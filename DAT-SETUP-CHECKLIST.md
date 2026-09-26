@@ -15,11 +15,12 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
       `MWDATMockDeviceTestClient` (UI-test target only).
 - [x] Deployment target ≥ iOS 17.2. Decided: iOS 27.0 (DECISIONS.md), Swift 6 language mode, strict concurrency.
 - [x] Bundle ID with **no dash** (DAT rejects `-`): `com.matthewcelia.birdjournal`.
-- [ ] Info.plist: URL scheme + `MWDAT` dict (`AppLinkURLScheme`, `MetaAppID` empty/0 for Dev Mode, `ClientToken`, `TeamID`),
+- [x] Info.plist: URL scheme + `MWDAT` dict (`AppLinkURLScheme`, `MetaAppID` empty/0 for Dev Mode, `ClientToken`, `TeamID`),
       `UIBackgroundModes` = processing, bluetooth-central, bluetooth-peripheral, external-accessory (+ `audio` for mic),
       `UISupportedExternalAccessoryProtocols` = com.meta.ar.wearable, `NSBluetoothAlwaysUsageDescription`,
       `NSLocalNetworkUsageDescription`, `NSBonjourServices` = _bonjour._tcp, `NSMicrophoneUsageDescription`.
-- [ ] `Wearables.configure()` at launch; `.onOpenURL` forwards links containing `metaWearablesAction` to `Wearables.shared.handleUrl`.
+      Done in #3: `BirdJournal/Info.plist` (outside the synchronized source folder), merged with the generated keys.
+- [x] `Wearables.configure()` at launch; `.onOpenURL` forwards links containing `metaWearablesAction` to `Wearables.shared.handleUrl`.
 - [x] Wearables Developer Center: iOS integration created. Universal link field: not needed for Dev Mode; use custom scheme `birdjournal://` now, add an https universal link before Beta distribution.
 
 ## Meta AI app and glasses versions (SDK 1.0.0 row of the version matrix)
@@ -34,10 +35,16 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 - [ ] Internet required during registration; Bluetooth on.
 
 ## Mock Device Kit fallback (no glasses needed)
-- [ ] Simulator/phone run with `MockDeviceKit.shared.enable()` + `pairGlasses(model: .metaRayBanDisplay)` + `powerOn()/unfold()/don()`.
+- [x] Simulator/phone run with `MockDeviceKit.shared.enable()` + `pairGlasses(model: .metaRayBanDisplay)` + `powerOn()/unfold()/don()`.
 - [ ] Lens preview inside the app: `mockDevice.services.display.createPreviewView()`; taps via `sendClick(identifier:)`.
 - [ ] Inputs injection: `services.input.navDown()/select()/back()`; camera feed from an HEVC .mp4 or JPEG/PNG.
 - [ ] Limit: no deterministic audio-frame injection. Test the identification engine with WAV files directly, not through the mock.
+- [x] Found in #3: an audio-enabled camera stream on the mock fails with `StreamError.videoStreamingError` unless
+      `services.camera.setCameraFeed(fileURL:)` is given an image first. With a feed it reaches `.streaming`, then
+      stops with `StreamError.timeout` a few seconds later (no audio frames). `AutoDeviceSelector` resolves its device
+      asynchronously; creating a session before `activeDevice` is set fails with `noEligibleDevice`.
+- [x] Found in #3: mock `doff()` does not pause the session or stream. Pause and resume are verified on hardware only.
+- [x] Found in #3: permission checks throw `PermissionError.noDevice` until the device is linked; wait for a connected device.
 - [x] Limit (found in #2): `MockDeviceKit.enable()` traps unless `Wearables.configure()` succeeded, and `configure()` throws
       `WearablesError.missingAppName/…Version/…BuildNumber` in a hostless test bundle. Mock-device tests must run in an
       app-hosted test target, not in `BirdJournalKit`. Loading `MWDATMockDevice` next to `MWDATCamera`/`MWDATDisplay` also

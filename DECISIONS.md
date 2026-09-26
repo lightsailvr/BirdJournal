@@ -54,3 +54,14 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - B: BirdNET engine on device with file-fed tests. Test clips: Matt's own labeled recordings (format specified at phase start).
 - C: cards from the LA pack, confirm and save to SwiftData.
 - D: minimal phone screen — connect, start/stop, live list, album list.
+
+## Phase A go/no-go (issue #3) — pending the hardware run
+Run the Audio spike screen with the glasses source for 20 minutes with the phone locked in a pocket, share the log, and fill in:
+- Audio sample rate chosen (44.1 or 48 kHz):
+- Audio coverage (total audio s / wall s) and gaps over 2 s (count, longest):
+- Latency: phone-mic first offset; glasses latency above best (mean, max). There is no clock shared with the glasses, so glasses latency is only the delay above the best case; the glasses `first_chunk` offset is absolute only if the toolkit stamps host time:
+- Glasses battery start → end, thermal peak; phone battery start → end:
+- Background survival with the phone locked (did `status` lines keep arriving every 30 s). The glasses path holds no `AVAudioSession`, so survival rests on the Bluetooth and external-accessory modes; if it fails, try an active audio session next:
+- Pause on doff / touchpad tap logged (`session_state state=paused`, then `gap … paused=yes`) and resumed without restarting the session:
+- Verdict:
+

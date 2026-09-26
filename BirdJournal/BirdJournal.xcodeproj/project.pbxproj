@@ -16,16 +16,35 @@
 		000000000000000000000406 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000306 /* MWDATDisplay */; };
 		000000000000000000000407 /* MWDATInputs in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000307 /* MWDATInputs */; };
 		000000000000000000000408 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000308 /* MWDATMockDevice */; };
+		000000000000000000000410 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000310 /* MWDATCore */; };
+		000000000000000000000411 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000311 /* MWDATCamera */; };
+		000000000000000000000412 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000312 /* MWDATMockDevice */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		000000000000000000000500 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000100000000;
+			remoteInfo = BirdJournal;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* BirdJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BirdJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000121 /* BirdJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000000000000000000000010 /* BirdJournal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = BirdJournal;
+			sourceTree = "<group>";
+		};
+		000000000000000000000011 /* BirdJournalTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BirdJournalTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,6 +64,14 @@
 				000000000000000000000408 /* MWDATMockDevice in Frameworks */,
 			);
 		};
+		000000000000000230000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				000000000000000000000410 /* MWDATCore in Frameworks */,
+				000000000000000000000411 /* MWDATCamera in Frameworks */,
+				000000000000000000000412 /* MWDATMockDevice in Frameworks */,
+			);
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -52,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* BirdJournal */,
+				000000000000000000000011 /* BirdJournalTests */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,6 +88,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000120 /* BirdJournal.app */,
+				000000000000000000000121 /* BirdJournalTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -96,6 +125,32 @@
 			productReference = 000000000000000000000120 /* BirdJournal.app */;
 			productType = "com.apple.product-type.application";
 		};
+		000000000000000200000000 /* BirdJournalTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000210000000 /* Build configuration list for PBXNativeTarget "BirdJournalTests" */;
+			buildPhases = (
+				000000000000000220000000 /* Sources */,
+				000000000000000230000000 /* Frameworks */,
+				000000000000000240000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000501 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000011 /* BirdJournalTests */,
+			);
+			name = BirdJournalTests;
+			packageProductDependencies = (
+				000000000000000000000310 /* MWDATCore */,
+				000000000000000000000311 /* MWDATCamera */,
+				000000000000000000000312 /* MWDATMockDevice */,
+			);
+			productName = BirdJournalTests;
+			productReference = 000000000000000000000121 /* BirdJournalTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -108,6 +163,10 @@
 				TargetAttributes = {
 					000000000000000100000000 = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					000000000000000200000000 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 000000000000000100000000;
 					};
 				};
 			};
@@ -130,12 +189,18 @@
 			projectRoot = "";
 			targets = (
 				000000000000000100000000 /* BirdJournal */,
+				000000000000000200000000 /* BirdJournalTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		000000000000000140000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		000000000000000240000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -148,7 +213,20 @@
 			files = (
 			);
 		};
+		000000000000000220000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		000000000000000000000501 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000100000000 /* BirdJournal */;
+			targetProxy = 000000000000000000000500 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		000000000000000011000000 /* Debug configuration for PBXProject "BirdJournal" */ = {
@@ -281,6 +359,7 @@
 				DEVELOPMENT_TEAM = 647FZYVR5Q;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -300,8 +379,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -315,6 +394,7 @@
 				DEVELOPMENT_TEAM = 647FZYVR5Q;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -334,10 +414,58 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		000000000000000211000000 /* Debug configuration for PBXNativeTarget "BirdJournalTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 647FZYVR5Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.birdjournal.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BirdJournal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BirdJournal";
+			};
+			name = Debug;
+		};
+		000000000000000212000000 /* Release configuration for PBXNativeTarget "BirdJournalTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 647FZYVR5Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.birdjournal.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BirdJournal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BirdJournal";
 			};
 			name = Release;
 		};
@@ -360,7 +488,16 @@
 			);
 			defaultConfigurationName = Release;
 		};
+		000000000000000210000000 /* Build configuration list for PBXNativeTarget "BirdJournalTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000211000000 /* Debug configuration for PBXNativeTarget "BirdJournalTests" */,
+				000000000000000212000000 /* Release configuration for PBXNativeTarget "BirdJournalTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
 /* Begin XCLocalSwiftPackageReference section */
 		000000000000000000000200 /* XCLocalSwiftPackageReference "BirdJournalKit" */ = {
 			isa = XCLocalSwiftPackageReference;
@@ -371,7 +508,7 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/facebook/meta-wearables-dat-ios";
+			repositoryURL = "https://github.com/lightsailvr/meta-wearables-dat-ios";
 			requirement = {
 				kind = exactVersion;
 				version = 1.0.0;
@@ -417,6 +554,21 @@
 			productName = MWDATInputs;
 		};
 		000000000000000000000308 /* MWDATMockDevice */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATMockDevice;
+		};
+		000000000000000000000310 /* MWDATCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATCore;
+		};
+		000000000000000000000311 /* MWDATCamera */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATCamera;
+		};
+		000000000000000000000312 /* MWDATMockDevice */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATMockDevice;

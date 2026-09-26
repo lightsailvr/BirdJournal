@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+Keys the generated Info.plist cannot express (arrays and dictionaries). Xcode merges the INFOPLIST_KEY_* build
+settings into this file. It sits outside the synchronized BirdJournal/ folder so it is not copied as a resource.
+Keys follow DAT-SETUP-CHECKLIST.md and the spec's "Platform and configuration" section.
+-->
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>birdjournal</string>
+			</array>
+		</dict>
+	</array>
+	<key>MWDAT</key>
+	<dict>
+		<key>AppLinkURLScheme</key>
+		<string>birdjournal://</string>
+		<key>MetaAppID</key>
+		<string>0</string>
+		<key>ClientToken</key>
+		<string></string>
+		<key>TeamID</key>
+		<string>$(DEVELOPMENT_TEAM)</string>
+	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>processing</string>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+		<string>external-accessory</string>
+	</array>
+	<key>UISupportedExternalAccessoryProtocols</key>
+	<array>
+		<string>com.meta.ar.wearable</string>
+	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>BirdJournal connects to your Meta glasses over Bluetooth to hear birds around you.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>BirdJournal finds and connects to your Meta glasses over Wi-Fi.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_bonjour._tcp</string>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>BirdJournal listens for birdsong with the phone microphone when your glasses are not connected.</string>
+</dict>
+</plist>
