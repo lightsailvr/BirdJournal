@@ -1,0 +1,54 @@
+# DAT setup checklist (iOS) — verified 2026-09-26
+
+Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Android is a non-goal.
+
+## Tooling (Mac) — all verified present
+- [x] Xcode 27.0 (27A266a), Swift 6.4, iOS 27.0 simulator runtime. SDK needs Xcode 26.4+ / Swift 6.3+.
+- [x] Claude Code plugin `mwdat-ios@mwdat-ios-marketplace` v1.0.0 installed and enabled (17 skills).
+- [x] Hosted docs MCP `https://mcp.developer.meta.com/wearables` registered by the plugin; `search_dat_docs` and `search_webapps_docs` answer queries. No auth needed.
+- [x] iPhone 17 Pro connected to Xcode (UDID 00008150-001643C91E08401C).
+
+## SDK prerequisites (to do when app code starts)
+- [ ] Add Swift Package `https://github.com/facebook/meta-wearables-dat-ios` at **1.0.0** (released 2026-09-24).
+      Products by phase: `MWDATCore` + `MWDATMockDevice` (always); `MWDATCamera` (audio + camera);
+      `MWDATDisplay` (lens cards); `MWDATInputs` (Neural Band nav/select/drag, experimental);
+      `MWDATMockDeviceTestClient` (UI-test target only).
+- [ ] Deployment target ≥ iOS 17.2 (project is at 27.0 — decide, see grill Q).
+- [ ] Bundle ID with **no dash** (DAT rejects `-`). Current value is a `devplaceholder.*` template — must be replaced.
+- [ ] Info.plist: URL scheme + `MWDAT` dict (`AppLinkURLScheme`, `MetaAppID` empty/0 for Dev Mode, `ClientToken`, `TeamID`),
+      `UIBackgroundModes` = processing, bluetooth-central, bluetooth-peripheral, external-accessory (+ `audio` for mic),
+      `UISupportedExternalAccessoryProtocols` = com.meta.ar.wearable, `NSBluetoothAlwaysUsageDescription`,
+      `NSLocalNetworkUsageDescription`, `NSBonjourServices` = _bonjour._tcp, `NSMicrophoneUsageDescription`.
+- [ ] `Wearables.configure()` at launch; `.onOpenURL` forwards links containing `metaWearablesAction` to `Wearables.shared.handleUrl`.
+- [x] Wearables Developer Center: iOS integration created. Universal link field: not needed for Dev Mode; use custom scheme `birdjournal://` now, add an https universal link before Beta distribution.
+
+## Meta AI app and glasses versions (SDK 1.0.0 row of the version matrix)
+- [ ] Meta AI app (iOS) **v290+** — check App Store update.
+- [ ] Meta Ray-Ban Display firmware **v128+** — Meta AI app > Devices > glasses > gear > General > About > Version.
+- [ ] Neural Band paired (needed for select/nav on the lens).
+- [ ] DAT glasses app installed on the Display glasses (Dev Mode screen has an Install button; wear the glasses, keep Meta AI open ~10 s, accept the Wi-Fi prompt).
+
+## Developer Mode
+- [ ] Meta AI app > Settings > App Info > tap App Version 5× > toggle Developer Mode on. Re-check after every firmware update (it resets).
+- [ ] Only ONE third-party app can be registered at a time in Dev Mode; registering BirdJournal unregisters any other DAT test app.
+- [ ] Internet required during registration; Bluetooth on.
+
+## Mock Device Kit fallback (no glasses needed)
+- [ ] Simulator/phone run with `MockDeviceKit.shared.enable()` + `pairGlasses(model: .metaRayBanDisplay)` + `powerOn()/unfold()/don()`.
+- [ ] Lens preview inside the app: `mockDevice.services.display.createPreviewView()`; taps via `sendClick(identifier:)`.
+- [ ] Inputs injection: `services.input.navDown()/select()/back()`; camera feed from an HEVC .mp4 or JPEG/PNG.
+- [ ] Limit: no deterministic audio-frame injection. Test the identification engine with WAV files directly, not through the mock.
+- [ ] Chrome "Meta Ray-Ban Display Simulator" extension previews the 600×600 additive display for layout checks.
+
+## Local verification steps (in order)
+1. Build the untouched project for the simulator — baseline compiles.
+2. Add package 1.0.0 + Info.plist keys; build again.
+3. Mock run: pair a mock Display device, send one FlexBox card, see it in the preview view, click it.
+4. Device run with Dev Mode: register from the app, accept in Meta AI, session reaches `.started`, Display shows the card on the lens.
+5. Audio spike: camera stream with `audioCodec: .pcm(sampleRate: .rate48000, numberOfChannels: 1)` at `.low`/2 fps; log frame cadence, latency and glasses battery over 20 min.
+
+## Facts that change the spec (see grill questions)
+- No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.
+- Inputs (Neural Band events), camera audio, photo capture, motion and speech are all **experimental**: usable in Dev Mode and the Beta channel, not publishable to production yet.
+- Web Apps for Display have **no camera and no microphone** — they cannot host the core loop.
+- Display: one root `FlexBox` per `send`, 600×600 additive display, images from bundled `UIImage` or HTTPS.

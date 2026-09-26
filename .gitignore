@@ -1,0 +1,16 @@
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.moved-aside
+.swiftpm/
+# Model and pack artifacts (downloaded by script)
+models/*.onnx
+models/*.tflite
+packbuilder/cache/
+# Python
+__pycache__/
+.venv/
+# macOS
+.DS_Store
