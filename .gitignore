@@ -5,9 +5,10 @@ DerivedData/
 build/
 *.moved-aside
 .swiftpm/
-# Model and pack artifacts (downloaded by script)
-models/*.onnx
-models/*.tflite
+# Model and pack artifacts (downloaded by scripts/download-models.sh)
+models/*
+!models/manifest.json
+!models/README.md
 packbuilder/cache/
 # Python
 __pycache__/

@@ -1,0 +1,71 @@
+{
+  "comment": "Pinned model files. Downloaded by scripts/download-models.sh into models/; never committed.",
+  "files": [
+    {
+      "name": "BirdNET+_V3.0-preview3.1_Global_11K_FP16_pruned.onnx",
+      "url": "https://zenodo.org/api/records/20703646/files/BirdNET+_V3.0-preview3.1_Global_11K_FP16_pruned.onnx/content",
+      "sha256": "69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24",
+      "md5": "8278be6e7d1a9fc1717cf953e269b2e3",
+      "bytes": 71528628,
+      "source": "Zenodo record 20703646 (BirdNET+ V3.0 model developer preview, Preview 3.1), doi:10.5281/zenodo.20703646",
+      "license": "CC-BY-SA-4.0",
+      "role": "acoustic model: 11,560 classes, 32 kHz raw waveform input, sigmoid in-graph"
+    },
+    {
+      "name": "BirdNET+_V3.0-preview3.1_Global_11K_Labels.csv",
+      "url": "https://zenodo.org/api/records/20703646/files/BirdNET+_V3.0-preview3.1_Global_11K_Labels.csv/content",
+      "sha256": "8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0",
+      "md5": "21ccf9e984a955bfc2d5c52faab6a6ea",
+      "bytes": 809172,
+      "source": "Zenodo record 20703646",
+      "license": "CC-BY-SA-4.0",
+      "role": "acoustic model labels, one row per output class"
+    },
+    {
+      "name": "TERMS_OF_USE.txt",
+      "url": "https://zenodo.org/api/records/20703646/files/TERMS_OF_USE.txt/content",
+      "sha256": "91b474bddbfdbd7cb2f5d85fd4511eee8af151d899c8450cd0b22000c425bd8f",
+      "md5": "d5949262d80b5749b49927767579b5f2",
+      "bytes": 2290,
+      "source": "Zenodo record 20703646",
+      "license": "CC-BY-SA-4.0",
+      "role": "BirdNET+ V3.0 developer preview terms of use"
+    },
+    {
+      "name": "BirdNET+_Geomodel_V3.0.4_Global_14K_FP16.onnx",
+      "url": "https://github.com/birdnet-team/geomodel/releases/download/v3.0.4/BirdNET%2B_Geomodel_V3.0.4_Global_14K_FP16.onnx",
+      "sha256": "80e410f811bf4455e6cb1a2d48e394737d3828fe943a444646778495b67e7bab",
+      "bytes": 7885053,
+      "source": "GitHub release birdnet-team/geomodel v3.0.4",
+      "license": "Apache-2.0",
+      "role": "geo prior: (lat, lon, week) -> per-species occurrence probability, 14,082 classes"
+    },
+    {
+      "name": "BirdNET+_Geomodel_V3.0.4_Global_14K_Labels.txt",
+      "url": "https://github.com/birdnet-team/geomodel/releases/download/v3.0.4/BirdNET%2B_Geomodel_V3.0.4_Global_14K_Labels.txt",
+      "sha256": "8250b457e45d43fc3e77b5cbd06a1d311baf585ab9c51ed8d42e011d98534835",
+      "bytes": 671823,
+      "source": "GitHub release birdnet-team/geomodel v3.0.4",
+      "license": "Apache-2.0",
+      "role": "geomodel labels, one per output class"
+    },
+    {
+      "name": "LICENSE-MODELS.md",
+      "url": "https://github.com/birdnet-team/geomodel/releases/download/v3.0.4/LICENSE-MODELS.md",
+      "sha256": "c61a126ce3b9005b3ec0a74bd921f31214f0bec564f9067305d59e7c007796ca",
+      "bytes": 11948,
+      "source": "GitHub release birdnet-team/geomodel v3.0.4",
+      "license": "Apache-2.0",
+      "role": "geomodel license text"
+    },
+    {
+      "name": "ACCEPTABLE_USE.md",
+      "url": "https://github.com/birdnet-team/geomodel/releases/download/v3.0.4/ACCEPTABLE_USE.md",
+      "sha256": "acef17f7e6fc94463b2d9e4614d37f38448a332bbdb48e73a4a286941c492272",
+      "bytes": 2774,
+      "source": "GitHub release birdnet-team/geomodel v3.0.4",
+      "license": "Apache-2.0",
+      "role": "geomodel acceptable-use policy"
+    }
+  ]
+}
