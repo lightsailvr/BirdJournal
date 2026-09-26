@@ -9,12 +9,12 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 - [x] iPhone 17 Pro connected to Xcode (UDID 00008150-001643C91E08401C).
 
 ## SDK prerequisites (to do when app code starts)
-- [ ] Add Swift Package `https://github.com/facebook/meta-wearables-dat-ios` at **1.0.0** (released 2026-09-24).
+- [x] Add Swift Package `https://github.com/facebook/meta-wearables-dat-ios` at **1.0.0** (released 2026-09-24). Done in #2: pinned `exact: 1.0.0` in the app target and `BirdJournalKit`.
       Products by phase: `MWDATCore` + `MWDATMockDevice` (always); `MWDATCamera` (audio + camera);
       `MWDATDisplay` (lens cards); `MWDATInputs` (Neural Band nav/select/drag, experimental);
       `MWDATMockDeviceTestClient` (UI-test target only).
-- [ ] Deployment target ≥ iOS 17.2 (project is at 27.0 — decide, see grill Q).
-- [ ] Bundle ID with **no dash** (DAT rejects `-`). Current value is a `devplaceholder.*` template — must be replaced.
+- [x] Deployment target ≥ iOS 17.2. Decided: iOS 27.0 (DECISIONS.md), Swift 6 language mode, strict concurrency.
+- [x] Bundle ID with **no dash** (DAT rejects `-`): `com.matthewcelia.birdjournal`.
 - [ ] Info.plist: URL scheme + `MWDAT` dict (`AppLinkURLScheme`, `MetaAppID` empty/0 for Dev Mode, `ClientToken`, `TeamID`),
       `UIBackgroundModes` = processing, bluetooth-central, bluetooth-peripheral, external-accessory (+ `audio` for mic),
       `UISupportedExternalAccessoryProtocols` = com.meta.ar.wearable, `NSBluetoothAlwaysUsageDescription`,
@@ -38,6 +38,10 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 - [ ] Lens preview inside the app: `mockDevice.services.display.createPreviewView()`; taps via `sendClick(identifier:)`.
 - [ ] Inputs injection: `services.input.navDown()/select()/back()`; camera feed from an HEVC .mp4 or JPEG/PNG.
 - [ ] Limit: no deterministic audio-frame injection. Test the identification engine with WAV files directly, not through the mock.
+- [x] Limit (found in #2): `MockDeviceKit.enable()` traps unless `Wearables.configure()` succeeded, and `configure()` throws
+      `WearablesError.missingAppName/…Version/…BuildNumber` in a hostless test bundle. Mock-device tests must run in an
+      app-hosted test target, not in `BirdJournalKit`. Loading `MWDATMockDevice` next to `MWDATCamera`/`MWDATDisplay` also
+      logs many `objc[…]: Class … is implemented in both` duplicate-class warnings; they come from the SDK binaries.
 - [ ] Chrome "Meta Ray-Ban Display Simulator" extension previews the 600×600 additive display for layout checks.
 
 ## Local verification steps (in order)
