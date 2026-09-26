@@ -10,8 +10,8 @@ public enum LensPage: Sendable, Equatable {
     case confirm(index: Int)
 }
 
-/// Gestures as the app sees them. Swipes arrive as Nav events and taps as Select events from the Neural Band;
-/// the two-finger tap that quits the session is handled by the system and never reaches this model.
+/// Gestures as the app sees them. Swipes arrive as Nav events and taps as Select events from the Neural Band.
+/// A `back` event is added when the hardware delivers one (DECISIONS.md: nested Back behind `consumeBack`).
 public enum LensGesture: Sendable, Equatable {
     case swipeLeft
     case swipeRight
@@ -53,10 +53,7 @@ public struct LensNavigation: Sendable, Equatable {
         case let (.photo(index), .tap):
             page = .confirm(index: index)
 
-        case let (.description(index), .swipeUp):
-            page = .photo(index: index)
-
-        case let (.confirm(index), .swipeUp):
+        case let (.description(index), .swipeUp), let (.confirm(index), .swipeUp):
             page = .photo(index: index)
 
         default:

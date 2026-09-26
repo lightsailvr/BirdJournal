@@ -17,14 +17,14 @@ public struct WindowPlanner: Sendable, Equatable {
     }
 
     /// Number of samples in one window.
-    public var windowLength: Int { Int((windowDuration * Double(sampleRate)).rounded()) }
+    public var samplesPerWindow: Int { Int((windowDuration * Double(sampleRate)).rounded()) }
 
     /// Number of samples between consecutive window starts.
-    public var hopLength: Int { Int((hopDuration * Double(sampleRate)).rounded()) }
+    public var samplesPerHop: Int { Int((hopDuration * Double(sampleRate)).rounded()) }
 
     /// Sample ranges of every complete window that fits in `count` samples, in order.
     public func windows(forSampleCount count: Int) -> [Range<Int>] {
-        guard count >= windowLength else { return [] }
-        return stride(from: 0, through: count - windowLength, by: hopLength).map { $0..<($0 + windowLength) }
+        guard count >= samplesPerWindow else { return [] }
+        return stride(from: 0, through: count - samplesPerWindow, by: samplesPerHop).map { $0..<($0 + samplesPerWindow) }
     }
 }

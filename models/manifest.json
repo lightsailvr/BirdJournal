@@ -1,5 +1,5 @@
 {
-  "comment": "Pinned model files. Downloaded by scripts/download-models.sh into models/; never committed.",
+  "comment": "Pinned model files. Downloaded by scripts/download-models.sh into models/ and verified by sha256; never committed. md5, where present, is the checksum the source (Zenodo) publishes, for cross-checking by hand.",
   "files": [
     {
       "name": "BirdNET+_V3.0-preview3.1_Global_11K_FP16_pruned.onnx",

@@ -4,12 +4,17 @@ import PackageDescription
 
 // BirdJournalKit holds the app's testable seams as separate modules.
 //
-// - Identification: audio windowing + BirdNET inference (ONNX Runtime). No toolkit dependency.
-// - LensSession:    glasses session, lens page model, Display/Inputs wiring (Device Access Toolkit).
+// - Identification: audio windowing + BirdNET inference (ONNX Runtime). No UI, no toolkit dependency.
+// - LensSession:    pure lens page state machine. No toolkit dependency; unit-tested without the glasses.
 // - Pack:           species packs (bundled LA pack, downloadable regional packs).
 // - Album:          saved sightings (SwiftData).
 //
-// The Device Access Toolkit ships iOS-only xcframeworks, so build and test this package through the
+// The Device Access Toolkit is linked by the app target only, where the thin glasses adapter lives
+// (docs/spec-v1-glasses-bird-id.md, "Architecture: three modules behind two seams"). Mock Device Kit smoke
+// tests need an app-hosted test target: `Wearables.configure()` reads the main bundle's name, version and
+// build number, which a hostless package test bundle lacks, so `MockDeviceKit.enable()` traps there.
+//
+// ONNX Runtime ships a binary framework built for iOS, so build and test this package through the
 // `BirdJournalKit-Package` scheme on an iOS simulator (`scripts/build-and-test.sh`), not with `swift test` on macOS.
 let package = Package(
     name: "BirdJournalKit",
@@ -21,7 +26,6 @@ let package = Package(
         .library(name: "Album", targets: ["Album"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/facebook/meta-wearables-dat-ios", exact: "1.0.0"),
         .package(url: "https://github.com/microsoft/onnxruntime-swift-package-manager", exact: "1.24.2"),
     ],
     targets: [
@@ -39,18 +43,7 @@ let package = Package(
             ]
         ),
 
-        .target(
-            name: "LensSession",
-            dependencies: [
-                .product(name: "MWDATCore", package: "meta-wearables-dat-ios"),
-                .product(name: "MWDATCamera", package: "meta-wearables-dat-ios"),
-                .product(name: "MWDATDisplay", package: "meta-wearables-dat-ios"),
-                .product(name: "MWDATInputs", package: "meta-wearables-dat-ios"),
-            ]
-        ),
-        // Mock Device Kit tests do not live here: `Wearables.configure()` reads the main bundle's name, version
-        // and build number, and a hostless package test bundle has none, so `MockDeviceKit.enable()` traps.
-        // Mock-device tests go in an app-hosted test target once the app carries its DAT Info.plist keys.
+        .target(name: "LensSession"),
         .testTarget(name: "LensSessionTests", dependencies: ["LensSession"]),
 
         .target(name: "Pack"),

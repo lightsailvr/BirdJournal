@@ -5,7 +5,7 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// Placeholder phone screen until phase D. Touches each module so the app links all four.
+/// Placeholder phone screen until phase D shows one fact from each module.
 struct ContentView: View {
     @Query private var sightings: [Sighting]
 
@@ -16,7 +16,7 @@ struct ContentView: View {
         NavigationStack {
             List {
                 Section("Modules") {
-                    LabeledContent("Identification", value: "\(planner.sampleRate) Hz, \(planner.windowLength) samples per window")
+                    LabeledContent("Identification", value: "\(planner.sampleRate) Hz, \(planner.samplesPerWindow) samples per window")
                     LabeledContent("LensSession", value: String(describing: navigation.page))
                     LabeledContent("Pack", value: PackIndex.bundledPackID)
                     LabeledContent("Album", value: "\(sightings.count) sightings")

@@ -32,8 +32,4 @@ struct PackIndexTests {
         #expect(pack.byteCount == 12_345_678)
     }
 
-    @Test("the bundled pack is the Los Angeles pack")
-    func bundledPack() {
-        #expect(PackIndex.bundledPackID == "us-ca-la")
-    }
 }

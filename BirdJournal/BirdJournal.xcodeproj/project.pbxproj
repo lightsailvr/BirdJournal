@@ -16,7 +16,6 @@
 		000000000000000000000406 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000306 /* MWDATDisplay */; };
 		000000000000000000000407 /* MWDATInputs in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000307 /* MWDATInputs */; };
 		000000000000000000000408 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000308 /* MWDATMockDevice */; };
-		000000000000000000000409 /* onnxruntime in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000309 /* onnxruntime */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,7 +43,6 @@
 				000000000000000000000406 /* MWDATDisplay in Frameworks */,
 				000000000000000000000407 /* MWDATInputs in Frameworks */,
 				000000000000000000000408 /* MWDATMockDevice in Frameworks */,
-				000000000000000000000409 /* onnxruntime in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -93,7 +91,6 @@
 				000000000000000000000306 /* MWDATDisplay */,
 				000000000000000000000307 /* MWDATInputs */,
 				000000000000000000000308 /* MWDATMockDevice */,
-				000000000000000000000309 /* onnxruntime */,
 			);
 			productName = BirdJournal;
 			productReference = 000000000000000000000120 /* BirdJournal.app */;
@@ -126,7 +123,6 @@
 			packageReferences = (
 				000000000000000000000200 /* XCLocalSwiftPackageReference "BirdJournalKit" */,
 				000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */,
-				000000000000000000000202 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */,
 			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
@@ -381,14 +377,6 @@
 				version = 1.0.0;
 			};
 		};
-		000000000000000000000202 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/microsoft/onnxruntime-swift-package-manager";
-			requirement = {
-				kind = exactVersion;
-				version = 1.24.2;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -432,11 +420,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATMockDevice;
-		};
-		000000000000000000000309 /* onnxruntime */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 000000000000000000000202 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */;
-			productName = onnxruntime;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

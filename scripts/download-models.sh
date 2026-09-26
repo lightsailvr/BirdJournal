@@ -17,6 +17,10 @@ for f in json.load(open(sys.argv[1]))["files"]:
 PY
 )"
 
+# Remove a partial download if curl aborts the script.
+partial=""
+trap '[ -n "$partial" ] && rm -f "$partial"' EXIT
+
 failed=0
 while IFS=$'\t' read -r name url expected; do
     [ -n "$name" ] || continue
@@ -27,7 +31,9 @@ while IFS=$'\t' read -r name url expected; do
     fi
     echo "fetching $name"
     tmp="$target.download"
-    curl --fail --location --silent --show-error --retry 3 --output "$tmp" "$url"
+    partial="$tmp"
+    curl --fail --location --silent --show-error --retry 3 --retry-all-errors --output "$tmp" "$url"
+    partial=""
     actual="$(sha256_of "$tmp")"
     if [ "$actual" != "$expected" ]; then
         echo "CHECKSUM MISMATCH $name" >&2
