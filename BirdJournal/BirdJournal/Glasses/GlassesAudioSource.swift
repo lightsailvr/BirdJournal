@@ -87,7 +87,7 @@ final class GlassesAudioSource: AudioSource {
         try await ensurePermission(.microphone)
 
         let selector = AutoDeviceSelector(wearables: wearables) { $0.supportsDisplay() }
-        try await waitForDevice(selector)
+        guard await selector.waitForDevice() else { throw StartError.noDisplayGlasses }
         let session = try wearables.createSession(deviceSelector: selector)
         self.session = session
         session.statePublisher.listen { [weak self] state in
@@ -99,7 +99,9 @@ final class GlassesAudioSource: AudioSource {
         }.store(in: tokens)
 
         try session.start()
-        try await waitUntilStarted(session)
+        guard await session.waitUntilStarted() else {
+            throw StartError.sessionDidNotStart(lastSessionError.withLock { $0 })
+        }
 
         guard let camera = try session.addCamera(config: configuration) else {
             throw StartError.cameraUnavailable
@@ -149,58 +151,6 @@ final class GlassesAudioSource: AudioSource {
         if try await wearables.checkPermissionStatus(permission) == .granted { return }
         guard try await wearables.requestPermission(permission) == .granted else {
             throw StartError.permissionDenied(permission)
-        }
-    }
-
-    /// Waits up to 10 s for the selector to pick a connected display-capable device; it resolves asynchronously.
-    private func waitForDevice(_ selector: AutoDeviceSelector) async throws {
-        if selector.activeDevice != nil { return }
-        let found = await completes(within: .seconds(10)) {
-            for await device in selector.activeDeviceStream() where device != nil { return true }
-            return false
-        }
-        guard found else { throw StartError.noDisplayGlasses }
-    }
-
-    /// Waits for `.started`; a session that stops first, or does not start within 30 s, is an error.
-    private func waitUntilStarted(_ session: DeviceSession) async throws {
-        let started = await completes(within: .seconds(30)) {
-            if session.state == .started { return true }
-            for await state in session.stateStream() {
-                if state == .started { return true }
-                if state == .stopped { return false }
-            }
-            return false
-        }
-        guard started else { throw StartError.sessionDidNotStart(lastSessionError.withLock { $0 }) }
-    }
-
-    /// Runs `operation` and returns its result, or false once `timeout` passes. Returns at the timeout even if
-    /// `operation` ignores cancellation, which a task group would wait for.
-    private func completes(within timeout: Duration, _ operation: @escaping @Sendable () async -> Bool) async -> Bool {
-        let resumed = ResumeOnce()
-        return await withCheckedContinuation { continuation in
-            let work = Task {
-                let result = await operation()
-                if resumed.claim() { continuation.resume(returning: result) }
-            }
-            Task {
-                try? await Task.sleep(for: timeout)
-                work.cancel()
-                if resumed.claim() { continuation.resume(returning: false) }
-            }
-        }
-    }
-}
-
-/// Lets exactly one of two racing tasks resume a continuation.
-private final class ResumeOnce: Sendable {
-    private let resumed = Mutex(false)
-
-    func claim() -> Bool {
-        resumed.withLock { resumed in
-            defer { resumed = true }
-            return !resumed
         }
     }
 }

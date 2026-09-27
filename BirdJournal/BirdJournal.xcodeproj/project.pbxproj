@@ -19,6 +19,8 @@
 		000000000000000000000410 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000310 /* MWDATCore */; };
 		000000000000000000000411 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000311 /* MWDATCamera */; };
 		000000000000000000000412 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000312 /* MWDATMockDevice */; };
+		000000000000000000000413 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000313 /* MWDATDisplay */; };
+		000000000000000000000414 /* MWDATInputs in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000314 /* MWDATInputs */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +73,8 @@
 				000000000000000000000410 /* MWDATCore in Frameworks */,
 				000000000000000000000411 /* MWDATCamera in Frameworks */,
 				000000000000000000000412 /* MWDATMockDevice in Frameworks */,
+				000000000000000000000413 /* MWDATDisplay in Frameworks */,
+				000000000000000000000414 /* MWDATInputs in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -148,6 +152,8 @@
 				000000000000000000000310 /* MWDATCore */,
 				000000000000000000000311 /* MWDATCamera */,
 				000000000000000000000312 /* MWDATMockDevice */,
+				000000000000000000000313 /* MWDATDisplay */,
+				000000000000000000000314 /* MWDATInputs */,
 			);
 			productName = BirdJournalTests;
 			productReference = 000000000000000000000121 /* BirdJournalTests.xctest */;
@@ -574,6 +580,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATMockDevice;
+		};
+		000000000000000000000313 /* MWDATDisplay */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATDisplay;
+		};
+		000000000000000000000314 /* MWDATInputs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATInputs;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

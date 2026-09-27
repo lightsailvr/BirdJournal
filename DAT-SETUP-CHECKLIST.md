@@ -37,8 +37,13 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 
 ## Mock Device Kit fallback (no glasses needed)
 - [x] Simulator/phone run with `MockDeviceKit.shared.enable()` + `pairGlasses(model: .metaRayBanDisplay)` + `powerOn()/unfold()/don()`.
-- [ ] Lens preview inside the app: `mockDevice.services.display.createPreviewView()`; taps via `sendClick(identifier:)`.
-- [ ] Inputs injection: `services.input.navDown()/select()/back()`; camera feed from an HEVC .mp4 or JPEG/PNG.
+- [x] Lens preview inside the app: `mockDevice.services.display.createPreviewView()` (done in #4: the "Lens card" screen embeds
+      it while a mock is paired; taps via `sendClick(identifier:)` are unused, the card's button is verified on hardware).
+- [x] Inputs injection: `services.input.navDown()/select()/back()`; camera feed from an HEVC .mp4 or JPEG/PNG. Done in #4:
+      Display and Inputs attach to one mock session; a `.metaRayBanDisplay` mock delivers `.nav`, `.select` and, unlike real
+      glasses, `.back` (source `neuralBand`) within 100 ms of injection. Injection before Inputs is `.active` is dropped.
+      Mock `powerOff()` ends the session on the device side (`.stopped` while running), so the "ended by the glasses"
+      path has a mock test; the real two-finger tap still needs the hardware run below.
 - [ ] Limit: no deterministic audio-frame injection. Test the identification engine with WAV files directly, not through the mock.
 - [x] Found in #3: an audio-enabled camera stream on the mock fails with `StreamError.videoStreamingError` unless
       `services.camera.setCameraFeed(fileURL:)` is given an image first. With a feed it reaches `.streaming`, then
@@ -55,8 +60,12 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 ## Local verification steps (in order)
 1. Build the untouched project for the simulator — baseline compiles.
 2. Add package 1.0.0 + Info.plist keys; build again.
-3. Mock run: pair a mock Display device, send one FlexBox card, see it in the preview view, click it.
-4. Device run with Dev Mode: register from the app, accept in Meta AI, session reaches `.started`, Display shows the card on the lens.
+3. [x] Mock run: pair a mock Display device, send one FlexBox card, see it in the preview view. Done in #4 ("Lens card" screen;
+   launch the app with `-autoMockLens YES` to pair, start and inject three gestures without tapping). Clicking the card's
+   button through the mock is not exercised.
+4. [ ] Device run with Dev Mode: register from the app, accept in Meta AI, session reaches `.started`, Display shows the card on the lens.
+   #4 adds the "Lens card" screen for this: start, swipe and tap with the Neural Band, watch the list on the phone, then
+   two-finger tap to end from the glasses and check the run reads "Ended by the glasses".
 5. [x] Audio spike: camera stream with `audioCodec: .pcm(sampleRate: .rate44100, numberOfChannels: 1)` at `.low`/2 fps; log frame cadence, latency and glasses battery over 20 min. Done 2026-09-26, results in DECISIONS.md "Phase A go/no-go".
    Found: glasses audio arrives as 1,024-sample chunks every ~23 ms at 44.1 kHz; presentation timestamps are not host time; the first chunk can be empty; a `StreamError` ("Critical error, the stream should end") can fire on backgrounding while the stream keeps delivering. Taking the Display glasses off ends the session (`DeviceSessionError` "Session ended by device") and drops the link; it does not pause. A new session is needed after they are put back on.
 
