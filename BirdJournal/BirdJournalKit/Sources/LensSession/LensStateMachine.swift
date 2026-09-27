@@ -54,7 +54,10 @@ public enum LensButton: Sendable, Hashable {
 
 /// What the adapter must do after an event, besides rendering the new page.
 public enum LensEffect: Sendable, Equatable {
-    /// The wearer confirmed this candidate: write a Sighting.
+    /// The wearer tapped this candidate's photo: capture the sighting's context (the most recent camera frame) now,
+    /// so a later Save stores what they were looking at when they confirmed (issue #9).
+    case confirmed(Candidate)
+    /// The wearer saved this candidate: write a Sighting.
     case saveSighting(Candidate)
     /// Back on the root: end the glasses session.
     case endSession
@@ -115,6 +118,7 @@ public struct LensStateMachine: Sendable, Equatable {
             page = .listening
         case let (.photo(index), .tap):
             page = .confirm(index: index)
+            return .confirmed(stack.candidates[index])
 
         case let (.description(index), .swipeUp), let (.description(index), .back):
             page = .photo(index: index)

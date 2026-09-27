@@ -8,14 +8,16 @@ import Observation
 import Synchronization
 import UIKit
 
-/// The glasses adapter for the lens (spec "Glasses adapter"): one device session with Display and Inputs attached,
+/// The glasses adapter for the lens (spec "Glasses adapter"): a device session with Display and Inputs attached,
 /// the `LensStateMachine` fed with stack updates and every Nav, Select and Back the glasses deliver, and the page it
-/// lands on rendered onto the lens after each change.
+/// lands on rendered onto the lens after each change. Confirm and Save are handed to `onEffect` for the listening
+/// run to act on (issue #9); Back on the root ends the run here.
 ///
 /// Order (DAT-SETUP-CHECKLIST.md): Display attaches once the session is `.started`, the first card is sent once
 /// Display is `.started`, and Inputs attaches last, with `consumeBack` so a Back event reaches the app when
 /// hardware delivers one. Real Display glasses end the session themselves on the two-finger tap, which arrives
-/// as `.stopped` and is reported as `StopReason.glasses`. Each `start` begins a fresh page state.
+/// as `.stopped` and is reported as `StopReason.glasses`. Each `start` begins a fresh page state on the session its
+/// lease gives: one of its own, or the listening run's, shared with the camera stream.
 @Observable
 final class GlassesLensSession {
     enum Phase: Equatable {
@@ -37,17 +39,11 @@ final class GlassesLensSession {
     }
 
     enum StartError: LocalizedError {
-        case noDisplayGlasses
-        /// Carries the session error reported before the session stopped, if any.
-        case sessionDidNotStart(DeviceSessionError?)
         case displayDidNotStart
         case inputsUnavailable
 
         var errorDescription: String? {
             switch self {
-            case .noDisplayGlasses: "No connected display glasses."
-            case .sessionDidNotStart(let error?): "The glasses session did not start: \(error.description)"
-            case .sessionDidNotStart(nil): "The glasses session did not start."
             case .displayDidNotStart: "The lens display did not start."
             case .inputsUnavailable: "Inputs could not be attached: the session is not started."
             }
@@ -72,7 +68,7 @@ final class GlassesLensSession {
     private(set) var machine = LensStateMachine()
     /// What the lens shows, kept in step with `machine`.
     private(set) var card: LensCard
-    /// Candidates confirmed this run, newest last. Writing them to the album is issue #9.
+    /// Candidates saved this run, newest last; the listening run writes them to the album.
     private(set) var savedSightings: [Candidate] = []
     /// Newest first, capped at `maxRecords`.
     private(set) var inputRecords: [InputRecord] = []
@@ -86,16 +82,20 @@ final class GlassesLensSession {
     @ObservationIgnored private let profile: (Species) -> SpeciesProfile?
     /// Pixels for the images the pack names.
     @ObservationIgnored private let image: (LensImage) -> UIImage?
+    /// Told about confirm and save; ending the session on Back is handled here.
+    @ObservationIgnored private let onEffect: (LensEffect) -> Void
+    @ObservationIgnored private var lease: DeviceSessionLease = .own
     @ObservationIgnored private var session: DeviceSession?
     @ObservationIgnored private var display: Display?
     @ObservationIgnored private var inputsCapability: Inputs?
     @ObservationIgnored private var inputTask: Task<Void, Never>?
     @ObservationIgnored private var savedTask: Task<Void, Never>?
-    @ObservationIgnored private var endTask: Task<Void, Never>?
+    /// The teardown in progress, so a second stop (the phone after Back, the run after the glasses) awaits it.
+    @ObservationIgnored private var stopTask: Task<Void, Never>?
     /// Sends run one after another so a burst of gestures leaves the latest card on the lens.
     @ObservationIgnored private var sendTask: Task<Void, Never>?
     @ObservationIgnored private let tokens = ListenerTokenBag()
-    /// Written straight from the toolkit callback, so a failed start can report it without waiting for a hop.
+    /// Written straight from the toolkit callback, so the end of a run can tell a device-side end from a failure.
     @ObservationIgnored private nonisolated let lastSessionError = Mutex<DeviceSessionError?>(nil)
 
     init(
@@ -103,13 +103,15 @@ final class GlassesLensSession {
         connection: GlassesConnection? = nil,
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
         image: @escaping (LensImage) -> UIImage? = { _ in nil },
-        savedDismissDelay: Duration = .seconds(2)
+        savedDismissDelay: Duration = .seconds(2),
+        onEffect: @escaping (LensEffect) -> Void = { _ in }
     ) {
         self.wearables = wearables
         self.connection = connection
         self.savedDismissDelay = savedDismissDelay
         self.profile = profile
         self.image = image
+        self.onEffect = onEffect
         card = LensCardRenderer.render(.listening, stack: CandidateStack(), profile: profile)
     }
 
@@ -120,13 +122,16 @@ final class GlassesLensSession {
 
     // MARK: - Lifecycle
 
-    func start() async {
+    /// Puts the pages on the lens over the session `lease` gives.
+    func start(lease: DeviceSessionLease = .own) async {
         guard !isActive else { return }
         phase = .starting
         errorMessage = nil
+        self.lease = lease
         machine = LensStateMachine()
         savedSightings = []
         inputRecords = []
+        stopTask = nil
         refreshCard()
         lastSessionError.withLock { $0 = nil }
         do {
@@ -142,15 +147,19 @@ final class GlassesLensSession {
 
     /// Stops a running session from the phone. A start in progress cannot be interrupted (the screen hides Stop
     /// meanwhile): `start()` would otherwise carry on after the teardown and report its own failure over this stop.
+    /// A stop already under way (Back, the glasses) is awaited instead and keeps its reason.
     func stop() async {
-        await stop(reason: .phone)
+        beginStop(reason: .phone)
+        await stopTask?.value
     }
 
-    private func stop(reason: StopReason) async {
+    private func beginStop(reason: StopReason) {
         guard phase == .running else { return }
         phase = .stopping
-        await tearDown()
-        phase = .stopped(reason)
+        stopTask = Task { [self] in
+            await tearDown()
+            phase = .stopped(reason)
+        }
     }
 
     // MARK: - Stack
@@ -162,21 +171,16 @@ final class GlassesLensSession {
     }
 
     private func attach() async throws {
-        let selector = AutoDeviceSelector(wearables: wearables) { $0.supportsDisplay() }
-        guard await selector.waitForDevice() else { throw StartError.noDisplayGlasses }
-        let session = try wearables.createSession(deviceSelector: selector)
-        self.session = session
-        session.statePublisher.listen { [weak self] state in
-            Task { @MainActor in self?.sessionDidChange(to: state) }
-        }.store(in: tokens)
-        session.errorPublisher.listen { [weak self] error in
-            self?.lastSessionError.withLock { $0 = error }
-            Task { @MainActor in self?.sessionDidFail(error) }
-        }.store(in: tokens)
-        try session.start()
-        guard await session.waitUntilStarted() else {
-            throw StartError.sessionDidNotStart(lastSessionError.withLock { $0 })
+        let session = try await lease.session(wearables: wearables) { session in
+            session.statePublisher.listen { [weak self] state in
+                Task { @MainActor in self?.sessionDidChange(to: state) }
+            }.store(in: tokens)
+            session.errorPublisher.listen { [weak self] error in
+                self?.lastSessionError.withLock { $0 = error }
+                Task { @MainActor in self?.sessionDidFail(error) }
+            }.store(in: tokens)
         }
+        self.session = session
 
         let display = try session.addDisplay()
         self.display = display
@@ -214,13 +218,13 @@ final class GlassesLensSession {
         }
     }
 
-    /// Releases Inputs, Display and the session, in that order, and every listener token.
+    /// Releases Inputs, Display and (when it is this adapter's own) the session, in that order, and every listener
+    /// token. A shared session is left to its owner.
     private func tearDown() async {
         inputTask?.cancel()
         inputTask = nil
         savedTask?.cancel()
         savedTask = nil
-        endTask = nil
         sendTask?.cancel()
         sendTask = nil
         await tokens.cancelAll()
@@ -230,11 +234,13 @@ final class GlassesLensSession {
         }
         display?.stop()
         display = nil
-        session?.stop()
+        if lease.isOwned {
+            session?.stop()
+            sessionState = .stopped
+        }
         session = nil
         inputsState = .inactive
         displayState = .stopped
-        sessionState = .stopped
     }
 
     // MARK: - Events
@@ -243,28 +249,17 @@ final class GlassesLensSession {
         sessionState = state
         // While starting, `start()` reports the failure; while stopping, the phone asked for it.
         guard state == .stopped, phase == .running else { return }
-        phase = .stopping // Claimed now, so a Stop tapped meanwhile is a no-op rather than a second teardown.
         // The glasses report their own end as an error too ("Session ended by device", DECISIONS.md doff test);
         // the phase already says so, and only a real failure (thermal, battery) is worth a red line.
-        if let error = lastSessionError.withLock({ $0 }), Self.isEndedByDevice(error) {
+        if lastSessionError.withLock({ $0 })?.isEndedByDevice == true {
             errorMessage = nil
         }
-        Task {
-            await tearDown()
-            phase = .stopped(.glasses)
-        }
+        beginStop(reason: .glasses) // Claimed now, so a Stop tapped meanwhile awaits this teardown instead of repeating it.
     }
 
     private func sessionDidFail(_ error: DeviceSessionError) {
         errorMessage = error.description
         connection?.noteSessionFailure(error)
-    }
-
-    private static func isEndedByDevice(_ error: DeviceSessionError) -> Bool {
-        if case .unexpectedError(let description) = error {
-            return description.localizedCaseInsensitiveContains("ended by device")
-        }
-        return false
     }
 
     private func handle(_ event: InputEvent) {
@@ -284,8 +279,11 @@ final class GlassesLensSession {
 
     private func perform(_ effect: LensEffect?) {
         switch effect {
+        case .confirmed(let candidate):
+            onEffect(.confirmed(candidate))
         case .saveSighting(let candidate):
             savedSightings.append(candidate)
+            onEffect(.saveSighting(candidate))
             savedTask?.cancel()
             savedTask = Task { [weak self, savedDismissDelay] in
                 try? await Task.sleep(for: savedDismissDelay)
@@ -294,7 +292,8 @@ final class GlassesLensSession {
                 self.refreshCard()
             }
         case .endSession:
-            endTask = Task { [weak self] in await self?.stop(reason: .back) }
+            beginStop(reason: .back)
+            onEffect(.endSession)
         case nil:
             break
         }

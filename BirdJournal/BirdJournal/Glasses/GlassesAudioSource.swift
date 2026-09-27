@@ -6,7 +6,8 @@ import MWDATCore
 import Synchronization
 
 /// Ambient audio from the glasses, which only arrives in-band on a camera stream (DECISIONS.md, "Toolkit facts").
-/// Video runs at the lowest resolution and frame rate to save battery; frames are not used.
+/// Video runs at the lowest resolution and frame rate to save battery; frames are not used for identification, but
+/// the most recent one is kept so a sighting can store what the wearer was looking at (issue #9).
 ///
 /// Pauses (doff, touchpad tap) are left to the toolkit: the session and stream report `.paused` and resume on
 /// their own, so this source never restarts on a pause.
@@ -14,7 +15,7 @@ import Synchronization
 /// Explicitly main-actor: conforming to the `Sendable` `AudioSource` protocol would otherwise make the class
 /// nonisolated under the target's default main-actor isolation. Single use: create one per listening run.
 @MainActor
-final class GlassesAudioSource: AudioSource {
+final class GlassesAudioSource: FrameKeepingAudioSource {
     /// Session and stream lifecycle, for the spike log.
     enum Event: Sendable {
         case sessionState(DeviceSessionState)
@@ -24,18 +25,10 @@ final class GlassesAudioSource: AudioSource {
     }
 
     enum StartError: LocalizedError {
-        case permissionDenied(Permission)
-        case noDisplayGlasses
-        /// Carries the session error reported before the session stopped, if any.
-        case sessionDidNotStart(DeviceSessionError?)
         case cameraUnavailable
 
         var errorDescription: String? {
             switch self {
-            case .permissionDenied(let permission): "Glasses \(permission) permission was not granted in Meta AI."
-            case .noDisplayGlasses: "No connected display glasses."
-            case .sessionDidNotStart(let error?): "The glasses session did not start: \(error.description)"
-            case .sessionDidNotStart(nil): "The glasses session did not start."
             case .cameraUnavailable: "The glasses camera stream could not be added to the session."
             }
         }
@@ -48,19 +41,24 @@ final class GlassesAudioSource: AudioSource {
     private(set) var streamState: StreamState = .stopped
 
     private let wearables: any WearablesInterface
+    private let lease: DeviceSessionLease
     private let eventContinuation: AsyncStream<Event>.Continuation
     private var session: DeviceSession?
     private var camera: Camera?
     private var chunkContinuation: AsyncStream<AudioChunk>.Continuation?
     private let tokens = ListenerTokenBag()
-    /// Written straight from the toolkit callback, so a failed start can report it without waiting for a hop.
-    private nonisolated let lastSessionError = Mutex<DeviceSessionError?>(nil)
+    /// Written straight from the video frame callback; read on confirm.
+    private nonisolated let latestVideoFrame = Mutex<VideoFrame?>(nil)
 
-    init(wearables: any WearablesInterface = Wearables.shared, sampleRate: AudioSampleRate = .rate48000) {
+    init(wearables: any WearablesInterface = Wearables.shared, lease: DeviceSessionLease = .own, sampleRate: AudioSampleRate = .rate48000) {
         self.wearables = wearables
+        self.lease = lease
         self.sampleRate = sampleRate
         (events, eventContinuation) = AsyncStream.makeStream(of: Event.self)
     }
+
+    /// The most recent video frame the stream delivered, nil until the first one arrives and after `stop()`.
+    var latestFrame: CameraFrame? { latestVideoFrame.withLock { $0 }.map(CameraFrame.init) }
 
     /// The stream configuration: raw video at 360×640 and 2 fps (the toolkit's minimum), PCM mono audio.
     var configuration: StreamConfiguration {
@@ -83,25 +81,18 @@ final class GlassesAudioSource: AudioSource {
     }
 
     private func startStreaming() async throws -> AsyncStream<AudioChunk> {
-        try await ensurePermission(.camera)
-        try await ensurePermission(.microphone)
+        try await wearables.ensurePermission(.camera)
+        try await wearables.ensurePermission(.microphone)
 
-        let selector = AutoDeviceSelector(wearables: wearables) { $0.supportsDisplay() }
-        guard await selector.waitForDevice() else { throw StartError.noDisplayGlasses }
-        let session = try wearables.createSession(deviceSelector: selector)
-        self.session = session
-        session.statePublisher.listen { [weak self] state in
-            Task { @MainActor in self?.handle(.sessionState(state)) }
-        }.store(in: tokens)
-        session.errorPublisher.listen { [weak self] error in
-            self?.lastSessionError.withLock { $0 = error }
-            Task { @MainActor in self?.handle(.sessionError(error)) }
-        }.store(in: tokens)
-
-        try session.start()
-        guard await session.waitUntilStarted() else {
-            throw StartError.sessionDidNotStart(lastSessionError.withLock { $0 })
+        let session = try await lease.session(wearables: wearables) { session in
+            session.statePublisher.listen { [weak self] state in
+                Task { @MainActor in self?.handle(.sessionState(state)) }
+            }.store(in: tokens)
+            session.errorPublisher.listen { [weak self] error in
+                Task { @MainActor in self?.handle(.sessionError(error)) }
+            }.store(in: tokens)
         }
+        self.session = session
 
         guard let camera = try session.addCamera(config: configuration) else {
             throw StartError.cameraUnavailable
@@ -113,6 +104,9 @@ final class GlassesAudioSource: AudioSource {
         camera.stream.audioFramePublisher.listen { frame in
             let chunk = AudioChunk(buffer: frame.pcmBuffer, presentationTime: frame.presentationTimeStamp.seconds)
             if let chunk { continuation.yield(chunk) }
+        }.store(in: tokens)
+        camera.stream.videoFramePublisher.listen { [weak self] frame in
+            self?.latestVideoFrame.withLock { $0 = frame }
         }.store(in: tokens)
         camera.stream.statePublisher.listen { [weak self] state in
             Task { @MainActor in self?.handle(.streamState(state)) }
@@ -129,9 +123,10 @@ final class GlassesAudioSource: AudioSource {
         // Listeners go first so no frame lands after the chunk stream finishes.
         await tokens.cancelAll()
         camera?.stop()
-        session?.stop()
+        if lease.isOwned { session?.stop() }
         camera = nil
         session = nil
+        latestVideoFrame.withLock { $0 = nil }
         chunkContinuation?.finish()
         chunkContinuation = nil
         // `events` stays open: a session error delivered just after a failed start must still reach the reader,
@@ -145,12 +140,5 @@ final class GlassesAudioSource: AudioSource {
         case .sessionError, .streamError: break
         }
         eventContinuation.yield(event)
-    }
-
-    private func ensurePermission(_ permission: Permission) async throws {
-        if try await wearables.checkPermissionStatus(permission) == .granted { return }
-        guard try await wearables.requestPermission(permission) == .granted else {
-            throw StartError.permissionDenied(permission)
-        }
     }
 }

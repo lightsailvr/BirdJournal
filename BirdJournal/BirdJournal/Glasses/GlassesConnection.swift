@@ -82,8 +82,7 @@ final class GlassesConnection {
     func noteSessionFailure(_ error: any Error) {
         let sessionError: DeviceSessionError? = switch error {
         case let error as DeviceSessionError: error
-        case GlassesAudioSource.StartError.sessionDidNotStart(let error): error
-        case GlassesLensSession.StartError.sessionDidNotStart(let error): error
+        case DeviceSessionStartError.sessionDidNotStart(let error): error
         default: nil
         }
         if sessionError == .datAppOnTheGlassesUpdateRequired {

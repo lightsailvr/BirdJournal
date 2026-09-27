@@ -58,12 +58,13 @@ struct LensStateMachineTests {
         Transition(.listening, .tap, .listening),
         Transition(.listening, .back, .listening, .endSession),
 
-        // Photo: left and right page through the stack, down opens the description, up is back, tap confirms.
+        // Photo: left and right page through the stack, down opens the description, up is back, tap confirms (and
+        // tells the adapter to take the camera frame now, so Save stores what the wearer was looking at).
         Transition(.photo(index: 1), .swipeLeft, .photo(index: 2)),
         Transition(.photo(index: 1), .swipeRight, .photo(index: 0)),
         Transition(.photo(index: 1), .swipeUp, .listening),
         Transition(.photo(index: 1), .swipeDown, .description(index: 1)),
-        Transition(.photo(index: 1), .tap, .confirm(index: 1)),
+        Transition(.photo(index: 1), .tap, .confirm(index: 1), .confirmed(Fakes.candidate(Fakes.finch))),
         Transition(.photo(index: 1), .back, .listening),
         Transition(.photo(index: 2), .swipeLeft, .photo(index: 2)),
         Transition(.photo(index: 0), .swipeRight, .listening),

@@ -21,6 +21,10 @@ public struct Species: Sendable, Hashable, Identifiable {
 
 extension Species {
     public static let birds = "Aves"
+
+    /// The BirdNET label, `scientificName_commonName` (e.g. "Sayornis nigricans_Black Phoebe"): the key the album and
+    /// the species packs use for a species.
+    public var birdnetLabel: String { "\(scientificName)_\(commonName)" }
 }
 
 public enum LabelFileError: Error, Equatable {

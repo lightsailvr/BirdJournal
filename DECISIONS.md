@@ -14,11 +14,13 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - Display: one root `FlexBox` per `send`, 600×600 additive display, no scrolling, dims and sleeps on inactivity. Images from bundled `UIImage` work offline.
 - A bundled `UIImage` is laid out at its pixel size on the 600-pixel canvas (measured on the mock in #7, to verify on hardware): a 600 px crop fills the card and pushes the text off it. Lens crops for the photo page (photo beside the name) should be about 260 px wide.
 - Only one third-party app can be registered in Dev Mode at a time. Bundle IDs may not contain `-`.
-- MockDeviceKit cannot inject audio frames; sound-ID tests run on recorded files.
+- One device session per device (`DeviceSessionError.sessionAlreadyExists`). The listening run (#9) starts one session and shares it between the camera stream, Display and Inputs; the single-capability screens and mock tests still start their own.
+- Display 1.0.0 has no wake call. The docs say the display dims after 20 s and sleeps at 25 s without ending the session; the app sends the refreshed Listening card on each new species and whether that wakes a sleeping display is checked on hardware (#9).
+- MockDeviceKit cannot inject audio frames; sound-ID tests run on recorded files. With a still-image feed it delivers no video frames either (#9), so the frame path is tested with a stand-in source and the real stream's frames on hardware.
 
 ## Audio and identification
 - Glasses stream: camera at `.low` resolution, lowest frame rate, audio PCM mono. Sample rate 44.1 kHz (chosen in the phase A spike), resampled to the model rate.
-- Video frames are not used for identification. The most recent frame at confirm time is stored with the sighting; the camera-assist re-ranker is out of scope.
+- Video frames are not used for identification. The most recent frame at confirm time (the tap on the photo page, not Save) is stored with the sighting as a JPEG under Application Support/Frames, referenced by a relative path; the camera-assist re-ranker is out of scope.
 - Model: BirdNET+ V3.0 preview 3.1 (11,560 species, 32 kHz input, CC BY-SA 4.0 weights, "Powered by BirdNET" attribution). Pinned to the exact Zenodo file. Engine sits behind a protocol so v2.4 can be swapped in.
 - Geo prior: BirdNET geomodel v3.0.4 (Apache-2.0), raw lat/lon/week input, used as a pre-filter with the reference threshold 0.03. No GBIF/H3 tables in v1.
 - Runtime: ONNX Runtime via the official Swift package (`microsoft/onnxruntime-swift-package-manager`), consumed through the fork `lightsailvr/onnxruntime-swift-package-manager` so Xcode Cloud can fetch it. Core ML conversion is a later optimization, not a dependency.
@@ -69,3 +71,9 @@ Run: glasses source, 44.1 kHz mono, `.low` at 2 fps, iPhone 17 Pro locked in a p
 - The first audio chunk after `streaming` was empty (0 samples); consumers must tolerate empty chunks.
 - Doff does **not** pause (`spike-20260926-195716.log`): 12 s after taking the glasses off, the device ended the session (`session_error "Session ended by device"`, session and stream `stopped`) and the link dropped. After putting them back on, the glasses were `donned` and `connected` within about 35 s, but the session stayed stopped and no audio returned. The app must start a new session itself once the glasses are worn and connected again; waiting for `.paused` → `.started` never happens. Touchpad-tap pause is still untested.
 - Verdict: **GO** for the audio path: continuous, survives a locked phone, and costs about 12 % glasses battery per 20 minutes. Follow-up needed: automatic session restart after doff/don (the listening session must survive taking the glasses off).
+
+## Phase C end to end (issue #9) — built 2026-09-27, hardware run pending
+- "Listen with the glasses" on the phone runs the whole loop: one device session, camera stream at 44.1 kHz mono / `.low` / 2 fps through the engine, the lens pages over the same session, tap to confirm, Save to SwiftData. Start order: session, permissions, lens (so "Listening" shows while the models load), then the stream and engine.
+- Confirming a species already saved in the run updates that sighting (latest confidence, new frame if there is one) instead of adding a second, so the album stays clean (spec user story 33). A Session record and the doff/don pause are not part of this issue.
+- Ending: Stop on the phone, Back on the listening page (once hardware delivers Back), or the glasses ending the session (two-finger tap, doff, link loss) all tear down lens, engine, stream and session the same way. Doff/don restart is still the open follow-up from phase A.
+- Verified on the mock: audio (stand-in source) to lens to a saved Sighting with species, time, location, confidence and source; the frame stored is the one from confirm time. To verify on the glasses: card within 6 s of a bird call, confirm and Save with the phone in a pocket, a real camera frame in the sighting, and the Listening page waking the display on a new species.

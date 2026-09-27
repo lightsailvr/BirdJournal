@@ -14,6 +14,7 @@ struct ContentView: View {
     private let planner = WindowPlanner()
 
     enum Screen: Hashable {
+        case glassesListening
         case phoneListening
         case audioSpike
         case lens
@@ -25,6 +26,7 @@ struct ContentView: View {
         NavigationStack(path: $path) {
             List {
                 Section("Listen") {
+                    NavigationLink("Listen with the glasses", value: Screen.glassesListening)
                     NavigationLink("Listen with the phone", value: Screen.phoneListening)
                 }
 
@@ -49,6 +51,7 @@ struct ContentView: View {
             .navigationTitle("BirdJournal")
             .navigationDestination(for: Screen.self) { screen in
                 switch screen {
+                case .glassesListening: GlassesListeningView()
                 case .phoneListening: PhoneListeningView()
                 case .audioSpike: SpikeView()
                 case .lens: LensSessionView()
@@ -101,7 +104,7 @@ private struct AutoMockLens: ViewModifier {
 /// Launch with `-autoPhoneListening YES` (or a WAV path, see `BirdJournalApp`) to open the phone listening screen
 /// and start a session, for screenshots and simulator checks of the location and model paths.
 private struct AutoPhoneListening: ViewModifier {
-    @Environment(PhoneListeningSession.self) private var session
+    @Environment(ListeningSession.self) private var session
     @Binding var path: [ContentView.Screen]
 
     func body(content: Content) -> some View {

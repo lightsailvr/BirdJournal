@@ -1,3 +1,4 @@
+import Album
 import Foundation
 import Identification
 import Synchronization
@@ -6,16 +7,16 @@ import Testing
 
 // Issue #6: listening on the phone with no glasses. Audio, location and the models are doubles at their seams
 // (`AudioSource`, `LocationProvider`, `BirdModel` + `SpeciesOccurrenceModel`); the session under test is real.
-@Suite("Phone listening session")
-struct PhoneListeningSessionTests {
-    static let losAngeles = LocationFix.fix(latitude: 34.05, longitude: -118.25, at: Date(timeIntervalSince1970: 1_790_000_000))
-    static let newYork = LocationFix.fix(latitude: 40.7, longitude: -74, at: Date(timeIntervalSince1970: 1_790_000_600))
+@Suite("Listening session")
+struct ListeningSessionTests {
+    static let losAngeles = LocationFix.fix(latitude: 34.05, longitude: -118.25, accuracy: 12, at: Date(timeIntervalSince1970: 1_790_000_000))
+    static let newYork = LocationFix.fix(latitude: 40.7, longitude: -74, accuracy: 30, at: Date(timeIntervalSince1970: 1_790_000_600))
 
     @Test("location denied: the screen shows the no-location state, the prior is never asked, and candidates still appear")
     func deniedLocationStillIdentifies() async throws {
         let prior = SpyOccurrence()
         let source = ManualAudioSource()
-        let session = PhoneListeningSession(
+        let session = ListeningSession(
             loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
             makeSource: { source },
             location: ScriptedLocationProvider([.denied])
@@ -24,6 +25,7 @@ struct PhoneListeningSessionTests {
         await session.start()
         #expect(session.phase == .listening)
         #expect(session.locationState == .settled(.denied))
+        #expect(session.coordinate == nil)
 
         source.feed(seconds: 4.5)  // windows at 0 and 1.5 s: finch and jay heard twice; no prior rules the jay out
         try await waitUntil("rows appear") { session.list.rows.count == 2 }
@@ -41,7 +43,7 @@ struct PhoneListeningSessionTests {
         let prior = SpyOccurrence()
         let source = ManualAudioSource()
         let location = ScriptedLocationProvider([Self.losAngeles, Self.newYork])
-        let session = PhoneListeningSession(
+        let session = ListeningSession(
             loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
             makeSource: { source },
             location: location,
@@ -50,6 +52,7 @@ struct PhoneListeningSessionTests {
 
         await session.start()
         #expect(session.locationState == .settled(Self.losAngeles))
+        #expect(session.coordinate == Coordinate(latitude: 34.05, longitude: -118.25, accuracy: 12))
         #expect(location.requests == 1)
 
         try await waitUntil("the location refreshes") { location.requests >= 2 }
@@ -61,9 +64,27 @@ struct PhoneListeningSessionTests {
         await session.stop()
     }
 
+    @Test("every new stack is handed on, so the lens can follow it (issue #9)")
+    func stacksAreHandedOn() async throws {
+        let source = ManualAudioSource()
+        let handed = Mutex<[Int]>([])
+        let session = ListeningSession(
+            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
+            location: ScriptedLocationProvider([.denied]),
+            onStack: { stack in handed.withLock { $0.append(stack.count) } }
+        )
+
+        await session.start(source: source)
+        source.feed(seconds: 4.5)
+        try await waitUntil("the stack is handed on") { handed.withLock { $0 }.last == 2 }
+        #expect(handed.withLock { $0 } == [2])
+
+        await session.stop()
+    }
+
     @Test("a source that cannot start leaves the session idle with the error shown")
     func sourceFailureIsReported() async {
-        let session = PhoneListeningSession(
+        let session = ListeningSession(
             loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
             makeSource: { FailingAudioSource() },
             location: ScriptedLocationProvider([Self.losAngeles])
@@ -109,10 +130,12 @@ nonisolated final class SpyOccurrence: SpeciesOccurrenceModel {
     }
 }
 
-/// Silence fed by the test at the model rate, so windows fall exactly where expected.
+/// Silence fed by the test at the model rate, so windows fall exactly where expected. Stands in for the glasses
+/// stream in the run tests (issue #9), with whatever camera frame the test sets.
 @MainActor
-final class ManualAudioSource: AudioSource {
+final class ManualAudioSource: FrameKeepingAudioSource {
     let sampleRate = 32_000
+    var latestFrame: CameraFrame?
     private(set) var isStopped = false
     private var fedSeconds = 0.0
     private let stream: AsyncStream<AudioChunk>
