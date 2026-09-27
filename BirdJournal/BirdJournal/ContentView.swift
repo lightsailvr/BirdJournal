@@ -5,7 +5,7 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// Placeholder phone screen until phase D shows one fact from each module.
+/// Placeholder phone screen until phase D: glasses status, the phase A audio spike, and one fact per module.
 struct ContentView: View {
     @Query private var sightings: [Sighting]
 
@@ -15,6 +15,12 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             List {
+                GlassesSection()
+
+                Section("Phase A") {
+                    NavigationLink("Audio spike") { SpikeView() }
+                }
+
                 Section("Modules") {
                     LabeledContent("Identification", value: "\(planner.sampleRate) Hz, \(planner.samplesPerWindow) samples per window")
                     LabeledContent("LensSession", value: String(describing: navigation.page))
@@ -25,9 +31,4 @@ struct ContentView: View {
             .navigationTitle("BirdJournal")
         }
     }
-}
-
-#Preview {
-    ContentView()
-        .modelContainer(try! AlbumSchema.makeContainer(inMemory: true))
 }

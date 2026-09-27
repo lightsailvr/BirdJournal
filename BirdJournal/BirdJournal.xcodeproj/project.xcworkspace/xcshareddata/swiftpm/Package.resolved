@@ -1,10 +1,10 @@
 {
-  "originHash" : "387c8b08bf3497662f985ca06c977fb6b65f9676d93035d36c8693f4d9109428",
+  "originHash" : "f2354c4dc1895759c1e9431a4b592739e7c39ef45bdc963a7b073812646257c1",
   "pins" : [
     {
       "identity" : "meta-wearables-dat-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/facebook/meta-wearables-dat-ios",
+      "location" : "https://github.com/lightsailvr/meta-wearables-dat-ios",
       "state" : {
         "revision" : "1f38beecba83c4c8b5e343540f9cd615323ab19a",
         "version" : "1.0.0"
@@ -13,7 +13,7 @@
     {
       "identity" : "onnxruntime-swift-package-manager",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/microsoft/onnxruntime-swift-package-manager",
+      "location" : "https://github.com/lightsailvr/onnxruntime-swift-package-manager",
       "state" : {
         "revision" : "b7fb7f7dea8a2469e6335d95a61b8f36d0dc83b2",
         "version" : "1.24.2"
