@@ -31,15 +31,13 @@ struct BirdJournalApp: App {
         _glassesListening = State(initialValue: Self.makeGlassesListeningSession(connection: connection, album: album))
     }
 
-    /// The album on disk. A store that cannot be opened is not worth crashing the field app over: sightings then go
-    /// to memory for the run and the error is logged.
+    /// The album on disk. Failing to open it is a broken install, not a field condition, so it traps like the
+    /// `.modelContainer(for:)` modifier it replaces did, rather than silently saving sightings to memory.
     private static func makeAlbum() -> ModelContainer {
         do {
             return try AlbumSchema.makeContainer()
         } catch {
-            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "album")
-                .error("album store unavailable, using memory: \(error.localizedDescription)")
-            return try! AlbumSchema.makeContainer(inMemory: true) // In-memory stores do not fail to open.
+            fatalError("album store unavailable: \(error)")
         }
     }
 
@@ -51,7 +49,15 @@ struct BirdJournalApp: App {
 
     /// The whole loop on the glasses (issue #9), writing sightings to the album and frames beside it.
     private static func makeGlassesListeningSession(connection: GlassesConnection, album: ModelContainer) -> GlassesListeningSession {
-        let frames = (try? FrameStore.applicationSupport()) ?? FrameStore(directory: URL.temporaryDirectory.appending(path: "Frames"))
+        let frames: FrameStore
+        do {
+            frames = try FrameStore.applicationSupport()
+        } catch {
+            // iOS purges tmp, so frames saved there can vanish; the sighting keeps the path and the album shows no image.
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "album")
+                .error("Application Support unavailable, frames go to tmp: \(error.localizedDescription)")
+            frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "Frames", directoryHint: .isDirectory))
+        }
         return GlassesListeningSession(
             connection: connection,
             recorder: SightingRecorder(container: album, frames: frames),

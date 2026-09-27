@@ -251,7 +251,7 @@ final class GlassesLensSession {
         guard state == .stopped, phase == .running else { return }
         // The glasses report their own end as an error too ("Session ended by device", DECISIONS.md doff test);
         // the phase already says so, and only a real failure (thermal, battery) is worth a red line.
-        if let error = lastSessionError.withLock({ $0 }), Self.isEndedByDevice(error) {
+        if lastSessionError.withLock({ $0 })?.isEndedByDevice == true {
             errorMessage = nil
         }
         beginStop(reason: .glasses) // Claimed now, so a Stop tapped meanwhile awaits this teardown instead of repeating it.
@@ -260,13 +260,6 @@ final class GlassesLensSession {
     private func sessionDidFail(_ error: DeviceSessionError) {
         errorMessage = error.description
         connection?.noteSessionFailure(error)
-    }
-
-    private static func isEndedByDevice(_ error: DeviceSessionError) -> Bool {
-        if case .unexpectedError(let description) = error {
-            return description.localizedCaseInsensitiveContains("ended by device")
-        }
-        return false
     }
 
     private func handle(_ event: InputEvent) {

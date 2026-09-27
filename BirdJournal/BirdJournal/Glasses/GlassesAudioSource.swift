@@ -4,28 +4,6 @@ import Identification
 import MWDATCamera
 import MWDATCore
 import Synchronization
-import UIKit
-
-/// A camera frame kept for a sighting, encoded when the sighting is written.
-struct CameraFrame: Sendable {
-    /// The frame as a JPEG, or nil if it cannot be decoded. Safe to call off the main actor.
-    let jpegData: @Sendable () -> Data?
-
-    init(jpegData: @escaping @Sendable () -> Data?) {
-        self.jpegData = jpegData
-    }
-
-    init(_ frame: VideoFrame) {
-        self.init { frame.makeUIImage()?.jpegData(compressionQuality: 0.85) }
-    }
-}
-
-/// An audio source that also keeps its camera's most recent frame: the glasses stream. The listening run stores the
-/// frame the wearer confirmed on with the sighting; sources without a camera keep none.
-@MainActor
-protocol FrameKeepingAudioSource: AudioSource {
-    var latestFrame: CameraFrame? { get }
-}
 
 /// Ambient audio from the glasses, which only arrives in-band on a camera stream (DECISIONS.md, "Toolkit facts").
 /// Video runs at the lowest resolution and frame rate to save battery; frames are not used for identification, but
@@ -47,12 +25,10 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
     }
 
     enum StartError: LocalizedError {
-        case permissionDenied(Permission)
         case cameraUnavailable
 
         var errorDescription: String? {
             switch self {
-            case .permissionDenied(let permission): "Glasses \(permission) permission was not granted in Meta AI."
             case .cameraUnavailable: "The glasses camera stream could not be added to the session."
             }
         }
@@ -105,8 +81,8 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
     }
 
     private func startStreaming() async throws -> AsyncStream<AudioChunk> {
-        try await ensurePermission(.camera)
-        try await ensurePermission(.microphone)
+        try await wearables.ensurePermission(.camera)
+        try await wearables.ensurePermission(.microphone)
 
         let session = try await lease.session(wearables: wearables) { session in
             session.statePublisher.listen { [weak self] state in
@@ -164,12 +140,5 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
         case .sessionError, .streamError: break
         }
         eventContinuation.yield(event)
-    }
-
-    private func ensurePermission(_ permission: Permission) async throws {
-        if try await wearables.checkPermissionStatus(permission) == .granted { return }
-        guard try await wearables.requestPermission(permission) == .granted else {
-            throw StartError.permissionDenied(permission)
-        }
     }
 }

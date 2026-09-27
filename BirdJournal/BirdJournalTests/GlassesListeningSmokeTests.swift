@@ -70,6 +70,17 @@ extension MockDeviceKitTests {
                 #expect(sighting.confirmedAt >= before && sighting.confirmedAt <= .now)
                 #expect(run.saved.first?.hasFrame == false)
 
+                // Confirming the same species again updates its sighting instead of adding a second (story 33).
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .photo(index: 0) }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .confirm(index: 0) }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
+                try await Task.sleep(for: .milliseconds(300))
+                #expect(run.saved.count == 1)
+                #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 1)
+
                 // Back on the root ends the whole run: lens, engine, source and session.
                 input.navUp()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.page == .photo(index: 0) }

@@ -55,6 +55,38 @@ enum DeviceSessionLease {
     }
 }
 
+extension WearablesInterface {
+    /// Grants `permission` through Meta AI if it is not granted already. Checked by the run before the lens starts and
+    /// again by the stream adapter when it runs on its own; a granted permission returns at once.
+    func ensurePermission(_ permission: Permission) async throws {
+        if try await checkPermissionStatus(permission) == .granted { return }
+        guard try await requestPermission(permission) == .granted else {
+            throw GlassesPermissionError.denied(permission)
+        }
+    }
+}
+
+enum GlassesPermissionError: LocalizedError {
+    case denied(Permission)
+
+    var errorDescription: String? {
+        switch self {
+        case .denied(let permission): "Glasses \(permission) permission was not granted in Meta AI."
+        }
+    }
+}
+
+extension DeviceSessionError {
+    /// The glasses report their own end (two-finger tap, doff) as an error too ("Session ended by device",
+    /// DECISIONS.md doff test); the session state already says so, and only a real failure is worth a red line.
+    var isEndedByDevice: Bool {
+        if case .unexpectedError(let description) = self {
+            return description.localizedCaseInsensitiveContains("ended by device")
+        }
+        return false
+    }
+}
+
 enum DeviceSessionStartError: LocalizedError {
     case noDisplayGlasses
     /// Carries the session error reported before the session stopped, if any.

@@ -15,6 +15,12 @@ struct AcousticLabelsTests {
         ])
     }
 
+    @Test("the BirdNET label joins the scientific and common names, as the album and packs key species")
+    func birdnetLabel() {
+        let phoebe = Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves")
+        #expect(phoebe.birdnetLabel == "Sayornis nigricans_Black Phoebe")
+    }
+
     @Test("a row whose idx does not match its position is rejected, since idx is the model output row")
     func rejectsIndexGap() {
         let csv = "idx;id;sci_name;com_name;class;order\n0;3;A a;A;Aves;X\n2;5;B b;B;Aves;X\n"

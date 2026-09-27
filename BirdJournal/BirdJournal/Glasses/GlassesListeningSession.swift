@@ -34,24 +34,30 @@ final class GlassesListeningSession {
     }
 
     enum StartError: LocalizedError {
-        case permissionDenied(Permission)
         case listeningDidNotStart(String)
         case lensDidNotStart(String)
 
         var errorDescription: String? {
             switch self {
-            case .permissionDenied(let permission): "Glasses \(permission) permission was not granted in Meta AI."
             case .listeningDidNotStart(let message): message
             case .lensDidNotStart(let message): message
             }
         }
     }
 
-    /// One sighting written this run, as the phone lists it.
+    /// One sighting written this run, as the phone lists it. A species saved again in the same run updates its
+    /// sighting rather than adding a second (spec user story 33).
     struct SavedSighting: Identifiable, Equatable {
         let id: PersistentIdentifier
+        var candidate: Candidate
+        var hasFrame: Bool
+    }
+
+    /// A tap on a photo page: the frame taken then, encoding off the main actor while the wearer reads the confirm page.
+    private struct PendingConfirmation {
         let candidate: Candidate
-        let hasFrame: Bool
+        let at: Date
+        let frame: Task<Data?, Never>
     }
 
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "glasses-listening")
@@ -59,7 +65,7 @@ final class GlassesListeningSession {
     private(set) var phase: Phase = .idle
     private(set) var sessionState: DeviceSessionState = .idle
     private(set) var streamState: StreamState = .stopped
-    /// Sightings written this run, newest last.
+    /// Sightings written this run, in first-save order.
     private(set) var saved: [SavedSighting] = []
     var errorMessage: String?
 
@@ -77,8 +83,9 @@ final class GlassesListeningSession {
     @ObservationIgnored private var sourceEventTask: Task<Void, Never>?
     @ObservationIgnored private var stopTask: Task<Void, Never>?
     @ObservationIgnored private let tokens = ListenerTokenBag()
-    /// The frame and time of the last confirm, encoded off the main actor while the wearer reads the confirm page.
-    @ObservationIgnored private var confirmed: (candidate: Candidate, at: Date, frame: Task<Data?, Never>)?
+    @ObservationIgnored private var confirmed: PendingConfirmation?
+    /// The album records behind `saved`, by species, so a repeat save updates instead of inserting.
+    @ObservationIgnored private var sightings: [Species: Sighting] = [:]
 
     init(
         wearables: any WearablesInterface = Wearables.shared,
@@ -129,6 +136,7 @@ final class GlassesListeningSession {
         phase = .starting
         errorMessage = nil
         saved = []
+        sightings = [:]
         confirmed = nil
         stopTask = nil
         do {
@@ -142,8 +150,8 @@ final class GlassesListeningSession {
             }
             self.session = session
             sessionState = session.state
-            try await ensurePermission(.camera)
-            try await ensurePermission(.microphone)
+            try await wearables.ensurePermission(.camera)
+            try await wearables.ensurePermission(.microphone)
 
             await lens.start(lease: .shared(session))
             guard lens.phase == .running else {
@@ -203,13 +211,6 @@ final class GlassesListeningSession {
         confirmed = nil
     }
 
-    private func ensurePermission(_ permission: Permission) async throws {
-        if try await wearables.checkPermissionStatus(permission) == .granted { return }
-        guard try await wearables.requestPermission(permission) == .granted else {
-            throw StartError.permissionDenied(permission)
-        }
-    }
-
     // MARK: - Events
 
     private func sessionDidChange(to state: DeviceSessionState) {
@@ -220,11 +221,7 @@ final class GlassesListeningSession {
 
     private func sessionDidFail(_ error: DeviceSessionError) {
         connection?.noteSessionFailure(error)
-        // The glasses report their own end as an error too ("Session ended by device"); the phase says so.
-        if case .unexpectedError(let description) = error, description.localizedCaseInsensitiveContains("ended by device") {
-            return
-        }
-        errorMessage = error.description
+        if !error.isEndedByDevice { errorMessage = error.description }
     }
 
     private func handle(_ effect: LensEffect) {
@@ -232,7 +229,7 @@ final class GlassesListeningSession {
         case .confirmed(let candidate):
             // The frame is taken now, before Save, so the sighting shows what the wearer was looking at.
             let frame = source?.latestFrame
-            confirmed = (candidate, .now, Task.detached(priority: .userInitiated) { frame?.jpegData() })
+            confirmed = PendingConfirmation(candidate: candidate, at: .now, frame: Task.detached(priority: .userInitiated) { frame?.jpegData() })
         case .saveSighting(let candidate):
             Task { await save(candidate) }
         case .endSession:
@@ -245,14 +242,21 @@ final class GlassesListeningSession {
         confirmed = nil
         let frame = await pending?.frame.value
         do {
-            let sighting = try recorder.record(
-                candidate,
-                confirmedAt: pending?.at ?? .now,
-                location: listening.coordinate,
-                frame: frame,
-                source: .glasses
-            )
-            saved.append(SavedSighting(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
+            if let existing = sightings[candidate.species], let position = saved.firstIndex(where: { $0.id == existing.persistentModelID }) {
+                try recorder.update(existing, with: candidate, frame: frame)
+                saved[position].candidate = candidate
+                if frame != nil { saved[position].hasFrame = true }
+            } else {
+                let sighting = try recorder.record(
+                    candidate,
+                    confirmedAt: pending?.at ?? .now,
+                    location: listening.coordinate,
+                    frame: frame,
+                    source: .glasses
+                )
+                sightings[candidate.species] = sighting
+                saved.append(SavedSighting(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
+            }
         } catch {
             errorMessage = "Could not save the sighting: \(error.localizedDescription)"
             Self.logger.error("save failed: \(error.localizedDescription, privacy: .public)")

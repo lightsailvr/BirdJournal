@@ -24,7 +24,7 @@ final class SightingRecorder {
         source: SightingSource
     ) throws -> Sighting {
         let sighting = Sighting(
-            speciesID: Self.speciesID(for: candidate.species),
+            speciesID: candidate.species.birdnetLabel,
             confirmedAt: confirmedAt,
             location: location,
             soundConfidence: Double(candidate.score),
@@ -37,8 +37,15 @@ final class SightingRecorder {
         return sighting
     }
 
-    /// The BirdNET label the album keys species by, e.g. "Sayornis nigricans_Black Phoebe".
-    static func speciesID(for species: Species) -> String {
-        "\(species.scientificName)_\(species.commonName)"
+    /// A second confirmation of the same species in one run: the sighting keeps its first time and place, takes the
+    /// latest confidence, and swaps in the new frame when there is one.
+    func update(_ sighting: Sighting, with candidate: Candidate, frame: Data?) throws {
+        sighting.soundConfidence = Double(candidate.score)
+        if let frame {
+            let previous = sighting.frameImagePath
+            sighting.frameImagePath = try frames.write(jpeg: frame)
+            if let previous { try? FileManager.default.removeItem(at: frames.url(for: previous)) }
+        }
+        try container.mainContext.save()
     }
 }

@@ -16,10 +16,11 @@ public struct FrameStore: Sendable {
         return FrameStore(directory: base.appending(path: "Frames", directoryHint: .isDirectory))
     }
 
-    /// Writes one JPEG and returns the path to store on the sighting. The folder is created on first use.
-    public func write(jpeg data: Data, name: String = UUID().uuidString) throws -> String {
+    /// Writes one JPEG under a fresh name and returns the path to store on the sighting. The folder is created on
+    /// first use.
+    public func write(jpeg data: Data) throws -> String {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let path = "\(name).jpg"
+        let path = "\(UUID().uuidString).jpg"
         try data.write(to: url(for: path), options: .atomic)
         return path
     }
