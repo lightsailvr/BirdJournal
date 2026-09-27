@@ -16,14 +16,14 @@ struct DisplayCardBuilderTests {
 
     @Test("every page builds one root FlexBox, saved or not", arguments: pages, [Set<Int>(), [0, 4]])
     func oneRoot(page: LensPage, saved: Set<Int>) {
-        let card = LensCardRenderer.render(page, stack: Self.stack, saved: saved, profile: FakeLensStack.profile(for:))
+        let card = LensCardRenderer.render(page, stack: Self.stack, selection: 4, saved: saved, profile: FakeLensStack.profile(for:))
         let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: FakeLensStack.image(for:)) { _ in }
         _ = root
     }
 
     @Test("a photo the app cannot load still builds a card")
     func missingPhoto() {
-        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, saved: [], profile: FakeLensStack.profile(for:))
+        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, selection: 0, saved: [], profile: FakeLensStack.profile(for:))
         #expect(card.photo != nil)
         let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: { _ in nil }) { _ in }
         _ = root

@@ -8,7 +8,8 @@ import UIKit
 /// Maps a `LensCard` one to one onto the single root `FlexBox` a Display send takes (DECISIONS.md, "Toolkit facts"):
 /// one top-aligned column that the glasses scroll vertically (issue #24). Images are resolved by the caller: the
 /// pure module names them, the pack (or the fake stack) holds the pixels. A photo the caller cannot load is left
-/// out. Taps on the card's button and list rows are delivered to `onAction`.
+/// out. Taps on the card's button are delivered to `onAction`; list rows are not tappable, the app moves their
+/// selection itself from Inputs.
 enum DisplayCardBuilder {
     /// Padding around the card on the 600-pixel canvas; the pack's lens crops are cut to the width this leaves.
     static let padding: CGFloat = 24
@@ -75,11 +76,15 @@ enum DisplayCardBuilder {
         }
     }
 
-    /// One tappable pill on the species list: name, match rate, and icons for a photo card and a saved sighting.
+    /// One row of the species list: a caret and a card background mark the selected row; name, match rate, and
+    /// icons for a photo card and a saved sighting.
     private static func row(_ row: LensListRow, onAction: @escaping @Sendable (LensAction) -> Void) -> FlexBox {
         FlexBox(direction: .row, spacing: 12, crossAlignment: .center) {
+            if row.isSelected {
+                Icon(name: .caretRight, style: .filled)
+            }
             FlexBox(direction: .row) {
-                Text(row.commonName, style: .body)
+                Text(row.commonName, style: .body, color: row.isSelected ? .primary : .secondary)
             }
             .flexGrow(1)
             .flexShrink(1)
@@ -92,7 +97,6 @@ enum DisplayCardBuilder {
             }
         }
         .padding(EdgeInsets(top: 8, bottom: 8, leading: 12, trailing: 12))
-        .background(.card)
-        .onTap { onAction(.open(index: row.index)) }
+        .background(row.isSelected ? .card : .none)
     }
 }

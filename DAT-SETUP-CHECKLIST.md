@@ -80,13 +80,16 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 6. [ ] End-to-end run with Dev Mode (#9): "Listen with the glasses", pocket the phone, hear a bird, see the card within 6 s,
    tap "This is my bird", then check the Album count on the phone and that the sighting's frame file exists.
 7. [ ] Lens UI probes (#24), on the glasses with the Neural Band, from the "Lens" screen with the fake stack:
-   - [x] Scrolling: a tall card scrolls natively with swipe up/down, and the middle-finger tap delivers Back (2026-09-27).
-     Still note whether the phone's input list records Nav up/down while the card scrolls (the app ignores them either way).
-     The mock preview does not scroll (it anchors overflow at the bottom), so check the second screenful on the glasses.
-   - Photo: does the 552 × 368 crop fill the card's width from the top with the name readable without scrolling?
-   - Focus and Select: on the species list, does Nav move focus between the rows, and does Select open the focused
-     row (a `FlexBox.onTap` click), arrive as an Inputs `select` (logged on the phone), or both? On a card, does Select
-     click "This is my bird", arrive as an Inputs `select`, or both? Either way one sighting must be written.
+   - [x] Scrolling: a tall card scrolls natively with swipe up/down (2026-09-27). The mock preview does not scroll (it
+     anchors overflow at the bottom), so check the second screenful on the glasses.
+   - [x] Back: the middle-finger tap ends the session from any card; no Back event reaches the app (2026-09-27, and the
+     Inputs docs' "Current limitations"). Swipe right on a card is the app's way back to the list.
+   - [x] List focus: swipe down did not move the glasses' focus between tappable rows while Inputs was attached
+     (2026-09-27); the app now moves the selection itself and re-sends the list.
+   - [ ] Photo: with the photo first on the card, is it fully on the first screenful? If it is still cut at the bottom,
+     shrink the lens crop height in `packbuilder/src/packbuilder/crops.py` (`LENS_HEIGHT`) and rebuild the pack.
+   - Select on a card: does it click "This is my bird" (a Display click), arrive as an Inputs `select` (logged on the
+     phone), or both? Either way one sighting must be written.
    - Record the answers in DECISIONS.md, "Lens UI".
 
 ## Facts that change the spec (see grill questions)

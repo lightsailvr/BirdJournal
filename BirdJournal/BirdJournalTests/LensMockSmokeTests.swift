@@ -8,11 +8,12 @@ import Testing
 @testable import BirdJournal
 
 // Lens pages on Mock Device Kit (issues #7 and #24): session started, Display and Inputs attached, the fake stack
-// fed in, the list and every species card reached with injected nav, select and back, and a clean stop.
+// fed in, the list driven as a menu and every species card reached with injected nav, select and back, and a clean
+// stop.
 extension MockDeviceKitTests {
     @Suite("Lens session")
     struct Lens {
-        @Test("injected nav, select and back walk the list and the cards, and a new species never moves the page")
+        @Test("injected nav, select and back drive the list and the cards, and a new species never moves the page")
         func navigatesAllPages() async throws {
             try await withRunningLens { lens, glasses in
                 #expect(lens.page == .list)
@@ -43,7 +44,7 @@ extension MockDeviceKitTests {
                 #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[0]])
                 #expect(lens.page == .species(index: 0))
                 #expect(lens.card.elements.last == .saved("Saved ✓"))
-                #expect(lens.card.elements.first == .status("2 species · 1 of 2 · Saved"))
+                #expect(lens.card.elements.contains(.status("2 species · 1 of 2 · Saved")))
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 5 }
                 #expect(lens.savedSightings.count == 1)
@@ -59,23 +60,27 @@ extension MockDeviceKitTests {
                 lens.update(with: FakeLensStack.stack(count: 3))
                 #expect(lens.page == .species(index: 1))
                 #expect(lens.stack.count == 3)
-                #expect(lens.card.elements.first == .status("3 species · 2 of 3"))
+                #expect(lens.card.elements.contains(.status("3 species · 2 of 3")))
                 #expect(lens.card.photo == LensImage(id: "haemorhous-mexicanus"))
 
-                // Right stops at the first card; Back (the middle-finger tap) returns to the list.
+                // Right is back to the list, with the card's species selected; down moves the selection; a tap opens it.
                 input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
-                input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 9 }
-                #expect(lens.page == .species(index: 0))
-                input.back()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
                 #expect(lens.card.elements[0] == .heading("3 species heard"))
                 guard case .list(let rows) = lens.card.elements[2] else { Issue.record("no rows on the list"); return }
+                #expect(rows.map(\.isSelected) == [false, true, false])
                 #expect(rows.map(\.isSaved) == [true, false, false])
                 #expect(rows.map(\.hasPhoto) == [true, true, true])
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.machine.selection == 2 }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 2) }
+                #expect(lens.card.screenfuls[0].contains(.title("California Towhee", detail: "74% match")))
 
-                // Back again, on the root, ends the session.
+                // Back (the mock delivers it; real glasses end the session themselves) returns to the list, then ends
+                // the session from the root.
+                input.back()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
                 input.back()
                 try await waitUntil(timeout: .seconds(2)) { lens.phase == .stopped(.back) }
                 #expect(lens.inputsState == .inactive)

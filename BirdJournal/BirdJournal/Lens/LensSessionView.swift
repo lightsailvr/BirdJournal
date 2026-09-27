@@ -36,7 +36,7 @@ struct LensSessionView: View {
                     Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                 }
             } footer: {
-                Text("Swipe left and right between species, up and down to scroll a card, tap for \"This is my bird\". The middle-finger tap goes back to the list and, from the list, ends the session.")
+                Text("On the list, swipe down and up to choose a species and tap to open it. On a card, swipe up and down to scroll, tap for \"This is my bird\", swipe left for the next species and right for the list. The middle-finger tap ends the session on real glasses.")
             }
 
             #if DEBUG
@@ -154,6 +154,7 @@ private struct LensElementView: View {
             case .list(let rows):
                 ForEach(rows, id: \.index) { row in
                     HStack {
+                        Image(systemName: row.isSelected ? "chevron.right" : "circle").font(.caption2).foregroundStyle(row.isSelected ? .primary : .tertiary)
                         Text(row.commonName)
                         Text(row.confidence).font(.caption).foregroundStyle(.secondary)
                         if row.hasPhoto { Image(systemName: "photo").font(.caption) }

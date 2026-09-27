@@ -112,7 +112,7 @@ final class GlassesLensSession {
         self.image = image
         self.saveDebounce = saveDebounce
         self.onEffect = onEffect
-        card = LensCardRenderer.render(.list, stack: CandidateStack(), saved: [], profile: profile)
+        card = LensCardRenderer.render(.list, stack: CandidateStack(), selection: 0, saved: [], profile: profile)
     }
 
     var page: LensPage { machine.page }
@@ -270,7 +270,7 @@ final class GlassesLensSession {
         perform(machine.apply(gesture))
     }
 
-    /// A tap on a card element (the Save button, a list row), delivered by Display rather than Inputs.
+    /// A tap on a card element (the Save button), delivered by Display rather than Inputs.
     private func tapped(_ action: LensAction) {
         guard phase == .running else { return }
         perform(machine.press(action))
@@ -302,7 +302,7 @@ final class GlassesLensSession {
     /// Re-renders the current page and sends it if it changed. Every page shows the stack (count, position, score),
     /// so a stack update on any page can change the card without changing the page.
     private func refreshCard() {
-        let next = LensCardRenderer.render(machine.page, stack: machine.stack, saved: machine.savedIndices, profile: profile)
+        let next = LensCardRenderer.render(machine.page, stack: machine.stack, selection: machine.selection, saved: machine.savedIndices, profile: profile)
         guard next != card else { return }
         card = next
         resendCard()

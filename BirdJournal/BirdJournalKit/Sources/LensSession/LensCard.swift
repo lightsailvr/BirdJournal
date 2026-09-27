@@ -35,9 +35,10 @@ public struct LensCardButton: Sendable, Equatable {
     public var action: LensAction
 }
 
-/// One row of the species list: a tappable pill that opens the species' card.
+/// One row of the species list. The app moves the selection with swipe down/up and opens the selected row on a
+/// tap, so rows are not tappable on the display: the glasses hand Nav and Select to the app, not to the rows.
 public struct LensListRow: Sendable, Equatable {
-    /// The stack index the row opens.
+    /// The stack index the row stands for.
     public var index: Int
     public var commonName: String
     /// The match rate, e.g. "82%".
@@ -45,6 +46,8 @@ public struct LensListRow: Sendable, Equatable {
     /// Whether the card has a photo (the pack knows the species) or is name-only.
     public var hasPhoto: Bool
     public var isSaved: Bool
+    /// The one highlighted row, which a tap opens.
+    public var isSelected: Bool
 
     /// The words the row spends on the lens: its name and match rate.
     public var words: Int { commonName.words + confidence.words }
@@ -64,7 +67,7 @@ public enum LensElement: Sendable, Equatable {
     case button(LensCardButton)
     /// The saved mark that replaces the button once the sighting is written.
     case saved(String)
-    /// Tappable rows on the species list.
+    /// The rows of the species list's current page, one selected.
     case list([LensListRow])
 }
 

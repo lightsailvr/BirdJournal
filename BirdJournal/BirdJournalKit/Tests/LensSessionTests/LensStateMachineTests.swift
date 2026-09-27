@@ -2,9 +2,9 @@ import Identification
 import Testing
 @testable import LensSession
 
-// Page map from DECISIONS.md, "Lens UI" (issue #24): a species list on the root and one scrolling card per species,
-// with Back (the middle-finger tap) as the only way back. Every (page, gesture) pair is listed in `transitions`, so a
-// rule that goes missing fails a test rather than falling through to `default`.
+// Page map from DECISIONS.md, "Lens UI" (issue #24): a species list the app drives as a menu on the root and one
+// scrolling card per species, with swipe right as the way back. Every (page, gesture) pair is listed in
+// `transitions`, so a rule that goes missing fails a test rather than falling through to `default`.
 @Suite("LensStateMachine")
 struct LensStateMachineTests {
     /// A machine on `page` with `species` fake species in its stack, reached through gestures alone.
@@ -12,17 +12,19 @@ struct LensStateMachineTests {
         var machine = LensStateMachine()
         machine.update(with: Fakes.stack(species))
         if let index = page.index {
-            for _ in 0...index { _ = machine.apply(.swipeLeft) }
+            for _ in 0..<index { _ = machine.apply(.swipeDown) }
+            _ = machine.apply(.tap)
         }
         precondition(machine.page == page, "could not reach \(page)")
         return machine
     }
 
-    @Test("starts on the species list with an empty stack and nothing saved")
+    @Test("starts on the species list with an empty stack, the first row selected and nothing saved")
     func initialState() {
         let machine = LensStateMachine()
         #expect(machine.page == .list)
         #expect(machine.stack.isEmpty)
+        #expect(machine.selection == 0)
         #expect(machine.savedIndices.isEmpty)
     }
 
@@ -46,25 +48,24 @@ struct LensStateMachineTests {
 
     /// Three species in the stack; the wearer is on the middle one where a page has a middle.
     static let transitions: [Transition] = [
-        // The list: left opens the first species; right has nothing before it; up and down scroll the list on the
-        // glasses; a tap is left to the Display (rows are opened through `press`); Back on the root ends the session.
+        // The list with the first row selected: down and up move the selection (checked in `listSelection`); a tap
+        // or swipe left opens the selected species; right has nothing before the list; Back ends the session.
         Transition(.list, .swipeLeft, .species(index: 0)),
         Transition(.list, .swipeRight, .list),
         Transition(.list, .swipeUp, .list),
         Transition(.list, .swipeDown, .list),
-        Transition(.list, .tap, .list),
+        Transition(.list, .tap, .species(index: 0)),
         Transition(.list, .back, .list, .endSession),
 
-        // A species card: left and right page through the stack and stop at its ends; up and down scroll the card
-        // on the glasses; a tap is "This is my bird"; Back returns to the list.
+        // A species card: left is the next species and stops at the end; right (and Back, on the mock) is back to
+        // the list; up and down scroll the card on the glasses; a tap is "This is my bird".
         Transition(.species(index: 1), .swipeLeft, .species(index: 2)),
-        Transition(.species(index: 1), .swipeRight, .species(index: 0)),
+        Transition(.species(index: 1), .swipeRight, .list),
         Transition(.species(index: 1), .swipeUp, .species(index: 1)),
         Transition(.species(index: 1), .swipeDown, .species(index: 1)),
         Transition(.species(index: 1), .tap, .species(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
         Transition(.species(index: 1), .back, .list),
         Transition(.species(index: 2), .swipeLeft, .species(index: 2)),
-        Transition(.species(index: 0), .swipeRight, .species(index: 0)),
     ]
 
     @Test("every page and gesture pair lands on the expected page with the expected effect", arguments: transitions)
@@ -85,11 +86,53 @@ struct LensStateMachineTests {
         }
     }
 
-    @Test("swiping on the list with an empty stack stays put")
+    // MARK: - The list as a menu
+
+    @Test("swipe down and up move the selection through the list and stop at its ends")
+    func listSelection() {
+        var machine = Self.machine(on: .list)
+        #expect(machine.apply(.swipeUp) == nil)
+        #expect(machine.selection == 0)
+        _ = machine.apply(.swipeDown)
+        _ = machine.apply(.swipeDown)
+        #expect(machine.selection == 2)
+        _ = machine.apply(.swipeDown)
+        #expect(machine.selection == 2)
+        #expect(machine.page == .list)
+        _ = machine.apply(.swipeUp)
+        #expect(machine.selection == 1)
+    }
+
+    @Test("a tap opens the selected species, and the list keeps the selection when the wearer comes back")
+    func openSelected() {
+        var machine = Self.machine(on: .list)
+        _ = machine.apply(.swipeDown)
+        #expect(machine.apply(.tap) == nil)
+        #expect(machine.page == .species(index: 1))
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .list)
+        #expect(machine.selection == 1)
+    }
+
+    @Test("paging to the next species moves the selection with it")
+    func nextSpeciesMovesSelection() {
+        var machine = Self.machine(on: .species(index: 0))
+        _ = machine.apply(.swipeLeft)
+        #expect(machine.page == .species(index: 1))
+        #expect(machine.selection == 1)
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .list)
+        #expect(machine.selection == 1)
+    }
+
+    @Test("gestures on the list with an empty stack stay put")
     func listWithoutSpecies() {
         var machine = LensStateMachine()
-        #expect(machine.apply(.swipeLeft) == nil)
-        #expect(machine.page == .list)
+        for gesture in [LensGesture.swipeLeft, .tap, .swipeDown, .swipeUp] {
+            #expect(machine.apply(gesture) == nil)
+            #expect(machine.page == .list)
+            #expect(machine.selection == 0)
+        }
     }
 
     // MARK: - Saving
@@ -105,7 +148,7 @@ struct LensStateMachineTests {
         #expect(machine.savedIndices == [1])
     }
 
-    @Test("the This is my bird button saves like a tap, and only on its own card")
+    @Test("the This is my bird button saves like a tap, and only on a card")
     func saveButton() {
         var machine = Self.machine(on: .species(index: 2))
         #expect(machine.press(.save) == .saveSighting(Fakes.candidate(Fakes.towhee)))
@@ -124,38 +167,23 @@ struct LensStateMachineTests {
         _ = machine.apply(.tap)
         _ = machine.apply(.swipeLeft)
         _ = machine.apply(.swipeRight)
+        _ = machine.apply(.swipeUp)
+        _ = machine.apply(.tap)
         #expect(machine.page == .species(index: 0))
         #expect(machine.savedIndices == [0])
     }
 
-    // MARK: - The list's rows
-
-    @Test("tapping a row on the list opens that species' card")
-    func openFromList() {
-        var machine = Self.machine(on: .list)
-        #expect(machine.press(.open(index: 2)) == nil)
-        #expect(machine.page == .species(index: 2))
-    }
-
-    @Test("a row tap is ignored off the list and for an index past the stack")
-    func openElsewhere() {
-        var machine = Self.machine(on: .species(index: 0))
-        #expect(machine.press(.open(index: 2)) == nil)
-        #expect(machine.page == .species(index: 0))
-
-        machine = Self.machine(on: .list)
-        #expect(machine.press(.open(index: 3)) == nil)
-        #expect(machine.page == .list)
-    }
-
     // MARK: - Stack updates
 
-    @Test("a new species arriving appends and leaves the page alone", arguments: [LensPage.species(index: 1), .list])
+    @Test("a new species arriving appends and leaves the page and the selection alone", arguments: [LensPage.species(index: 1), .list])
     func appendKeepsPage(page: LensPage) {
         var machine = Self.machine(on: page, species: 2)
+        _ = machine.apply(.swipeDown) // Scrolls a card, moves the selection on the list.
+        let selection = machine.selection
         let changed = machine.update(with: Fakes.stack(3))
         #expect(changed)
         #expect(machine.page == page)
+        #expect(machine.selection == selection)
         #expect(machine.stack.candidates.map(\.species) == Fakes.all)
     }
 
@@ -187,6 +215,7 @@ struct LensStateMachineTests {
         let changed = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]))
         #expect(changed)
         #expect(machine.page == .list)
+        #expect(machine.selection == 0)
         #expect(machine.savedIndices.isEmpty)
         #expect(machine.stack.count == 1)
     }
