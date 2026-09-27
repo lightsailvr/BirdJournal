@@ -11,12 +11,11 @@ struct ContentView: View {
     @State private var path: [Screen] = []
 
     private let planner = WindowPlanner()
-    private let navigation = LensNavigation()
 
     enum Screen: Hashable {
         case phoneListening
         case audioSpike
-        case lensCard
+        case lens
     }
 
     var body: some View {
@@ -28,14 +27,14 @@ struct ContentView: View {
 
                 GlassesSection()
 
-                Section("Phase A") {
+                Section("Glasses") {
+                    NavigationLink("Lens", value: Screen.lens)
                     NavigationLink("Audio spike", value: Screen.audioSpike)
-                    NavigationLink("Lens card", value: Screen.lensCard)
                 }
 
                 Section("Modules") {
                     LabeledContent("Identification", value: "\(planner.sampleRate) Hz, \(planner.samplesPerWindow) samples per window")
-                    LabeledContent("LensSession", value: String(describing: navigation.page))
+                    LabeledContent("LensSession", value: "\(LensCardRenderer.wordBudget) words per page")
                     LabeledContent("Pack", value: PackIndex.bundledPackID)
                     LabeledContent("Album", value: "\(sightings.count) sightings")
                 }
@@ -45,7 +44,7 @@ struct ContentView: View {
                 switch screen {
                 case .phoneListening: PhoneListeningView()
                 case .audioSpike: SpikeView()
-                case .lensCard: LensSessionView()
+                case .lens: LensSessionView()
                 }
             }
             #if DEBUG
@@ -57,8 +56,9 @@ struct ContentView: View {
 }
 
 #if DEBUG
-/// Launch with `-autoMockLens YES` to pair the mock, open the lens screen, start the card and inject a few
-/// gestures: a screenshot of the simulator then shows the mock lens without any taps.
+/// Launch with `-autoMockLens YES` to pair the mock, open the lens screen, start the pages, hear three fake
+/// species and walk to a description page: a screenshot of the simulator then shows the mock lens without any taps.
+/// `-autoMockLensInputs "navLeft select"` walks a different sequence (mock input names, one second apart).
 private struct AutoMockLens: ViewModifier {
     @Environment(GlassesConnection.self) private var connection
     @Environment(GlassesLensSession.self) private var lens
@@ -68,9 +68,14 @@ private struct AutoMockLens: ViewModifier {
         content.task {
             guard UserDefaults.standard.bool(forKey: "autoMockLens") else { return }
             connection.pairMockGlasses()
-            path = [.lensCard]
+            path = [.lens]
             await lens.start()
-            for input in [GlassesConnection.MockInput.navLeft, .navDown, .select] {
+            lens.update(with: FakeLensStack.stack(count: 3))
+            let sequence = UserDefaults.standard.string(forKey: "autoMockLensInputs") ?? "navLeft navLeft navDown"
+            let inputs = sequence.split(whereSeparator: \.isWhitespace).compactMap { name in
+                GlassesConnection.MockInput.allCases.first { String(describing: $0) == name }
+            }
+            for input in inputs {
                 try? await Task.sleep(for: .seconds(1))
                 connection.injectMockInput(input)
             }

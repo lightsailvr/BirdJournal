@@ -1,3 +1,4 @@
+import Identification
 import LensSession
 import MWDATCore
 import MWDATDisplay
@@ -6,42 +7,74 @@ import MWDATMockDevice
 import Testing
 @testable import BirdJournal
 
-// Lens round trip on Mock Device Kit (issue #4): session started, Display and Inputs attached, one card sent,
-// every injected Nav and Select echoed on the phone and onto the card, and a clean stop.
+// Lens pages on Mock Device Kit (issue #7): session started, Display and Inputs attached, the fake stack fed in,
+// every page reached with injected nav, select and back, and a clean stop.
 extension MockDeviceKitTests {
     @Suite("Lens session")
     struct Lens {
-        @Test("the card reaches the mock lens and every nav and select is echoed within a second")
-        func gestureRoundTrip() async throws {
-            try await withRunningLens { lens, glasses in
-                #expect(lens.card.body == "Swipe or tap to test the Neural Band.")
+        @Test("injected nav, select and back walk every page, and a new species never moves the page")
+        func navigatesAllPages() async throws {
+            // The test, not the timer, leaves the Saved page.
+            try await withRunningLens(savedDismissDelay: .seconds(30)) { lens, glasses in
+                #expect(lens.page == .listening)
+                #expect(lens.card.elements[1] == .body("No species yet"))
+
+                lens.update(with: FakeLensStack.stack(count: 2))
+                #expect(lens.page == .listening)
+                #expect(lens.card.elements[1] == .body("2 species heard"))
 
                 let input = glasses.services.input
-                let expected: [(inject: () -> Void, gesture: LensGesture)] = [
-                    (input.navLeft, .swipeLeft),
-                    (input.navRight, .swipeRight),
-                    (input.navUp, .swipeUp),
-                    (input.navDown, .swipeDown),
-                    (input.select, .tap),
+                let steps: [(inject: () -> Void, page: LensPage)] = [
+                    (input.navLeft, .photo(index: 0)),
+                    (input.navDown, .description(index: 0)),
+                    (input.navUp, .photo(index: 0)),
+                    (input.select, .confirm(index: 0)),
+                    (input.select, .saved(index: 0)),
+                    (input.navUp, .photo(index: 0)),
+                    (input.navLeft, .photo(index: 1)),
                 ]
-                for (index, step) in expected.enumerated() {
+                for step in steps {
                     step.inject()
-                    try await waitUntil(timeout: .seconds(1)) { lens.echo.count == index + 1 }
-                    #expect(lens.echo.lastGesture == step.gesture)
-                    #expect(lens.inputRecords.first?.gesture == step.gesture)
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == step.page }
                 }
-                #expect(lens.card.body == "Tap · 5 gestures")
-                #expect(lens.inputRecords.map(\.gesture) == [.tap, .swipeDown, .swipeUp, .swipeRight, .swipeLeft])
+                #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[0]])
+                #expect(lens.card.elements.contains(.heading("House Finch")))
+
+                // A species arriving while on a photo page appends and leaves the page alone.
+                lens.update(with: FakeLensStack.stack(count: 3))
+                #expect(lens.page == .photo(index: 1))
+                #expect(lens.stack.count == 3)
+                #expect(lens.card.elements.contains(.meta("2 of 3")))
+                #expect(lens.card.photo == LensImage(id: "haemorhous-mexicanus"))
+
+                input.navRight()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .photo(index: 0) }
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .listening }
+                #expect(lens.card.elements[1] == .body("3 species heard"))
+
+                // Back on the root ends the session.
+                input.back()
+                try await waitUntil(timeout: .seconds(2)) { lens.phase == .stopped(.back) }
+                #expect(lens.inputsState == .inactive)
+                #expect(lens.inputRecords.first?.gesture == .back)
+                #expect(lens.errorMessage == nil)
             }
         }
 
-        @Test("back is recorded on the phone but is not a gesture")
-        func backIsIgnored() async throws {
-            try await withRunningLens { lens, glasses in
-                glasses.services.input.back()
-                try await waitUntil(timeout: .seconds(1)) { !lens.inputRecords.isEmpty }
-                #expect(lens.inputRecords.first?.gesture == nil)
-                #expect(lens.echo.count == 0)
+        @Test("the Saved page returns to the photo on its own")
+        func savedPageDismisses() async throws {
+            try await withRunningLens(savedDismissDelay: .milliseconds(200)) { lens, glasses in
+                lens.update(with: FakeLensStack.stack(count: 1))
+                let input = glasses.services.input
+                input.navLeft()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .photo(index: 0) }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .confirm(index: 0) }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .saved(index: 0) }
+                try await waitUntil(timeout: .seconds(2)) { lens.page == .photo(index: 0) }
+                #expect(lens.savedSightings.count == 1)
             }
         }
 
@@ -87,12 +120,20 @@ extension MockDeviceKitTests {
             }
         }
 
-        /// Starts a lens session on a connected mock Display, waits for Inputs to be active, and always stops it.
-        private func withRunningLens(_ body: (GlassesLensSession, any MockGlasses) async throws -> Void) async throws {
+        /// Starts a lens session with the fake stack's profiles on a connected mock Display, waits for Inputs to be
+        /// active, and always stops it.
+        private func withRunningLens(
+            savedDismissDelay: Duration,
+            _ body: (GlassesLensSession, any MockGlasses) async throws -> Void
+        ) async throws {
             try await withMockDisplay { glasses in
                 let connection = GlassesConnection()
                 try await waitUntil { connection.connectedDevice != nil }
-                let lens = GlassesLensSession()
+                let lens = GlassesLensSession(
+                    profile: FakeLensStack.profile(for:),
+                    image: FakeLensStack.image(for:),
+                    savedDismissDelay: savedDismissDelay
+                )
                 await lens.start()
                 do {
                     try #require(lens.phase == .running, "\(lens.errorMessage ?? "no error")")

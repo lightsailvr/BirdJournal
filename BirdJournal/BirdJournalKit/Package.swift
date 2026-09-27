@@ -7,7 +7,8 @@ import PackageDescription
 // - Identification: audio windowing + BirdNET inference (ONNX Runtime). No UI, no toolkit dependency. Its
 //                   `Models` resource folder is a symlink to the repo's `models/` directory (populated by
 //                   `scripts/download-models.sh`), so the model files ship inside the package's resource bundle.
-// - LensSession:    pure lens page state machine. No toolkit dependency; unit-tested without the glasses.
+// - LensSession:    pure lens page state machine and card renderer. Depends on Identification for the
+//                   CandidateStack it pages through; no toolkit dependency, unit-tested without the glasses.
 // - Pack:           species packs (bundled LA pack, downloadable regional packs).
 // - Album:          saved sightings (SwiftData).
 //
@@ -47,8 +48,8 @@ let package = Package(
             resources: [.copy("Fixtures")]
         ),
 
-        .target(name: "LensSession"),
-        .testTarget(name: "LensSessionTests", dependencies: ["LensSession"]),
+        .target(name: "LensSession", dependencies: ["Identification"]),
+        .testTarget(name: "LensSessionTests", dependencies: ["LensSession", "Identification"]),
 
         .target(name: "Pack"),
         .testTarget(name: "PackTests", dependencies: ["Pack"]),

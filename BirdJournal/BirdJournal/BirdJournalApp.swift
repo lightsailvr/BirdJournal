@@ -22,8 +22,18 @@ struct BirdJournalApp: App {
         let connection = GlassesConnection()
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
-        _lens = State(initialValue: GlassesLensSession(connection: connection))
+        _lens = State(initialValue: Self.makeLensSession(connection: connection))
         _phoneListening = State(initialValue: Self.makePhoneListeningSession())
+    }
+
+    /// The lens session. Until the species pack lands (#8) the pages draw on the hard-coded fake stack's profiles
+    /// in debug builds and show species by name alone otherwise.
+    private static func makeLensSession(connection: GlassesConnection) -> GlassesLensSession {
+        #if DEBUG
+        GlassesLensSession(connection: connection, profile: FakeLensStack.profile(for:), image: FakeLensStack.image(for:))
+        #else
+        GlassesLensSession(connection: connection)
+        #endif
     }
 
     /// The phone listening session over the real microphone. In debug builds, `-autoPhoneListening <path.wav>`
