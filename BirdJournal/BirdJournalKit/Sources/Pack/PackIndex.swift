@@ -34,6 +34,11 @@ public struct PackIndex: Codable, Sendable, Equatable {
         self.packs = packs
     }
 
+    /// The index's entry for a pack id, if it lists one.
+    public func descriptor(id: String) -> PackDescriptor? {
+        packs.first { $0.id == id }
+    }
+
     public static func decode(from data: Data) throws -> PackIndex {
         try JSONDecoder().decode(PackIndex.self, from: data)
     }

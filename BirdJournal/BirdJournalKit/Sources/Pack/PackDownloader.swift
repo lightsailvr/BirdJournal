@@ -32,17 +32,13 @@ public struct PackDownloader: Sendable {
             var buffer = Data()
             buffer.reserveCapacity(Int(Self.reportEvery))
             var received: Int64 = 0
-            var reportedAt: Int64 = 0
             for try await byte in bytes {
                 buffer.append(byte)
                 if buffer.count >= Int(Self.reportEvery) {
                     try handle.write(contentsOf: buffer)
                     received += Int64(buffer.count)
                     buffer.removeAll(keepingCapacity: true)
-                    if received - reportedAt >= Self.reportEvery {
-                        reportedAt = received
-                        progress(received)
-                    }
+                    progress(received)
                 }
             }
             try handle.write(contentsOf: buffer)

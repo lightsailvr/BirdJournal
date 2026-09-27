@@ -90,7 +90,7 @@ struct ContentView: View {
                     LicenseTextView(title: fileName) { try ModelCredits.licenseText(fileName: fileName) }
                 case .packLicense(let id):
                     LicenseTextView(title: "Pack license") {
-                        guard let pack = library.pack(id: id) else { throw PackError.missingBundledPack(id) }
+                        guard let pack = library.pack(id: id) else { throw PackError.notInstalled(id) }
                         return pack.info.licenseText
                     }
                 }
@@ -167,7 +167,7 @@ private struct AutoSpeciesPack: ViewModifier {
             if let id = UserDefaults.standard.string(forKey: "autoDownloadPack") {
                 path = [.settings, .packs]
                 await library.refreshIndex()
-                if let descriptor = library.index?.packs.first(where: { $0.id == id }) { library.startDownload(descriptor) }
+                if let descriptor = library.index?.descriptor(id: id) { library.startDownload(descriptor) }
                 return
             }
             guard let value = UserDefaults.standard.string(forKey: "autoSpeciesPack") else { return }

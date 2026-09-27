@@ -78,6 +78,20 @@ struct PackStorageTests {
         try storage.remove(id: "test-pack")  // removing what is not there is not an error
     }
 
+    @Test("a staging folder left by a crash is not listed and is cleaned up; the record is only ever under the final name")
+    func staleStaging() throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let storage = PackStorage(directory: root.appending(path: "Packs"))
+        let zip = try Fixtures.testPackZip()
+        let stale = storage.directory.appending(path: "test-pack.unpacking")
+        try ZipArchive.extract(zip, into: stale)
+        try JSONEncoder().encode(try Fixtures.descriptor(for: zip, version: 1)).write(to: stale.appending(path: "installed.json"))
+
+        #expect(storage.installed().isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: stale.path(percentEncoded: false)))
+    }
+
     @Test("a storage folder with a space in its path, like Application Support, works")
     func spaceInPath() throws {
         let root = try Fixtures.temporaryFolder()

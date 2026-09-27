@@ -6,6 +6,7 @@ import SwiftUI
 struct SpeciesPackView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dismiss) private var dismiss
+    @State private var removalError: String?
     let pack: SpeciesPack
 
     private var isDownloaded: Bool { library.installed.contains { $0.id == pack.info.id } }
@@ -24,8 +25,12 @@ struct SpeciesPackView: View {
             if isDownloaded {
                 Section {
                     Button("Delete this pack", role: .destructive) {
-                        try? library.remove(id: pack.info.id)
-                        dismiss()
+                        do {
+                            try library.remove(id: pack.info.id)
+                            dismiss()
+                        } catch {
+                            removalError = error.localizedDescription
+                        }
                     }
                 } footer: {
                     Text("Frees its space on the phone; the pack can be downloaded again from the index.")
@@ -33,6 +38,11 @@ struct SpeciesPackView: View {
             }
         }
         .navigationTitle(pack.info.name)
+        .alert("The pack could not be deleted", isPresented: Binding(get: { removalError != nil }, set: { if !$0 { removalError = nil } })) {
+            Button("OK") { removalError = nil }
+        } message: {
+            Text(removalError ?? "")
+        }
     }
 }
 

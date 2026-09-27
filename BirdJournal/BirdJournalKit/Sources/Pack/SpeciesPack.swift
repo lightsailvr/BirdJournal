@@ -118,6 +118,8 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
 public enum PackError: Error, Equatable {
     case missingDatabase(String)
     case missingBundledPack(String)
+    /// A pack id the library no longer has (deleted while a screen still pointed at it).
+    case notInstalled(String)
     case unsupportedSchema(Int)
     case sqlite(String)
     case malformedRow(table: String)

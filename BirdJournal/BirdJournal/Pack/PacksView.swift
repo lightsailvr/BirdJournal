@@ -5,17 +5,20 @@ import SwiftUI
 /// the packs the index offers, with a download that shows its progress and a delete that frees the space.
 struct PacksView: View {
     @Environment(PackLibrary.self) private var library
+    @State private var removalError: String?
 
     var body: some View {
         List {
             Section {
                 if let bundled = library.bundled {
-                    PackRow(pack: bundled, detail: "Included with the app", descriptor: library.index?.packs.first { $0.id == bundled.info.id })
+                    PackRow(pack: bundled, detail: "Included with the app", descriptor: library.index?.descriptor(id: bundled.info.id))
                 }
                 ForEach(library.installed) { installed in
-                    PackRow(pack: installed.pack, detail: Self.sizeText(installed.descriptor.byteCount), descriptor: library.index?.packs.first { $0.id == installed.id } ?? installed.descriptor)
+                    PackRow(pack: installed.pack, detail: Self.sizeText(installed.descriptor.byteCount), descriptor: library.index?.descriptor(id: installed.id) ?? installed.descriptor)
                         .swipeActions {
-                            Button("Delete", systemImage: "trash", role: .destructive) { try? library.remove(id: installed.id) }
+                            Button("Delete", systemImage: "trash", role: .destructive) {
+                                do { try library.remove(id: installed.id) } catch { removalError = error.localizedDescription }
+                            }
                         }
                 }
             } header: {
@@ -50,6 +53,11 @@ struct PacksView: View {
         .navigationTitle("Species packs")
         .task { await library.refreshIndex() }
         .refreshable { await library.refreshIndex() }
+        .alert("The pack could not be deleted", isPresented: Binding(get: { removalError != nil }, set: { if !$0 { removalError = nil } })) {
+            Button("OK") { removalError = nil }
+        } message: {
+            Text(removalError ?? "")
+        }
     }
 
     static func sizeText(_ bytes: Int) -> String {

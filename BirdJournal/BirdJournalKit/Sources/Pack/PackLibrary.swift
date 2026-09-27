@@ -27,12 +27,11 @@ public final class PackLibrary {
     /// Why the last index fetch failed, nil after a good one.
     public private(set) var indexError: String?
     public private(set) var isRefreshingIndex = false
-    @ObservationIgnored private var transfers: [String: Status] = [:]
+    /// The download or failure state per pack id; absent when nothing is in flight.
+    private var transfers: [String: Status] = [:]
     @ObservationIgnored private var tasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private let downloader: PackDownloader
     @ObservationIgnored private let session: URLSession
-    /// Bumped on every transfer state change, so views observing `status(of:)` refresh.
-    private var transferVersion = 0
 
     public init(bundled: SpeciesPack?, storage: PackStorage, indexURL: URL = PackIndex.defaultURL, session: URLSession = .shared) {
         self.bundled = bundled
@@ -72,15 +71,15 @@ public final class PackLibrary {
 
     // MARK: - The index
 
-    /// The index's packs that are neither bundled nor installed: what the packs screen offers to download.
+    /// The index's packs that are neither bundled nor installed: what the packs screen offers to download. A build
+    /// whose bundle lacks its pack is offered it like any other.
     public var available: [PackDescriptor] {
-        (index?.packs ?? []).filter { $0.id != PackIndex.bundledPackID && installedPack(id: $0.id) == nil }
+        (index?.packs ?? []).filter { !isBundled($0.id) && installedPack(id: $0.id) == nil }
     }
 
     public func status(of descriptor: PackDescriptor) -> Status {
-        _ = transferVersion
         if let transfer = transfers[descriptor.id] { return transfer }
-        if descriptor.id == PackIndex.bundledPackID, bundled != nil { return .bundled }
+        if isBundled(descriptor.id) { return .bundled }
         guard let installed = installedPack(id: descriptor.id) else { return .notInstalled }
         if descriptor.version > installed.descriptor.version {
             return .updateAvailable(installed: installed.descriptor.version, available: descriptor.version)
@@ -126,20 +125,19 @@ public final class PackLibrary {
         }
         do {
             let downloader = downloader
-            try await Task.detached(priority: .userInitiated) {
+            try await Self.offMain {
                 try await downloader.download(descriptor, to: zip) { received in
                     Task { @MainActor [weak self] in
                         guard let self, case .downloading = self.transfers[id] else { return }
                         self.setTransfer(id, .downloading(received: received))
                     }
                 }
-            }.value
+            }
             try Task.checkCancellation()
             setTransfer(id, .installing)
             let storage = storage
-            let installedPack = try await Task.detached(priority: .userInitiated) {
-                try storage.install(zip: zip, as: descriptor)
-            }.value
+            let installedPack = try await Self.offMain { try storage.install(zip: zip, as: descriptor) }
+            try Task.checkCancellation()
             installed = installed.filter { $0.id != id } + [installedPack]
             installed.sort { $0.descriptor.name < $1.descriptor.name }
             setTransfer(id, nil)
@@ -157,11 +155,17 @@ public final class PackLibrary {
         if case .failed = transfers[id] { setTransfer(id, nil) }
     }
 
-    /// Deletes a downloaded pack's files; its species are gone from `packs` at once.
+    /// Deletes a downloaded pack's files; its species are gone from `packs` at once, and a download of the same
+    /// pack still in flight is cancelled.
     public func remove(id: String) throws {
+        tasks[id]?.cancel()
         try storage.remove(id: id)
         installed.removeAll { $0.id == id }
         setTransfer(id, nil)
+    }
+
+    private func isBundled(_ id: String) -> Bool {
+        bundled?.info.id == id
     }
 
     private func installedPack(id: String) -> InstalledPack? {
@@ -170,7 +174,18 @@ public final class PackLibrary {
 
     private func setTransfer(_ id: String, _ status: Status?) {
         transfers[id] = status
-        transferVersion += 1
+    }
+
+    /// Runs `work` in its own task off the main actor (a 165 MB stream and its hashing and unpacking do not belong
+    /// there), forwarding cancellation to it: a detached task is not a child, so without this Cancel would let the
+    /// whole download finish before the status cleared.
+    private static func offMain<T: Sendable>(_ work: @escaping @Sendable () async throws -> T) async throws -> T {
+        let task = Task.detached(priority: .userInitiated, operation: work)
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     private static func message(for error: any Error) -> String {

@@ -43,6 +43,17 @@ struct ZipArchiveTests {
         #expect(!FileManager.default.fileExists(atPath: out.appending(path: "escaped.txt").path(percentEncoded: false)))
     }
 
+    @Test("a deflated entry with no compressed bytes is a corrupt entry, not a crash")
+    func emptyDeflatedEntry() throws {
+        let out = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: out) }
+        let zipURL = out.appending(path: "empty-deflate.zip")
+        try Fixtures.storedZip(entries: [("truncated.bin", Data())], method: 8, uncompressedSize: 5).write(to: zipURL)
+        #expect(throws: ZipError.corruptEntry("truncated.bin")) {
+            try ZipArchive.extract(zipURL, into: out.appending(path: "x"))
+        }
+    }
+
     @Test("a file that is not a zip is reported")
     func notAZip() throws {
         let out = try Fixtures.temporaryFolder()
@@ -69,20 +80,21 @@ enum Fixtures {
 
     /// A zip of stored (uncompressed) entries: local headers, central directory, end record. Enough to exercise the
     /// reader's paths that the builder's deflated zip does not.
-    static func storedZip(entries: [(name: String, data: Data)]) -> Data {
+    static func storedZip(entries: [(name: String, data: Data)], method: UInt16 = 0, uncompressedSize: Int? = nil) -> Data {
         var out = Data()
         var central = Data()
         for (name, data) in entries {
             let nameBytes = Data(name.utf8)
             let offset = UInt32(out.count)
             let crc = ZipArchive.crc32(data)
-            out.append(le32(0x0403_4B50)); out.append(le16(20)); out.append(le16(0)); out.append(le16(0))
+            let fullSize = UInt32(uncompressedSize ?? data.count)
+            out.append(le32(0x0403_4B50)); out.append(le16(20)); out.append(le16(0)); out.append(le16(method))
             out.append(le16(0)); out.append(le16(0)); out.append(le32(crc))
-            out.append(le32(UInt32(data.count))); out.append(le32(UInt32(data.count)))
+            out.append(le32(UInt32(data.count))); out.append(le32(fullSize))
             out.append(le16(UInt16(nameBytes.count))); out.append(le16(0)); out.append(nameBytes); out.append(data)
-            central.append(le32(0x0201_4B50)); central.append(le16(20)); central.append(le16(20)); central.append(le16(0)); central.append(le16(0))
+            central.append(le32(0x0201_4B50)); central.append(le16(20)); central.append(le16(20)); central.append(le16(0)); central.append(le16(method))
             central.append(le16(0)); central.append(le16(0)); central.append(le32(crc))
-            central.append(le32(UInt32(data.count))); central.append(le32(UInt32(data.count)))
+            central.append(le32(UInt32(data.count))); central.append(le32(fullSize))
             central.append(le16(UInt16(nameBytes.count))); central.append(le16(0)); central.append(le16(0))
             central.append(le16(0)); central.append(le16(0)); central.append(le32(0)); central.append(le32(offset)); central.append(nameBytes)
         }

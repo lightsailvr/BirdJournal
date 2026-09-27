@@ -118,6 +118,7 @@ enum ZipArchive {
 
     private static func inflate(_ compressed: Data, expectedSize: Int, name: String) throws -> Data {
         guard expectedSize > 0 else { return Data() }
+        guard !compressed.isEmpty else { throw ZipError.corruptEntry(name) }
         var output = Data(count: expectedSize)
         let written = output.withUnsafeMutableBytes { destination in
             compressed.withUnsafeBytes { source in
