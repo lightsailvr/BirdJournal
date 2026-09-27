@@ -72,11 +72,9 @@ struct IdentificationEngineTests {
         #expect(windows.map(\.start) == [0, 1.5, 3])
         #expect(windows.allSatisfy { $0.topScore < 0.15 })
         #expect(events.filter { if case .stack = $0 { true } else { false } }.isEmpty)
-        let slowest = windows.map(\.inference).max()!
-        print("noise clip: slowest window inference \(slowest)")
-        #if !targetEnvironment(simulator)
-        #expect(slowest <= .milliseconds(150), "issue #5: per-window inference stays under 150 ms on an iPhone 17 Pro")
-        #endif
+        // Timing here is informative: package tests are tool-hosted and never run on a device. The 150 ms budget
+        // is asserted on the phone by the app-hosted InferenceBudgetTests.
+        print("noise clip: slowest window inference \(windows.map(\.inference).max()!)")
     }
 
     @Test("external labeled clips: the expected species ranks in the top three and filtered species never appear", arguments: ExternalClips.available())
