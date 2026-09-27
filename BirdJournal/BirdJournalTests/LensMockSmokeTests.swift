@@ -14,8 +14,8 @@ extension MockDeviceKitTests {
     struct Lens {
         @Test("injected nav, select and back walk every page, and a new species never moves the page")
         func navigatesAllPages() async throws {
-            try await withRunningLens { lens, glasses in
-                lens.savedDismissDelay = .seconds(30) // The test, not the timer, leaves the Saved page.
+            // The test, not the timer, leaves the Saved page.
+            try await withRunningLens(savedDismissDelay: .seconds(30)) { lens, glasses in
                 #expect(lens.page == .listening)
                 #expect(lens.card.elements[1] == .body("No species yet"))
 
@@ -45,6 +45,7 @@ extension MockDeviceKitTests {
                 #expect(lens.page == .photo(index: 1))
                 #expect(lens.stack.count == 3)
                 #expect(lens.card.elements.contains(.meta("2 of 3")))
+                #expect(lens.card.photo == LensImage(id: "haemorhous-mexicanus"))
 
                 input.navRight()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .photo(index: 0) }
@@ -63,8 +64,7 @@ extension MockDeviceKitTests {
 
         @Test("the Saved page returns to the photo on its own")
         func savedPageDismisses() async throws {
-            try await withRunningLens { lens, glasses in
-                lens.savedDismissDelay = .milliseconds(200)
+            try await withRunningLens(savedDismissDelay: .milliseconds(200)) { lens, glasses in
                 lens.update(with: FakeLensStack.stack(count: 1))
                 let input = glasses.services.input
                 input.navLeft()
@@ -122,11 +122,18 @@ extension MockDeviceKitTests {
 
         /// Starts a lens session with the fake stack's profiles on a connected mock Display, waits for Inputs to be
         /// active, and always stops it.
-        private func withRunningLens(_ body: (GlassesLensSession, any MockGlasses) async throws -> Void) async throws {
+        private func withRunningLens(
+            savedDismissDelay: Duration,
+            _ body: (GlassesLensSession, any MockGlasses) async throws -> Void
+        ) async throws {
             try await withMockDisplay { glasses in
                 let connection = GlassesConnection()
                 try await waitUntil { connection.connectedDevice != nil }
-                let lens = GlassesLensSession(profile: FakeLensStack.profile(for:), image: FakeLensStack.image(for:))
+                let lens = GlassesLensSession(
+                    profile: FakeLensStack.profile(for:),
+                    image: FakeLensStack.image(for:),
+                    savedDismissDelay: savedDismissDelay
+                )
                 await lens.start()
                 do {
                     try #require(lens.phase == .running, "\(lens.errorMessage ?? "no error")")

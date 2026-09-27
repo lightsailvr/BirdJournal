@@ -6,11 +6,20 @@ import Testing
 // listed in `transitions`, so a rule that goes missing fails a test rather than falling through to `default`.
 @Suite("LensStateMachine")
 struct LensStateMachineTests {
-    /// A machine on `page` with `species` fake species in its stack.
+    /// A machine on `page` with `species` fake species in its stack, reached through gestures alone.
     static func machine(on page: LensPage, species: Int = 3) -> LensStateMachine {
         var machine = LensStateMachine()
-        _ = machine.update(with: Fakes.stack(species))
-        machine.jump(to: page)
+        machine.update(with: Fakes.stack(species))
+        if let index = page.index {
+            for _ in 0...index { _ = machine.apply(.swipeLeft) }
+        }
+        switch page {
+        case .listening, .photo: break
+        case .description: _ = machine.apply(.swipeDown)
+        case .confirm: _ = machine.apply(.tap)
+        case .saved: _ = machine.apply(.tap); _ = machine.apply(.tap)
+        }
+        precondition(machine.page == page, "could not reach \(page)")
         return machine
     }
 
@@ -119,7 +128,7 @@ struct LensStateMachineTests {
         #expect(machine.press(.cancel) == nil)
         #expect(machine.page == .photo(index: 2))
 
-        machine.jump(to: .confirm(index: 2))
+        machine = Self.machine(on: .confirm(index: 2))
         #expect(machine.press(.save) == .saveSighting(Fakes.candidate(Fakes.towhee)))
         #expect(machine.page == .saved(index: 2))
     }
@@ -139,7 +148,7 @@ struct LensStateMachineTests {
         machine.dismissSaved()
         #expect(machine.page == .photo(index: 0))
 
-        machine.jump(to: .description(index: 0))
+        machine = Self.machine(on: .description(index: 0))
         machine.dismissSaved()
         #expect(machine.page == .description(index: 0))
     }

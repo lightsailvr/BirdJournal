@@ -32,6 +32,7 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - Gestures: swipe = Nav, tap = Select. Swipe up = in-app back. Two-finger tap = quit (system). Nested Back handler written behind `consumeBack: true` for when hardware delivers Back.
 - Page map: Listening (root, "N species heard", updates on each new species and wakes the display) → swipe L/R between species photo pages → swipe down: description page (field marks, size, habitat, one-line photo credit) → swipe up: back to photo. Tap on a photo = confirm → info page with Save as the primary action.
 - Stack never reorders while on a photo page; new species append at the end.
+- Confirm page: a tap (Select) saves, because Save is the primary action; Cancel is reached through the Display's button. Whether real glasses also deliver a Select to Inputs when a button is focused is unknown until the on-glasses run (#9); if they do, the confirm page switches to button clicks alone.
 - Photo-first cards: close-up crops with dark backgrounds preferred. Text ≤ ~40 words per page.
 - Audio chirp on new candidate: off by default.
 - Session start: phone button in v1; "Hey Meta, start BirdJournal" once the Developer Center approves Voice Invocation.

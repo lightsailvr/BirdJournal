@@ -76,12 +76,12 @@ final class GlassesLensSession {
     private(set) var savedSightings: [Candidate] = []
     /// Newest first, capped at `maxRecords`.
     private(set) var inputRecords: [InputRecord] = []
-    /// How long the Saved page stays before the photo returns on its own.
-    var savedDismissDelay: Duration = .seconds(2)
     var errorMessage: String?
 
     @ObservationIgnored private let wearables: any WearablesInterface
     @ObservationIgnored private let connection: GlassesConnection?
+    /// How long the Saved page stays before the photo returns on its own.
+    @ObservationIgnored private let savedDismissDelay: Duration
     /// Pack lookup for the photo and description pages.
     @ObservationIgnored private let profile: (Species) -> SpeciesProfile?
     /// Pixels for the images the pack names.
@@ -91,6 +91,7 @@ final class GlassesLensSession {
     @ObservationIgnored private var inputsCapability: Inputs?
     @ObservationIgnored private var inputTask: Task<Void, Never>?
     @ObservationIgnored private var savedTask: Task<Void, Never>?
+    @ObservationIgnored private var endTask: Task<Void, Never>?
     /// Sends run one after another so a burst of gestures leaves the latest card on the lens.
     @ObservationIgnored private var sendTask: Task<Void, Never>?
     @ObservationIgnored private let tokens = ListenerTokenBag()
@@ -101,10 +102,12 @@ final class GlassesLensSession {
         wearables: any WearablesInterface = Wearables.shared,
         connection: GlassesConnection? = nil,
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
-        image: @escaping (LensImage) -> UIImage? = { _ in nil }
+        image: @escaping (LensImage) -> UIImage? = { _ in nil },
+        savedDismissDelay: Duration = .seconds(2)
     ) {
         self.wearables = wearables
         self.connection = connection
+        self.savedDismissDelay = savedDismissDelay
         self.profile = profile
         self.image = image
         card = LensCardRenderer.render(.listening, stack: CandidateStack(), profile: profile)
@@ -217,6 +220,7 @@ final class GlassesLensSession {
         inputTask = nil
         savedTask?.cancel()
         savedTask = nil
+        endTask = nil
         sendTask?.cancel()
         sendTask = nil
         await tokens.cancelAll()
@@ -267,12 +271,14 @@ final class GlassesLensSession {
         let record = InputRecord(event)
         inputRecords.insert(record, at: 0)
         if inputRecords.count > Self.maxRecords { inputRecords.removeLast(inputRecords.count - Self.maxRecords) }
-        guard let gesture = record.gesture else { return }
+        // Events that land while the run is ending (after Back on the root, say) must not move the pages.
+        guard let gesture = record.gesture, phase == .running else { return }
         perform(machine.apply(gesture))
     }
 
     /// A click on a card button, delivered by Display rather than Inputs.
     private func buttonClicked(_ button: LensButton) {
+        guard phase == .running else { return }
         perform(machine.press(button))
     }
 
@@ -288,7 +294,7 @@ final class GlassesLensSession {
                 self.refreshCard()
             }
         case .endSession:
-            Task { await stop(reason: .back) }
+            endTask = Task { [weak self] in await self?.stop(reason: .back) }
         case nil:
             break
         }
@@ -368,19 +374,6 @@ extension LensGesture {
         case .right: .swipeRight
         case .up: .swipeUp
         case .down: .swipeDown
-        }
-    }
-}
-
-extension LensPage {
-    /// The page as the phone screen names it.
-    var title: String {
-        switch self {
-        case .listening: "Listening"
-        case .photo(let index): "Photo \(index + 1)"
-        case .description(let index): "Description \(index + 1)"
-        case .confirm(let index): "Confirm \(index + 1)"
-        case .saved(let index): "Saved \(index + 1)"
         }
     }
 }

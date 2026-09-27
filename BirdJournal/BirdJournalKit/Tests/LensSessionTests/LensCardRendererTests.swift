@@ -38,22 +38,26 @@ struct LensCardRendererTests {
         ])
     }
 
-    @Test("the photo page leads with the pack photo, then the common name, confidence and position")
+    @Test("the photo page has the pack photo beside the common name, confidence and position")
     func photo() {
         let card = Self.render(.photo(index: 0))
-        #expect(card.layout == .photoBeside)
+        #expect(card.photo == LensImage(id: "sayornis-nigricans-1"))
         #expect(card.elements == [
-            .image(LensImage(id: "sayornis-nigricans-1")),
             .heading("Black Phoebe"),
             .body("80% match"),
             .meta("1 of 3"),
         ])
     }
 
+    @Test("every page but the photo page has no photo", arguments: pages.filter { if case .photo = $0 { false } else { true } })
+    func noPhoto(page: LensPage) {
+        #expect(Self.render(page).photo == nil)
+    }
+
     @Test("a species outside the pack is still shown by name")
     func photoWithoutPack() {
         let card = Self.render(.photo(index: 1))
-        #expect(card.layout == .column)
+        #expect(card.photo == nil)
         #expect(card.elements == [
             .heading("House Finch"),
             .body("80% match"),
@@ -103,17 +107,21 @@ struct LensCardRendererTests {
         ])
     }
 
-    @Test("confidence rounds the session score to a whole percent")
-    func confidence() {
-        #expect(LensCardRenderer.confidence(Fakes.candidate(Fakes.phoebe, score: 0.999)) == "100% match")
-        #expect(LensCardRenderer.confidence(Fakes.candidate(Fakes.phoebe, score: 0.054)) == "5% match")
+    @Test("long size, habitat and credit lines are cut too, and the field marks get what is left")
+    func longMetaLines() {
+        let long = Array(repeating: "word", count: 30).joined(separator: " ")
+        let profile = SpeciesProfile(photo: nil, fieldMarks: long, size: long, habitat: long, photoCredit: long)
+        let card = LensCardRenderer.render(.description(index: 0), stack: Self.stack) { _ in profile }
+        #expect(card.wordCount <= LensCardRenderer.wordBudget)
+        guard case .meta(let credit) = card.elements[3] else { Issue.record("no credit line"); return }
+        #expect(credit.hasSuffix("…"))
+        #expect(credit.words == LensCardRenderer.metaLineBudget)
     }
 
-    @Test("word limiting keeps whole words and marks the cut")
-    func wordLimit() {
-        #expect("one two three".limited(toWords: 5) == "one two three")
-        #expect("one two three".limited(toWords: 2) == "one two…")
-        #expect("one two three".limited(toWords: 0) == "")
-        #expect("a  b\nc".words == 3)
+    @Test("confidence rounds the session score to a whole percent")
+    func confidence() {
+        let stack = CandidateStack(candidates: [Fakes.candidate(Fakes.phoebe, score: 0.999), Fakes.candidate(Fakes.finch, score: 0.054)])
+        #expect(LensCardRenderer.render(.photo(index: 0), stack: stack, profile: Self.profile).elements[1] == .body("100% match"))
+        #expect(LensCardRenderer.render(.photo(index: 1), stack: stack, profile: Self.profile).elements[1] == .body("5% match"))
     }
 }

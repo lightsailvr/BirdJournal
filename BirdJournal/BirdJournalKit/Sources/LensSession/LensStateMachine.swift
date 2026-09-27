@@ -122,6 +122,8 @@ public struct LensStateMachine: Sendable, Equatable {
             break
 
         case (.confirm, .tap):
+            // Save is the primary action (DECISIONS.md, "Lens UI"), so a tap saves. Whether hardware also delivers a
+            // Select to Inputs when the Cancel button is focused is unknown until the on-glasses run (#9).
             return save()
         case let (.confirm(index), .swipeUp), let (.confirm(index), .back):
             page = .photo(index: index)
@@ -157,9 +159,4 @@ public struct LensStateMachine: Sendable, Equatable {
         return .saveSighting(stack.candidates[index])
     }
 
-    /// Test seam: put the machine on a page directly.
-    mutating func jump(to page: LensPage) {
-        precondition(page.index.map { $0 < stack.count } ?? true, "page must index into the stack")
-        self.page = page
-    }
 }

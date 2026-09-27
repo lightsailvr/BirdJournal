@@ -35,26 +35,19 @@ public struct LensCardButton: Sendable, Equatable {
     public var isPrimary: Bool
 }
 
-/// One element of a card, in Display DSL terms: text in one of its three styles, an image, or a button group.
+/// One element of a card, in Display DSL terms: text in one of its three styles, or a button group.
 public enum LensElement: Sendable, Equatable {
     case heading(String)
     case body(String)
     case meta(String)
-    case image(LensImage)
     case buttons([LensCardButton])
 }
 
 /// The single root a Display send takes, described without the toolkit (DECISIONS.md: one root `FlexBox` per
-/// send). `layout` says how the elements sit; the app maps this one to one onto a `FlexBox`.
+/// send): an optional photo beside a column of elements. The app maps this one to one onto a `FlexBox`.
 public struct LensCard: Sendable, Equatable {
-    public enum Layout: Sendable, Equatable {
-        /// Elements stacked top to bottom.
-        case column
-        /// A photo on the left with the remaining elements stacked beside it.
-        case photoBeside
-    }
-
-    public var layout: Layout
+    /// Shown beside the elements when the pack has one and the app can load it.
+    public var photo: LensImage?
     public var elements: [LensElement]
 
     /// Every word of text on the card, including button labels.
@@ -63,7 +56,6 @@ public struct LensCard: Sendable, Equatable {
             switch element {
             case .heading(let text), .body(let text), .meta(let text): count + text.words
             case .buttons(let buttons): count + buttons.reduce(0) { $0 + $1.label.words }
-            case .image: count
             }
         }
     }
@@ -72,5 +64,13 @@ public struct LensCard: Sendable, Equatable {
 extension String {
     var words: Int {
         split(whereSeparator: \.isWhitespace).count
+    }
+
+    /// The first `count` words, with an ellipsis when anything was cut. Zero or fewer words gives an empty string.
+    func limited(toWords count: Int) -> String {
+        guard count > 0 else { return "" }
+        let words = split(whereSeparator: \.isWhitespace)
+        guard words.count > count else { return self }
+        return words.prefix(count).joined(separator: " ") + "…"
     }
 }

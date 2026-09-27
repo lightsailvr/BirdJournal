@@ -54,8 +54,9 @@ struct LensSessionView: View {
                 if lens.savedSightings.isEmpty {
                     Text("Nothing saved yet").foregroundStyle(.secondary)
                 }
-                ForEach(lens.savedSightings) { candidate in
-                    LabeledContent(candidate.species.commonName, value: "\(Int((candidate.score * 100).rounded())) %")
+                // The same species can be saved more than once in a run, so rows are keyed by position.
+                ForEach(Array(lens.savedSightings.enumerated()), id: \.offset) { _, candidate in
+                    LabeledContent(candidate.species.commonName, value: LensCardRenderer.confidence(candidate))
                 }
             }
 
@@ -94,12 +95,28 @@ struct LensSessionView: View {
     }
 }
 
+extension LensPage {
+    /// The page as the phone screen names it.
+    var title: String {
+        switch self {
+        case .listening: "Listening"
+        case .photo(let index): "Photo \(index + 1)"
+        case .description(let index): "Description \(index + 1)"
+        case .confirm(let index): "Confirm \(index + 1)"
+        case .saved(let index): "Saved \(index + 1)"
+        }
+    }
+}
+
 /// The current card mirrored on the phone (spec "Card renderer": the same page model feeds the phone view).
 struct LensCardView: View {
     let card: LensCard
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            if let photo = card.photo {
+                Label(photo.id, systemImage: "photo").font(.caption).foregroundStyle(.secondary)
+            }
             ForEach(Array(card.elements.enumerated()), id: \.offset) { _, element in
                 switch element {
                 case .heading(let text):
@@ -108,8 +125,6 @@ struct LensCardView: View {
                     Text(text)
                 case .meta(let text):
                     Text(text).font(.caption).foregroundStyle(.secondary)
-                case .image(let image):
-                    Label(image.id, systemImage: "photo").font(.caption).foregroundStyle(.secondary)
                 case .buttons(let buttons):
                     HStack {
                         ForEach(Array(buttons.enumerated()), id: \.offset) { _, button in

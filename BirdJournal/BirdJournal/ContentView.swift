@@ -11,7 +11,6 @@ struct ContentView: View {
     @State private var path: [Screen] = []
 
     private let planner = WindowPlanner()
-    private let machine = LensStateMachine()
 
     enum Screen: Hashable {
         case phoneListening
@@ -35,7 +34,7 @@ struct ContentView: View {
 
                 Section("Modules") {
                     LabeledContent("Identification", value: "\(planner.sampleRate) Hz, \(planner.samplesPerWindow) samples per window")
-                    LabeledContent("LensSession", value: machine.page.title)
+                    LabeledContent("LensSession", value: "\(LensCardRenderer.wordBudget) words per page")
                     LabeledContent("Pack", value: PackIndex.bundledPackID)
                     LabeledContent("Album", value: "\(sightings.count) sightings")
                 }
