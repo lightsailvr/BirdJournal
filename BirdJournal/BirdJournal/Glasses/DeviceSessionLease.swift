@@ -85,6 +85,21 @@ extension DeviceSessionError {
         }
         return false
     }
+
+    /// A session that ended with one of these will not restart until the wearer does something (charge, cool
+    /// down, update), so a listening run ends rather than waiting to reconnect (issue #10).
+    var endsRun: Bool {
+        switch self {
+        case .thermalCritical, .thermalEmergency, .peakPowerShutdown, .batteryCritical,
+             .datAppOnTheGlassesUpdateRequired, .insufficientSDKVersion, .dwaUnavailable:
+            true
+        case .noEligibleDevice, .sessionAlreadyStopped, .sessionAlreadyExists, .sessionIdle, .capabilityAlreadyActive,
+             .capabilityNotFound, .unexpectedError, .dwaOutOfStuRange:
+            false
+        @unknown default:
+            false
+        }
+    }
 }
 
 enum DeviceSessionStartError: LocalizedError {

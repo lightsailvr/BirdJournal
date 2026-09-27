@@ -16,6 +16,7 @@ struct LensStateMachineTests {
             _ = machine.apply(.tap)
         }
         if case .details = page { _ = machine.apply(.swipeDown) }
+        if case .problem(let problem) = page { machine.report(problem) }
         precondition(machine.page == page, "could not reach \(page)")
         return machine
     }
@@ -77,6 +78,15 @@ struct LensStateMachineTests {
         Transition(.details(index: 1), .tap, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
         Transition(.details(index: 1), .back, .list),
         Transition(.details(index: 2), .swipeLeft, .details(index: 2)),
+
+        // A problem page over the list (the way back, issue #10): swipe right, Back and a tap return to the page it
+        // covers; the other swipes stay on it.
+        Transition(.problem(.noLocation), .swipeLeft, .problem(.noLocation)),
+        Transition(.problem(.noLocation), .swipeRight, .list),
+        Transition(.problem(.noLocation), .swipeUp, .problem(.noLocation)),
+        Transition(.problem(.noLocation), .swipeDown, .problem(.noLocation)),
+        Transition(.problem(.noLocation), .tap, .list),
+        Transition(.problem(.noLocation), .back, .list),
     ]
 
     @Test("every page and gesture pair lands on the expected page with the expected effect", arguments: transitions)
@@ -89,7 +99,7 @@ struct LensStateMachineTests {
 
     @Test("the table covers every page kind and gesture")
     func tableIsComplete() {
-        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1)]
+        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1), .problem(.noLocation)]
         for page in pages {
             for gesture in LensGesture.allCases {
                 #expect(Self.transitions.contains { $0.from == page && $0.gesture == gesture }, "\(page) + \(gesture) is not in the table")
@@ -185,6 +195,57 @@ struct LensStateMachineTests {
         _ = machine.apply(.tap)
         #expect(machine.page == .species(index: 0))
         #expect(machine.savedIndices == [0])
+    }
+
+    // MARK: - Problems
+
+    @Test("a problem covers the page the wearer is on, and the way back returns there with the selection kept")
+    func problemCoversPage() {
+        var machine = Self.machine(on: .details(index: 1))
+        machine.report(.connectionLost)
+        #expect(machine.page == .problem(.connectionLost))
+        #expect(machine.page.index == nil)
+        #expect(machine.currentCandidate == nil)
+        #expect(machine.apply(.swipeRight) == nil)
+        #expect(machine.page == .details(index: 1))
+        #expect(machine.selection == 1)
+    }
+
+    @Test("a second problem replaces the first and the way back still leads to the covered page")
+    func problemReplaced() {
+        var machine = Self.machine(on: .species(index: 2))
+        machine.report(.noLocation)
+        machine.report(.connectionLost)
+        #expect(machine.page == .problem(.connectionLost))
+        _ = machine.apply(.back)
+        #expect(machine.page == .species(index: 2))
+    }
+
+    @Test("the Add button does nothing on a problem page")
+    func problemIgnoresSave() {
+        var machine = Self.machine(on: .problem(.noLocation))
+        #expect(machine.press(.save) == nil)
+        #expect(machine.savedIndices.isEmpty)
+        #expect(machine.page == .problem(.noLocation))
+    }
+
+    @Test("a species arriving while a problem shows appends without dismissing it")
+    func problemSurvivesAppend() {
+        var machine = Self.machine(on: .details(index: 1), species: 2)
+        machine.report(.noLocation)
+        let changed = machine.update(with: Fakes.stack(3))
+        #expect(changed)
+        #expect(machine.page == .problem(.noLocation))
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .details(index: 1))
+        #expect(machine.stack.count == 3)
+    }
+
+    @Test("a stack that is not a continuation drops the problem along with the page")
+    func problemDroppedOnReplacedStack() {
+        var machine = Self.machine(on: .problem(.connectionLost))
+        _ = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]))
+        #expect(machine.page == .list)
     }
 
     // MARK: - Stack updates

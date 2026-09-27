@@ -20,7 +20,10 @@ struct LensCardRendererTests {
     static let hint = LensElement.meta("Swipe down for more information · swipe right: all species")
 
     /// Every page kind, on a species with a profile (index 0) and one without (index 1).
-    static let pages: [LensPage] = [.list, .species(index: 0), .species(index: 1), .details(index: 0), .details(index: 1)]
+    static let pages: [LensPage] = [
+        .list, .species(index: 0), .species(index: 1), .details(index: 0), .details(index: 1),
+        .problem(.noLocation), .problem(.connectionLost),
+    ]
 
     @Test("every page is one screenful inside the word budget", arguments: pages)
     func budget(page: LensPage) {
@@ -158,6 +161,23 @@ struct LensCardRendererTests {
         guard case .meta(let credit) = card.elements[3] else { Issue.record("no credit line"); return }
         #expect(credit.hasSuffix("…"))
         #expect(credit.words == LensCardRenderer.metaLineBudget)
+    }
+
+    // MARK: - Problems
+
+    @Test("a problem page names the problem, says what it means for the run, and gives the way back")
+    func problemPages() {
+        #expect(Self.render(.problem(.noLocation)).elements == [
+            .heading("No location"),
+            .body("Species are not filtered by your region. Allow location for BirdJournal in Settings on the phone."),
+            .meta("Swipe right to continue"),
+        ])
+        #expect(Self.render(.problem(.connectionLost)).elements == [
+            .heading("Connection lost"),
+            .body("The glasses were out of range. BirdJournal kept listening and is back on the lens."),
+            .meta("Swipe right to continue"),
+        ])
+        #expect(Self.render(.problem(.noLocation)).photo == nil)
     }
 
     @Test("confidence rounds the session score to a whole percent")

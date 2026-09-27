@@ -86,6 +86,7 @@ struct LensSessionView: View {
         case .idle: "Not started"
         case .starting: "Starting"
         case .running: "On the lens"
+        case .suspended: "Waiting for the glasses"
         case .stopping: "Stopping"
         case .stopped(.phone): "Stopped from the phone"
         case .stopped(.back): "Ended with Back"
@@ -102,6 +103,8 @@ extension LensPage {
         case .list: "Species list"
         case .species(let index): "Species \(index + 1) · photo"
         case .details(let index): "Species \(index + 1) · details"
+        case .problem(.noLocation): "Problem · no location"
+        case .problem(.connectionLost): "Problem · connection lost"
         }
     }
 }

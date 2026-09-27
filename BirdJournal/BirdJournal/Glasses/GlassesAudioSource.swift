@@ -9,8 +9,10 @@ import Synchronization
 /// Video runs at the lowest resolution and frame rate to save battery; frames are not used for identification, but
 /// the most recent one is kept so a sighting can store what the wearer was looking at (issue #9).
 ///
-/// Pauses (doff, touchpad tap) are left to the toolkit: the session and stream report `.paused` and resume on
-/// their own, so this source never restarts on a pause.
+/// A pause the toolkit reports (`.paused` on the session and stream) is left to it to resume. A session the glasses
+/// end (a doff ends it and drops the link, DECISIONS.md phase A) is survived instead (issue #10): the run calls
+/// `suspend()`, which drops the camera but keeps the chunk stream open so the engine waits rather than ends, and
+/// `resume(on:)` with the next session, which continues the same chunk stream.
 ///
 /// Explicitly main-actor: conforming to the `Sendable` `AudioSource` protocol would otherwise make the class
 /// nonisolated under the target's default main-actor isolation. Single use: create one per listening run.
@@ -26,10 +28,12 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
 
     enum StartError: LocalizedError {
         case cameraUnavailable
+        case notStarted
 
         var errorDescription: String? {
             switch self {
             case .cameraUnavailable: "The glasses camera stream could not be added to the session."
+            case .notStarted: "The glasses audio source is not running."
             }
         }
     }
@@ -84,23 +88,30 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
         try await wearables.ensurePermission(.camera)
         try await wearables.ensurePermission(.microphone)
 
-        let session = try await lease.session(wearables: wearables) { session in
-            session.statePublisher.listen { [weak self] state in
-                Task { @MainActor in self?.handle(.sessionState(state)) }
-            }.store(in: tokens)
-            session.errorPublisher.listen { [weak self] error in
-                Task { @MainActor in self?.handle(.sessionError(error)) }
-            }.store(in: tokens)
-        }
-        self.session = session
+        let session = try await lease.session(wearables: wearables, listen: listen(to:))
+        let (chunks, continuation) = AsyncStream.makeStream(of: AudioChunk.self, bufferingPolicy: .bufferingNewest(1_024))
+        chunkContinuation = continuation
+        try attachCamera(to: session, feeding: continuation)
+        return chunks
+    }
 
+    private func listen(to session: DeviceSession) {
+        session.statePublisher.listen { [weak self] state in
+            Task { @MainActor in self?.handle(.sessionState(state)) }
+        }.store(in: tokens)
+        session.errorPublisher.listen { [weak self] error in
+            Task { @MainActor in self?.handle(.sessionError(error)) }
+        }.store(in: tokens)
+    }
+
+    /// Adds the camera to `session` and starts its stream into `continuation`.
+    private func attachCamera(to session: DeviceSession, feeding continuation: AsyncStream<AudioChunk>.Continuation) throws {
+        self.session = session
         guard let camera = try session.addCamera(config: configuration) else {
             throw StartError.cameraUnavailable
         }
         self.camera = camera
 
-        let (chunks, continuation) = AsyncStream.makeStream(of: AudioChunk.self, bufferingPolicy: .bufferingNewest(1_024))
-        chunkContinuation = continuation
         camera.stream.audioFramePublisher.listen { frame in
             let chunk = AudioChunk(buffer: frame.pcmBuffer, presentationTime: frame.presentationTimeStamp.seconds)
             if let chunk { continuation.yield(chunk) }
@@ -116,21 +127,44 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
         }.store(in: tokens)
 
         camera.stream.start()
-        return chunks
     }
 
     func stop() async {
-        // Listeners go first so no frame lands after the chunk stream finishes.
+        await releaseCamera()
+        chunkContinuation?.finish()
+        chunkContinuation = nil
+        // `events` stays open: a session error delivered just after a failed start must still reach the reader,
+        // which cancels its own iteration when done.
+    }
+
+    /// The session ended under the stream (doff, link loss): the camera, its listeners and the stale frame go; the
+    /// chunk stream stays open for `resume(on:)`.
+    func suspend() async {
+        await releaseCamera()
+    }
+
+    /// Continues the chunk stream on `session`, the one the run started once the glasses came back. Fails if the
+    /// source was never started or has been stopped; a failure to attach leaves nothing on the session.
+    func resume(on session: DeviceSession) async throws {
+        guard let continuation = chunkContinuation else { throw StartError.notStarted }
+        listen(to: session)
+        do {
+            try attachCamera(to: session, feeding: continuation)
+        } catch {
+            await releaseCamera()
+            throw error
+        }
+    }
+
+    /// Listeners go first so no frame lands after the chunk stream finishes or the camera is gone.
+    private func releaseCamera() async {
         await tokens.cancelAll()
         camera?.stop()
         if lease.isOwned { session?.stop() }
         camera = nil
         session = nil
         latestVideoFrame.withLock { $0 = nil }
-        chunkContinuation?.finish()
-        chunkContinuation = nil
-        // `events` stays open: a session error delivered just after a failed start must still reach the reader,
-        // which cancels its own iteration when done.
+        streamState = .stopped
     }
 
     private func handle(_ event: Event) {

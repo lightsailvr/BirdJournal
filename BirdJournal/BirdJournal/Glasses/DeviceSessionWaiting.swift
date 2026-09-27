@@ -16,6 +16,56 @@ extension AutoDeviceSelector {
     }
 }
 
+extension Device {
+    /// The device's state as one value, as its state listener reports it.
+    var currentState: DeviceState {
+        DeviceState(
+            linkState: linkState,
+            compatibility: compatibility(),
+            batteryLevel: batteryLevel,
+            chargingState: chargingState,
+            donState: donState,
+            hingeState: hingeState,
+            thermalLevel: thermalLevel
+        )
+    }
+
+    /// The first value `outcome` gives for the current state or a later one; nil once `timeout` passes (no
+    /// timeout waits as long as the task lives) or the task is cancelled. Used by the listening run to tell a
+    /// doff from a lost link from a quit, and to wait for the glasses to come back (issue #10).
+    func firstState<Outcome: Sendable>(
+        within timeout: Duration?,
+        _ outcome: @escaping @Sendable (DeviceState) -> Outcome?
+    ) async -> Outcome? {
+        let (states, continuation) = AsyncStream.makeStream(of: DeviceState.self, bufferingPolicy: .unbounded)
+        let bag = ListenerTokenBag()
+        addDeviceStateListener { continuation.yield($0) }.store(in: bag)
+        // After the listener is in place, so a change between the two is not missed.
+        continuation.yield(currentState)
+        defer {
+            bag.clear()
+            continuation.finish()
+        }
+        return await withTaskGroup(of: Outcome?.self) { group in
+            group.addTask {
+                for await state in states {
+                    if let value = outcome(state) { return value }
+                }
+                return nil
+            }
+            if let timeout {
+                group.addTask {
+                    try? await Task.sleep(for: timeout)
+                    return nil
+                }
+            }
+            let first = await group.next() ?? nil
+            group.cancelAll()
+            return first
+        }
+    }
+}
+
 extension DeviceSession {
     /// Waits for `.started`; false if the session stops first or `timeout` passes.
     func waitUntilStarted(timeout: Duration = .seconds(30)) async -> Bool {

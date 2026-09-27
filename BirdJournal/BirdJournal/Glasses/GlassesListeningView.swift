@@ -22,6 +22,12 @@ struct GlassesListeningView: View {
                     }
                 case .listening:
                     Button("Stop", role: .destructive) { Task { await run.stop() } }
+                case .interrupted, .paused, .resuming:
+                    HStack {
+                        ProgressView()
+                        Text(pauseText)
+                    }
+                    Button("Stop", role: .destructive) { Task { await run.stop() } }
                 case .stopping:
                     HStack {
                         ProgressView()
@@ -39,7 +45,7 @@ struct GlassesListeningView: View {
                 }
                 LocationRow(session: run.listening)
             } footer: {
-                Text("Glasses audio feeds BirdNET; cards show on the lens. Swipe between species, swipe down to choose a species and tap to open it, swipe down again for its details, tap \"Add to my list\". Powered by BirdNET.")
+                Text("Glasses audio feeds BirdNET; cards show on the lens. Swipe between species, swipe down to choose a species and tap to open it, swipe down again for its details, tap \"Add to my list\". Taking the glasses off or walking out of range pauses the run; it carries on when they are back. Powered by BirdNET.")
             }
 
             Section("On the lens") {
@@ -76,11 +82,28 @@ struct GlassesListeningView: View {
         case .idle: "Not started"
         case .starting: "Starting"
         case .listening: "Listening"
+        case .interrupted: "Interrupted"
+        case .paused(.glassesOff): "Paused: glasses off"
+        case .paused(.disconnected): "Paused: glasses disconnected"
+        case .paused(.byGlasses): "Paused by the glasses"
+        case .resuming: "Reconnecting"
         case .stopping: "Stopping"
         case .stopped(.phone): "Stopped from the phone"
         case .stopped(.back): "Ended with Back"
         case .stopped(.glasses): "Ended by the glasses"
         case .stopped(.failed): "Failed"
+        }
+    }
+
+    /// What the run is waiting for while paused, and the way out.
+    private var pauseText: String {
+        switch run.phase {
+        case .interrupted: "The glasses ended the session…"
+        case .paused(.glassesOff): "Glasses off. Put them on to carry on, or Stop."
+        case .paused(.disconnected): "Glasses out of range. Move closer to carry on, or Stop."
+        case .paused(.byGlasses): "Paused by the glasses. Tap the touchpad to carry on, or Stop."
+        case .resuming: "Glasses back: reconnecting…"
+        case .idle, .starting, .listening, .stopping, .stopped: ""
         }
     }
 }

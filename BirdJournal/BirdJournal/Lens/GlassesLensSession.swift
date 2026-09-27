@@ -18,12 +18,19 @@ import UIKit
 /// hardware delivers one. Real Display glasses end the session themselves on the two-finger tap, which arrives
 /// as `.stopped` and is reported as `StopReason.glasses`. Each `start` begins a fresh page state on the session its
 /// lease gives: one of its own, or the listening run's, shared with the camera stream.
+///
+/// A shared session the glasses end (a doff ends the session and drops the link, DECISIONS.md phase A) suspends
+/// the adapter instead of stopping it (issue #10): Display and Inputs are released, the pages stay as the wearer
+/// left them, and the run either resumes them on its next session or stops. A problem the run reports (no
+/// location, a lost link) covers the current page until the wearer swipes right.
 @Observable
 final class GlassesLensSession {
     enum Phase: Equatable {
         case idle
         case starting
         case running
+        /// The run's session ended under the pages; they wait for `resume(lease:)` or `stop()`.
+        case suspended
         case stopping
         case stopped(StopReason)
     }
@@ -90,8 +97,8 @@ final class GlassesLensSession {
     @ObservationIgnored private var display: Display?
     @ObservationIgnored private var inputsCapability: Inputs?
     @ObservationIgnored private var inputTask: Task<Void, Never>?
-    /// The teardown in progress, so a second stop (the phone after Back, the run after the glasses) awaits it.
-    @ObservationIgnored private var stopTask: Task<Void, Never>?
+    /// The teardown in progress (a stop or a suspension), so a stop or resume that lands meanwhile awaits it.
+    @ObservationIgnored private var teardownTask: Task<Void, Never>?
     /// Sends run one after another so a burst of gestures leaves the latest card on the lens.
     @ObservationIgnored private var sendTask: Task<Void, Never>?
     @ObservationIgnored private let tokens = ListenerTokenBag()
@@ -118,7 +125,8 @@ final class GlassesLensSession {
     var page: LensPage { machine.page }
     var stack: CandidateStack { machine.stack }
 
-    var isActive: Bool { phase == .starting || phase == .running }
+    /// Whether the adapter holds a run's pages: starting, on the lens, or waiting for the run's session to return.
+    var isActive: Bool { phase == .starting || phase == .running || phase == .suspended }
 
     // MARK: - Lifecycle
 
@@ -132,8 +140,25 @@ final class GlassesLensSession {
         savedSightings = []
         lastSave = nil
         inputRecords = []
-        stopTask = nil
+        teardownTask = nil
         refreshCard()
+        await attachOrFail()
+    }
+
+    /// Puts the pages back on the lens over the session `lease` gives, after the run's session ended under them:
+    /// the page, the selection and the saved marks are as the wearer left them, and a problem reported meanwhile
+    /// is the first card sent. Only from `.suspended`; a stop that landed first wins.
+    func resume(lease: DeviceSessionLease) async {
+        guard phase == .suspended else { return }
+        await teardownTask?.value
+        guard phase == .suspended else { return }
+        phase = .starting
+        errorMessage = nil
+        self.lease = lease
+        await attachOrFail()
+    }
+
+    private func attachOrFail() async {
         lastSessionError.withLock { $0 = nil }
         do {
             try await attach()
@@ -146,22 +171,68 @@ final class GlassesLensSession {
         }
     }
 
-    /// Stops a running session from the phone. A start in progress cannot be interrupted (the screen hides Stop
-    /// meanwhile): `start()` would otherwise carry on after the teardown and report its own failure over this stop.
-    /// A stop already under way (Back, the glasses) is awaited instead and keeps its reason.
+    /// Stops a running or suspended session from the phone. A start in progress cannot be interrupted (the screen
+    /// hides Stop meanwhile): `start()` would otherwise carry on after the teardown and report its own failure over
+    /// this stop. A stop already under way (Back, the glasses) is awaited instead and keeps its reason.
     func stop() async {
-        beginStop(reason: .phone)
-        await stopTask?.value
+        await stop(reason: .phone)
+    }
+
+    /// As `stop()`, recorded with `reason`: the run passes on why it ended a suspended lens.
+    func stop(reason: StopReason) async {
+        switch phase {
+        case .running:
+            beginStop(reason: reason)
+        case .suspended:
+            // Everything was released on suspension; only the phase is left to settle once that teardown is done.
+            phase = .stopping
+            let suspension = teardownTask
+            teardownTask = Task { [self] in
+                await suspension?.value
+                phase = .stopped(reason)
+            }
+        case .idle, .starting, .stopping, .stopped:
+            break
+        }
+        await teardownTask?.value
     }
 
     private func beginStop(reason: StopReason) {
         guard phase == .running else { return }
         phase = .stopping
-        stopTask = Task { [self] in
+        teardownTask = Task { [self] in
             await tearDown()
             phase = .stopped(reason)
         }
     }
+
+    /// Takes the pages off a shared session that ended under them and keeps them for `resume(lease:)`. The run
+    /// calls this when it learns the session ended; the adapter also does it on the session's own `.stopped`, so
+    /// whichever arrives first suspends and the other finds it done. Returns once everything is released.
+    func suspend() async {
+        guard !lease.isOwned else { return }
+        beginSuspend()
+        await teardownTask?.value
+    }
+
+    /// The shared session ended under the pages: release what was on it and keep the pages for `resume(lease:)`.
+    private func beginSuspend() {
+        guard phase == .running else { return }
+        phase = .suspended
+        teardownTask = Task { [self] in
+            await tearDown()
+        }
+    }
+
+    // MARK: - Problems
+
+    /// Shows `problem` over the current page until the wearer swipes right (or taps, or goes back). Sent at once
+    /// when the lens is up, or as the first card when the pages resume.
+    func report(_ problem: LensProblem) {
+        machine.report(problem)
+        refreshCard()
+    }
+
 
     // MARK: - Stack
 
@@ -220,24 +291,28 @@ final class GlassesLensSession {
     }
 
     /// Releases Inputs, Display and (when it is this adapter's own) the session, in that order, and every listener
-    /// token. A shared session is left to its owner.
+    /// token. A shared session is left to its owner. The capabilities are taken off the adapter before the first
+    /// await, so a card refreshed meanwhile finds no display to send to.
     private func tearDown() async {
         inputTask?.cancel()
         inputTask = nil
         sendTask?.cancel()
         sendTask = nil
+        let display = self.display
+        self.display = nil
+        let inputs = inputsCapability
+        inputsCapability = nil
+        let session = self.session
+        self.session = nil
         await tokens.cancelAll()
-        if inputsCapability != nil {
+        if inputs != nil {
             try? session?.removeInputs()
-            inputsCapability = nil
         }
         display?.stop()
-        display = nil
         if lease.isOwned {
             session?.stop()
             sessionState = .stopped
         }
-        session = nil
         inputsState = .inactive
         displayState = .stopped
     }
@@ -245,15 +320,30 @@ final class GlassesLensSession {
     // MARK: - Events
 
     private func sessionDidChange(to state: DeviceSessionState) {
+        let previous = sessionState
         sessionState = state
         // While starting, `start()` reports the failure; while stopping, the phone asked for it.
-        guard state == .stopped, phase == .running else { return }
-        // The glasses report their own end as an error too ("Session ended by device", DECISIONS.md doff test);
-        // the phase already says so, and only a real failure (thermal, battery) is worth a red line.
-        if lastSessionError.withLock({ $0 })?.isEndedByDevice == true {
-            errorMessage = nil
+        guard phase == .running else { return }
+        switch state {
+        case .started where previous == .paused:
+            // The glasses paused the session (touchpad) and resumed it; the display may have dropped the card.
+            resendCard()
+        case .stopped:
+            // The glasses report their own end as an error too ("Session ended by device", DECISIONS.md doff test);
+            // the phase already says so, and only a real failure (thermal, battery) is worth a red line.
+            if lastSessionError.withLock({ $0 })?.isEndedByDevice == true {
+                errorMessage = nil
+            }
+            // Claimed now, so a Stop tapped meanwhile awaits this teardown instead of repeating it. The run that
+            // owns a shared session decides whether its pages come back (doff, link loss) or it is over (a quit).
+            if lease.isOwned {
+                beginStop(reason: .glasses)
+            } else {
+                beginSuspend()
+            }
+        case .idle, .starting, .started, .paused, .stopping:
+            break
         }
-        beginStop(reason: .glasses) // Claimed now, so a Stop tapped meanwhile awaits this teardown instead of repeating it.
     }
 
     private func sessionDidFail(_ error: DeviceSessionError) {

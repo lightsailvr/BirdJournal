@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import MWDATCore
 import Synchronization
 import Testing
 @testable import BirdJournal
@@ -131,12 +132,15 @@ nonisolated final class SpyOccurrence: SpeciesOccurrenceModel {
 }
 
 /// Silence fed by the test at the model rate, so windows fall exactly where expected. Stands in for the glasses
-/// stream in the run tests (issue #9), with whatever camera frame the test sets.
+/// stream in the run tests (issue #9), with whatever camera frame the test sets, and records the sessions it was
+/// suspended from and resumed on (issue #10).
 @MainActor
 final class ManualAudioSource: FrameKeepingAudioSource {
     let sampleRate = 32_000
     var latestFrame: CameraFrame?
     private(set) var isStopped = false
+    private(set) var suspensions = 0
+    private(set) var resumedOn: [DeviceSession] = []
     private var fedSeconds = 0.0
     private let stream: AsyncStream<AudioChunk>
     private let continuation: AsyncStream<AudioChunk>.Continuation
@@ -150,6 +154,15 @@ final class ManualAudioSource: FrameKeepingAudioSource {
     func stop() async {
         isStopped = true
         continuation.finish()
+    }
+
+    func suspend() async {
+        suspensions += 1
+        latestFrame = nil
+    }
+
+    func resume(on session: DeviceSession) async throws {
+        resumedOn.append(session)
     }
 
     func feed(seconds: Double) {
