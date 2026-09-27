@@ -3,6 +3,7 @@ import MWDATCore
 import Observation
 #if DEBUG
 import MWDATMockDevice
+import UIKit
 #endif
 
 /// One linked pair of glasses as the phone screen shows it.
@@ -82,6 +83,7 @@ final class GlassesConnection {
         let sessionError: DeviceSessionError? = switch error {
         case let error as DeviceSessionError: error
         case GlassesAudioSource.StartError.sessionDidNotStart(let error): error
+        case GlassesLensSession.StartError.sessionDidNotStart(let error): error
         default: nil
         }
         if sessionError == .datAppOnTheGlassesUpdateRequired {
@@ -164,6 +166,41 @@ final class GlassesConnection {
 
     func setMockWorn(_ worn: Bool) {
         if worn { mockGlasses?.don() } else { mockGlasses?.doff() }
+    }
+
+    /// What the mock lens is showing, as a view to embed in the phone screen. Nil unless a mock is paired.
+    func makeMockDisplayPreview() -> UIView? {
+        mockGlasses?.services.display.createPreviewView()
+    }
+
+    /// Stand-ins for the Neural Band. Dropped by the mock unless Inputs is attached and active.
+    enum MockInput: CaseIterable, Identifiable {
+        case navLeft, navRight, navUp, navDown, select, back
+
+        var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .navLeft: "←"
+            case .navRight: "→"
+            case .navUp: "↑"
+            case .navDown: "↓"
+            case .select: "Tap"
+            case .back: "Back"
+            }
+        }
+    }
+
+    func injectMockInput(_ input: MockInput) {
+        guard let kit = mockGlasses?.services.input else { return }
+        switch input {
+        case .navLeft: kit.navLeft()
+        case .navRight: kit.navRight()
+        case .navUp: kit.navUp()
+        case .navDown: kit.navDown()
+        case .select: kit.select()
+        case .back: kit.back()
+        }
     }
     #endif
 }

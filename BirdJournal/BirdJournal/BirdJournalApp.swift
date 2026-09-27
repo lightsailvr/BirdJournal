@@ -8,6 +8,7 @@ import SwiftUI
 struct BirdJournalApp: App {
     @State private var connection: GlassesConnection
     @State private var spike: SpikeRecorder
+    @State private var lens: GlassesLensSession
 
     init() {
         do {
@@ -19,6 +20,7 @@ struct BirdJournalApp: App {
         let connection = GlassesConnection()
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
+        _lens = State(initialValue: GlassesLensSession(connection: connection))
     }
 
     var body: some Scene {
@@ -26,6 +28,7 @@ struct BirdJournalApp: App {
             ContentView()
                 .environment(connection)
                 .environment(spike)
+                .environment(lens)
                 .onOpenURL { url in
                     Task { await connection.handle(url: url) }
                 }
