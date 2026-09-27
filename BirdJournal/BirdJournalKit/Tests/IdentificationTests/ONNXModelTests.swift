@@ -39,6 +39,19 @@ struct ONNXModelTests {
         #expect(noiseScores != toneScores)
     }
 
+    @Test("the label sets join by scientific name; the bird classes the geomodel does not know are a known, stable set")
+    func labelSetsJoin() throws {
+        let birds = try ONNXBirdModel.bundled().species.filter { $0.taxonomicClass == Species.birds }
+        let known = Set(try ONNXGeoModel.bundled().labels.map(\.scientificName))
+
+        let unknown = birds.filter { !known.contains($0.scientificName) }
+
+        // 394 of 9,834 bird classes (preview 3.1 vs geomodel 3.0.4) can never be admitted. A change here means one
+        // of the pinned label files changed and the join needs another look.
+        #expect(unknown.count == 394, "\(unknown.prefix(10).map(\.commonName))")
+        #expect(known.contains("Haemorhous mexicanus"))
+    }
+
     @Test("the geomodel puts House Finch in Los Angeles and keeps Common Blackbird and Chaffinch out")
     func geomodelLosAngeles() throws {
         let model = try ONNXGeoModel.bundled()

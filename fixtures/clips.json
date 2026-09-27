@@ -16,7 +16,8 @@
         "Baeolophus bicolor",
         "Turdus merula",
         "Fringilla coelebs"
-      ]
+      ],
+      "withinSeconds": 10
     }
   ]
 }

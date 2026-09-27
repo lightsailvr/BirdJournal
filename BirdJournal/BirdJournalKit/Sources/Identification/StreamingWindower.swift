@@ -29,12 +29,12 @@ public struct StreamingWindower: Sendable {
     /// Appends samples and returns every window that became complete, in order.
     public mutating func append(_ samples: [Float]) -> [AudioWindow] {
         buffer.append(contentsOf: samples)
-        var windows: [AudioWindow] = []
-        while buffer.count >= planner.samplesPerWindow {
-            windows.append(AudioWindow(start: bufferStart, samples: Array(buffer[..<planner.samplesPerWindow])))
-            buffer.removeFirst(planner.samplesPerHop)
-            bufferStart += planner.samplesPerHop
-        }
+        let ranges = planner.windows(forSampleCount: buffer.count)
+        guard let last = ranges.last else { return [] }
+        let windows = ranges.map { AudioWindow(start: bufferStart + $0.lowerBound, samples: Array(buffer[$0])) }
+        let consumed = last.lowerBound + planner.samplesPerHop
+        buffer.removeFirst(consumed)
+        bufferStart += consumed
         return windows
     }
 }

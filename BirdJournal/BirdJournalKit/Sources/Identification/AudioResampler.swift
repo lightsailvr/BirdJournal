@@ -3,7 +3,8 @@ import AVFAudio
 public enum ResampleError: Error {
     case unsupportedRate(Int)
     case converterUnavailable(from: Int, to: Int)
-    case conversionFailed(any Error)
+    /// The converter reported an error; `underlying` is what it said, if anything.
+    case conversionFailed(underlying: (any Error)?)
 }
 
 /// Converts chunks from a source's native rate to the model rate, keeping the converter's filter state across
@@ -12,7 +13,6 @@ public final class AudioResampler {
     public let outputRate: Int
 
     private var converter: AVAudioConverter?
-    private var inputFormat: AVAudioFormat?
     private let outputFormat: AVAudioFormat
 
     public init(outputRate: Int = 32_000) {
@@ -21,10 +21,15 @@ public final class AudioResampler {
         outputFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(outputRate), channels: 1, interleaved: false)!
     }
 
-    /// Returns the chunk's samples at the output rate. Chunks already at that rate pass through untouched.
+    /// Returns the chunk's samples at the output rate. Chunks already at that rate pass through untouched. A
+    /// change of input rate first drains what the previous converter still held, so no audio is lost.
     public func resample(_ chunk: AudioChunk) throws -> [Float] {
-        guard chunk.sampleRate != outputRate else { return chunk.samples }
         guard !chunk.samples.isEmpty else { return [] }
+        var drained: [Float] = []
+        if let converter, Int(converter.inputFormat.sampleRate) != chunk.sampleRate {
+            drained = try flush()
+        }
+        guard chunk.sampleRate != outputRate else { return drained + chunk.samples }
         let converter = try converter(forInputRate: chunk.sampleRate)
 
         let input = AVAudioPCMBuffer(pcmFormat: converter.inputFormat, frameCapacity: AVAudioFrameCount(chunk.samples.count))!
@@ -33,15 +38,23 @@ public final class AudioResampler {
 
         let ratio = Double(outputRate) / Double(chunk.sampleRate)
         let capacity = AVAudioFrameCount((Double(chunk.samples.count) * ratio).rounded(.up)) + 64
-        return try convert(with: converter, capacity: capacity, input: input, trailingStatus: .noDataNow)
+        return drained + (try convert(with: converter, capacity: capacity, input: input, trailingStatus: .noDataNow))
     }
 
     /// Drains the samples the converter's filter still holds once the source has ended, and resets it so the next
     /// chunk starts a fresh stream. Returns nothing if no conversion happened.
     public func flush() throws -> [Float] {
         guard let converter else { return [] }
-        defer { converter.reset() }
-        return try convert(with: converter, capacity: 256, input: nil, trailingStatus: .endOfStream)
+        defer {
+            converter.reset()
+            self.converter = nil
+        }
+        var drained: [Float] = []
+        while true {
+            let tail = try convert(with: converter, capacity: 1_024, input: nil, trailingStatus: .endOfStream)
+            guard !tail.isEmpty else { return drained }
+            drained += tail
+        }
     }
 
     private func convert(with converter: AVAudioConverter, capacity: AVAudioFrameCount, input: AVAudioPCMBuffer?, trailingStatus: AVAudioConverterInputStatus) throws -> [Float] {
@@ -57,8 +70,7 @@ public final class AudioResampler {
             outStatus.pointee = .haveData
             return next
         }
-        if let error { throw ResampleError.conversionFailed(error) }
-        guard status != .error else { throw ResampleError.converterUnavailable(from: Int(converter.inputFormat.sampleRate), to: outputRate) }
+        guard status != .error else { throw ResampleError.conversionFailed(underlying: error) }
         return Array(UnsafeBufferPointer(start: output.floatChannelData![0], count: Int(output.frameLength)))
     }
 
@@ -71,7 +83,6 @@ public final class AudioResampler {
             throw ResampleError.converterUnavailable(from: rate, to: outputRate)
         }
         self.converter = converter
-        inputFormat = format
         return converter
     }
 }

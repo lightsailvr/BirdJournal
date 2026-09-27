@@ -12,7 +12,13 @@ public final class WAVFileAudioSource: AudioSource {
     public let url: URL
     public let chunkFrames: Int
 
-    private let task = Mutex<Task<Void, Never>?>(nil)
+    private enum State {
+        case idle
+        case starting
+        case running(Task<Void, Never>)
+    }
+
+    private let state = Mutex(State.idle)
 
     public init(url: URL, chunkFrames: Int = 4_096) {
         precondition(chunkFrames > 0, "chunkFrames must be positive")
@@ -22,7 +28,18 @@ public final class WAVFileAudioSource: AudioSource {
 
     /// Opens the file (throwing if it cannot be read) and streams it; the stream finishes at end of file or on `stop()`.
     public func start() async throws -> AsyncStream<AudioChunk> {
-        _ = try AVAudioFile(forReading: url)
+        let claimed = state.withLock { state -> Bool in
+            guard case .idle = state else { return false }
+            state = .starting
+            return true
+        }
+        guard claimed else { throw SourceError.alreadyStarted }
+        do {
+            _ = try AVAudioFile(forReading: url)
+        } catch {
+            state.withLock { $0 = .idle }
+            throw error
+        }
         let (chunks, continuation) = AsyncStream.makeStream(of: AudioChunk.self, bufferingPolicy: .unbounded)
         let reader = Task.detached(priority: .utility) { [url, chunkFrames] in
             defer { continuation.finish() }
@@ -36,22 +53,15 @@ public final class WAVFileAudioSource: AudioSource {
                 continuation.yield(chunk)
             }
         }
-        let started = task.withLock { current -> Bool in
-            guard current == nil else { return false }
-            current = reader
-            return true
-        }
-        guard started else {
-            reader.cancel()
-            throw SourceError.alreadyStarted
-        }
+        state.withLock { $0 = .running(reader) }
         return chunks
     }
 
     public func stop() async {
-        let reader = task.withLock { current -> Task<Void, Never>? in
-            defer { current = nil }
-            return current
+        let reader = state.withLock { state -> Task<Void, Never>? in
+            defer { state = .idle }
+            if case .running(let task) = state { return task }
+            return nil
         }
         reader?.cancel()
         await reader?.value

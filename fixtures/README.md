@@ -21,6 +21,7 @@ Add an entry to `clips.json`:
 | `latitude`, `longitude`, `week` | Where and when it was recorded. `week` is BirdNET's 48-week year (four per month). |
 | `expected` | Scientific names (as in the BirdNET+ label file) that must rank in the top three of the final stack. |
 | `absent` | Optional. Scientific names that must never be admitted, e.g. species the geomodel rules out at that location. |
+| `withinSeconds` | Optional. Seconds into the clip by which every `expected` species must be in the stack (spec "Engine seam": top three within a time budget). |
 | `note` | Free text: source, license, what is audible. |
 
 Labeled recordings: name the file after the dominant species and date (`house-finch-2026-10-03.wav`),

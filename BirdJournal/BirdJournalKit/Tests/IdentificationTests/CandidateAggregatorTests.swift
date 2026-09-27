@@ -22,7 +22,7 @@ struct CandidateAggregatorTests {
         #expect(aggregator.observe([0.9, 0, 0], at: 1.5) == true)
 
         #expect(aggregator.stack.candidates == [
-            Candidate(species: finch, score: 0.9, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1.5),
+            Candidate(species: finch, score: 0.9, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1.5, admittedAt: 1.5),
         ])
     }
 
@@ -55,6 +55,7 @@ struct CandidateAggregatorTests {
         #expect(aggregator.stack.candidates.map(\.score) == [0.95, 0.7, 0.9])
         #expect(aggregator.stack.candidates[0].windowsAboveThreshold == 4)
         #expect(aggregator.stack.candidates[0].lastHeardAt == 4.5)
+        #expect(aggregator.stack.candidates.map(\.admittedAt) == [1.5, 1.5, 4.5])
         #expect(aggregator.stack.ranked.map(\.species) == [finch, robin, jay])
     }
 
@@ -69,9 +70,9 @@ struct CandidateAggregatorTests {
     @Test("ranking breaks score ties by admission order")
     func rankedTies() {
         let stack = CandidateStack(candidates: [
-            Candidate(species: finch, score: 0.5, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 0),
-            Candidate(species: jay, score: 0.5, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 0),
-            Candidate(species: robin, score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 0),
+            Candidate(species: finch, score: 0.5, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 0, admittedAt: 0),
+            Candidate(species: jay, score: 0.5, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 0, admittedAt: 0),
+            Candidate(species: robin, score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 0, admittedAt: 0),
         ])
         #expect(stack.ranked.map(\.species) == [robin, finch, jay])
     }

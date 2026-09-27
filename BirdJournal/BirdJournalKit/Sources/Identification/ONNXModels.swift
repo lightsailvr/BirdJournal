@@ -45,7 +45,7 @@ enum ONNXRuntime {
 }
 
 /// BirdNET+ V3.0 through ONNX Runtime: raw 32 kHz waveform in, per-class sigmoid scores out.
-public final class ONNXBirdModel: BirdModel, @unchecked Sendable {
+public final class ONNXBirdModel: BirdModel {
     public static let modelFileName = "BirdNET+_V3.0-preview3.1_Global_11K_FP16_pruned.onnx"
     public static let labelsFileName = "BirdNET+_V3.0-preview3.1_Global_11K_Labels.csv"
 
@@ -75,7 +75,7 @@ public final class ONNXBirdModel: BirdModel, @unchecked Sendable {
 }
 
 /// BirdNET geomodel v3.0.4 through ONNX Runtime: (latitude, longitude, week) in, per-class occurrence out.
-public final class ONNXGeoModel: SpeciesOccurrenceModel, @unchecked Sendable {
+public final class ONNXGeoModel: SpeciesOccurrenceModel {
     public static let modelFileName = "BirdNET+_Geomodel_V3.0.4_Global_14K_FP16.onnx"
     public static let labelsFileName = "BirdNET+_Geomodel_V3.0.4_Global_14K_Labels.txt"
 

@@ -95,6 +95,9 @@ struct IdentificationEngineTests {
         let topThree = stack.ranked.prefix(3).map(\.species.scientificName)
         for expected in clip.expected {
             #expect(topThree.contains(expected), "\(expected) not in top three \(topThree) for \(clip.file)")
+            if let budget = clip.withinSeconds, let candidate = stack.candidates.first(where: { $0.species.scientificName == expected }) {
+                #expect(candidate.admittedAt <= budget, "\(expected) admitted at \(candidate.admittedAt) s, after the \(budget) s budget, for \(clip.file)")
+            }
         }
         let admitted = Set(stack.candidates.map(\.species.scientificName))
         for absent in clip.absent {
@@ -173,10 +176,12 @@ struct ExternalClip: Decodable, CustomTestStringConvertible {
     var week: Int
     var expected: [String]
     var absent: [String] = []
+    /// Seconds into the clip by which each expected species must have been admitted, if given.
+    var withinSeconds: Double?
     var url: URL { ExternalClips.fixturesDirectory.appending(path: file) }
     var testDescription: String { file }
 
-    private enum CodingKeys: String, CodingKey { case file, latitude, longitude, week, expected, absent }
+    private enum CodingKeys: String, CodingKey { case file, latitude, longitude, week, expected, absent, withinSeconds }
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -186,6 +191,7 @@ struct ExternalClip: Decodable, CustomTestStringConvertible {
         week = try container.decode(Int.self, forKey: .week)
         expected = try container.decode([String].self, forKey: .expected)
         absent = try container.decodeIfPresent([String].self, forKey: .absent) ?? []
+        withinSeconds = try container.decodeIfPresent(Double.self, forKey: .withinSeconds)
     }
 }
 

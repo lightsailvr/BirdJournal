@@ -52,14 +52,21 @@ public final class IdentificationEngine: Sendable {
         self.configuration = configuration
     }
 
-    /// Classes admissible in `context`, one flag per model class.
+    /// Classes admissible in `context`, one flag per model class. Logs how many bird classes the prior does not
+    /// know at all, since those can never be admitted (the two label sets are joined by scientific name).
     public func allowedSpecies(in context: GeoContext) throws -> [Bool] {
-        SpeciesFilter.allowed(
+        let occurrence = try occurrenceModel.occurrence(in: context)
+        let allowed = SpeciesFilter.allowed(
             species: model.species,
-            occurrence: try occurrenceModel.occurrence(in: context),
+            occurrence: occurrence,
             threshold: configuration.occurrenceThreshold,
             taxonomicClasses: configuration.taxonomicClasses
         )
+        let birds = model.species.filter { $0.taxonomicClass == Species.birds }
+        let unknownToPrior = birds.filter { occurrence[$0.scientificName] == nil }.count
+        let admissible = allowed.filter { $0 }.count
+        Self.logger.info("session at \(context.latitude, privacy: .public), \(context.longitude, privacy: .public) week \(context.week, privacy: .public): \(admissible, privacy: .public) admissible classes; \(unknownToPrior, privacy: .public) of \(birds.count, privacy: .public) bird classes unknown to the geo prior")
+        return allowed
     }
 
     /// Starts `source` and identifies until it ends or the consumer cancels. Errors from the prior or the source
@@ -102,11 +109,12 @@ public final class IdentificationEngine: Sendable {
                     try process(try resampler.resample(chunk))
                 }
                 try process(try resampler.flush())
+                await source.stop()
                 continuation.finish()
             } catch {
+                await source.stop()
                 continuation.finish(throwing: error)
             }
-            await source.stop()
         }
         continuation.onTermination = { _ in worker.cancel() }
         return events
@@ -115,10 +123,12 @@ public final class IdentificationEngine: Sendable {
     private static func log(_ report: WindowReport, configuration: IdentificationConfiguration) {
         let milliseconds = Double(report.inference.components.attoseconds) / 1e15 + Double(report.inference.components.seconds) * 1_000
         let top = report.topSpecies?.commonName ?? "none"
-        if report.inference > configuration.inferenceBudget {
-            logger.warning("window \(report.start, format: .fixed(precision: 1), privacy: .public) s: inference \(milliseconds, format: .fixed(precision: 1), privacy: .public) ms over budget; top \(top, privacy: .public) \(report.topScore, format: .fixed(precision: 3), privacy: .public)")
+        let overBudget = report.inference > configuration.inferenceBudget
+        let message = "window \(report.start.formatted(.number.precision(.fractionLength(1)))) s: inference \(milliseconds.formatted(.number.precision(.fractionLength(1)))) ms\(overBudget ? " over budget" : ""); top \(top) \(report.topScore.formatted(.number.precision(.fractionLength(3))))"
+        if overBudget {
+            logger.warning("\(message, privacy: .public)")
         } else {
-            logger.info("window \(report.start, format: .fixed(precision: 1), privacy: .public) s: inference \(milliseconds, format: .fixed(precision: 1), privacy: .public) ms; top \(top, privacy: .public) \(report.topScore, format: .fixed(precision: 3), privacy: .public)")
+            logger.info("\(message, privacy: .public)")
         }
     }
 }

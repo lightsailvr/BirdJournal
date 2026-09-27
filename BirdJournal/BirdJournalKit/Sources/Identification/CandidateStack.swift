@@ -1,22 +1,26 @@
 /// A species the session has heard convincingly, with what the engine knows about it so far.
 public struct Candidate: Sendable, Equatable, Identifiable {
     public let species: Species
-    /// Best single-window score so far, in [0, 1].
+    /// The session score: the best single-window score so far, in [0, 1]. A maximum rather than a mean, so one
+    /// clear call is not diluted by the quiet windows around it.
     public var score: Float
     /// Windows that scored at or above the window threshold.
     public var windowsAboveThreshold: Int
-    /// Seconds into the session of the first and latest window above threshold.
+    /// Seconds into the session of the first and latest window above threshold, and of the window that admitted
+    /// the species to the stack.
     public var firstHeardAt: Double
     public var lastHeardAt: Double
+    public let admittedAt: Double
 
     public var id: Int { species.index }
 
-    public init(species: Species, score: Float, windowsAboveThreshold: Int, firstHeardAt: Double, lastHeardAt: Double) {
+    public init(species: Species, score: Float, windowsAboveThreshold: Int, firstHeardAt: Double, lastHeardAt: Double, admittedAt: Double) {
         self.species = species
         self.score = score
         self.windowsAboveThreshold = windowsAboveThreshold
         self.firstHeardAt = firstHeardAt
         self.lastHeardAt = lastHeardAt
+        self.admittedAt = admittedAt
     }
 }
 
@@ -35,7 +39,12 @@ public struct CandidateStack: Sendable, Equatable {
 
     /// Candidates by descending score; ties keep admission order.
     public var ranked: [Candidate] {
-        candidates.enumerated().sorted { ($1.element.score, $0.offset) < ($0.element.score, $1.offset) }.map(\.element)
+        candidates.enumerated()
+            .sorted { lhs, rhs in
+                if lhs.element.score != rhs.element.score { return lhs.element.score > rhs.element.score }
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
     }
 
     public func candidate(for species: Species) -> Candidate? {
@@ -66,6 +75,7 @@ public struct CandidateAggregator: Sendable {
     private var scores: [Float]
     private var counts: [Int]
     private var firstHeard: [Double]
+    private var admitted: [Double]
 
     /// - Parameters:
     ///   - species: the model's classes in output order.
@@ -80,6 +90,7 @@ public struct CandidateAggregator: Sendable {
         scores = [Float](repeating: 0, count: species.count)
         counts = [Int](repeating: 0, count: species.count)
         firstHeard = [Double](repeating: 0, count: species.count)
+        admitted = [Double](repeating: 0, count: species.count)
     }
 
     /// Folds one window's scores (one per class) into the session. Returns true if the stack changed.
@@ -92,21 +103,23 @@ public struct CandidateAggregator: Sendable {
             if counts[index] == 0 { firstHeard[index] = time }
             counts[index] += 1
             scores[index] = max(scores[index], score)
+            guard counts[index] >= admissionWindows else { continue }
+            if counts[index] == admissionWindows { admitted[index] = time }
 
             let candidate = Candidate(
                 species: species[index],
                 score: scores[index],
                 windowsAboveThreshold: counts[index],
                 firstHeardAt: firstHeard[index],
-                lastHeardAt: time
+                lastHeardAt: time,
+                admittedAt: admitted[index]
             )
             if counts[index] == admissionWindows {
                 stack.append(candidate)
-                changed = true
-            } else if counts[index] > admissionWindows {
+            } else {
                 stack.update(candidate)
-                changed = true
             }
+            changed = true
         }
         return changed
     }

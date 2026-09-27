@@ -33,6 +33,16 @@ struct AudioResamplerTests {
         #expect(try resampler.resample(chunk) == [0.1, -0.2, 0.3])
     }
 
+    @Test("a change of input rate drains the previous converter before switching, losing nothing")
+    func rateChangeDrains() throws {
+        let resampler = AudioResampler(outputRate: 32_000)
+        var output = try resampler.resample(AudioChunk(samples: [Float](repeating: 0.5, count: 44_100), sampleRate: 44_100, presentationTime: 0))
+        #expect(output.count < 32_000)
+        output += try resampler.resample(AudioChunk(samples: [Float](repeating: 0.5, count: 48_000), sampleRate: 48_000, presentationTime: 1))
+        output += try resampler.flush()
+        #expect(output.count == 64_000)
+    }
+
     @Test("flushing before any conversion yields nothing")
     func flushWithoutInput() throws {
         #expect(try AudioResampler(outputRate: 32_000).flush().isEmpty)
