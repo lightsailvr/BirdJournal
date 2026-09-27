@@ -32,6 +32,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		000000000000000000000122 /* BirdJournalKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = BirdJournalKit; sourceTree = "<group>"; };
 		000000000000000000000120 /* BirdJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BirdJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000121 /* BirdJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -78,6 +79,7 @@
 		000000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				000000000000000000000122 /* BirdJournalKit */,
 				000000000000000000000010 /* BirdJournal */,
 				000000000000000000000011 /* BirdJournalTests */,
 				000000000000000000000020 /* Products */,
@@ -371,7 +373,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.birdjournal;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.mybirdjournal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -406,7 +408,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.birdjournal;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.mybirdjournal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -430,7 +432,7 @@
 				DEVELOPMENT_TEAM = 647FZYVR5Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.birdjournal.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.mybirdjournal.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -454,7 +456,7 @@
 				DEVELOPMENT_TEAM = 647FZYVR5Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.birdjournal.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.mybirdjournal.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

@@ -40,6 +40,46 @@
                ReferencedContainer = "container:BirdJournal.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "IdentificationTests"
+               BuildableName = "IdentificationTests"
+               BlueprintName = "IdentificationTests"
+               ReferencedContainer = "container:BirdJournalKit">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "LensSessionTests"
+               BuildableName = "LensSessionTests"
+               BlueprintName = "LensSessionTests"
+               ReferencedContainer = "container:BirdJournalKit">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "PackTests"
+               BuildableName = "PackTests"
+               BlueprintName = "PackTests"
+               ReferencedContainer = "container:BirdJournalKit">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AlbumTests"
+               BuildableName = "AlbumTests"
+               BlueprintName = "AlbumTests"
+               ReferencedContainer = "container:BirdJournalKit">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

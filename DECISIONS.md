@@ -43,7 +43,7 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - Photo licenses: CC0, CC BY and CC BY-NC. Every photo carries observer, license and source URL. Credit shown on the description page and in a full credits screen on the phone.
 
 ## Identity and distribution
-- Bundle ID `com.matthewcelia.birdjournal`, personal Apple team. Working name BirdJournal.
+- Bundle ID `com.matthewcelia.mybirdjournal`, personal Apple team. Working name BirdJournal.
 - URL scheme `birdjournal://` for Meta AI callbacks in Dev Mode. A universal link (https domain with an apple-app-site-association file) is only needed for Beta/production distribution; set up later.
 - Wearables Developer Center integration exists (created by Matt). Permissions to request: Camera, Audio Streaming, Inputs, Voice Invocation.
 - Repo: outer `BirdJournal/` folder becomes the git root (app, `packbuilder/`, docs, spec). License MIT for our code; pack and models carry their own licenses.

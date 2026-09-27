@@ -81,7 +81,7 @@ An iOS app that turns the glasses into the ears and eyes of a bird identifier. T
 - Meta Wearables Device Access Toolkit 1.0.0 via Swift Package Manager. Products: MWDATCore, MWDATCamera, MWDATDisplay, MWDATInputs, MWDATMockDevice; MWDATMockDeviceTestClient only in the UI test target.
 - ONNX Runtime through Microsoft's official Swift package for model inference.
 - SwiftData for the album. Pack data in SQLite plus image files on disk.
-- Bundle identifier `com.matthewcelia.birdjournal` (no dashes), custom URL scheme `birdjournal://` for Meta AI callbacks. MetaAppID left empty in Developer Mode. Background modes: audio, processing, bluetooth-central, bluetooth-peripheral, external-accessory, plus the external accessory protocol, Bluetooth, local network, Bonjour and microphone usage descriptions.
+- Bundle identifier `com.matthewcelia.mybirdjournal` (no dashes), custom URL scheme `birdjournal://` for Meta AI callbacks. MetaAppID left empty in Developer Mode. Background modes: audio, processing, bluetooth-central, bluetooth-peripheral, external-accessory, plus the external accessory protocol, Bluetooth, local network, Bonjour and microphone usage descriptions.
 - Repository root is the outer BirdJournal folder containing the app project, a `packbuilder` Python package, docs and specs. MIT license for our code.
 
 ### Architecture: three modules behind two seams

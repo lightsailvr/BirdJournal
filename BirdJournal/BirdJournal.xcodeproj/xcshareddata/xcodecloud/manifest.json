@@ -1,0 +1,9 @@
+{
+  "id" : "cfbe30c5-2eda-4c12-bcaa-e44487054d49",
+  "targets" : [
+    {
+      "id" : "464d51e9-76f6-4bc6-a010-cc3f1a77ca1e",
+      "name" : "BirdJournal"
+    }
+  ]
+}
