@@ -12,7 +12,7 @@ import UIKit
 struct DisplayCardBuilderTests {
     static let stack = FakeLensStack.stack(count: 5) // The fifth species has no profile.
 
-    nonisolated static let pages: [LensPage] = [.list, .species(index: 0), .species(index: 4)]
+    nonisolated static let pages: [LensPage] = [.list, .species(index: 0), .species(index: 4), .details(index: 0), .details(index: 4)]
 
     @Test("every page builds one root FlexBox, saved or not", arguments: pages, [Set<Int>(), [0, 4]])
     func oneRoot(page: LensPage, saved: Set<Int>) {

@@ -29,32 +29,39 @@ extension MockDeviceKitTests {
                 #expect(lens.card.photo == LensImage(id: "sayornis-nigricans"))
                 #expect(lens.card.screenfuls[0].contains(.title("Black Phoebe", detail: "82% match")))
 
-                // Up and down scroll the card on the glasses; the page stays.
-                input.navDown()
+                // A tap on the photo page adds nothing; down opens the details and up brings the photo back.
+                input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 2 }
                 #expect(lens.page == .species(index: 0))
+                #expect(lens.savedSightings.isEmpty)
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 0) }
+                #expect(lens.card.elements.last == .button(LensCardButton(label: "Add to my list", action: .save)))
                 input.navUp()
-                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 3 }
-                #expect(lens.page == .species(index: 0))
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 0) }
 
-                // "This is my bird": one Select saves and the card shows it; a Select right behind it (one press the
+                // "Add to my list": one Select saves and the page shows it; a Select right behind it (one press the
                 // hardware delivered twice) saves nothing more; a deliberate one later saves again.
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 1 }
                 #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[0]])
-                #expect(lens.page == .species(index: 0))
-                #expect(lens.card.elements.last == .saved("Saved ✓"))
-                #expect(lens.card.elements.contains(.status("2 species · 1 of 2 · Saved")))
+                #expect(lens.page == .details(index: 0))
+                #expect(lens.card.elements.last == .saved("Added to my list ✓"))
                 input.select()
-                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 5 }
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 7 }
                 #expect(lens.savedSightings.count == 1)
                 try await Task.sleep(for: .milliseconds(1100))
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 2 }
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                #expect(lens.card.elements.contains(.status("2 species · 1 of 2 · Added")))
 
                 input.navLeft()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1) }
-                #expect(lens.card.screenfuls[0].contains(.title("House Finch", detail: "61% match")))
+                #expect(lens.card.elements.contains(.title("House Finch", detail: "61% match")))
 
                 // A species arriving while on a card appends, updates the strip and leaves the page alone.
                 lens.update(with: FakeLensStack.stack(count: 3))
@@ -75,7 +82,7 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { lens.machine.selection == 2 }
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 2) }
-                #expect(lens.card.screenfuls[0].contains(.title("California Towhee", detail: "74% match")))
+                #expect(lens.card.elements.contains(.title("California Towhee", detail: "74% match")))
 
                 // Back (the mock delivers it; real glasses end the session themselves) returns to the list, then ends
                 // the session from the root.

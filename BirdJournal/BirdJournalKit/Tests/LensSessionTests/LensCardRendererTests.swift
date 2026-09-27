@@ -16,21 +16,18 @@ struct LensCardRendererTests {
         LensCardRenderer.render(page, stack: stack, selection: selection, saved: saved, profile: profile)
     }
 
-    static let saveButton = LensElement.button(LensCardButton(label: "This is my bird", action: .save))
-    static let hint = LensElement.meta("Tap: this is my bird · swipe right: all species")
+    static let saveButton = LensElement.button(LensCardButton(label: "Add to my list", action: .save))
+    static let hint = LensElement.meta("Swipe down for more information · swipe right: all species")
 
     /// Every page kind, on a species with a profile (index 0) and one without (index 1).
-    static let pages: [LensPage] = [.list, .species(index: 0), .species(index: 1)]
+    static let pages: [LensPage] = [.list, .species(index: 0), .species(index: 1), .details(index: 0), .details(index: 1)]
 
-    @Test("every page renders screenfuls that each stay inside the word budget", arguments: pages)
+    @Test("every page is one screenful inside the word budget", arguments: pages)
     func budget(page: LensPage) {
         let card = Self.render(page)
-        #expect(!card.screenfuls.isEmpty)
-        for (position, screenful) in card.screenfuls.enumerated() {
-            let words = screenful.wordCount
-            #expect(words > 0)
-            #expect(words <= LensCardRenderer.wordBudget, "\(page) screenful \(position) uses \(words) words")
-        }
+        #expect(card.screenfuls.count == 1)
+        #expect(card.wordCount > 0)
+        #expect(card.wordCount <= LensCardRenderer.wordBudget, "\(page) uses \(card.wordCount) words")
     }
 
     // MARK: - The list
@@ -81,52 +78,55 @@ struct LensCardRendererTests {
 
     // MARK: - Species cards
 
-    @Test("a species card is the photo, the name with its match rate, the status strip and a hint, then the text, credit and button")
-    func speciesCard() {
+    @Test("the photo page is the photo, the name with its match rate, the status strip and the swipe-down hint")
+    func photoPage() {
         let card = Self.render(.species(index: 0))
         #expect(card.photo == LensImage(id: "sayornis-nigricans-1"))
-        #expect(card.screenfuls == [
-            [
-                .photo(LensImage(id: "sayornis-nigricans-1")),
-                .title("Black Phoebe", detail: "80% match"),
-                .status("3 species · 1 of 3"),
-                Self.hint,
-            ],
-            [
-                .body(Fakes.phoebeProfile.fieldMarks),
-                .meta("Sparrow-sized · Streams, ponds, lawns"),
-                .meta("Photo: J. Birder, CC BY"),
-                Self.saveButton,
-            ],
+        #expect(card.elements == [
+            .photo(LensImage(id: "sayornis-nigricans-1")),
+            .title("Black Phoebe", detail: "80% match"),
+            .status("3 species · 1 of 3"),
+            Self.hint,
         ])
     }
 
-    @Test("a saved species shows the saved mark in place of the button, on the strip and in the hint")
-    func savedCard() {
-        let card = Self.render(.species(index: 0), saved: [0, 2])
-        #expect(card.screenfuls[0][2] == .status("3 species · 1 of 3 · Saved"))
-        #expect(card.screenfuls[0].last == .meta("Saved ✓ · swipe right: all species"))
-        #expect(card.screenfuls[1].last == .saved("Saved ✓"))
-        #expect(!card.elements.contains(Self.saveButton))
+    @Test("the details page is the name, the text, size and habitat, the credit and the Add button")
+    func detailsPage() {
+        let card = Self.render(.details(index: 0))
+        #expect(card.photo == nil)
+        #expect(card.elements == [
+            .title("Black Phoebe", detail: "80% match"),
+            .body(Fakes.phoebeProfile.fieldMarks),
+            .meta("Sparrow-sized · Streams, ponds, lawns"),
+            .meta("Photo: J. Birder, CC BY"),
+            Self.saveButton,
+        ])
+    }
+
+    @Test("an added species shows the mark in place of the button and on the photo page's strip")
+    func savedPages() {
+        #expect(Self.render(.species(index: 0), saved: [0, 2]).elements[2] == .status("3 species · 1 of 3 · Added"))
+        let details = Self.render(.details(index: 0), saved: [0, 2])
+        #expect(details.elements.last == .saved("Added to my list ✓"))
+        #expect(!details.elements.contains(Self.saveButton))
     }
 
     @Test("a species outside the pack is still shown by name, with its scientific name as the text")
     func speciesWithoutPack() {
-        let card = Self.render(.species(index: 1))
-        #expect(card.photo == nil)
-        #expect(card.screenfuls == [
-            [.title("House Finch", detail: "80% match"), .status("3 species · 2 of 3"), Self.hint],
-            [.body("Haemorhous mexicanus"), .meta("Not in your pack"), Self.saveButton],
+        let photoPage = Self.render(.species(index: 1))
+        #expect(photoPage.photo == nil)
+        #expect(photoPage.elements == [.title("House Finch", detail: "80% match"), .status("3 species · 2 of 3"), Self.hint])
+        #expect(Self.render(.details(index: 1)).elements == [
+            .title("House Finch", detail: "80% match"), .body("Haemorhous mexicanus"), .meta("Not in your pack"), Self.saveButton,
         ])
     }
 
     @Test("a pack entry without a photo says so instead of a credit, and empty text falls back to the scientific name")
     func profileWithoutPhotoOrText() {
         let profile = SpeciesProfile(photo: nil, fieldMarks: "", size: "", habitat: "", photoCredit: "")
-        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
-        #expect(card.screenfuls == [
-            [.title("Black Phoebe", detail: "80% match"), .status("3 species · 1 of 3"), Self.hint],
-            [.body("Sayornis nigricans"), .meta("No photo in your pack"), Self.saveButton],
+        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        #expect(card.elements == [
+            .title("Black Phoebe", detail: "80% match"), .body("Sayornis nigricans"), .meta("No photo in your pack"), Self.saveButton,
         ])
     }
 
@@ -135,17 +135,17 @@ struct LensCardRendererTests {
         var profile = Fakes.phoebeProfile
         profile.size = ""
         profile.habitat = "Streams"
-        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
-        #expect(card.screenfuls[1][1] == .meta("Streams"))
+        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        #expect(card.elements[2] == .meta("Streams"))
     }
 
-    @Test("long field marks are cut so the text screenful fills the budget exactly")
+    @Test("long field marks are cut so the details page fills the budget exactly")
     func longFieldMarks() {
         var profile = Fakes.phoebeProfile
         profile.fieldMarks = Array(repeating: "word", count: 80).joined(separator: " ")
-        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
-        #expect(card.screenfuls[1].wordCount == LensCardRenderer.wordBudget)
-        guard case .body(let fieldMarks) = card.screenfuls[1][0] else { Issue.record("no field marks"); return }
+        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        #expect(card.wordCount == LensCardRenderer.wordBudget)
+        guard case .body(let fieldMarks) = card.elements[1] else { Issue.record("no field marks"); return }
         #expect(fieldMarks.hasSuffix("…"))
     }
 
@@ -153,9 +153,9 @@ struct LensCardRendererTests {
     func longMetaLines() {
         let long = Array(repeating: "word", count: 30).joined(separator: " ")
         let profile = SpeciesProfile(photo: LensImage(id: "x"), fieldMarks: long, size: long, habitat: long, photoCredit: long)
-        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
-        #expect(card.screenfuls[1].wordCount <= LensCardRenderer.wordBudget)
-        guard case .meta(let credit) = card.screenfuls[1][2] else { Issue.record("no credit line"); return }
+        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        #expect(card.wordCount <= LensCardRenderer.wordBudget)
+        guard case .meta(let credit) = card.elements[3] else { Issue.record("no credit line"); return }
         #expect(credit.hasSuffix("…"))
         #expect(credit.words == LensCardRenderer.metaLineBudget)
     }
@@ -164,6 +164,6 @@ struct LensCardRendererTests {
     func confidence() {
         let stack = CandidateStack(candidates: [Fakes.candidate(Fakes.phoebe, score: 0.999), Fakes.candidate(Fakes.finch, score: 0.054)])
         #expect(LensCardRenderer.confidence(stack.candidates[0]) == "100% match")
-        #expect(LensCardRenderer.render(.species(index: 1), stack: stack, selection: 0, saved: [], profile: Self.profile).screenfuls[0][0] == .title("House Finch", detail: "5% match"))
+        #expect(LensCardRenderer.render(.species(index: 1), stack: stack, selection: 0, saved: [], profile: Self.profile).elements[0] == .title("House Finch", detail: "5% match"))
     }
 }

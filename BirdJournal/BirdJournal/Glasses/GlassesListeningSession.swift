@@ -10,7 +10,7 @@ import SwiftData
 import UIKit
 
 /// The whole loop on the glasses (issue #9): one device session shared by the camera stream, Display and Inputs;
-/// glasses audio through the engine into the lens pages; "This is my bird" on a species card writes the sighting to
+/// glasses audio through the engine into the lens pages; "Add to my list" on a species' details page writes the sighting to
 /// the album with the most recent camera frame (issue #24). Start from the phone, then pocket it: nothing here needs
 /// the screen.
 ///

@@ -1,10 +1,10 @@
 import Identification
 
 /// Maps a page and the stack to its card (spec "Card renderer", issue #24): the species list (count, one row per
-/// species on the page holding the selected row, which is highlighted) and the species card (photo, name and match
-/// rate, status strip and a hint; then field marks, size and habitat, credit and "This is my bird" or the saved
-/// mark). The lens shows the whole card and scrolls it. No screenful exceeds `wordBudget` words (spec user story
-/// 24): pack text is cut to fit, field marks first.
+/// species on the page holding the selected row, which is highlighted), the photo page (photo, name and match rate,
+/// status strip and a hint) and the details page (name, field marks, size and habitat, credit and "Add to my list"
+/// or the saved mark). Every page fits the canvas. No page exceeds `wordBudget` words (spec user story 24): pack
+/// text is cut to fit, field marks first.
 public enum LensCardRenderer {
     public static let wordBudget = 40
     /// The most words a card spends on its size-and-habitat line and on its credit line.
@@ -12,7 +12,7 @@ public enum LensCardRenderer {
     /// Rows on one page of the list. The app re-sends the list on every selection move and a send starts at the top,
     /// so the rows are paged rather than scrolled, and few enough to fit the canvas with the heading.
     public static let listRowsPerPage = 5
-    static let saveButton = LensCardButton(label: "This is my bird", action: .save)
+    static let saveButton = LensCardButton(label: "Add to my list", action: .save)
 
     public static func render(_ page: LensPage, stack: CandidateStack, selection: Int, saved: Set<Int>, profile: (Species) -> SpeciesProfile?) -> LensCard {
         switch page {
@@ -21,6 +21,9 @@ public enum LensCardRenderer {
         case .species(let index):
             let candidate = stack.candidates[index]
             return species(candidate, position: index + 1, of: stack.count, isSaved: saved.contains(index), profile: profile(candidate.species))
+        case .details(let index):
+            let candidate = stack.candidates[index]
+            return details(candidate, isSaved: saved.contains(index), profile: profile(candidate.species))
         }
     }
 
@@ -63,13 +66,15 @@ public enum LensCardRenderer {
 
     static func species(_ candidate: Candidate, position: Int, of count: Int, isSaved: Bool, profile: SpeciesProfile?) -> LensCard {
         // The photo first, so nothing above it can push it below the fold on the glasses.
-        var first: [LensElement] = []
-        if let photo = profile?.photo { first.append(.photo(photo)) }
-        first.append(.title(candidate.species.commonName, detail: confidence(candidate)))
-        first.append(.status("\(count) species · \(position) of \(count)" + (isSaved ? " · Saved" : "")))
-        // The button is below the fold and the list is a swipe away; both are worth saying.
-        first.append(.meta(isSaved ? "Saved ✓ · swipe right: all species" : "Tap: this is my bird · swipe right: all species"))
+        var elements: [LensElement] = []
+        if let photo = profile?.photo { elements.append(.photo(photo)) }
+        elements.append(.title(candidate.species.commonName, detail: confidence(candidate)))
+        elements.append(.status("\(count) species · \(position) of \(count)" + (isSaved ? " · Added" : "")))
+        elements.append(.meta("Swipe down for more information · swipe right: all species"))
+        return LensCard(screenfuls: [elements])
+    }
 
+    static func details(_ candidate: Candidate, isSaved: Bool, profile: SpeciesProfile?) -> LensCard {
         // The fixed lines first, then the field marks take what is left of the budget.
         var fixed: [LensElement] = []
         if let profile {
@@ -79,9 +84,10 @@ public enum LensCardRenderer {
         } else {
             fixed.append(.meta("Not in your pack"))
         }
-        fixed.append(isSaved ? .saved("Saved ✓") : .button(saveButton))
-        let budget = wordBudget - fixed.wordCount
+        fixed.append(isSaved ? .saved("Added to my list ✓") : .button(saveButton))
+        let title = LensElement.title(candidate.species.commonName, detail: confidence(candidate))
+        let budget = wordBudget - fixed.wordCount - title.words
         let text = profile.map(\.fieldMarks).flatMap { $0.isEmpty ? nil : $0 } ?? candidate.species.scientificName
-        return LensCard(screenfuls: [first, [.body(text.limited(toWords: budget))] + fixed])
+        return LensCard(screenfuls: [[title, .body(text.limited(toWords: budget))] + fixed])
     }
 }

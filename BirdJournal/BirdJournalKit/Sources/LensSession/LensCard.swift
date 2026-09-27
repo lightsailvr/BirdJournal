@@ -33,6 +33,11 @@ public struct SpeciesProfile: Sendable, Equatable {
 public struct LensCardButton: Sendable, Equatable {
     public var label: String
     public var action: LensAction
+
+    public init(label: String, action: LensAction) {
+        self.label = label
+        self.action = action
+    }
 }
 
 /// One row of the species list. The app moves the selection with swipe down/up and opens the selected row on a

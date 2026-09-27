@@ -36,7 +36,7 @@ struct LensSessionView: View {
                     Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                 }
             } footer: {
-                Text("On the list, swipe down and up to choose a species and tap to open it. On a card, swipe up and down to scroll, tap for \"This is my bird\", swipe left for the next species and right for the list. The middle-finger tap ends the session on real glasses.")
+                Text("On the list, swipe down and up to choose a species and tap to open it. On its photo, swipe down for more information and tap \"Add to my list\" there; swipe up for the photo, left for the next species, right for the list. The middle-finger tap ends the session on real glasses.")
             }
 
             #if DEBUG
@@ -100,7 +100,8 @@ extension LensPage {
     var title: String {
         switch self {
         case .list: "Species list"
-        case .species(let index): "Species \(index + 1)"
+        case .species(let index): "Species \(index + 1) · photo"
+        case .details(let index): "Species \(index + 1) · details"
         }
     }
 }

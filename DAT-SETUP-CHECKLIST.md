@@ -70,26 +70,26 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 2. Add package 1.0.0 + Info.plist keys; build again.
 3. [x] Mock run: pair a mock Display device, send one FlexBox card, see it in the preview view. Done in #4 ("Lens" screen;
    launch the app with `-autoMockLens YES` to pair, start and inject two gestures without tapping). #24 sends the species
-   list and the species cards and navigates them with injected nav, select and back. Clicking a card's "This is my bird"
-   button or a list row through the mock is not exercised; Select stands in for the button and swipes for the rows.
+   list and the species cards and navigates them with injected nav, select and back. Clicking a details page's "Add to my
+   list" button through the mock is not exercised; Select stands in for it.
 4. [ ] Device run with Dev Mode: register from the app, accept in Meta AI, session reaches `.started`, Display shows the card on the lens.
    #4 adds the "Lens card" screen for this: start, swipe and tap with the Neural Band, watch the list on the phone, then
    two-finger tap to end from the glasses and check the run reads "Ended by the glasses".
 5. [x] Audio spike: camera stream with `audioCodec: .pcm(sampleRate: .rate44100, numberOfChannels: 1)` at `.low`/2 fps; log frame cadence, latency and glasses battery over 20 min. Done 2026-09-26, results in DECISIONS.md "Phase A go/no-go".
    Found: glasses audio arrives as 1,024-sample chunks every ~23 ms at 44.1 kHz; presentation timestamps are not host time; the first chunk can be empty; a `StreamError` ("Critical error, the stream should end") can fire on backgrounding while the stream keeps delivering. Taking the Display glasses off ends the session (`DeviceSessionError` "Session ended by device") and drops the link; it does not pause. A new session is needed after they are put back on.
 6. [ ] End-to-end run with Dev Mode (#9): "Listen with the glasses", pocket the phone, hear a bird, see the card within 6 s,
-   tap "This is my bird", then check the Album count on the phone and that the sighting's frame file exists.
+   swipe down to its details, tap "Add to my list", then check the Album count on the phone and that the sighting's frame file exists.
 7. [ ] Lens UI probes (#24), on the glasses with the Neural Band, from the "Lens" screen with the fake stack:
-   - [x] Scrolling: a tall card scrolls natively with swipe up/down (2026-09-27). The mock preview does not scroll (it
-     anchors overflow at the bottom), so check the second screenful on the glasses.
+   - [x] Scrolling: with Inputs attached the glasses do not scroll a tall card; swipe up/down reach the app (2026-09-27).
+     Every send is one screenful: a species has a photo page and, on swipe down, a details page.
    - [x] Back: the middle-finger tap ends the session from any card; no Back event reaches the app (2026-09-27, and the
      Inputs docs' "Current limitations"). Swipe right on a card is the app's way back to the list.
    - [x] List focus: swipe down did not move the glasses' focus between tappable rows while Inputs was attached
      (2026-09-27); the app now moves the selection itself and re-sends the list.
-   - [ ] Photo: with the photo first on the card, is it fully on the first screenful? If it is still cut at the bottom,
-     shrink the lens crop height in `packbuilder/src/packbuilder/crops.py` (`LENS_HEIGHT`) and rebuild the pack.
-   - Select on a card: does it click "This is my bird" (a Display click), arrive as an Inputs `select` (logged on the
-     phone), or both? Either way one sighting must be written.
+   - [ ] Photo: is the 552 × 368 photo fully on the photo page with the name under it? If it is cut at the bottom, shrink
+     the lens crop height in `packbuilder/src/packbuilder/crops.py` (`LENS_HEIGHT`) and rebuild the pack.
+   - Select on the details page: does it click "Add to my list" (a Display click), arrive as an Inputs `select` (logged
+     on the phone), or both? Either way one sighting must be written.
    - Record the answers in DECISIONS.md, "Lens UI".
 
 ## Facts that change the spec (see grill questions)

@@ -11,13 +11,13 @@ import UIKit
 @testable import BirdJournal
 
 // The whole loop on Mock Device Kit (issue #9): one session shared by the stream, Display and Inputs; audio through
-// the engine onto the lens; "This is my bird" writes the album. The mock injects neither audio nor video frames
+// the engine onto the lens; "Add to my list" writes the album. The mock injects neither audio nor video frames
 // (DAT-SETUP-CHECKLIST.md), so a test source stands in for the stream and the frame path is checked with its frames;
 // the real stream's frames are verified on hardware.
 extension MockDeviceKitTests {
     @Suite("Glasses listening run")
     struct GlassesListening {
-        @Test("a species heard on the glasses shows on the lens and one tap writes it to the album")
+        @Test("a species heard on the glasses shows on the lens and Add to my list writes it to the album")
         func hearConfirmSave() async throws {
             try await withMockDisplay { glasses in
                 let connection = GlassesConnection()
@@ -51,11 +51,13 @@ extension MockDeviceKitTests {
                 let before = Date.now
                 input.navLeft()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
-                #expect(run.lens.card.screenfuls[0].contains(.title("House Finch", detail: "90% match")))
+                #expect(run.lens.card.elements.contains(.title("House Finch", detail: "90% match")))
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .details(index: 0) }
                 input.select()
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
-                #expect(run.lens.page == .species(index: 0))
-                #expect(run.lens.card.elements.last == .saved("Saved ✓"))
+                #expect(run.lens.page == .details(index: 0))
+                #expect(run.lens.card.elements.last == .saved("Added to my list ✓"))
 
                 let sightings = try album.mainContext.fetch(FetchDescriptor<Sighting>())
                 #expect(sightings.count == 1)
@@ -71,7 +73,7 @@ extension MockDeviceKitTests {
                 // A Select right behind the first (one press the hardware delivered twice) saves nothing more; a
                 // deliberate one later updates the sighting instead of adding a second (story 33).
                 input.select()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.inputRecords.count == 3 }
+                try await waitUntil(timeout: .seconds(1)) { run.lens.inputRecords.count == 4 }
                 try await Task.sleep(for: .milliseconds(300))
                 #expect(run.lens.savedSightings.count == 1)
                 try await Task.sleep(for: .milliseconds(1100))
@@ -122,6 +124,8 @@ extension MockDeviceKitTests {
                     let input = glasses.services.input
                     input.navLeft()
                     try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
+                    input.navDown()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .details(index: 0) }
                     source.latestFrame = Self.frame(.red)
                     #expect(run.hasCameraFrame)
                     input.select()
