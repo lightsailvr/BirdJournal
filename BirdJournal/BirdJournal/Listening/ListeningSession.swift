@@ -1,13 +1,15 @@
+import Album
 import Foundation
 import Identification
 import Observation
 import OSLog
 
-/// One listening run on the phone with no glasses (issue #6): the phone microphone feeds the engine, the location
-/// is fetched once at start and refreshed every ten minutes, and the live list on the screen follows the stack.
-/// Stop ends the run. Reusable: `start()` after `stop()` begins a fresh session.
+/// One listening run over an `AudioSource`: the phone microphone with no glasses (issue #6) or the glasses stream
+/// (issue #9). The source feeds the engine, the location is fetched once at start and refreshed every ten minutes,
+/// and the live list on the screen follows the stack; `onStack` hands each new stack to whoever else follows it
+/// (the lens). Stop ends the run. Reusable: `start()` after `stop()` begins a fresh session.
 @Observable
-final class PhoneListeningSession {
+final class ListeningSession {
     enum Phase: Equatable {
         case idle
         case starting
@@ -24,7 +26,7 @@ final class PhoneListeningSession {
     }
 
     static let locationRefreshInterval: Duration = .seconds(600)
-    private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "phone-listening")
+    private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "listening")
 
     private(set) var phase: Phase = .idle
     private(set) var locationState: LocationState = .unknown
@@ -39,6 +41,7 @@ final class PhoneListeningSession {
     @ObservationIgnored private let makeSource: () -> any AudioSource
     @ObservationIgnored private let location: any LocationProvider
     @ObservationIgnored private let locationRefreshInterval: Duration
+    @ObservationIgnored private let onStack: (CandidateStack) -> Void
     @ObservationIgnored private var source: (any AudioSource)?
     @ObservationIgnored private var context: LiveGeoContext?
     @ObservationIgnored private var eventTask: Task<Void, Never>?
@@ -48,17 +51,31 @@ final class PhoneListeningSession {
         loadEngine: @escaping @Sendable () async throws -> IdentificationEngine = { try await BundledIdentification.engine() },
         makeSource: @escaping () -> any AudioSource = { PhoneMicAudioSource() },
         location: any LocationProvider = CoreLocationProvider(),
-        locationRefreshInterval: Duration = PhoneListeningSession.locationRefreshInterval
+        locationRefreshInterval: Duration = ListeningSession.locationRefreshInterval,
+        onStack: @escaping (CandidateStack) -> Void = { _ in }
     ) {
         self.loadEngine = loadEngine
         self.makeSource = makeSource
         self.location = location
         self.locationRefreshInterval = locationRefreshInterval
+        self.onStack = onStack
     }
 
-    /// Loads the models and takes the first location fix side by side, then starts the microphone. On failure
-    /// the session is idle again with `errorMessage` set.
+    /// The latest location fix as the album records it, nil while identification runs without one.
+    var coordinate: Coordinate? {
+        guard case .settled(.fix(let latitude, let longitude, let accuracy, _)) = locationState else { return nil }
+        return Coordinate(latitude: latitude, longitude: longitude, accuracy: accuracy)
+    }
+
+    /// Starts over the source `makeSource` gives.
     func start() async {
+        guard phase == .idle else { return }
+        await start(source: makeSource())
+    }
+
+    /// Loads the models and takes the first location fix side by side, then starts `source`. On failure the
+    /// session is idle again with `errorMessage` set.
+    func start(source: any AudioSource) async {
         guard phase == .idle else { return }
         phase = .starting
         errorMessage = nil
@@ -74,7 +91,6 @@ final class PhoneListeningSession {
         self.context = context
         do {
             let engine = try await loading
-            let source = makeSource()
             self.source = source
             let events = try await engine.identify(source, in: context)
             startedAt = .now
@@ -125,6 +141,7 @@ final class PhoneListeningSession {
         case .stack(let stack):
             self.stack = stack
             list.update(with: stack)
+            onStack(stack)
         }
     }
 
@@ -157,7 +174,7 @@ final class PhoneListeningSession {
         } else {
             locationState = .settled(fix)
         }
-        guard case .settled(.fix(let latitude, let longitude, _)) = locationState else { return nil }
+        guard case .settled(.fix(let latitude, let longitude, _, _)) = locationState else { return nil }
         return GeoContext(latitude: latitude, longitude: longitude, date: .now)
     }
 }

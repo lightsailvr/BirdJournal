@@ -47,6 +47,12 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
       Mock `powerOff()` ends the session on the device side (`.stopped` while running), so the "ended by the glasses"
       path has a mock test; the real two-finger tap still needs the hardware run below.
 - [ ] Limit: no deterministic audio-frame injection. Test the identification engine with WAV files directly, not through the mock.
+- [x] Found in #9: with a still-image feed the mock delivers no video frames at all. A video-only stream reaches `.streaming` and
+      stays there without frames; an audio-enabled one reaches `.streaming` after about 6 s and stops with `StreamError.timeout`
+      right away. Attaching Display and Inputs to the same session changes nothing. The run's frame capture is tested with a
+      stand-in source (`ManualAudioSource` with a `CameraFrame`); the real stream's frames are verified on hardware.
+- [x] Found in #9: `DeviceSessionError.sessionAlreadyExists` exists, so one device session per device. The run shares one session
+      (`DeviceSessionLease.shared`) between camera, Display and Inputs.
 - [x] Found in #3: an audio-enabled camera stream on the mock fails with `StreamError.videoStreamingError` unless
       `services.camera.setCameraFeed(fileURL:)` is given an image first. With a feed it reaches `.streaming`, then
       stops with `StreamError.timeout` a few seconds later (no audio frames). `AutoDeviceSelector` resolves its device
@@ -69,6 +75,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 4. [ ] Device run with Dev Mode: register from the app, accept in Meta AI, session reaches `.started`, Display shows the card on the lens.
    #4 adds the "Lens card" screen for this: start, swipe and tap with the Neural Band, watch the list on the phone, then
    two-finger tap to end from the glasses and check the run reads "Ended by the glasses".
+6. [ ] End-to-end run with Dev Mode (#9): "Listen with the glasses", pocket the phone, hear a bird, see the card within 6 s,
+   tap to confirm, tap Save, then check the Album count on the phone and that the sighting's frame file exists.
 5. [x] Audio spike: camera stream with `audioCodec: .pcm(sampleRate: .rate44100, numberOfChannels: 1)` at `.low`/2 fps; log frame cadence, latency and glasses battery over 20 min. Done 2026-09-26, results in DECISIONS.md "Phase A go/no-go".
    Found: glasses audio arrives as 1,024-sample chunks every ~23 ms at 44.1 kHz; presentation timestamps are not host time; the first chunk can be empty; a `StreamError` ("Critical error, the stream should end") can fire on backgrounding while the stream keeps delivering. Taking the Display glasses off ends the session (`DeviceSessionError` "Session ended by device") and drops the link; it does not pause. A new session is needed after they are put back on.
 

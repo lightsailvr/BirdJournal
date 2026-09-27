@@ -3,8 +3,7 @@ import SwiftUI
 
 /// Listening on the phone with no glasses (issue #6): Start, the location state, and the live candidate list.
 struct PhoneListeningView: View {
-    @Environment(PhoneListeningSession.self) private var session
-    @Environment(\.openURL) private var openURL
+    @Environment(ListeningSession.self) private var session
 
     var body: some View {
         List {
@@ -28,45 +27,72 @@ struct PhoneListeningView: View {
                 if let errorMessage = session.errorMessage {
                     Text(errorMessage).foregroundStyle(.red)
                 }
-                locationRow
+                LocationRow(session: session)
             } footer: {
                 Text("Uses the phone microphone. Powered by BirdNET.")
             }
 
-            Section(session.stack.isEmpty ? "Heard" : "Heard (\(session.stack.count))") {
-                if session.list.isEmpty {
-                    Text(session.phase == .listening ? "Listening for birds…" : "No species yet")
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(session.list.rows) { candidate in
-                    CandidateRow(candidate: candidate)
-                }
-            }
-            .animation(.default, value: session.list.rows.map(\.id))
-
-            if session.phase == .listening || session.windowsScored > 0 {
-                Section("Session") {
-                    if let startedAt = session.startedAt {
-                        LabeledContent("Started", value: startedAt, format: .dateTime.hour().minute().second())
-                    }
-                    LabeledContent("Windows scored", value: "\(session.windowsScored)")
-                    if let window = session.lastWindow {
-                        LabeledContent("Last window", value: lastWindowText(window))
-                    }
-                }
-            }
+            HeardSection(session: session)
+            ListeningStatsSection(session: session)
         }
         .navigationTitle("Listen")
     }
+}
 
-    @ViewBuilder
-    private var locationRow: some View {
+/// The live candidate list (spec user story 34), shared by the phone and glasses screens.
+struct HeardSection: View {
+    let session: ListeningSession
+
+    var body: some View {
+        Section(session.stack.isEmpty ? "Heard" : "Heard (\(session.stack.count))") {
+            if session.list.isEmpty {
+                Text(session.phase == .listening ? "Listening for birds…" : "No species yet")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(session.list.rows) { candidate in
+                CandidateRow(candidate: candidate)
+            }
+        }
+        .animation(.default, value: session.list.rows.map(\.id))
+    }
+}
+
+/// Start time and the engine's window count, once a run has scored anything.
+struct ListeningStatsSection: View {
+    let session: ListeningSession
+
+    var body: some View {
+        if session.phase == .listening || session.windowsScored > 0 {
+            Section("Session") {
+                if let startedAt = session.startedAt {
+                    LabeledContent("Started", value: startedAt, format: .dateTime.hour().minute().second())
+                }
+                LabeledContent("Windows scored", value: "\(session.windowsScored)")
+                if let window = session.lastWindow {
+                    LabeledContent("Last window", value: lastWindowText(window))
+                }
+            }
+        }
+    }
+
+    private func lastWindowText(_ window: WindowReport) -> String {
+        let top = window.topSpecies.map { "\($0.commonName) \(window.topScore.formatted(.number.precision(.fractionLength(2))))" } ?? "none"
+        return "\(top), \(window.inference.formatted(.units(allowed: [.milliseconds])))"
+    }
+}
+
+/// The location state as the screen shows it.
+struct LocationRow: View {
+    @Environment(\.openURL) private var openURL
+    let session: ListeningSession
+
+    var body: some View {
         switch session.locationState {
         case .unknown:
             EmptyView()
         case .requesting:
             LabeledContent("Location", value: "Finding you…")
-        case .settled(.fix(let latitude, let longitude, let at)):
+        case .settled(.fix(let latitude, let longitude, _, let at)):
             LabeledContent("Location") {
                 VStack(alignment: .trailing) {
                     Text("\(coordinate(latitude)), \(coordinate(longitude))")
@@ -98,11 +124,6 @@ struct PhoneListeningView: View {
 
     private func coordinate(_ degrees: Double) -> String {
         degrees.formatted(.number.precision(.fractionLength(2))) + "°"
-    }
-
-    private func lastWindowText(_ window: WindowReport) -> String {
-        let top = window.topSpecies.map { "\($0.commonName) \(window.topScore.formatted(.number.precision(.fractionLength(2))))" } ?? "none"
-        return "\(top), \(window.inference.formatted(.units(allowed: [.milliseconds])))"
     }
 }
 

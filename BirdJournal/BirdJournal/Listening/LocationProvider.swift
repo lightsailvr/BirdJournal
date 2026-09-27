@@ -4,7 +4,8 @@ import Synchronization
 
 /// What one location request came back with.
 nonisolated enum LocationFix: Equatable, Sendable {
-    case fix(latitude: Double, longitude: Double, at: Date)
+    /// A fix with its horizontal accuracy in metres.
+    case fix(latitude: Double, longitude: Double, accuracy: Double, at: Date)
     /// The user declined when-in-use permission, or it is restricted. Identification carries on without the geo
     /// filter (issue #6).
     case denied
@@ -68,7 +69,12 @@ final class CoreLocationProvider: LocationProvider {
                     return .denied
                 }
                 if let location = update.location {
-                    return .fix(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, at: location.timestamp)
+                    return .fix(
+                        latitude: location.coordinate.latitude,
+                        longitude: location.coordinate.longitude,
+                        accuracy: location.horizontalAccuracy,
+                        at: location.timestamp
+                    )
                 }
                 // Otherwise the request is in progress or no fix is available yet: keep waiting.
             }
