@@ -16,7 +16,7 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - MockDeviceKit cannot inject audio frames; sound-ID tests run on recorded files.
 
 ## Audio and identification
-- Glasses stream: camera at `.low` resolution, lowest frame rate, audio PCM mono. Sample rate chosen in the phase A spike (44.1 or 48 kHz, resampled to the model rate).
+- Glasses stream: camera at `.low` resolution, lowest frame rate, audio PCM mono. Sample rate 44.1 kHz (chosen in the phase A spike), resampled to the model rate.
 - Video frames are not used for identification. The most recent frame at confirm time is stored with the sighting; the camera-assist re-ranker is out of scope.
 - Model: BirdNET+ V3.0 preview 3.1 (11,560 species, 32 kHz input, CC BY-SA 4.0 weights, "Powered by BirdNET" attribution). Pinned to the exact Zenodo file. Engine sits behind a protocol so v2.4 can be swapped in.
 - Geo prior: BirdNET geomodel v3.0.4 (Apache-2.0), raw lat/lon/week input, used as a pre-filter with the reference threshold 0.03. No GBIF/H3 tables in v1.
@@ -55,13 +55,14 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - C: cards from the LA pack, confirm and save to SwiftData.
 - D: minimal phone screen — connect, start/stop, live list, album list.
 
-## Phase A go/no-go (issue #3) — pending the hardware run
-Run the Audio spike screen with the glasses source for 20 minutes with the phone locked in a pocket, share the log, and fill in:
-- Audio sample rate chosen (44.1 or 48 kHz):
-- Audio coverage (total audio s / wall s) and gaps over 2 s (count, longest):
-- Latency: phone-mic first offset; glasses latency above best (mean, max). There is no clock shared with the glasses, so glasses latency is only the delay above the best case; the glasses `first_chunk` offset is absolute only if the toolkit stamps host time:
-- Glasses battery start → end, thermal peak; phone battery start → end:
-- Background survival with the phone locked (did `status` lines keep arriving every 30 s). The glasses path holds no `AVAudioSession`, so survival rests on the Bluetooth and external-accessory modes; if it fails, try an active audio session next:
-- Pause on doff / touchpad tap logged (`session_state state=paused`, then `gap … paused=yes`) and resumed without restarting the session:
-- Verdict:
-
+## Phase A go/no-go (issue #3) — GO, 2026-09-26
+Run: glasses source, 44.1 kHz mono, `.low` at 2 fps, iPhone 17 Pro locked in a pocket, 19 min 45 s (`spike-20260926-193507.log`).
+- Sample rate: **44.1 kHz**. 48 kHz is untested: the first attempt stalled on the Meta AI microphone grant, not on the rate.
+- Coverage: 1,182.0 s of audio in 1,185.2 s of wall time (99.7 %; the shortfall is stream startup). Zero gaps over 2 s. Chunks every 23.2 ms on average (1,024 samples); the longest interval between chunks was 671 ms.
+- Latency above best: 39–89 ms mean per 30 s interval, 689 ms worst. No upward drift over the run, so the link does not back up. Absolute glasses latency is unknown: presentation times are not on the phone's host clock (first offset 882,188 s).
+- Glasses battery 100 → 88 % (about 0.6 %/min, so roughly 2.5–3 h of listening from full). Glasses thermal `none` throughout. Phone battery 65 → 65 %, thermal `nominal`.
+- Background: status lines kept arriving every 30 s while locked (`background_locked` for 37 of 40 intervals). The Bluetooth and external-accessory modes are enough; no `AVAudioSession` is needed on the glasses path.
+- One `stream_error "Critical error, the stream should end"` arrived 2 s after the app went to the background, but the stream kept `streaming` and audio never stopped. Watch for it; do not stop the source on stream errors alone.
+- The first audio chunk after `streaming` was empty (0 samples); consumers must tolerate empty chunks.
+- Pause on doff / touchpad tap: not yet run (Mock Device Kit cannot simulate it). Check it in a short follow-up run.
+- Verdict: **GO**. The glasses camera-stream audio path is continuous, survives a locked phone, and costs about 12 % glasses battery per 20 minutes.

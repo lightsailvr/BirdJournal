@@ -57,7 +57,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 2. Add package 1.0.0 + Info.plist keys; build again.
 3. Mock run: pair a mock Display device, send one FlexBox card, see it in the preview view, click it.
 4. Device run with Dev Mode: register from the app, accept in Meta AI, session reaches `.started`, Display shows the card on the lens.
-5. Audio spike: camera stream with `audioCodec: .pcm(sampleRate: .rate48000, numberOfChannels: 1)` at `.low`/2 fps; log frame cadence, latency and glasses battery over 20 min.
+5. [x] Audio spike: camera stream with `audioCodec: .pcm(sampleRate: .rate44100, numberOfChannels: 1)` at `.low`/2 fps; log frame cadence, latency and glasses battery over 20 min. Done 2026-09-26, results in DECISIONS.md "Phase A go/no-go".
+   Found: glasses audio arrives as 1,024-sample chunks every ~23 ms at 44.1 kHz; presentation timestamps are not host time; the first chunk can be empty; a `StreamError` ("Critical error, the stream should end") can fire on backgrounding while the stream keeps delivering.
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.
