@@ -13,7 +13,7 @@ struct BirdJournalApp: App {
         do {
             try Wearables.configure()
         } catch {
-            Logger(subsystem: "com.matthewcelia.birdjournal", category: "glasses")
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "glasses")
                 .error("Wearables.configure failed: \(error.localizedDescription)")
         }
         let connection = GlassesConnection()
