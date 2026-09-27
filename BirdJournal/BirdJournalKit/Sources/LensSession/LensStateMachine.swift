@@ -1,30 +1,28 @@
 import Identification
 
-/// A page shown on the lens. Indices refer to the session's candidate stack, which only ever appends.
+/// A page shown on the lens. Indices refer to the session's candidate stack, which only ever appends. Every page
+/// fits the canvas: the glasses do not scroll a view while the app subscribes to Inputs (DECISIONS.md, "Lens UI").
 public enum LensPage: Sendable, Hashable {
-    /// Root page: "N species heard".
-    case listening
-    /// Photo card for the species at `index`: image, common name, confidence.
-    case photo(index: Int)
-    /// Field marks, size, habitat and photo credit for the species at `index`.
-    case description(index: Int)
-    /// Confirm page for the species at `index`; Save is the primary action.
-    case confirm(index: Int)
-    /// "Saved" acknowledgment for the species at `index`, then back to its photo.
-    case saved(index: Int)
+    /// Root page: every species heard this session, one row each, with the machine's `selection` highlighted.
+    case list
+    /// The photo page for the species at `index`: photo, name and match rate, status strip, hint.
+    case species(index: Int)
+    /// The details page under the photo page: identification text, credit and the "Add to my list" action (or its
+    /// saved mark).
+    case details(index: Int)
 
     /// The stack index the page is about, nil on the root.
     public var index: Int? {
         switch self {
-        case .listening: nil
-        case .photo(let index), .description(let index), .confirm(let index), .saved(let index): index
+        case .list: nil
+        case .species(let index), .details(let index): index
         }
     }
 }
 
 /// Semantic input events as the app sees them. Swipes arrive as Nav events and taps as Select events from the
-/// Neural Band. Real Display glasses do not deliver `back` (the two-finger tap ends the session instead); the rule
-/// is here for when the hardware does, behind `consumeBack` (DECISIONS.md, "Lens UI").
+/// Neural Band. Real glasses do not deliver `back` (DAT 1.0.0 Inputs docs, "Current limitations"): the system's
+/// back gesture ends the display session instead. The rule is here for the mock and for when hardware delivers it.
 public enum LensGesture: Sendable, Hashable, CaseIterable {
     case swipeLeft
     case swipeRight
@@ -46,18 +44,15 @@ public enum LensGesture: Sendable, Hashable, CaseIterable {
     }
 }
 
-/// A button on a lens card, clicked through the Display rather than Inputs.
-public enum LensButton: Sendable, Hashable {
+/// A tappable element on a lens card, activated through the Display rather than Inputs.
+public enum LensAction: Sendable, Hashable {
+    /// The "Add to my list" button on a details page.
     case save
-    case cancel
 }
 
 /// What the adapter must do after an event, besides rendering the new page.
 public enum LensEffect: Sendable, Equatable {
-    /// The wearer tapped this candidate's photo: capture the sighting's context (the most recent camera frame) now,
-    /// so a later Save stores what they were looking at when they confirmed (issue #9).
-    case confirmed(Candidate)
-    /// The wearer saved this candidate: write a Sighting.
+    /// The wearer said "Add to my list": write a Sighting with the camera frame from this moment.
     case saveSighting(Candidate)
     /// Back on the root: end the glasses session.
     case endSession
@@ -66,18 +61,29 @@ public enum LensEffect: Sendable, Equatable {
 /// Pure lens state machine (spec "Lens session"): folds `CandidateStack` updates and semantic input events into
 /// the page to render and at most one side effect per event.
 ///
-/// Page map (DECISIONS.md, "Lens UI"): listening ⇄ photo pages (swipe left/right), photo ⇄ description (swipe
-/// down/up), photo → confirm (tap) → saved (tap or Save), confirm/saved → photo (swipe up), photo → listening
-/// (swipe up). Back goes up one page and ends the session on the root. The stack never reorders and new species
-/// append at the end, so an update never moves the page the wearer is on.
+/// Page map (DECISIONS.md, "Lens UI", issue #24). The list is a menu the app drives, because the glasses hand Nav
+/// and Select to an app that subscribes to Inputs instead of moving focus between tappable rows (and do not scroll
+/// a view either): swipe down/up move `selection`, and a tap or swipe left opens the selected species' photo page.
+/// From the photo page swipe down opens the details page and swipe up returns; on either, swipe left is the next
+/// species' photo and swipe right is back to the list (the only way back on real glasses, which do not deliver
+/// Back). A tap or the button on the details page is "Add to my list"; a tap on the photo page does nothing, so a
+/// bird is never added by accident. The stack never reorders and new species append at the end, so an update
+/// never moves the page the wearer is on.
 public struct LensStateMachine: Sendable, Equatable {
-    public private(set) var page: LensPage = .listening
+    public private(set) var page: LensPage = .list
     /// The candidates the pages index into, in admission order.
     public private(set) var stack = CandidateStack()
+    /// The highlighted row of the list, a stack index; follows the card the wearer was on.
+    public private(set) var selection = 0
+    /// Stack indices whose sighting has been saved this session; their pages show the saved mark instead of the
+    /// button. A later tap on a saved details page saves again (the run updates the sighting, spec user story 33);
+    /// one press that hardware delivers twice, as a click and a select, is deduplicated by the adapter, which has a
+    /// clock.
+    public private(set) var savedIndices: Set<Int> = []
 
     public init() {}
 
-    /// The candidate the current page is about, nil on the listening page.
+    /// The candidate the current page is about, nil on the list.
     public var currentCandidate: Candidate? {
         page.index.map { stack.candidates[$0] }
     }
@@ -85,14 +91,18 @@ public struct LensStateMachine: Sendable, Equatable {
     // MARK: - Stack
 
     /// Takes the latest stack. Returns true if anything the pages show changed. A stack that does not continue the
-    /// current one (a new session) restarts on the listening page so no page can index past the end.
+    /// current one (a new session) restarts on the list with nothing saved, so no page can index past the end.
     @discardableResult
     public mutating func update(with stack: CandidateStack) -> Bool {
         guard stack != self.stack else { return false }
         let continues = stack.count >= self.stack.count
             && zip(stack.candidates, self.stack.candidates).allSatisfy { $0.species == $1.species }
         self.stack = stack
-        if !continues { page = .listening }
+        if !continues {
+            page = .list
+            selection = 0
+            savedIndices = []
+        }
         return true
     }
 
@@ -101,66 +111,53 @@ public struct LensStateMachine: Sendable, Equatable {
     /// Applies a gesture to the current page. Gestures with no meaning on the current page are ignored.
     public mutating func apply(_ gesture: LensGesture) -> LensEffect? {
         switch (page, gesture) {
-        case (.listening, .swipeLeft), (.listening, .swipeRight):
-            if !stack.isEmpty { page = .photo(index: 0) }
-        case (.listening, .back):
+        case (.list, .swipeDown):
+            if selection + 1 < stack.count { selection += 1 }
+        case (.list, .swipeUp):
+            if selection > 0 { selection -= 1 }
+        case (.list, .tap), (.list, .swipeLeft):
+            if !stack.isEmpty { page = .species(index: selection) }
+        case (.list, .swipeRight):
+            break
+        case (.list, .back):
             return .endSession
-        case (.listening, _):
-            break
 
-        case let (.photo(index), .swipeLeft):
-            if index + 1 < stack.count { page = .photo(index: index + 1) }
-        case let (.photo(index), .swipeRight):
-            page = index == 0 ? .listening : .photo(index: index - 1)
-        case let (.photo(index), .swipeDown):
-            page = .description(index: index)
-        case (.photo, .swipeUp), (.photo, .back):
-            page = .listening
-        case let (.photo(index), .tap):
-            page = .confirm(index: index)
-            return .confirmed(stack.candidates[index])
-
-        case let (.description(index), .swipeUp), let (.description(index), .back):
-            page = .photo(index: index)
-        case (.description, _):
+        case let (.species(index), .swipeLeft), let (.details(index), .swipeLeft):
+            if index + 1 < stack.count { open(index + 1) }
+        case (.species, .swipeRight), (.species, .back), (.details, .swipeRight), (.details, .back):
+            page = .list
+        case let (.species(index), .swipeDown):
+            page = .details(index: index)
+        case (.species, .swipeUp), (.species, .tap):
             break
-
-        case (.confirm, .tap):
-            // Save is the primary action (DECISIONS.md, "Lens UI"), so a tap saves. Whether hardware also delivers a
-            // Select to Inputs when the Cancel button is focused is unknown until the on-glasses run (#9).
-            return save()
-        case let (.confirm(index), .swipeUp), let (.confirm(index), .back):
-            page = .photo(index: index)
-        case (.confirm, _):
+        case let (.details(index), .swipeUp):
+            page = .species(index: index)
+        case (.details, .swipeDown):
             break
-
-        case (.saved, .tap):
-            break
-        case let (.saved(index), _):
-            page = .photo(index: index)
+        case let (.details(index), .tap):
+            return save(index)
         }
         return nil
     }
 
-    /// A click on one of the confirm page's buttons. Buttons on other pages do not exist, so clicks are ignored.
-    public mutating func press(_ button: LensButton) -> LensEffect? {
-        guard case .confirm(let index) = page else { return nil }
-        switch button {
-        case .save: return save()
-        case .cancel: page = .photo(index: index); return nil
+    /// A tap on a card element, delivered by the Display: the Add button on its own details page. Anything else is
+    /// ignored.
+    public mutating func press(_ action: LensAction) -> LensEffect? {
+        switch (page, action) {
+        case let (.details(index), .save):
+            return save(index)
+        case (.list, .save), (.species, .save):
+            return nil
         }
     }
 
-    /// The Saved acknowledgment has been shown long enough: back to the photo.
-    public mutating func dismissSaved() {
-        guard case .saved(let index) = page else { return }
-        page = .photo(index: index)
+    private mutating func open(_ index: Int) {
+        page = .species(index: index)
+        selection = index
     }
 
-    private mutating func save() -> LensEffect? {
-        guard case .confirm(let index) = page else { return nil }
-        page = .saved(index: index)
+    private mutating func save(_ index: Int) -> LensEffect {
+        savedIndices.insert(index)
         return .saveSighting(stack.candidates[index])
     }
-
 }

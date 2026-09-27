@@ -39,7 +39,7 @@ struct GlassesListeningView: View {
                 }
                 LocationRow(session: run.listening)
             } footer: {
-                Text("Glasses audio feeds BirdNET; cards show on the lens. Swipe between species, down for the description, tap to confirm, tap Save. Powered by BirdNET.")
+                Text("Glasses audio feeds BirdNET; cards show on the lens. Swipe between species, swipe down to choose a species and tap to open it, swipe down again for its details, tap \"Add to my list\". Powered by BirdNET.")
             }
 
             Section("On the lens") {

@@ -7,74 +7,92 @@ import MWDATMockDevice
 import Testing
 @testable import BirdJournal
 
-// Lens pages on Mock Device Kit (issue #7): session started, Display and Inputs attached, the fake stack fed in,
-// every page reached with injected nav, select and back, and a clean stop.
+// Lens pages on Mock Device Kit (issues #7 and #24): session started, Display and Inputs attached, the fake stack
+// fed in, the list driven as a menu and every species card reached with injected nav, select and back, and a clean
+// stop.
 extension MockDeviceKitTests {
     @Suite("Lens session")
     struct Lens {
-        @Test("injected nav, select and back walk every page, and a new species never moves the page")
+        @Test("injected nav, select and back drive the list and the cards, and a new species never moves the page")
         func navigatesAllPages() async throws {
-            // The test, not the timer, leaves the Saved page.
-            try await withRunningLens(savedDismissDelay: .seconds(30)) { lens, glasses in
-                #expect(lens.page == .listening)
-                #expect(lens.card.elements[1] == .body("No species yet"))
+            try await withRunningLens { lens, glasses in
+                #expect(lens.page == .list)
+                #expect(lens.card.elements[0] == .heading("No species yet"))
 
                 lens.update(with: FakeLensStack.stack(count: 2))
-                #expect(lens.page == .listening)
-                #expect(lens.card.elements[1] == .body("2 species heard"))
+                #expect(lens.page == .list)
+                #expect(lens.card.elements[0] == .heading("2 species heard"))
 
                 let input = glasses.services.input
-                let steps: [(inject: () -> Void, page: LensPage)] = [
-                    (input.navLeft, .photo(index: 0)),
-                    (input.navDown, .description(index: 0)),
-                    (input.navUp, .photo(index: 0)),
-                    (input.select, .confirm(index: 0)),
-                    (input.select, .saved(index: 0)),
-                    (input.navUp, .photo(index: 0)),
-                    (input.navLeft, .photo(index: 1)),
-                ]
-                for step in steps {
-                    step.inject()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page == step.page }
-                }
-                #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[0]])
-                #expect(lens.card.elements.contains(.heading("House Finch")))
+                input.navLeft()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                #expect(lens.card.photo == LensImage(id: "sayornis-nigricans"))
+                #expect(lens.card.screenfuls[0].contains(.title("Black Phoebe", detail: "82% match")))
 
-                // A species arriving while on a photo page appends and leaves the page alone.
+                // A tap on the photo page adds nothing; down opens the details and up brings the photo back.
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 2 }
+                #expect(lens.page == .species(index: 0))
+                #expect(lens.savedSightings.isEmpty)
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 0) }
+                #expect(lens.card.elements.last == .button(LensCardButton(label: "Add to my list", action: .save)))
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 0) }
+
+                // "Add to my list": one Select saves and the page shows it; a Select right behind it (one press the
+                // hardware delivered twice) saves nothing more; a deliberate one later saves again.
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 1 }
+                #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[0]])
+                #expect(lens.page == .details(index: 0))
+                #expect(lens.card.elements.last == .saved("Added to my list ✓"))
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 7 }
+                #expect(lens.savedSightings.count == 1)
+                try await Task.sleep(for: .milliseconds(1100))
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 2 }
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                #expect(lens.card.elements.contains(.status("2 species · 1 of 2 · Added")))
+
+                input.navLeft()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1) }
+                #expect(lens.card.elements.contains(.title("House Finch", detail: "61% match")))
+
+                // A species arriving while on a card appends, updates the strip and leaves the page alone.
                 lens.update(with: FakeLensStack.stack(count: 3))
-                #expect(lens.page == .photo(index: 1))
+                #expect(lens.page == .species(index: 1))
                 #expect(lens.stack.count == 3)
-                #expect(lens.card.elements.contains(.meta("2 of 3")))
+                #expect(lens.card.elements.contains(.status("3 species · 2 of 3")))
                 #expect(lens.card.photo == LensImage(id: "haemorhous-mexicanus"))
 
+                // Right is back to the list, with the card's species selected; down moves the selection; a tap opens it.
                 input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .photo(index: 0) }
-                input.navUp()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .listening }
-                #expect(lens.card.elements[1] == .body("3 species heard"))
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+                #expect(lens.card.elements[0] == .heading("3 species heard"))
+                guard case .list(let rows) = lens.card.elements[2] else { Issue.record("no rows on the list"); return }
+                #expect(rows.map(\.isSelected) == [false, true, false])
+                #expect(rows.map(\.isSaved) == [true, false, false])
+                #expect(rows.map(\.hasPhoto) == [true, true, true])
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.machine.selection == 2 }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 2) }
+                #expect(lens.card.elements.contains(.title("California Towhee", detail: "74% match")))
 
-                // Back on the root ends the session.
+                // Back (the mock delivers it; real glasses end the session themselves) returns to the list, then ends
+                // the session from the root.
+                input.back()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
                 input.back()
                 try await waitUntil(timeout: .seconds(2)) { lens.phase == .stopped(.back) }
                 #expect(lens.inputsState == .inactive)
                 #expect(lens.inputRecords.first?.gesture == .back)
                 #expect(lens.errorMessage == nil)
-            }
-        }
-
-        @Test("the Saved page returns to the photo on its own")
-        func savedPageDismisses() async throws {
-            try await withRunningLens(savedDismissDelay: .milliseconds(200)) { lens, glasses in
-                lens.update(with: FakeLensStack.stack(count: 1))
-                let input = glasses.services.input
-                input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .photo(index: 0) }
-                input.select()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .confirm(index: 0) }
-                input.select()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .saved(index: 0) }
-                try await waitUntil(timeout: .seconds(2)) { lens.page == .photo(index: 0) }
-                #expect(lens.savedSightings.count == 1)
             }
         }
 
@@ -122,18 +140,11 @@ extension MockDeviceKitTests {
 
         /// Starts a lens session with the fake stack's profiles on a connected mock Display, waits for Inputs to be
         /// active, and always stops it.
-        private func withRunningLens(
-            savedDismissDelay: Duration,
-            _ body: (GlassesLensSession, any MockGlasses) async throws -> Void
-        ) async throws {
+        private func withRunningLens(_ body: (GlassesLensSession, any MockGlasses) async throws -> Void) async throws {
             try await withMockDisplay { glasses in
                 let connection = GlassesConnection()
                 try await waitUntil { connection.connectedDevice != nil }
-                let lens = GlassesLensSession(
-                    profile: FakeLensStack.profile(for:),
-                    image: FakeLensStack.image(for:),
-                    savedDismissDelay: savedDismissDelay
-                )
+                let lens = GlassesLensSession(profile: FakeLensStack.profile(for:), image: FakeLensStack.image(for:))
                 await lens.start()
                 do {
                     try #require(lens.phase == .running, "\(lens.errorMessage ?? "no error")")

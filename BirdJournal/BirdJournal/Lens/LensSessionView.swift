@@ -36,7 +36,7 @@ struct LensSessionView: View {
                     Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                 }
             } footer: {
-                Text("Swipe left and right between species, down for the description, up to go back, tap to confirm. The two-finger tap ends the session from the glasses.")
+                Text("On the list, swipe down and up to choose a species and tap to open it. On its photo, swipe down for more information and tap \"Add to my list\" there; swipe up for the photo, left for the next species, right for the list. The middle-finger tap ends the session on real glasses.")
             }
 
             #if DEBUG
@@ -99,41 +99,67 @@ extension LensPage {
     /// The page as the phone screen names it.
     var title: String {
         switch self {
-        case .listening: "Listening"
-        case .photo(let index): "Photo \(index + 1)"
-        case .description(let index): "Description \(index + 1)"
-        case .confirm(let index): "Confirm \(index + 1)"
-        case .saved(let index): "Saved \(index + 1)"
+        case .list: "Species list"
+        case .species(let index): "Species \(index + 1) · photo"
+        case .details(let index): "Species \(index + 1) · details"
         }
     }
 }
 
-/// The current card mirrored on the phone (spec "Card renderer": the same page model feeds the phone view).
+/// The current card mirrored on the phone (spec "Card renderer": the same page model feeds the phone view), with a
+/// rule between the screenfuls the word budget counts.
 struct LensCardView: View {
     let card: LensCard
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let photo = card.photo {
-                Label(photo.id, systemImage: "photo").font(.caption).foregroundStyle(.secondary)
+            ForEach(Array(card.screenfuls.enumerated()), id: \.offset) { position, screenful in
+                if position > 0 { Divider() }
+                ForEach(Array(screenful.enumerated()), id: \.offset) { _, element in
+                    LensElementView(element: element)
+                }
             }
-            ForEach(Array(card.elements.enumerated()), id: \.offset) { _, element in
-                switch element {
-                case .heading(let text):
-                    Text(text).font(.headline)
-                case .body(let text):
-                    Text(text)
-                case .meta(let text):
-                    Text(text).font(.caption).foregroundStyle(.secondary)
-                case .buttons(let buttons):
+        }
+    }
+}
+
+private struct LensElementView: View {
+    let element: LensElement
+
+    var body: some View {
+        Group {
+            switch element {
+            case .status(let text):
+                Text(text).font(.caption2).foregroundStyle(.secondary)
+            case .photo(let photo):
+                Label(photo.id, systemImage: "photo").font(.caption).foregroundStyle(.secondary)
+            case .title(let name, let detail):
+                HStack(alignment: .firstTextBaseline) {
+                    Text(name).font(.headline)
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                }
+            case .heading(let text):
+                Text(text).font(.headline)
+            case .body(let text):
+                Text(text)
+            case .meta(let text):
+                Text(text).font(.caption).foregroundStyle(.secondary)
+            case .button(let button):
+                Text(button.label)
+                    .font(.caption.bold())
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(.tint.opacity(0.3), in: Capsule())
+            case .saved(let text):
+                Label(text, systemImage: "checkmark.circle.fill").font(.caption.bold())
+            case .list(let rows):
+                ForEach(rows, id: \.index) { row in
                     HStack {
-                        ForEach(Array(buttons.enumerated()), id: \.offset) { _, button in
-                            Text(button.label)
-                                .font(.caption.bold())
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(.tint.opacity(button.isPrimary ? 0.3 : 0.1), in: Capsule())
-                        }
+                        Image(systemName: row.isSelected ? "chevron.right" : "circle").font(.caption2).foregroundStyle(row.isSelected ? .primary : .tertiary)
+                        Text(row.commonName)
+                        Text(row.confidence).font(.caption).foregroundStyle(.secondary)
+                        if row.hasPhoto { Image(systemName: "photo").font(.caption) }
+                        if row.isSaved { Image(systemName: "checkmark.circle.fill").font(.caption) }
                     }
                 }
             }
@@ -189,7 +215,7 @@ private struct FakeStackSection: View {
         } header: {
             Text("Fake stack")
         } footer: {
-            Text("Adding a species while on a photo page appends it without moving the page.")
+            Text("Adding a species while on a card appends it without moving the page.")
         }
     }
 }

@@ -29,15 +29,15 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Pytho
 4. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates from the Open Data bucket
    into `cache/photos/`, and the `original` of the chosen ones.
 5. **Detect.** A COCO SSD MobileNet v1 from the ONNX model zoo (Apache-2.0, pinned by SHA-256 in `detector.py`)
-   finds the bird; photos without one, with a bird under 2 % of the frame, or with a bird narrower than the
-   260-pixel lens crop in the original, are dropped (`pipeline.py`).
+   finds the bird; photos without one, with a bird under 2 % of the frame, or with a bird that, padded, cannot fill the
+   lens crop's 368-pixel height in the original (about 263 pixels of bird), are dropped (`pipeline.py`).
 6. **Score.** Each crop gets `0.45 × bird area + 0.35 × background darkness + 0.20 × sharpness`, all in 0…1
    (`scoring.py`): big birds on dark, sharp backgrounds read best on the additive lens display. Crops under 0.4
    sharpness are dropped before ranking. The score cannot tell a hand-held or dead bird from a perched one; that
    is what `overrides.json` is for (see the Los Angeles file for examples).
 7. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
    logged gap (`selection.py`).
-8. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `lookalike`), `lens/<photo>.jpg` (260 px square, tight crop),
+8. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `lookalike`), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
    `phone/<photo>.jpg` (looser crop, 1200 px max), `LICENSE` with every credit and link, `report.json` with counts,
    chosen ids and gaps, and optionally a zip (`writer.py`).
 

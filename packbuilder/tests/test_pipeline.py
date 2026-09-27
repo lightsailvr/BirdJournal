@@ -109,6 +109,6 @@ def test_small_birds_in_the_original_are_skipped(tmp_path, photos):
 
     result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos))
 
-    assert chosen_ids(result) == [2], "a 180-pixel bird cannot fill a 260-pixel lens crop"
+    assert chosen_ids(result) == [2], "a 180-pixel bird cannot fill the lens crop's 368-pixel height"
     assert pipeline.bird_pixels(candidates[1], (1024, 683), BIG) == pytest.approx(0.6 * 2048)
     assert pipeline.bird_pixels(make_candidate(width=None, height=None), (1024, 683), BIG) == pytest.approx(0.6 * 2048)

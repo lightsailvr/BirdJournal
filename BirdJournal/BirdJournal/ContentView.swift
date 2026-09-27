@@ -73,7 +73,7 @@ struct ContentView: View {
 
 #if DEBUG
 /// Launch with `-autoMockLens YES` to pair the mock, open the lens screen, start the pages, hear three fake
-/// species and walk to a description page: a screenshot of the simulator then shows the mock lens without any taps.
+/// species and walk to the second species card: a screenshot of the simulator then shows the mock lens without any taps.
 /// `-autoMockLensInputs "navLeft select"` walks a different sequence (mock input names, one second apart).
 private struct AutoMockLens: ViewModifier {
     @Environment(GlassesConnection.self) private var connection
@@ -87,7 +87,7 @@ private struct AutoMockLens: ViewModifier {
             path = [.lens]
             await lens.start()
             lens.update(with: FakeLensStack.stack(count: 3))
-            let sequence = UserDefaults.standard.string(forKey: "autoMockLensInputs") ?? "navLeft navLeft navDown"
+            let sequence = UserDefaults.standard.string(forKey: "autoMockLensInputs") ?? "navLeft navLeft"
             let inputs = sequence.split(whereSeparator: \.isWhitespace).compactMap { name in
                 GlassesConnection.MockInput.allCases.first { String(describing: $0) == name }
             }

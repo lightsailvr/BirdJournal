@@ -33,6 +33,7 @@ An iOS app that turns the glasses into the ears and eyes of a bird identifier. T
 16. As a birder, I want to fall back to the phone microphone when no glasses are connected, so that I can still test and use the app.
 
 ### Cards on the lens
+_Stories 20–24 and 27–30 describe the #7 page map; DECISIONS.md "Lens UI" (#24) supersedes them with a species list on the root and one card per species, paged by screenful, saved with one "This is my bird" tap._
 17. As a birder, I want to swipe left and right between candidate species, so that I can compare what I hear with the likely birds.
 18. As a birder, I want each species card to lead with a close-up photo and the common name, so that I can match the bird by sight in under two seconds.
 19. As a birder, I want the confidence shown on the card, so that I know how much to trust it.

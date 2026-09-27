@@ -9,9 +9,9 @@ import Synchronization
 import UIKit
 
 /// The glasses adapter for the lens (spec "Glasses adapter"): a device session with Display and Inputs attached,
-/// the `LensStateMachine` fed with stack updates and every Nav, Select and Back the glasses deliver, and the page it
-/// lands on rendered onto the lens after each change. Confirm and Save are handed to `onEffect` for the listening
-/// run to act on (issue #9); Back on the root ends the run here.
+/// the `LensStateMachine` fed with stack updates, every Nav, Select and Back the glasses deliver, and every tap on
+/// a card element the Display reports, and the card it lands on rendered onto the lens after each change. Saves are
+/// handed to `onEffect` for the listening run to act on (issue #9); Back on the root ends the run here.
 ///
 /// Order (DAT-SETUP-CHECKLIST.md): Display attaches once the session is `.started`, the first card is sent once
 /// Display is `.started`, and Inputs attaches last, with `consumeBack` so a Back event reaches the app when
@@ -31,7 +31,7 @@ final class GlassesLensSession {
     enum StopReason: Equatable {
         /// Stop was tapped on the phone.
         case phone
-        /// Back on the listening page (the root) ended the session.
+        /// Back on the species list (the root) ended the session.
         case back
         /// The session ended on the device side (two-finger tap, doff, link loss).
         case glasses
@@ -76,20 +76,20 @@ final class GlassesLensSession {
 
     @ObservationIgnored private let wearables: any WearablesInterface
     @ObservationIgnored private let connection: GlassesConnection?
-    /// How long the Saved page stays before the photo returns on its own.
-    @ObservationIgnored private let savedDismissDelay: Duration
-    /// Pack lookup for the photo and description pages.
+    /// Pack lookup for the species cards.
     @ObservationIgnored private let profile: (Species) -> SpeciesProfile?
     /// Pixels for the images the pack names.
     @ObservationIgnored private let image: (LensImage) -> UIImage?
-    /// Told about confirm and save; ending the session on Back is handled here.
+    /// Told about saves; ending the session on Back is handled here.
     @ObservationIgnored private let onEffect: (LensEffect) -> Void
+    /// How close two saves of one species must be to count as one press delivered twice.
+    @ObservationIgnored private let saveDebounce: Duration
+    @ObservationIgnored private var lastSave: (species: Species, at: ContinuousClock.Instant)?
     @ObservationIgnored private var lease: DeviceSessionLease = .own
     @ObservationIgnored private var session: DeviceSession?
     @ObservationIgnored private var display: Display?
     @ObservationIgnored private var inputsCapability: Inputs?
     @ObservationIgnored private var inputTask: Task<Void, Never>?
-    @ObservationIgnored private var savedTask: Task<Void, Never>?
     /// The teardown in progress, so a second stop (the phone after Back, the run after the glasses) awaits it.
     @ObservationIgnored private var stopTask: Task<Void, Never>?
     /// Sends run one after another so a burst of gestures leaves the latest card on the lens.
@@ -103,16 +103,16 @@ final class GlassesLensSession {
         connection: GlassesConnection? = nil,
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
         image: @escaping (LensImage) -> UIImage? = { _ in nil },
-        savedDismissDelay: Duration = .seconds(2),
+        saveDebounce: Duration = .seconds(1),
         onEffect: @escaping (LensEffect) -> Void = { _ in }
     ) {
         self.wearables = wearables
         self.connection = connection
-        self.savedDismissDelay = savedDismissDelay
         self.profile = profile
         self.image = image
+        self.saveDebounce = saveDebounce
         self.onEffect = onEffect
-        card = LensCardRenderer.render(.listening, stack: CandidateStack(), profile: profile)
+        card = LensCardRenderer.render(.list, stack: CandidateStack(), selection: 0, saved: [], profile: profile)
     }
 
     var page: LensPage { machine.page }
@@ -130,6 +130,7 @@ final class GlassesLensSession {
         self.lease = lease
         machine = LensStateMachine()
         savedSightings = []
+        lastSave = nil
         inputRecords = []
         stopTask = nil
         refreshCard()
@@ -223,8 +224,6 @@ final class GlassesLensSession {
     private func tearDown() async {
         inputTask?.cancel()
         inputTask = nil
-        savedTask?.cancel()
-        savedTask = nil
         sendTask?.cancel()
         sendTask = nil
         await tokens.cancelAll()
@@ -271,26 +270,24 @@ final class GlassesLensSession {
         perform(machine.apply(gesture))
     }
 
-    /// A click on a card button, delivered by Display rather than Inputs.
-    private func buttonClicked(_ button: LensButton) {
+    /// A tap on a card element (the Save button), delivered by Display rather than Inputs.
+    private func tapped(_ action: LensAction) {
         guard phase == .running else { return }
-        perform(machine.press(button))
+        perform(machine.press(action))
     }
 
     private func perform(_ effect: LensEffect?) {
         switch effect {
-        case .confirmed(let candidate):
-            onEffect(.confirmed(candidate))
         case .saveSighting(let candidate):
+            // Hardware may deliver one press as both a button click and an Inputs select (DECISIONS.md, "Lens UI"):
+            // a second save of the same species inside `saveDebounce` is that echo, not a wish to save again.
+            let now = ContinuousClock.now
+            if let lastSave, lastSave.species == candidate.species, now - lastSave.at < saveDebounce {
+                break
+            }
+            lastSave = (candidate.species, now)
             savedSightings.append(candidate)
             onEffect(.saveSighting(candidate))
-            savedTask?.cancel()
-            savedTask = Task { [weak self, savedDismissDelay] in
-                try? await Task.sleep(for: savedDismissDelay)
-                guard !Task.isCancelled, let self else { return }
-                self.machine.dismissSaved()
-                self.refreshCard()
-            }
         case .endSession:
             beginStop(reason: .back)
             onEffect(.endSession)
@@ -305,15 +302,15 @@ final class GlassesLensSession {
     /// Re-renders the current page and sends it if it changed. Every page shows the stack (count, position, score),
     /// so a stack update on any page can change the card without changing the page.
     private func refreshCard() {
-        let next = LensCardRenderer.render(machine.page, stack: machine.stack, profile: profile)
+        let next = LensCardRenderer.render(machine.page, stack: machine.stack, selection: machine.selection, saved: machine.savedIndices, profile: profile)
         guard next != card else { return }
         card = next
         resendCard()
     }
 
     private func renderedCard() -> FlexBox {
-        DisplayCardBuilder.flexBox(for: card, image: image) { [weak self] button in
-            Task { @MainActor in self?.buttonClicked(button) }
+        DisplayCardBuilder.flexBox(for: card, image: image) { [weak self] action in
+            Task { @MainActor in self?.tapped(action) }
         }
     }
 

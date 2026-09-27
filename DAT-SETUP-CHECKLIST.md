@@ -39,8 +39,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 - [x] Simulator/phone run with `MockDeviceKit.shared.enable()` + `pairGlasses(model: .metaRayBanDisplay)` + `powerOn()/unfold()/don()`.
 - [x] Lens preview inside the app: `mockDevice.services.display.createPreviewView()` (done in #4: the "Lens" screen embeds
       it while a mock is paired; taps via `sendClick(identifier:)` are unused, the card's button is verified on hardware).
-      #7 drives the real pages on it: `-autoMockLens YES` starts the lens with three fake species and walks to a description
-      page; `-autoMockLensInputs "navLeft select"` walks any other sequence of mock input names for screenshots.
+      #7 drives the real pages on it: `-autoMockLens YES` starts the lens with three fake species and walks to the second
+      species card; `-autoMockLensInputs "navLeft select"` walks any other sequence of mock input names for screenshots.
 - [x] Inputs injection: `services.input.navDown()/select()/back()`; camera feed from an HEVC .mp4 or JPEG/PNG. Done in #4:
       Display and Inputs attach to one mock session; a `.metaRayBanDisplay` mock delivers `.nav`, `.select` and, unlike real
       glasses, `.back` (source `neuralBand`) within 100 ms of injection. Injection before Inputs is `.active` is dropped.
@@ -69,21 +69,35 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 1. Build the untouched project for the simulator — baseline compiles.
 2. Add package 1.0.0 + Info.plist keys; build again.
 3. [x] Mock run: pair a mock Display device, send one FlexBox card, see it in the preview view. Done in #4 ("Lens" screen;
-   launch the app with `-autoMockLens YES` to pair, start and inject three gestures without tapping). #7 sends every lens
-   page (listening, photo, description, confirm, saved) and navigates them with injected nav, select and back. Clicking
-   the confirm page's Save button through the mock is not exercised; Select stands in for it.
+   launch the app with `-autoMockLens YES` to pair, start and inject two gestures without tapping). #24 sends the species
+   list and the species cards and navigates them with injected nav, select and back. Clicking a details page's "Add to my
+   list" button through the mock is not exercised; Select stands in for it.
 4. [ ] Device run with Dev Mode: register from the app, accept in Meta AI, session reaches `.started`, Display shows the card on the lens.
    #4 adds the "Lens card" screen for this: start, swipe and tap with the Neural Band, watch the list on the phone, then
    two-finger tap to end from the glasses and check the run reads "Ended by the glasses".
 5. [x] Audio spike: camera stream with `audioCodec: .pcm(sampleRate: .rate44100, numberOfChannels: 1)` at `.low`/2 fps; log frame cadence, latency and glasses battery over 20 min. Done 2026-09-26, results in DECISIONS.md "Phase A go/no-go".
    Found: glasses audio arrives as 1,024-sample chunks every ~23 ms at 44.1 kHz; presentation timestamps are not host time; the first chunk can be empty; a `StreamError` ("Critical error, the stream should end") can fire on backgrounding while the stream keeps delivering. Taking the Display glasses off ends the session (`DeviceSessionError` "Session ended by device") and drops the link; it does not pause. A new session is needed after they are put back on.
 6. [ ] End-to-end run with Dev Mode (#9): "Listen with the glasses", pocket the phone, hear a bird, see the card within 6 s,
-   tap to confirm, tap Save, then check the Album count on the phone and that the sighting's frame file exists.
+   swipe down to its details, tap "Add to my list", then check the Album count on the phone and that the sighting's frame file exists.
+7. [ ] Lens UI probes (#24), on the glasses with the Neural Band, from the "Lens" screen with the fake stack:
+   - [x] Scrolling: with Inputs attached the glasses do not scroll a tall card; swipe up/down reach the app (2026-09-27).
+     Every send is one screenful: a species has a photo page and, on swipe down, a details page.
+   - [x] Back: the middle-finger tap ends the session from any card; no Back event reaches the app (2026-09-27, and the
+     Inputs docs' "Current limitations"). Swipe right on a card is the app's way back to the list.
+   - [x] List focus: swipe down did not move the glasses' focus between tappable rows while Inputs was attached
+     (2026-09-27); the app now moves the selection itself and re-sends the list.
+   - [ ] Photo: is the 552 × 368 photo fully on the photo page with the name under it? If it is cut at the bottom, shrink
+     the lens crop height in `packbuilder/src/packbuilder/crops.py` (`LENS_HEIGHT`) and rebuild the pack.
+   - Select on the details page: does it click "Add to my list" (a Display click), arrive as an Inputs `select` (logged
+     on the phone), or both? Either way one sighting must be written.
+   - Record the answers in DECISIONS.md, "Lens UI".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.
 - Inputs (Neural Band events), camera audio, photo capture, motion and speech are all **experimental**: usable in Dev Mode and the Beta channel, not publishable to production yet.
 - Web Apps for Display have **no camera and no microphone** — they cannot host the core loop.
 - Display: one root `FlexBox` per `send`, 600×600 additive display, images from bundled `UIImage` or HTTPS. A bundled image
-  takes its pixel size in the layout (`ImageSize` is only `.icon` or `.fill`), so size lens crops to about 260 px for a
-  photo-beside-text card; the root `FlexBox` needs `.alignSelf(.stretch)` to span the canvas width.
+  takes its pixel size in the layout (`ImageSize` is only `.icon` or `.fill`), so lens crops are cut to 552 × 368, the
+  card's width under its padding (#24); the root `FlexBox` needs `.alignSelf(.stretch)` to span the canvas width. Tall
+  views scroll vertically per the docs ("Views are presented one at a time with vertical scrolling"); any `FlexBox`
+  takes `.onTap` and the Neural Band moves focus between tappable elements with Nav and activates with Select.

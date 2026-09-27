@@ -57,7 +57,7 @@ def test_pack_output(tmp_path):
     for photo in photos:
         assert photo["observer"] and photo["license"] in {"CC0", "CC BY", "CC BY-NC"} and photo["source_url"].startswith("https://www.inaturalist.org/observations/")
         assert (out / photo["file_lens"]).exists() and (out / photo["file_phone"]).exists()
-        assert Image.open(out / photo["file_lens"]).size == (260, 260)
+        assert Image.open(out / photo["file_lens"]).size == (552, 368)
         assert max(Image.open(out / photo["file_phone"]).size) <= 1200
     first = [p for p in photos if p["species_id"] == "sayornis-nigricans"][0]
     assert first["rank"] == 0 and first["credit_line"] == "Jane Birder, no rights reserved (CC0)"

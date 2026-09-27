@@ -41,8 +41,8 @@ struct BirdJournalApp: App {
         }
     }
 
-    /// The lens session over the bundled species pack: photo and description pages come from the pack, and a
-    /// species the pack lacks shows by name alone.
+    /// The lens session over the bundled species pack: the species cards' photos and text come from the pack,
+    /// and a species the pack lacks shows by name alone.
     private static func makeLensSession(connection: GlassesConnection) -> GlassesLensSession {
         GlassesLensSession(connection: connection, profile: BundledPack.profile(for:), image: BundledPack.image(for:))
     }
