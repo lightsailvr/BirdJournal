@@ -2,32 +2,32 @@ import Identification
 import Testing
 @testable import LensSession
 
-// Page map from DECISIONS.md, "Lens UI", and the spec's "Inputs mapping" (issue #7). Every (page, gesture) pair is
-// listed in `transitions`, so a rule that goes missing fails a test rather than falling through to `default`.
+// Page map from DECISIONS.md, "Lens UI" (issue #24): a species list on the root and one card per species, both
+// paged by screenful. Every (page, gesture) pair is listed in `transitions`, so a rule that goes missing fails a
+// test rather than falling through to `default`.
 @Suite("LensStateMachine")
 struct LensStateMachineTests {
+    /// Screenfuls the current card is taken to have when a test does not say otherwise.
+    static let screenfuls = 2
+
     /// A machine on `page` with `species` fake species in its stack, reached through gestures alone.
     static func machine(on page: LensPage, species: Int = 3) -> LensStateMachine {
         var machine = LensStateMachine()
         machine.update(with: Fakes.stack(species))
         if let index = page.index {
-            for _ in 0...index { _ = machine.apply(.swipeLeft) }
+            for _ in 0...index { _ = machine.apply(.swipeLeft, screenfuls: screenfuls) }
         }
-        switch page {
-        case .listening, .photo: break
-        case .description: _ = machine.apply(.swipeDown)
-        case .confirm: _ = machine.apply(.tap)
-        case .saved: _ = machine.apply(.tap); _ = machine.apply(.tap)
-        }
+        for _ in 0..<page.screenful { _ = machine.apply(.swipeDown, screenfuls: screenfuls) }
         precondition(machine.page == page, "could not reach \(page)")
         return machine
     }
 
-    @Test("starts on the listening page with an empty stack")
+    @Test("starts on the species list with an empty stack and nothing saved")
     func initialState() {
         let machine = LensStateMachine()
-        #expect(machine.page == .listening)
+        #expect(machine.page == .list(screenful: 0))
         #expect(machine.stack.isEmpty)
+        #expect(machine.savedIndices.isEmpty)
     }
 
     // MARK: - Every (page, gesture) pair
@@ -48,116 +48,143 @@ struct LensStateMachineTests {
         var testDescription: String { "\(from) + \(gesture) → \(to)\(effect.map { " + \($0)" } ?? "")" }
     }
 
-    /// Three species in the stack; the wearer is on the middle one where a page has a middle.
+    /// Three species in the stack, cards of two screenfuls; the wearer is on the middle one where a page has a middle.
     static let transitions: [Transition] = [
-        // Listening: swipes open the first species; Back on the root ends the session.
-        Transition(.listening, .swipeLeft, .photo(index: 0)),
-        Transition(.listening, .swipeRight, .photo(index: 0)),
-        Transition(.listening, .swipeUp, .listening),
-        Transition(.listening, .swipeDown, .listening),
-        Transition(.listening, .tap, .listening),
-        Transition(.listening, .back, .listening, .endSession),
+        // The list: left and right open the first species; down and up page its screenfuls; a tap is left to the
+        // Display (rows are opened through `press`); Back on the root ends the session.
+        Transition(.list(screenful: 0), .swipeLeft, .species(index: 0, screenful: 0)),
+        Transition(.list(screenful: 0), .swipeRight, .species(index: 0, screenful: 0)),
+        Transition(.list(screenful: 0), .swipeUp, .list(screenful: 0)),
+        Transition(.list(screenful: 0), .swipeDown, .list(screenful: 1)),
+        Transition(.list(screenful: 0), .tap, .list(screenful: 0)),
+        Transition(.list(screenful: 0), .back, .list(screenful: 0), .endSession),
+        Transition(.list(screenful: 1), .swipeUp, .list(screenful: 0)),
+        Transition(.list(screenful: 1), .swipeDown, .list(screenful: 1)),
+        Transition(.list(screenful: 1), .swipeLeft, .species(index: 0, screenful: 0)),
+        Transition(.list(screenful: 1), .back, .list(screenful: 1), .endSession),
 
-        // Photo: left and right page through the stack, down opens the description, up is back, tap confirms (and
-        // tells the adapter to take the camera frame now, so Save stores what the wearer was looking at).
-        Transition(.photo(index: 1), .swipeLeft, .photo(index: 2)),
-        Transition(.photo(index: 1), .swipeRight, .photo(index: 0)),
-        Transition(.photo(index: 1), .swipeUp, .listening),
-        Transition(.photo(index: 1), .swipeDown, .description(index: 1)),
-        Transition(.photo(index: 1), .tap, .confirm(index: 1), .confirmed(Fakes.candidate(Fakes.finch))),
-        Transition(.photo(index: 1), .back, .listening),
-        Transition(.photo(index: 2), .swipeLeft, .photo(index: 2)),
-        Transition(.photo(index: 0), .swipeRight, .listening),
-
-        // Description: up and Back return to the photo; nothing else moves.
-        Transition(.description(index: 1), .swipeLeft, .description(index: 1)),
-        Transition(.description(index: 1), .swipeRight, .description(index: 1)),
-        Transition(.description(index: 1), .swipeUp, .photo(index: 1)),
-        Transition(.description(index: 1), .swipeDown, .description(index: 1)),
-        Transition(.description(index: 1), .tap, .description(index: 1)),
-        Transition(.description(index: 1), .back, .photo(index: 1)),
-
-        // Confirm: tap is Save; up and Back cancel.
-        Transition(.confirm(index: 1), .swipeLeft, .confirm(index: 1)),
-        Transition(.confirm(index: 1), .swipeRight, .confirm(index: 1)),
-        Transition(.confirm(index: 1), .swipeUp, .photo(index: 1)),
-        Transition(.confirm(index: 1), .swipeDown, .confirm(index: 1)),
-        Transition(.confirm(index: 1), .tap, .saved(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
-        Transition(.confirm(index: 1), .back, .photo(index: 1)),
-
-        // Saved: any swipe or Back returns to the photo; a tap is ignored so a doubled Select cannot skip the page.
-        Transition(.saved(index: 1), .swipeLeft, .photo(index: 1)),
-        Transition(.saved(index: 1), .swipeRight, .photo(index: 1)),
-        Transition(.saved(index: 1), .swipeUp, .photo(index: 1)),
-        Transition(.saved(index: 1), .swipeDown, .photo(index: 1)),
-        Transition(.saved(index: 1), .tap, .saved(index: 1)),
-        Transition(.saved(index: 1), .back, .photo(index: 1)),
+        // A species card: left and right page through the stack (each card opens on its first screenful) and right
+        // past the first returns to the list; down and up page the card's screenfuls, and up from the first is back
+        // to the list; a tap is "This is my bird" on any screenful; Back returns to the list.
+        Transition(.species(index: 1, screenful: 0), .swipeLeft, .species(index: 2, screenful: 0)),
+        Transition(.species(index: 1, screenful: 0), .swipeRight, .species(index: 0, screenful: 0)),
+        Transition(.species(index: 1, screenful: 0), .swipeUp, .list(screenful: 0)),
+        Transition(.species(index: 1, screenful: 0), .swipeDown, .species(index: 1, screenful: 1)),
+        Transition(.species(index: 1, screenful: 0), .tap, .species(index: 1, screenful: 0), .saveSighting(Fakes.candidate(Fakes.finch))),
+        Transition(.species(index: 1, screenful: 0), .back, .list(screenful: 0)),
+        Transition(.species(index: 1, screenful: 1), .swipeLeft, .species(index: 2, screenful: 0)),
+        Transition(.species(index: 1, screenful: 1), .swipeRight, .species(index: 0, screenful: 0)),
+        Transition(.species(index: 1, screenful: 1), .swipeUp, .species(index: 1, screenful: 0)),
+        Transition(.species(index: 1, screenful: 1), .swipeDown, .species(index: 1, screenful: 1)),
+        Transition(.species(index: 1, screenful: 1), .tap, .species(index: 1, screenful: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
+        Transition(.species(index: 1, screenful: 1), .back, .list(screenful: 0)),
+        Transition(.species(index: 2, screenful: 0), .swipeLeft, .species(index: 2, screenful: 0)),
+        Transition(.species(index: 0, screenful: 1), .swipeRight, .list(screenful: 0)),
     ]
 
     @Test("every page and gesture pair lands on the expected page with the expected effect", arguments: transitions)
     func transition(_ transition: Transition) {
         var machine = Self.machine(on: transition.from)
-        let effect = machine.apply(transition.gesture)
+        let effect = machine.apply(transition.gesture, screenfuls: Self.screenfuls)
         #expect(machine.page == transition.to)
         #expect(effect == transition.effect)
     }
 
-    @Test("the table covers every page kind and gesture")
+    @Test("the table covers every page kind, first and later screenfuls, and every gesture")
     func tableIsComplete() {
-        let pages: [LensPage] = [.listening, .photo(index: 1), .description(index: 1), .confirm(index: 1), .saved(index: 1)]
+        let pages: [LensPage] = [.list(screenful: 0), .species(index: 1, screenful: 0), .species(index: 1, screenful: 1)]
         for page in pages {
             for gesture in LensGesture.allCases {
                 #expect(Self.transitions.contains { $0.from == page && $0.gesture == gesture }, "\(page) + \(gesture) is not in the table")
             }
         }
-    }
-
-    @Test("swiping on the listening page with an empty stack stays put")
-    func listeningWithoutSpecies() {
-        var machine = LensStateMachine()
-        #expect(machine.apply(.swipeLeft) == nil)
-        #expect(machine.page == .listening)
-        #expect(machine.apply(.swipeRight) == nil)
-        #expect(machine.page == .listening)
-    }
-
-    // MARK: - Buttons and the saved page
-
-    @Test("the Save button on the confirm page saves; Cancel returns to the photo")
-    func confirmButtons() {
-        var machine = Self.machine(on: .confirm(index: 2))
-        #expect(machine.press(.cancel) == nil)
-        #expect(machine.page == .photo(index: 2))
-
-        machine = Self.machine(on: .confirm(index: 2))
-        #expect(machine.press(.save) == .saveSighting(Fakes.candidate(Fakes.towhee)))
-        #expect(machine.page == .saved(index: 2))
-    }
-
-    @Test("buttons are ignored off the confirm page")
-    func buttonsElsewhere() {
-        for page in [LensPage.listening, .photo(index: 0), .description(index: 0), .saved(index: 0)] {
-            var machine = Self.machine(on: page)
-            #expect(machine.press(.save) == nil)
-            #expect(machine.page == page)
+        for gesture in [LensGesture.swipeUp, .swipeDown] {
+            #expect(Self.transitions.contains { $0.from == .list(screenful: 1) && $0.gesture == gesture })
         }
     }
 
-    @Test("the saved page returns to the photo once acknowledged, and only then")
-    func savedDismissal() {
-        var machine = Self.machine(on: .saved(index: 0))
-        machine.dismissSaved()
-        #expect(machine.page == .photo(index: 0))
+    @Test("a card with one screenful does not page down, and the screenful never runs past the card")
+    func screenfulsAreClamped() {
+        var machine = Self.machine(on: .species(index: 0, screenful: 0))
+        #expect(machine.apply(.swipeDown, screenfuls: 1) == nil)
+        #expect(machine.page == .species(index: 0, screenful: 0))
+        // A card that shrank (the wearer is past its end) comes back to its last screenful on the next page down.
+        machine = Self.machine(on: .species(index: 0, screenful: 1))
+        _ = machine.apply(.swipeDown, screenfuls: 1)
+        #expect(machine.page == .species(index: 0, screenful: 0))
+    }
 
-        machine = Self.machine(on: .description(index: 0))
-        machine.dismissSaved()
-        #expect(machine.page == .description(index: 0))
+    @Test("swiping on the list with an empty stack stays put")
+    func listWithoutSpecies() {
+        var machine = LensStateMachine()
+        #expect(machine.apply(.swipeLeft, screenfuls: 1) == nil)
+        #expect(machine.page == .list(screenful: 0))
+        #expect(machine.apply(.swipeRight, screenfuls: 1) == nil)
+        #expect(machine.page == .list(screenful: 0))
+    }
+
+    // MARK: - Saving
+
+    @Test("a tap on a species card saves it once: the card is marked saved and a second tap does nothing")
+    func tapSaves() {
+        var machine = Self.machine(on: .species(index: 1, screenful: 0))
+        #expect(machine.apply(.tap, screenfuls: 2) == .saveSighting(Fakes.candidate(Fakes.finch)))
+        #expect(machine.savedIndices == [1])
+        #expect(machine.page == .species(index: 1, screenful: 0))
+        // Hardware may deliver one press as both a button click and an Inputs select (issue #24): the second is ignored.
+        #expect(machine.apply(.tap, screenfuls: 2) == nil)
+        #expect(machine.savedIndices == [1])
+    }
+
+    @Test("the This is my bird button saves like a tap, and only on its own card")
+    func saveButton() {
+        var machine = Self.machine(on: .species(index: 2, screenful: 1))
+        #expect(machine.press(.save) == .saveSighting(Fakes.candidate(Fakes.towhee)))
+        #expect(machine.savedIndices == [2])
+        #expect(machine.page == .species(index: 2, screenful: 1))
+        #expect(machine.press(.save) == nil)
+
+        machine = Self.machine(on: .list(screenful: 0))
+        #expect(machine.press(.save) == nil)
+        #expect(machine.savedIndices.isEmpty)
+        #expect(machine.page == .list(screenful: 0))
+    }
+
+    @Test("saved cards stay saved while paging away and back")
+    func savedSurvivesNavigation() {
+        var machine = Self.machine(on: .species(index: 0, screenful: 0))
+        _ = machine.apply(.tap, screenfuls: 2)
+        _ = machine.apply(.swipeLeft, screenfuls: 2)
+        _ = machine.apply(.swipeRight, screenfuls: 2)
+        #expect(machine.page == .species(index: 0, screenful: 0))
+        #expect(machine.savedIndices == [0])
+        #expect(machine.apply(.tap, screenfuls: 2) == nil)
+    }
+
+    // MARK: - The list's rows
+
+    @Test("tapping a row on the list opens that species' card on its first screenful")
+    func openFromList() {
+        var machine = Self.machine(on: .list(screenful: 1))
+        #expect(machine.press(.open(index: 2)) == nil)
+        #expect(machine.page == .species(index: 2, screenful: 0))
+    }
+
+    @Test("a row tap is ignored off the list and for an index past the stack")
+    func openElsewhere() {
+        var machine = Self.machine(on: .species(index: 0, screenful: 0))
+        #expect(machine.press(.open(index: 2)) == nil)
+        #expect(machine.page == .species(index: 0, screenful: 0))
+
+        machine = Self.machine(on: .list(screenful: 0))
+        #expect(machine.press(.open(index: 3)) == nil)
+        #expect(machine.page == .list(screenful: 0))
     }
 
     // MARK: - Stack updates
 
-    @Test("a new species arriving on a photo page appends and leaves the page alone", arguments: [
-        LensPage.photo(index: 1), .description(index: 1), .confirm(index: 1), .saved(index: 1), .listening,
+    @Test("a new species arriving appends and leaves the page alone", arguments: [
+        LensPage.species(index: 1, screenful: 1), .species(index: 1, screenful: 0), .list(screenful: 0), .list(screenful: 1),
     ])
     func appendKeepsPage(page: LensPage) {
         var machine = Self.machine(on: page, species: 2)
@@ -167,38 +194,41 @@ struct LensStateMachineTests {
         #expect(machine.stack.candidates.map(\.species) == Fakes.all)
     }
 
-    @Test("a score change on the current species keeps the order and the page")
+    @Test("a score change on the current species keeps the order, the page and the saved mark")
     func scoreUpdateKeepsOrder() {
-        var machine = Self.machine(on: .photo(index: 0), species: 3)
+        var machine = Self.machine(on: .species(index: 0, screenful: 0), species: 3)
+        _ = machine.apply(.tap, screenfuls: 2)
         var candidates = Fakes.stack(3).candidates
         candidates[0].score = 0.1
         candidates[2].score = 0.99
         let changed = machine.update(with: CandidateStack(candidates: candidates))
         #expect(changed)
-        #expect(machine.page == .photo(index: 0))
+        #expect(machine.page == .species(index: 0, screenful: 0))
+        #expect(machine.savedIndices == [0])
         #expect(machine.stack.candidates.map(\.species) == Fakes.all)
         #expect(machine.stack.candidates[0].score == 0.1)
     }
 
     @Test("an identical stack reports no change")
     func unchangedStack() {
-        var machine = Self.machine(on: .photo(index: 0), species: 2)
+        var machine = Self.machine(on: .species(index: 0, screenful: 0), species: 2)
         #expect(machine.update(with: Fakes.stack(2)) == false)
     }
 
-    @Test("a stack that is not a continuation of the current one restarts on the listening page")
+    @Test("a stack that is not a continuation of the current one restarts on the list with nothing saved")
     func replacedStackResets() {
-        var machine = Self.machine(on: .description(index: 2), species: 3)
+        var machine = Self.machine(on: .species(index: 2, screenful: 1), species: 3)
+        _ = machine.apply(.tap, screenfuls: 2)
         let changed = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]))
         #expect(changed)
-        #expect(machine.page == .listening)
+        #expect(machine.page == .list(screenful: 0))
+        #expect(machine.savedIndices.isEmpty)
         #expect(machine.stack.count == 1)
     }
 
     @Test("the current candidate follows the page")
     func currentCandidate() {
-        #expect(Self.machine(on: .listening).currentCandidate == nil)
-        #expect(Self.machine(on: .photo(index: 2)).currentCandidate == Fakes.candidate(Fakes.towhee))
-        #expect(Self.machine(on: .saved(index: 0)).currentCandidate == Fakes.candidate(Fakes.phoebe))
+        #expect(Self.machine(on: .list(screenful: 0)).currentCandidate == nil)
+        #expect(Self.machine(on: .species(index: 2, screenful: 1)).currentCandidate == Fakes.candidate(Fakes.towhee))
     }
 }

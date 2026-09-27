@@ -6,7 +6,7 @@ import UIKit
 /// A hard-coded stack for driving the lens without the engine (issue #7: "demonstrated on the mock display with a
 /// hard-coded fake stack"), plus fake profiles with SF Symbol photos for the app-hosted tests that must not depend
 /// on the bundled pack. The app itself draws profiles from `BundledPack`. The last species has no profile, to show
-/// the name-only pages.
+/// the name-only card.
 enum FakeLensStack {
     static let species: [Species] = [
         Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"),
@@ -67,18 +67,18 @@ enum FakeLensStack {
         profiles[species.scientificName]
     }
 
-    /// A 260-pixel bird symbol on a dark card. The Display lays a bundled image out at its pixel size on the
-    /// 600-pixel canvas, so this is about the width the pack's lens crops should take to leave room for the name
-    /// beside them.
+    /// A bird symbol on a dark card at the pack's lens crop size (552 × 368). The Display lays a bundled image out at
+    /// its pixel size on the 600-pixel canvas, so this fills the card's width under its 24-pixel padding and leaves
+    /// the name on the first screenful (issue #24).
     static func image(for image: LensImage) -> UIImage? {
         guard profiles.values.contains(where: { $0.photo == image }) else { return nil }
-        let size = CGSize(width: 260, height: 260)
+        let size = CGSize(width: 552, height: 368)
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         return UIGraphicsImageRenderer(size: size, format: format).image { context in
             UIColor(white: 0.08, alpha: 1).setFill()
             context.fill(CGRect(origin: .zero, size: size))
-            let configuration = UIImage.SymbolConfiguration(pointSize: 140, weight: .regular)
+            let configuration = UIImage.SymbolConfiguration(pointSize: 200, weight: .regular)
             guard let symbol = UIImage(systemName: "bird.fill", withConfiguration: configuration)?
                 .withTintColor(UIColor(white: 0.85, alpha: 1), renderingMode: .alwaysOriginal)
             else { return }

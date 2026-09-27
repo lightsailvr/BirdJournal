@@ -9,14 +9,15 @@ public struct LensImage: Sendable, Hashable {
     }
 }
 
-/// What the species pack knows about one species, for the photo and description pages. Nil when the pack lacks
-/// the species: it is still identifiable by name (spec user story 40).
+/// What the species pack knows about one species, for its card. Nil when the pack lacks the species: it is still
+/// identifiable by name (spec user story 40).
 public struct SpeciesProfile: Sendable, Equatable {
     public var photo: LensImage?
+    /// The identification text. Empty until the pack has it (#12); the card then shows the scientific name.
     public var fieldMarks: String
     public var size: String
     public var habitat: String
-    /// One line, e.g. "Photo: J. Birder, CC BY".
+    /// One line, e.g. "Photo: J. Birder, CC BY". Ignored when there is no photo.
     public var photoCredit: String
 
     public init(photo: LensImage?, fieldMarks: String, size: String, habitat: String, photoCredit: String) {
@@ -31,32 +32,81 @@ public struct SpeciesProfile: Sendable, Equatable {
 /// One button on a card.
 public struct LensCardButton: Sendable, Equatable {
     public var label: String
-    public var action: LensButton
+    public var action: LensAction
     public var isPrimary: Bool
 }
 
-/// One element of a card, in Display DSL terms: text in one of its three styles, or a button group.
+/// One row of the species list: a tappable pill that opens the species' card.
+public struct LensListRow: Sendable, Equatable {
+    /// The stack index the row opens.
+    public var index: Int
+    public var commonName: String
+    /// The match rate, e.g. "82%".
+    public var confidence: String
+    /// Whether the card has a photo (the pack knows the species) or is name-only.
+    public var hasPhoto: Bool
+    public var isSaved: Bool
+}
+
+/// One element of a card, in Display DSL terms.
 public enum LensElement: Sendable, Equatable {
+    /// The one-line strip at the top of a species card: species count and position.
+    case status(String)
+    /// The species photo, full card width, top of the card.
+    case photo(LensImage)
+    /// The common name in heading style with a detail (the match rate) beside it in meta style.
+    case title(String, detail: String)
     case heading(String)
     case body(String)
     case meta(String)
-    case buttons([LensCardButton])
+    case button(LensCardButton)
+    /// The saved mark that replaces the button once the sighting is written.
+    case saved(String)
+    /// Tappable rows on the species list.
+    case list([LensListRow])
 }
 
-/// The single root a Display send takes, described without the toolkit (DECISIONS.md: one root `FlexBox` per
-/// send): an optional photo beside a column of elements. The app maps this one to one onto a `FlexBox`.
+/// A card, described without the toolkit: a column of elements split into screenfuls, each of which fits the
+/// 600-pixel canvas and is what one Display send shows (DECISIONS.md: one root `FlexBox` per send; the page says
+/// which screenful is on the lens). The word budget (spec user story 24) applies per screenful.
 public struct LensCard: Sendable, Equatable {
-    /// Shown beside the elements when the pack has one and the app can load it.
-    public var photo: LensImage?
-    public var elements: [LensElement]
+    public var screenfuls: [[LensElement]]
 
-    /// Every word of text on the card, including button labels.
+    public init(screenfuls: [[LensElement]]) {
+        self.screenfuls = screenfuls
+    }
+
+    /// Every element of every screenful in order.
+    public var elements: [LensElement] { screenfuls.flatMap { $0 } }
+
+    /// The elements of screenful `index`, clamped to the card (a page can outlive a card that shrank).
+    public func screenful(at index: Int) -> [LensElement] {
+        guard !screenfuls.isEmpty else { return [] }
+        return screenfuls[min(max(index, 0), screenfuls.count - 1)]
+    }
+
+    /// The card's photo, if it has one.
+    public var photo: LensImage? {
+        for element in elements {
+            if case .photo(let image) = element { return image }
+        }
+        return nil
+    }
+
+    /// Every word of text on the card, including button labels and list rows.
     public var wordCount: Int {
-        elements.reduce(0) { count, element in
-            switch element {
-            case .heading(let text), .body(let text), .meta(let text): count + text.words
-            case .buttons(let buttons): count + buttons.reduce(0) { $0 + $1.label.words }
-            }
+        elements.reduce(0) { $0 + $1.words }
+    }
+}
+
+extension LensElement {
+    var words: Int {
+        switch self {
+        case .status(let text), .heading(let text), .body(let text), .meta(let text), .saved(let text): text.words
+        case .title(let name, let detail): name.words + detail.words
+        case .button(let button): button.label.words
+        case .list(let rows): rows.reduce(0) { $0 + $1.commonName.words + $1.confidence.words }
+        case .photo: 0
         }
     }
 }

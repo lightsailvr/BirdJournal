@@ -22,12 +22,13 @@ from packbuilder.writer import ChosenPhoto, SpeciesResult, WrittenPack, write_pa
 
 log = logging.getLogger("packbuilder")
 
-# Birds smaller than this fraction of the frame make a soft 260-pixel crop even from a 2048-pixel original.
+# Birds smaller than this fraction of the frame make a soft lens crop even from a 2048-pixel original.
 MIN_BIRD_AREA = 0.02
 # Below this sharpness (see scoring.py) a crop is motion blur or out of focus; area and a dark background would
 # otherwise carry it into the top five.
 MIN_SHARPNESS = 0.4
-# The bird must span at least the lens crop's 260 pixels in the original, or the lens JPEG would be upscaled.
+# The bird must span about the lens crop's 368-pixel height in the original (its padded box is 1.4 × the bird), or
+# the lens JPEG would be upscaled.
 MIN_BIRD_PIXELS = 260
 
 FULL_FRAME = Box(0.0, 0.0, 1.0, 1.0)

@@ -38,15 +38,15 @@ struct SpeciesPackTests {
         #expect(pack.photos.count == pack.species.reduce(0) { $0 + $1.photos.count })
     }
 
-    @Test("lens crops are 260 pixels square and phone crops at most 1200 pixels, on disk")
+    @Test("lens crops are 552 × 368 pixels and phone crops at most 1200 pixels, on disk")
     func imagesExist() throws {
         let pack = try SpeciesPack.bundled()
         for photo in pack.photos {
             let lens = try #require(Self.pixelSize(of: pack.lensImageURL(for: photo)), "missing \(photo.lensFile)")
-            #expect(lens == CGSize(width: 260, height: 260))
+            #expect(lens == CGSize(width: 552, height: 368))
             let phone = try #require(Self.pixelSize(of: pack.phoneImageURL(for: photo)), "missing \(photo.phoneFile)")
             #expect(max(phone.width, phone.height) <= 1200)
-            #expect(max(phone.width, phone.height) > 260)
+            #expect(max(phone.width, phone.height) > 552)
         }
     }
 

@@ -19,22 +19,22 @@ enum BundledPack {
 
     static var pack: SpeciesPack? { try? loaded.get() }
 
-    /// What the lens pages show for a species: its best photo and the description fields the pack has. Until #12
-    /// fills field marks, size and habitat, the field marks fall back to the scientific name and the size-and-habitat
-    /// line is left out.
+    /// What the species card shows: the best photo and the description fields the pack has. Until #12 fills field
+    /// marks, size and habitat, the text falls back to the pack's summary, then (in the renderer) to the scientific
+    /// name, and the size-and-habitat line is left out.
     static func profile(for species: Species) -> SpeciesProfile? {
         guard let pack, let entry = pack.species(scientificName: species.scientificName) else { return nil }
         let best = entry.photos.first
         return SpeciesProfile(
             photo: best.map { LensImage(id: $0.id) },
-            fieldMarks: entry.fieldMarks ?? entry.scientificName,
+            fieldMarks: entry.fieldMarks ?? entry.summary ?? "",
             size: entry.size ?? "",
             habitat: entry.habitat ?? "",
-            photoCredit: best?.shortCredit ?? "No photo in your pack"
+            photoCredit: best?.shortCredit ?? ""
         )
     }
 
-    /// The lens-sized crop for a photo the pack names (260 pixels square, laid out at pixel size on the lens).
+    /// The lens crop for a photo the pack names (552 × 368 pixels, laid out at pixel size across the card, issue #24).
     static func image(for image: LensImage) -> UIImage? {
         guard let pack, let photo = pack.photo(id: image.id) else { return nil }
         return UIImage(contentsOfFile: pack.lensImageURL(for: photo).path())

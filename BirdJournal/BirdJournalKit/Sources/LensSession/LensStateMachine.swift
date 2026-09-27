@@ -1,23 +1,27 @@
 import Identification
 
-/// A page shown on the lens. Indices refer to the session's candidate stack, which only ever appends.
+/// A page shown on the lens: a card and the screenful of it on the canvas. Indices refer to the session's candidate
+/// stack, which only ever appends. Each send must fit the canvas (the mock anchors overflow at the bottom, cutting
+/// the top of a tall card; see DECISIONS.md, "Lens UI"), so a card is paged by screenful rather than scrolled.
 public enum LensPage: Sendable, Hashable {
-    /// Root page: "N species heard".
-    case listening
-    /// Photo card for the species at `index`: image, common name, confidence.
-    case photo(index: Int)
-    /// Field marks, size, habitat and photo credit for the species at `index`.
-    case description(index: Int)
-    /// Confirm page for the species at `index`; Save is the primary action.
-    case confirm(index: Int)
-    /// "Saved" acknowledgment for the species at `index`, then back to its photo.
-    case saved(index: Int)
+    /// Root page: every species heard this session, one tappable row each, `screenful` rows-pages down.
+    case list(screenful: Int)
+    /// The card for the species at `index`: photo, name and match rate on the first screenful; identification
+    /// text, credit and the "This is my bird" action (or its saved mark) on the next.
+    case species(index: Int, screenful: Int)
 
     /// The stack index the page is about, nil on the root.
     public var index: Int? {
         switch self {
-        case .listening: nil
-        case .photo(let index), .description(let index), .confirm(let index), .saved(let index): index
+        case .list: nil
+        case .species(let index, _): index
+        }
+    }
+
+    /// The screenful of the card the page shows, from 0.
+    public var screenful: Int {
+        switch self {
+        case .list(let screenful), .species(_, let screenful): screenful
         }
     }
 }
@@ -46,18 +50,17 @@ public enum LensGesture: Sendable, Hashable, CaseIterable {
     }
 }
 
-/// A button on a lens card, clicked through the Display rather than Inputs.
-public enum LensButton: Sendable, Hashable {
+/// A tappable element on a lens card, activated through the Display rather than Inputs.
+public enum LensAction: Sendable, Hashable {
+    /// The "This is my bird" button on a species card.
     case save
-    case cancel
+    /// A row on the species list: open that species' card.
+    case open(index: Int)
 }
 
 /// What the adapter must do after an event, besides rendering the new page.
 public enum LensEffect: Sendable, Equatable {
-    /// The wearer tapped this candidate's photo: capture the sighting's context (the most recent camera frame) now,
-    /// so a later Save stores what they were looking at when they confirmed (issue #9).
-    case confirmed(Candidate)
-    /// The wearer saved this candidate: write a Sighting.
+    /// The wearer said "This is my bird": write a Sighting with the camera frame from this moment.
     case saveSighting(Candidate)
     /// Back on the root: end the glasses session.
     case endSession
@@ -66,18 +69,23 @@ public enum LensEffect: Sendable, Equatable {
 /// Pure lens state machine (spec "Lens session"): folds `CandidateStack` updates and semantic input events into
 /// the page to render and at most one side effect per event.
 ///
-/// Page map (DECISIONS.md, "Lens UI"): listening ⇄ photo pages (swipe left/right), photo ⇄ description (swipe
-/// down/up), photo → confirm (tap) → saved (tap or Save), confirm/saved → photo (swipe up), photo → listening
-/// (swipe up). Back goes up one page and ends the session on the root. The stack never reorders and new species
-/// append at the end, so an update never moves the page the wearer is on.
+/// Page map (DECISIONS.md, "Lens UI", issue #24): list ⇄ species cards (swipe left/right; right past the first
+/// card returns to the list; a row tap opens a card; every card opens on its first screenful), swipe down/up page
+/// the screenfuls of the list or the card, and up from a card's first screenful is back to the list. A tap or the
+/// Save button on a card is "This is my bird", once per species. Back returns to the list and ends the session on
+/// the root. The stack never reorders and new species append at the end, so an update never moves the page the
+/// wearer is on.
 public struct LensStateMachine: Sendable, Equatable {
-    public private(set) var page: LensPage = .listening
+    public private(set) var page: LensPage = .list(screenful: 0)
     /// The candidates the pages index into, in admission order.
     public private(set) var stack = CandidateStack()
+    /// Stack indices whose sighting has been saved this session; their cards show the saved mark instead of the
+    /// button, and a second tap (hardware may deliver one press twice, as a click and a select) does nothing.
+    public private(set) var savedIndices: Set<Int> = []
 
     public init() {}
 
-    /// The candidate the current page is about, nil on the listening page.
+    /// The candidate the current page is about, nil on the list.
     public var currentCandidate: Candidate? {
         page.index.map { stack.candidates[$0] }
     }
@@ -85,82 +93,72 @@ public struct LensStateMachine: Sendable, Equatable {
     // MARK: - Stack
 
     /// Takes the latest stack. Returns true if anything the pages show changed. A stack that does not continue the
-    /// current one (a new session) restarts on the listening page so no page can index past the end.
+    /// current one (a new session) restarts on the list with nothing saved, so no page can index past the end.
     @discardableResult
     public mutating func update(with stack: CandidateStack) -> Bool {
         guard stack != self.stack else { return false }
         let continues = stack.count >= self.stack.count
             && zip(stack.candidates, self.stack.candidates).allSatisfy { $0.species == $1.species }
         self.stack = stack
-        if !continues { page = .listening }
+        if !continues {
+            page = .list(screenful: 0)
+            savedIndices = []
+        }
         return true
     }
 
     // MARK: - Gestures
 
-    /// Applies a gesture to the current page. Gestures with no meaning on the current page are ignored.
-    public mutating func apply(_ gesture: LensGesture) -> LensEffect? {
+    /// Applies a gesture to the current page, whose card has `screenfuls` screenfuls (at least one; the renderer
+    /// knows, the machine does not). Gestures with no meaning on the current page are ignored.
+    public mutating func apply(_ gesture: LensGesture, screenfuls: Int) -> LensEffect? {
+        let last = max(screenfuls - 1, 0)
         switch (page, gesture) {
-        case (.listening, .swipeLeft), (.listening, .swipeRight):
-            if !stack.isEmpty { page = .photo(index: 0) }
-        case (.listening, .back):
+        case (.list, .swipeLeft), (.list, .swipeRight):
+            if !stack.isEmpty { page = .species(index: 0, screenful: 0) }
+        case let (.list(screenful), .swipeDown):
+            page = .list(screenful: min(screenful + 1, last))
+        case let (.list(screenful), .swipeUp):
+            page = .list(screenful: max(min(screenful, last) - 1, 0))
+        case (.list, .back):
             return .endSession
-        case (.listening, _):
+        case (.list, .tap):
+            // Rows are opened through `press`.
             break
 
-        case let (.photo(index), .swipeLeft):
-            if index + 1 < stack.count { page = .photo(index: index + 1) }
-        case let (.photo(index), .swipeRight):
-            page = index == 0 ? .listening : .photo(index: index - 1)
-        case let (.photo(index), .swipeDown):
-            page = .description(index: index)
-        case (.photo, .swipeUp), (.photo, .back):
-            page = .listening
-        case let (.photo(index), .tap):
-            page = .confirm(index: index)
-            return .confirmed(stack.candidates[index])
-
-        case let (.description(index), .swipeUp), let (.description(index), .back):
-            page = .photo(index: index)
-        case (.description, _):
-            break
-
-        case (.confirm, .tap):
-            // Save is the primary action (DECISIONS.md, "Lens UI"), so a tap saves. Whether hardware also delivers a
-            // Select to Inputs when the Cancel button is focused is unknown until the on-glasses run (#9).
-            return save()
-        case let (.confirm(index), .swipeUp), let (.confirm(index), .back):
-            page = .photo(index: index)
-        case (.confirm, _):
-            break
-
-        case (.saved, .tap):
-            break
-        case let (.saved(index), _):
-            page = .photo(index: index)
+        case let (.species(index, _), .swipeLeft):
+            if index + 1 < stack.count { page = .species(index: index + 1, screenful: 0) }
+        case let (.species(index, _), .swipeRight):
+            page = index == 0 ? .list(screenful: 0) : .species(index: index - 1, screenful: 0)
+        case let (.species(index, screenful), .swipeDown):
+            page = .species(index: index, screenful: min(screenful + 1, last))
+        case let (.species(index, screenful), .swipeUp):
+            page = screenful == 0 ? .list(screenful: 0) : .species(index: index, screenful: max(min(screenful, last) - 1, 0))
+        case let (.species(index, _), .tap):
+            return save(index)
+        case (.species, .back):
+            page = .list(screenful: 0)
         }
         return nil
     }
 
-    /// A click on one of the confirm page's buttons. Buttons on other pages do not exist, so clicks are ignored.
-    public mutating func press(_ button: LensButton) -> LensEffect? {
-        guard case .confirm(let index) = page else { return nil }
-        switch button {
-        case .save: return save()
-        case .cancel: page = .photo(index: index); return nil
+    /// A tap on a card element, delivered by the Display: the Save button on its own card, or a row on the list.
+    /// Anything else is ignored.
+    public mutating func press(_ action: LensAction) -> LensEffect? {
+        switch (page, action) {
+        case let (.species(index, _), .save):
+            return save(index)
+        case let (.list, .open(index)) where stack.candidates.indices.contains(index):
+            page = .species(index: index, screenful: 0)
+            return nil
+        case (.species, .open), (.list, .save), (.list, .open):
+            return nil
         }
     }
 
-    /// The Saved acknowledgment has been shown long enough: back to the photo.
-    public mutating func dismissSaved() {
-        guard case .saved(let index) = page else { return }
-        page = .photo(index: index)
-    }
-
-    private mutating func save() -> LensEffect? {
-        guard case .confirm(let index) = page else { return nil }
-        page = .saved(index: index)
+    private mutating func save(_ index: Int) -> LensEffect? {
+        guard !savedIndices.contains(index) else { return nil }
+        savedIndices.insert(index)
         return .saveSighting(stack.candidates[index])
     }
-
 }

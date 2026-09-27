@@ -10,11 +10,12 @@ import SwiftData
 import UIKit
 
 /// The whole loop on the glasses (issue #9): one device session shared by the camera stream, Display and Inputs;
-/// glasses audio through the engine into the lens pages; a tap on a photo captures the most recent camera frame;
-/// Save writes the sighting to the album. Start from the phone, then pocket it: nothing here needs the screen.
+/// glasses audio through the engine into the lens pages; "This is my bird" on a species card writes the sighting to
+/// the album with the most recent camera frame (issue #24). Start from the phone, then pocket it: nothing here needs
+/// the screen.
 ///
 /// Order: the device session (which waits for connected display glasses), camera and microphone permission, the
-/// lens (so the wearer sees "Listening" while the models load), then the listening session over the stream. The run ends from the phone, from Back on the root,
+/// lens (so the wearer sees the empty species list while the models load), then the listening session over the stream. The run ends from the phone, from Back on the root,
 /// or when the glasses end the session (two-finger tap, doff, link loss); each path tears down the same way.
 @Observable
 final class GlassesListeningSession {
@@ -53,13 +54,6 @@ final class GlassesListeningSession {
         var hasFrame: Bool
     }
 
-    /// A tap on a photo page: the frame taken then, encoding off the main actor while the wearer reads the confirm page.
-    private struct PendingConfirmation {
-        let candidate: Candidate
-        let at: Date
-        let frame: Task<Data?, Never>
-    }
-
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "glasses-listening")
 
     private(set) var phase: Phase = .idle
@@ -83,7 +77,6 @@ final class GlassesListeningSession {
     @ObservationIgnored private var sourceEventTask: Task<Void, Never>?
     @ObservationIgnored private var stopTask: Task<Void, Never>?
     @ObservationIgnored private let tokens = ListenerTokenBag()
-    @ObservationIgnored private var confirmed: PendingConfirmation?
     /// The album records behind `saved`, by species, so a repeat save updates instead of inserting.
     @ObservationIgnored private var sightings: [Species: Sighting] = [:]
 
@@ -98,8 +91,7 @@ final class GlassesListeningSession {
         location: any LocationProvider = CoreLocationProvider(),
         locationRefreshInterval: Duration = ListeningSession.locationRefreshInterval,
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
-        image: @escaping (LensImage) -> UIImage? = { _ in nil },
-        savedDismissDelay: Duration = .seconds(2)
+        image: @escaping (LensImage) -> UIImage? = { _ in nil }
     ) {
         self.wearables = wearables
         self.connection = connection
@@ -118,7 +110,6 @@ final class GlassesListeningSession {
             connection: connection,
             profile: profile,
             image: image,
-            savedDismissDelay: savedDismissDelay,
             onEffect: { effect in box.run?.handle(effect) }
         )
         box.run = self
@@ -126,7 +117,7 @@ final class GlassesListeningSession {
 
     var isActive: Bool { phase == .starting || phase == .listening }
 
-    /// Whether the stream has delivered a frame a confirm could store.
+    /// Whether the stream has delivered a frame a save could store.
     var hasCameraFrame: Bool { source?.latestFrame != nil }
 
     // MARK: - Lifecycle
@@ -137,7 +128,6 @@ final class GlassesListeningSession {
         errorMessage = nil
         saved = []
         sightings = [:]
-        confirmed = nil
         stopTask = nil
         do {
             let session = try await DeviceSessionLease.startSession(wearables: wearables) { session in
@@ -208,7 +198,6 @@ final class GlassesListeningSession {
         session = nil
         sessionState = .stopped
         streamState = .stopped
-        confirmed = nil
     }
 
     // MARK: - Events
@@ -226,21 +215,23 @@ final class GlassesListeningSession {
 
     private func handle(_ effect: LensEffect) {
         switch effect {
-        case .confirmed(let candidate):
-            // The frame is taken now, before Save, so the sighting shows what the wearer was looking at.
-            let frame = source?.latestFrame
-            confirmed = PendingConfirmation(candidate: candidate, at: .now, frame: Task.detached(priority: .userInitiated) { frame?.jpegData() })
         case .saveSighting(let candidate):
-            Task { await save(candidate) }
+            // The frame is taken now, at the tap, so the sighting shows what the wearer was looking at; it is
+            // encoded off the main actor.
+            let frame = source?.latestFrame
+            let confirmedAt = Date.now
+            Task {
+                let jpeg = await Task.detached(priority: .userInitiated) { frame?.jpegData() }.value
+                await save(candidate, confirmedAt: confirmedAt, frame: jpeg)
+            }
         case .endSession:
             beginStop(reason: .back)
         }
     }
 
-    private func save(_ candidate: Candidate) async {
-        let pending = confirmed?.candidate.species == candidate.species ? confirmed : nil
-        confirmed = nil
-        let frame = await pending?.frame.value
+    /// Writes the sighting; the lens saves each species once per run, and the species map keeps the album clean
+    /// (spec user story 33) should the same species arrive again.
+    private func save(_ candidate: Candidate, confirmedAt: Date, frame: Data?) async {
         do {
             if let existing = sightings[candidate.species], let position = saved.firstIndex(where: { $0.id == existing.persistentModelID }) {
                 try recorder.update(existing, with: candidate, frame: frame)
@@ -249,7 +240,7 @@ final class GlassesListeningSession {
             } else {
                 let sighting = try recorder.record(
                     candidate,
-                    confirmedAt: pending?.at ?? .now,
+                    confirmedAt: confirmedAt,
                     location: listening.coordinate,
                     frame: frame,
                     source: .glasses
