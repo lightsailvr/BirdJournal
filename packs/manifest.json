@@ -1,13 +1,25 @@
 {
-  "comment": "Built species packs, published as zips on this repository's GitHub Releases and fetched into packs/<id>/ by scripts/download-pack.sh, which verifies the sha256. Written by scripts/pin-pack.sh after scripts/build-pack.sh; never edit the checksum by hand.",
+  "comment": "Built species packs, published as zips on this repository's GitHub Releases. Written by scripts/pin-pack.sh after scripts/build-pack.sh; never edit the checksum by hand. A pack marked bundled is fetched into packs/<id>/ by scripts/download-pack.sh and ships in the app; the others are what the phone downloads, listed for it by scripts/publish-pack-index.sh as index.json on the `packs` release.",
   "packs": [
     {
       "id": "us-ca-la",
+      "name": "Los Angeles",
       "version": 1,
+      "bundled": true,
       "release": "pack-us-ca-la-v1",
       "asset": "us-ca-la.zip",
       "sha256": "d014d409fb734e284bee86ac55183f5c031b3997cdb86bc1e01c13472cb1daff",
       "bytes": 164711896
+    },
+    {
+      "id": "us-ca-sd",
+      "name": "San Diego",
+      "version": 1,
+      "bundled": false,
+      "release": "pack-us-ca-sd-v1",
+      "asset": "us-ca-sd.zip",
+      "sha256": "5dc24c953046fb8f2f425e3f8e4b6aad6f0a660ba273388e86c1ab0699eb916a",
+      "bytes": 39206660
     }
   ]
 }

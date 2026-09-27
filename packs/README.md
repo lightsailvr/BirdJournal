@@ -19,9 +19,12 @@ Schema version 2 (`SpeciesPack.schemaVersion` in the Swift `Pack` module).
 ## Where the built packs come from
 
 Built packs are **not committed**: the Los Angeles pack is about 160 species and 150 MB of JPEGs. `manifest.json`
-pins each pack to a zip on this repository's GitHub Releases (release tag, asset name, SHA-256, byte count), and
-`scripts/download-pack.sh` fetches, verifies and unpacks them into `packs/<id>/` (the Xcode Cloud post-clone hook
-runs it after the models). The repository is private, so the script uses a logged-in `gh` CLI or a `GITHUB_TOKEN`
+pins each pack to a zip on this repository's GitHub Releases (name, release tag, asset name, SHA-256, byte count, and
+whether the app bundles it), and `scripts/download-pack.sh` fetches, verifies and unpacks the bundled ones into
+`packs/<id>/` (the Xcode Cloud post-clone hook runs it after the models). The other packs are what the phone downloads
+(issue #13): `scripts/publish-pack-index.sh` lists every pack of the manifest as `index.json` on the rolling `packs`
+release, and the app's `PackLibrary` fetches that index, downloads a zip, checks its SHA-256 and unpacks it under
+Application Support/Packs. The repository is private, so the script uses a logged-in `gh` CLI or a `GITHUB_TOKEN`
 with contents read access, and keeps the zips under `build/pack-downloads/`: everything under `packs/` ships in the app's resource bundle, so nothing but packs may live here. Everything under `packs/` except this file and `manifest.json` is gitignored.
 
 `us-ca-la` is the pack bundled in the app: the `Pack` package target's `Sources/Pack/Packs` folder is a symlink to
@@ -30,11 +33,12 @@ this directory and is declared as a package resource, so the pack ships in the p
 
 ## Publishing a new build
 
-1. `scripts/build-pack.sh us-ca-la` writes `packs/us-ca-la/` and `build/packs/us-ca-la.zip` (reproducible from the
-   committed `pack.json`, `overrides.json` and `wikipedia.lock.json` plus the builder's cache: iNaturalist metadata
-   pinned to `inat_created_before`, Wikipedia pages cached by title and their revisions pinned in the lock).
-2. Bump `version` in `packbuilder/packs/us-ca-la/pack.json` when the contents change for users, and rebuild.
-3. `scripts/pin-pack.sh us-ca-la` writes the tag (`pack-us-ca-la-v<version>`), asset name, SHA-256 and byte count
-   into `manifest.json`.
-4. `gh release create pack-us-ca-la-v<version> build/packs/us-ca-la.zip --title "..." --notes "..."`, then commit
-   the manifest.
+1. `scripts/build-pack.sh <id>` writes the pack (`packs/<id>/` for the bundled pack, `build/packs/<id>/` for a
+   downloadable one) and `build/packs/<id>.zip` (reproducible from the committed `pack.json`, `overrides.json` and
+   `wikipedia.lock.json` plus the builder's cache: iNaturalist metadata pinned to `inat_created_before`, Wikipedia
+   pages cached by title and their revisions pinned in the lock).
+2. Bump `version` in `packbuilder/packs/<id>/pack.json` when the contents change for users, and rebuild.
+3. `scripts/pin-pack.sh <id>` writes the name, the tag (`pack-<id>-v<version>`), asset name, SHA-256 and byte count
+   into `manifest.json` (a new pack is a download; `--bundled` marks the one the app ships).
+4. `gh release create pack-<id>-v<version> build/packs/<id>.zip --title "..." --notes "..."`, then
+   `scripts/publish-pack-index.sh` to replace `index.json` on the `packs` release, and commit the manifest.

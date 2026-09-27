@@ -88,7 +88,7 @@ struct SpeciesPackTests {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
-        #expect(throws: PackError.missingDatabase(folder.appending(path: "pack.sqlite").path())) {
+        #expect(throws: PackError.missingDatabase(folder.appending(path: "pack.sqlite").path(percentEncoded: false))) {
             try SpeciesPack.open(directory: folder)
         }
     }

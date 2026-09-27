@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Fetches the built species packs listed in packs/manifest.json from this repo's GitHub Releases into packs/<id>/,
-# verifying each zip's SHA-256 before unpacking. The bundled Los Angeles pack (about 160 species, DECISIONS.md
-# "Species pack") is too big to commit, so a clean checkout runs this before building the app; the Xcode Cloud
-# post-clone hook does the same. Safe to re-run: a pack whose unpacked marker matches the manifest is skipped.
+# Fetches the species packs the app bundles (`bundled` in packs/manifest.json) from this repo's GitHub Releases into
+# packs/<id>/, verifying each zip's SHA-256 before unpacking. The bundled Los Angeles pack (about 160 species,
+# DECISIONS.md "Species pack") is too big to commit, so a clean checkout runs this before building the app; the Xcode
+# Cloud post-clone hook does the same. Safe to re-run: a pack whose unpacked marker matches the manifest is skipped.
+# Naming a pack fetches that one whether or not it is bundled; mind that everything under packs/ ships in the app.
 #
 # The repository is private, so the release assets need credentials: the `gh` CLI when it is installed and logged
 # in (a developer machine), else a GITHUB_TOKEN environment variable with read access to the repository's contents
@@ -11,8 +12,8 @@
 # The zips are kept under build/ (gitignored), never under packs/: the Pack package target copies the whole packs/
 # folder into the app's resource bundle, so anything left there would ship.
 #
-#   scripts/download-pack.sh            # every pack in the manifest
-#   scripts/download-pack.sh us-ca-la   # one pack
+#   scripts/download-pack.sh            # every bundled pack
+#   scripts/download-pack.sh us-ca-la   # one pack, bundled or not
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -42,18 +43,19 @@ fetch_asset() {
         --output "$target" "https://api.github.com/repos/$repo/releases/assets/$asset_id"
 }
 
-# id<TAB>version<TAB>tag<TAB>asset<TAB>sha256 per line
-entries="$(python3 - "$manifest" <<'PY'
+# id<TAB>version<TAB>tag<TAB>asset<TAB>sha256 per line: the bundled packs, or the one named
+entries="$(python3 - "$manifest" "$only" <<'PY'
 import json, sys
+only = sys.argv[2]
 for p in json.load(open(sys.argv[1]))["packs"]:
-    print(f"{p['id']}\t{p['version']}\t{p['release']}\t{p['asset']}\t{p['sha256']}")
+    if only == p["id"] or (not only and p.get("bundled")):
+        print(f"{p['id']}\t{p['version']}\t{p['release']}\t{p['asset']}\t{p['sha256']}")
 PY
 )"
 
 failed=0
 while IFS=$'\t' read -r id version tag asset expected; do
     [ -n "$id" ] || continue
-    if [ -n "$only" ] && [ "$only" != "$id" ]; then continue; fi
     pack_dir="$packs_dir/$id"
     marker="$pack_dir/.unpacked-sha256"
     if [ -f "$marker" ] && [ "$(cat "$marker")" = "$expected" ] && [ -f "$pack_dir/pack.sqlite" ]; then

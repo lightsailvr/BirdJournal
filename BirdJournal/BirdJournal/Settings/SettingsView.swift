@@ -1,12 +1,16 @@
 import Pack
 import SwiftUI
 
-/// Settings on the phone (issue #11): the species pack and the credits screen the licenses ask for.
+/// Settings on the phone (issue #11): the species packs (#13) and the credits screen the licenses ask for.
 struct SettingsView: View {
+    @Environment(PackLibrary.self) private var library
+
     var body: some View {
         List {
-            Section("Species pack") {
-                NavigationLink(BundledPack.pack?.info.name ?? "Species pack", value: ContentView.Screen.speciesPack)
+            Section("Species packs") {
+                NavigationLink(value: ContentView.Screen.packs) {
+                    LabeledContent("Species packs", value: library.packs.map(\.info.name).joined(separator: ", "))
+                }
             }
             Section("About") {
                 NavigationLink("Credits", value: ContentView.Screen.credits)

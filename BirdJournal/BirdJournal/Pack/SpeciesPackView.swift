@@ -1,33 +1,35 @@
 import Pack
 import SwiftUI
 
-/// The bundled pack on the phone (issue #8): each species with its best photo and that photo's credit line, and a
-/// detail page with every photo, credit and source link. The full credits screen with the model licenses is #11.
+/// One pack on the phone (issue #8; any pack since #13): each species with its best photo and that photo's credit
+/// line, a detail page with every photo, credit and source link, and, for a downloaded pack, the button that deletes it.
 struct SpeciesPackView: View {
-    var body: some View {
-        switch BundledPack.loaded {
-        case .success(let pack):
-            SpeciesList(pack: pack)
-        case .failure(let error):
-            ContentUnavailableView("No species pack", systemImage: "bird", description: Text(String(describing: error)))
-        }
-    }
-}
-
-/// Every species of the pack, best photo and its credit line beside the names.
-private struct SpeciesList: View {
+    @Environment(PackLibrary.self) private var library
+    @Environment(\.dismiss) private var dismiss
     let pack: SpeciesPack
+
+    private var isDownloaded: Bool { library.installed.contains { $0.id == pack.info.id } }
 
     var body: some View {
         List {
             Section {
                 ForEach(pack.species) { species in
-                    NavigationLink(value: ContentView.Screen.species(id: species.id)) {
+                    NavigationLink(value: ContentView.Screen.species(packID: pack.info.id, id: species.id)) {
                         SpeciesRow(species: species, thumbnail: species.photos.first.map(pack.lensImageURL(for:)))
                     }
                 }
             } footer: {
                 Text("\(pack.species.count) species · \(pack.photos.count) photos from iNaturalist Open Data. Pack \(pack.info.id) v\(pack.info.version), built \(pack.info.builtAt).")
+            }
+            if isDownloaded {
+                Section {
+                    Button("Delete this pack", role: .destructive) {
+                        try? library.remove(id: pack.info.id)
+                        dismiss()
+                    }
+                } footer: {
+                    Text("Frees its space on the phone; the pack can be downloaded again from the index.")
+                }
             }
         }
         .navigationTitle(pack.info.name)
@@ -130,7 +132,7 @@ private struct PackImage: View {
     let url: URL?
 
     var body: some View {
-        if let url, let image = UIImage(contentsOfFile: url.path()) {
+        if let url, let image = UIImage(contentsOfFile: url.path(percentEncoded: false)) {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()

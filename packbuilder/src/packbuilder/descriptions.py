@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import unquote, urlparse
 
-import requests
+from packbuilder.http import session
 
 from packbuilder.definition import SpeciesEntry
 
@@ -351,7 +351,7 @@ def fetch_page(title: str, pause_seconds: float = 0.5) -> dict:
         "formatversion": 2,
         "titles": title,
     }
-    response = requests.get(API, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
+    response = session().get(API, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
     response.raise_for_status()
     pages = response.json().get("query", {}).get("pages", [])
     time.sleep(pause_seconds)

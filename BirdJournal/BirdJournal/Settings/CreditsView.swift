@@ -2,10 +2,12 @@ import Identification
 import Pack
 import SwiftUI
 
-/// Credits (issue #11, spec user story 36): "Powered by BirdNET" with both models' licenses, then every photo in the
-/// bundled pack with its observer, license and observation link, the Wikipedia text credit (issue #12) and the pack's
-/// LICENSE text.
+/// Credits (issue #11, spec user story 36): "Powered by BirdNET" with both models' licenses, then, for every pack on
+/// the phone (#13), each photo with its observer, license and observation link, the Wikipedia text credit (issue #12)
+/// and the pack's LICENSE text.
 struct CreditsView: View {
+    @Environment(PackLibrary.self) private var library
+
     var body: some View {
         List {
             Section {
@@ -24,14 +26,14 @@ struct CreditsView: View {
                 }
             }
 
-            switch BundledPack.loaded {
-            case .success(let pack):
-                PhotoCreditSections(pack: pack)
-            case .failure:
+            if library.packs.isEmpty {
                 Section("Photos") {
                     Text("No species pack is loaded, so there are no photos to credit.")
                         .foregroundStyle(.secondary)
                 }
+            }
+            ForEach(library.packs, id: \.info.id) { pack in
+                PhotoCreditSections(pack: pack)
             }
         }
         .navigationTitle("Credits")
@@ -75,7 +77,7 @@ private struct PhotoCreditSections: View {
                 Link("Wikipedia text: CC BY-SA 4.0", destination: Self.wikipediaLicense)
                     .font(.footnote)
             }
-            NavigationLink("Pack license (\(pack.info.id) v\(pack.info.version))", value: ContentView.Screen.packLicense)
+            NavigationLink("Pack license (\(pack.info.id) v\(pack.info.version))", value: ContentView.Screen.packLicense(id: pack.info.id))
         } header: {
             Text("Photos and text: \(pack.info.name)")
         }
