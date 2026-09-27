@@ -3,8 +3,9 @@ import Identification
 /// Maps a page and the stack to its card (spec "Card renderer", issue #24): the species list (count, one row per
 /// species on the page holding the selected row, which is highlighted), the photo page (photo, name and match rate,
 /// status strip and a hint) and the details page (name, field marks, size and habitat, credit and "Add to my list"
-/// or the saved mark). Every page fits the canvas. No page exceeds `wordBudget` words (spec user story 24): pack
-/// text is cut to fit, field marks first.
+/// or the saved mark) and the problem page (what went wrong, what it means for the run, the way back). Every page
+/// fits the canvas. No page exceeds `wordBudget` words (spec user story 24): pack text is cut to fit, field marks
+/// first.
 public enum LensCardRenderer {
     public static let wordBudget = 40
     /// The most words a card spends on its size-and-habitat line and on its credit line.
@@ -24,6 +25,8 @@ public enum LensCardRenderer {
         case .details(let index):
             let candidate = stack.candidates[index]
             return details(candidate, isSaved: saved.contains(index), profile: profile(candidate.species))
+        case .problem(let problem):
+            return self.problem(problem)
         }
     }
 
@@ -72,6 +75,16 @@ public enum LensCardRenderer {
         elements.append(.status("\(count) species · \(position) of \(count)" + (isSaved ? " · Added" : "")))
         elements.append(.meta("Swipe down for more information · swipe right: all species"))
         return LensCard(screenfuls: [elements])
+    }
+
+    static func problem(_ problem: LensProblem) -> LensCard {
+        let (heading, body) = switch problem {
+        case .noLocation:
+            ("No location", "Species are not filtered by your region. Allow location for BirdJournal in Settings on the phone.")
+        case .connectionLost:
+            ("Connection lost", "The glasses were out of range. BirdJournal kept listening and is back on the lens.")
+        }
+        return LensCard(screenfuls: [[.heading(heading), .body(body), .meta("Swipe right to continue")]])
     }
 
     static func details(_ candidate: Candidate, isSaved: Bool, profile: SpeciesProfile?) -> LensCard {

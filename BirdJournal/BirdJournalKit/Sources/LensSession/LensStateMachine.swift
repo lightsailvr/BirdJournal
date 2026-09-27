@@ -10,14 +10,25 @@ public enum LensPage: Sendable, Hashable {
     /// The details page under the photo page: identification text, credit and the "Add to my list" action (or its
     /// saved mark).
     case details(index: Int)
+    /// A problem the run wants the wearer to know about, over whichever page they were on (issue #10). Swipe right,
+    /// Back or a tap is the way back to that page.
+    case problem(LensProblem)
 
-    /// The stack index the page is about, nil on the root.
+    /// The stack index the page is about, nil on the root and on a problem page.
     public var index: Int? {
         switch self {
-        case .list: nil
+        case .list, .problem: nil
         case .species(let index), .details(let index): index
         }
     }
+}
+
+/// What can go wrong with a run while the lens is still reachable (issue #10).
+public enum LensProblem: Sendable, Hashable {
+    /// No location fix: identification runs without the regional filter.
+    case noLocation
+    /// The link to the glasses dropped and came back; the run kept listening meanwhile.
+    case connectionLost
 }
 
 /// Semantic input events as the app sees them. Swipes arrive as Nav events and taps as Select events from the
@@ -68,9 +79,12 @@ public enum LensEffect: Sendable, Equatable {
 /// species' photo and swipe right is back to the list (the only way back on real glasses, which do not deliver
 /// Back). A tap or the button on the details page is "Add to my list"; a tap on the photo page does nothing, so a
 /// bird is never added by accident. The stack never reorders and new species append at the end, so an update
-/// never moves the page the wearer is on.
+/// never moves the page the wearer is on. A reported problem covers the current page until swipe right, Back or a
+/// tap returns there (issue #10).
 public struct LensStateMachine: Sendable, Equatable {
     public private(set) var page: LensPage = .list
+    /// The page a problem page covers, for the way back.
+    private var coveredPage: LensPage = .list
     /// The candidates the pages index into, in admission order.
     public private(set) var stack = CandidateStack()
     /// The highlighted row of the list, a stack index; follows the card the wearer was on.
@@ -100,10 +114,20 @@ public struct LensStateMachine: Sendable, Equatable {
         self.stack = stack
         if !continues {
             page = .list
+            coveredPage = .list
             selection = 0
             savedIndices = []
         }
         return true
+    }
+
+    // MARK: - Problems
+
+    /// Shows `problem` over the current page (or in place of the problem already showing) until the wearer swipes
+    /// right, taps or goes back.
+    public mutating func report(_ problem: LensProblem) {
+        if case .problem = page {} else { coveredPage = page }
+        page = .problem(problem)
     }
 
     // MARK: - Gestures
@@ -136,6 +160,11 @@ public struct LensStateMachine: Sendable, Equatable {
             break
         case let (.details(index), .tap):
             return save(index)
+
+        case (.problem, .swipeRight), (.problem, .back), (.problem, .tap):
+            page = coveredPage
+        case (.problem, .swipeLeft), (.problem, .swipeUp), (.problem, .swipeDown):
+            break
         }
         return nil
     }
@@ -146,7 +175,7 @@ public struct LensStateMachine: Sendable, Equatable {
         switch (page, action) {
         case let (.details(index), .save):
             return save(index)
-        case (.list, .save), (.species, .save):
+        case (.list, .save), (.species, .save), (.problem, .save):
             return nil
         }
     }

@@ -109,7 +109,7 @@ extension MockDeviceKitTests {
                     recorder: SightingRecorder(container: album, frames: frames),
                     loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
                     makeSource: { _ in source },
-                    location: ScriptedLocationProvider([.denied]),
+                    location: ScriptedLocationProvider([ListeningSessionTests.newYork]),
                     profile: FakeLensStack.profile(for:),
                     image: FakeLensStack.image(for:)
                 )

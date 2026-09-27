@@ -114,20 +114,7 @@ final class GlassesConnection {
                 }.store(in: bag)
                 deviceTokens[identifier] = bag
             }
-            return GlassesDeviceStatus(
-                id: identifier,
-                name: device.nameOrId(),
-                type: device.deviceType(),
-                state: DeviceState(
-                    linkState: device.linkState,
-                    compatibility: device.compatibility(),
-                    batteryLevel: device.batteryLevel,
-                    chargingState: device.chargingState,
-                    donState: device.donState,
-                    hingeState: device.hingeState,
-                    thermalLevel: device.thermalLevel
-                )
-            )
+            return GlassesDeviceStatus(id: identifier, name: device.nameOrId(), type: device.deviceType(), state: device.currentState)
         }
     }
 

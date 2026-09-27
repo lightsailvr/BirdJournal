@@ -58,6 +58,11 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
       stops with `StreamError.timeout` a few seconds later (no audio frames). `AutoDeviceSelector` resolves its device
       asynchronously; creating a session before `activeDevice` is set fails with `noEligibleDevice`.
 - [x] Found in #3: mock `doff()` does not pause the session or stream. Pause and resume are verified on hardware only.
+- [x] Found in #10 (probe on the mock): `services.captouch.tap()` puts the session in `.paused` and a second tap returns it to
+      `.started` (the toolkit's touchpad pause). `doff()` only sets `donState` to `.doffed`. `powerOff()` drops the link
+      (`.disconnected`, then `.connecting`), publishes `unexpectedError("Session ended by device")` and stops the session,
+      which is the order the hardware doff showed in phase A; `powerOn()` connects again and `don()` sets `.donned`, and a
+      new session starts at once. So the run's pause and resume paths have mock tests (`GlassesInterruptionTests`).
 - [x] Found in #3: permission checks throw `PermissionError.noDevice` until the device is linked; wait for a connected device.
 - [x] Limit (found in #2): `MockDeviceKit.enable()` traps unless `Wearables.configure()` succeeded, and `configure()` throws
       `WearablesError.missingAppName/…Version/…BuildNumber` in a hostless test bundle. Mock-device tests must run in an
@@ -91,6 +96,17 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - Select on the details page: does it click "Add to my list" (a Display click), arrive as an Inputs `select` (logged
      on the phone), or both? Either way one sighting must be written.
    - Record the answers in DECISIONS.md, "Lens UI".
+8. [ ] Pause and disconnect (#10), from "Listen with the glasses" with the phone in a pocket:
+   - Doff: take the glasses off for a minute. The phone should read "Paused: glasses off" within about 15 s (the glasses end
+     the session themselves). Put them on: within about a minute the phone reads "Listening" again, the lens shows the page
+     it was on, and the next bird call updates it. Note the time from don to "Listening".
+   - Out of range: walk away from the phone until the link drops. The phone should read "Paused: glasses disconnected".
+     Walk back: "Listening", and the lens shows "Connection lost" with swipe right back to the page.
+   - Touchpad: tap the touchpad. Does the session pause (`.paused` on the phone, "Paused by the glasses")? Does a second tap
+     resume it, and does the card come back on the lens?
+   - Quit: two-finger tap. After the 2 s grace period the phone should read "Ended by the glasses", not paused.
+   - Three cycles: Start, hear a bird, Stop, three times; the third works like the first.
+   - Record the answers in DECISIONS.md, "Pause, disconnect and error handling".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.
