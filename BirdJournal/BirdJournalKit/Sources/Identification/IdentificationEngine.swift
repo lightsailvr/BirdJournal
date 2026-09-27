@@ -84,11 +84,12 @@ public final class IdentificationEngine: Sendable {
     /// As above, at a place that may change while the session runs: each window is scored against the classes
     /// admissible at the latest `context`. A prior failure on an update ends the stream like a model failure.
     public func identify(_ source: any AudioSource, in context: LiveGeoContext) async throws -> AsyncThrowingStream<IdentificationEvent, any Error> {
-        var (appliedVersion, initialContext) = context.snapshot()
+        let (initialVersion, initialContext) = context.snapshot()
         let allowed = try allowedSpecies(in: initialContext)
         let chunks = try await source.start()
         let (events, continuation) = AsyncThrowingStream.makeStream(of: IdentificationEvent.self)
         let worker = Task.detached(priority: .userInitiated) { [self, model, configuration] in
+            var appliedVersion = initialVersion
             var aggregator = CandidateAggregator(
                 species: model.species,
                 allowed: allowed,

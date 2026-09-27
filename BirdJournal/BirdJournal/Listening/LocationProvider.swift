@@ -20,11 +20,17 @@ protocol LocationProvider {
 }
 
 /// Core Location through `CLLocationUpdate.liveUpdates`, which prompts for when-in-use permission itself when
-/// the status is undetermined. Stops iterating after the first fix, so the location hardware runs for seconds per
-/// request, not for the session.
+/// the status is undetermined and reports a denial without prompting again (only "Allow Once" reverts to
+/// undetermined after the app leaves the foreground, so a later refresh may ask again). Stops iterating after the
+/// first fix, so the location hardware runs for seconds per request, not for the session.
+///
+/// With no background location mode, a refresh while the phone is locked gets no fix and comes back
+/// `.unavailable`; the session then keeps the fix it had.
 final class CoreLocationProvider: LocationProvider {
-    /// How long to wait for a fix once permission is settled.
-    static let fixTimeout: Duration = .seconds(20)
+    /// How long to wait for a fix once permission is settled. Listening does not start until the first request
+    /// settles, so this caps how long Start can take when no fix is coming.
+    nonisolated static let fixTimeout: Duration = .seconds(10)
+    private nonisolated static let timeoutTick: Duration = .seconds(1)
 
     /// Shared between the fix task and the timeout task: whether the permission prompt is up.
     private nonisolated final class PromptFlag: Sendable {
@@ -40,10 +46,12 @@ final class CoreLocationProvider: LocationProvider {
         return await withTaskGroup(of: LocationFix.self) { group in
             group.addTask { await Self.firstFix(prompt: prompt) }
             group.addTask {
-                // The clock does not run while the permission prompt is up.
-                repeat {
-                    try? await Task.sleep(for: Self.fixTimeout)
-                } while prompt.isPrompting && !Task.isCancelled
+                // Counted in ticks so the clock pauses while the permission prompt is up.
+                var remaining = Self.fixTimeout
+                while remaining > .zero, !Task.isCancelled {
+                    try? await Task.sleep(for: Self.timeoutTick)
+                    if !prompt.isPrompting { remaining -= Self.timeoutTick }
+                }
                 return .unavailable
             }
             let first = await group.next() ?? .unavailable

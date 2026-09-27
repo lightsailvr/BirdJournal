@@ -66,7 +66,7 @@ struct PhoneListeningView: View {
             EmptyView()
         case .requesting:
             LabeledContent("Location", value: "Finding you…")
-        case .fixed(let latitude, let longitude, let at):
+        case .settled(.fix(let latitude, let longitude, let at)):
             LabeledContent("Location") {
                 VStack(alignment: .trailing) {
                     Text("\(coordinate(latitude)), \(coordinate(longitude))")
@@ -75,7 +75,7 @@ struct PhoneListeningView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-        case .denied:
+        case .settled(.denied):
             VStack(alignment: .leading, spacing: 4) {
                 Label("No location", systemImage: "location.slash")
                 Text("Species are not filtered by region. Allow location in Settings to narrow the list.")
@@ -86,7 +86,7 @@ struct PhoneListeningView: View {
                 }
                 .font(.caption)
             }
-        case .unavailable:
+        case .settled(.unavailable):
             VStack(alignment: .leading, spacing: 4) {
                 Label("No location fix", systemImage: "location.slash")
                 Text("Species are not filtered by region until a fix arrives.")

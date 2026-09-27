@@ -16,14 +16,14 @@ struct PhoneListeningSessionTests {
         let prior = SpyOccurrence()
         let source = ManualAudioSource()
         let session = PhoneListeningSession(
-            engine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
+            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
             makeSource: { source },
             location: ScriptedLocationProvider([.denied])
         )
 
         await session.start()
         #expect(session.phase == .listening)
-        #expect(session.locationState == .denied)
+        #expect(session.locationState == .settled(.denied))
 
         source.feed(seconds: 4.5)  // windows at 0 and 1.5 s: finch and jay heard twice; no prior rules the jay out
         try await waitUntil("rows appear") { session.list.rows.count == 2 }
@@ -42,18 +42,18 @@ struct PhoneListeningSessionTests {
         let source = ManualAudioSource()
         let location = ScriptedLocationProvider([Self.losAngeles, Self.newYork])
         let session = PhoneListeningSession(
-            engine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
+            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
             makeSource: { source },
             location: location,
             locationRefreshInterval: .milliseconds(50)
         )
 
         await session.start()
-        #expect(session.locationState == .fixed(latitude: 34.05, longitude: -118.25, at: Date(timeIntervalSince1970: 1_790_000_000)))
+        #expect(session.locationState == .settled(Self.losAngeles))
         #expect(location.requests == 1)
 
         try await waitUntil("the location refreshes") { location.requests >= 2 }
-        try await waitUntil("the new fix shows") { session.locationState == .fixed(latitude: 40.7, longitude: -74, at: Date(timeIntervalSince1970: 1_790_000_600)) }
+        try await waitUntil("the new fix shows") { session.locationState == .settled(Self.newYork) }
         source.feed(seconds: 3)
         try await waitUntil("a window is scored") { session.windowsScored >= 1 }
         #expect(prior.asked.withLock { $0.map(\.latitude) } == [34.05, 40.7])
@@ -64,7 +64,7 @@ struct PhoneListeningSessionTests {
     @Test("a source that cannot start leaves the session idle with the error shown")
     func sourceFailureIsReported() async {
         let session = PhoneListeningSession(
-            engine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
+            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
             makeSource: { FailingAudioSource() },
             location: ScriptedLocationProvider([Self.losAngeles])
         )

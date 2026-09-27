@@ -18,11 +18,9 @@ final class PhoneListeningSession {
     enum LocationState: Equatable {
         case unknown
         case requesting
-        case fixed(latitude: Double, longitude: Double, at: Date)
-        /// Permission denied: identification runs without the regional filter.
-        case denied
-        /// No fix in time: identification runs without the regional filter until the next refresh.
-        case unavailable
+        /// What the latest request came back with. `.denied` and `.unavailable` mean identification runs
+        /// without the regional filter; a refresh that finds nothing keeps the earlier fix instead.
+        case settled(LocationFix)
     }
 
     static let locationRefreshInterval: Duration = .seconds(600)
@@ -37,7 +35,7 @@ final class PhoneListeningSession {
     private(set) var startedAt: Date?
     var errorMessage: String?
 
-    @ObservationIgnored private let engineLoader: @Sendable () async throws -> IdentificationEngine
+    @ObservationIgnored private let loadEngine: @Sendable () async throws -> IdentificationEngine
     @ObservationIgnored private let makeSource: () -> any AudioSource
     @ObservationIgnored private let location: any LocationProvider
     @ObservationIgnored private let locationRefreshInterval: Duration
@@ -47,18 +45,16 @@ final class PhoneListeningSession {
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
 
     init(
-        engine: @escaping @Sendable () async throws -> IdentificationEngine = { try await BundledIdentification.engine() },
+        loadEngine: @escaping @Sendable () async throws -> IdentificationEngine = { try await BundledIdentification.engine() },
         makeSource: @escaping () -> any AudioSource = { PhoneMicAudioSource() },
         location: any LocationProvider = CoreLocationProvider(),
         locationRefreshInterval: Duration = PhoneListeningSession.locationRefreshInterval
     ) {
-        engineLoader = engine
+        self.loadEngine = loadEngine
         self.makeSource = makeSource
         self.location = location
         self.locationRefreshInterval = locationRefreshInterval
     }
-
-    var isActive: Bool { phase == .starting || phase == .listening }
 
     /// Loads the models and takes the first location fix side by side, then starts the microphone. On failure
     /// the session is idle again with `errorMessage` set.
@@ -73,8 +69,8 @@ final class PhoneListeningSession {
         startedAt = nil
         locationState = .requesting
 
-        async let loading = engineLoader()
-        let context = LiveGeoContext(apply(await location.currentFix()))
+        async let loading = loadEngine()
+        let context = LiveGeoContext(record(await location.currentFix()))
         self.context = context
         do {
             let engine = try await loading
@@ -96,7 +92,10 @@ final class PhoneListeningSession {
                 while !Task.isCancelled {
                     try? await Task.sleep(for: locationRefreshInterval)
                     guard !Task.isCancelled, let self else { return }
-                    context.update(self.apply(await self.location.currentFix()))
+                    let fix = await self.location.currentFix()
+                    // Stop may have landed during the request; a stale result must not touch the next session.
+                    guard !Task.isCancelled, self.context === context else { return }
+                    context.update(self.record(fix))
                 }
             }
         } catch {
@@ -150,22 +149,15 @@ final class PhoneListeningSession {
         await events?.value
     }
 
-    /// Records a fix on the screen and turns it into what the engine needs. No fix means no geo filter.
-    private func apply(_ fix: LocationFix) -> GeoContext? {
-        switch fix {
-        case .fix(let latitude, let longitude, let at):
-            locationState = .fixed(latitude: latitude, longitude: longitude, at: at)
-            return GeoContext(latitude: latitude, longitude: longitude, date: at)
-        case .denied:
-            locationState = .denied
-            return nil
-        case .unavailable:
-            // Keep an earlier fix rather than dropping the filter on a missed refresh.
-            if case .fixed(let latitude, let longitude, _) = locationState {
-                return GeoContext(latitude: latitude, longitude: longitude, date: .now)
-            }
-            locationState = .unavailable
-            return nil
+    /// Records what a location request came back with and returns what the engine should filter by from now
+    /// on. A missed refresh keeps the earlier fix rather than dropping the filter; no fix means no geo filter.
+    private func record(_ fix: LocationFix) -> GeoContext? {
+        if case .unavailable = fix, case .settled(.fix) = locationState {
+            // Keep the earlier fix on screen and in the engine.
+        } else {
+            locationState = .settled(fix)
         }
+        guard case .settled(.fix(let latitude, let longitude, _)) = locationState else { return nil }
+        return GeoContext(latitude: latitude, longitude: longitude, date: .now)
     }
 }
