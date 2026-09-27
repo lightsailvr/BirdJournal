@@ -12,6 +12,7 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - Camera audio, Inputs, photo capture, motion, speech and voice invocations are experimental in SDK 1.0.0: Dev Mode and Beta channel only.
 - Real glasses do not deliver the Back event; the two-finger temple tap always ends the display session. Root view + system Back = quit.
 - Display: one root `FlexBox` per `send`, 600×600 additive display, no scrolling, dims and sleeps on inactivity. Images from bundled `UIImage` work offline.
+- A bundled `UIImage` is laid out at its pixel size on the 600-pixel canvas (measured on the mock in #7, to verify on hardware): a 600 px crop fills the card and pushes the text off it. Lens crops for the photo page (photo beside the name) should be about 260 px wide.
 - Only one third-party app can be registered in Dev Mode at a time. Bundle IDs may not contain `-`.
 - MockDeviceKit cannot inject audio frames; sound-ID tests run on recorded files.
 
@@ -38,7 +39,7 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 ## Species pack
 - Region v1: Los Angeles area, ~150 species with photos and descriptions. All BirdNET species remain identifiable by name.
 - LA pack bundled in the app binary (offline on first launch). Other packs downloaded from GitHub Releases via a JSON index into app storage.
-- Pack = zip of SQLite + pre-sized JPEGs (lens ~600 px, phone ~1200 px).
+- Pack = zip of SQLite + pre-sized JPEGs (lens ~260 px, see the Display image-size fact above; phone ~1200 px).
 - Pack builder (Python) adds a detector step (COCO "bird") to crop close-ups, scores crops on bird area, background luminance and sharpness, keeps top 3–5 per species, with a manual override list.
 - Photo licenses: CC0, CC BY and CC BY-NC. Every photo carries observer, license and source URL. Credit shown on the description page and in a full credits screen on the phone.
 
