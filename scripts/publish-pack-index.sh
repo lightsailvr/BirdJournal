@@ -5,10 +5,6 @@
 # per-version releases; the index points at them by URL. Run after `gh release create pack-<id>-v<n> ...` so every
 # listed zip exists.
 #
-# The repository is private, and the phone fetches the index and the zips with no credentials: until the repository
-# (or the packs' releases) is public, the app can only reach an index served elsewhere (`-packIndexURL` in debug
-# builds; DECISIONS.md "Downloadable regional packs").
-#
 #   scripts/publish-pack-index.sh            # writes build/pack-index/index.json and uploads it
 #   scripts/publish-pack-index.sh --dry-run  # only writes the file
 set -euo pipefail

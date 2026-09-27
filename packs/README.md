@@ -24,8 +24,8 @@ whether the app bundles it), and `scripts/download-pack.sh` fetches, verifies an
 `packs/<id>/` (the Xcode Cloud post-clone hook runs it after the models). The other packs are what the phone downloads
 (issue #13): `scripts/publish-pack-index.sh` lists every pack of the manifest as `index.json` on the rolling `packs`
 release, and the app's `PackLibrary` fetches that index, downloads a zip, checks its SHA-256 and unpacks it under
-Application Support/Packs. The repository is private, so the script uses a logged-in `gh` CLI or a `GITHUB_TOKEN`
-with contents read access, and keeps the zips under `build/pack-downloads/`: everything under `packs/` ships in the app's resource bundle, so nothing but packs may live here. Everything under `packs/` except this file and `manifest.json` is gitignored.
+Application Support/Packs. The repository is public, so no credentials are needed (a logged-in `gh` CLI or a `GITHUB_TOKEN` is used when
+present); the script keeps the zips under `build/pack-downloads/`: everything under `packs/` ships in the app's resource bundle, so nothing but packs may live here. Everything under `packs/` except this file and `manifest.json` is gitignored.
 
 `us-ca-la` is the pack bundled in the app: the `Pack` package target's `Sources/Pack/Packs` folder is a symlink to
 this directory and is declared as a package resource, so the pack ships in the package's resource bundle and

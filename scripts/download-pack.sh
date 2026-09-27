@@ -5,9 +5,8 @@
 # Cloud post-clone hook does the same. Safe to re-run: a pack whose unpacked marker matches the manifest is skipped.
 # Naming a pack fetches that one whether or not it is bundled; mind that everything under packs/ ships in the app.
 #
-# The repository is private, so the release assets need credentials: the `gh` CLI when it is installed and logged
-# in (a developer machine), else a GITHUB_TOKEN environment variable with read access to the repository's contents
-# (Xcode Cloud: an environment variable on the workflow).
+# The repository is public, so the release assets need no credentials. A logged-in `gh` CLI is used when there is
+# one, a GITHUB_TOKEN environment variable when set (both raise the API rate limit), else plain curl.
 #
 # The zips are kept under build/ (gitignored), never under packs/: the Pack package target copies the whole packs/
 # folder into the app's resource bundle, so anything left there would ship.
@@ -31,8 +30,9 @@ fetch_asset() {
         return
     fi
     if [ -z "${GITHUB_TOKEN:-}" ]; then
-        echo "Neither a logged-in gh CLI nor GITHUB_TOKEN is available to fetch $asset from release $tag of $repo." >&2
-        return 1
+        curl --fail --location --silent --show-error --retry 3 --retry-all-errors \
+            --output "$target" "https://github.com/$repo/releases/download/$tag/$asset"
+        return
     fi
     local auth="Authorization: Bearer $GITHUB_TOKEN"
     local asset_id

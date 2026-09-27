@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 
 /// The packs the app reads (issue #13): the pack bundled in the binary first, then every pack downloaded from the
 /// index, looked up as one. Downloads run one task per pack; their state is published for the packs screen.
@@ -17,6 +18,8 @@ public final class PackLibrary {
         case installing
         case failed(String)
     }
+
+    private static let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "packs")
 
     /// The pack compiled into the app, nil when the bundle lacks it (every species then shows by name alone).
     public let bundled: SpeciesPack?
@@ -141,11 +144,15 @@ public final class PackLibrary {
             installed = installed.filter { $0.id != id } + [installedPack]
             installed.sort { $0.descriptor.name < $1.descriptor.name }
             setTransfer(id, nil)
+            Self.log.info("installed pack \(id) v\(descriptor.version)")
         } catch is CancellationError {
+            Self.log.info("download of \(id) cancelled")
             setTransfer(id, nil)
         } catch let error as URLError where error.code == .cancelled {
+            Self.log.info("download of \(id) cancelled by the session")
             setTransfer(id, nil)
         } catch {
+            Self.log.error("download of \(id) failed: \(String(describing: error))")
             setTransfer(id, .failed(Self.message(for: error)))
         }
     }

@@ -166,8 +166,12 @@ private struct AutoSpeciesPack: ViewModifier {
         content.task {
             if let id = UserDefaults.standard.string(forKey: "autoDownloadPack") {
                 path = [.settings, .packs]
-                await library.refreshIndex()
-                if let descriptor = library.index?.descriptor(id: id) { library.startDownload(descriptor) }
+                // Not awaited here: this task belongs to the root list, which the push takes off screen, and SwiftUI
+                // cancels it before a fetch from GitHub returns. The library's own task outlives the navigation.
+                Task {
+                    await library.refreshIndex()
+                    if let descriptor = library.index?.descriptor(id: id) { library.startDownload(descriptor) }
+                }
                 return
             }
             guard let value = UserDefaults.standard.string(forKey: "autoSpeciesPack") else { return }
