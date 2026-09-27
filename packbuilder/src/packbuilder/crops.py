@@ -46,16 +46,18 @@ def lens_crop_box(box: Box, size: tuple[int, int]) -> tuple[int, int, int, int]:
 
 
 def phone_crop_box(box: Box, size: tuple[int, int]) -> tuple[int, int, int, int]:
-    """The bird box padded by `PHONE_PADDING` on each side, clamped to the image."""
+    """The bird box padded by `PHONE_PADDING` on each side, clamped to the image, and never inside the lens crop (a
+    small bird at an edge would otherwise get a phone image tighter than its card)."""
     width, height = size
     box = box.clamped()
     bx0, by0, bx1, by1 = box.pixels(size)
     pad_x = (bx1 - bx0) * PHONE_PADDING
     pad_y = (by1 - by0) * PHONE_PADDING
-    left = max(0, int(round(bx0 - pad_x)))
-    top = max(0, int(round(by0 - pad_y)))
-    right = min(width, int(round(bx1 + pad_x)))
-    bottom = min(height, int(round(by1 + pad_y)))
+    lx0, ly0, lx1, ly1 = lens_crop_box(box, size)
+    left = min(lx0, max(0, int(round(bx0 - pad_x))))
+    top = min(ly0, max(0, int(round(by0 - pad_y))))
+    right = max(lx1, min(width, int(round(bx1 + pad_x))))
+    bottom = max(ly1, min(height, int(round(by1 + pad_y))))
     return left, top, max(right, left + 1), max(bottom, top + 1)
 
 

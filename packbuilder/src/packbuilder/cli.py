@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from packbuilder.definition import PackDefinition
+from packbuilder.descriptions import WikipediaDescriptions
 from packbuilder.detector import BirdDetector, ensure_model
 from packbuilder.pipeline import BuildOptions, build_pack
 
@@ -26,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--max-photos", type=int, default=5, help="photos kept per species (default 5)")
     build.add_argument("--zip", type=Path, metavar="PATH", help="also write a zip of the pack at PATH")
     build.add_argument("--built-at", help="ISO timestamp to record instead of now (for reproducible output)")
+    build.add_argument("--workers", type=int, default=8, help="concurrent photo downloads per species (default 8)")
+    build.add_argument("--no-descriptions", action="store_true", help="skip the Wikipedia descriptions (overrides.json text still applies)")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
@@ -43,8 +46,14 @@ def main(argv: list[str] | None = None) -> int:
         metadata = APIMetadata(definition.place_id, args.cache, created_before=definition.created_before)
 
     detector = BirdDetector(ensure_model(args.cache))
-    options = BuildOptions(cache_dir=args.cache, out_dir=args.out, candidate_limit=args.limit, min_photos=args.min_photos, max_photos=args.max_photos, archive_path=args.zip, built_at=args.built_at)
-    build_pack(definition, args.definition / "overrides.json", metadata, detector, options)
+    descriptions = None if args.no_descriptions else WikipediaDescriptions(args.cache, lock_path=args.definition / "wikipedia.lock.json")
+    options = BuildOptions(
+        cache_dir=args.cache, out_dir=args.out, candidate_limit=args.limit, min_photos=args.min_photos, max_photos=args.max_photos,
+        archive_path=args.zip, built_at=args.built_at, download_workers=args.workers,
+    )
+    build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions)
+    if descriptions is not None:
+        descriptions.write_lock()
     return 0
 
 

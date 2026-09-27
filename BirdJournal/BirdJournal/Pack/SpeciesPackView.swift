@@ -59,7 +59,8 @@ private struct SpeciesRow: View {
     }
 }
 
-/// One species of the pack: every photo at phone size with its credit and observation link.
+/// One species of the pack: its description (issue #12), then every photo at phone size with its credit and
+/// observation link.
 struct SpeciesDetailView: View {
     let pack: SpeciesPack
     let species: PackSpecies
@@ -72,6 +73,9 @@ struct SpeciesDetailView: View {
                 if let url = species.wikipediaURL {
                     Link("Wikipedia", destination: url)
                 }
+            }
+            if species.isDescribed {
+                SpeciesDescriptionSection(species: species)
             }
             ForEach(species.photos) { photo in
                 Section {
@@ -88,6 +92,36 @@ struct SpeciesDetailView: View {
         }
         .navigationTitle(species.commonName)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// The pack's text for a species: what the lens shows (field marks, size and habitat) and the phone's summary, with
+/// the Wikipedia revision it was adapted from (CC BY-SA 4.0) when there is one.
+private struct SpeciesDescriptionSection: View {
+    let species: PackSpecies
+
+    var body: some View {
+        Section {
+            if let fieldMarks = species.fieldMarks, !fieldMarks.isEmpty {
+                Text(fieldMarks)
+            }
+            let sizeAndHabitat = [species.size, species.habitat].compactMap { $0 }.filter { !$0.isEmpty }
+            if !sizeAndHabitat.isEmpty {
+                Text(sizeAndHabitat.joined(separator: " · "))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            if let summary = species.summary, !summary.isEmpty {
+                Text(summary)
+                    .font(.footnote)
+            }
+            if let source = species.descriptionSource {
+                Link("Text adapted from Wikipedia, CC BY-SA 4.0", destination: source)
+                    .font(.footnote)
+            }
+        } header: {
+            Text("Description")
+        }
     }
 }
 

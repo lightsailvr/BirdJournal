@@ -10,8 +10,10 @@ import PackageDescription
 // - LensSession:    pure lens page state machine and card renderer. Depends on Identification for the
 //                   CandidateStack it pages through; no toolkit dependency, unit-tested without the glasses.
 // - Pack:           species packs (bundled LA pack, downloadable regional packs). Its `Packs` resource folder is a
-//                   symlink to the repo's `packs/` directory (built by `scripts/build-pack.sh`, committed while small),
-//                   so the bundled pack's SQLite and JPEGs ship in the package's resource bundle like the models do.
+//                   symlink to the repo's `packs/` directory (fetched by `scripts/download-pack.sh` from the GitHub
+//                   Release that `packs/manifest.json` pins, or built by `scripts/build-pack.sh`), so the bundled
+//                   pack's SQLite and JPEGs ship in the package's resource bundle like the models do. Everything under
+//                   `packs/` ships, so nothing but packs belongs there.
 // - Album:          saved sightings (SwiftData), their frames on disk and the album's crop of them (CoreGraphics).
 //
 // The Device Access Toolkit is linked by the app target only, where the thin glasses adapter lives

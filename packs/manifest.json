@@ -1,0 +1,13 @@
+{
+  "comment": "Built species packs, published as zips on this repository's GitHub Releases and fetched into packs/<id>/ by scripts/download-pack.sh, which verifies the sha256. Written by scripts/pin-pack.sh after scripts/build-pack.sh; never edit the checksum by hand.",
+  "packs": [
+    {
+      "id": "us-ca-la",
+      "version": 1,
+      "release": "pack-us-ca-la-v1",
+      "asset": "us-ca-la.zip",
+      "sha256": "d014d409fb734e284bee86ac55183f5c031b3997cdb86bc1e01c13472cb1daff",
+      "bytes": 164711896
+    }
+  ]
+}

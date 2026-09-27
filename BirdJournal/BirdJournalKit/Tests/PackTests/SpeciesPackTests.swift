@@ -3,28 +3,49 @@ import ImageIO
 import Testing
 @testable import Pack
 
-/// The bundled Los Angeles pack as `scripts/build-pack.sh` wrote it (issue #8 acceptance: ten species, photos with
-/// observer, license and source URL, offline).
+/// The bundled Los Angeles pack as `scripts/download-pack.sh` fetched it (issue #12: about 150 species with photos
+/// carrying observer, license and source URL, and Wikipedia-derived descriptions, offline).
 @Suite("SpeciesPack")
 struct SpeciesPackTests {
     static let allowedLicenses: Set<String> = ["CC0", "CC BY", "CC BY-NC"]
 
-    @Test("the bundled pack opens with ten species in order")
+    @Test("the bundled pack opens with about 150 species in the definition's order")
     func bundledPack() throws {
         let pack = try SpeciesPack.bundled()
         #expect(pack.info.id == PackIndex.bundledPackID)
         #expect(pack.info.schemaVersion == SpeciesPack.schemaVersion)
-        #expect(pack.species.count == 10)
-        #expect(pack.species.first?.scientificName == "Sayornis nigricans")
+        #expect((140...170).contains(pack.species.count), "\(pack.species.count) species")
+        #expect(pack.species.first?.scientificName == "Buteo jamaicensis")
         #expect(pack.species(scientificName: "Calypte anna")?.commonName == "Anna's Hummingbird")
         #expect(pack.species(scientificName: "Nope nope") == nil)
     }
 
-    @Test("every species has three to five photos, best first, with full attribution")
-    func photosCarryAttribution() throws {
+    @Test("every species has a description: field marks for the lens, a summary for the phone, and its Wikipedia revision")
+    func speciesAreDescribed() throws {
         let pack = try SpeciesPack.bundled()
         for species in pack.species {
-            #expect((3...5).contains(species.photos.count), "\(species.commonName) has \(species.photos.count) photos")
+            #expect(species.isDescribed, "\(species.commonName) has no description")
+            #expect(!(species.fieldMarks ?? "").isEmpty, "\(species.commonName) has no field marks")
+            #expect((species.fieldMarks ?? "").split(separator: " ").count <= 20, "\(species.commonName): field marks over the lens budget")
+            #expect(!(species.summary ?? "").isEmpty, "\(species.commonName) has no summary")
+            if let source = species.descriptionSource {
+                #expect(source.host() == "en.wikipedia.org" && source.query()?.contains("oldid=") == true, "\(species.commonName): \(source)")
+                #expect(pack.info.licenseText.contains(source.absoluteString), "\(species.commonName)'s text credit is missing from LICENSE")
+            }
+        }
+        let sized = pack.species.filter { !($0.size ?? "").isEmpty }.count
+        let placed = pack.species.filter { !($0.habitat ?? "").isEmpty }.count
+        #expect(sized * 10 >= pack.species.count * 8, "only \(sized) of \(pack.species.count) species have a size")
+        #expect(placed * 10 >= pack.species.count * 9, "only \(placed) of \(pack.species.count) species have a habitat")
+    }
+
+    @Test("every species has one to five photos, best first, with full attribution; at least three unless logged as a gap")
+    func photosCarryAttribution() throws {
+        let pack = try SpeciesPack.bundled()
+        let gaps = try Self.photoGaps(in: pack)
+        for species in pack.species {
+            #expect((1...5).contains(species.photos.count), "\(species.commonName) has \(species.photos.count) photos")
+            #expect(species.photos.count >= 3 || gaps.contains(species.id), "\(species.commonName) has \(species.photos.count) photos and is not a logged gap")
             #expect(species.photos.map(\.rank) == Array(0..<species.photos.count))
             for photo in species.photos {
                 #expect(!photo.observer.isEmpty)
@@ -47,7 +68,7 @@ struct SpeciesPackTests {
             #expect(lens == CGSize(width: 552, height: 368))
             let phone = try #require(Self.pixelSize(of: pack.phoneImageURL(for: photo)), "missing \(photo.phoneFile)")
             #expect(max(phone.width, phone.height) <= 1200)
-            #expect(max(phone.width, phone.height) > 552)
+            #expect(max(phone.width, phone.height) >= 552, "\(photo.phoneFile) is smaller than the lens crop")
         }
     }
 
@@ -77,6 +98,14 @@ struct SpeciesPackTests {
         #expect(throws: PackError.missingBundledPack("nowhere")) {
             try SpeciesPack.bundled(id: "nowhere")
         }
+    }
+
+    /// The species ids the builder logged with fewer than three photos (`report.json`, "gaps").
+    private static func photoGaps(in pack: SpeciesPack) throws -> Set<String> {
+        let data = try Data(contentsOf: pack.directory.appending(path: "report.json"))
+        let report = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let gaps = report?["gaps"] as? [String: [String]]
+        return Set(gaps?["photos"] ?? [])
     }
 
     private static func pixelSize(of url: URL) -> CGSize? {

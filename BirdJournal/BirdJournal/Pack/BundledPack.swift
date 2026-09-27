@@ -20,9 +20,9 @@ enum BundledPack {
 
     static var pack: SpeciesPack? { try? loaded.get() }
 
-    /// What the species card shows: the best photo and the description fields the pack has. Until #12 fills field
-    /// marks, size and habitat, the text falls back to the pack's summary, then (in the renderer) to the scientific
-    /// name, and the size-and-habitat line is left out.
+    /// What the species card shows: the best photo and the description fields the pack has (issue #12). A species
+    /// without field marks falls back to the pack's summary, then (in the renderer) to the scientific name, and the
+    /// size-and-habitat line is left out when both are empty.
     static func profile(for species: Species) -> SpeciesProfile? {
         guard let pack, let entry = pack.species(scientificName: species.scientificName) else { return nil }
         let best = entry.photos.first

@@ -5,6 +5,7 @@ import zipfile
 from PIL import Image
 
 from packbuilder.definition import PackDefinition, SpeciesEntry, BoundingBox
+from packbuilder.descriptions import Description
 from packbuilder.geometry import Box
 from packbuilder.scoring import CropScore
 from packbuilder.selection import ScoredPhoto
@@ -27,7 +28,7 @@ def definition():
     )
 
 
-def result_for(entry, photo_ids, tmp_path):
+def result_for(entry, photo_ids, tmp_path, description=None):
     photos = []
     for offset, photo_id in enumerate(photo_ids):
         path = tmp_path / f"src-{photo_id}.jpg"
@@ -35,12 +36,13 @@ def result_for(entry, photo_ids, tmp_path):
         candidate = make_candidate(photo_id=photo_id, observation_id=photo_id * 10, license="CC BY-NC" if offset else "CC0")
         score = CropScore(0.5, 0.5, 0.5, 0.5 - offset * 0.1)
         photos.append(ChosenPhoto(scored=ScoredPhoto(candidate=candidate, box=Box(0.3, 0.3, 0.7, 0.7), score=score), original=path))
-    return SpeciesResult(entry=entry, photos=photos, gap=len(photo_ids) < 3)
+    return SpeciesResult(entry=entry, photos=photos, gap=len(photo_ids) < 3, description=description)
 
 
 def test_pack_output(tmp_path):
     pack = definition()
-    results = [result_for(pack.species[0], [1, 2, 3], tmp_path), result_for(pack.species[1], [4, 5], tmp_path)]
+    phoebe = Description(summary="A black flycatcher of the west.", field_marks="Black with a white belly.", size="16 cm", habitat="water, coast", source="https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245")
+    results = [result_for(pack.species[0], [1, 2, 3], tmp_path, description=phoebe), result_for(pack.species[1], [4, 5], tmp_path)]
     out = tmp_path / "out"
 
     written = write_pack(pack, results, out, built_at="2026-09-27T00:00:00Z", archive_path=tmp_path / "dist" / "test-pack.zip")
@@ -51,6 +53,9 @@ def test_pack_output(tmp_path):
     assert [s["id"] for s in species] == ["sayornis-nigricans", "calypte-anna"]
     assert species[0]["common_name"] == "Black Phoebe"
     assert species[0]["inat_taxon_id"] == 17013
+    assert (species[0]["summary"], species[0]["field_marks"], species[0]["size"], species[0]["habitat"]) == ("A black flycatcher of the west.", "Black with a white belly.", "16 cm", "water, coast")
+    assert species[0]["description_source"] == "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+    assert species[1]["summary"] is None and species[1]["field_marks"] is None and species[1]["description_source"] is None
 
     photos = db.execute("SELECT * FROM photo ORDER BY species_id, rank").fetchall()
     assert len(photos) == 5
@@ -64,18 +69,22 @@ def test_pack_output(tmp_path):
 
     info = db.execute("SELECT * FROM pack").fetchone()
     assert info["id"] == "test-pack" and info["version"] == 1 and info["built_at"] == "2026-09-27T00:00:00Z"
-    assert info["schema_version"] == 1
+    assert info["schema_version"] == 2
 
     license_text = (out / "LICENSE").read_text()
     for photo in photos:
         assert photo["credit_line"] in license_text and photo["source_url"] in license_text
     assert "Anna's Hummingbird" in license_text
+    assert "CC BY-SA 4.0" in license_text and "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245" in license_text
 
     report = json.loads((out / "report.json").read_text())
     assert report["species"]["calypte-anna"]["gap"] is True
     assert report["species"]["sayornis-nigricans"]["photos"] == 3
+    assert report["species"]["sayornis-nigricans"]["description"] == "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+    assert report["species"]["calypte-anna"]["description"] is None
+    assert report["gaps"] == {"photos": ["calypte-anna"], "descriptions": ["calypte-anna"]}
 
     with zipfile.ZipFile(written.archive) as archive:
         names = set(archive.namelist())
     assert "pack.sqlite" in names and "LICENSE" in names and "lens/1.jpg" in names
-    assert db.execute("SELECT COUNT(*) FROM lookalike").fetchone()[0] == 0, "lookalikes are empty until #12"
+    assert db.execute("SELECT COUNT(*) FROM lookalike").fetchone()[0] == 0, "no lookalikes in v1: nothing on the lens shows them"
