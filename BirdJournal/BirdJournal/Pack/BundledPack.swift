@@ -1,3 +1,4 @@
+import Album
 import Identification
 import LensSession
 import OSLog
@@ -32,6 +33,12 @@ enum BundledPack {
             habitat: entry.habitat ?? "",
             photoCredit: best?.shortCredit ?? ""
         )
+    }
+
+    /// The species name the album shows (issue #11): the pack's common name for the sighting's scientific name (the
+    /// key the pack and the model share), else the label's own common name, so an unpacked species is still named.
+    static func commonName(for sighting: Sighting) -> String {
+        pack?.species(scientificName: sighting.scientificName)?.commonName ?? sighting.commonName
     }
 
     /// The lens crop for a photo the pack names (552 × 368 pixels, laid out at pixel size across the card, issue #24).

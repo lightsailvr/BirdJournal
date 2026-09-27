@@ -32,6 +32,7 @@ struct SpeciesPackTests {
                 #expect(photo.sourceURL.host() == "www.inaturalist.org")
                 #expect(photo.creditLine.contains(photo.observer))
                 #expect(photo.shortCredit.hasPrefix("Photo: "))
+                #expect(photo.licenseURL?.host() == "creativecommons.org", "\(photo.id) has no license link")
                 #expect(pack.photo(id: photo.id) == photo)
             }
         }
