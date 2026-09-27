@@ -35,5 +35,5 @@ def credit_line(observer: str, license: str) -> str:
 
 
 def short_credit(observer: str, license: str) -> str:
-    """The one-line credit for the lens description page (budgeted at eight words there)."""
+    """The one-line credit on the lens species card (budgeted at eight words there)."""
     return f"Photo: {observer}, {license}"

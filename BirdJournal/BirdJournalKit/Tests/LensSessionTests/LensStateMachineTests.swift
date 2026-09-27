@@ -125,14 +125,14 @@ struct LensStateMachineTests {
 
     // MARK: - Saving
 
-    @Test("a tap on a species card saves it once: the card is marked saved and a second tap does nothing")
+    @Test("a tap on a species card saves it and marks the card; a later tap saves it again")
     func tapSaves() {
         var machine = Self.machine(on: .species(index: 1, screenful: 0))
         #expect(machine.apply(.tap, screenfuls: 2) == .saveSighting(Fakes.candidate(Fakes.finch)))
         #expect(machine.savedIndices == [1])
         #expect(machine.page == .species(index: 1, screenful: 0))
-        // Hardware may deliver one press as both a button click and an Inputs select (issue #24): the second is ignored.
-        #expect(machine.apply(.tap, screenfuls: 2) == nil)
+        // Saving again updates the sighting (spec user story 33); a press delivered twice is the adapter's to drop.
+        #expect(machine.apply(.tap, screenfuls: 2) == .saveSighting(Fakes.candidate(Fakes.finch)))
         #expect(machine.savedIndices == [1])
     }
 
@@ -142,7 +142,6 @@ struct LensStateMachineTests {
         #expect(machine.press(.save) == .saveSighting(Fakes.candidate(Fakes.towhee)))
         #expect(machine.savedIndices == [2])
         #expect(machine.page == .species(index: 2, screenful: 1))
-        #expect(machine.press(.save) == nil)
 
         machine = Self.machine(on: .list(screenful: 0))
         #expect(machine.press(.save) == nil)
@@ -158,7 +157,6 @@ struct LensStateMachineTests {
         _ = machine.apply(.swipeRight, screenfuls: 2)
         #expect(machine.page == .species(index: 0, screenful: 0))
         #expect(machine.savedIndices == [0])
-        #expect(machine.apply(.tap, screenfuls: 2) == nil)
     }
 
     // MARK: - The list's rows

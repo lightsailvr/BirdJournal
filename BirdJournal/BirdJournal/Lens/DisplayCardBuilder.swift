@@ -58,12 +58,8 @@ enum DisplayCardBuilder {
             return Text(text, style: .meta, color: .secondary)
         case .button(let button):
             return ButtonGroup {
-                if button.isPrimary {
-                    Button(label: button.label, style: .primary, iconName: .checkmark) { onAction(button.action) }
-                        .actionRole(.primary)
-                } else {
-                    Button(label: button.label, style: .secondary) { onAction(button.action) }
-                }
+                Button(label: button.label, style: .primary, iconName: .checkmark) { onAction(button.action) }
+                    .actionRole(.primary)
             }
         case .saved(let text):
             return FlexBox(direction: .row, spacing: 8, crossAlignment: .center) {

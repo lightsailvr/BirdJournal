@@ -84,6 +84,9 @@ final class GlassesLensSession {
     @ObservationIgnored private let image: (LensImage) -> UIImage?
     /// Told about saves; ending the session on Back is handled here.
     @ObservationIgnored private let onEffect: (LensEffect) -> Void
+    /// How close two saves of one species must be to count as one press delivered twice.
+    @ObservationIgnored private let saveDebounce: Duration
+    @ObservationIgnored private var lastSave: (species: Species, at: ContinuousClock.Instant)?
     @ObservationIgnored private var lease: DeviceSessionLease = .own
     @ObservationIgnored private var session: DeviceSession?
     @ObservationIgnored private var display: Display?
@@ -102,12 +105,14 @@ final class GlassesLensSession {
         connection: GlassesConnection? = nil,
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
         image: @escaping (LensImage) -> UIImage? = { _ in nil },
+        saveDebounce: Duration = .seconds(1),
         onEffect: @escaping (LensEffect) -> Void = { _ in }
     ) {
         self.wearables = wearables
         self.connection = connection
         self.profile = profile
         self.image = image
+        self.saveDebounce = saveDebounce
         self.onEffect = onEffect
         card = LensCardRenderer.render(.list(screenful: 0), stack: CandidateStack(), saved: [], profile: profile)
     }
@@ -127,6 +132,7 @@ final class GlassesLensSession {
         self.lease = lease
         machine = LensStateMachine()
         savedSightings = []
+        lastSave = nil
         inputRecords = []
         stopTask = nil
         sentPage = nil
@@ -194,6 +200,7 @@ final class GlassesLensSession {
             }
         }
         guard displayStarted else { throw StartError.displayDidNotStart }
+        sentPage = machine.page
         try await display.send(renderedCard())
 
         // Inputs last: `addInputs` returns nil unless the session is already started.
@@ -267,8 +274,7 @@ final class GlassesLensSession {
         perform(machine.apply(gesture, screenfuls: card.screenfuls.count))
     }
 
-    /// A tap on a card element (the Save button, a list row), delivered by Display rather than Inputs. Hardware may
-    /// deliver one Select as both; the machine saves a species once, so the second arrival does nothing.
+    /// A tap on a card element (the Save button, a list row), delivered by Display rather than Inputs.
     private func tapped(_ action: LensAction) {
         guard phase == .running else { return }
         perform(machine.press(action))
@@ -277,6 +283,13 @@ final class GlassesLensSession {
     private func perform(_ effect: LensEffect?) {
         switch effect {
         case .saveSighting(let candidate):
+            // Hardware may deliver one press as both a button click and an Inputs select (DECISIONS.md, "Lens UI"):
+            // a second save of the same species inside `saveDebounce` is that echo, not a wish to save again.
+            let now = ContinuousClock.now
+            if let lastSave, lastSave.species == candidate.species, now - lastSave.at < saveDebounce {
+                break
+            }
+            lastSave = (candidate.species, now)
             savedSightings.append(candidate)
             onEffect(.saveSighting(candidate))
         case .endSession:
@@ -296,12 +309,12 @@ final class GlassesLensSession {
         let next = LensCardRenderer.render(machine.page, stack: machine.stack, saved: machine.savedIndices, profile: profile)
         guard next != card || machine.page != sentPage else { return }
         card = next
+        sentPage = machine.page
         resendCard()
     }
 
     private func renderedCard() -> FlexBox {
-        sentPage = machine.page
-        return DisplayCardBuilder.flexBox(for: card.screenful(at: machine.page.screenful), image: image) { [weak self] action in
+        DisplayCardBuilder.flexBox(for: card.screenful(at: machine.page.screenful), image: image) { [weak self] action in
             Task { @MainActor in self?.tapped(action) }
         }
     }

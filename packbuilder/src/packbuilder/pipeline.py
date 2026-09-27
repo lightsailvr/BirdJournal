@@ -11,7 +11,7 @@ from typing import Callable, Protocol
 from PIL import Image
 
 from packbuilder.candidates import PhotoCandidate, filter_candidates
-from packbuilder.crops import upright
+from packbuilder.crops import LENS_HEIGHT, LENS_PADDING, upright
 from packbuilder.definition import PackDefinition, SpeciesEntry, load_overrides
 from packbuilder.detector import Detection
 from packbuilder.download import fetch_photo
@@ -27,9 +27,9 @@ MIN_BIRD_AREA = 0.02
 # Below this sharpness (see scoring.py) a crop is motion blur or out of focus; area and a dark background would
 # otherwise carry it into the top five.
 MIN_SHARPNESS = 0.4
-# The bird must span about the lens crop's 368-pixel height in the original (its padded box is 1.4 × the bird), or
-# the lens JPEG would be upscaled.
-MIN_BIRD_PIXELS = 260
+# The bird's padded box (1.4 × the bird) must reach the lens crop's height in the original, or the lens JPEG would be
+# upscaled: about 263 pixels.
+MIN_BIRD_PIXELS = round(LENS_HEIGHT / (1 + 2 * LENS_PADDING))
 
 FULL_FRAME = Box(0.0, 0.0, 1.0, 1.0)
 

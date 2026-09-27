@@ -127,40 +127,40 @@ private struct LensElementView: View {
 
     var body: some View {
         Group {
-                switch element {
-                case .status(let text):
-                    Text(text).font(.caption2).foregroundStyle(.secondary)
-                case .photo(let photo):
-                    Label(photo.id, systemImage: "photo").font(.caption).foregroundStyle(.secondary)
-                case .title(let name, let detail):
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(name).font(.headline)
-                        Text(detail).font(.caption).foregroundStyle(.secondary)
-                    }
-                case .heading(let text):
-                    Text(text).font(.headline)
-                case .body(let text):
-                    Text(text)
-                case .meta(let text):
-                    Text(text).font(.caption).foregroundStyle(.secondary)
-                case .button(let button):
-                    Text(button.label)
-                        .font(.caption.bold())
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(.tint.opacity(button.isPrimary ? 0.3 : 0.1), in: Capsule())
-                case .saved(let text):
-                    Label(text, systemImage: "checkmark.circle.fill").font(.caption.bold())
-                case .list(let rows):
-                    ForEach(rows, id: \.index) { row in
-                        HStack {
-                            Text(row.commonName)
-                            Text(row.confidence).font(.caption).foregroundStyle(.secondary)
-                            if row.hasPhoto { Image(systemName: "photo").font(.caption) }
-                            if row.isSaved { Image(systemName: "checkmark.circle.fill").font(.caption) }
-                        }
+            switch element {
+            case .status(let text):
+                Text(text).font(.caption2).foregroundStyle(.secondary)
+            case .photo(let photo):
+                Label(photo.id, systemImage: "photo").font(.caption).foregroundStyle(.secondary)
+            case .title(let name, let detail):
+                HStack(alignment: .firstTextBaseline) {
+                    Text(name).font(.headline)
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                }
+            case .heading(let text):
+                Text(text).font(.headline)
+            case .body(let text):
+                Text(text)
+            case .meta(let text):
+                Text(text).font(.caption).foregroundStyle(.secondary)
+            case .button(let button):
+                Text(button.label)
+                    .font(.caption.bold())
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(.tint.opacity(0.3), in: Capsule())
+            case .saved(let text):
+                Label(text, systemImage: "checkmark.circle.fill").font(.caption.bold())
+            case .list(let rows):
+                ForEach(rows, id: \.index) { row in
+                    HStack {
+                        Text(row.commonName)
+                        Text(row.confidence).font(.caption).foregroundStyle(.secondary)
+                        if row.hasPhoto { Image(systemName: "photo").font(.caption) }
+                        if row.isSaved { Image(systemName: "checkmark.circle.fill").font(.caption) }
                     }
                 }
+            }
         }
     }
 }

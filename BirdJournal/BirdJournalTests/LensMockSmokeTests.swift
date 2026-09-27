@@ -37,7 +37,8 @@ extension MockDeviceKitTests {
                 input.navUp()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0, screenful: 0) }
 
-                // "This is my bird": one Select saves, the card shows it, and a second Select saves nothing more.
+                // "This is my bird": one Select saves and the card shows it; a Select right behind it (one press the
+                // hardware delivered twice) saves nothing more; a deliberate one later saves again.
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 1 }
                 #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[0]])
@@ -47,6 +48,9 @@ extension MockDeviceKitTests {
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 6 }
                 #expect(lens.savedSightings.count == 1)
+                try await Task.sleep(for: .milliseconds(1100))
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 2 }
 
                 input.navLeft()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1, screenful: 0) }

@@ -29,8 +29,8 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Pytho
 4. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates from the Open Data bucket
    into `cache/photos/`, and the `original` of the chosen ones.
 5. **Detect.** A COCO SSD MobileNet v1 from the ONNX model zoo (Apache-2.0, pinned by SHA-256 in `detector.py`)
-   finds the bird; photos without one, with a bird under 2 % of the frame, or with a bird narrower than the
-   lens crop's 368-pixel height in the original, are dropped (`pipeline.py`).
+   finds the bird; photos without one, with a bird under 2 % of the frame, or with a bird that, padded, cannot fill the
+   lens crop's 368-pixel height in the original (about 263 pixels of bird), are dropped (`pipeline.py`).
 6. **Score.** Each crop gets `0.45 × bird area + 0.35 × background darkness + 0.20 × sharpness`, all in 0…1
    (`scoring.py`): big birds on dark, sharp backgrounds read best on the additive lens display. Crops under 0.4
    sharpness are dropped before ranking. The score cannot tell a hand-held or dead bird from a perched one; that

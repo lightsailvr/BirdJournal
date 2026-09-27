@@ -29,11 +29,10 @@ public struct SpeciesProfile: Sendable, Equatable {
     }
 }
 
-/// One button on a card.
+/// One button on a card; every button is the card's primary action.
 public struct LensCardButton: Sendable, Equatable {
     public var label: String
     public var action: LensAction
-    public var isPrimary: Bool
 }
 
 /// One row of the species list: a tappable pill that opens the species' card.
@@ -46,6 +45,9 @@ public struct LensListRow: Sendable, Equatable {
     /// Whether the card has a photo (the pack knows the species) or is name-only.
     public var hasPhoto: Bool
     public var isSaved: Bool
+
+    /// The words the row spends on the lens: its name and match rate.
+    public var words: Int { commonName.words + confidence.words }
 }
 
 /// One element of a card, in Display DSL terms.
@@ -94,21 +96,25 @@ public struct LensCard: Sendable, Equatable {
     }
 
     /// Every word of text on the card, including button labels and list rows.
-    public var wordCount: Int {
-        elements.reduce(0) { $0 + $1.words }
-    }
+    public var wordCount: Int { elements.wordCount }
 }
 
 extension LensElement {
-    var words: Int {
+    /// The words the element spends on the lens.
+    public var words: Int {
         switch self {
         case .status(let text), .heading(let text), .body(let text), .meta(let text), .saved(let text): text.words
         case .title(let name, let detail): name.words + detail.words
         case .button(let button): button.label.words
-        case .list(let rows): rows.reduce(0) { $0 + $1.commonName.words + $1.confidence.words }
+        case .list(let rows): rows.reduce(0) { $0 + $1.words }
         case .photo: 0
         }
     }
+}
+
+extension [LensElement] {
+    /// The words a screenful spends, against `LensCardRenderer.wordBudget`.
+    public var wordCount: Int { reduce(0) { $0 + $1.words } }
 }
 
 extension String {

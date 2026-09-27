@@ -72,15 +72,15 @@ public enum LensEffect: Sendable, Equatable {
 /// Page map (DECISIONS.md, "Lens UI", issue #24): list ⇄ species cards (swipe left/right; right past the first
 /// card returns to the list; a row tap opens a card; every card opens on its first screenful), swipe down/up page
 /// the screenfuls of the list or the card, and up from a card's first screenful is back to the list. A tap or the
-/// Save button on a card is "This is my bird", once per species. Back returns to the list and ends the session on
-/// the root. The stack never reorders and new species append at the end, so an update never moves the page the
+/// Save button on a card is "This is my bird". Back returns to the list and ends the session on the root. The stack never reorders and new species append at the end, so an update never moves the page the
 /// wearer is on.
 public struct LensStateMachine: Sendable, Equatable {
     public private(set) var page: LensPage = .list(screenful: 0)
     /// The candidates the pages index into, in admission order.
     public private(set) var stack = CandidateStack()
     /// Stack indices whose sighting has been saved this session; their cards show the saved mark instead of the
-    /// button, and a second tap (hardware may deliver one press twice, as a click and a select) does nothing.
+    /// button. A later tap on a saved card saves again (the run updates the sighting, spec user story 33); one press
+    /// that hardware delivers twice, as a click and a select, is deduplicated by the adapter, which has a clock.
     public private(set) var savedIndices: Set<Int> = []
 
     public init() {}
@@ -113,13 +113,17 @@ public struct LensStateMachine: Sendable, Equatable {
     /// knows, the machine does not). Gestures with no meaning on the current page are ignored.
     public mutating func apply(_ gesture: LensGesture, screenfuls: Int) -> LensEffect? {
         let last = max(screenfuls - 1, 0)
+        /// The next screenful down, stopping at the card's last one.
+        func down(from screenful: Int) -> Int { min(screenful + 1, last) }
+        /// The next screenful up, from a page that may have outlived a card that shrank.
+        func up(from screenful: Int) -> Int { max(min(screenful, last) - 1, 0) }
         switch (page, gesture) {
         case (.list, .swipeLeft), (.list, .swipeRight):
             if !stack.isEmpty { page = .species(index: 0, screenful: 0) }
         case let (.list(screenful), .swipeDown):
-            page = .list(screenful: min(screenful + 1, last))
+            page = .list(screenful: down(from: screenful))
         case let (.list(screenful), .swipeUp):
-            page = .list(screenful: max(min(screenful, last) - 1, 0))
+            page = .list(screenful: up(from: screenful))
         case (.list, .back):
             return .endSession
         case (.list, .tap):
@@ -131,9 +135,9 @@ public struct LensStateMachine: Sendable, Equatable {
         case let (.species(index, _), .swipeRight):
             page = index == 0 ? .list(screenful: 0) : .species(index: index - 1, screenful: 0)
         case let (.species(index, screenful), .swipeDown):
-            page = .species(index: index, screenful: min(screenful + 1, last))
+            page = .species(index: index, screenful: down(from: screenful))
         case let (.species(index, screenful), .swipeUp):
-            page = screenful == 0 ? .list(screenful: 0) : .species(index: index, screenful: max(min(screenful, last) - 1, 0))
+            page = screenful == 0 ? .list(screenful: 0) : .species(index: index, screenful: up(from: screenful))
         case let (.species(index, _), .tap):
             return save(index)
         case (.species, .back):
@@ -156,8 +160,7 @@ public struct LensStateMachine: Sendable, Equatable {
         }
     }
 
-    private mutating func save(_ index: Int) -> LensEffect? {
-        guard !savedIndices.contains(index) else { return nil }
+    private mutating func save(_ index: Int) -> LensEffect {
         savedIndices.insert(index)
         return .saveSighting(stack.candidates[index])
     }

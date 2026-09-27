@@ -68,11 +68,16 @@ extension MockDeviceKitTests {
                 #expect(sighting.confirmedAt >= before && sighting.confirmedAt <= .now)
                 #expect(run.saved.first?.hasFrame == false)
 
-                // A second Select on the saved card (hardware may deliver one press twice) saves nothing more (story 33).
+                // A Select right behind the first (one press the hardware delivered twice) saves nothing more; a
+                // deliberate one later updates the sighting instead of adding a second (story 33).
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.inputRecords.count == 3 }
                 try await Task.sleep(for: .milliseconds(300))
                 #expect(run.lens.savedSightings.count == 1)
+                try await Task.sleep(for: .milliseconds(1100))
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
+                try await Task.sleep(for: .milliseconds(300))
                 #expect(run.saved.count == 1)
                 #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 1)
 

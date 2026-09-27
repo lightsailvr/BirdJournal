@@ -1,8 +1,8 @@
 import Identification
 
 /// Maps a page and the stack to its card (spec "Card renderer", issue #24): the species list (count, one tappable
-/// row per species) and the species card (status strip, photo, name and match rate; then the strip again, field
-/// marks, size and habitat, credit and "This is my bird" or the saved mark). The page's screenful of the card is
+/// row per species) and the species card (status strip, photo, name and match rate, a hint; then the strip again,
+/// field marks, size and habitat, credit and "This is my bird" or the saved mark). The page's screenful of the card is
 /// what the lens shows. No screenful exceeds `wordBudget` words (spec user story 24): pack text is cut to fit,
 /// field marks first, and long lists are split into screenfuls of rows, each taking as many rows as fit the budget.
 public enum LensCardRenderer {
@@ -11,7 +11,7 @@ public enum LensCardRenderer {
     static let metaLineBudget = 8
     /// Words held back on later list screenfuls for their status strip ("14 species heard · 2 of 3").
     static let listStripBudget = 8
-    static let saveButton = LensCardButton(label: "This is my bird", action: .save, isPrimary: true)
+    static let saveButton = LensCardButton(label: "This is my bird", action: .save)
 
     public static func render(_ page: LensPage, stack: CandidateStack, saved: Set<Int>, profile: (Species) -> SpeciesProfile?) -> LensCard {
         switch page {
@@ -55,15 +55,14 @@ public enum LensCardRenderer {
         // Rows fill each screenful up to the budget; the first one also carries the heading and the hint, the later
         // ones a status strip saying where in the list they are.
         var pages: [[LensListRow]] = [[]]
-        var words = first.reduce(0) { $0 + $1.words }
+        var words = first.wordCount
         for row in rows {
-            let rowWords = row.commonName.words + row.confidence.words
-            if !pages[pages.count - 1].isEmpty, words + rowWords > wordBudget {
+            if !pages[pages.count - 1].isEmpty, words + row.words > wordBudget {
                 pages.append([])
                 words = listStripBudget
             }
             pages[pages.count - 1].append(row)
-            words += rowWords
+            words += row.words
         }
         return LensCard(screenfuls: pages.enumerated().map { position, page in
             position == 0 ? first + [.list(page)] : [.status("\(heading) · \(position + 1) of \(pages.count)"), .list(page)]
@@ -71,11 +70,12 @@ public enum LensCardRenderer {
     }
 
     static func species(_ candidate: Candidate, position: Int, of count: Int, isSaved: Bool, profile: SpeciesProfile?) -> LensCard {
-        var strip = "\(count) species · \(position) of \(count)"
-        if isSaved { strip += " · Saved" }
-        var first: [LensElement] = [.status(strip)]
+        let strip = LensElement.status("\(count) species · \(position) of \(count)" + (isSaved ? " · Saved" : ""))
+        var first: [LensElement] = [strip]
         if let photo = profile?.photo { first.append(.photo(photo)) }
         first.append(.title(candidate.species.commonName, detail: confidence(candidate)))
+        // The button is on the next screenful; a tap saves from this one too, so say so.
+        first.append(.meta(isSaved ? "Saved ✓ · swipe down for more" : "Tap: this is my bird · swipe down for more"))
 
         // The fixed lines first, then the field marks take what is left of the budget.
         var fixed: [LensElement] = []
@@ -87,8 +87,8 @@ public enum LensCardRenderer {
             fixed.append(.meta("Not in your pack"))
         }
         fixed.append(isSaved ? .saved("Saved ✓") : .button(saveButton))
-        let budget = wordBudget - fixed.reduce(0) { $0 + $1.words } - first[0].words
+        let budget = wordBudget - fixed.wordCount - strip.words
         let text = profile.map(\.fieldMarks).flatMap { $0.isEmpty ? nil : $0 } ?? candidate.species.scientificName
-        return LensCard(screenfuls: [first, [first[0], .body(text.limited(toWords: budget))] + fixed])
+        return LensCard(screenfuls: [first, [strip, .body(text.limited(toWords: budget))] + fixed])
     }
 }
