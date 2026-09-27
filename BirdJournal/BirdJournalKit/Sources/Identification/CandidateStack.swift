@@ -67,7 +67,7 @@ public struct CandidateStack: Sendable, Equatable {
 /// Species outside `allowedSpecies` are never counted, which is how the geomodel pre-filter takes effect.
 public struct CandidateAggregator: Sendable {
     public let species: [Species]
-    public let allowed: [Bool]
+    public private(set) var allowed: [Bool]
     public let windowThreshold: Float
     public let admissionWindows: Int
 
@@ -91,6 +91,14 @@ public struct CandidateAggregator: Sendable {
         counts = [Int](repeating: 0, count: species.count)
         firstHeard = [Double](repeating: 0, count: species.count)
         admitted = [Double](repeating: 0, count: species.count)
+    }
+
+    /// Swaps the admissible classes, from the next window on: the session moved or lost its location. Species
+    /// already in the stack stay there (the stack never shrinks or reorders); a species no longer allowed just stops
+    /// accumulating windows.
+    public mutating func replaceAllowed(_ allowed: [Bool]) {
+        precondition(allowed.count == species.count, "allowed must have one flag per species")
+        self.allowed = allowed
     }
 
     /// Folds one window's scores (one per class) into the session. Returns true if the stack changed.

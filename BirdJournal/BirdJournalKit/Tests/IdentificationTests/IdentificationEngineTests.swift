@@ -36,6 +36,69 @@ struct IdentificationEngineTests {
         #expect(events.last == .stack(stacks.last!))
     }
 
+    @Test("with no location, the prior is never consulted and every bird class can be admitted")
+    func noLocationSkipsThePrior() async throws {
+        let model = ScriptedBirdModel(scoresPerWindow: [[0.9, 0.9, 0.0], [0.9, 0.9, 0.0]])
+        let engine = IdentificationEngine(model: model, occurrenceModel: ThrowingOccurrence())
+
+        let events = try await collect(engine.identify(WAVFileAudioSource(url: try Fixtures.url("synthetic-chirps-44k1.wav")), in: nil))
+
+        let stacks = events.compactMap { if case .stack(let stack) = $0 { stack } else { nil } }
+        #expect(stacks.last?.candidates.map(\.species.commonName) == ["House Finch", "Blue Jay"])
+    }
+
+    @Test("a location update mid-session applies from the next window: a species the old place ruled out is admitted")
+    func locationUpdateMidSession() async throws {
+        // Every window hears finch and jay; New York's prior allows both, Los Angeles's only the finch.
+        let model = ScriptedBirdModel(scoresPerWindow: Array(repeating: [0.9, 0.9, 0.0], count: 8))
+        let prior = OccurrenceByLatitude([
+            34: ["Haemorhous mexicanus": 1, "Cyanocitta cristata": 0.01],
+            40: ["Haemorhous mexicanus": 1, "Cyanocitta cristata": 1],
+        ])
+        let engine = IdentificationEngine(model: model, occurrenceModel: prior)
+        let source = ManualAudioSource()
+        let context = LiveGeoContext(Self.la)
+
+        let events = try await engine.identify(source, in: context)
+        source.feed(seconds: 4.5)  // windows at 0 and 1.5 s: finch admitted, jay counted nowhere
+        var stacks: [CandidateStack] = []
+        for try await event in events {
+            guard case .stack(let stack) = event else { continue }
+            stacks.append(stack)
+            if stacks.count == 1 {
+                context.update(GeoContext(latitude: 40.7, longitude: -74, week: 36))
+                source.feed(seconds: 3)  // windows at 3 and 4.5 s: jay counted twice, admitted
+            } else if stack.count == 2 {
+                await source.stop()
+            }
+        }
+
+        #expect(stacks.map { $0.candidates.map(\.species.commonName) } == [["House Finch"], ["House Finch"], ["House Finch", "Blue Jay"]])
+        #expect(stacks.last?.candidate(for: model.species[1])?.admittedAt == 4.5)
+        #expect(prior.asked.withLock { $0 } == [34.05, 40.7])
+    }
+
+    @Test("a call is admitted within 6 s of audio after it starts, whatever its phase against the 1.5 s hop (issue #6)", arguments: [0.0, 0.7, 1.4, 1.6, 2.2, 2.9, 3.1, 4.4])
+    func admittedWithinSixSeconds(callStart: Double) async throws {
+        // A model that "hears" the species once at least half a window (1.5 s) is loud.
+        var configuration = IdentificationConfiguration()
+        configuration.windowThreshold = 0.5
+        let engine = IdentificationEngine(model: LoudnessBirdModel(), occurrenceModel: FixedOccurrence(["Haemorhous mexicanus": 1]), configuration: configuration)
+        let source = ManualAudioSource()
+        source.feed(seconds: callStart)
+        source.feed(seconds: 6, amplitude: 0.5)
+        source.feed(seconds: 3)
+        await source.stop()
+
+        let events = try await collect(engine.identify(source, in: Self.la))
+
+        let stack = try #require(events.compactMap { if case .stack(let stack) = $0 { stack } else { nil } }.last)
+        let candidate = try #require(stack.candidates.first)
+        let admittingWindowEnds = candidate.admittedAt + configuration.windowDuration
+        #expect(admittingWindowEnds - callStart <= 6, "call at \(callStart) s admitted by the window ending at \(admittingWindowEnds) s")
+        #expect(admittingWindowEnds - callStart <= 4.5)  // the actual bound: two hops plus one window, minus the call's head start
+    }
+
     @Test("a source that ends before one window yields no windows and no stack")
     func tooShortForAWindow() async throws {
         let engine = IdentificationEngine(model: ScriptedBirdModel(scoresPerWindow: []), occurrenceModel: FixedOccurrence([:]))
@@ -151,11 +214,61 @@ final class ScriptedBirdModel: BirdModel {
     }
 }
 
+/// One-species model whose score is the fraction of loud samples in the window.
+struct LoudnessBirdModel: BirdModel {
+    let species = [Species(index: 0, scientificName: "Haemorhous mexicanus", commonName: "House Finch", taxonomicClass: "Aves")]
+    let sampleRate = 32_000
+    func scores(for samples: [Float]) throws -> [Float] {
+        [Float(samples.filter { abs($0) > 0.1 }.count) / Float(samples.count)]
+    }
+}
+
 struct FailingBirdModel: BirdModel {
     struct Failure: Error {}
     let species = [Species(index: 0, scientificName: "X x", commonName: "X", taxonomicClass: "Aves")]
     let sampleRate = 32_000
     func scores(for samples: [Float]) throws -> [Float] { throw Failure() }
+}
+
+/// A prior that must not be asked: no location means no geo filter.
+struct ThrowingOccurrence: SpeciesOccurrenceModel {
+    struct Asked: Error {}
+    func occurrence(in context: GeoContext) throws -> [String: Float] { throw Asked() }
+}
+
+/// A prior whose answer depends on where the session is, recording every latitude it was asked about.
+final class OccurrenceByLatitude: SpeciesOccurrenceModel {
+    let tables: [Int: [String: Float]]
+    let asked = Mutex<[Double]>([])
+    init(_ tables: [Int: [String: Float]]) { self.tables = tables }
+    func occurrence(in context: GeoContext) throws -> [String: Float] {
+        asked.withLock { $0.append(context.latitude) }
+        return tables[Int(context.latitude.rounded(.down))] ?? [:]
+    }
+}
+
+/// Silence fed by the test, one chunk per `feed`, at the model rate so windows fall exactly where expected.
+final class ManualAudioSource: AudioSource {
+    let sampleRate = 32_000
+    private let stream: AsyncStream<AudioChunk>
+    private let continuation: AsyncStream<AudioChunk>.Continuation
+    private let fed = Mutex<Double>(0)
+
+    init() {
+        (stream, continuation) = AsyncStream.makeStream(of: AudioChunk.self, bufferingPolicy: .unbounded)
+    }
+
+    func start() async throws -> AsyncStream<AudioChunk> { stream }
+    func stop() async { continuation.finish() }
+
+    func feed(seconds: Double, amplitude: Float = 0) {
+        let start = fed.withLock { start in
+            defer { start += seconds }
+            return start
+        }
+        let samples = [Float](repeating: amplitude, count: Int(seconds * Double(sampleRate)))
+        continuation.yield(AudioChunk(samples: samples, sampleRate: sampleRate, presentationTime: start))
+    }
 }
 
 struct FixedOccurrence: SpeciesOccurrenceModel {
