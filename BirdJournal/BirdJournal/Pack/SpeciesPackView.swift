@@ -9,7 +9,7 @@ struct SpeciesPackView: View {
     @State private var removalError: String?
     let pack: SpeciesPack
 
-    private var isDownloaded: Bool { library.installed.contains { $0.id == pack.info.id } }
+    private var isDownloaded: Bool { library.downloads.contains { $0.id == pack.info.id } }
 
     var body: some View {
         List {

@@ -21,7 +21,7 @@ enum FakeLensStack {
     static let profiles: [String: SpeciesProfile] = [
         "Sayornis nigricans": SpeciesProfile(
             photo: LensImage(id: "sayornis-nigricans"),
-            fieldMarks: "Sooty black with a clean white belly. Perches low near water and wags its tail.",
+            fieldMarks: "Sooty black with a clean white belly, the white forming an inverted V on the lower breast. Perches low near water, pumping its tail down and up, and sallies out for insects over the surface. Sexes alike.",
             size: "Sparrow-sized",
             habitat: "Streams, ponds, lawns",
             photoCredit: "Photo: placeholder, CC0"

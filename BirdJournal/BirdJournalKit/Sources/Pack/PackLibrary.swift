@@ -47,9 +47,23 @@ public final class PackLibrary {
 
     // MARK: - Reading
 
-    /// Every readable pack: the bundled one, then the downloads.
+    /// Every readable pack: the bundled one first (or the newer version of it downloaded from the index, issue #33,
+    /// which takes its place), then the other downloads.
     public var packs: [SpeciesPack] {
-        (bundled.map { [$0] } ?? []) + installed.map(\.pack)
+        var packs: [SpeciesPack] = []
+        if let bundled { packs.append(bundledUpdate?.pack ?? bundled) }
+        packs += installed.filter { !isBundled($0.id) }.map(\.pack)
+        return packs
+    }
+
+    /// The downloaded newer version of the bundled pack, when there is one; deleting it returns to the bundled copy.
+    public var bundledUpdate: InstalledPack? {
+        bundled.flatMap { installedPack(id: $0.info.id) }
+    }
+
+    /// The downloads other than a newer version of the bundled pack.
+    public var downloads: [InstalledPack] {
+        installed.filter { !isBundled($0.id) }
     }
 
     public func pack(id: String) -> SpeciesPack? {
@@ -82,12 +96,16 @@ public final class PackLibrary {
 
     public func status(of descriptor: PackDescriptor) -> Status {
         if let transfer = transfers[descriptor.id] { return transfer }
-        if isBundled(descriptor.id) { return .bundled }
-        guard let installed = installedPack(id: descriptor.id) else { return .notInstalled }
-        if descriptor.version > installed.descriptor.version {
-            return .updateAvailable(installed: installed.descriptor.version, available: descriptor.version)
+        if let installed = installedPack(id: descriptor.id) {
+            if descriptor.version > installed.descriptor.version {
+                return .updateAvailable(installed: installed.descriptor.version, available: descriptor.version)
+            }
+            return .installed(version: installed.descriptor.version)
         }
-        return .installed(version: installed.descriptor.version)
+        if let bundled, isBundled(descriptor.id) {
+            return descriptor.version > bundled.info.version ? .updateAvailable(installed: bundled.info.version, available: descriptor.version) : .bundled
+        }
+        return .notInstalled
     }
 
     /// Fetches the index again; a failure keeps the last good index and records why.
@@ -198,6 +216,7 @@ public final class PackLibrary {
     private static func message(for error: any Error) -> String {
         switch error {
         case PackInstallError.checksumMismatch: "The download's checksum did not match the index."
+        case PackInstallError.wrongPack(let expected, let actual): "The download holds the pack \(actual), not \(expected)."
         case PackDownloadError.httpStatus(let code): "The server answered \(code)."
         case let error as ZipError: "The download is not a pack zip (\(error))."
         case let error as PackError: "The download is not a readable pack (\(error))."

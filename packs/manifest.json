@@ -4,22 +4,22 @@
     {
       "id": "us-ca-la",
       "name": "Los Angeles",
-      "version": 1,
+      "version": 2,
       "bundled": true,
-      "release": "pack-us-ca-la-v1",
+      "release": "pack-us-ca-la-v2",
       "asset": "us-ca-la.zip",
-      "sha256": "d014d409fb734e284bee86ac55183f5c031b3997cdb86bc1e01c13472cb1daff",
-      "bytes": 164711896
+      "sha256": "9c3de8f1f2fa66fb209632179a6e038d09759b4c101f99c6095acc353d4e5fc5",
+      "bytes": 164716688
     },
     {
       "id": "us-ca-sd",
       "name": "San Diego",
-      "version": 1,
+      "version": 2,
       "bundled": false,
-      "release": "pack-us-ca-sd-v1",
+      "release": "pack-us-ca-sd-v2",
       "asset": "us-ca-sd.zip",
-      "sha256": "5dc24c953046fb8f2f425e3f8e4b6aad6f0a660ba273388e86c1ab0699eb916a",
-      "bytes": 39206660
+      "sha256": "7c76d544c2020f3c6198f691f0921d016ca47381123540a825da652e2e500227",
+      "bytes": 39208040
     }
   ]
 }

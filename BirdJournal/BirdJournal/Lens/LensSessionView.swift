@@ -145,6 +145,8 @@ private struct LensElementView: View {
                 Text(text).font(.headline)
             case .body(let text):
                 Text(text)
+            case .passage(let text):
+                Text(text).font(.footnote)
             case .meta(let text):
                 Text(text).font(.caption).foregroundStyle(.secondary)
             case .button(let button):

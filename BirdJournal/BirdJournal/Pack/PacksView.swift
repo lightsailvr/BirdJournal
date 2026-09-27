@@ -2,7 +2,9 @@ import Pack
 import SwiftUI
 
 /// Species packs on the phone (issue #13): the bundled pack and every download, each opening its species list, and
-/// the packs the index offers, with a download that shows its progress and a delete that frees the space.
+/// the packs the index offers, with a download that shows its progress and a delete that frees the space. A newer
+/// version of the bundled pack in the index is offered on its row and, once downloaded, stands in for the bundled
+/// copy (issue #33); deleting it goes back to the copy in the app.
 struct PacksView: View {
     @Environment(PackLibrary.self) private var library
     @State private var removalError: String?
@@ -11,9 +13,21 @@ struct PacksView: View {
         List {
             Section {
                 if let bundled = library.bundled {
-                    PackRow(pack: bundled, detail: "Included with the app", descriptor: library.index?.descriptor(id: bundled.info.id))
+                    let update = library.bundledUpdate
+                    PackRow(
+                        pack: update?.pack ?? bundled,
+                        detail: update.map { "Included with the app, updated to version \($0.descriptor.version)" } ?? "Included with the app",
+                        descriptor: library.index?.descriptor(id: bundled.info.id) ?? update?.descriptor
+                    )
+                    .swipeActions {
+                        if let update {
+                            Button("Delete update", systemImage: "trash", role: .destructive) {
+                                do { try library.remove(id: update.id) } catch { removalError = error.localizedDescription }
+                            }
+                        }
+                    }
                 }
-                ForEach(library.installed) { installed in
+                ForEach(library.downloads) { installed in
                     PackRow(pack: installed.pack, detail: Self.sizeText(installed.descriptor.byteCount), descriptor: library.index?.descriptor(id: installed.id) ?? installed.descriptor)
                         .swipeActions {
                             Button("Delete", systemImage: "trash", role: .destructive) {
@@ -24,7 +38,7 @@ struct PacksView: View {
             } header: {
                 Text("On this phone")
             } footer: {
-                Text("Every pack's species are shown on the lens and named in the album. Swipe a downloaded pack to delete it.")
+                Text("Every pack's species are shown on the lens and named in the album. Swipe a downloaded pack to delete it; deleting an update of the included pack goes back to the copy in the app.")
             }
 
             Section {

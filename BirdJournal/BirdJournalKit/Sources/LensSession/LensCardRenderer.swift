@@ -4,10 +4,15 @@ import Identification
 /// species on the page holding the selected row, which is highlighted), the photo page (photo, name and match rate,
 /// status strip and a hint) and the details page (name, field marks, size and habitat, credit and "Add to my list"
 /// or the saved mark) and the problem page (what went wrong, what it means for the run, the way back). Every page
-/// fits the canvas. No page exceeds `wordBudget` words (spec user story 24): pack text is cut to fit, field marks
-/// first.
+/// fits the canvas. No page exceeds `wordBudget` words (spec user story 24) but the details page, whose field marks
+/// are set in the small style and get `detailsWordBudget` less the fixed lines (issue #32); pack text is cut to
+/// fit, field marks first.
 public enum LensCardRenderer {
     public static let wordBudget = 40
+    /// The details page's budget: forty words of field marks in the small style (the pack builder's
+    /// `FIELD_MARKS_WORDS`, so pack text is never cut here) plus the name, match rate, size and habitat, credit
+    /// and button. Checked on the mock lens: the page fits the 600 px canvas.
+    public static let detailsWordBudget = 64
     /// The most words a card spends on its size-and-habitat line and on its credit line.
     static let metaLineBudget = 8
     /// Rows on one page of the list. The app re-sends the list on every selection move and a send starts at the top,
@@ -99,8 +104,8 @@ public enum LensCardRenderer {
         }
         fixed.append(isSaved ? .saved("Added to my list ✓") : .button(saveButton))
         let title = LensElement.title(candidate.species.commonName, detail: confidence(candidate))
-        let budget = wordBudget - fixed.wordCount - title.words
+        let budget = detailsWordBudget - fixed.wordCount - title.words
         let text = profile.map(\.fieldMarks).flatMap { $0.isEmpty ? nil : $0 } ?? candidate.species.scientificName
-        return LensCard(screenfuls: [[title, .body(text.limited(toWords: budget))] + fixed])
+        return LensCard(screenfuls: [[title, .passage(text.limited(toWords: budget))] + fixed])
     }
 }

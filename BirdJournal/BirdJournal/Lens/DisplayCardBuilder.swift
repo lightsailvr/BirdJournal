@@ -55,6 +55,8 @@ enum DisplayCardBuilder {
             return Text(text, style: .heading)
         case .body(let text):
             return Text(text, style: .body)
+        case .passage(let text):
+            return Text(text, style: .meta, color: .primary)
         case .meta(let text):
             return Text(text, style: .meta, color: .secondary)
         case .button(let button):

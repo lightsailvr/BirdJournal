@@ -2,7 +2,7 @@
   "id": "us-ca-sd",
   "name": "San Diego",
   "region": "San Diego County, California, US",
-  "version": 1,
+  "version": 2,
   "inat_place_id": 829,
   "inat_created_before": "2026-09-27",
   "bounding_box": {

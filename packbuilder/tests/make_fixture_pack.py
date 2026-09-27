@@ -3,6 +3,10 @@ one description, schema as `writer.py` writes it (the zip records file times, so
 hash the checked-in file rather than pin a digest).
 
     cd packbuilder && uv run python -m tests.make_fixture_pack ../BirdJournal/BirdJournalKit/Tests/PackTests/Fixtures/test-pack.zip
+    cd packbuilder && uv run python -m tests.make_fixture_pack ../BirdJournal/BirdJournalKit/Tests/PackTests/Fixtures/us-ca-la-v2.zip us-ca-la 2
+
+The second form writes the same two species under another pack id and version: the `PackLibrary` test's newer
+version of the bundled Los Angeles pack (issue #33).
 """
 
 from __future__ import annotations
@@ -20,18 +24,19 @@ from packbuilder.selection import ScoredPhoto
 from packbuilder.writer import ChosenPhoto, SpeciesResult, write_pack
 from tests.conftest import make_candidate, synthetic_photo
 
-DEFINITION = PackDefinition(
-    id="test-pack",
-    name="Test Pack",
-    region="Testland",
-    version=1,
+def definition(pack_id: str = "test-pack", version: int = 1) -> PackDefinition:
+    return PackDefinition(
+        id=pack_id,
+        name="Test Pack" if pack_id == "test-pack" else "Los Angeles",
+        region="Testland",
+        version=version,
     place_id=1,
     bounding_box=BoundingBox(south=0, west=0, north=1, east=1),
-    species=[
-        SpeciesEntry(scientific_name="Sayornis nigricans", common_name="Black Phoebe", birdnet_label="Sayornis nigricans", inat_taxon_id=17013, wikipedia_url="https://en.wikipedia.org/wiki/Black_phoebe"),
-        SpeciesEntry(scientific_name="Calypte anna", common_name="Anna's Hummingbird", birdnet_label="Calypte anna", inat_taxon_id=6317, wikipedia_url=None),
-    ],
-)
+        species=[
+            SpeciesEntry(scientific_name="Sayornis nigricans", common_name="Black Phoebe", birdnet_label="Sayornis nigricans", inat_taxon_id=17013, wikipedia_url="https://en.wikipedia.org/wiki/Black_phoebe"),
+            SpeciesEntry(scientific_name="Calypte anna", common_name="Anna's Hummingbird", birdnet_label="Calypte anna", inat_taxon_id=6317, wikipedia_url=None),
+        ],
+    )
 
 
 def result_for(entry: SpeciesEntry, photo_ids: list[int], work: Path, description: Description | None = None) -> SpeciesResult:
@@ -45,20 +50,21 @@ def result_for(entry: SpeciesEntry, photo_ids: list[int], work: Path, descriptio
     return SpeciesResult(entry=entry, photos=photos, gap=len(photo_ids) < 3, description=description)
 
 
-def main(target: Path) -> None:
+def main(target: Path, pack_id: str = "test-pack", version: int = 1) -> None:
+    pack = definition(pack_id, version)
     work = Path(tempfile.mkdtemp(prefix="fixture-pack-"))
     try:
         phoebe = Description(
             summary="A black flycatcher of the west.", field_marks="Black with a white belly.", size="16 cm", habitat="water, coast",
             source="https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245",
         )
-        results = [result_for(DEFINITION.species[0], [1, 2], work, description=phoebe), result_for(DEFINITION.species[1], [3], work)]
+        results = [result_for(pack.species[0], [1, 2], work, description=phoebe), result_for(pack.species[1], [3], work)]
         target.parent.mkdir(parents=True, exist_ok=True)
-        write_pack(DEFINITION, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target)
+        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target)
         print(f"wrote {target} ({target.stat().st_size} bytes)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]))
+    main(Path(sys.argv[1]), *([sys.argv[2], int(sys.argv[3])] if len(sys.argv) > 3 else []))
