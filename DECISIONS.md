@@ -20,7 +20,7 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - Video frames are not used for identification. The most recent frame at confirm time is stored with the sighting; the camera-assist re-ranker is out of scope.
 - Model: BirdNET+ V3.0 preview 3.1 (11,560 species, 32 kHz input, CC BY-SA 4.0 weights, "Powered by BirdNET" attribution). Pinned to the exact Zenodo file. Engine sits behind a protocol so v2.4 can be swapped in.
 - Geo prior: BirdNET geomodel v3.0.4 (Apache-2.0), raw lat/lon/week input, used as a pre-filter with the reference threshold 0.03. No GBIF/H3 tables in v1.
-- Runtime: ONNX Runtime via the official Swift package (`microsoft/onnxruntime-swift-package-manager`). Core ML conversion is a later optimization, not a dependency.
+- Runtime: ONNX Runtime via the official Swift package (`microsoft/onnxruntime-swift-package-manager`), consumed through the fork `lightsailvr/onnxruntime-swift-package-manager` so Xcode Cloud can fetch it. Core ML conversion is a later optimization, not a dependency.
 - Audio source is a protocol with three implementations: glasses stream, phone mic, WAV file (tests).
 - Windows: 3 s with 1.5 s overlap; a species enters the stack after two windows above threshold. Thresholds tuned in phase B.
 - Ring buffer exists only for live playback. No audio is saved to the album.

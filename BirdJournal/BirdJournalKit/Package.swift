@@ -26,7 +26,7 @@ let package = Package(
         .library(name: "Album", targets: ["Album"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/microsoft/onnxruntime-swift-package-manager", exact: "1.24.2"),
+        .package(url: "https://github.com/lightsailvr/onnxruntime-swift-package-manager", exact: "1.24.2"),
     ],
     targets: [
         .target(

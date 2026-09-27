@@ -9,7 +9,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 - [x] iPhone 17 Pro connected to Xcode (UDID 00008150-001643C91E08401C).
 
 ## SDK prerequisites (to do when app code starts)
-- [x] Add Swift Package `https://github.com/facebook/meta-wearables-dat-ios` at **1.0.0** (released 2026-09-24). Done in #2: pinned `exact: 1.0.0` in the app target and `BirdJournalKit`.
+- [x] Add Swift Package `https://github.com/facebook/meta-wearables-dat-ios` at **1.0.0** (released 2026-09-24). Done in #2: pinned `exact: 1.0.0` in the app target and `BirdJournalKit`. Consumed through the fork
+      `lightsailvr/meta-wearables-dat-ios` (same 1.0.0 revision) so Xcode Cloud can fetch it.
       Products by phase: `MWDATCore` + `MWDATMockDevice` (always); `MWDATCamera` (audio + camera);
       `MWDATDisplay` (lens cards); `MWDATInputs` (Neural Band nav/select/drag, experimental);
       `MWDATMockDeviceTestClient` (UI-test target only).

@@ -1,10 +1,10 @@
 {
-  "originHash" : "e87c16d065ee60243850dd63057dea66c685a0e340df46fc77e73a527566c57e",
+  "originHash" : "dbbf91562963d6afe3087a297a8b25d178bcba8c054f532ad11f5ec1cd28d5ed",
   "pins" : [
     {
       "identity" : "onnxruntime-swift-package-manager",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/microsoft/onnxruntime-swift-package-manager",
+      "location" : "https://github.com/lightsailvr/onnxruntime-swift-package-manager",
       "state" : {
         "revision" : "b7fb7f7dea8a2469e6335d95a61b8f36d0dc83b2",
         "version" : "1.24.2"
