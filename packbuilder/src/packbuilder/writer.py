@@ -1,5 +1,6 @@
-"""Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, LICENSE, report.json, and optionally a zip of it
-(the download format for other regions, DECISIONS.md "Species pack")."""
+"""Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, LICENSE (every photo and text credit), report.json
+(counts, chosen ids, and the photo and description gaps), and optionally a zip of it (the download format for other
+regions, DECISIONS.md "Species pack")."""
 
 from __future__ import annotations
 
@@ -16,10 +17,11 @@ from PIL import Image
 from packbuilder.candidates import PhotoCandidate, attribution_name
 from packbuilder.crops import JPEG_QUALITY, render_lens, render_phone, upright
 from packbuilder.definition import PackDefinition, SpeciesEntry
+from packbuilder.descriptions import Description
 from packbuilder.licenses import credit_line, short_credit
 from packbuilder.selection import ScoredPhoto
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -42,6 +44,7 @@ CREATE TABLE species (
     field_marks TEXT,
     size TEXT,
     habitat TEXT,
+    description_source TEXT,
     sort_order INTEGER NOT NULL
 );
 CREATE TABLE photo (
@@ -116,6 +119,7 @@ class SpeciesResult:
     rejected: dict[str, int] | None = None
     """Rejected candidates by `Rejection` value."""
     detected: int = 0
+    description: Description | None = None
 
 
 @dataclass
@@ -174,9 +178,10 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
             (definition.id, definition.name, definition.region, definition.version, SCHEMA_VERSION, built_at, license_text),
         )
         db.executemany(
-            "INSERT INTO species (id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO species (id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat, description_source, sort_order)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
-                (r.entry.id, r.entry.scientific_name, r.entry.common_name, r.entry.birdnet_label, r.entry.inat_taxon_id, r.entry.wikipedia_url, order)
+                (r.entry.id, r.entry.scientific_name, r.entry.common_name, r.entry.birdnet_label, r.entry.inat_taxon_id, r.entry.wikipedia_url, *_description_columns(r.description), order)
                 for order, r in enumerate(results)
             ],
         )
@@ -197,6 +202,13 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
     return WrittenPack(directory=out_dir, database=database, archive=archive)
 
 
+def _description_columns(description: Description | None) -> tuple[str | None, str | None, str | None, str | None, str | None]:
+    """summary, field_marks, size, habitat, description_source; NULL rather than empty text for what is missing."""
+    if description is None:
+        return (None, None, None, None, None)
+    return tuple(value or None for value in (description.summary, description.field_marks, description.size, description.habitat, description.source))
+
+
 def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> str:
     lines = [
         f"{definition.name} species pack for BirdJournal (pack id {definition.id}, version {definition.version}, built {built_at})",
@@ -209,6 +221,10 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         "",
         "Species names and the BirdNET labels are from the BirdNET+ label file (CC BY-SA 4.0, https://birdnet.cornell.edu).",
         "",
+        "Species descriptions (summary, field marks, size and habitat) are adapted from the English Wikipedia articles",
+        "listed under \"Text credits\", written by Wikipedia contributors and licensed CC BY-SA 4.0",
+        "(https://creativecommons.org/licenses/by-sa/4.0/). Each link is the article revision the text was taken from.",
+        "",
         "Photo credits",
         "=============",
     ]
@@ -218,6 +234,10 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         for chosen in result.photos:
             credit = Credit.of(chosen.candidate)
             lines.append(f"  {credit.line} — {credit.source_url} — photo {chosen.candidate.photo_url('original')}")
+    lines += ["", "Text credits", "============"]
+    for result in results:
+        if result.description and result.description.source:
+            lines.append(f"  {result.entry.common_name} — {result.description.source}")
     return "\n".join(lines) + "\n"
 
 
@@ -235,7 +255,12 @@ def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: 
                 "photos": len(r.photos),
                 "gap": r.gap,
                 "chosen": [chosen.candidate.photo_id for chosen in r.photos],
+                "description": r.description.source if r.description and r.description.source else None,
             }
             for r in results
+        },
+        "gaps": {
+            "photos": [r.entry.id for r in results if r.gap],
+            "descriptions": [r.entry.id for r in results if r.description is None],
         },
     }

@@ -48,3 +48,12 @@ def test_rendered_sizes():
 def test_phone_crop_keeps_context_around_the_bird():
     left, top, right, bottom = phone_crop_box(Box(0.4, 0.4, 0.6, 0.6), (1000, 1000))
     assert left < 400 and right > 600 and top < 400 and bottom > 600
+
+
+def test_phone_crop_contains_the_lens_crop():
+    """A small bird near an edge gets a phone crop no tighter than the lens crop, so the phone never shows less."""
+    box = Box(0.0, 0.0, 0.15, 0.15)
+    size = (1200, 800)
+    lx0, ly0, lx1, ly1 = lens_crop_box(box, size)
+    px0, py0, px1, py1 = phone_crop_box(box, size)
+    assert px0 <= lx0 and py0 <= ly0 and px1 >= lx1 and py1 >= ly1

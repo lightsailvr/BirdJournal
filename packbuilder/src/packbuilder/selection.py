@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from packbuilder.candidates import PhotoCandidate
+from packbuilder.descriptions import DESCRIPTION_FIELDS
 from packbuilder.geometry import Box
 from packbuilder.scoring import CropScore
 
@@ -18,17 +19,33 @@ class ScoredPhoto:
 
 @dataclass(frozen=True)
 class Overrides:
-    """`include` photo ids are forced in, first, in the given order; `exclude` ids are never chosen."""
+    """`include` photo ids are forced in, first, in the given order; `exclude` ids are never chosen; `description`
+    fields (`summary`, `field_marks`, `size`, `habitat`) replace the Wikipedia-derived text; `trust_article` skips
+    the check that the article is about the species; `limit` widens the candidate shortlist."""
 
     include: list[int] = field(default_factory=list)
     exclude: list[int] = field(default_factory=list)
+    description: dict[str, str] = field(default_factory=dict)
+    candidate_limit: int | None = None
+    """Cleared candidates to download and detect for this species instead of the build's `--limit`: more for a species
+    whose photos are mostly distant (a Bald Eagle over a reservoir)."""
+    trust_article: bool = False
+    """Take the Wikipedia article although its lead names neither the binomial nor the common name (a taxonomic split
+    where BirdNET and Wikipedia disagree on both, e.g. BirdNET's Scarlet Flycatcher and Wikipedia's Vermilion flycatcher)."""
 
     def forces(self, photo_id: int) -> bool:
         return photo_id in self.include
 
     @classmethod
     def from_mapping(cls, data: dict) -> "Overrides":
-        return cls(include=[int(i) for i in data.get("include", [])], exclude=[int(i) for i in data.get("exclude", [])])
+        description = {k: str(v) for k, v in (data.get("description") or {}).items() if k in DESCRIPTION_FIELDS}
+        return cls(
+            include=[int(i) for i in data.get("include", [])],
+            exclude=[int(i) for i in data.get("exclude", [])],
+            description=description,
+            trust_article=bool(data.get("trust_article", False)),
+            candidate_limit=int(data["limit"]) if data.get("limit") is not None else None,
+        )
 
 
 @dataclass

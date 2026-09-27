@@ -19,9 +19,11 @@ __pycache__/
 # Labeled test clips (downloaded by scripts/download-clips.sh)
 fixtures/clips/
 
-# Pack builder (packbuilder/): environment, download cache, pytest state. Built packs live in packs/<id>/ and
-# are committed while small; the zip archives go to build/packs/.
+# Pack builder (packbuilder/): environment, download cache, pytest state. Built packs are fetched into packs/<id>/
+# from GitHub Releases by scripts/download-pack.sh (packs/manifest.json pins them); the builder's zips go to build/packs/.
 packbuilder/.venv/
 packbuilder/.pytest_cache/
 packbuilder/**/__pycache__/
-packs/*.zip
+packs/*
+!packs/README.md
+!packs/manifest.json

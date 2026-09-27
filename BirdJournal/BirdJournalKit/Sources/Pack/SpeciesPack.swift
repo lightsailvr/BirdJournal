@@ -5,8 +5,9 @@ import SQLite3
 /// folders and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
 /// the SQLite connection open.
 public struct SpeciesPack: Sendable, Hashable {
-    /// The schema this reader understands; `packbuilder.writer.SCHEMA_VERSION` must match.
-    public static let schemaVersion = 1
+    /// The schema this reader understands; `packbuilder.writer.SCHEMA_VERSION` must match. Schema 2 (issue #12) added
+    /// the Wikipedia-derived description columns' source.
+    public static let schemaVersion = 2
 
     public let info: PackInfo
     /// The folder holding `pack.sqlite` and the image folders.
@@ -50,7 +51,8 @@ public struct PackInfo: Sendable, Hashable {
     public let licenseText: String
 }
 
-/// One `species` row with its photos. The description fields are nil until #12 fills them.
+/// One `species` row with its photos. The description fields are cut from the species' Wikipedia article by the pack
+/// builder (or written by hand in its override file) and are nil when it had neither.
 public struct PackSpecies: Sendable, Hashable, Identifiable {
     public let id: String
     /// The key shared with the acoustic model's labels (`Species.scientificName`).
@@ -59,12 +61,23 @@ public struct PackSpecies: Sendable, Hashable, Identifiable {
     public let birdnetLabel: String
     public let inatTaxonID: Int?
     public let wikipediaURL: URL?
+    /// A few sentences for the phone.
     public let summary: String?
+    /// One or two sentences of plumage, inside the lens details page's word budget.
     public let fieldMarks: String?
+    /// Body length, e.g. "16 cm".
     public let size: String?
+    /// The habitat terms the article uses most, e.g. "coast, rivers, water".
     public let habitat: String?
+    /// The Wikipedia article revision the text was adapted from (CC BY-SA 4.0); nil when the text is hand-written or absent.
+    public let descriptionSource: URL?
     /// Best first.
     public let photos: [PackPhoto]
+
+    /// Whether the pack has any description text for this species.
+    public var isDescribed: Bool {
+        [summary, fieldMarks, size, habitat].contains { !($0 ?? "").isEmpty }
+    }
 }
 
 /// One `photo` row: where its two JPEGs are and whom to credit.
@@ -169,7 +182,8 @@ extension SpeciesPack {
 
     private static func readSpecies(_ database: SQLiteDatabase, photos: [String: [PackPhoto]]) throws -> [PackSpecies] {
         let sql = """
-            SELECT id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat
+            SELECT id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat,
+                   description_source
             FROM species ORDER BY sort_order
             """
         return try database.rows(sql) { row in
@@ -180,6 +194,7 @@ extension SpeciesPack {
                 id: id, scientificName: scientific, commonName: common, birdnetLabel: label,
                 inatTaxonID: row.int(4), wikipediaURL: row.text(5).flatMap(URL.init(string:)),
                 summary: row.text(6), fieldMarks: row.text(7), size: row.text(8), habitat: row.text(9),
+                descriptionSource: row.text(10).flatMap(URL.init(string:)),
                 photos: photos[id] ?? []
             )
         }

@@ -13,7 +13,7 @@ public struct LensImage: Sendable, Hashable {
 /// identifiable by name (spec user story 40).
 public struct SpeciesProfile: Sendable, Equatable {
     public var photo: LensImage?
-    /// The identification text. Empty until the pack has it (#12); the card then shows the scientific name.
+    /// The identification text from the pack (its field marks, else its summary). Empty when the pack has none; the card then shows the scientific name.
     public var fieldMarks: String
     public var size: String
     public var habitat: String

@@ -46,3 +46,11 @@ def test_overrides_parse_from_json_mapping():
     parsed = Overrides.from_mapping({"include": [5], "exclude": [6, 7]})
     assert parsed == Overrides(include=[5], exclude=[6, 7])
     assert Overrides.from_mapping({}) == Overrides()
+
+
+def test_overrides_carry_description_fields():
+    parsed = Overrides.from_mapping({"description": {"field_marks": "Hand-written.", "size": "16 cm", "_why": "ignored"}})
+    assert parsed.description == {"field_marks": "Hand-written.", "size": "16 cm"}
+    assert Overrides.from_mapping({}).description == {}
+    assert Overrides.from_mapping({"trust_article": True}).trust_article and not Overrides.from_mapping({}).trust_article
+    assert Overrides.from_mapping({"limit": 150}).candidate_limit == 150 and Overrides.from_mapping({}).candidate_limit is None
