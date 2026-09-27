@@ -1,0 +1,157 @@
+{
+  "pack": "us-ca-la",
+  "version": 1,
+  "built_at": "2026-09-27T00:00:00Z",
+  "species": {
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "candidates": 297,
+      "rejected": {},
+      "detected": 32,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        739067160,
+        739030444,
+        741323151,
+        740554913,
+        739615563
+      ]
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "candidates": 374,
+      "rejected": {},
+      "detected": 33,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        737885701,
+        734716653,
+        739699329,
+        739699882,
+        739703332
+      ]
+    },
+    "melozone-crissalis": {
+      "common_name": "California Towhee",
+      "candidates": 432,
+      "rejected": {},
+      "detected": 33,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        737426775,
+        739521360,
+        735523785,
+        737836080,
+        735759327
+      ]
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "candidates": 437,
+      "rejected": {},
+      "detected": 31,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        729301335,
+        729235505,
+        735546778,
+        731215999,
+        734725113
+      ]
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "candidates": 369,
+      "rejected": {},
+      "detected": 16,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        728678241,
+        729137591,
+        740746512,
+        732295836,
+        732314620
+      ]
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "candidates": 383,
+      "rejected": {},
+      "detected": 37,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        735115228,
+        736834788,
+        738663566,
+        732195495,
+        734694278
+      ]
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "candidates": 384,
+      "rejected": {},
+      "detected": 27,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        738663685,
+        740651122,
+        735142910,
+        737426777,
+        737684571
+      ]
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "candidates": 310,
+      "rejected": {},
+      "detected": 23,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        736265630,
+        738663736,
+        731292457,
+        734735485,
+        729902900
+      ]
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "candidates": 436,
+      "rejected": {},
+      "detected": 20,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        737866537,
+        737866569,
+        737866331,
+        737866514,
+        740459257
+      ]
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "candidates": 334,
+      "rejected": {},
+      "detected": 30,
+      "photos": 5,
+      "gap": false,
+      "chosen": [
+        721995631,
+        737081587,
+        724337743,
+        727022965,
+        731171145
+      ]
+    }
+  }
+}

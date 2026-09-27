@@ -9,7 +9,9 @@ import PackageDescription
 //                   `scripts/download-models.sh`), so the model files ship inside the package's resource bundle.
 // - LensSession:    pure lens page state machine and card renderer. Depends on Identification for the
 //                   CandidateStack it pages through; no toolkit dependency, unit-tested without the glasses.
-// - Pack:           species packs (bundled LA pack, downloadable regional packs).
+// - Pack:           species packs (bundled LA pack, downloadable regional packs). Its `Packs` resource folder is a
+//                   symlink to the repo's `packs/` directory (built by `scripts/build-pack.sh`, committed while small),
+//                   so the bundled pack's SQLite and JPEGs ship in the package's resource bundle like the models do.
 // - Album:          saved sightings (SwiftData).
 //
 // The Device Access Toolkit is linked by the app target only, where the thin glasses adapter lives
@@ -51,7 +53,7 @@ let package = Package(
         .target(name: "LensSession", dependencies: ["Identification"]),
         .testTarget(name: "LensSessionTests", dependencies: ["LensSession", "Identification"]),
 
-        .target(name: "Pack"),
+        .target(name: "Pack", resources: [.copy("Packs")]),
         .testTarget(name: "PackTests", dependencies: ["Pack"]),
 
         .target(name: "Album"),

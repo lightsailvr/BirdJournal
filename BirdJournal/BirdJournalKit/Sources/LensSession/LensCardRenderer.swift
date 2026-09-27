@@ -61,11 +61,11 @@ public enum LensCardRenderer {
                 .meta("No description in your pack."),
             ])
         }
-        let fixed: [LensElement] = [
-            heading,
-            .meta("\(profile.size) · \(profile.habitat)".limited(toWords: metaLineBudget)),
-            .meta(profile.photoCredit.limited(toWords: metaLineBudget)),
-        ]
+        // Size and habitat share one line; a pack without them (#12 fills them) leaves the line out.
+        let sizeAndHabitat = [profile.size, profile.habitat].filter { !$0.isEmpty }.joined(separator: " · ")
+        var fixed: [LensElement] = [heading]
+        if !sizeAndHabitat.isEmpty { fixed.append(.meta(sizeAndHabitat.limited(toWords: metaLineBudget))) }
+        fixed.append(.meta(profile.photoCredit.limited(toWords: metaLineBudget)))
         let budget = wordBudget - LensCard(photo: nil, elements: fixed).wordCount
         var elements = fixed
         elements.insert(.body(profile.fieldMarks.limited(toWords: budget)), at: 1)

@@ -43,6 +43,7 @@ Source of truth for choices made on top of `spec.md`. Where this file and the sp
 - Pack = zip of SQLite + pre-sized JPEGs (lens ~260 px, see the Display image-size fact above; phone ~1200 px).
 - Pack builder (Python) adds a detector step (COCO "bird") to crop close-ups, scores crops on bird area, background luminance and sharpness, keeps top 3–5 per species, with a manual override list.
 - Photo licenses: CC0, CC BY and CC BY-NC. Every photo carries observer, license and source URL. Credit shown on the description page and in a full credits screen on the phone.
+- Pack builder facts (#8): the iNaturalist API is the default metadata source (the Open Data dump is tens of GB; the DuckDB path over it exists for full rebuilds), ordered newest first because the most-faved observations are the oddities (every top-voted California Towhee was leucistic). Detector: COCO SSD MobileNet v1 (ONNX zoo, Apache-2.0); it misses birds under about 5 % of the frame, which are poor cards anyway. Crops below 0.4 sharpness are dropped before ranking; hand-held and dead birds still need the override file. The ten-species pack (about 9 MB) is committed under `packs/`; when #12 grows it, move it to a GitHub Release fetched like the models.
 
 ## Identity and distribution
 - Bundle ID `com.matthewcelia.mybirdjournal`, personal Apple team. Working name BirdJournal.

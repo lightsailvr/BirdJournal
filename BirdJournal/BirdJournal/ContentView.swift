@@ -5,7 +5,8 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// Placeholder phone screen until phase D: phone listening, glasses status, the phase A screens, and one fact per module.
+/// Placeholder phone screen until phase D: phone listening, glasses status, the phase A screens, the bundled species
+/// pack, and one fact per module.
 struct ContentView: View {
     @Query private var sightings: [Sighting]
     @State private var path: [Screen] = []
@@ -16,6 +17,8 @@ struct ContentView: View {
         case phoneListening
         case audioSpike
         case lens
+        case speciesPack
+        case species(id: String)
     }
 
     var body: some View {
@@ -32,10 +35,14 @@ struct ContentView: View {
                     NavigationLink("Audio spike", value: Screen.audioSpike)
                 }
 
+                Section("Species pack") {
+                    NavigationLink(BundledPack.pack?.info.name ?? "Species", value: Screen.speciesPack)
+                }
+
                 Section("Modules") {
                     LabeledContent("Identification", value: "\(planner.sampleRate) Hz, \(planner.samplesPerWindow) samples per window")
                     LabeledContent("LensSession", value: "\(LensCardRenderer.wordBudget) words per page")
-                    LabeledContent("Pack", value: PackIndex.bundledPackID)
+                    LabeledContent("Pack", value: BundledPack.pack.map { "\($0.info.id) v\($0.info.version), \($0.species.count) species" } ?? "\(PackIndex.bundledPackID) missing")
                     LabeledContent("Album", value: "\(sightings.count) sightings")
                 }
             }
@@ -45,11 +52,17 @@ struct ContentView: View {
                 case .phoneListening: PhoneListeningView()
                 case .audioSpike: SpikeView()
                 case .lens: LensSessionView()
+                case .speciesPack: SpeciesPackView()
+                case .species(let id):
+                    if let pack = BundledPack.pack, let species = pack.species.first(where: { $0.id == id }) {
+                        SpeciesDetailView(pack: pack, species: species)
+                    }
                 }
             }
             #if DEBUG
             .modifier(AutoMockLens(path: $path))
             .modifier(AutoPhoneListening(path: $path))
+            .modifier(AutoSpeciesPack(path: $path))
             #endif
         }
     }
@@ -96,6 +109,22 @@ private struct AutoPhoneListening: ViewModifier {
             guard UserDefaults.standard.object(forKey: "autoPhoneListening") != nil else { return }
             path = [.phoneListening]
             await session.start()
+        }
+    }
+}
+#endif
+
+#if DEBUG
+/// Launch with `-autoSpeciesPack YES` to open the species pack screen, or `-autoSpeciesPack <scientific name>` to
+/// open that species' detail, for simulator screenshots of the bundled pack.
+private struct AutoSpeciesPack: ViewModifier {
+    @Binding var path: [ContentView.Screen]
+
+    func body(content: Content) -> some View {
+        content.task {
+            guard let value = UserDefaults.standard.string(forKey: "autoSpeciesPack") else { return }
+            path = [.speciesPack]
+            if let species = BundledPack.pack?.species(scientificName: value) { path.append(.species(id: species.id)) }
         }
     }
 }
