@@ -53,8 +53,14 @@ public final class IdentificationEngine: Sendable {
     }
 
     /// Classes admissible in `context`, one flag per model class. Logs how many bird classes the prior does not
-    /// know at all, since those can never be admitted (the two label sets are joined by scientific name).
-    public func allowedSpecies(in context: GeoContext) throws -> [Bool] {
+    /// know at all, since those can never be admitted (the two label sets are joined by scientific name). With no
+    /// context (no location) the prior is skipped and only the class restriction applies.
+    public func allowedSpecies(in context: GeoContext?) throws -> [Bool] {
+        guard let context else {
+            let allowed = SpeciesFilter.allowed(species: model.species, occurrence: nil, threshold: configuration.occurrenceThreshold, taxonomicClasses: configuration.taxonomicClasses)
+            Self.logger.info("session without location: geo prior skipped; \(allowed.filter { $0 }.count, privacy: .public) admissible classes")
+            return allowed
+        }
         let occurrence = try occurrenceModel.occurrence(in: context)
         let allowed = SpeciesFilter.allowed(
             species: model.species,
@@ -69,13 +75,21 @@ public final class IdentificationEngine: Sendable {
         return allowed
     }
 
-    /// Starts `source` and identifies until it ends or the consumer cancels. Errors from the prior or the source
-    /// surface here; a failing model call ends the stream with its error.
-    public func identify(_ source: any AudioSource, in context: GeoContext) async throws -> AsyncThrowingStream<IdentificationEvent, any Error> {
-        let allowed = try allowedSpecies(in: context)
+    /// Starts `source` and identifies until it ends or the consumer cancels, at a fixed place (or none). Errors
+    /// from the prior or the source surface here; a failing model call ends the stream with its error.
+    public func identify(_ source: any AudioSource, in context: GeoContext?) async throws -> AsyncThrowingStream<IdentificationEvent, any Error> {
+        try await identify(source, in: LiveGeoContext(context))
+    }
+
+    /// As above, at a place that may change while the session runs: each window is scored against the classes
+    /// admissible at the latest `context`. A prior failure on an update ends the stream like a model failure.
+    public func identify(_ source: any AudioSource, in context: LiveGeoContext) async throws -> AsyncThrowingStream<IdentificationEvent, any Error> {
+        let (initialVersion, initialContext) = context.snapshot()
+        let allowed = try allowedSpecies(in: initialContext)
         let chunks = try await source.start()
         let (events, continuation) = AsyncThrowingStream.makeStream(of: IdentificationEvent.self)
-        let worker = Task.detached(priority: .userInitiated) { [model, configuration] in
+        let worker = Task.detached(priority: .userInitiated) { [self, model, configuration] in
+            var appliedVersion = initialVersion
             var aggregator = CandidateAggregator(
                 species: model.species,
                 allowed: allowed,
@@ -89,6 +103,11 @@ public final class IdentificationEngine: Sendable {
 
             func process(_ samples: [Float]) throws {
                 for window in windower.append(samples) {
+                    let (version, current) = context.snapshot()
+                    if version != appliedVersion {
+                        aggregator.replaceAllowed(try allowedSpecies(in: current))
+                        appliedVersion = version
+                    }
                     let start = Double(window.start) / Double(model.sampleRate)
                     let began = clock.now
                     let scores = try model.scores(for: window.samples)

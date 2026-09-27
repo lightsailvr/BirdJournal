@@ -30,6 +30,12 @@ struct SpeciesFilterTests {
         )
         #expect(allowed == [true, false])
     }
+
+    @Test("with no prior (no location), every species in the allowed classes passes, unknowns included")
+    func noPrior() {
+        let allowed = SpeciesFilter.allowed(species: [finch, jay, dog, unknown], occurrence: nil, threshold: 0.03, taxonomicClasses: [Species.birds])
+        #expect(allowed == [true, true, false, true])
+    }
 }
 
 @Suite("GeoContext")

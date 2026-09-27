@@ -5,7 +5,7 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// Placeholder phone screen until phase D: glasses status, the phase A screens, and one fact per module.
+/// Placeholder phone screen until phase D: phone listening, glasses status, the phase A screens, and one fact per module.
 struct ContentView: View {
     @Query private var sightings: [Sighting]
     @State private var path: [Screen] = []
@@ -14,6 +14,7 @@ struct ContentView: View {
     private let navigation = LensNavigation()
 
     enum Screen: Hashable {
+        case phoneListening
         case audioSpike
         case lensCard
     }
@@ -21,6 +22,10 @@ struct ContentView: View {
     var body: some View {
         NavigationStack(path: $path) {
             List {
+                Section("Listen") {
+                    NavigationLink("Listen with the phone", value: Screen.phoneListening)
+                }
+
                 GlassesSection()
 
                 Section("Phase A") {
@@ -38,12 +43,14 @@ struct ContentView: View {
             .navigationTitle("BirdJournal")
             .navigationDestination(for: Screen.self) { screen in
                 switch screen {
+                case .phoneListening: PhoneListeningView()
                 case .audioSpike: SpikeView()
                 case .lensCard: LensSessionView()
                 }
             }
             #if DEBUG
             .modifier(AutoMockLens(path: $path))
+            .modifier(AutoPhoneListening(path: $path))
             #endif
         }
     }
@@ -67,6 +74,23 @@ private struct AutoMockLens: ViewModifier {
                 try? await Task.sleep(for: .seconds(1))
                 connection.injectMockInput(input)
             }
+        }
+    }
+}
+#endif
+
+#if DEBUG
+/// Launch with `-autoPhoneListening YES` (or a WAV path, see `BirdJournalApp`) to open the phone listening screen
+/// and start a session, for screenshots and simulator checks of the location and model paths.
+private struct AutoPhoneListening: ViewModifier {
+    @Environment(PhoneListeningSession.self) private var session
+    @Binding var path: [ContentView.Screen]
+
+    func body(content: Content) -> some View {
+        content.task {
+            guard UserDefaults.standard.object(forKey: "autoPhoneListening") != nil else { return }
+            path = [.phoneListening]
+            await session.start()
         }
     }
 }
