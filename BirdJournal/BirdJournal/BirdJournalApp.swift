@@ -2,6 +2,7 @@ import Album
 import Identification
 import MWDATCore
 import OSLog
+import Pack
 import SwiftData
 import SwiftUI
 
@@ -13,6 +14,7 @@ struct BirdJournalApp: App {
     @State private var phoneListening: ListeningSession
     @State private var glassesListening: GlassesListeningSession
     @State private var places = PlaceNames()
+    @State private var packs: PackLibrary
     private let album: ModelContainer
     private let frames: FrameStore
 
@@ -26,13 +28,15 @@ struct BirdJournalApp: App {
         let connection = GlassesConnection()
         let album = Self.makeAlbum()
         let frames = Self.makeFrameStore()
+        let packs = PackLibrary.forApp()
         self.album = album
         self.frames = frames
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
-        _lens = State(initialValue: Self.makeLensSession(connection: connection))
+        _packs = State(initialValue: packs)
+        _lens = State(initialValue: Self.makeLensSession(connection: connection, packs: packs))
         _phoneListening = State(initialValue: Self.makePhoneListeningSession())
-        _glassesListening = State(initialValue: Self.makeGlassesListeningSession(connection: connection, album: album, frames: frames))
+        _glassesListening = State(initialValue: Self.makeGlassesListeningSession(connection: connection, album: album, frames: frames, packs: packs))
     }
 
     /// The album on disk. Failing to open it is a broken install, not a field condition, so it traps like the
@@ -68,19 +72,20 @@ struct BirdJournalApp: App {
         }
     }
 
-    /// The lens session over the bundled species pack: the species cards' photos and text come from the pack,
-    /// and a species the pack lacks shows by name alone.
-    private static func makeLensSession(connection: GlassesConnection) -> GlassesLensSession {
-        GlassesLensSession(connection: connection, profile: BundledPack.profile(for:), image: BundledPack.image(for:))
+    /// The lens session over the species packs: the species cards' photos and text come from the first pack that has
+    /// the species (bundled first, then downloads, read live so a pack downloaded mid-run counts), and a species no
+    /// pack has shows by name alone.
+    private static func makeLensSession(connection: GlassesConnection, packs: PackLibrary) -> GlassesLensSession {
+        GlassesLensSession(connection: connection, profile: { packs.profile(for: $0) }, image: { packs.image(for: $0) })
     }
 
     /// The whole loop on the glasses (issue #9), writing sightings to the album and frames beside it.
-    private static func makeGlassesListeningSession(connection: GlassesConnection, album: ModelContainer, frames: FrameStore) -> GlassesListeningSession {
+    private static func makeGlassesListeningSession(connection: GlassesConnection, album: ModelContainer, frames: FrameStore, packs: PackLibrary) -> GlassesListeningSession {
         GlassesListeningSession(
             connection: connection,
             recorder: SightingRecorder(container: album, frames: frames),
-            profile: BundledPack.profile(for:),
-            image: BundledPack.image(for:)
+            profile: { packs.profile(for: $0) },
+            image: { packs.image(for: $0) }
         )
     }
 
@@ -104,6 +109,7 @@ struct BirdJournalApp: App {
                 .environment(phoneListening)
                 .environment(glassesListening)
                 .environment(places)
+                .environment(packs)
                 .environment(\.frameStore, frames)
                 .onOpenURL { url in
                     Task { await connection.handle(url: url) }

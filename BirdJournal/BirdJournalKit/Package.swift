@@ -56,7 +56,7 @@ let package = Package(
         .testTarget(name: "LensSessionTests", dependencies: ["LensSession", "Identification"]),
 
         .target(name: "Pack", resources: [.copy("Packs")]),
-        .testTarget(name: "PackTests", dependencies: ["Pack"]),
+        .testTarget(name: "PackTests", dependencies: ["Pack"], resources: [.copy("Fixtures")]),
 
         .target(name: "Album"),
         .testTarget(name: "AlbumTests", dependencies: ["Album"]),

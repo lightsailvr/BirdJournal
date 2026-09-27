@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
-import requests
+from packbuilder.http import session
 
 from packbuilder.candidates import PhotoCandidate
 
@@ -66,7 +66,7 @@ class APIMetadata:
         }
         if self.created_before:
             params["created_d2"] = self.created_before
-        response = requests.get(API, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
+        response = session().get(API, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
         response.raise_for_status()
         payload = response.json()
         cache_file.write_text(json.dumps(payload))

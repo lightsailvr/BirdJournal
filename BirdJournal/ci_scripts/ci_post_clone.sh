@@ -4,8 +4,8 @@
 #
 # The model files in models/manifest.json (~80 MB) and the built species packs in packs/manifest.json (the
 # bundled Los Angeles pack, ~150 MB) are gitignored, so a fresh clone lacks them. Fetch and verify them here so
-# the app can bundle them exactly as it does from a local checkout. The pack download needs a GITHUB_TOKEN
-# environment variable on the workflow (the repository is private; see scripts/download-pack.sh).
+# the app can bundle them exactly as it does from a local checkout. Both come from public URLs (the repository's
+# GitHub Releases for the pack), so no credentials are needed; a GITHUB_TOKEN on the workflow only raises the rate limit.
 set -eu
 
 "$CI_PRIMARY_REPOSITORY_PATH/scripts/download-models.sh"

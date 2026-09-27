@@ -8,6 +8,8 @@ from pathlib import Path
 
 import requests
 
+from packbuilder.http import session
+
 from packbuilder.candidates import PhotoCandidate
 
 log = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ def fetch(url: str, target: Path, sha256: str | None = None, timeout: int = 120)
         return target
     target.parent.mkdir(parents=True, exist_ok=True)
     partial = target.with_suffix(target.suffix + ".download")
-    with requests.get(url, stream=True, timeout=timeout) as response:
+    with session().get(url, stream=True, timeout=timeout) as response:
         response.raise_for_status()
         with partial.open("wb") as handle:
             for chunk in response.iter_content(1 << 20):

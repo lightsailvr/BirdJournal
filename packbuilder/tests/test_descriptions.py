@@ -72,8 +72,9 @@ def test_summary_is_the_first_sentences_of_the_lead_within_budget():
 
 def test_field_marks_skip_measurements_and_prefer_plumage_sentences():
     marks = field_marks(sections(EXTRACT), max_words=FIELD_MARKS_WORDS)
-    assert marks == "It has predominantly black plumage, with white on its belly and undertail coverts."
+    assert marks == 'It has predominantly black plumage, with white on its belly and undertail coverts. The white forms an inverted "V" in the lower breast. The sexes are identical and plumage does not vary seasonally.'
     assert len(marks.split()) <= FIELD_MARKS_WORDS
+    assert field_marks(sections(EXTRACT), max_words=20) == "It has predominantly black plumage, with white on its belly and undertail coverts."
 
 
 def test_field_marks_take_a_second_sentence_when_the_budget_allows():
@@ -81,10 +82,29 @@ def test_field_marks_take_a_second_sentence_when_the_budget_allows():
     assert marks == 'It has predominantly black plumage, with white on its belly and undertail coverts. The white forms an inverted "V" in the lower breast.'
 
 
-def test_field_marks_clip_a_long_sentence_at_a_clause_boundary():
+def test_field_marks_take_the_longest_clause_of_a_long_sentence_and_never_an_ellipsis():
     parts = {"": "", "Description": "Adults are brown above with a rusty tail, a pale belly crossed by a dark band, and a dark bar on the leading edge of the wing that shows in flight."}
     marks = field_marks(parts, max_words=12)
-    assert marks == "Adults are brown above with a rusty tail…"
+    assert marks == "Adults are brown above with a rusty tail."
+    assert not marks.endswith("…")
+
+
+def test_field_marks_skip_a_long_first_sentence_for_a_later_one_that_fits_whole():
+    parts = {"": "", "Description": "The plumage is a bewildering mix of brown, buff, grey, black and white streaks, bars and spots that varies by age, sex, season and region. The belly is white."}
+    assert field_marks(parts, max_words=12) == "The belly is white."
+
+
+def test_field_marks_fall_back_to_the_lead_when_no_section_sentence_or_clause_fits():
+    parts = {
+        "": "Its plumage is plain brown.",
+        "Description": "The plumage is a bewildering mix of brown buff grey black and white streaks bars and spots that varies by age sex season and region without pause",
+    }
+    assert field_marks(parts, max_words=8) == "Its plumage is plain brown."
+
+
+def test_field_marks_are_empty_rather_than_cut_when_nothing_fits():
+    parts = {"": "", "Description": "The plumage is brown buff grey black and white streaks bars spots everywhere"}
+    assert field_marks(parts, max_words=5) == ""
 
 
 def test_field_marks_prefer_the_lead_plumage_over_the_section_measurements():
@@ -177,7 +197,7 @@ def test_derive_builds_the_whole_description():
     description = derive(EXTRACT, source="https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245")
     assert description == Description(
         summary="The black phoebe is a passerine bird in the tyrant-flycatcher family. It breeds from southwest Oregon and California south through Central and South America. It occurs year-round throughout most of its range and migrates less than the other birds in its genus though its northern populations are partially migratory.",
-        field_marks="It has predominantly black plumage, with white on its belly and undertail coverts.",
+        field_marks='It has predominantly black plumage, with white on its belly and undertail coverts. The white forms an inverted "V" in the lower breast. The sexes are identical and plumage does not vary seasonally.',
         size="16 cm",
         habitat="coast, rivers, water",
         source="https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245",

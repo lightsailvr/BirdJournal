@@ -5,7 +5,7 @@ import UIKit
 
 /// A hard-coded stack for driving the lens without the engine (issue #7: "demonstrated on the mock display with a
 /// hard-coded fake stack"), plus fake profiles with SF Symbol photos for the app-hosted tests that must not depend
-/// on the bundled pack. The app itself draws profiles from `BundledPack`. The last species has no profile, to show
+/// on the bundled pack. The app itself draws profiles from its `PackLibrary`. The last species has no profile, to show
 /// the name-only card.
 enum FakeLensStack {
     static let species: [Species] = [
@@ -21,7 +21,7 @@ enum FakeLensStack {
     static let profiles: [String: SpeciesProfile] = [
         "Sayornis nigricans": SpeciesProfile(
             photo: LensImage(id: "sayornis-nigricans"),
-            fieldMarks: "Sooty black with a clean white belly. Perches low near water and wags its tail.",
+            fieldMarks: "Sooty black with a clean white belly, the white forming an inverted V on the lower breast. Perches low near water, pumping its tail down and up, and sallies out for insects over the surface. Sexes alike.",
             size: "Sparrow-sized",
             habitat: "Streams, ponds, lawns",
             photoCredit: "Photo: placeholder, CC0"

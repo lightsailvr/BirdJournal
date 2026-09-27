@@ -118,6 +118,8 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
 public enum PackError: Error, Equatable {
     case missingDatabase(String)
     case missingBundledPack(String)
+    /// A pack id the library no longer has (deleted while a screen still pointed at it).
+    case notInstalled(String)
     case unsupportedSchema(Int)
     case sqlite(String)
     case malformedRow(table: String)
@@ -127,10 +129,10 @@ extension SpeciesPack {
     /// Reads the pack in `directory`.
     public static func open(directory: URL) throws -> SpeciesPack {
         let databaseURL = directory.appending(path: "pack.sqlite")
-        guard FileManager.default.fileExists(atPath: databaseURL.path()) else {
-            throw PackError.missingDatabase(databaseURL.path())
+        guard FileManager.default.fileExists(atPath: databaseURL.path(percentEncoded: false)) else {
+            throw PackError.missingDatabase(databaseURL.path(percentEncoded: false))
         }
-        let database = try SQLiteDatabase(path: databaseURL.path())
+        let database = try SQLiteDatabase(path: databaseURL.path(percentEncoded: false))
         defer { database.close() }
 
         let info = try readInfo(database)

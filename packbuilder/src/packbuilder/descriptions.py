@@ -19,15 +19,15 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import unquote, urlparse
 
-import requests
+from packbuilder.http import session
 
 from packbuilder.definition import SpeciesEntry
 
 log = logging.getLogger(__name__)
 
-FIELD_MARKS_WORDS = 20
-"""The lens details page's budget for field marks once the name, match rate, size and habitat, credit and button
-have taken theirs (40 words a page, `LensCardRenderer.wordBudget`)."""
+FIELD_MARKS_WORDS = 40
+"""The lens details page's budget for field marks, shown there in the Display DSL's small text style (issue #32;
+`LensCardRenderer.detailsWordBudget` is this plus the name, match rate, size and habitat, credit and button)."""
 SUMMARY_WORDS = 60
 HABITAT_TERMS = 3
 
@@ -161,8 +161,9 @@ def words(text: str) -> int:
 
 
 def take_sentences(candidates: list[str], max_words: int) -> str:
-    """Whole sentences in order while they fit; a first sentence that does not fit is cut at a clause boundary and
-    ends with an ellipsis."""
+    """Whole sentences in order while they fit, skipping ones that do not until the first that does; when no
+    sentence fits whole, the first sentence's longest clause that fits (issue #32: text is never cut mid-phrase and
+    never ends with an ellipsis); when not even a clause fits, nothing, so the caller can try another source."""
     taken: list[str] = []
     used = 0
     for sentence in candidates:
@@ -170,21 +171,24 @@ def take_sentences(candidates: list[str], max_words: int) -> str:
         if used + count <= max_words:
             taken.append(sentence)
             used += count
-        elif not taken:
-            return clip(sentence, max_words)
-        else:
+        elif taken:
             break
-    return " ".join(taken)
+    if taken:
+        return " ".join(taken)
+    return clause(candidates[0], max_words) if candidates else ""
 
 
-def clip(sentence: str, max_words: int) -> str:
-    """The first `max_words` words of a sentence, backed up to the last comma or semicolon inside them when that keeps
-    at least half the budget, with an ellipsis."""
+CLAUSE_BREAKS = (", ", "; ", ": ", " and ", " but ", " while ", " with ")
+
+
+def clause(sentence: str, max_words: int) -> str:
+    """The longest prefix of a sentence that ends at a clause boundary inside `max_words` words and keeps at least
+    half the budget, closed with a full stop; empty when there is none."""
     head = " ".join(sentence.split()[:max_words])
-    cut = max(head.rfind(", "), head.rfind("; "))
-    if cut > 0 and words(head[:cut]) * 2 >= max_words:
-        head = head[:cut]
-    return head.rstrip(",;. ") + "…"
+    cut = max(head.rfind(mark) for mark in CLAUSE_BREAKS)
+    if cut <= 0 or words(head[:cut]) * 2 < max_words:
+        return ""
+    return head[:cut].rstrip(",;: ") + "."
 
 
 def summary(lead: str, max_words: int = SUMMARY_WORDS) -> str:
@@ -208,12 +212,12 @@ def field_marks(parts: dict[str, str], max_words: int = FIELD_MARKS_WORDS) -> st
     lead = sentences(parts.get("", ""))
     for candidates in (section, lead):
         marks = [s for s in candidates if PLUMAGE_WORDS.search(s) and not MEASUREMENT.search(s)]
-        if marks:
-            return take_sentences(marks, max_words)
+        if marks and (taken := take_sentences(marks, max_words)):
+            return taken
     for candidates in (section, lead):
         plain = [s for s in candidates if not MEASUREMENT.search(s)]
-        if plain:
-            return take_sentences(plain, max_words)
+        if plain and (taken := take_sentences(plain, max_words)):
+            return taken
     return take_sentences(section or lead, max_words)
 
 
@@ -351,7 +355,7 @@ def fetch_page(title: str, pause_seconds: float = 0.5) -> dict:
         "formatversion": 2,
         "titles": title,
     }
-    response = requests.get(API, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
+    response = session().get(API, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
     response.raise_for_status()
     pages = response.json().get("query", {}).get("pages", [])
     time.sleep(pause_seconds)

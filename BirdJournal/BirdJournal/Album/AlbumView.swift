@@ -31,6 +31,7 @@ struct AlbumView: View {
 /// One sighting: the cropped frame, the species, when and where.
 private struct SightingRow: View {
     @Environment(PlaceNames.self) private var places
+    @Environment(PackLibrary.self) private var library
     let sighting: Sighting
 
     var body: some View {
@@ -39,7 +40,7 @@ private struct SightingRow: View {
                 .frame(width: 72, height: 54)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             VStack(alignment: .leading, spacing: 2) {
-                Text(BundledPack.commonName(for: sighting))
+                Text(library.commonName(for: sighting))
                 Text(sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -59,6 +60,7 @@ private struct SightingRow: View {
 struct SightingDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(PlaceNames.self) private var places
+    @Environment(PackLibrary.self) private var library
     let id: PersistentIdentifier
 
     /// Fetched, not `model(for:)`: a deleted id would come back as a placeholder that faults on first access.
@@ -79,7 +81,7 @@ struct SightingDetailView: View {
                     Text(sighting.frameImagePath == nil ? "No camera frame was kept with this sighting." : "The center of the last camera frame, 2x.")
                 }
                 Section {
-                    LabeledContent("Species", value: BundledPack.commonName(for: sighting))
+                    LabeledContent("Species", value: library.commonName(for: sighting))
                     LabeledContent("Scientific name", value: sighting.scientificName)
                     LabeledContent("When", value: sighting.confirmedAt.formatted(date: .long, time: .shortened))
                     LabeledContent("Where", value: placeText(for: sighting))
@@ -87,7 +89,7 @@ struct SightingDetailView: View {
                     LabeledContent("Heard with", value: sighting.source == .glasses ? "Glasses" : "Phone")
                 }
             }
-            .navigationTitle(BundledPack.commonName(for: sighting))
+            .navigationTitle(library.commonName(for: sighting))
             .navigationBarTitleDisplayMode(.inline)
             .task(id: sighting.location) {
                 if let location = sighting.location { await places.resolve(location) }
