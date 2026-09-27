@@ -1,0 +1,221 @@
+import Foundation
+import SQLite3
+
+/// A species pack as `packbuilder` writes it (spec "Pack store"): `pack.sqlite` beside `lens/` and `phone/` JPEG
+/// folders and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
+/// the SQLite connection open.
+public struct SpeciesPack: Sendable, Equatable {
+    /// The schema this reader understands; `packbuilder.writer.SCHEMA_VERSION` must match.
+    public static let schemaVersion = 1
+
+    public let info: PackInfo
+    /// The folder holding `pack.sqlite` and the image folders.
+    public let directory: URL
+    /// In the pack's order.
+    public let species: [PackSpecies]
+
+    public func species(scientificName: String) -> PackSpecies? {
+        species.first { $0.scientificName == scientificName }
+    }
+
+    /// The photo with this pack-wide id (`PackPhoto.id`), if any.
+    public func photo(id: String) -> PackPhoto? {
+        for entry in species {
+            if let photo = entry.photos.first(where: { $0.id == id }) { return photo }
+        }
+        return nil
+    }
+
+    /// Every photo in the pack, in species order then rank: the credits screen's list.
+    public var photos: [PackPhoto] { species.flatMap(\.photos) }
+
+    public func lensImageURL(for photo: PackPhoto) -> URL {
+        directory.appending(path: photo.lensFile)
+    }
+
+    public func phoneImageURL(for photo: PackPhoto) -> URL {
+        directory.appending(path: photo.phoneFile)
+    }
+}
+
+public struct PackInfo: Sendable, Equatable {
+    public let id: String
+    public let name: String
+    public let region: String
+    public let version: Int
+    public let schemaVersion: Int
+    public let builtAt: String
+    /// The pack's LICENSE text, for the credits screen.
+    public let licenseText: String
+}
+
+public struct PackSpecies: Sendable, Equatable, Identifiable {
+    public let id: String
+    /// The key shared with the acoustic model's labels (`Species.scientificName`).
+    public let scientificName: String
+    public let commonName: String
+    public let birdnetLabel: String
+    public let inatTaxonID: Int?
+    public let wikipediaURL: URL?
+    public let summary: String?
+    public let fieldMarks: String?
+    public let size: String?
+    public let habitat: String?
+    /// Best first.
+    public let photos: [PackPhoto]
+}
+
+public struct PackPhoto: Sendable, Equatable, Identifiable {
+    public let id: String
+    public let speciesID: String
+    public let rank: Int
+    /// Paths relative to the pack directory.
+    public let lensFile: String
+    public let phoneFile: String
+    public let observer: String
+    public let observerLogin: String?
+    public let license: String
+    /// iNaturalist's attribution statement, e.g. "© Name, some rights reserved (CC BY-NC)".
+    public let creditLine: String
+    /// The one-line lens credit, e.g. "Photo: Name, CC BY-NC".
+    public let shortCredit: String
+    /// The observation page.
+    public let sourceURL: URL
+    /// The original in the iNaturalist Open Data bucket.
+    public let photoURL: URL
+    public let inatPhotoID: Int
+    public let score: Double
+}
+
+public enum PackError: Error, Equatable {
+    case missingDatabase(String)
+    case missingBundledPack(String)
+    case unsupportedSchema(Int)
+    case sqlite(String)
+    case malformedRow(table: String)
+}
+
+extension SpeciesPack {
+    /// Reads the pack in `directory`.
+    public static func open(directory: URL) throws -> SpeciesPack {
+        let databaseURL = directory.appending(path: "pack.sqlite")
+        guard FileManager.default.fileExists(atPath: databaseURL.path()) else {
+            throw PackError.missingDatabase(databaseURL.path())
+        }
+        let database = try SQLiteDatabase(path: databaseURL.path())
+        defer { database.close() }
+
+        let info = try readInfo(database)
+        guard info.schemaVersion == schemaVersion else { throw PackError.unsupportedSchema(info.schemaVersion) }
+        let photosBySpecies = try readPhotos(database)
+        let species = try readSpecies(database, photos: photosBySpecies)
+        return SpeciesPack(info: info, directory: directory, species: species)
+    }
+
+    /// The pack compiled into the package's `Packs` resource folder (the symlink to the repo's `packs/` directory).
+    public static func bundled(id: String = PackIndex.bundledPackID) throws -> SpeciesPack {
+        guard let directory = Bundle.module.url(forResource: id, withExtension: nil, subdirectory: "Packs") else {
+            throw PackError.missingBundledPack(id)
+        }
+        return try open(directory: directory)
+    }
+
+    private static func readInfo(_ database: SQLiteDatabase) throws -> PackInfo {
+        let rows = try database.rows("SELECT id, name, region, version, schema_version, built_at, license_text FROM pack") { row in
+            guard let id = row.text(0), let name = row.text(1), let region = row.text(2), let builtAt = row.text(5), let license = row.text(6) else {
+                throw PackError.malformedRow(table: "pack")
+            }
+            return PackInfo(id: id, name: name, region: region, version: row.int(3), schemaVersion: row.int(4), builtAt: builtAt, licenseText: license)
+        }
+        guard let info = rows.first else { throw PackError.malformedRow(table: "pack") }
+        return info
+    }
+
+    private static func readPhotos(_ database: SQLiteDatabase) throws -> [String: [PackPhoto]] {
+        let sql = """
+            SELECT id, species_id, rank, file_lens, file_phone, observer, observer_login, license, credit_line, short_credit,
+                   source_url, photo_url, inat_photo_id, score
+            FROM photo ORDER BY species_id, rank
+            """
+        let photos = try database.rows(sql) { row in
+            guard let id = row.text(0), let speciesID = row.text(1), let lens = row.text(3), let phone = row.text(4),
+                  let observer = row.text(5), let license = row.text(7), let credit = row.text(8), let short = row.text(9),
+                  let source = row.text(10).flatMap(URL.init(string:)), let photoURL = row.text(11).flatMap(URL.init(string:))
+            else { throw PackError.malformedRow(table: "photo") }
+            return PackPhoto(
+                id: id, speciesID: speciesID, rank: row.int(2), lensFile: lens, phoneFile: phone, observer: observer,
+                observerLogin: row.text(6), license: license, creditLine: credit, shortCredit: short, sourceURL: source,
+                photoURL: photoURL, inatPhotoID: row.int(12), score: row.double(13)
+            )
+        }
+        return Dictionary(grouping: photos, by: \.speciesID)
+    }
+
+    private static func readSpecies(_ database: SQLiteDatabase, photos: [String: [PackPhoto]]) throws -> [PackSpecies] {
+        let sql = """
+            SELECT id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat
+            FROM species ORDER BY sort_order
+            """
+        return try database.rows(sql) { row in
+            guard let id = row.text(0), let scientific = row.text(1), let common = row.text(2), let label = row.text(3) else {
+                throw PackError.malformedRow(table: "species")
+            }
+            return PackSpecies(
+                id: id, scientificName: scientific, commonName: common, birdnetLabel: label,
+                inatTaxonID: row.isNull(4) ? nil : row.int(4), wikipediaURL: row.text(5).flatMap(URL.init(string:)),
+                summary: row.text(6), fieldMarks: row.text(7), size: row.text(8), habitat: row.text(9),
+                photos: photos[id] ?? []
+            )
+        }
+    }
+}
+
+/// The least of SQLite needed to read a pack: open read-only, run a query, map rows, close.
+private final class SQLiteDatabase {
+    private var handle: OpaquePointer?
+
+    init(path: String) throws {
+        let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX
+        guard sqlite3_open_v2(path, &handle, flags, nil) == SQLITE_OK else {
+            let message = handle.map { String(cString: sqlite3_errmsg($0)) } ?? "cannot open \(path)"
+            sqlite3_close(handle)
+            throw PackError.sqlite(message)
+        }
+    }
+
+    func close() {
+        sqlite3_close(handle)
+        handle = nil
+    }
+
+    func rows<T>(_ sql: String, _ map: (Row) throws -> T) throws -> [T] {
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(handle, sql, -1, &statement, nil) == SQLITE_OK, let statement else {
+            throw PackError.sqlite(String(cString: sqlite3_errmsg(handle)))
+        }
+        defer { sqlite3_finalize(statement) }
+        var results: [T] = []
+        while true {
+            switch sqlite3_step(statement) {
+            case SQLITE_ROW: results.append(try map(Row(statement: statement)))
+            case SQLITE_DONE: return results
+            default: throw PackError.sqlite(String(cString: sqlite3_errmsg(handle)))
+            }
+        }
+    }
+
+    struct Row {
+        let statement: OpaquePointer
+
+        func isNull(_ column: Int) -> Bool { sqlite3_column_type(statement, Int32(column)) == SQLITE_NULL }
+
+        func text(_ column: Int) -> String? {
+            guard let pointer = sqlite3_column_text(statement, Int32(column)) else { return nil }
+            return String(cString: pointer)
+        }
+
+        func int(_ column: Int) -> Int { Int(sqlite3_column_int64(statement, Int32(column))) }
+
+        func double(_ column: Int) -> Double { sqlite3_column_double(statement, Int32(column)) }
+    }
+}

@@ -80,6 +80,18 @@ struct LensCardRendererTests {
         ])
     }
 
+    @Test("a pack without size or habitat leaves that line out rather than an empty one")
+    func noSizeOrHabitat() {
+        var profile = Fakes.phoebeProfile
+        profile.size = ""
+        profile.habitat = ""
+        let card = LensCardRenderer.render(.description(index: 0), stack: Self.stack) { _ in profile }
+        #expect(card.elements == [.heading("Black Phoebe"), .body(profile.fieldMarks), .meta("Photo: J. Birder, CC BY")])
+        profile.habitat = "Streams"
+        let habitatOnly = LensCardRenderer.render(.description(index: 0), stack: Self.stack) { _ in profile }
+        #expect(habitatOnly.elements[2] == .meta("Streams"))
+    }
+
     @Test("long field marks are cut to keep the description inside the budget")
     func longFieldMarks() {
         var profile = Fakes.phoebeProfile

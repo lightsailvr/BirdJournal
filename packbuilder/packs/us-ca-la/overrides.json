@@ -1,0 +1,25 @@
+{
+  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen]}. Photo ids are in the pack's report.json and LICENSE.",
+  "Melozone crissalis": {
+    "exclude": [
+      740654177,
+      735952133
+    ],
+    "_why": "leucistic (white) birds; not how a California Towhee looks"
+  },
+  "Haemorhous mexicanus": {
+    "exclude": [
+      739958128,
+      739958088,
+      739958089
+    ],
+    "_why": "birds held in a hand, and a dead bird on pavement"
+  },
+  "Zenaida macroura": {
+    "exclude": [
+      731073363,
+      731073307
+    ],
+    "_why": "macros of feathers in a hand, not a bird"
+  }
+}

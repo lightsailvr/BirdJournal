@@ -3,9 +3,10 @@ import Identification
 import LensSession
 import UIKit
 
-/// A hard-coded stack and pack profiles for driving the lens without the engine or a species pack (issue #7:
-/// "demonstrated on the mock display with a hard-coded fake stack"). Photos are SF Symbols on a dark card until
-/// the pack builder (#8) supplies real crops. The last species has no profile, to show the name-only pages.
+/// A hard-coded stack for driving the lens without the engine (issue #7: "demonstrated on the mock display with a
+/// hard-coded fake stack"), plus fake profiles with SF Symbol photos for the app-hosted tests that must not depend
+/// on the bundled pack. The app itself draws profiles from `BundledPack`. The last species has no profile, to show
+/// the name-only pages.
 enum FakeLensStack {
     static let species: [Species] = [
         Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"),
