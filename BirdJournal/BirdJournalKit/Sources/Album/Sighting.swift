@@ -58,3 +58,32 @@ public enum AlbumSchema {
         return try ModelContainer(for: Schema(models), configurations: [configuration])
     }
 }
+
+extension Sighting {
+    /// The album's order (issue #11): newest first.
+    public static func newestFirst() -> FetchDescriptor<Sighting> {
+        FetchDescriptor<Sighting>(sortBy: [SortDescriptor(\.confirmedAt, order: .reverse)])
+    }
+
+    /// The scientific name half of the BirdNET label; the whole label when it has no underscore.
+    public var scientificName: String { String(speciesID.prefix { $0 != "_" }) }
+
+    /// The common name half of the BirdNET label, so a species the pack lacks still has a name (spec user story 40).
+    public var commonName: String {
+        guard let underscore = speciesID.firstIndex(of: "_") else { return speciesID }
+        return String(speciesID[speciesID.index(after: underscore)...])
+    }
+}
+
+extension Coordinate {
+    /// Degrees with hemispheres to two decimals, e.g. "34.05° N, 118.24° W": the place line when there is no
+    /// place name.
+    public var formatted: String { formatted(locale: .current) }
+
+    public func formatted(locale: Locale) -> String {
+        let degrees = FloatingPointFormatStyle<Double>.number.locale(locale).precision(.fractionLength(2))
+        let lat = "\(abs(latitude).formatted(degrees))° \(latitude < 0 ? "S" : "N")"
+        let lon = "\(abs(longitude).formatted(degrees))° \(longitude < 0 ? "W" : "E")"
+        return "\(lat), \(lon)"
+    }
+}

@@ -12,7 +12,7 @@ import PackageDescription
 // - Pack:           species packs (bundled LA pack, downloadable regional packs). Its `Packs` resource folder is a
 //                   symlink to the repo's `packs/` directory (built by `scripts/build-pack.sh`, committed while small),
 //                   so the bundled pack's SQLite and JPEGs ship in the package's resource bundle like the models do.
-// - Album:          saved sightings (SwiftData).
+// - Album:          saved sightings (SwiftData), their frames on disk and the album's crop of them (CoreGraphics).
 //
 // The Device Access Toolkit is linked by the app target only, where the thin glasses adapter lives
 // (docs/spec-v1-glasses-bird-id.md, "Architecture: three modules behind two seams"). Mock Device Kit smoke

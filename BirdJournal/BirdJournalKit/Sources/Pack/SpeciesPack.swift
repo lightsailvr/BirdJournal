@@ -88,6 +88,17 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
     public let photoURL: URL
     public let inatPhotoID: Int
     public let score: Double
+
+    /// The Creative Commons deed for `license` (the credits screen's license link; the observation page states the
+    /// exact terms). Nil for a license the pack builder does not admit.
+    public var licenseURL: URL? {
+        switch license {
+        case "CC0": URL(string: "https://creativecommons.org/publicdomain/zero/1.0/")
+        case "CC BY": URL(string: "https://creativecommons.org/licenses/by/4.0/")
+        case "CC BY-NC": URL(string: "https://creativecommons.org/licenses/by-nc/4.0/")
+        default: nil
+        }
+    }
 }
 
 /// Why a pack could not be read.
