@@ -56,10 +56,10 @@ struct LensSessionView: View {
             }
 
             Section("Inputs from the glasses") {
-                if lens.inputs.isEmpty {
+                if lens.inputRecords.isEmpty {
                     Text("Nothing received yet").foregroundStyle(.secondary)
                 }
-                ForEach(lens.inputs) { record in
+                ForEach(lens.inputRecords) { record in
                     HStack {
                         Text(record.receivedAt, format: .dateTime.hour().minute().second().secondFraction(.fractional(1)))
                             .font(.caption.monospaced())

@@ -66,7 +66,7 @@ final class GlassesLensSession {
     private(set) var inputsState: InputsState = .inactive
     private(set) var echo = GestureEcho()
     /// Newest first, capped at `maxRecords`.
-    private(set) var inputs: [InputRecord] = []
+    private(set) var inputRecords: [InputRecord] = []
     /// Clicks of the card's button, delivered by Display rather than Inputs.
     private(set) var buttonClicks = 0
     var errorMessage: String?
@@ -99,7 +99,7 @@ final class GlassesLensSession {
         phase = .starting
         errorMessage = nil
         echo = GestureEcho()
-        inputs = []
+        inputRecords = []
         buttonClicks = 0
         lastSessionError.withLock { $0 = nil }
         do {
@@ -113,8 +113,10 @@ final class GlassesLensSession {
         }
     }
 
+    /// Stops a running session. A start in progress cannot be interrupted (the screen hides Stop meanwhile):
+    /// `start()` would otherwise carry on after the teardown and report its own failure over this stop.
     func stop() async {
-        guard isActive else { return }
+        guard phase == .running else { return }
         phase = .stopping
         await tearDown()
         phase = .stopped(.phone)
@@ -142,7 +144,7 @@ final class GlassesLensSession {
         display.statePublisher.listen { [weak self] state in
             Task { @MainActor in self?.displayState = state }
         }.store(in: tokens)
-        async let displayStarted = display.statePublisher.waitUntil(timeout: .seconds(15)) { state in
+        let displayStarted = await display.statePublisher.waitUntil(timeout: .seconds(15), after: display.start) { state in
             switch state {
             case .started: true
             case .stopped: false
@@ -150,8 +152,7 @@ final class GlassesLensSession {
             @unknown default: nil
             }
         }
-        display.start()
-        guard await displayStarted else { throw StartError.displayDidNotStart }
+        guard displayStarted else { throw StartError.displayDidNotStart }
         try await display.send(renderedCard())
 
         // Inputs last: `addInputs` returns nil unless the session is already started.
@@ -200,6 +201,12 @@ final class GlassesLensSession {
         sessionState = state
         // While starting, `start()` reports the failure; while stopping, the phone asked for it.
         guard state == .stopped, phase == .running else { return }
+        phase = .stopping // Claimed now, so a Stop tapped meanwhile is a no-op rather than a second teardown.
+        // The glasses report their own end as an error too ("Session ended by device", DECISIONS.md doff test);
+        // the phase already says so, and only a real failure (thermal, battery) is worth a red line.
+        if let error = lastSessionError.withLock({ $0 }), Self.isEndedByDevice(error) {
+            errorMessage = nil
+        }
         Task {
             await tearDown()
             phase = .stopped(.glasses)
@@ -211,16 +218,18 @@ final class GlassesLensSession {
         connection?.noteSessionFailure(error)
     }
 
-    private func handle(_ event: InputEvent) {
-        let gesture: LensGesture? = switch event {
-        case .nav(let direction, _, _): LensGesture(direction)
-        case .select: .tap
-        case .back, .button, .capture, .drag: nil
-        @unknown default: nil
+    private static func isEndedByDevice(_ error: DeviceSessionError) -> Bool {
+        if case .unexpectedError(let description) = error {
+            return description.localizedCaseInsensitiveContains("ended by device")
         }
-        inputs.insert(InputRecord(receivedAt: .now, description: Self.describe(event), gesture: gesture), at: 0)
-        if inputs.count > Self.maxRecords { inputs.removeLast(inputs.count - Self.maxRecords) }
-        guard let gesture else { return }
+        return false
+    }
+
+    private func handle(_ event: InputEvent) {
+        let record = InputRecord(event)
+        inputRecords.insert(record, at: 0)
+        if inputRecords.count > Self.maxRecords { inputRecords.removeLast(inputRecords.count - Self.maxRecords) }
+        guard let gesture = record.gesture else { return }
         echo.apply(gesture)
         resendCard()
     }
@@ -243,24 +252,44 @@ final class GlassesLensSession {
         let previous = sendTask
         sendTask = Task { [weak self] in
             await previous?.value
-            guard !Task.isCancelled else { return }
+            // Only the newest queued send is cancelled by a teardown; older ones find the display gone here.
+            guard !Task.isCancelled, let self, self.display === display else { return }
             do {
                 try await display.send(view)
+            } catch where self.display === display {
+                self.errorMessage = "Display: \(error.localizedDescription)"
             } catch {
-                self?.errorMessage = "Display: \(error.localizedDescription)"
+                // The run ended while sending; the phase already says so.
             }
         }
     }
+}
 
-    private static func describe(_ event: InputEvent) -> String {
+extension GlassesLensSession.InputRecord {
+    init(_ event: InputEvent) {
+        receivedAt = .now
         switch event {
-        case .nav(let direction, let source, _): "Nav \(direction) · \(source)"
-        case .select(let source, _): "Select · \(source)"
-        case .back(let source, _): "Back · \(source) (ignored)"
-        case .button(let button, let source, _): "Button \(button) · \(source) (ignored)"
-        case .capture(let press, let source, _): "Capture \(press) · \(source) (ignored)"
-        case .drag(let action, _, _, _, _, let source, _): "Drag \(action) · \(source) (ignored)"
-        @unknown default: "Unknown input event (ignored)"
+        case .nav(let direction, let source, _):
+            gesture = LensGesture(direction)
+            description = "Nav \(direction) · \(source)"
+        case .select(let source, _):
+            gesture = .tap
+            description = "Select · \(source)"
+        case .back(let source, _):
+            gesture = nil
+            description = "Back · \(source) (ignored)"
+        case .button(let button, let source, _):
+            gesture = nil
+            description = "Button \(button) · \(source) (ignored)"
+        case .capture(let press, let source, _):
+            gesture = nil
+            description = "Capture \(press) · \(source) (ignored)"
+        case .drag(let action, _, _, _, _, let source, _):
+            gesture = nil
+            description = "Drag \(action) · \(source) (ignored)"
+        @unknown default:
+            gesture = nil
+            description = "Unknown input event (ignored)"
         }
     }
 }

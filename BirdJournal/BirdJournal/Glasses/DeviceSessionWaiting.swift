@@ -32,11 +32,17 @@ extension DeviceSession {
 
 extension Announcer {
     /// Waits until a published value decides the outcome (`true` or `false`); `nil` keeps waiting. False once
-    /// `timeout` passes. Subscribe before triggering the transition: values published earlier are not replayed.
-    func waitUntil(timeout: Duration, _ outcome: @escaping @Sendable (T) -> Bool?) async -> Bool {
+    /// `timeout` passes. `trigger` runs once the listener is in place, because values published earlier are not
+    /// replayed: pass the call that starts the transition (`display.start()`) so its first state is not missed.
+    func waitUntil(
+        timeout: Duration,
+        after trigger: () -> Void = {},
+        _ outcome: @escaping @Sendable (T) -> Bool?
+    ) async -> Bool {
         let (values, continuation) = AsyncStream.makeStream(of: T.self, bufferingPolicy: .unbounded)
         let bag = ListenerTokenBag()
         listen { continuation.yield($0) }.store(in: bag)
+        trigger()
         defer {
             bag.clear()
             continuation.finish()
@@ -51,30 +57,37 @@ extension Announcer {
 }
 
 /// Runs `operation` and returns its result, or false once `timeout` passes. Returns at the timeout even if
-/// `operation` ignores cancellation, which a task group would wait for.
+/// `operation` ignores cancellation, which a task group would wait for. Whichever side finishes first cancels
+/// the other, so no sleeping timeout task outlives a wait that succeeded.
 func completes(within timeout: Duration, _ operation: @escaping @Sendable () async -> Bool) async -> Bool {
-    let resumed = ResumeOnce()
+    let race = FirstToFinish()
     return await withCheckedContinuation { continuation in
         let work = Task {
             let result = await operation()
-            if resumed.claim() { continuation.resume(returning: result) }
+            if race.claim() { continuation.resume(returning: result) }
         }
-        Task {
+        race.timeout = Task {
             try? await Task.sleep(for: timeout)
             work.cancel()
-            if resumed.claim() { continuation.resume(returning: false) }
+            if race.claim() { continuation.resume(returning: false) }
         }
     }
 }
 
-/// Lets exactly one of two racing tasks resume a continuation.
-private final class ResumeOnce: Sendable {
-    private let resumed = Mutex(false)
+/// Lets exactly one of two racing tasks resume a continuation, and stops the timeout when the work wins.
+private final class FirstToFinish: Sendable {
+    private let state = Mutex<(claimed: Bool, timeout: Task<Void, Never>?)>((false, nil))
+
+    var timeout: Task<Void, Never>? {
+        get { state.withLock { $0.timeout } }
+        set { state.withLock { $0.timeout = newValue } }
+    }
 
     func claim() -> Bool {
-        resumed.withLock { resumed in
-            defer { resumed = true }
-            return !resumed
+        state.withLock { state in
+            defer { state.claimed = true }
+            if !state.claimed { state.timeout?.cancel() }
+            return !state.claimed
         }
     }
 }

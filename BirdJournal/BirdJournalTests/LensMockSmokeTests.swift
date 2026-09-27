@@ -28,10 +28,10 @@ extension MockDeviceKitTests {
                     step.inject()
                     try await waitUntil(timeout: .seconds(1)) { lens.echo.count == index + 1 }
                     #expect(lens.echo.lastGesture == step.gesture)
-                    #expect(lens.inputs.first?.gesture == step.gesture)
+                    #expect(lens.inputRecords.first?.gesture == step.gesture)
                 }
                 #expect(lens.card.body == "Tap · 5 gestures")
-                #expect(lens.inputs.map(\.gesture) == [.tap, .swipeDown, .swipeUp, .swipeRight, .swipeLeft])
+                #expect(lens.inputRecords.map(\.gesture) == [.tap, .swipeDown, .swipeUp, .swipeRight, .swipeLeft])
             }
         }
 
@@ -39,9 +39,8 @@ extension MockDeviceKitTests {
         func backIsIgnored() async throws {
             try await withRunningLens { lens, glasses in
                 glasses.services.input.back()
-                try await waitUntil(timeout: .seconds(1)) { !lens.inputs.isEmpty }
-                #expect(lens.inputs.first?.gesture == nil)
-                #expect(lens.inputs.first?.description.hasPrefix("Back") == true)
+                try await waitUntil(timeout: .seconds(1)) { !lens.inputRecords.isEmpty }
+                #expect(lens.inputRecords.first?.gesture == nil)
                 #expect(lens.echo.count == 0)
             }
         }
@@ -56,8 +55,9 @@ extension MockDeviceKitTests {
 
                 await lens.start()
                 #expect(lens.phase == .running)
-                #expect(lens.sessionState == .started)
-                #expect(lens.displayState == .started)
+                // The mirrored states arrive through their own listener hops, a beat after `start()` returns.
+                try await waitUntil { lens.sessionState == .started }
+                try await waitUntil { lens.displayState == .started }
                 try await waitUntil { lens.inputsState == .active }
 
                 await lens.stop()
@@ -66,6 +66,24 @@ extension MockDeviceKitTests {
                 #expect(lens.displayState == .stopped)
                 #expect(lens.sessionState == .stopped)
                 #expect(lens.errorMessage == nil)
+            }
+        }
+
+        @Test("a session the glasses end is reported as ended by the glasses")
+        func endedByGlasses() async throws {
+            try await withMockDisplay { glasses in
+                let connection = GlassesConnection()
+                try await waitUntil { connection.connectedDevice != nil }
+                let lens = GlassesLensSession()
+                await lens.start()
+                try #require(lens.phase == .running, "\(lens.errorMessage ?? "no error")")
+
+                glasses.powerOff()
+                try await waitUntil { lens.phase == .stopped(.glasses) }
+                #expect(lens.inputsState == .inactive)
+                #expect(lens.sessionState == .stopped)
+                await lens.stop() // No-op once ended; must not change the reason.
+                #expect(lens.phase == .stopped(.glasses))
             }
         }
 

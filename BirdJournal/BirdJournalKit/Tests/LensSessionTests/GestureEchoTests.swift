@@ -12,14 +12,18 @@ struct GestureEchoTests {
         #expect(echo.lastGesture == nil)
     }
 
-    @Test("each gesture is named on the card with a running count", arguments: [
-        (LensGesture.swipeLeft, "Swipe left"),
-        (LensGesture.swipeRight, "Swipe right"),
-        (LensGesture.swipeUp, "Swipe up"),
-        (LensGesture.swipeDown, "Swipe down"),
-        (LensGesture.tap, "Tap"),
-    ])
+    /// Gesture names as the wearer performed them; the same table drives the card and the phone log.
+    static let gestureNames: [(LensGesture, String)] = [
+        (.swipeLeft, "Swipe left"),
+        (.swipeRight, "Swipe right"),
+        (.swipeUp, "Swipe up"),
+        (.swipeDown, "Swipe down"),
+        (.tap, "Tap"),
+    ]
+
+    @Test("each gesture is named on the card with a running count", arguments: gestureNames)
     func gestureNamesTheCard(gesture: LensGesture, name: String) {
+        #expect(gesture.name == name)
         var echo = GestureEcho()
         echo.apply(gesture)
         #expect(echo.lastGesture == gesture)
@@ -37,16 +41,5 @@ struct GestureEchoTests {
         echo.apply(.tap)
         #expect(echo.count == 3)
         #expect(echo.card.body == "Tap · 3 gestures")
-    }
-
-    @Test("gesture names read as the wearer sees them", arguments: [
-        (LensGesture.swipeLeft, "Swipe left"),
-        (LensGesture.swipeRight, "Swipe right"),
-        (LensGesture.swipeUp, "Swipe up"),
-        (LensGesture.swipeDown, "Swipe down"),
-        (LensGesture.tap, "Tap"),
-    ])
-    func gestureNames(gesture: LensGesture, name: String) {
-        #expect(gesture.name == name)
     }
 }

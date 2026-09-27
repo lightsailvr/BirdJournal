@@ -42,6 +42,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 - [x] Inputs injection: `services.input.navDown()/select()/back()`; camera feed from an HEVC .mp4 or JPEG/PNG. Done in #4:
       Display and Inputs attach to one mock session; a `.metaRayBanDisplay` mock delivers `.nav`, `.select` and, unlike real
       glasses, `.back` (source `neuralBand`) within 100 ms of injection. Injection before Inputs is `.active` is dropped.
+      Mock `powerOff()` ends the session on the device side (`.stopped` while running), so the "ended by the glasses"
+      path has a mock test; the real two-finger tap still needs the hardware run below.
 - [ ] Limit: no deterministic audio-frame injection. Test the identification engine with WAV files directly, not through the mock.
 - [x] Found in #3: an audio-enabled camera stream on the mock fails with `StreamError.videoStreamingError` unless
       `services.camera.setCameraFeed(fileURL:)` is given an image first. With a feed it reaches `.streaming`, then
