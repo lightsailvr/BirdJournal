@@ -5,21 +5,21 @@ import UIKit
 
 // No SwiftUI import here: `Text`, `Button`, `Icon` and `Image` are the Display DSL, not SwiftUI's.
 
-/// Maps one screenful of a `LensCard` one to one onto the single root `FlexBox` a Display send takes (DECISIONS.md,
-/// "Toolkit facts"): one top-aligned column that fits the canvas (issue #24). Images are resolved by the caller:
-/// the pure module names them, the pack (or the fake stack) holds the pixels. A photo the caller cannot load is
-/// left out. Taps on the card's button and list rows are delivered to `onAction`.
+/// Maps a `LensCard` one to one onto the single root `FlexBox` a Display send takes (DECISIONS.md, "Toolkit facts"):
+/// one top-aligned column that the glasses scroll vertically (issue #24). Images are resolved by the caller: the
+/// pure module names them, the pack (or the fake stack) holds the pixels. A photo the caller cannot load is left
+/// out. Taps on the card's button and list rows are delivered to `onAction`.
 enum DisplayCardBuilder {
     /// Padding around the card on the 600-pixel canvas; the pack's lens crops are cut to the width this leaves.
     static let padding: CGFloat = 24
 
     static func flexBox(
-        for screenful: [LensElement],
+        for card: LensCard,
         image: (LensImage) -> UIImage?,
         onAction: @escaping @Sendable (LensAction) -> Void
     ) -> FlexBox {
         // A photo the caller cannot load is left out, so the children are gathered before the builder runs.
-        let children = screenful.compactMap { component($0, image: image, onAction: onAction) }
+        let children = card.elements.compactMap { component($0, image: image, onAction: onAction) }
         return FlexBox(direction: .column, spacing: 12, crossAlignment: .stretch) {
             for child in children {
                 child

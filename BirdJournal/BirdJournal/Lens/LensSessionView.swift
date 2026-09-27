@@ -36,7 +36,7 @@ struct LensSessionView: View {
                     Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                 }
             } footer: {
-                Text("Swipe left and right between species, down for a card's field marks and up to come back, tap for \"This is my bird\". The two-finger tap ends the session from the glasses.")
+                Text("Swipe left and right between species, up and down to scroll a card, tap for \"This is my bird\". The middle-finger tap goes back to the list and, from the list, ends the session.")
             }
 
             #if DEBUG
@@ -99,14 +99,14 @@ extension LensPage {
     /// The page as the phone screen names it.
     var title: String {
         switch self {
-        case .list(let screenful): "Species list · screenful \(screenful + 1)"
-        case .species(let index, let screenful): "Species \(index + 1) · screenful \(screenful + 1)"
+        case .list: "Species list"
+        case .species(let index): "Species \(index + 1)"
         }
     }
 }
 
-/// The current card mirrored on the phone (spec "Card renderer": the same page model feeds the phone view), one
-/// block per screenful.
+/// The current card mirrored on the phone (spec "Card renderer": the same page model feeds the phone view), with a
+/// rule between the screenfuls the word budget counts.
 struct LensCardView: View {
     let card: LensCard
 

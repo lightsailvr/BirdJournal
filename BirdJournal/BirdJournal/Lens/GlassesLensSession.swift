@@ -10,7 +10,7 @@ import UIKit
 
 /// The glasses adapter for the lens (spec "Glasses adapter"): a device session with Display and Inputs attached,
 /// the `LensStateMachine` fed with stack updates, every Nav, Select and Back the glasses deliver, and every tap on
-/// a card element the Display reports, and the screenful it lands on rendered onto the lens after each change. Saves are
+/// a card element the Display reports, and the card it lands on rendered onto the lens after each change. Saves are
 /// handed to `onEffect` for the listening run to act on (issue #9); Back on the root ends the run here.
 ///
 /// Order (DAT-SETUP-CHECKLIST.md): Display attaches once the session is `.started`, the first card is sent once
@@ -66,10 +66,8 @@ final class GlassesLensSession {
     private(set) var displayState: DisplayState = .stopped
     private(set) var inputsState: InputsState = .inactive
     private(set) var machine = LensStateMachine()
-    /// The card for the current page, kept in step with `machine`; the lens shows the page's screenful of it.
+    /// What the lens shows, kept in step with `machine`.
     private(set) var card: LensCard
-    /// The page whose screenful was last sent, so a page change on an unchanged card still sends.
-    @ObservationIgnored private var sentPage: LensPage?
     /// Candidates saved this run, newest last; the listening run writes them to the album.
     private(set) var savedSightings: [Candidate] = []
     /// Newest first, capped at `maxRecords`.
@@ -114,7 +112,7 @@ final class GlassesLensSession {
         self.image = image
         self.saveDebounce = saveDebounce
         self.onEffect = onEffect
-        card = LensCardRenderer.render(.list(screenful: 0), stack: CandidateStack(), saved: [], profile: profile)
+        card = LensCardRenderer.render(.list, stack: CandidateStack(), saved: [], profile: profile)
     }
 
     var page: LensPage { machine.page }
@@ -135,7 +133,6 @@ final class GlassesLensSession {
         lastSave = nil
         inputRecords = []
         stopTask = nil
-        sentPage = nil
         refreshCard()
         lastSessionError.withLock { $0 = nil }
         do {
@@ -200,7 +197,6 @@ final class GlassesLensSession {
             }
         }
         guard displayStarted else { throw StartError.displayDidNotStart }
-        sentPage = machine.page
         try await display.send(renderedCard())
 
         // Inputs last: `addInputs` returns nil unless the session is already started.
@@ -271,7 +267,7 @@ final class GlassesLensSession {
         if inputRecords.count > Self.maxRecords { inputRecords.removeLast(inputRecords.count - Self.maxRecords) }
         // Events that land while the run is ending (after Back on the root, say) must not move the pages.
         guard let gesture = record.gesture, phase == .running else { return }
-        perform(machine.apply(gesture, screenfuls: card.screenfuls.count))
+        perform(machine.apply(gesture))
     }
 
     /// A tap on a card element (the Save button, a list row), delivered by Display rather than Inputs.
@@ -303,18 +299,17 @@ final class GlassesLensSession {
 
     // MARK: - Display
 
-    /// Re-renders the current page's card and sends its screenful if either changed. Every page shows the stack
-    /// (count, position, score), so a stack update on any page can change the card without changing the page.
+    /// Re-renders the current page and sends it if it changed. Every page shows the stack (count, position, score),
+    /// so a stack update on any page can change the card without changing the page.
     private func refreshCard() {
         let next = LensCardRenderer.render(machine.page, stack: machine.stack, saved: machine.savedIndices, profile: profile)
-        guard next != card || machine.page != sentPage else { return }
+        guard next != card else { return }
         card = next
-        sentPage = machine.page
         resendCard()
     }
 
     private func renderedCard() -> FlexBox {
-        DisplayCardBuilder.flexBox(for: card.screenful(at: machine.page.screenful), image: image) { [weak self] action in
+        DisplayCardBuilder.flexBox(for: card, image: image) { [weak self] action in
             Task { @MainActor in self?.tapped(action) }
         }
     }

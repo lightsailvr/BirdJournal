@@ -80,10 +80,9 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 6. [ ] End-to-end run with Dev Mode (#9): "Listen with the glasses", pocket the phone, hear a bird, see the card within 6 s,
    tap "This is my bird", then check the Album count on the phone and that the sighting's frame file exists.
 7. [ ] Lens UI probes (#24), on the glasses with the Neural Band, from the "Lens" screen with the fake stack:
-   - Paging: on a species card, does swipe down show the text screenful (strip, field marks, credit, button) and swipe
-     up bring the photo back, with the phone's input list recording each Nav? If the glasses consume Nav up/down instead,
-     the card never pages: note whether the display scrolls the view by itself and where it starts (the mock anchors
-     overflow at the bottom and does not scroll, which is why each send is one screenful).
+   - [x] Scrolling: a tall card scrolls natively with swipe up/down, and the middle-finger tap delivers Back (2026-09-27).
+     Still note whether the phone's input list records Nav up/down while the card scrolls (the app ignores them either way).
+     The mock preview does not scroll (it anchors overflow at the bottom), so check the second screenful on the glasses.
    - Photo: does the 552 × 368 crop fill the card's width from the top with the name readable without scrolling?
    - Focus and Select: on the species list, does Nav move focus between the rows, and does Select open the focused
      row (a `FlexBox.onTap` click), arrive as an Inputs `select` (logged on the phone), or both? On a card, does Select

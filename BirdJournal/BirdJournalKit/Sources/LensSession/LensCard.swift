@@ -68,9 +68,9 @@ public enum LensElement: Sendable, Equatable {
     case list([LensListRow])
 }
 
-/// A card, described without the toolkit: a column of elements split into screenfuls, each of which fits the
-/// 600-pixel canvas and is what one Display send shows (DECISIONS.md: one root `FlexBox` per send; the page says
-/// which screenful is on the lens). The word budget (spec user story 24) applies per screenful.
+/// A card, described without the toolkit: one column of elements, sent whole as the single root `FlexBox` of a
+/// Display send and scrolled by the glasses (DECISIONS.md, "Lens UI"). The elements are grouped into the screenfuls
+/// they roughly lay out as, because the word budget (spec user story 24) applies per screenful.
 public struct LensCard: Sendable, Equatable {
     public var screenfuls: [[LensElement]]
 
@@ -81,11 +81,6 @@ public struct LensCard: Sendable, Equatable {
     /// Every element of every screenful in order.
     public var elements: [LensElement] { screenfuls.flatMap { $0 } }
 
-    /// The elements of screenful `index`, clamped to the card (a page can outlive a card that shrank).
-    public func screenful(at index: Int) -> [LensElement] {
-        guard !screenfuls.isEmpty else { return [] }
-        return screenfuls[min(max(index, 0), screenfuls.count - 1)]
-    }
 
     /// The card's photo, if it has one.
     public var photo: LensImage? {

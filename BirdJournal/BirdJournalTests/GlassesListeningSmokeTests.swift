@@ -36,25 +36,25 @@ extension MockDeviceKitTests {
                 await run.start()
                 try #require(run.phase == .listening, "\(run.errorMessage ?? "no error")")
                 #expect(run.sessionState == .started)
-                #expect(run.lens.page == .list(screenful: 0))
+                #expect(run.lens.page == .list)
                 #expect(run.lens.card.elements[0] == .heading("No species yet"))
                 try await waitUntil { run.lens.inputsState == .active }
 
                 // Windows at 0 and 1.5 s: finch and jay heard twice, both admitted away from Los Angeles.
                 source.feed(seconds: 4.5)
                 try await waitUntil { run.lens.stack.count == 2 }
-                #expect(run.lens.page == .list(screenful: 0))
+                #expect(run.lens.page == .list)
                 #expect(run.lens.card.elements[0] == .heading("2 species heard"))
                 #expect(run.listening.list.rows.count == 2)
 
                 let input = glasses.services.input
                 let before = Date.now
                 input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0, screenful: 0) }
+                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
                 #expect(run.lens.card.screenfuls[0].contains(.title("House Finch", detail: "90% match")))
                 input.select()
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
-                #expect(run.lens.page == .species(index: 0, screenful: 0))
+                #expect(run.lens.page == .species(index: 0))
                 #expect(run.lens.card.elements.last == .saved("Saved ✓"))
 
                 let sightings = try album.mainContext.fetch(FetchDescriptor<Sighting>())
@@ -81,9 +81,10 @@ extension MockDeviceKitTests {
                 #expect(run.saved.count == 1)
                 #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 1)
 
-                // Back on the root ends the whole run: lens, engine, source and session.
-                input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .list(screenful: 0) }
+                // Back (the middle-finger tap) returns to the list; Back on the root ends the whole run: lens, engine,
+                // source and session.
+                input.back()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .list }
                 input.back()
                 try await waitUntil(timeout: .seconds(5)) { run.phase == .stopped(.back) }
                 #expect(run.lens.phase == .stopped(.back))
@@ -120,7 +121,7 @@ extension MockDeviceKitTests {
 
                     let input = glasses.services.input
                     input.navLeft()
-                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0, screenful: 0) }
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
                     source.latestFrame = Self.frame(.red)
                     #expect(run.hasCameraFrame)
                     input.select()

@@ -1,34 +1,26 @@
 import Identification
 
-/// A page shown on the lens: a card and the screenful of it on the canvas. Indices refer to the session's candidate
-/// stack, which only ever appends. Each send must fit the canvas (the mock anchors overflow at the bottom, cutting
-/// the top of a tall card; see DECISIONS.md, "Lens UI"), so a card is paged by screenful rather than scrolled.
+/// A page shown on the lens. Indices refer to the session's candidate stack, which only ever appends. A page is
+/// one tall card that the glasses scroll vertically (verified on hardware, DECISIONS.md, "Lens UI").
 public enum LensPage: Sendable, Hashable {
-    /// Root page: every species heard this session, one tappable row each, `screenful` rows-pages down.
-    case list(screenful: Int)
-    /// The card for the species at `index`: photo, name and match rate on the first screenful; identification
-    /// text, credit and the "This is my bird" action (or its saved mark) on the next.
-    case species(index: Int, screenful: Int)
+    /// Root page: every species heard this session, one tappable row each.
+    case list
+    /// The card for the species at `index`: photo, name and match rate, then identification text, credit and the
+    /// "This is my bird" action (or its saved mark).
+    case species(index: Int)
 
     /// The stack index the page is about, nil on the root.
     public var index: Int? {
         switch self {
         case .list: nil
-        case .species(let index, _): index
-        }
-    }
-
-    /// The screenful of the card the page shows, from 0.
-    public var screenful: Int {
-        switch self {
-        case .list(let screenful), .species(_, let screenful): screenful
+        case .species(let index): index
         }
     }
 }
 
 /// Semantic input events as the app sees them. Swipes arrive as Nav events and taps as Select events from the
-/// Neural Band. Real Display glasses do not deliver `back` (the two-finger tap ends the session instead); the rule
-/// is here for when the hardware does, behind `consumeBack` (DECISIONS.md, "Lens UI").
+/// Neural Band; the middle-finger tap arrives as Back, which reaches the app because Inputs is attached with
+/// `consumeBack` (DECISIONS.md, "Lens UI").
 public enum LensGesture: Sendable, Hashable, CaseIterable {
     case swipeLeft
     case swipeRight
@@ -69,13 +61,13 @@ public enum LensEffect: Sendable, Equatable {
 /// Pure lens state machine (spec "Lens session"): folds `CandidateStack` updates and semantic input events into
 /// the page to render and at most one side effect per event.
 ///
-/// Page map (DECISIONS.md, "Lens UI", issue #24): list ⇄ species cards (swipe left/right; right past the first
-/// card returns to the list; a row tap opens a card; every card opens on its first screenful), swipe down/up page
-/// the screenfuls of the list or the card, and up from a card's first screenful is back to the list. A tap or the
-/// Save button on a card is "This is my bird". Back returns to the list and ends the session on the root. The stack never reorders and new species append at the end, so an update never moves the page the
-/// wearer is on.
+/// Page map (DECISIONS.md, "Lens UI", issue #24): list → first species card (swipe left) or any card (a row tap);
+/// swipe left/right move between cards and stop at the ends. Back (the middle-finger tap) is the only way back: a
+/// card → the list, the list → end the session. Swipe up and down scroll the card on the glasses, so the machine
+/// ignores them. A tap or the Save button on a card is "This is my bird". The stack never reorders and new species
+/// append at the end, so an update never moves the page the wearer is on.
 public struct LensStateMachine: Sendable, Equatable {
-    public private(set) var page: LensPage = .list(screenful: 0)
+    public private(set) var page: LensPage = .list
     /// The candidates the pages index into, in admission order.
     public private(set) var stack = CandidateStack()
     /// Stack indices whose sighting has been saved this session; their cards show the saved mark instead of the
@@ -101,7 +93,7 @@ public struct LensStateMachine: Sendable, Equatable {
             && zip(stack.candidates, self.stack.candidates).allSatisfy { $0.species == $1.species }
         self.stack = stack
         if !continues {
-            page = .list(screenful: 0)
+            page = .list
             savedIndices = []
         }
         return true
@@ -109,39 +101,28 @@ public struct LensStateMachine: Sendable, Equatable {
 
     // MARK: - Gestures
 
-    /// Applies a gesture to the current page, whose card has `screenfuls` screenfuls (at least one; the renderer
-    /// knows, the machine does not). Gestures with no meaning on the current page are ignored.
-    public mutating func apply(_ gesture: LensGesture, screenfuls: Int) -> LensEffect? {
-        let last = max(screenfuls - 1, 0)
-        /// The next screenful down, stopping at the card's last one.
-        func down(from screenful: Int) -> Int { min(screenful + 1, last) }
-        /// The next screenful up, from a page that may have outlived a card that shrank.
-        func up(from screenful: Int) -> Int { max(min(screenful, last) - 1, 0) }
+    /// Applies a gesture to the current page. Gestures with no meaning on the current page are ignored.
+    public mutating func apply(_ gesture: LensGesture) -> LensEffect? {
         switch (page, gesture) {
-        case (.list, .swipeLeft), (.list, .swipeRight):
-            if !stack.isEmpty { page = .species(index: 0, screenful: 0) }
-        case let (.list(screenful), .swipeDown):
-            page = .list(screenful: down(from: screenful))
-        case let (.list(screenful), .swipeUp):
-            page = .list(screenful: up(from: screenful))
+        case (.list, .swipeLeft):
+            if !stack.isEmpty { page = .species(index: 0) }
         case (.list, .back):
             return .endSession
-        case (.list, .tap):
-            // Rows are opened through `press`.
+        case (.list, .swipeRight), (.list, .swipeUp), (.list, .swipeDown), (.list, .tap):
+            // Nothing before the first card; the list scrolls on the glasses; rows are opened through `press`.
             break
 
-        case let (.species(index, _), .swipeLeft):
-            if index + 1 < stack.count { page = .species(index: index + 1, screenful: 0) }
-        case let (.species(index, _), .swipeRight):
-            page = index == 0 ? .list(screenful: 0) : .species(index: index - 1, screenful: 0)
-        case let (.species(index, screenful), .swipeDown):
-            page = .species(index: index, screenful: down(from: screenful))
-        case let (.species(index, screenful), .swipeUp):
-            page = screenful == 0 ? .list(screenful: 0) : .species(index: index, screenful: up(from: screenful))
-        case let (.species(index, _), .tap):
+        case let (.species(index), .swipeLeft):
+            if index + 1 < stack.count { page = .species(index: index + 1) }
+        case let (.species(index), .swipeRight):
+            if index > 0 { page = .species(index: index - 1) }
+        case (.species, .swipeUp), (.species, .swipeDown):
+            // The card scrolls on the glasses.
+            break
+        case let (.species(index), .tap):
             return save(index)
         case (.species, .back):
-            page = .list(screenful: 0)
+            page = .list
         }
         return nil
     }
@@ -150,10 +131,10 @@ public struct LensStateMachine: Sendable, Equatable {
     /// Anything else is ignored.
     public mutating func press(_ action: LensAction) -> LensEffect? {
         switch (page, action) {
-        case let (.species(index, _), .save):
+        case let (.species(index), .save):
             return save(index)
         case let (.list, .open(index)) where stack.candidates.indices.contains(index):
-            page = .species(index: index, screenful: 0)
+            page = .species(index: index)
             return nil
         case (.species, .open), (.list, .save), (.list, .open):
             return nil

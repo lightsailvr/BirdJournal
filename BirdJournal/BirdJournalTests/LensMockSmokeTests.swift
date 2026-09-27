@@ -15,64 +15,67 @@ extension MockDeviceKitTests {
         @Test("injected nav, select and back walk the list and the cards, and a new species never moves the page")
         func navigatesAllPages() async throws {
             try await withRunningLens { lens, glasses in
-                #expect(lens.page == .list(screenful: 0))
+                #expect(lens.page == .list)
                 #expect(lens.card.elements[0] == .heading("No species yet"))
 
                 lens.update(with: FakeLensStack.stack(count: 2))
-                #expect(lens.page == .list(screenful: 0))
+                #expect(lens.page == .list)
                 #expect(lens.card.elements[0] == .heading("2 species heard"))
 
                 let input = glasses.services.input
                 input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0, screenful: 0) }
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
                 #expect(lens.card.photo == LensImage(id: "sayornis-nigricans"))
                 #expect(lens.card.screenfuls[0].contains(.title("Black Phoebe", detail: "82% match")))
 
-                // Down pages to the text screenful and stops at the card's end; up comes back.
+                // Up and down scroll the card on the glasses; the page stays.
                 input.navDown()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0, screenful: 1) }
-                input.navDown()
-                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 3 }
-                #expect(lens.page == .species(index: 0, screenful: 1))
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 2 }
+                #expect(lens.page == .species(index: 0))
                 input.navUp()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0, screenful: 0) }
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 3 }
+                #expect(lens.page == .species(index: 0))
 
                 // "This is my bird": one Select saves and the card shows it; a Select right behind it (one press the
                 // hardware delivered twice) saves nothing more; a deliberate one later saves again.
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 1 }
                 #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[0]])
-                #expect(lens.page == .species(index: 0, screenful: 0))
+                #expect(lens.page == .species(index: 0))
                 #expect(lens.card.elements.last == .saved("Saved ✓"))
                 #expect(lens.card.elements.first == .status("2 species · 1 of 2 · Saved"))
                 input.select()
-                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 6 }
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 5 }
                 #expect(lens.savedSightings.count == 1)
                 try await Task.sleep(for: .milliseconds(1100))
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 2 }
 
                 input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1, screenful: 0) }
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1) }
                 #expect(lens.card.screenfuls[0].contains(.title("House Finch", detail: "61% match")))
 
                 // A species arriving while on a card appends, updates the strip and leaves the page alone.
                 lens.update(with: FakeLensStack.stack(count: 3))
-                #expect(lens.page == .species(index: 1, screenful: 0))
+                #expect(lens.page == .species(index: 1))
                 #expect(lens.stack.count == 3)
                 #expect(lens.card.elements.first == .status("3 species · 2 of 3"))
                 #expect(lens.card.photo == LensImage(id: "haemorhous-mexicanus"))
 
+                // Right stops at the first card; Back (the middle-finger tap) returns to the list.
                 input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0, screenful: 0) }
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
                 input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .list(screenful: 0) }
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 9 }
+                #expect(lens.page == .species(index: 0))
+                input.back()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
                 #expect(lens.card.elements[0] == .heading("3 species heard"))
                 guard case .list(let rows) = lens.card.elements[2] else { Issue.record("no rows on the list"); return }
                 #expect(rows.map(\.isSaved) == [true, false, false])
                 #expect(rows.map(\.hasPhoto) == [true, true, true])
 
-                // Back on the root ends the session.
+                // Back again, on the root, ends the session.
                 input.back()
                 try await waitUntil(timeout: .seconds(2)) { lens.phase == .stopped(.back) }
                 #expect(lens.inputsState == .inactive)
