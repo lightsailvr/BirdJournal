@@ -4,7 +4,9 @@ import PackageDescription
 
 // BirdJournalKit holds the app's testable seams as separate modules.
 //
-// - Identification: audio windowing + BirdNET inference (ONNX Runtime). No UI, no toolkit dependency.
+// - Identification: audio windowing + BirdNET inference (ONNX Runtime). No UI, no toolkit dependency. Its
+//                   `Models` resource folder is a symlink to the repo's `models/` directory (populated by
+//                   `scripts/download-models.sh`), so the model files ship inside the package's resource bundle.
 // - LensSession:    pure lens page state machine. No toolkit dependency; unit-tested without the glasses.
 // - Pack:           species packs (bundled LA pack, downloadable regional packs).
 // - Album:          saved sightings (SwiftData).
@@ -33,14 +35,16 @@ let package = Package(
             name: "Identification",
             dependencies: [
                 .product(name: "onnxruntime", package: "onnxruntime-swift-package-manager"),
-            ]
+            ],
+            resources: [.copy("Models")]
         ),
         .testTarget(
             name: "IdentificationTests",
             dependencies: [
                 "Identification",
                 .product(name: "onnxruntime", package: "onnxruntime-swift-package-manager"),
-            ]
+            ],
+            resources: [.copy("Fixtures")]
         ),
 
         .target(name: "LensSession"),

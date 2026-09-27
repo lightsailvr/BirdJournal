@@ -10,6 +10,11 @@ scripts/download-models.sh
 The script downloads every entry in `manifest.json` into this directory and verifies its SHA-256.
 Existing files whose checksum already matches are skipped, so re-running is cheap.
 
+The `Identification` package target's `Sources/Identification/Models` folder is a symlink to this
+directory and is declared as a package resource, so the files here end up in the package's resource
+bundle and load through `Bundle.module` on the simulator, on a device and in the app. Xcode Cloud's
+post-clone hook runs the download script for the same reason.
+
 | File | What | Source | License |
 | --- | --- | --- | --- |
 | `BirdNET+_V3.0-preview3.1_Global_11K_FP16_pruned.onnx` | Acoustic model (11,560 classes, 32 kHz input) | Zenodo record 20703646 | CC BY-SA 4.0 |

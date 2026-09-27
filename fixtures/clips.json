@@ -1,0 +1,23 @@
+{
+  "comment": "Labeled recordings for the identification engine tests. Files live in fixtures/clips/ (gitignored); scripts/download-clips.sh fetches the entries that carry a url. Species are scientific names as spelled in the BirdNET+ V3.0 label file. See fixtures/README.md.",
+  "clips": [
+    {
+      "file": "clips/birdnet-example-soundscape.wav",
+      "url": "https://raw.githubusercontent.com/birdnet-team/birdnet-V3.0-dev/main/example/soundscape.wav",
+      "sha256": "df312b45bc82ce4c638c3e9e09d748702ea14a91ec29e4e8e0676d3e3e015fd7",
+      "note": "The BirdNET+ V3.0 developer preview's example soundscape (birdnet-team/birdnet-V3.0-dev, MIT). 120 s, 48 kHz mono, a north-eastern US dawn chorus: Dark-eyed Junco, Black-capped Chickadee, Blue Jay, House Finch, Northern Cardinal, American Goldfinch, Red Crossbill and Tufted Titmouse are audible. Scored against Los Angeles, where the geomodel keeps the first seven (it is permissive: Blue Jay scores 0.04 there) and rules out Tufted Titmouse.",
+      "latitude": 34.05,
+      "longitude": -118.25,
+      "week": 36,
+      "expected": [
+        "Junco hyemalis"
+      ],
+      "absent": [
+        "Baeolophus bicolor",
+        "Turdus merula",
+        "Fringilla coelebs"
+      ],
+      "withinSeconds": 10
+    }
+  ]
+}
