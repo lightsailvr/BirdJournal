@@ -7,9 +7,9 @@ context, at most 1200 pixels on the long side.
 
 from __future__ import annotations
 
-from PIL import Image
+from PIL import Image, ImageOps
 
-from packbuilder.scoring import Box
+from packbuilder.geometry import Box
 
 LENS_SIZE = 260
 PHONE_MAX_SIZE = 1200
@@ -46,6 +46,11 @@ def phone_crop_box(box: Box, size: tuple[int, int]) -> tuple[int, int, int, int]
     right = min(width, int(round(bx1 + pad_x)))
     bottom = min(height, int(round(by1 + pad_y)))
     return left, top, max(right, left + 1), max(bottom, top + 1)
+
+
+def upright(image: Image.Image) -> Image.Image:
+    """The image with its EXIF orientation applied, so boxes and crops agree with what the photographer saw."""
+    return ImageOps.exif_transpose(image) or image
 
 
 def render_lens(image: Image.Image, box: Box) -> Image.Image:

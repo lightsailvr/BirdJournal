@@ -1,5 +1,6 @@
 from packbuilder.selection import Overrides, ScoredPhoto, select_photos
-from packbuilder.scoring import Box, CropScore
+from packbuilder.geometry import Box
+from packbuilder.scoring import CropScore
 from tests.conftest import make_candidate
 
 

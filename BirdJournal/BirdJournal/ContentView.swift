@@ -18,7 +18,7 @@ struct ContentView: View {
         case audioSpike
         case lens
         case speciesPack
-        case species(PackSpecies)
+        case species(id: String)
     }
 
     var body: some View {
@@ -53,8 +53,10 @@ struct ContentView: View {
                 case .audioSpike: SpikeView()
                 case .lens: LensSessionView()
                 case .speciesPack: SpeciesPackView()
-                case .species(let species):
-                    if let pack = BundledPack.pack { SpeciesDetailView(pack: pack, species: species) }
+                case .species(let id):
+                    if let pack = BundledPack.pack, let species = pack.species.first(where: { $0.id == id }) {
+                        SpeciesDetailView(pack: pack, species: species)
+                    }
                 }
             }
             #if DEBUG
@@ -122,7 +124,7 @@ private struct AutoSpeciesPack: ViewModifier {
         content.task {
             guard let value = UserDefaults.standard.string(forKey: "autoSpeciesPack") else { return }
             path = [.speciesPack]
-            if let species = BundledPack.pack?.species(scientificName: value) { path.append(.species(species)) }
+            if let species = BundledPack.pack?.species(scientificName: value) { path.append(.species(id: species.id)) }
         }
     }
 }

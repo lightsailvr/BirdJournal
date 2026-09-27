@@ -12,16 +12,18 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Pytho
 
 ## What a build does
 
-1. **Definition.** `packs/<id>/pack.json` names the pack, its iNaturalist place and bounding box, and the species
-   (scientific name, common name as the BirdNET+ label file spells it, iNaturalist taxon id, Wikipedia URL).
+1. **Definition.** `packs/<id>/pack.json` names the pack, its iNaturalist place and bounding box, the date
+   (`inat_created_before`) after which observations are ignored so a rebuild sees the same candidates, and the
+   species (scientific name, common name as the BirdNET+ label file spells it, iNaturalist taxon id, Wikipedia URL).
    `overrides.json` beside it forces photos in or out per species (`{"Sayornis nigricans": {"include": [id], "exclude": [id]}}`).
 2. **Metadata.** Research-grade observations of each species in the region, with their photos, observers and
    licenses. Two sources describe the same iNaturalist data:
-   - `--source api` (default): `api.inaturalist.org/v1/observations`, newest first (the most-faved observations are the oddities), cached under `cache/api/` so
-     a rebuild is offline and reproducible until the cache is cleared.
+   - `--source api` (default): `api.inaturalist.org/v1/observations`, newest first up to `inat_created_before`
+     (the most-faved observations are the oddities), cached under `cache/api/` so a rebuild is offline. Photos
+     deleted from iNaturalist since the pin drop out of the candidate set; `overrides.json` pins the rest.
    - `--source opendata --metadata-dir DIR`: the [iNaturalist Open Data](https://github.com/inaturalist/inaturalist-open-data)
      metadata dump (`observations.csv`, `photos.csv`, `observers.csv`, tens of gigabytes), scanned with DuckDB inside
-     the pack's bounding box.
+     the pack's bounding box, in one scan for every species of the pack.
 3. **Filter.** Keeps CC0, CC BY and CC BY-NC photos of research-grade observations that have an observer and an
    observation URL; everything else is counted in `report.json` (`candidates.py`, `licenses.py`).
 4. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates from the Open Data bucket
@@ -35,7 +37,7 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Pytho
    is what `overrides.json` is for (see the Los Angeles file for examples).
 7. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
    logged gap (`selection.py`).
-8. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`), `lens/<photo>.jpg` (260 px square, tight crop),
+8. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `lookalike`), `lens/<photo>.jpg` (260 px square, tight crop),
    `phone/<photo>.jpg` (looser crop, 1200 px max), `LICENSE` with every credit and link, `report.json` with counts,
    chosen ids and gaps, and optionally a zip (`writer.py`).
 

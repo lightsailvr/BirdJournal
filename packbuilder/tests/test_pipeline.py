@@ -1,13 +1,11 @@
-"""The build of one species end to end, with a fake metadata source and detector and synthetic photos on disk."""
-
-import json
+"""The build of one species end to end, through its seams: a metadata source, a detector and a photo fetcher."""
 
 import pytest
 
 from packbuilder import pipeline
 from packbuilder.definition import SpeciesEntry
 from packbuilder.detector import Detection
-from packbuilder.scoring import Box
+from packbuilder.geometry import Box
 from packbuilder.selection import Overrides
 from tests.conftest import make_candidate, synthetic_photo
 
@@ -24,94 +22,93 @@ class FakeMetadata:
 
 
 class FakeDetector:
-    """Detects a big bird in every photo except the ids listed in `blind`."""
+    """Detects a big bird in every photo except those whose width is in `blind` (the fetcher encodes the photo id
+    in the width)."""
 
     def __init__(self, blind=()):
-        self.blind = set(blind)
-        self.seen = []
+        self.blind = {400 + photo_id for photo_id in blind}
 
     def detect(self, image):
-        self.seen.append(image.size)
-        return [] if image.size in self.blind else [Detection(box=BIG, score=0.9)]
+        return [] if image.size[0] in self.blind else [Detection(box=BIG, score=0.9)]
+
+
+class Photos:
+    """Synthetic photos written on demand: `specs[photo_id]` are `synthetic_photo` keyword arguments."""
+
+    def __init__(self, root):
+        self.root = root
+        self.specs = {}
+
+    def fetch(self, candidate, cache_dir, size):
+        path = self.root / size / f"{candidate.photo_id}.jpg"
+        path.parent.mkdir(exist_ok=True, parents=True)
+        synthetic_photo(size=(400 + candidate.photo_id, 300), bird_box=BIG, **self.specs[candidate.photo_id]).save(path)
+        return path
 
 
 @pytest.fixture
-def photos_on_disk(tmp_path, monkeypatch):
-    """Synthetic photos keyed by photo id; the size encodes the id so the fake detector can tell them apart."""
-    specs = {}
-
-    def fetch(candidate, cache_dir, size="original"):
-        spec = specs[candidate.photo_id]
-        path = tmp_path / size / f"{candidate.photo_id}.jpg"
-        path.parent.mkdir(exist_ok=True)
-        synthetic_photo(size=(400 + candidate.photo_id, 300), bird_box=BIG, **spec).save(path)
-        return path
-
-    monkeypatch.setattr(pipeline, "fetch_photo", fetch)
-    return specs
+def photos(tmp_path):
+    return Photos(tmp_path / "photos")
 
 
-def options(tmp_path, **kwargs):
-    return pipeline.BuildOptions(cache_dir=tmp_path / "cache", out_dir=tmp_path / "out", candidate_limit=kwargs.pop("limit", 10), **kwargs)
+def options(tmp_path, photos, **kwargs):
+    return pipeline.BuildOptions(cache_dir=tmp_path / "cache", out_dir=tmp_path / "out", fetch=photos.fetch, **kwargs)
 
 
-def test_species_build_filters_detects_scores_and_selects(tmp_path, photos_on_disk):
+def chosen_ids(result):
+    return [chosen.candidate.photo_id for chosen in result.photos]
+
+
+def test_species_build_filters_detects_scores_and_selects(tmp_path, photos):
     candidates = [make_candidate(photo_id=i, observation_id=i * 10) for i in range(1, 7)]
     candidates.append(make_candidate(photo_id=7, observation_id=70, license="cc-by-sa"))
     for i in range(1, 7):
-        photos_on_disk[i] = {"background": 30}
-    photos_on_disk[3] = {"background": 30, "blur": 8}  # too blurred to keep
-    detector = FakeDetector(blind={(400 + 5, 300)})  # photo 5 has no bird
+        photos.specs[i] = {"background": 30}
+    photos.specs[3] = {"background": 30, "blur": 8}  # too blurred to keep
 
-    result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), detector, options(tmp_path))
+    result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(blind=[5]), options(tmp_path, photos))
 
-    chosen = {p.candidate.photo_id for p, _ in result.photos}
-    assert chosen == {1, 2, 4, 6}
-    assert 3 not in chosen and 5 not in chosen and 7 not in chosen
-    assert result.candidates == 7 and list(result.rejected.values()) == [1]
+    assert set(chosen_ids(result)) == {1, 2, 4, 6}, "3 is blurred, 5 has no bird, 7 is share-alike"
+    assert result.candidates == 7 and result.rejected == {"license": 1}
     assert result.detected == 5
     assert not result.gap
-    assert len(detector.seen) == 6, "only license-cleared candidates reach the detector"
 
 
-def test_override_include_forces_a_photo_without_a_detection(tmp_path, photos_on_disk):
+def test_override_include_forces_a_photo_without_a_detection(tmp_path, photos):
     candidates = [make_candidate(photo_id=i, observation_id=i * 10) for i in range(1, 4)]
     for i in range(1, 4):
-        photos_on_disk[i] = {"background": 30}
-    detector = FakeDetector(blind={(400 + 2, 300)})
+        photos.specs[i] = {"background": 30}
 
-    result = pipeline.build_species(ENTRY, Overrides(include=[2]), FakeMetadata(candidates), detector, options(tmp_path))
+    result = pipeline.build_species(ENTRY, Overrides(include=[2]), FakeMetadata(candidates), FakeDetector(blind=[2]), options(tmp_path, photos))
 
-    first, _ = result.photos[0]
-    assert first.candidate.photo_id == 2
-    assert first.box == Box(0.0, 0.0, 1.0, 1.0)
+    assert chosen_ids(result)[0] == 2
+    assert result.photos[0].scored.box == pipeline.FULL_FRAME
 
 
-def test_candidate_limit_caps_downloads_but_not_overrides(tmp_path, photos_on_disk):
+def test_candidate_limit_caps_the_shortlist_but_not_overrides(tmp_path, photos):
     candidates = [make_candidate(photo_id=i, observation_id=i * 10) for i in range(1, 9)]
     for i in range(1, 9):
-        photos_on_disk[i] = {"background": 30}
-    detector = FakeDetector()
+        photos.specs[i] = {"background": 30}
 
-    result = pipeline.build_species(ENTRY, Overrides(include=[8]), FakeMetadata(candidates), detector, options(tmp_path, limit=3))
+    result = pipeline.build_species(ENTRY, Overrides(include=[8]), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos, candidate_limit=3))
 
-    assert len(detector.seen) == 4
-    assert [p.candidate.photo_id for p, _ in result.photos][0] == 8
+    assert chosen_ids(result)[0] == 8
+    assert set(chosen_ids(result)) == {8, 1, 2, 3}, "only the first three cleared candidates were considered"
 
 
-def test_gap_when_too_few_photos(tmp_path, photos_on_disk):
+def test_gap_when_too_few_photos(tmp_path, photos):
     candidates = [make_candidate(photo_id=1, observation_id=10)]
-    photos_on_disk[1] = {"background": 30}
-    result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(), options(tmp_path))
+    photos.specs[1] = {"background": 30}
+    result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos))
     assert result.gap and len(result.photos) == 1
 
 
-def test_small_birds_in_the_original_are_skipped(tmp_path, photos_on_disk):
+def test_small_birds_in_the_original_are_skipped(tmp_path, photos):
     candidates = [make_candidate(photo_id=1, observation_id=10, width=300, height=200), make_candidate(photo_id=2, observation_id=20)]
-    photos_on_disk[1] = photos_on_disk[2] = {"background": 30}
+    photos.specs[1] = photos.specs[2] = {"background": 30}
 
-    result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(), options(tmp_path))
+    result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos))
 
-    assert [p.candidate.photo_id for p, _ in result.photos] == [2], "a 180-pixel bird cannot fill a 260-pixel lens crop"
+    assert chosen_ids(result) == [2], "a 180-pixel bird cannot fill a 260-pixel lens crop"
     assert pipeline.bird_pixels(candidates[1], (1024, 683), BIG) == pytest.approx(0.6 * 2048)
     assert pipeline.bird_pixels(make_candidate(width=None, height=None), (1024, 683), BIG) == pytest.approx(0.6 * 2048)

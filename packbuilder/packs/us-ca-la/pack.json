@@ -4,6 +4,7 @@
   "region": "Los Angeles County, California, US",
   "version": 1,
   "inat_place_id": 962,
+  "inat_created_before": "2026-09-26",
   "bounding_box": { "south": 33.70, "west": -118.95, "north": 34.85, "east": -117.65 },
   "comment": "Ten common Los Angeles species for issue #8. common_name follows the BirdNET+ label file so the lens and the phone name a bird the same way; inat_taxon_id resolved from api.inaturalist.org/v1/taxa on 2026-09-27. Issue #12 grows this to about 150 species.",
   "species": [

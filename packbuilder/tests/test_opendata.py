@@ -32,8 +32,9 @@ def test_open_data_join_yields_photo_candidates(tmp_path):
     )
     write_tsv(tmp_path / "observers.csv", "observer_id\tlogin\tname", ["1\tjbirder\tJane Birder", "2\tother\t"])
 
-    source = OpenDataMetadata(tmp_path, BoundingBox(south=33.7, west=-118.95, north=34.85, east=-117.65))
+    source = OpenDataMetadata(tmp_path, BoundingBox(south=33.7, west=-118.95, north=34.85, east=-117.65), taxon_ids=[17013, 42])
     candidates = source.candidates_for(taxon_id=17013)
+    assert source.candidates_for(taxon_id=42) == []
 
     by_id = {c.photo_id: c for c in candidates}
     assert set(by_id) == {1001, 1002}

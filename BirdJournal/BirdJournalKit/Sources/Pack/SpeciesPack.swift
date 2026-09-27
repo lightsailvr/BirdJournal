@@ -4,7 +4,7 @@ import SQLite3
 /// A species pack as `packbuilder` writes it (spec "Pack store"): `pack.sqlite` beside `lens/` and `phone/` JPEG
 /// folders and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
 /// the SQLite connection open.
-public struct SpeciesPack: Sendable, Equatable {
+public struct SpeciesPack: Sendable, Hashable {
     /// The schema this reader understands; `packbuilder.writer.SCHEMA_VERSION` must match.
     public static let schemaVersion = 1
 
@@ -38,7 +38,8 @@ public struct SpeciesPack: Sendable, Equatable {
     }
 }
 
-public struct PackInfo: Sendable, Equatable {
+/// The `pack` row: identity, version and the license text.
+public struct PackInfo: Sendable, Hashable {
     public let id: String
     public let name: String
     public let region: String
@@ -49,7 +50,8 @@ public struct PackInfo: Sendable, Equatable {
     public let licenseText: String
 }
 
-public struct PackSpecies: Sendable, Equatable, Identifiable {
+/// One `species` row with its photos. The description fields are nil until #12 fills them.
+public struct PackSpecies: Sendable, Hashable, Identifiable {
     public let id: String
     /// The key shared with the acoustic model's labels (`Species.scientificName`).
     public let scientificName: String
@@ -65,7 +67,8 @@ public struct PackSpecies: Sendable, Equatable, Identifiable {
     public let photos: [PackPhoto]
 }
 
-public struct PackPhoto: Sendable, Equatable, Identifiable {
+/// One `photo` row: where its two JPEGs are and whom to credit.
+public struct PackPhoto: Sendable, Hashable, Identifiable {
     public let id: String
     public let speciesID: String
     public let rank: Int
@@ -87,6 +90,7 @@ public struct PackPhoto: Sendable, Equatable, Identifiable {
     public let score: Double
 }
 
+/// Why a pack could not be read.
 public enum PackError: Error, Equatable {
     case missingDatabase(String)
     case missingBundledPack(String)
@@ -122,12 +126,12 @@ extension SpeciesPack {
 
     private static func readInfo(_ database: SQLiteDatabase) throws -> PackInfo {
         let rows = try database.rows("SELECT id, name, region, version, schema_version, built_at, license_text FROM pack") { row in
-            guard let id = row.text(0), let name = row.text(1), let region = row.text(2), let builtAt = row.text(5), let license = row.text(6) else {
-                throw PackError.malformedRow(table: "pack")
-            }
-            return PackInfo(id: id, name: name, region: region, version: row.int(3), schemaVersion: row.int(4), builtAt: builtAt, licenseText: license)
+            guard let id = row.text(0), let name = row.text(1), let region = row.text(2), let version = row.int(3),
+                  let schemaVersion = row.int(4), let builtAt = row.text(5), let license = row.text(6)
+            else { throw PackError.malformedRow(table: "pack") }
+            return PackInfo(id: id, name: name, region: region, version: version, schemaVersion: schemaVersion, builtAt: builtAt, licenseText: license)
         }
-        guard let info = rows.first else { throw PackError.malformedRow(table: "pack") }
+        guard rows.count == 1, let info = rows.first else { throw PackError.malformedRow(table: "pack") }
         return info
     }
 
@@ -138,14 +142,15 @@ extension SpeciesPack {
             FROM photo ORDER BY species_id, rank
             """
         let photos = try database.rows(sql) { row in
-            guard let id = row.text(0), let speciesID = row.text(1), let lens = row.text(3), let phone = row.text(4),
-                  let observer = row.text(5), let license = row.text(7), let credit = row.text(8), let short = row.text(9),
-                  let source = row.text(10).flatMap(URL.init(string:)), let photoURL = row.text(11).flatMap(URL.init(string:))
+            guard let id = row.text(0), let speciesID = row.text(1), let rank = row.int(2), let lens = row.text(3),
+                  let phone = row.text(4), let observer = row.text(5), let license = row.text(7), let credit = row.text(8),
+                  let short = row.text(9), let source = row.text(10).flatMap(URL.init(string:)),
+                  let photoURL = row.text(11).flatMap(URL.init(string:)), let inatPhotoID = row.int(12), let score = row.double(13)
             else { throw PackError.malformedRow(table: "photo") }
             return PackPhoto(
-                id: id, speciesID: speciesID, rank: row.int(2), lensFile: lens, phoneFile: phone, observer: observer,
+                id: id, speciesID: speciesID, rank: rank, lensFile: lens, phoneFile: phone, observer: observer,
                 observerLogin: row.text(6), license: license, creditLine: credit, shortCredit: short, sourceURL: source,
-                photoURL: photoURL, inatPhotoID: row.int(12), score: row.double(13)
+                photoURL: photoURL, inatPhotoID: inatPhotoID, score: score
             )
         }
         return Dictionary(grouping: photos, by: \.speciesID)
@@ -162,7 +167,7 @@ extension SpeciesPack {
             }
             return PackSpecies(
                 id: id, scientificName: scientific, commonName: common, birdnetLabel: label,
-                inatTaxonID: row.isNull(4) ? nil : row.int(4), wikipediaURL: row.text(5).flatMap(URL.init(string:)),
+                inatTaxonID: row.int(4), wikipediaURL: row.text(5).flatMap(URL.init(string:)),
                 summary: row.text(6), fieldMarks: row.text(7), size: row.text(8), habitat: row.text(9),
                 photos: photos[id] ?? []
             )
@@ -204,18 +209,19 @@ private final class SQLiteDatabase {
         }
     }
 
+    /// One result row; every accessor returns nil for SQL NULL.
     struct Row {
         let statement: OpaquePointer
 
-        func isNull(_ column: Int) -> Bool { sqlite3_column_type(statement, Int32(column)) == SQLITE_NULL }
+        private func isNull(_ column: Int) -> Bool { sqlite3_column_type(statement, Int32(column)) == SQLITE_NULL }
 
         func text(_ column: Int) -> String? {
             guard let pointer = sqlite3_column_text(statement, Int32(column)) else { return nil }
             return String(cString: pointer)
         }
 
-        func int(_ column: Int) -> Int { Int(sqlite3_column_int64(statement, Int32(column))) }
+        func int(_ column: Int) -> Int? { isNull(column) ? nil : Int(sqlite3_column_int64(statement, Int32(column))) }
 
-        func double(_ column: Int) -> Double { sqlite3_column_double(statement, Int32(column)) }
+        func double(_ column: Int) -> Double? { isNull(column) ? nil : sqlite3_column_double(statement, Int32(column)) }
     }
 }

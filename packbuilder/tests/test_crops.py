@@ -1,5 +1,5 @@
 from packbuilder.crops import LENS_SIZE, PHONE_MAX_SIZE, lens_crop_box, phone_crop_box, render_lens, render_phone
-from packbuilder.scoring import Box
+from packbuilder.geometry import Box
 from tests.conftest import synthetic_photo
 
 

@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from packbuilder.candidates import PhotoCandidate
-from packbuilder.scoring import Box, CropScore
+from packbuilder.geometry import Box
+from packbuilder.scoring import CropScore
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,9 @@ class Overrides:
 
     include: list[int] = field(default_factory=list)
     exclude: list[int] = field(default_factory=list)
+
+    def forces(self, photo_id: int) -> bool:
+        return photo_id in self.include
 
     @classmethod
     def from_mapping(cls, data: dict) -> "Overrides":

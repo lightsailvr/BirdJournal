@@ -14,6 +14,7 @@ struct SpeciesPackView: View {
     }
 }
 
+/// Every species of the pack, best photo and its credit line beside the names.
 private struct SpeciesList: View {
     let pack: SpeciesPack
 
@@ -21,8 +22,8 @@ private struct SpeciesList: View {
         List {
             Section {
                 ForEach(pack.species) { species in
-                    NavigationLink(value: ContentView.Screen.species(species)) {
-                        SpeciesRow(pack: pack, species: species)
+                    NavigationLink(value: ContentView.Screen.species(id: species.id)) {
+                        SpeciesRow(species: species, thumbnail: species.photos.first.map(pack.lensImageURL(for:)))
                     }
                 }
             } footer: {
@@ -33,13 +34,14 @@ private struct SpeciesList: View {
     }
 }
 
+/// One list row: lens thumbnail, common and scientific names, the best photo's credit.
 private struct SpeciesRow: View {
-    let pack: SpeciesPack
     let species: PackSpecies
+    let thumbnail: URL?
 
     var body: some View {
         HStack(spacing: 12) {
-            PackImage(url: species.photos.first.map(pack.lensImageURL(for:)))
+            PackImage(url: thumbnail)
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             VStack(alignment: .leading, spacing: 2) {
@@ -105,11 +107,5 @@ private struct PackImage: View {
                     .foregroundStyle(.secondary)
             }
         }
-    }
-}
-
-extension PackSpecies: @retroactive Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
     }
 }

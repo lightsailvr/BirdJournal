@@ -3,20 +3,22 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Protocol
+from typing import Callable, Protocol
 
-from PIL import Image, ImageOps
+from PIL import Image
 
 from packbuilder.candidates import PhotoCandidate, filter_candidates
+from packbuilder.crops import upright
 from packbuilder.definition import PackDefinition, SpeciesEntry, load_overrides
-from packbuilder.detector import BirdDetector
+from packbuilder.detector import Detection
 from packbuilder.download import fetch_photo
-from packbuilder.scoring import Box, score_crop
+from packbuilder.geometry import Box
+from packbuilder.scoring import score_crop
 from packbuilder.selection import Overrides, ScoredPhoto, select_photos
-from packbuilder.writer import SpeciesResult, WrittenPack, write_pack
+from packbuilder.writer import ChosenPhoto, SpeciesResult, WrittenPack, write_pack
 
 log = logging.getLogger("packbuilder")
 
@@ -28,9 +30,19 @@ MIN_SHARPNESS = 0.4
 # The bird must span at least the lens crop's 260 pixels in the original, or the lens JPEG would be upscaled.
 MIN_BIRD_PIXELS = 260
 
+FULL_FRAME = Box(0.0, 0.0, 1.0, 1.0)
+
 
 class MetadataSource(Protocol):
     def candidates_for(self, taxon_id: int) -> list[PhotoCandidate]: ...
+
+
+class Detector(Protocol):
+    def detect(self, image: Image.Image) -> list[Detection]: ...
+
+
+PhotoFetcher = Callable[[PhotoCandidate, Path, str], Path | None]
+"""(candidate, cache_dir, size) -> local path, or None when the photo is gone; `download.fetch_photo` in production."""
 
 
 @dataclass
@@ -39,13 +51,15 @@ class BuildOptions:
     out_dir: Path
     candidate_limit: int = 60
     """How many license-cleared candidates per species are downloaded and run through the detector."""
-    minimum: int = 3
-    maximum: int = 5
+    min_photos: int = 3
+    """Fewer chosen photos than this is a logged gap."""
+    max_photos: int = 5
     archive_path: Path | None = None
     built_at: str | None = None
+    fetch: PhotoFetcher = field(default=fetch_photo)
 
 
-def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: BirdDetector, options: BuildOptions) -> WrittenPack:
+def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions) -> WrittenPack:
     raw_overrides = load_overrides(overrides_path)
     results = [
         build_species(entry, Overrides.from_mapping(raw_overrides.get(entry.scientific_name, {})), metadata, detector, options)
@@ -58,60 +72,61 @@ def build_pack(definition: PackDefinition, overrides_path: Path, metadata: Metad
     return written
 
 
-def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: BirdDetector, options: BuildOptions) -> SpeciesResult:
+def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: Detector, options: BuildOptions) -> SpeciesResult:
     log.info("%s (%s)", entry.common_name, entry.scientific_name)
     candidates = metadata.candidates_for(entry.inat_taxon_id)
     filtered = filter_candidates(candidates)
-    log.info("  %d candidates, %d cleared, rejected %s", len(candidates), len(filtered.kept), {k.value: v for k, v in filtered.rejected.items()} or "none")
+    rejected = {reason.value: count for reason, count in filtered.rejected.items()}
+    log.info("  %d candidates, %d cleared, rejected %s", len(candidates), len(filtered.kept), rejected or "none")
 
-    to_score = [c for c in filtered.kept if c.photo_id not in overrides.exclude][: options.candidate_limit]
-    forced = [c for c in filtered.kept if c.photo_id in overrides.include and c not in to_score]
+    shortlist = [c for c in filtered.kept if c.photo_id not in overrides.exclude][: options.candidate_limit]
+    shortlist += [c for c in filtered.kept if overrides.forces(c.photo_id) and c not in shortlist]
     missing = set(overrides.include) - {c.photo_id for c in filtered.kept}
     if missing:
         log.warning("  override includes %s, not among the cleared candidates", sorted(missing))
 
     scored: list[ScoredPhoto] = []
-    sources: dict[int, Path] = {}
     detected = 0
     blurred = 0
-    for candidate in to_score + forced:
-        path = fetch_photo(candidate, options.cache_dir, size="large")
+    for candidate in shortlist:
+        path = options.fetch(candidate, options.cache_dir, "large")
         if path is None:
             continue
-        with Image.open(path) as image:
-            image = ImageOps.exif_transpose(image) or image
+        with Image.open(path) as opened:
+            image = upright(opened)
             detections = detector.detect(image)
-            box: Box | None = detections[0].box if detections else None
-            if box is not None:
+            if detections:
                 detected += 1
-                if candidate.photo_id not in overrides.include and (box.area < MIN_BIRD_AREA or bird_pixels(candidate, image.size, box) < MIN_BIRD_PIXELS):
+                box = detections[0].box
+                too_small = box.area < MIN_BIRD_AREA or bird_pixels(candidate, image.size, box) < MIN_BIRD_PIXELS
+                if too_small and not overrides.forces(candidate.photo_id):
                     continue
-            elif candidate.photo_id in overrides.include:
-                box = Box(0.0, 0.0, 1.0, 1.0)  # forced in without a detection: keep the whole frame
+            elif overrides.forces(candidate.photo_id):
+                box = FULL_FRAME  # forced in without a detection: keep the whole frame
             else:
                 continue
             score = score_crop(image, box)
-            if score.sharpness < MIN_SHARPNESS and candidate.photo_id not in overrides.include:
+            if score.sharpness < MIN_SHARPNESS and not overrides.forces(candidate.photo_id):
                 blurred += 1
                 continue
             scored.append(ScoredPhoto(candidate=candidate, box=box, score=score))
     log.info("  %d with a bird, %d too blurred, %d scored", detected, blurred, len(scored))
 
-    selection = select_photos(scored, overrides, minimum=options.minimum, maximum=options.maximum)
-    photos: list[tuple[ScoredPhoto, Path]] = []
+    selection = select_photos(scored, overrides, minimum=options.min_photos, maximum=options.max_photos)
+    photos: list[ChosenPhoto] = []
     for photo in selection.chosen:
-        original = fetch_photo(photo.candidate, options.cache_dir, size="original")
+        original = options.fetch(photo.candidate, options.cache_dir, "original")
         if original is None:
             log.warning("  original of %s unavailable; skipped", photo.candidate.photo_id)
             continue
-        photos.append((photo, original))
-    for photo, _ in photos:
-        s = photo.score
-        log.info("  chose %d  total %.2f (area %.2f, dark %.2f, sharp %.2f)  %s", photo.candidate.photo_id, s.total, s.bird_area, s.background_darkness, s.sharpness, photo.candidate.source_url)
-    gap = len(photos) < options.minimum
+        photos.append(ChosenPhoto(scored=photo, original=original))
+    for chosen in photos:
+        s = chosen.scored.score
+        log.info("  chose %d  total %.2f (area %.2f, dark %.2f, sharp %.2f)  %s", chosen.candidate.photo_id, s.total, s.bird_area, s.background_darkness, s.sharpness, chosen.candidate.source_url)
+    gap = len(photos) < options.min_photos
     if gap:
         log.warning("  GAP: only %d photos for %s", len(photos), entry.common_name)
-    return SpeciesResult(entry=entry, photos=photos, gap=gap, candidates=len(candidates), rejected=dict(filtered.rejected), detected=detected)
+    return SpeciesResult(entry=entry, photos=photos, gap=gap, candidates=len(candidates), rejected=rejected, detected=detected)
 
 
 def bird_pixels(candidate: PhotoCandidate, large_size: tuple[int, int], box: Box) -> float:

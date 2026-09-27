@@ -5,9 +5,10 @@ import zipfile
 from PIL import Image
 
 from packbuilder.definition import PackDefinition, SpeciesEntry, BoundingBox
-from packbuilder.scoring import Box, CropScore
+from packbuilder.geometry import Box
+from packbuilder.scoring import CropScore
 from packbuilder.selection import ScoredPhoto
-from packbuilder.writer import SpeciesResult, write_pack
+from packbuilder.writer import ChosenPhoto, SpeciesResult, write_pack
 from tests.conftest import make_candidate, synthetic_photo
 
 
@@ -33,7 +34,7 @@ def result_for(entry, photo_ids, tmp_path):
         synthetic_photo(size=(1600, 1200)).save(path)
         candidate = make_candidate(photo_id=photo_id, observation_id=photo_id * 10, license="CC BY-NC" if offset else "CC0")
         score = CropScore(0.5, 0.5, 0.5, 0.5 - offset * 0.1)
-        photos.append((ScoredPhoto(candidate=candidate, box=Box(0.3, 0.3, 0.7, 0.7), score=score), path))
+        photos.append(ChosenPhoto(scored=ScoredPhoto(candidate=candidate, box=Box(0.3, 0.3, 0.7, 0.7), score=score), original=path))
     return SpeciesResult(entry=entry, photos=photos, gap=len(photo_ids) < 3)
 
 
@@ -77,3 +78,4 @@ def test_pack_output(tmp_path):
     with zipfile.ZipFile(written.archive) as archive:
         names = set(archive.namelist())
     assert "pack.sqlite" in names and "LICENSE" in names and "lens/1.jpg" in names
+    assert db.execute("SELECT COUNT(*) FROM lookalike").fetchone()[0] == 0, "lookalikes are empty until #12"

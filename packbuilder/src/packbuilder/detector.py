@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 
 from packbuilder.download import fetch
-from packbuilder.scoring import Box
+from packbuilder.geometry import Box
 
 DETECTOR_URL = "https://github.com/onnx/models/raw/main/validated/vision/object_detection_segmentation/ssd-mobilenetv1/model/ssd_mobilenet_v1_12.onnx"
 DETECTOR_SHA256 = "b8fba5e404077d4048d27fcd1667e85e27e192eb9bf51e696c46a3acd7d21058"

@@ -1,6 +1,7 @@
 import pytest
 
-from packbuilder.scoring import Box, rank_by_score, score_crop
+from packbuilder.geometry import Box
+from packbuilder.scoring import rank_by_score, score_crop
 from tests.conftest import synthetic_photo
 
 BIG = Box(0.2, 0.2, 0.8, 0.8)

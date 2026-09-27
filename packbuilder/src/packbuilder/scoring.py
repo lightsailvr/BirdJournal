@@ -8,6 +8,11 @@ from dataclasses import dataclass
 import numpy as np
 from PIL import Image
 
+from packbuilder.crops import lens_crop_box
+from packbuilder.geometry import Box
+
+__all__ = ["Box", "CropScore", "score_crop", "rank_by_score", "laplacian_variance"]
+
 # Weights of the three components in the total; they sum to one.
 AREA_WEIGHT = 0.45
 DARKNESS_WEIGHT = 0.35
@@ -20,31 +25,6 @@ SHARPNESS_CROP_SIZE = 256
 
 
 @dataclass(frozen=True)
-class Box:
-    """A normalized box: fractions of the image width and height, x right and y down."""
-
-    x0: float
-    y0: float
-    x1: float
-    y1: float
-
-    @property
-    def area(self) -> float:
-        return max(0.0, self.x1 - self.x0) * max(0.0, self.y1 - self.y0)
-
-    @property
-    def center(self) -> tuple[float, float]:
-        return (self.x0 + self.x1) / 2, (self.y0 + self.y1) / 2
-
-    def clamped(self) -> "Box":
-        return Box(min(max(self.x0, 0.0), 1.0), min(max(self.y0, 0.0), 1.0), min(max(self.x1, 0.0), 1.0), min(max(self.y1, 0.0), 1.0))
-
-    def pixels(self, size: tuple[int, int]) -> tuple[int, int, int, int]:
-        width, height = size
-        return (int(round(self.x0 * width)), int(round(self.y0 * height)), int(round(self.x1 * width)), int(round(self.y1 * height)))
-
-
-@dataclass(frozen=True)
 class CropScore:
     bird_area: float
     background_darkness: float
@@ -54,8 +34,6 @@ class CropScore:
 
 def score_crop(image: Image.Image, box: Box) -> CropScore:
     """Scores the bird in `box` for the lens card cut around it (see `crops.lens_crop_box`)."""
-    from packbuilder.crops import lens_crop_box
-
     box = box.clamped()
     grey = np.asarray(image.convert("L"), dtype=np.float32)
     height, width = grey.shape

@@ -7,18 +7,17 @@ import UIKit
 /// The species pack compiled into the app (DECISIONS.md, "Species pack": the LA pack ships in the binary so the
 /// first launch works offline), read once per process, and the lens-facing lookups over it.
 enum BundledPack {
-    /// The pack, or the reason it could not be read. A missing or broken pack is not fatal: every species stays
-    /// identifiable by name (spec user story 40).
-    static let loaded: Result<SpeciesPack, any Error> = Result { try SpeciesPack.bundled() }
-
-    static var pack: SpeciesPack? {
-        switch loaded {
-        case .success(let pack): return pack
-        case .failure(let error):
+    /// The pack, or the reason it could not be read (logged once). A missing or broken pack is not fatal: every
+    /// species stays identifiable by name (spec user story 40).
+    static let loaded: Result<SpeciesPack, any Error> = {
+        let result = Result { try SpeciesPack.bundled() }
+        if case .failure(let error) = result {
             Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "pack").error("bundled pack unavailable: \(String(describing: error))")
-            return nil
         }
-    }
+        return result
+    }()
+
+    static var pack: SpeciesPack? { try? loaded.get() }
 
     /// What the lens pages show for a species: its best photo and the description fields the pack has. Until #12
     /// fills field marks, size and habitat, the field marks fall back to the scientific name and the size-and-habitat

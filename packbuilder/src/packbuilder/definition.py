@@ -37,6 +37,8 @@ class PackDefinition:
     place_id: int
     bounding_box: BoundingBox
     species: list[SpeciesEntry]
+    created_before: str | None = None
+    """Observations created after this date (YYYY-MM-DD) are ignored, so rebuilds see the same candidates."""
 
     @classmethod
     def load(cls, path: Path) -> "PackDefinition":
@@ -49,6 +51,7 @@ class PackDefinition:
             version=int(data["version"]),
             place_id=int(data["inat_place_id"]),
             bounding_box=BoundingBox(south=box["south"], west=box["west"], north=box["north"], east=box["east"]),
+            created_before=data.get("inat_created_before"),
             species=[
                 SpeciesEntry(
                     scientific_name=s["scientific_name"],
