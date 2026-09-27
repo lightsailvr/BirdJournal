@@ -68,6 +68,9 @@ public enum LensElement: Sendable, Equatable {
     case title(String, detail: String)
     case heading(String)
     case body(String)
+    /// A longer pack passage (the field marks) in the small text style but the primary colour (issue #32): the
+    /// Display DSL has only heading, body and meta, and the small style fits twice the words on the details page.
+    case passage(String)
     case meta(String)
     case button(LensCardButton)
     /// The saved mark that replaces the button once the sighting is written.
@@ -106,7 +109,7 @@ extension LensElement {
     /// The words the element spends on the lens.
     public var words: Int {
         switch self {
-        case .status(let text), .heading(let text), .body(let text), .meta(let text), .saved(let text): text.words
+        case .status(let text), .heading(let text), .body(let text), .passage(let text), .meta(let text), .saved(let text): text.words
         case .title(let name, let detail): name.words + detail.words
         case .button(let button): button.label.words
         case .list(let rows): rows.reduce(0) { $0 + $1.words }

@@ -13,6 +13,8 @@ public struct InstalledPack: Sendable, Hashable, Identifiable {
 /// Why a downloaded zip was not installed.
 public enum PackInstallError: Error, Equatable {
     case checksumMismatch(expected: String, actual: String)
+    /// The zip holds a pack with another id than the index entry it was downloaded for.
+    case wrongPack(expected: String, actual: String)
 }
 
 /// Downloaded packs on disk (issue #13): one folder per pack under `directory` (Application Support/Packs in the
@@ -77,7 +79,8 @@ public struct PackStorage: Sendable {
         do {
             try createDirectoryExcludedFromBackup()
             try ZipArchive.extract(zip, into: staging)
-            _ = try SpeciesPack.open(directory: staging)  // a zip that is not a readable pack never lands
+            let unpacked = try SpeciesPack.open(directory: staging)  // a zip that is not a readable pack never lands
+            guard unpacked.info.id == descriptor.id else { throw PackInstallError.wrongPack(expected: descriptor.id, actual: unpacked.info.id) }
             let final = url(for: descriptor.id)
             try? FileManager.default.removeItem(at: final)
             try FileManager.default.moveItem(at: staging, to: final)

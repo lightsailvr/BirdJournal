@@ -37,7 +37,8 @@ this directory and is declared as a package resource, so the pack ships in the p
    downloadable one) and `build/packs/<id>.zip` (reproducible from the committed `pack.json`, `overrides.json` and
    `wikipedia.lock.json` plus the builder's cache: iNaturalist metadata pinned to `inat_created_before`, Wikipedia
    pages cached by title and their revisions pinned in the lock).
-2. Bump `version` in `packbuilder/packs/<id>/pack.json` when the contents change for users, and rebuild.
+2. Bump `version` in `packbuilder/packs/<id>/pack.json` when the contents change for users, and rebuild. The app
+   offers a newer version of an installed pack, and of the bundled pack (issue #33), as an update.
 3. `scripts/pin-pack.sh <id>` writes the name, the tag (`pack-<id>-v<version>`), asset name, SHA-256 and byte count
    into `manifest.json` (a new pack is a download; `--bundled` marks the one the app ships).
 4. `gh release create pack-<id>-v<version> build/packs/<id>.zip --title "..." --notes "..."`, then

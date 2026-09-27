@@ -26,7 +26,8 @@ struct SpeciesPackTests {
         for species in pack.species {
             #expect(species.isDescribed, "\(species.commonName) has no description")
             #expect(!(species.fieldMarks ?? "").isEmpty, "\(species.commonName) has no field marks")
-            #expect((species.fieldMarks ?? "").split(separator: " ").count <= 20, "\(species.commonName): field marks over the lens budget")
+            #expect((species.fieldMarks ?? "").split(separator: " ").count <= 40, "\(species.commonName): field marks over the lens budget")
+            #expect(!(species.fieldMarks ?? "").hasSuffix("…"), "\(species.commonName): field marks cut mid-phrase (issue #32)")
             #expect(!(species.summary ?? "").isEmpty, "\(species.commonName) has no summary")
             if let source = species.descriptionSource {
                 #expect(source.host() == "en.wikipedia.org" && source.query()?.contains("oldid=") == true, "\(species.commonName): \(source)")
