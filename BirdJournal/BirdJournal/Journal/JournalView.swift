@@ -15,6 +15,7 @@ struct JournalView: View {
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var mode: Mode = .sightings
     @State private var query = ""
 
@@ -67,9 +68,10 @@ struct JournalView: View {
             if let removed = edits.pendingRemoval {
                 Toast(text: "Removed \(removed.commonName)", undo: { edits.undoRemoval() })
                     .padding(.bottom, 8)
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.default, value: edits.pendingRemoval)
+        .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: edits.pendingRemoval)
     }
 }
 

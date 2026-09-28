@@ -179,7 +179,7 @@ struct ErrorNotice<Action: View>: View {
 }
 
 /// A brief acknowledgment at the bottom of a screen ("Added to your journal") with an optional Undo, shown for a few
-/// seconds. Reduce Motion drops the slide.
+/// seconds. The screen that shows it picks the transition: a slide, or a fade under Reduce Motion.
 struct Toast: View {
     let text: String
     var undo: (() -> Void)?

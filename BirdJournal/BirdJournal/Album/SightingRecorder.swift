@@ -38,9 +38,8 @@ final class SightingRecorder {
     }
 
     /// A second confirmation of the same species in one run: the sighting keeps its first time and place, takes the
-    /// latest confidence, and swaps in the new frame when there is one. The earlier frame stays on disk until the
-    /// undo window has passed; `restore` puts it back, and a later `update` or `delete` of the sighting removes what
-    /// it replaces.
+    /// latest confidence, and swaps in the new frame when there is one. The earlier frame stays on disk so `restore`
+    /// can put it back; the run's ledger (`RunSightings`) deletes it once the undo window has closed.
     func update(_ sighting: Sighting, with candidate: Candidate, frame: Data?) throws {
         sighting.soundConfidence = Double(candidate.score)
         if let frame {

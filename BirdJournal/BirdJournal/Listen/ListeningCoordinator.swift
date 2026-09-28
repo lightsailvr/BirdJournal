@@ -128,9 +128,12 @@ final class ListeningCoordinator {
 
     // MARK: - What the screens read
 
+    /// The source of the run under way or the last one, else the one chosen for the next.
+    var activeSource: Source { runSource ?? source }
+
     /// The listening session behind the run: the phone's, or the one inside the glasses run.
     private var listening: ListeningSession {
-        (runSource ?? source) == .glasses ? glasses.listening : phone
+        activeSource == .glasses ? glasses.listening : phone
     }
 
     var state: State {
@@ -263,6 +266,7 @@ final class ListeningCoordinator {
             try? await Task.sleep(for: .seconds(6))
             guard !Task.isCancelled, let self, self.acknowledgment == acknowledgment else { return }
             self.acknowledgment = nil
+            self.sightings.commitReplacedFrames()  // the undo window has closed
         }
     }
 

@@ -7,7 +7,7 @@ struct GlassesSection: View {
 
     var body: some View {
         Section("Glasses") {
-            LabeledContent("Meta AI", value: registrationText)
+            LabeledContent("Meta AI", value: connection.registrationText)
             switch connection.registrationState {
             case .registered:
                 Button("Unregister", role: .destructive) { Task { await connection.unregister() } }
@@ -45,15 +45,5 @@ struct GlassesSection: View {
             }
         }
         #endif
-    }
-
-    private var registrationText: String {
-        switch connection.registrationState {
-        case .unavailable: "Unavailable"
-        case .available: "Not registered"
-        case .registering: "Registering…"
-        case .registered: "Registered"
-        @unknown default: "Unknown"
-        }
     }
 }

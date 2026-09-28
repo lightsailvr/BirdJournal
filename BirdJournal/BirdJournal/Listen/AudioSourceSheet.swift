@@ -44,7 +44,7 @@ struct AudioSourceSheet: View {
                 }
 
                 Section("Ray-Ban Display") {
-                    LabeledContent("Meta AI", value: registrationText)
+                    LabeledContent("Meta AI", value: connection.registrationText)
                     if connection.registrationState == .available {
                         Button("Register with Meta AI") { Task { await connection.register() } }
                     } else if connection.registrationState == .registered {
@@ -73,7 +73,10 @@ struct AudioSourceSheet: View {
                     }
                 }
 
-                Section("What the glasses need") {
+                Section("What each source asks for") {
+                    Text("The iPhone microphone asks for microphone access the first time you start listening. Sound is analysed on the phone as it arrives and never saved.")
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.inkSecondary)
                     Text("The glasses' microphones only reach the phone inside their camera stream, so BirdJournal asks Meta AI for camera and microphone access the first time. The video is not used to tell birds apart; the most recent frame is kept with a sighting you add, as a snapshot of where you were looking.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
@@ -101,23 +104,8 @@ struct AudioSourceSheet: View {
         }
     }
 
-    private var registrationText: String {
-        switch connection.registrationState {
-        case .unavailable: "Unavailable"
-        case .available: "Not registered"
-        case .registering: "Registering…"
-        case .registered: "Registered"
-        @unknown default: "Unknown"
-        }
-    }
-
     private func linkText(_ device: GlassesDeviceStatus) -> String {
-        let link = switch device.state.linkState {
-        case .connected: "Connected"
-        case .connecting: "Connecting…"
-        case .disconnected: "Not connected"
-        }
-        var parts = [link]
+        var parts = [device.linkText]
         if let battery = device.state.batteryLevel { parts.append("battery \(battery)%") }
         if device.state.compatibility != .compatible { parts.append(device.state.compatibility.displayString) }
         return parts.joined(separator: " · ")

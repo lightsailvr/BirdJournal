@@ -107,7 +107,7 @@ extension ActiveListeningView {
     fileprivate var emptyText: String {
         switch run.state {
         case .starting:
-            (run.runSource ?? run.source) == .glasses
+            run.activeSource == .glasses
                 ? "Starting: connecting to the glasses, checking camera and microphone access with Meta AI, loading the models…"
                 : "Starting: finding your location and loading the models…"
         case .listening: "Listening for birds…"
@@ -143,7 +143,7 @@ private struct StatusLine: View {
     }
 
     private var text: String {
-        let source = (run.runSource ?? run.source)
+        let source = run.activeSource
         switch run.state {
         case .starting: return "Starting \(source == .glasses ? "the glasses" : "the microphone")…"
         case .listening: return source == .glasses ? "Glasses microphones" : "iPhone microphone"

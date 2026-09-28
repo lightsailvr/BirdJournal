@@ -20,7 +20,7 @@ struct SettingsView: View {
                     ForEach(ListeningCoordinator.Source.allCases) { Text($0.title).tag($0) }
                 }
                 .disabled(run.state.isActive)
-                LabeledContent("Meta AI", value: registrationText)
+                LabeledContent("Meta AI", value: connection.registrationText)
                 switch connection.registrationState {
                 case .available:
                     Button("Register with Meta AI") { Task { await connection.register() } }
@@ -77,16 +77,6 @@ struct SettingsView: View {
         #endif
     }
 
-    private var registrationText: String {
-        switch connection.registrationState {
-        case .unavailable: "Unavailable"
-        case .available: "Not registered"
-        case .registering: "Registering…"
-        case .registered: "Registered"
-        @unknown default: "Unknown"
-        }
-    }
-
     static var versionText: String {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
@@ -103,7 +93,7 @@ struct GlassesDeviceRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(device.name).font(.headline)
-            Text("\(linkText) · \(device.state.compatibility.displayString)")
+            Text("\(device.linkText) · \(device.state.compatibility.displayString)")
                 .font(JournalFont.supporting)
                 .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? Color.moss : Color.inkSecondary)
             if let battery = device.state.batteryLevel {
@@ -119,14 +109,6 @@ struct GlassesDeviceRow: View {
             default:
                 EmptyView()
             }
-        }
-    }
-
-    private var linkText: String {
-        switch device.state.linkState {
-        case .connected: "Connected"
-        case .connecting: "Connecting…"
-        case .disconnected: "Not connected"
         }
     }
 }

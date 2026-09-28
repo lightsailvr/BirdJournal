@@ -5,6 +5,7 @@ import SwiftUI
 struct ListeningAccessory: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let showListen: () -> Void
 
     var body: some View {
@@ -13,7 +14,7 @@ struct ListeningAccessory: View {
                 HStack(spacing: 10) {
                     Image(systemName: run.state == .listening ? "waveform" : "pause.circle")
                         .foregroundStyle(Color.moss)
-                        .symbolEffect(.variableColor.iterative, isActive: run.state == .listening)
+                        .symbolEffect(.variableColor.iterative, isActive: run.state == .listening && !reduceMotion)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(title)
                             .font(JournalFont.supporting.weight(.semibold))

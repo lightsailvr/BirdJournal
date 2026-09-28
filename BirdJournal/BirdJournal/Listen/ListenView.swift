@@ -10,6 +10,7 @@ import SwiftUI
 /// `ListeningCoordinator`, so leaving the tab never ends one.
 struct ListenView: View {
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         @Bindable var run = run
@@ -37,10 +38,10 @@ struct ListenView: View {
             if let acknowledgment = run.acknowledgment {
                 Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } })
                     .padding(.bottom, 8)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.default, value: run.acknowledgment)
+        .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: run.acknowledgment)
     }
 }
 

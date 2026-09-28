@@ -22,7 +22,7 @@ struct FieldGuideView: View {
 
     private var shown: [(pack: SpeciesPack, species: PackSpecies)] {
         entries
-            .filter { Journal.matches(query: query, commonName: $0.species.commonName, scientificName: $0.species.scientificName) }
+            .filter { NameSearch.matches(query: query, in: [$0.species.commonName, $0.species.scientificName]) }
             .sorted { $0.species.commonName.localizedCaseInsensitiveCompare($1.species.commonName) == .orderedAscending }
     }
 

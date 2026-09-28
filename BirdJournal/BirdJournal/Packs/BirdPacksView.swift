@@ -10,7 +10,7 @@ struct BirdPacksView: View {
     @State private var removalError: String?
 
     private func matches(_ name: String, _ region: String?) -> Bool {
-        Journal.matches(query: query, commonName: name, scientificName: region ?? "")
+        NameSearch.matches(query: query, in: [name, region ?? ""])
     }
 
     var body: some View {

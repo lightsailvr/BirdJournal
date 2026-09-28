@@ -98,19 +98,20 @@ public enum AlbumMigrationPlan: SchemaMigrationPlan {
 
 /// The album's persistent schema and container factory.
 public enum AlbumSchema {
-    public static let current: any VersionedSchema.Type = AlbumSchemaV2.self
     public static let models: [any PersistentModel.Type] = AlbumSchemaV2.models
 
     /// The app's album: on disk in the default store, migrated through `AlbumMigrationPlan`; or in memory.
     public static func makeContainer(inMemory: Bool = false) throws -> ModelContainer {
-        let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
-        return try ModelContainer(for: Schema(versionedSchema: AlbumSchemaV2.self), migrationPlan: AlbumMigrationPlan.self, configurations: [configuration])
+        try makeContainer(ModelConfiguration(isStoredInMemoryOnly: inMemory))
     }
 
     /// An album at `url`, for tests that open the same file under different schema versions.
     public static func makeContainer(at url: URL) throws -> ModelContainer {
-        let configuration = ModelConfiguration(url: url)
-        return try ModelContainer(for: Schema(versionedSchema: AlbumSchemaV2.self), migrationPlan: AlbumMigrationPlan.self, configurations: [configuration])
+        try makeContainer(ModelConfiguration(url: url))
+    }
+
+    private static func makeContainer(_ configuration: ModelConfiguration) throws -> ModelContainer {
+        try ModelContainer(for: Schema(versionedSchema: AlbumSchemaV2.self), migrationPlan: AlbumMigrationPlan.self, configurations: [configuration])
     }
 }
 

@@ -82,9 +82,17 @@ public enum Journal {
     /// Whether a species matches a search: every word of the query starts a word of the common or scientific name,
     /// ignoring case and accents, so "phoe" finds the Black Phoebe and "sayo nig" does too. An empty query matches.
     public static func matches(query: String, commonName: String, scientificName: String) -> Bool {
+        NameSearch.matches(query: query, in: [commonName, scientificName])
+    }
+}
+
+/// The search rule the journal, the guide and the packs share: every word of the query starts a word of one of the
+/// names, ignoring case and accents. An empty query matches everything.
+public enum NameSearch {
+    public static func matches(query: String, in names: [String]) -> Bool {
         let terms = query.split(whereSeparator: \.isWhitespace).map(normalize)
         guard !terms.isEmpty else { return true }
-        let words = (commonName + " " + scientificName)
+        let words = names.joined(separator: " ")
             .split { !$0.isLetter && !$0.isNumber && $0 != "'" }
             .map { normalize(String($0)) }
         return terms.allSatisfy { term in words.contains { $0.hasPrefix(term) } }

@@ -57,6 +57,34 @@ struct RunSightingsTests {
         #expect(!ledger.isAdded(Self.finch))
     }
 
+    @Test("a frame an update replaced stays on disk until the undo window closes, then goes; an undone update keeps it")
+    func replacedFramesAreDeletedOnCommit() throws {
+        let album = try AlbumSchema.makeContainer(inMemory: true)
+        let folder = URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let frames = FrameStore(directory: folder)
+        let ledger = RunSightings(recorder: SightingRecorder(container: album, frames: frames))
+        func exists(_ path: String?) -> Bool { path.map { FileManager.default.fileExists(atPath: frames.url(for: $0).path(percentEncoded: false)) } ?? false }
+
+        let first = try ledger.add(Self.candidate(score: 0.5), confirmedAt: .now, location: nil, frame: Data([1]), source: .glasses)
+        let second = try ledger.add(Self.candidate(score: 0.6), confirmedAt: .now, location: nil, frame: Data([2]), source: .glasses)
+        let firstFrame = try #require(second.previousFramePath)
+        #expect(exists(firstFrame), "still there while the update can be undone")
+
+        ledger.commitReplacedFrames()
+        #expect(!exists(firstFrame), "gone once the window closed")
+        let stored = try #require(try album.mainContext.fetch(Sighting.newestFirst()).first)
+        #expect(exists(stored.frameImagePath), "the current frame stays")
+
+        let third = try ledger.add(Self.candidate(score: 0.7), confirmedAt: .now, location: nil, frame: Data([3]), source: .phone)
+        let secondFrame = try #require(third.previousFramePath)
+        try ledger.undo(third)
+        ledger.commitReplacedFrames()
+        #expect(exists(secondFrame), "an undone update's earlier frame is back in use, not deleted")
+        #expect(stored.frameImagePath == secondFrame)
+        _ = first
+    }
+
     @Test("a sighting names its species from the packs, else from its label, so a removed pack leaves the journal readable")
     func namesFallBack() throws {
         let library = PackLibrary.forApp()

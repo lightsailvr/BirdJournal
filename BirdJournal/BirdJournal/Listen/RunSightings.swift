@@ -32,6 +32,8 @@ final class RunSightings {
     /// In first-add order.
     private(set) var entries: [Entry] = []
     @ObservationIgnored private var records: [Species: Sighting] = [:]
+    /// Frames an update replaced, kept on disk while the update can still be undone.
+    @ObservationIgnored private var replacedFrames: [PersistentIdentifier: [String]] = [:]
     @ObservationIgnored let recorder: SightingRecorder
 
     init(recorder: SightingRecorder) {
@@ -40,8 +42,18 @@ final class RunSightings {
 
     /// Forgets the run's species; the album keeps its sightings. Called at the start of a run.
     func reset() {
+        commitReplacedFrames()
         entries = []
         records = [:]
+    }
+
+    /// Deletes the frames that updates replaced: the undo window has closed, so the earlier pictures are not coming
+    /// back. Called when an acknowledgment expires and when the next run starts.
+    func commitReplacedFrames() {
+        for path in replacedFrames.values.flatMap({ $0 }) {
+            try? FileManager.default.removeItem(at: recorder.frames.url(for: path))
+        }
+        replacedFrames = [:]
     }
 
     func isAdded(_ species: Species) -> Bool {
@@ -58,6 +70,9 @@ final class RunSightings {
         if let existing = records[candidate.species], let position = entries.firstIndex(where: { $0.id == existing.persistentModelID }) {
             let previous = (existing.soundConfidence, existing.frameImagePath)
             try recorder.update(existing, with: candidate, frame: frame)
+            if frame != nil, let replaced = previous.1, replaced != existing.frameImagePath {
+                replacedFrames[existing.persistentModelID, default: []].append(replaced)
+            }
             entries[position].candidate = candidate
             if frame != nil { entries[position].hasFrame = true }
             return Addition(species: candidate.species, sightingID: existing.persistentModelID, wasNew: false, previousConfidence: previous.0, previousFramePath: previous.1)
@@ -78,6 +93,9 @@ final class RunSightings {
             entries.removeAll { $0.id == addition.sightingID }
         } else if let position = entries.firstIndex(where: { $0.id == addition.sightingID }) {
             try recorder.restore(sighting, confidence: addition.previousConfidence ?? sighting.soundConfidence, framePath: addition.previousFramePath)
+            if let previous = addition.previousFramePath {
+                replacedFrames[addition.sightingID]?.removeAll { $0 == previous }  // back in use, not to be deleted
+            }
             entries[position].candidate.score = Float(sighting.soundConfidence)
             entries[position].hasFrame = sighting.frameImagePath != nil
         }

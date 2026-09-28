@@ -167,6 +167,15 @@ struct PostcardExport: Transferable {
     }
 }
 
+/// The card's colours, fixed rather than the catalog's tokens: the export is the same picture in every appearance.
+enum PostcardPalette {
+    static let paper = Color(red: 0.973, green: 0.961, blue: 0.929)
+    static let raised = Color(red: 0.906, green: 0.929, blue: 0.875)
+    static let ink = Color(red: 0.15, green: 0.20, blue: 0.16)
+    static let secondary = Color(red: 0.36, green: 0.40, blue: 0.37)
+    static let rule = Color(red: 0.85, green: 0.87, blue: 0.82)
+}
+
 /// The postcard itself: warm paper, the picture, "A small discovery", the name, the date and area, the note, and the
 /// caption with the credit. Drawn on screen and rendered for the export from the same view.
 struct PostcardView: View {
@@ -183,23 +192,23 @@ struct PostcardView: View {
             Text("A small discovery")
                 .font(.system(size: 11, weight: .regular, design: .monospaced))
                 .tracking(2)
-                .foregroundStyle(Color(red: 0.36, green: 0.40, blue: 0.37))
+                .foregroundStyle(PostcardPalette.secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 18)
             Text(content.commonName)
                 .font(.system(size: 30, design: .serif))
-                .foregroundStyle(Color(red: 0.15, green: 0.20, blue: 0.16))
+                .foregroundStyle(PostcardPalette.ink)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 4)
             Text(content.scientificName)
                 .font(.system(size: 14, design: .serif).italic())
-                .foregroundStyle(Color(red: 0.36, green: 0.40, blue: 0.37))
+                .foregroundStyle(PostcardPalette.secondary)
                 .frame(maxWidth: .infinity)
             if let line = [content.dateText, content.areaText].compactMap({ $0 }).joined(separator: " · ").nilIfEmpty {
                 Text(line)
                     .font(.system(size: 15))
-                    .foregroundStyle(Color(red: 0.15, green: 0.20, blue: 0.16))
+                    .foregroundStyle(PostcardPalette.ink)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
@@ -207,21 +216,21 @@ struct PostcardView: View {
             if let note = content.note {
                 Text("“\(note)”")
                     .font(.system(size: 14, design: .serif).italic())
-                    .foregroundStyle(Color(red: 0.15, green: 0.20, blue: 0.16))
+                    .foregroundStyle(PostcardPalette.ink)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 10)
             }
             Text(content.pictureCaption)
                 .font(.system(size: 11))
-                .foregroundStyle(Color(red: 0.36, green: 0.40, blue: 0.37))
+                .foregroundStyle(PostcardPalette.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 14)
         }
         .padding(16)
-        .background(Color(red: 0.973, green: 0.961, blue: 0.929), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color(red: 0.85, green: 0.87, blue: 0.82), lineWidth: 1))
+        .background(PostcardPalette.paper, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(PostcardPalette.rule, lineWidth: 1))
         .environment(\.colorScheme, .light)
     }
 
@@ -234,7 +243,7 @@ struct PostcardView: View {
             PostcardPackImage(url: pack?.phoneImageURL(for: photo))
         case .none:
             ZStack {
-                Color(red: 0.906, green: 0.929, blue: 0.875)
+                PostcardPalette.raised
                 PerchedBirdDrawing().frame(height: 90)
             }
         }
@@ -246,7 +255,7 @@ private struct PostcardPackImage: View {
     let url: URL?
 
     var body: some View {
-        Color(red: 0.906, green: 0.929, blue: 0.875)
+        PostcardPalette.raised
             .overlay {
                 if let url, let image = UIImage(contentsOfFile: url.path(percentEncoded: false)) {
                     Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)
@@ -260,7 +269,7 @@ private struct PostcardFrame: View {
     let url: URL?
 
     var body: some View {
-        Color(red: 0.906, green: 0.929, blue: 0.875)
+        PostcardPalette.raised
             .overlay {
                 if let url, let image = FrameImage.croppedFrame(at: url, zoom: 2) {
                     Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)

@@ -48,8 +48,8 @@
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* BirdJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BirdJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000121 /* BirdJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		000000000000000000000123 /* BirdJournalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000122 /* BirdJournalKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = BirdJournalKit; sourceTree = "<group>"; };
+		000000000000000000000123 /* BirdJournalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		61CF3A9130698B9800A0B268 /* MyBirdJournal 2.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal 2.icon"; sourceTree = "<group>"; };
 		61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-HouseFinch.icon"; sourceTree = "<group>"; };
 		61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-ProthonotaryWarbler.icon"; sourceTree = "<group>"; };
@@ -102,10 +102,8 @@
 		};
 		000000000000000330000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -213,8 +211,6 @@
 				000000000000000000000012 /* BirdJournalUITests */,
 			);
 			name = BirdJournalUITests;
-			packageProductDependencies = (
-			);
 			productName = BirdJournalUITests;
 			productReference = 000000000000000000000123 /* BirdJournalUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -281,10 +277,8 @@
 		};
 		000000000000000340000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
@@ -301,10 +295,8 @@
 		};
 		000000000000000320000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 

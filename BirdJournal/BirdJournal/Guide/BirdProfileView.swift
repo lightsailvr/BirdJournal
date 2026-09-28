@@ -26,7 +26,8 @@ struct BirdProfileView: View {
                     .padding(.top, 2)
 
                 if let match {
-                    Text("\(LensCardRendererBridge.confidence(match)) · heard \(match.windowsAboveThreshold)× this run")
+                    // No score in the headline: it lives in the "About this match" disclosure, explained.
+                    Text("Heard \(match.windowsAboveThreshold)× this run")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 8)
@@ -165,12 +166,5 @@ private struct NameOnlyProfile: View {
             MatchDetails(candidate: match)
                 .padding(.top, 8)
         }
-    }
-}
-
-/// The lens's match wording, reused on the phone so both say the same thing.
-enum LensCardRendererBridge {
-    static func confidence(_ candidate: Candidate) -> String {
-        "\(Int((candidate.score * 100).rounded()))% match"
     }
 }

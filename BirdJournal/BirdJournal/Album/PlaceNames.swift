@@ -42,8 +42,10 @@ final class PlaceNames {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         guard let request = MKReverseGeocodingRequest(location: location) else { return }
         guard let items = try? await request.mapItems, let item = items.first else { return }
+        // A city with its context, or a city, and nothing finer: the name is shown on the phone as the approximate
+        // place and shared as the "general area", so a street never comes back from here (issue #28).
         let representations = item.addressRepresentations
-        guard let name = representations?.cityWithContext ?? representations?.cityName ?? item.address?.shortAddress else { return }
+        guard let name = representations?.cityWithContext ?? representations?.cityName else { return }
         names[key] = name
     }
 }

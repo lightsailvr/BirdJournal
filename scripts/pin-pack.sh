@@ -18,7 +18,9 @@ definition="$repo_root/packbuilder/packs/$pack_id/pack.json"
 
 sha256="$(shasum -a 256 "$zip" | cut -d' ' -f1)"
 bytes="$(stat -f%z "$zip")"
-# The built pack's database, for the counts and the region the phone shows before a download (issue #28).
+# The built pack's database, for the counts and the region the phone shows before a download (issue #28). sqlite3
+# ships with macOS.
+command -v sqlite3 >/dev/null || { echo "sqlite3 is needed to read the pack's counts" >&2; exit 1; }
 database="$repo_root/packs/$pack_id/pack.sqlite"
 [ -f "$database" ] || database="$repo_root/build/packs/$pack_id/pack.sqlite"
 [ -f "$database" ] || { echo "no pack.sqlite for $pack_id under packs/ or build/packs/" >&2; exit 1; }
