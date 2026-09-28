@@ -16,12 +16,27 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Pytho
    (`inat_created_before`) after which observations are ignored so a rebuild sees the same candidates, and the
    species (scientific name and common name as the BirdNET+ label file spells them, iNaturalist taxon id, Wikipedia
    URL; `tests/test_definition.py` checks every entry against the label file). `overrides.json` beside it forces
-   photos in or out per species and replaces description fields by hand:
+   photos in or out per species (an excluded photo drops the rest of its observation too) and replaces description fields by hand:
    `{"Sayornis nigricans": {"include": [id], "exclude": [id], "limit": 200, "trust_article": true, "description": {"field_marks": "...", "size": "...", "habitat": "...", "summary": "..."}}}`
    (`limit` widens that species' candidate shortlist; `trust_article` takes a Wikipedia article the binomial check
    would refuse, for a species BirdNET and Wikipedia name differently after a split).
    The Los Angeles list is the 150 most-observed species of LA County on iNaturalist plus ten heard more than seen
-   (the file's `comment` says how it was made).
+   (the file's `comment` says how it was made). A region made of several places (the counties around Orlando) lists
+   them as `inat_place_ids` instead of `inat_place_id`; the photos come from their union.
+
+   A new pack's list starts from `packbuilder draft` (`species_list.py`), which ranks research-grade observations of
+   birds in the places, maps each taxon to its BirdNET+ label (reusing the committed packs' entries, then the label
+   file's binomial, then its common name, which is logged as a rename to check), skips hybrids and `--exclude`d
+   species, and prints the `species` array; the ranking is cached under `cache/api/` like the build's pages:
+
+   ```sh
+   uv run packbuilder draft --place 934 --place 839 --before 2026-09-27 --top 150 \
+       --season 10,11 --season-top 120 --add "Strix varia" > species.json
+   ```
+
+   `--season` takes the most-observed species of those months too (a trip pack wants the wintering ducks and the
+   migrants a yearly ranking buries); `--add` takes a species by hand (the ones heard far more than seen). A taxon the
+   label file does not name is printed as unresolved for a person to map or drop.
 2. **Describe.** Each species' English Wikipedia article (plain-text extract, cached under `cache/wikipedia/` by
    title so a rebuild is offline and gives the same text) is cut by rule into a `summary` (the lead's first sentences,
    60 words), `field_marks` (the Description section's plumage sentences, skipping measurements, 20 words: the lens

@@ -34,3 +34,17 @@ def test_extension_parsing():
 def test_missing_fields_do_not_crash():
     candidates = _candidates_in({"photos": [{"id": 5}]})
     assert candidates[0].license is None and candidates[0].taxon_id == -1 and candidates[0].quality_grade is None
+
+
+def test_annotations_are_carried_and_a_dead_bird_or_a_feather_is_rejected():
+    from packbuilder.candidates import Rejection, rejection_reason
+
+    def with_annotations(*pairs):
+        observation = OBSERVATION | {"annotations": [{"controlled_attribute_id": a, "controlled_value_id": v} for a, v in pairs]}
+        return _candidates_in(observation)[0]
+
+    assert with_annotations((17, 18), (22, 24)).annotations == ((17, 18), (22, 24))
+    assert rejection_reason(with_annotations((17, 18), (22, 24))) is None
+    assert rejection_reason(with_annotations((17, 19))) is Rejection.NOT_A_LIVE_BIRD
+    assert rejection_reason(with_annotations((22, 23))) is Rejection.NOT_A_LIVE_BIRD
+    assert rejection_reason(with_annotations((17, 20), (22, 24))) is None

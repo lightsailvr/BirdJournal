@@ -1,0 +1,68 @@
+{
+  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name}. Photo ids are in the pack's report.json and LICENSE.",
+  "Haliaeetus leucocephalus": {
+    "limit": 200,
+    "_why": "most Bay Area photos are of a distant bird; the first 60 candidates gave one usable crop; a downed juvenile",
+    "exclude": [
+      692531282
+    ]
+  },
+  "Passerella iliaca": {
+    "exclude": [
+      624576303
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Uria aalge": {
+    "exclude": [
+      723879950,
+      734970357,
+      738352068,
+      738851951,
+      738853763,
+      738854652,
+      739131694,
+      740477501,
+      740745253,
+      741844975
+    ],
+    "_why": "most Bay Area murres on iNaturalist are beached; 200 candidates find live ones; excluded: dead on a beach; beached; dead in the sand; a grounded, sick-looking bird",
+    "limit": 200
+  },
+  "Anas crecca": {
+    "exclude": [
+      739172142
+    ],
+    "_why": "excluded: a feather, no bird"
+  },
+  "Regulus satrapa": {
+    "exclude": [
+      463689771
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Callipepla californica": {
+    "exclude": [
+      737773001
+    ],
+    "_why": "excluded: held in a hand"
+  },
+  "Petrochelidon pyrrhonota": {
+    "exclude": [
+      708382455
+    ],
+    "_why": "excluded: a nestling in the nest"
+  },
+  "Astur cooperii": {
+    "exclude": [
+      738737656
+    ],
+    "_why": "excluded: a flock, not a Cooper's Hawk"
+  },
+  "Catharus ustulatus": {
+    "exclude": [
+      559624330
+    ],
+    "_why": "excluded: held in a hand"
+  }
+}

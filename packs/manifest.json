@@ -17,15 +17,54 @@
     {
       "id": "us-ca-sd",
       "name": "San Diego",
-      "version": 2,
+      "version": 3,
       "bundled": false,
-      "release": "pack-us-ca-sd-v2",
+      "release": "pack-us-ca-sd-v3",
       "asset": "us-ca-sd.zip",
-      "sha256": "7c76d544c2020f3c6198f691f0921d016ca47381123540a825da652e2e500227",
-      "bytes": 39208040,
-      "species": 40,
-      "photos": 200,
+      "sha256": "946550bde9a5a360da0918a39844fac53aea56877f013490e400b3d3f44ab49f",
+      "bytes": 156276753,
+      "species": 159,
+      "photos": 789,
       "region": "San Diego County, California, US"
+    },
+    {
+      "id": "us-ca-bay",
+      "name": "SF Bay Area",
+      "version": 1,
+      "bundled": false,
+      "release": "pack-us-ca-bay-v1",
+      "asset": "us-ca-bay.zip",
+      "sha256": "cb6c116f39f2a063f08d9efbcba9903b97b46edd2c1525afc4f7717e41bd5c5e",
+      "bytes": 162093676,
+      "species": 158,
+      "photos": 787,
+      "region": "San Francisco Bay Area, California, US"
+    },
+    {
+      "id": "us-ca-desert",
+      "name": "California Deserts",
+      "version": 1,
+      "bundled": false,
+      "release": "pack-us-ca-desert-v1",
+      "asset": "us-ca-desert.zip",
+      "sha256": "4c030ad8268aeb21031bf88c16b99e3806775c0653f2b0b9f3cfc7ff3fdc6ccd",
+      "bytes": 163136418,
+      "species": 155,
+      "photos": 771,
+      "region": "Joshua Tree, Palm Springs, Anza-Borrego and the Salton Sea, California, US"
+    },
+    {
+      "id": "us-fl-orlando",
+      "name": "Orlando & Space Coast",
+      "version": 1,
+      "bundled": false,
+      "release": "pack-us-fl-orlando-v1",
+      "asset": "us-fl-orlando.zip",
+      "sha256": "47557d36515b714c9f4a9ba32ce7102c86a74ea700d1d7afeb71824fa913024d",
+      "bytes": 168417128,
+      "species": 159,
+      "photos": 786,
+      "region": "Orlando, the Space Coast and Central Florida, US"
     }
   ]
 }

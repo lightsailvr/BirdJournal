@@ -34,7 +34,9 @@ class PackDefinition:
     name: str
     region: str
     version: int
-    place_id: int
+    place_ids: tuple[int, ...]
+    """iNaturalist places the photos come from: `inat_place_id` (one place) or `inat_place_ids` (a region several
+    places make up, such as the counties around Orlando)."""
     bounding_box: BoundingBox
     species: list[SpeciesEntry]
     created_before: str | None = None
@@ -49,7 +51,7 @@ class PackDefinition:
             name=data["name"],
             region=data["region"],
             version=int(data["version"]),
-            place_id=int(data["inat_place_id"]),
+            place_ids=_place_ids(data),
             bounding_box=BoundingBox(south=box["south"], west=box["west"], north=box["north"], east=box["east"]),
             created_before=data.get("inat_created_before"),
             species=[
@@ -70,3 +72,12 @@ def load_overrides(path: Path) -> dict[str, dict]:
     if not path.exists():
         return {}
     return json.loads(path.read_text())
+
+
+def _place_ids(data: dict) -> tuple[int, ...]:
+    if "inat_place_ids" in data:
+        ids = tuple(int(p) for p in data["inat_place_ids"])
+        if not ids:
+            raise ValueError("inat_place_ids is empty")
+        return ids
+    return (int(data["inat_place_id"]),)

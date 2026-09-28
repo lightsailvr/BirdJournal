@@ -1,0 +1,965 @@
+{
+  "id": "us-ca-bay",
+  "name": "SF Bay Area",
+  "region": "San Francisco Bay Area, California, US",
+  "version": 1,
+  "inat_place_id": 54321,
+  "inat_created_before": "2026-09-27",
+  "bounding_box": {
+    "south": 36.89,
+    "west": -123.63,
+    "north": 38.86,
+    "east": -121.21
+  },
+  "comment": "About 150 San Francisco Bay Area species: the 150 bird species with the most research-grade iNaturalist observations in place 54321 (the nine Bay Area counties) created up to 2026-09-27, minus the domestic Muscovy Duck, plus heard-more-than-seen forest and marsh birds (Pacific Wren, Hutton's Vireo, Varied Thrush, Western Screech Owl, Mountain Pygmy Owl, Virginia Rail, Sora, Swainson's Thrush, Brown Creeper, Golden-crowned Kinglet). `packbuilder draft --place 54321 --before 2026-09-27 --top 150 --exclude 'Cairina moschata' --add ...`. scientific_name and common_name follow the BirdNET+ label file as in us-ca-la (species the committed packs already list reuse their entries); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the observation ranking, then the species added by hand. Drafted with `packbuilder draft` (the command is below) and read over by a person; tests/test_definition.py checks the labels.",
+  "species": [
+    {
+      "scientific_name": "Buteo jamaicensis",
+      "common_name": "Red-tailed Hawk",
+      "inat_taxon_id": 5212,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Red-tailed_hawk"
+    },
+    {
+      "scientific_name": "Anas platyrhynchos",
+      "common_name": "Mallard",
+      "inat_taxon_id": 6930,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Mallard"
+    },
+    {
+      "scientific_name": "Calypte anna",
+      "common_name": "Anna's Hummingbird",
+      "inat_taxon_id": 6317,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Anna's_hummingbird"
+    },
+    {
+      "scientific_name": "Nycticorax nycticorax",
+      "common_name": "Black-crowned Night Heron",
+      "inat_taxon_id": 4981,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Black-crowned_night_heron"
+    },
+    {
+      "scientific_name": "Ardea herodias",
+      "common_name": "Great Blue Heron",
+      "inat_taxon_id": 4956,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Great_blue_heron"
+    },
+    {
+      "scientific_name": "Zonotrichia leucophrys",
+      "common_name": "White-crowned Sparrow",
+      "inat_taxon_id": 9176,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/White-crowned_sparrow"
+    },
+    {
+      "scientific_name": "Junco hyemalis",
+      "common_name": "Dark-eyed Junco",
+      "inat_taxon_id": 10094,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Dark-eyed_junco"
+    },
+    {
+      "scientific_name": "Egretta thula",
+      "common_name": "Snowy Egret",
+      "inat_taxon_id": 4940,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Snowy_egret"
+    },
+    {
+      "scientific_name": "Sayornis nigricans",
+      "common_name": "Black Phoebe",
+      "inat_taxon_id": 17013,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Black_phoebe"
+    },
+    {
+      "scientific_name": "Aphelocoma californica",
+      "common_name": "California Scrub Jay",
+      "inat_taxon_id": 506118,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/California_scrub_jay"
+    },
+    {
+      "scientific_name": "Branta canadensis",
+      "common_name": "Canada Goose",
+      "inat_taxon_id": 7089,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Canada_goose"
+    },
+    {
+      "scientific_name": "Haemorhous mexicanus",
+      "common_name": "House Finch",
+      "inat_taxon_id": 199840,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/House_finch"
+    },
+    {
+      "scientific_name": "Ardea alba",
+      "common_name": "Great Egret",
+      "inat_taxon_id": 144455,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Great_egret"
+    },
+    {
+      "scientific_name": "Cathartes aura",
+      "common_name": "Turkey Vulture",
+      "inat_taxon_id": 4756,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Turkey_vulture"
+    },
+    {
+      "scientific_name": "Meleagris gallopavo",
+      "common_name": "Wild Turkey",
+      "inat_taxon_id": 906,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Wild_turkey"
+    },
+    {
+      "scientific_name": "Sialia mexicana",
+      "common_name": "Western Bluebird",
+      "inat_taxon_id": 12937,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_bluebird"
+    },
+    {
+      "scientific_name": "Melozone crissalis",
+      "common_name": "California Towhee",
+      "inat_taxon_id": 73044,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/California_towhee"
+    },
+    {
+      "scientific_name": "Buteo lineatus",
+      "common_name": "Red-shouldered Hawk",
+      "inat_taxon_id": 5206,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Red-shouldered_hawk"
+    },
+    {
+      "scientific_name": "Larus occidentalis",
+      "common_name": "Western Gull",
+      "inat_taxon_id": 4345,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_gull"
+    },
+    {
+      "scientific_name": "Melospiza melodia",
+      "common_name": "Song Sparrow",
+      "inat_taxon_id": 9100,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Song_sparrow"
+    },
+    {
+      "scientific_name": "Spinus psaltria",
+      "common_name": "Lesser Goldfinch",
+      "inat_taxon_id": 145308,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Lesser_goldfinch"
+    },
+    {
+      "scientific_name": "Corvus brachyrhynchos",
+      "common_name": "American Crow",
+      "inat_taxon_id": 8021,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_crow"
+    },
+    {
+      "scientific_name": "Nannopterum auritum",
+      "common_name": "Double-crested Cormorant",
+      "inat_taxon_id": 1454382,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Double-crested_cormorant"
+    },
+    {
+      "scientific_name": "Fulica americana",
+      "common_name": "American Coot",
+      "inat_taxon_id": 473,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_coot"
+    },
+    {
+      "scientific_name": "Melanerpes formicivorus",
+      "common_name": "Acorn Woodpecker",
+      "inat_taxon_id": 18209,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Acorn_woodpecker"
+    },
+    {
+      "scientific_name": "Pelecanus occidentalis",
+      "common_name": "Brown Pelican",
+      "inat_taxon_id": 4328,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Brown_pelican"
+    },
+    {
+      "scientific_name": "Setophaga coronata",
+      "common_name": "Myrtle Warbler",
+      "inat_taxon_id": 145245,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Yellow-rumped_warbler"
+    },
+    {
+      "scientific_name": "Turdus migratorius",
+      "common_name": "American Robin",
+      "inat_taxon_id": 12727,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_robin"
+    },
+    {
+      "scientific_name": "Zonotrichia atricapilla",
+      "common_name": "Golden-crowned Sparrow",
+      "inat_taxon_id": 9185,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Golden-crowned_sparrow"
+    },
+    {
+      "scientific_name": "Zenaida macroura",
+      "common_name": "Mourning Dove",
+      "inat_taxon_id": 3454,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Mourning_dove"
+    },
+    {
+      "scientific_name": "Corvus corax",
+      "common_name": "Northern Raven",
+      "inat_taxon_id": 8010,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_raven"
+    },
+    {
+      "scientific_name": "Callipepla californica",
+      "common_name": "California Quail",
+      "inat_taxon_id": 1409,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/California_quail"
+    },
+    {
+      "scientific_name": "Himantopus mexicanus",
+      "common_name": "Black-necked Stilt",
+      "inat_taxon_id": 4836,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Black-necked_stilt"
+    },
+    {
+      "scientific_name": "Poecile rufescens",
+      "common_name": "Chestnut-backed Chickadee",
+      "inat_taxon_id": 144820,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Chestnut-backed_chickadee"
+    },
+    {
+      "scientific_name": "Bubo virginianus",
+      "common_name": "Great Horned Owl",
+      "inat_taxon_id": 20044,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Great_horned_owl"
+    },
+    {
+      "scientific_name": "Astur cooperii",
+      "common_name": "Cooper's Hawk",
+      "inat_taxon_id": 1579017,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Cooper's_hawk"
+    },
+    {
+      "scientific_name": "Recurvirostra americana",
+      "common_name": "American Avocet",
+      "inat_taxon_id": 4885,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_avocet"
+    },
+    {
+      "scientific_name": "Bucephala albeola",
+      "common_name": "Bufflehead",
+      "inat_taxon_id": 6993,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Bufflehead"
+    },
+    {
+      "scientific_name": "Columba livia",
+      "common_name": "Rock Dove",
+      "inat_taxon_id": 3017,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Rock_dove"
+    },
+    {
+      "scientific_name": "Agelaius phoeniceus",
+      "common_name": "Red-winged Blackbird",
+      "inat_taxon_id": 9744,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Red-winged_blackbird"
+    },
+    {
+      "scientific_name": "Pipilo maculatus",
+      "common_name": "Spotted Towhee",
+      "inat_taxon_id": 9420,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Spotted_towhee"
+    },
+    {
+      "scientific_name": "Cyanocitta stelleri",
+      "common_name": "Steller's Jay",
+      "inat_taxon_id": 8234,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Steller's_jay"
+    },
+    {
+      "scientific_name": "Euphagus cyanocephalus",
+      "common_name": "Brewer's Blackbird",
+      "inat_taxon_id": 10325,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Brewer's_blackbird"
+    },
+    {
+      "scientific_name": "Tringa semipalmata",
+      "common_name": "Willet",
+      "inat_taxon_id": 144491,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Willet"
+    },
+    {
+      "scientific_name": "Podilymbus podiceps",
+      "common_name": "Pied-billed Grebe",
+      "inat_taxon_id": 4246,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Pied-billed_grebe"
+    },
+    {
+      "scientific_name": "Pelecanus erythrorhynchos",
+      "common_name": "American White Pelican",
+      "inat_taxon_id": 4334,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_white_pelican"
+    },
+    {
+      "scientific_name": "Psaltriparus minimus",
+      "common_name": "American Bushtit",
+      "inat_taxon_id": 7266,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_bushtit"
+    },
+    {
+      "scientific_name": "Mimus polyglottos",
+      "common_name": "Northern Mockingbird",
+      "inat_taxon_id": 14886,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Northern_mockingbird"
+    },
+    {
+      "scientific_name": "Spatula clypeata",
+      "common_name": "Northern Shoveler",
+      "inat_taxon_id": 558438,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Northern_shoveler"
+    },
+    {
+      "scientific_name": "Oxyura jamaicensis",
+      "common_name": "Ruddy Duck",
+      "inat_taxon_id": 850859,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Ruddy_duck"
+    },
+    {
+      "scientific_name": "Charadrius vociferus",
+      "common_name": "Killdeer",
+      "inat_taxon_id": 4793,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Killdeer"
+    },
+    {
+      "scientific_name": "Elanus leucurus",
+      "common_name": "White-tailed Kite",
+      "inat_taxon_id": 5277,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/White-tailed_kite"
+    },
+    {
+      "scientific_name": "Thryomanes bewickii",
+      "common_name": "Bewick's Wren",
+      "inat_taxon_id": 7576,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Bewick's_wren"
+    },
+    {
+      "scientific_name": "Calidris minutilla",
+      "common_name": "Least Sandpiper",
+      "inat_taxon_id": 3864,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Least_sandpiper"
+    },
+    {
+      "scientific_name": "Falco sparverius",
+      "common_name": "American Kestrel",
+      "inat_taxon_id": 4665,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_kestrel"
+    },
+    {
+      "scientific_name": "Baeolophus inornatus",
+      "common_name": "Oak Titmouse",
+      "inat_taxon_id": 13633,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Oak_titmouse"
+    },
+    {
+      "scientific_name": "Larus californicus",
+      "common_name": "California Gull",
+      "inat_taxon_id": 4385,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/California_gull"
+    },
+    {
+      "scientific_name": "Colaptes auratus",
+      "common_name": "Northern Flicker",
+      "inat_taxon_id": 18236,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Northern_flicker"
+    },
+    {
+      "scientific_name": "Sturnus vulgaris",
+      "common_name": "Common Starling",
+      "inat_taxon_id": 14850,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_starling"
+    },
+    {
+      "scientific_name": "Dryobates nuttallii",
+      "common_name": "Nuttall's Woodpecker",
+      "inat_taxon_id": 792987,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Nuttall's_woodpecker"
+    },
+    {
+      "scientific_name": "Tringa melanoleuca",
+      "common_name": "Greater Yellowlegs",
+      "inat_taxon_id": 3892,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Greater_yellowlegs"
+    },
+    {
+      "scientific_name": "Circus hudsonius",
+      "common_name": "Northern Harrier",
+      "inat_taxon_id": 558446,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Northern_harrier"
+    },
+    {
+      "scientific_name": "Bucephala clangula",
+      "common_name": "Common Goldeneye",
+      "inat_taxon_id": 6990,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_goldeneye"
+    },
+    {
+      "scientific_name": "Setophaga townsendi",
+      "common_name": "Townsend's Warbler",
+      "inat_taxon_id": 145255,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Townsend's_warbler"
+    },
+    {
+      "scientific_name": "Limosa fedoa",
+      "common_name": "Marbled Godwit",
+      "inat_taxon_id": 3954,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Marbled_godwit"
+    },
+    {
+      "scientific_name": "Larus delawarensis",
+      "common_name": "Ring-billed Gull",
+      "inat_taxon_id": 4364,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Ring-billed_gull"
+    },
+    {
+      "scientific_name": "Anas crecca",
+      "common_name": "Eurasian Teal",
+      "inat_taxon_id": 6937,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Eurasian_teal"
+    },
+    {
+      "scientific_name": "Corthylio calendula",
+      "common_name": "Ruby-crowned Kinglet",
+      "inat_taxon_id": 1289388,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Ruby-crowned_kinglet"
+    },
+    {
+      "scientific_name": "Mareca americana",
+      "common_name": "American Wigeon",
+      "inat_taxon_id": 485176,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_wigeon"
+    },
+    {
+      "scientific_name": "Catharus guttatus",
+      "common_name": "Hermit Thrush",
+      "inat_taxon_id": 12890,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Hermit_thrush"
+    },
+    {
+      "scientific_name": "Sayornis saya",
+      "common_name": "Say's Phoebe",
+      "inat_taxon_id": 17009,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Say's_phoebe"
+    },
+    {
+      "scientific_name": "Sterna forsteri",
+      "common_name": "Forster's Tern",
+      "inat_taxon_id": 4457,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Forster's_tern"
+    },
+    {
+      "scientific_name": "Numenius americanus",
+      "common_name": "Long-billed Curlew",
+      "inat_taxon_id": 3906,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Long-billed_curlew"
+    },
+    {
+      "scientific_name": "Hirundo rustica",
+      "common_name": "Barn Swallow",
+      "inat_taxon_id": 11901,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Barn_swallow"
+    },
+    {
+      "scientific_name": "Passer domesticus",
+      "common_name": "House Sparrow",
+      "inat_taxon_id": 13858,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/House_sparrow"
+    },
+    {
+      "scientific_name": "Haematopus bachmani",
+      "common_name": "Black Oystercatcher",
+      "inat_taxon_id": 4838,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Black_oystercatcher"
+    },
+    {
+      "scientific_name": "Butorides virescens",
+      "common_name": "Green Heron",
+      "inat_taxon_id": 5020,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Green_heron"
+    },
+    {
+      "scientific_name": "Melanitta perspicillata",
+      "common_name": "Surf Scoter",
+      "inat_taxon_id": 7036,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Surf_scoter"
+    },
+    {
+      "scientific_name": "Passerculus sandwichensis",
+      "common_name": "Savannah Sparrow",
+      "inat_taxon_id": 9981,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Savannah_sparrow"
+    },
+    {
+      "scientific_name": "Mareca strepera",
+      "common_name": "Gadwall",
+      "inat_taxon_id": 558439,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Gadwall"
+    },
+    {
+      "scientific_name": "Bombycilla cedrorum",
+      "common_name": "Cedar Waxwing",
+      "inat_taxon_id": 7428,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Cedar_waxwing"
+    },
+    {
+      "scientific_name": "Sitta carolinensis",
+      "common_name": "White-breasted Nuthatch",
+      "inat_taxon_id": 14801,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/White-breasted_nuthatch"
+    },
+    {
+      "scientific_name": "Pandion haliaetus",
+      "common_name": "Osprey",
+      "inat_taxon_id": 116999,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Osprey"
+    },
+    {
+      "scientific_name": "Patagioenas fasciata",
+      "common_name": "Band-tailed Pigeon",
+      "inat_taxon_id": 3108,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Band-tailed_pigeon"
+    },
+    {
+      "scientific_name": "Numenius hudsonicus",
+      "common_name": "Hudsonian Whimbrel",
+      "inat_taxon_id": 1188213,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Hudsonian_whimbrel"
+    },
+    {
+      "scientific_name": "Larus heermanni",
+      "common_name": "Heermann's Gull",
+      "inat_taxon_id": 4353,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Heermann's_gull"
+    },
+    {
+      "scientific_name": "Sturnella neglecta",
+      "common_name": "Western Meadowlark",
+      "inat_taxon_id": 9535,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_meadowlark"
+    },
+    {
+      "scientific_name": "Aechmophorus occidentalis",
+      "common_name": "Western Grebe",
+      "inat_taxon_id": 4235,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_grebe"
+    },
+    {
+      "scientific_name": "Podiceps nigricollis",
+      "common_name": "Black-necked Grebe",
+      "inat_taxon_id": 4205,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Black-necked_grebe"
+    },
+    {
+      "scientific_name": "Lophodytes cucullatus",
+      "common_name": "Hooded Merganser",
+      "inat_taxon_id": 7109,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Hooded_merganser"
+    },
+    {
+      "scientific_name": "Molothrus ater",
+      "common_name": "Brown-headed Cowbird",
+      "inat_taxon_id": 10373,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Brown-headed_cowbird"
+    },
+    {
+      "scientific_name": "Pluvialis squatarola",
+      "common_name": "Grey Plover",
+      "inat_taxon_id": 4892,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Grey_plover"
+    },
+    {
+      "scientific_name": "Calidris mauri",
+      "common_name": "Western Sandpiper",
+      "inat_taxon_id": 3855,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_sandpiper"
+    },
+    {
+      "scientific_name": "Hydroprogne caspia",
+      "common_name": "Caspian Tern",
+      "inat_taxon_id": 144537,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Caspian_tern"
+    },
+    {
+      "scientific_name": "Mergus merganser",
+      "common_name": "Common Merganser",
+      "inat_taxon_id": 7004,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_merganser"
+    },
+    {
+      "scientific_name": "Aythya collaris",
+      "common_name": "Ring-necked Duck",
+      "inat_taxon_id": 7044,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Ring-necked_duck"
+    },
+    {
+      "scientific_name": "Haliaeetus leucocephalus",
+      "common_name": "Bald Eagle",
+      "inat_taxon_id": 5305,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Bald_eagle"
+    },
+    {
+      "scientific_name": "Megaceryle alcyon",
+      "common_name": "Belted Kingfisher",
+      "inat_taxon_id": 2548,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Belted_kingfisher"
+    },
+    {
+      "scientific_name": "Aythya marila",
+      "common_name": "Greater Scaup",
+      "inat_taxon_id": 7047,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Greater_scaup"
+    },
+    {
+      "scientific_name": "Aythya valisineria",
+      "common_name": "Canvasback",
+      "inat_taxon_id": 7057,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Canvasback"
+    },
+    {
+      "scientific_name": "Tachycineta bicolor",
+      "common_name": "Tree Swallow",
+      "inat_taxon_id": 11935,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Tree_swallow"
+    },
+    {
+      "scientific_name": "Urile penicillatus",
+      "common_name": "Brandt's Cormorant",
+      "inat_taxon_id": 1289607,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Brandt's_cormorant"
+    },
+    {
+      "scientific_name": "Streptopelia decaocto",
+      "common_name": "Eurasian Collared Dove",
+      "inat_taxon_id": 2969,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Eurasian_collared_dove"
+    },
+    {
+      "scientific_name": "Spatula cyanoptera",
+      "common_name": "Cinnamon Teal",
+      "inat_taxon_id": 558434,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Cinnamon_teal"
+    },
+    {
+      "scientific_name": "Petrochelidon pyrrhonota",
+      "common_name": "American Cliff Swallow",
+      "inat_taxon_id": 11858,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_cliff_swallow"
+    },
+    {
+      "scientific_name": "Actitis macularius",
+      "common_name": "Spotted Sandpiper",
+      "inat_taxon_id": 72458,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Spotted_sandpiper"
+    },
+    {
+      "scientific_name": "Passerella iliaca",
+      "common_name": "Red Fox Sparrow",
+      "inat_taxon_id": 9156,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Fox_sparrow"
+    },
+    {
+      "scientific_name": "Uria aalge",
+      "common_name": "Common Murre",
+      "inat_taxon_id": 4519,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_murre"
+    },
+    {
+      "scientific_name": "Cardellina pusilla",
+      "common_name": "Wilson's Warbler",
+      "inat_taxon_id": 145276,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Wilson's_warbler"
+    },
+    {
+      "scientific_name": "Calidris alba",
+      "common_name": "Sanderling",
+      "inat_taxon_id": 3849,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Sanderling"
+    },
+    {
+      "scientific_name": "Dryobates villosus",
+      "common_name": "Hairy Woodpecker",
+      "inat_taxon_id": 1651487,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Hairy_woodpecker"
+    },
+    {
+      "scientific_name": "Sitta pygmaea",
+      "common_name": "Pygmy Nuthatch",
+      "inat_taxon_id": 14816,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Pygmy_nuthatch"
+    },
+    {
+      "scientific_name": "Dryobates pubescens",
+      "common_name": "Downy Woodpecker",
+      "inat_taxon_id": 792988,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Downy_woodpecker"
+    },
+    {
+      "scientific_name": "Icterus cucullatus",
+      "common_name": "Hooded Oriole",
+      "inat_taxon_id": 9319,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Hooded_oriole"
+    },
+    {
+      "scientific_name": "Leiothlypis celata",
+      "common_name": "Orange-crowned Warbler",
+      "inat_taxon_id": 979757,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Orange-crowned_warbler"
+    },
+    {
+      "scientific_name": "Certhia americana",
+      "common_name": "Brown Creeper",
+      "inat_taxon_id": 7458,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Brown_creeper"
+    },
+    {
+      "scientific_name": "Calidris alpina",
+      "common_name": "Dunlin",
+      "inat_taxon_id": 3857,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Dunlin"
+    },
+    {
+      "scientific_name": "Tachycineta thalassina",
+      "common_name": "Violet-green Swallow",
+      "inat_taxon_id": 11931,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Violet-green_swallow"
+    },
+    {
+      "scientific_name": "Gavia immer",
+      "common_name": "Common Loon",
+      "inat_taxon_id": 4626,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_loon"
+    },
+    {
+      "scientific_name": "Geothlypis trichas",
+      "common_name": "Common Yellowthroat",
+      "inat_taxon_id": 9721,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_yellowthroat"
+    },
+    {
+      "scientific_name": "Pheucticus melanocephalus",
+      "common_name": "Black-headed Grosbeak",
+      "inat_taxon_id": 10274,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Black-headed_grosbeak"
+    },
+    {
+      "scientific_name": "Tyto furcata",
+      "common_name": "American Barn Owl",
+      "inat_taxon_id": 1578502,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_barn_owl"
+    },
+    {
+      "scientific_name": "Quiscalus mexicanus",
+      "common_name": "Great-tailed Grackle",
+      "inat_taxon_id": 9607,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Great-tailed_grackle"
+    },
+    {
+      "scientific_name": "Spinus tristis",
+      "common_name": "American Goldfinch",
+      "inat_taxon_id": 145310,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/American_goldfinch"
+    },
+    {
+      "scientific_name": "Falco peregrinus",
+      "common_name": "Peregrine Falcon",
+      "inat_taxon_id": 4647,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Peregrine_falcon"
+    },
+    {
+      "scientific_name": "Aythya affinis",
+      "common_name": "Lesser Scaup",
+      "inat_taxon_id": 7054,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Lesser_scaup"
+    },
+    {
+      "scientific_name": "Larus brachyrhynchus",
+      "common_name": "Short-billed Gull",
+      "inat_taxon_id": 1286964,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Short-billed_gull"
+    },
+    {
+      "scientific_name": "Gallinula galeata",
+      "common_name": "Common Gallinule",
+      "inat_taxon_id": 144479,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Common_gallinule"
+    },
+    {
+      "scientific_name": "Aechmophorus clarkii",
+      "common_name": "Clark's Grebe",
+      "inat_taxon_id": 4234,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Clark's_grebe"
+    },
+    {
+      "scientific_name": "Anarhynchus nivosus",
+      "common_name": "Snowy Plover",
+      "inat_taxon_id": 1505663,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Snowy_plover"
+    },
+    {
+      "scientific_name": "Myiarchus cinerascens",
+      "common_name": "Ash-throated Flycatcher",
+      "inat_taxon_id": 16010,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Ash-throated_flycatcher"
+    },
+    {
+      "scientific_name": "Charadrius semipalmatus",
+      "common_name": "Semipalmated Plover",
+      "inat_taxon_id": 4817,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Semipalmated_plover"
+    },
+    {
+      "scientific_name": "Empidonax difficilis",
+      "common_name": "Western Flycatcher",
+      "inat_taxon_id": 16598,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_flycatcher"
+    },
+    {
+      "scientific_name": "Cygnus olor",
+      "common_name": "Mute Swan",
+      "inat_taxon_id": 6921,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Mute_swan"
+    },
+    {
+      "scientific_name": "Arenaria melanocephala",
+      "common_name": "Black Turnstone",
+      "inat_taxon_id": 3941,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Black_turnstone"
+    },
+    {
+      "scientific_name": "Podiceps auritus",
+      "common_name": "Horned Grebe",
+      "inat_taxon_id": 4209,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Horned_grebe"
+    },
+    {
+      "scientific_name": "Aix sponsa",
+      "common_name": "Wood Duck",
+      "inat_taxon_id": 7107,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Wood_duck"
+    },
+    {
+      "scientific_name": "Setophaga aestiva",
+      "common_name": "American Yellow Warbler",
+      "inat_taxon_id": 1188207,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Yellow_warbler"
+    },
+    {
+      "scientific_name": "Toxostoma redivivum",
+      "common_name": "California Thrasher",
+      "inat_taxon_id": 14906,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/California_thrasher"
+    },
+    {
+      "scientific_name": "Thalasseus elegans",
+      "common_name": "Elegant Tern",
+      "inat_taxon_id": 144542,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Elegant_tern"
+    },
+    {
+      "scientific_name": "Vireo huttoni",
+      "common_name": "Hutton's Vireo",
+      "inat_taxon_id": 17375,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Hutton's_vireo"
+    },
+    {
+      "scientific_name": "Chamaea fasciata",
+      "common_name": "Wrentit",
+      "inat_taxon_id": 15256,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Wrentit"
+    },
+    {
+      "scientific_name": "Piranga ludoviciana",
+      "common_name": "Western Tanager",
+      "inat_taxon_id": 9919,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_tanager"
+    },
+    {
+      "scientific_name": "Haemorhous purpureus",
+      "common_name": "Purple Finch",
+      "inat_taxon_id": 199841,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Purple_finch"
+    },
+    {
+      "scientific_name": "Larus glaucescens",
+      "common_name": "Glaucous-winged Gull",
+      "inat_taxon_id": 4399,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Glaucous-winged_gull"
+    },
+    {
+      "scientific_name": "Athene cunicularia",
+      "common_name": "Burrowing Owl",
+      "inat_taxon_id": 19975,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Burrowing_owl"
+    },
+    {
+      "scientific_name": "Anas acuta",
+      "common_name": "Northern Pintail",
+      "inat_taxon_id": 6933,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Northern_pintail"
+    },
+    {
+      "scientific_name": "Selasphorus sasin",
+      "common_name": "Allen's Hummingbird",
+      "inat_taxon_id": 6359,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Allen's_hummingbird"
+    },
+    {
+      "scientific_name": "Chondestes grammacus",
+      "common_name": "Lark Sparrow",
+      "inat_taxon_id": 10479,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Lark_sparrow"
+    },
+    {
+      "scientific_name": "Urile pelagicus",
+      "common_name": "Pelagic Cormorant",
+      "inat_taxon_id": 1289605,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Pelagic_cormorant"
+    },
+    {
+      "scientific_name": "Troglodytes pacificus",
+      "common_name": "Pacific Wren",
+      "inat_taxon_id": 144882,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Pacific_wren"
+    },
+    {
+      "scientific_name": "Ixoreus naevius",
+      "common_name": "Varied Thrush",
+      "inat_taxon_id": 145088,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Varied_thrush"
+    },
+    {
+      "scientific_name": "Megascops kennicottii",
+      "common_name": "Western Screech Owl",
+      "inat_taxon_id": 19743,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Western_screech_owl"
+    },
+    {
+      "scientific_name": "Glaucidium gnoma",
+      "common_name": "Mountain Pygmy Owl",
+      "inat_taxon_id": 19812,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Mountain_pygmy_owl"
+    },
+    {
+      "scientific_name": "Rallus limicola",
+      "common_name": "Virginia Rail",
+      "inat_taxon_id": 243,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Virginia_rail"
+    },
+    {
+      "scientific_name": "Porzana carolina",
+      "common_name": "Sora",
+      "inat_taxon_id": 162,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Sora_(bird)"
+    },
+    {
+      "scientific_name": "Catharus ustulatus",
+      "common_name": "Swainson's Thrush",
+      "inat_taxon_id": 12878,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Swainson's_thrush"
+    },
+    {
+      "scientific_name": "Regulus satrapa",
+      "common_name": "Golden-crowned Kinglet",
+      "inat_taxon_id": 117100,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Golden-crowned_kinglet"
+    }
+  ]
+}

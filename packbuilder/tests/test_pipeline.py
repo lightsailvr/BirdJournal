@@ -219,3 +219,30 @@ def test_large_photos_are_fetched_in_parallel_before_detection(tmp_path, photos)
 
     assert len(chosen_ids(result)) == 5
     assert len(threads) > 1, "the large renditions were fetched from a pool"
+
+
+def test_a_photo_of_two_species_is_chosen_for_neither(tmp_path, photos):
+    # Photo 3 is attached to an observation of each species (one picture of an avocet among pintails).
+    other = SpeciesEntry(scientific_name="Anas acuta", common_name="Northern Pintail", birdnet_label="Anas acuta", inat_taxon_id=1)
+    candidates = [make_candidate(photo_id=i, observation_id=i * 10) for i in range(1, 6)]
+    candidates.append(make_candidate(photo_id=3, observation_id=99, taxon_id=1))
+    for i in range(1, 6):
+        photos.specs[i] = {"background": 30}
+    metadata = FakeMetadata(candidates)
+
+    shared = pipeline.shared_photo_ids([ENTRY, other], metadata)
+    result = pipeline.build_species(ENTRY, Overrides(), metadata, FakeDetector(), options(tmp_path, photos), shared=shared)
+
+    assert shared == {3}
+    assert 3 not in chosen_ids(result)
+    assert sorted(chosen_ids(result)) == [1, 2, 4, 5]
+
+
+def test_an_excluded_photo_takes_the_rest_of_its_observation_with_it(tmp_path, photos):
+    # Photos 1 and 2 are one observation (an injured dove on a blanket, twice); excluding 1 drops 2 as well.
+    candidates = [make_candidate(photo_id=1, observation_id=10), make_candidate(photo_id=2, observation_id=10)]
+    candidates += [make_candidate(photo_id=i, observation_id=i * 10) for i in range(3, 7)]
+    for i in range(1, 7):
+        photos.specs[i] = {"background": 30}
+    result = pipeline.build_species(ENTRY, Overrides(exclude=[1]), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos))
+    assert sorted(chosen_ids(result)) == [3, 4, 5, 6]

@@ -22,10 +22,11 @@ PER_PAGE = 200
 
 
 class APIMetadata:
-    def __init__(self, place_id: int, cache_dir: Path, created_before: str | None = None, per_species: int = 200, pause_seconds: float = 1.0):
+    def __init__(self, place_ids: tuple[int, ...], cache_dir: Path, created_before: str | None = None, per_species: int = 200, pause_seconds: float = 1.0):
         """`created_before` (YYYY-MM-DD) pins the newest-first query to observations created up to that date, so a
-        rebuild from a clean checkout sees the same candidates as the committed pack (barring deletions)."""
-        self.place_id = place_id
+        rebuild from a clean checkout sees the same candidates as the committed pack (barring deletions). Several
+        `place_ids` are one query over their union."""
+        self.place_ids = tuple(place_ids)
         self.created_before = created_before
         self.cache_dir = Path(cache_dir) / "api"
         self.per_species = per_species
@@ -48,12 +49,12 @@ class APIMetadata:
 
     def _page(self, taxon_id: int, page: int) -> list[dict]:
         pin = f"-before-{self.created_before}" if self.created_before else ""
-        cache_file = self.cache_dir / f"taxon-{taxon_id}-place-{self.place_id}{pin}-page-{page}.json"
+        cache_file = self.cache_dir / f"taxon-{taxon_id}-place-{"-".join(map(str, self.place_ids))}{pin}-page-{page}.json"
         if cache_file.exists():
             return json.loads(cache_file.read_text())["results"]
         params = {
             "taxon_id": taxon_id,
-            "place_id": self.place_id,
+            "place_id": ",".join(map(str, self.place_ids)),
             "quality_grade": "research",
             "photo_license": "cc0,cc-by,cc-by-nc",
             "photos": "true",
@@ -97,6 +98,11 @@ def _candidates_in(observation: dict) -> list[PhotoCandidate]:
                 width=dims.get("width"),
                 height=dims.get("height"),
                 position=position,
+                annotations=tuple(
+                    (int(a["controlled_attribute_id"]), int(a["controlled_value_id"]))
+                    for a in observation.get("annotations") or []
+                    if a.get("controlled_attribute_id") is not None and a.get("controlled_value_id") is not None
+                ),
             )
         )
     return out
