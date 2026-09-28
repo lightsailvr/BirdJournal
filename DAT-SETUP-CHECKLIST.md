@@ -107,6 +107,17 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - Quit: two-finger tap. After the 2 s grace period the phone should read "Ended by the glasses", not paused.
    - Three cycles: Start, hear a bird, Stop, three times; the third works like the first.
    - Record the answers in DECISIONS.md, "Pause, disconnect and error handling".
+9. [ ] The field journal's Listen tab (#28), which drives the same glasses run as step 8 from the normal app:
+   - Listen tab, source row "Ray-Ban Display · Connected", Start listening: the title reads "Listening", the dot is green,
+     the elapsed time ticks and the waveform moves with sound near the glasses. Lock the phone in a pocket; on return the
+     time has kept counting and the species heard are listed in the order heard.
+   - Add on the lens ("Add to my list"): the phone row shows the check and "Added to journal" and the summary counts it.
+     Then tap Review on another row on the phone and Add to journal: the Journal shows one sighting with "Your glasses
+     snapshot" (the frame from the moment of the phone tap), not two entries when the lens adds the same species later.
+   - Switch to the Journal tab while listening: the strip above the tab bar shows the time and Stop; the run carries on.
+   - Doff, out of range, touchpad and the two-finger quit as in step 8, read on the Listen tab: "Paused: glasses off",
+     "Paused: glasses disconnected", "Paused by the glasses", "Ended by the glasses"; nothing reads paused after a quit.
+   - Record the answers in DECISIONS.md, "The phone as a field journal".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.
