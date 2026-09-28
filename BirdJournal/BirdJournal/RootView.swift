@@ -17,6 +17,7 @@ enum Route: Hashable {
     case modelLicense(fileName: String)
     case packLicense(id: String)
     case settings
+    case appIcon
 }
 
 extension View {
@@ -57,6 +58,8 @@ private struct RouteDestination: View {
             }
         case .settings:
             SettingsView()
+        case .appIcon:
+            AppIconView()
         }
     }
 }

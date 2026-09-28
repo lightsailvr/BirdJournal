@@ -26,6 +26,7 @@
 		61CF3AAB3069D4D100A0B268 /* MyBirdJournal-StellersJay.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA93069D4D100A0B268 /* MyBirdJournal-StellersJay.icon */; };
 		61CF3AAC3069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */; };
 		61CF3AAD3069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */; };
+		61F878E0306A2B4800D0FF2C /* MyBirdJournal-GreatEgret.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61F878DF306A2B4800D0FF2C /* MyBirdJournal-GreatEgret.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +56,7 @@
 		61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-ProthonotaryWarbler.icon"; sourceTree = "<group>"; };
 		61CF3AA83069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-RedTailedHawk.icon"; sourceTree = "<group>"; };
 		61CF3AA93069D4D100A0B268 /* MyBirdJournal-StellersJay.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-StellersJay.icon"; sourceTree = "<group>"; };
+		61F878DF306A2B4800D0FF2C /* MyBirdJournal-GreatEgret.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-GreatEgret.icon"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -120,6 +122,7 @@
 				61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */,
 				61CF3AA83069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon */,
 				61CF3AA93069D4D100A0B268 /* MyBirdJournal-StellersJay.icon */,
+				61F878DF306A2B4800D0FF2C /* MyBirdJournal-GreatEgret.icon */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -144,6 +147,7 @@
 				000000000000000120000000 /* Sources */,
 				000000000000000130000000 /* Frameworks */,
 				000000000000000140000000 /* Resources */,
+				000000000000000150000000 /* Remove stub onnxruntime.framework */,
 			);
 			buildRules = (
 			);
@@ -267,6 +271,7 @@
 				61CF3AAB3069D4D100A0B268 /* MyBirdJournal-StellersJay.icon in Resources */,
 				61CF3AAC3069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon in Resources */,
 				61CF3AAD3069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon in Resources */,
+				61F878E0306A2B4800D0FF2C /* MyBirdJournal-GreatEgret.icon in Resources */,
 				61CF3A9230698B9800A0B268 /* MyBirdJournal-Default.icon in Resources */,
 			);
 		};
@@ -281,6 +286,30 @@
 			);
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		000000000000000150000000 /* Remove stub onnxruntime.framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/onnxruntime.framework",
+			);
+			name = "Remove stub onnxruntime.framework";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/onnxruntime-stub-removed",
+			);
+			shellPath = /bin/sh;
+			shellScript = (
+				"# Xcode embeds the package's static onnxruntime.framework as a codeless framework: the runtime itself is linked",
+				"# into the app, so it strips the code and injects a stub dylib built for the app's deployment target, but keeps the",
+				"# xcframework's MinimumOSVersion (15.1). App Store Connect rejects that mismatch (ITMS-90208) and nothing loads",
+				"# the stub, so remove it before the app is signed.",
+				"rm -rf \"${SCRIPT_INPUT_FILE_0}\"",
+				"touch \"${SCRIPT_OUTPUT_FILE_0}\"",
+				"",
+			);
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		000000000000000120000000 /* Sources */ = {
@@ -450,18 +479,17 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "My Bird Journal";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "BirdJournal connects to your Meta glasses over Bluetooth to hear birds around you.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "BirdJournal does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "BirdJournal finds and connects to your Meta glasses over Wi-Fi.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "BirdJournal uses your location to list the birds that live where you are listening.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "BirdJournal listens for birdsong with the phone microphone when your glasses are not connected.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "BirdJournal does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
@@ -498,18 +526,17 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "My Bird Journal";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "BirdJournal connects to your Meta glasses over Bluetooth to hear birds around you.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "BirdJournal does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "BirdJournal finds and connects to your Meta glasses over Wi-Fi.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "BirdJournal uses your location to list the birds that live where you are listening.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "BirdJournal listens for birdsong with the phone microphone when your glasses are not connected.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "BirdJournal does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;

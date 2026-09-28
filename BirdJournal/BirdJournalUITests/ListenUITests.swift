@@ -28,6 +28,9 @@ final class ListenUITests: XCTestCase {
         app.launch()
         app.buttons["Settings"].tap()
         let developer = app.buttons["Developer tools"]
+        // The last row of Settings, below the fold on a small phone.
+        XCTAssertTrue(app.buttons["Dark"].waitForExistence(timeout: 10))
+        for _ in 0..<4 where !developer.isHittable { app.swipeUp() }
         XCTAssertTrue(developer.waitForExistence(timeout: 10))
         developer.tap()
         XCTAssertTrue(app.staticTexts["Developer"].waitForExistence(timeout: 10) || app.navigationBars["Developer"].waitForExistence(timeout: 5))

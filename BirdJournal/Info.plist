@@ -34,6 +34,15 @@
 	<array>
 		<string>_bonjour._tcp</string>
 	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>JournalPaper</string>
+		<key>UIImageName</key>
+		<string>LaunchBird</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<false/>
+	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

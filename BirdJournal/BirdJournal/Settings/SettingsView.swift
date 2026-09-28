@@ -2,12 +2,15 @@ import MWDATCore
 import Pack
 import SwiftUI
 
-/// Settings (issue #28): the glasses in plain words, the bird packs, sources and credits, and, in debug builds, the
-/// developer screens that used to be the app's front page.
+/// Settings (issue #28): the glasses in plain words, the appearance and app icon, the bird packs, sources and credits,
+/// and, in debug builds, the developer screens that used to be the app's front page.
 struct SettingsView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
+    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
+    /// Read on appear, so it is current when the reader comes back from the icon screen.
+    @State private var iconTitle = ""
     #if DEBUG
     @State private var showingDeveloper = false
     #endif
@@ -49,6 +52,16 @@ struct SettingsView: View {
                 Text("BirdJournal registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             }
 
+            Section("Appearance") {
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                NavigationLink(value: Route.appIcon) {
+                    LabeledContent("App icon", value: iconTitle)
+                }
+            }
+
             Section("Field guide") {
                 NavigationLink(value: Route.packs) {
                     LabeledContent("Bird packs", value: library.packs.map(\.info.name).joined(separator: ", "))
@@ -72,6 +85,7 @@ struct SettingsView: View {
         }
         .paperList()
         .navigationTitle("Settings")
+        .onAppear { iconTitle = AppIconChoice.current?.title ?? "" }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
         #endif

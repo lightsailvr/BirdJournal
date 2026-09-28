@@ -18,6 +18,8 @@ struct BirdJournalApp: App {
     @State private var places = PlaceNames()
     @State private var packs: PackLibrary
     @State private var journalEdits: JournalEdits
+    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
+    @State private var showingSplash = true
     private let album: ModelContainer
     private let frames: FrameStore
 
@@ -124,21 +126,34 @@ struct BirdJournalApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(connection)
-                .environment(spike)
-                .environment(lens)
-                .environment(phoneListening)
-                .environment(glassesListening)
-                .environment(listening)
-                .environment(journalEdits)
-                .environment(places)
-                .environment(packs)
-                .environment(\.frameStore, frames)
-                .onOpenURL { url in
-                    Task { await connection.handle(url: url) }
+            ZStack {
+                root
+                if showingSplash {
+                    LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
+                        .transition(.opacity)
+                        .zIndex(1)
                 }
+            }
+            .preferredColorScheme(appearance.colorScheme)
         }
         .modelContainer(album)
+    }
+
+    /// The app with its shared objects, under the launch splash.
+    private var root: some View {
+        RootView()
+            .environment(connection)
+            .environment(spike)
+            .environment(lens)
+            .environment(phoneListening)
+            .environment(glassesListening)
+            .environment(listening)
+            .environment(journalEdits)
+            .environment(places)
+            .environment(packs)
+            .environment(\.frameStore, frames)
+            .onOpenURL { url in
+                Task { await connection.handle(url: url) }
+            }
     }
 }
