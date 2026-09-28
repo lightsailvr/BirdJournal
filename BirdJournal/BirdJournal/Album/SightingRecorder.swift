@@ -38,14 +38,30 @@ final class SightingRecorder {
     }
 
     /// A second confirmation of the same species in one run: the sighting keeps its first time and place, takes the
-    /// latest confidence, and swaps in the new frame when there is one.
+    /// latest confidence, and swaps in the new frame when there is one. The earlier frame stays on disk so `restore`
+    /// can put it back; the run's ledger (`RunSightings`) deletes it once the undo window has closed.
     func update(_ sighting: Sighting, with candidate: Candidate, frame: Data?) throws {
         sighting.soundConfidence = Double(candidate.score)
         if let frame {
-            let previous = sighting.frameImagePath
             sighting.frameImagePath = try frames.write(jpeg: frame)
-            if let previous { try? FileManager.default.removeItem(at: frames.url(for: previous)) }
         }
         try container.mainContext.save()
+    }
+
+    /// Puts a sighting back as it was before an update: the frame written by the update is deleted from disk.
+    func restore(_ sighting: Sighting, confidence: Double, framePath: String?) throws {
+        let replaced = sighting.frameImagePath
+        sighting.soundConfidence = confidence
+        sighting.frameImagePath = framePath
+        try container.mainContext.save()
+        if let replaced, replaced != framePath { try? FileManager.default.removeItem(at: frames.url(for: replaced)) }
+    }
+
+    /// Removes a sighting and its frame from the album.
+    func delete(_ sighting: Sighting) throws {
+        let frame = sighting.frameImagePath
+        container.mainContext.delete(sighting)
+        try container.mainContext.save()
+        if let frame { try? FileManager.default.removeItem(at: frames.url(for: frame)) }
     }
 }

@@ -1,6 +1,8 @@
 import Foundation
 
-/// One downloadable species pack as listed in the GitHub Releases JSON index.
+/// One downloadable species pack as listed in the GitHub Releases JSON index. The counts and the region are what the
+/// packs screen shows before a pack is on the phone (issue #28); an index written before they existed leaves them
+/// nil and the screen shows what it has.
 public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
     public let id: String
     public let name: String
@@ -8,14 +10,23 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
     public let url: URL
     public let sha256: String
     public let byteCount: Int
+    /// Species in the pack, from its database at pin time.
+    public let speciesCount: Int?
+    /// Photos in the pack, from its database at pin time.
+    public let photoCount: Int?
+    /// The region the pack covers, e.g. "Los Angeles County, California, US".
+    public let region: String?
 
-    public init(id: String, name: String, version: Int, url: URL, sha256: String, byteCount: Int) {
+    public init(id: String, name: String, version: Int, url: URL, sha256: String, byteCount: Int, speciesCount: Int? = nil, photoCount: Int? = nil, region: String? = nil) {
         self.id = id
         self.name = name
         self.version = version
         self.url = url
         self.sha256 = sha256
         self.byteCount = byteCount
+        self.speciesCount = speciesCount
+        self.photoCount = photoCount
+        self.region = region
     }
 }
 

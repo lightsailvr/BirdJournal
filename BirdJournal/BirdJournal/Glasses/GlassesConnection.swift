@@ -14,6 +14,17 @@ struct GlassesDeviceStatus: Identifiable, Equatable {
     var state: DeviceState
 }
 
+extension GlassesDeviceStatus {
+    /// The link as the phone screens name it.
+    var linkText: String {
+        switch state.linkState {
+        case .connected: "Connected"
+        case .connecting: "Connecting…"
+        case .disconnected: "Not connected"
+        }
+    }
+}
+
 /// Registration with the Meta AI app and the list of linked glasses (spec "Glasses adapter"). Holds every
 /// toolkit listener token for registration and device state; the audio stream lives in `GlassesAudioSource`.
 @Observable
@@ -44,6 +55,17 @@ final class GlassesConnection {
     /// The first connected glasses, used for battery, charging and thermal readings.
     var connectedDevice: GlassesDeviceStatus? {
         devices.first { $0.state.linkState == .connected }
+    }
+
+    /// The registration state as the phone screens name it.
+    var registrationText: String {
+        switch registrationState {
+        case .unavailable: "Unavailable"
+        case .available: "Not registered"
+        case .registering: "Registering…"
+        case .registered: "Registered"
+        @unknown default: "Unknown"
+        }
     }
 
     // MARK: - Registration

@@ -171,8 +171,11 @@ extension Fixtures {
     /// A library over the bundled pack, a temp storage folder and an index file listing the bundled pack and the
     /// fixture pack (served from a file URL).
     @MainActor
-    static func library(root: URL, indexVersion: Int = 1, sha256: String? = nil, bundledZip: URL? = nil, bundledVersion: Int = 1) throws -> PackLibrary {
-        let zip = try testPackZip()
+    static func library(
+        root: URL, indexVersion: Int = 1, sha256: String? = nil, bundledZip: URL? = nil, bundledVersion: Int = 1,
+        zip: URL? = nil, availableCapacity: (() -> Int64?)? = nil
+    ) throws -> PackLibrary {
+        let zip = try zip ?? testPackZip()
         var descriptor = try descriptor(for: zip, version: indexVersion)
         if let sha256 {
             descriptor = PackDescriptor(id: descriptor.id, name: descriptor.name, version: indexVersion, url: zip, sha256: sha256, byteCount: descriptor.byteCount)
@@ -182,6 +185,9 @@ extension Fixtures {
         let index = PackIndex(packs: [bundled, descriptor])
         let indexURL = root.appending(path: "index.json")
         try JSONEncoder().encode(index).write(to: indexURL)
-        return PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL)
+        return PackLibrary(
+            bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL,
+            availableCapacity: availableCapacity ?? { nil }
+        )
     }
 }

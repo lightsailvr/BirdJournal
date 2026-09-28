@@ -1,5 +1,6 @@
 import Album
 import Identification
+import MWDATCamera
 import MWDATCore
 import OSLog
 import Pack
@@ -13,8 +14,10 @@ struct BirdJournalApp: App {
     @State private var lens: GlassesLensSession
     @State private var phoneListening: ListeningSession
     @State private var glassesListening: GlassesListeningSession
+    @State private var listening: ListeningCoordinator
     @State private var places = PlaceNames()
     @State private var packs: PackLibrary
+    @State private var journalEdits: JournalEdits
     private let album: ModelContainer
     private let frames: FrameStore
 
@@ -25,18 +28,29 @@ struct BirdJournalApp: App {
             Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "glasses")
                 .error("Wearables.configure failed: \(error.localizedDescription)")
         }
+        JournalFont.applyNavigationBarAppearance()
         let connection = GlassesConnection()
         let album = Self.makeAlbum()
         let frames = Self.makeFrameStore()
         let packs = PackLibrary.forApp()
+        let levels = LevelSink()
+        let recorder = SightingRecorder(container: album, frames: frames)
+        let sightings = RunSightings(recorder: recorder)
+        let phone = Self.makePhoneListeningSession(levels: levels)
+        let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels)
         self.album = album
         self.frames = frames
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
         _lens = State(initialValue: Self.makeLensSession(connection: connection, packs: packs))
-        _phoneListening = State(initialValue: Self.makePhoneListeningSession())
-        _glassesListening = State(initialValue: Self.makeGlassesListeningSession(connection: connection, album: album, frames: frames, packs: packs))
+        _phoneListening = State(initialValue: phone)
+        _glassesListening = State(initialValue: glasses)
+        _listening = State(initialValue: ListeningCoordinator(
+            phone: phone, glasses: glasses, sightings: sightings, levels: levels,
+            defaultSource: connection.devices.isEmpty ? .phone : .glasses
+        ))
+        _journalEdits = State(initialValue: JournalEdits(container: album, frames: frames))
     }
 
     /// The album on disk. Failing to open it is a broken install, not a field condition, so it traps like the
@@ -79,35 +93,45 @@ struct BirdJournalApp: App {
         GlassesLensSession(connection: connection, profile: { packs.profile(for: $0) }, image: { packs.image(for: $0) })
     }
 
-    /// The whole loop on the glasses (issue #9), writing sightings to the album and frames beside it.
-    private static func makeGlassesListeningSession(connection: GlassesConnection, album: ModelContainer, frames: FrameStore, packs: PackLibrary) -> GlassesListeningSession {
+    /// The whole loop on the glasses (issue #9), writing sightings to the album through the run ledger the phone's
+    /// adds share (issue #28), and reporting the audio level for the waveform.
+    private static func makeGlassesListeningSession(connection: GlassesConnection, recorder: SightingRecorder, sightings: RunSightings, packs: PackLibrary, levels: LevelSink) -> GlassesListeningSession {
         GlassesListeningSession(
             connection: connection,
-            recorder: SightingRecorder(container: album, frames: frames),
+            recorder: recorder,
+            sightings: sightings,
+            makeSource: { session in
+                GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100, onLevel: { levels.level = $0 })
+            },
             profile: { packs.profile(for: $0) },
             image: { packs.image(for: $0) }
         )
     }
 
-    /// The phone listening session over the real microphone. In debug builds, `-autoPhoneListening <path.wav>`
-    /// feeds that file instead, so the screen can be checked on the simulator, whose audio input is not available.
-    private static func makePhoneListeningSession() -> ListeningSession {
+    /// The phone listening session over the real microphone, metered for the waveform. In debug builds,
+    /// `-autoPhoneListening <path.wav>` feeds that file instead, so the screen can be checked on the simulator, whose
+    /// audio input is not available.
+    private static func makePhoneListeningSession(levels: LevelSink) -> ListeningSession {
+        let meter: @Sendable (AudioLevel) -> Void = { levels.level = $0 }
         #if DEBUG
         if let path = UserDefaults.standard.string(forKey: "autoPhoneListening"), path.hasSuffix(".wav") {
-            return ListeningSession(makeSource: { WAVFileAudioSource(url: URL(fileURLWithPath: path)) })
+            // Paced like a microphone, so the Listen tab's live state can be seen and screenshotted on the simulator.
+            return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) })
         }
         #endif
-        return ListeningSession()
+        return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) })
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
                 .environment(connection)
                 .environment(spike)
                 .environment(lens)
                 .environment(phoneListening)
                 .environment(glassesListening)
+                .environment(listening)
+                .environment(journalEdits)
                 .environment(places)
                 .environment(packs)
                 .environment(\.frameStore, frames)

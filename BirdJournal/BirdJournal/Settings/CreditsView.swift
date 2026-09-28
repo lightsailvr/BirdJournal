@@ -2,9 +2,9 @@ import Identification
 import Pack
 import SwiftUI
 
-/// Credits (issue #11, spec user story 36): "Powered by BirdNET" with both models' licenses, then, for every pack on
-/// the phone (#13), each photo with its observer, license and observation link, the Wikipedia text credit (issue #12)
-/// and the pack's LICENSE text.
+/// Sources & credits (issues #11 and #28, spec user story 36): "Powered by BirdNET" with both models' licenses, then,
+/// for every pack on the phone (#13), the text credit and each photo with its observer, exact license and observation
+/// link, and the pack's LICENSE text.
 struct CreditsView: View {
     @Environment(PackLibrary.self) private var library
 
@@ -14,9 +14,9 @@ struct CreditsView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Label(ModelCredits.poweredBy, systemImage: "waveform")
                         .font(.headline)
-                    Text("Birds are identified on the phone by the BirdNET models below. No audio leaves the phone.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Text("Birds are identified on this iPhone by the BirdNET models below. No audio leaves the phone.")
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.inkSecondary)
                 }
             }
 
@@ -28,15 +28,16 @@ struct CreditsView: View {
 
             if library.packs.isEmpty {
                 Section("Photos") {
-                    Text("No species pack is loaded, so there are no photos to credit.")
-                        .foregroundStyle(.secondary)
+                    Text("No bird pack is on this iPhone, so there are no photos to credit.")
+                        .foregroundStyle(Color.inkSecondary)
                 }
             }
             ForEach(library.packs, id: \.info.id) { pack in
                 PhotoCreditSections(pack: pack)
             }
         }
-        .navigationTitle("Credits")
+        .paperList()
+        .navigationTitle("Sources & credits")
     }
 }
 
@@ -47,12 +48,12 @@ private struct ModelCreditRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(model.name).font(.headline)
-            Text(model.role).font(.footnote).foregroundStyle(.secondary)
-            Link("License: \(model.license)", destination: model.licenseURL).font(.footnote)
-            Link("Source", destination: model.sourceURL).font(.footnote)
+            Text(model.role).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
+            Link("License: \(model.license)", destination: model.licenseURL).font(JournalFont.attribution)
+            Link("Source", destination: model.sourceURL).font(JournalFont.attribution)
             ForEach(model.licenseFileNames, id: \.self) { file in
-                NavigationLink(file, value: ContentView.Screen.modelLicense(fileName: file))
-                    .font(.footnote)
+                NavigationLink(file, value: Route.modelLicense(fileName: file))
+                    .font(JournalFont.attribution)
             }
         }
         .padding(.vertical, 2)
@@ -66,47 +67,28 @@ private struct PhotoCreditSections: View {
 
     var body: some View {
         Section {
-            Text("\(pack.photos.count) photos from iNaturalist Open Data, each under the Creative Commons license its photographer chose. Photographers keep their copyright unless the photo is CC0.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            Text("\(pack.photos.count) photos from iNaturalist observations, each under the Creative Commons license its photographer chose and cropped around the bird for this app. Photographers keep their copyright unless the photo is CC0.")
+                .font(JournalFont.supporting)
+                .foregroundStyle(Color.inkSecondary)
             let described = pack.species.filter { $0.descriptionSource != nil }.count
             if described > 0 {
-                Text("Descriptions of \(described) species are adapted from English Wikipedia articles by Wikipedia contributors. Each species page in the pack links the article revision it came from.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text("Descriptions of \(described) species are adapted from English Wikipedia articles by Wikipedia contributors. Each bird's Sources & credits links the article revision it came from.")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
                 Link("Wikipedia text: CC BY-SA 4.0", destination: Self.wikipediaLicense)
-                    .font(.footnote)
+                    .font(JournalFont.attribution)
             }
-            NavigationLink("Pack license (\(pack.info.id) v\(pack.info.version))", value: ContentView.Screen.packLicense(id: pack.info.id))
+            NavigationLink("Pack license (\(pack.info.id) v\(pack.info.version))", value: Route.packLicense(id: pack.info.id))
         } header: {
             Text("Photos and text: \(pack.info.name)")
         }
         ForEach(pack.species) { species in
             Section(species.commonName) {
                 ForEach(species.photos) { photo in
-                    PhotoCreditRow(photo: photo)
+                    PhotoCreditRow(pack: pack, photo: photo)
                 }
             }
         }
-    }
-}
-
-/// One photo's observer, license (linked to its deed) and observation link.
-private struct PhotoCreditRow: View {
-    let photo: PackPhoto
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(photo.observer)
-            if let licenseURL = photo.licenseURL {
-                Link(photo.license, destination: licenseURL).font(.footnote)
-            } else {
-                Text(photo.license).font(.footnote).foregroundStyle(.secondary)
-            }
-            Link("Observation on iNaturalist", destination: photo.sourceURL)
-                .font(.footnote)
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -131,6 +113,7 @@ struct LicenseTextView: View {
                 ProgressView()
             }
         }
+        .background(Color.paper)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task { text = Result(catching: load) }
