@@ -303,7 +303,8 @@
 				"# Xcode embeds the package's static onnxruntime.framework as a codeless framework: the runtime itself is linked",
 				"# into the app, so it strips the code and injects a stub dylib built for the app's deployment target, but keeps the",
 				"# xcframework's MinimumOSVersion (15.1). App Store Connect rejects that mismatch (ITMS-90208) and nothing loads",
-				"# the stub, so remove it before the app is signed.",
+				"# the stub, so remove it before the app is signed. The script sandbox forbids the delete, so the target turns it off.",
+				"set -eu",
 				"rm -rf \"${SCRIPT_INPUT_FILE_0}\"",
 				"touch \"${SCRIPT_OUTPUT_FILE_0}\"",
 				"",
@@ -474,6 +475,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 647FZYVR5Q;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "My Bird Journal";
@@ -521,6 +523,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 647FZYVR5Q;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "My Bird Journal";
