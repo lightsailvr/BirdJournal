@@ -244,7 +244,7 @@ struct PostcardView: View {
         case .none:
             ZStack {
                 PostcardPalette.raised
-                PerchedBirdDrawing().frame(height: 90)
+                PerchedBirdDrawing(ink: PostcardPalette.ink, secondary: PostcardPalette.secondary).frame(height: 90)
             }
         }
     }

@@ -21,7 +21,7 @@
 		000000000000000000000412 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000312 /* MWDATMockDevice */; };
 		000000000000000000000413 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000313 /* MWDATDisplay */; };
 		000000000000000000000414 /* MWDATInputs in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000314 /* MWDATInputs */; };
-		61CF3A9230698B9800A0B268 /* MyBirdJournal 2.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3A9130698B9800A0B268 /* MyBirdJournal 2.icon */; };
+		61CF3A9230698B9800A0B268 /* MyBirdJournal-Default.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3A9130698B9800A0B268 /* MyBirdJournal-Default.icon */; };
 		61CF3AAA3069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA83069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon */; };
 		61CF3AAB3069D4D100A0B268 /* MyBirdJournal-StellersJay.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA93069D4D100A0B268 /* MyBirdJournal-StellersJay.icon */; };
 		61CF3AAC3069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */; };
@@ -50,7 +50,7 @@
 		000000000000000000000121 /* BirdJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000122 /* BirdJournalKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = BirdJournalKit; sourceTree = "<group>"; };
 		000000000000000000000123 /* BirdJournalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		61CF3A9130698B9800A0B268 /* MyBirdJournal 2.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal 2.icon"; sourceTree = "<group>"; };
+		61CF3A9130698B9800A0B268 /* MyBirdJournal-Default.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-Default.icon"; sourceTree = "<group>"; };
 		61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-HouseFinch.icon"; sourceTree = "<group>"; };
 		61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-ProthonotaryWarbler.icon"; sourceTree = "<group>"; };
 		61CF3AA83069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-RedTailedHawk.icon"; sourceTree = "<group>"; };
@@ -115,7 +115,7 @@
 				000000000000000000000010 /* BirdJournal */,
 				000000000000000000000011 /* BirdJournalTests */,
 				000000000000000000000012 /* BirdJournalUITests */,
-				61CF3A9130698B9800A0B268 /* MyBirdJournal 2.icon */,
+				61CF3A9130698B9800A0B268 /* MyBirdJournal-Default.icon */,
 				61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */,
 				61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */,
 				61CF3AA83069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon */,
@@ -267,7 +267,7 @@
 				61CF3AAB3069D4D100A0B268 /* MyBirdJournal-StellersJay.icon in Resources */,
 				61CF3AAC3069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon in Resources */,
 				61CF3AAD3069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon in Resources */,
-				61CF3A9230698B9800A0B268 /* MyBirdJournal 2.icon in Resources */,
+				61CF3A9230698B9800A0B268 /* MyBirdJournal-Default.icon in Resources */,
 			);
 		};
 		000000000000000240000000 /* Resources */ = {
