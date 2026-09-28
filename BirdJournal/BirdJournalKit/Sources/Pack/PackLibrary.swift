@@ -35,13 +35,23 @@ public final class PackLibrary {
     @ObservationIgnored private var tasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private let downloader: PackDownloader
     @ObservationIgnored private let session: URLSession
+    @ObservationIgnored private let availableCapacity: () -> Int64?
 
-    public init(bundled: SpeciesPack?, storage: PackStorage, indexURL: URL = PackIndex.defaultURL, session: URLSession = .shared) {
+    /// Free space a download must leave besides the zip and its unpacked copy.
+    public static let storageHeadroom: Int64 = 100 << 20
+
+    /// - Parameter availableCapacity: free bytes on the phone before a download, nil when unknown; the storage's
+    ///   own reading by default.
+    public init(
+        bundled: SpeciesPack?, storage: PackStorage, indexURL: URL = PackIndex.defaultURL, session: URLSession = .shared,
+        availableCapacity: (() -> Int64?)? = nil
+    ) {
         self.bundled = bundled
         self.storage = storage
         self.indexURL = indexURL
         self.session = session
         self.downloader = PackDownloader(session: session)
+        self.availableCapacity = availableCapacity ?? { storage.availableCapacity() }
         self.installed = storage.installed()
     }
 
@@ -138,12 +148,15 @@ public final class PackLibrary {
     /// says why and nothing is installed. Returns when the pack is in `packs` or the download has failed.
     public func download(_ descriptor: PackDescriptor) async {
         let id = descriptor.id
+        defer { tasks[id] = nil }
+        // The zip lands in tmp and its unpacked copy beside the other packs, so both must fit, with room to spare.
+        if let free = availableCapacity(), free < Self.spaceNeeded(for: descriptor) {
+            setTransfer(id, .failed(Self.notEnoughSpace(needed: Self.spaceNeeded(for: descriptor), free: free)))
+            return
+        }
         setTransfer(id, .downloading(received: 0))
         let zip = URL.temporaryDirectory.appending(path: "\(id)-\(UUID().uuidString).zip")
-        defer {
-            try? FileManager.default.removeItem(at: zip)
-            tasks[id] = nil
-        }
+        defer { try? FileManager.default.removeItem(at: zip) }
         do {
             let downloader = downloader
             try await Self.offMain {
@@ -213,13 +226,39 @@ public final class PackLibrary {
         }
     }
 
-    private static func message(for error: any Error) -> String {
+    /// Bytes a download of `descriptor` needs free: the zip, its unpacked copy and the headroom.
+    static func spaceNeeded(for descriptor: PackDescriptor) -> Int64 {
+        Int64(descriptor.byteCount) * 2 + storageHeadroom
+    }
+
+    static func notEnoughSpace(needed: Int64, free: Int64) -> String {
+        let style = ByteCountFormatStyle(style: .file)
+        return "Not enough space on this iPhone: the download needs about \(needed.formatted(style)) free and \(free.formatted(style)) is available. Free some space and try again."
+    }
+
+    /// What the packs screen says about a failed download: the cause in plain words and what to do about it.
+    static func message(for error: any Error) -> String {
         switch error {
-        case PackInstallError.checksumMismatch: "The download's checksum did not match the index."
+        case PackInstallError.checksumMismatch: "The download's checksum did not match the index, so it was not installed. Try again."
         case PackInstallError.wrongPack(let expected, let actual): "The download holds the pack \(actual), not \(expected)."
-        case PackDownloadError.httpStatus(let code): "The server answered \(code)."
+        case PackDownloadError.httpStatus(let code): "The pack server answered \(code). Try again later."
         case let error as ZipError: "The download is not a pack zip (\(error))."
         case let error as PackError: "The download is not a readable pack (\(error))."
+        case let error as URLError:
+            switch error.code {
+            case .notConnectedToInternet, .internationalRoamingOff, .dataNotAllowed:
+                "No internet connection. Connect to Wi‑Fi or cellular data and try again."
+            case .networkConnectionLost:
+                "The connection dropped before the download finished. Try again."
+            case .timedOut:
+                "The download timed out. Try again."
+            case .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed:
+                "The pack server could not be reached. Try again later."
+            default:
+                error.localizedDescription
+            }
+        case let error as CocoaError where error.code == .fileWriteOutOfSpace:
+            "This iPhone ran out of space during the download. Free some space and try again."
         default: error.localizedDescription
         }
     }

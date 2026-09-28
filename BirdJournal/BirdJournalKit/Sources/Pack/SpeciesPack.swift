@@ -102,6 +102,26 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
     public let inatPhotoID: Int
     public let score: Double
 
+    public init(
+        id: String, speciesID: String, rank: Int, lensFile: String, phoneFile: String, observer: String, observerLogin: String?,
+        license: String, creditLine: String, shortCredit: String, sourceURL: URL, photoURL: URL, inatPhotoID: Int, score: Double
+    ) {
+        self.id = id
+        self.speciesID = speciesID
+        self.rank = rank
+        self.lensFile = lensFile
+        self.phoneFile = phoneFile
+        self.observer = observer
+        self.observerLogin = observerLogin
+        self.license = license
+        self.creditLine = creditLine
+        self.shortCredit = shortCredit
+        self.sourceURL = sourceURL
+        self.photoURL = photoURL
+        self.inatPhotoID = inatPhotoID
+        self.score = score
+    }
+
     /// The Creative Commons deed for `license` (the credits screen's license link; the observation page states the
     /// exact terms). Nil for a license the pack builder does not admit.
     public var licenseURL: URL? {

@@ -24,6 +24,7 @@ public enum PackInstallError: Error, Equatable {
 public struct PackStorage: Sendable {
     static let recordFile = "installed.json"
     static let stagingSuffix = ".unpacking"
+    static let replacedSuffix = ".replaced"
     private static let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "packs")
 
     public let directory: URL
@@ -50,7 +51,9 @@ public struct PackStorage: Sendable {
         var packs: [InstalledPack] = []
         for name in names.sorted() {
             let folder = url(for: name)
-            if name.hasSuffix(Self.stagingSuffix) {
+            if name.hasSuffix(Self.stagingSuffix) || name.hasSuffix(Self.replacedSuffix) {
+                // A staging folder a crash left behind, or a previous version set aside during an update that did
+                // not finish: the final folder is whole either way.
                 try? FileManager.default.removeItem(at: folder)
                 continue
             }
@@ -82,14 +85,46 @@ public struct PackStorage: Sendable {
             let unpacked = try SpeciesPack.open(directory: staging)  // a zip that is not a readable pack never lands
             guard unpacked.info.id == descriptor.id else { throw PackInstallError.wrongPack(expected: descriptor.id, actual: unpacked.info.id) }
             let final = url(for: descriptor.id)
-            try? FileManager.default.removeItem(at: final)
-            try FileManager.default.moveItem(at: staging, to: final)
+            try replace(final, with: staging)
             try JSONEncoder().encode(descriptor).write(to: final.appending(path: Self.recordFile), options: .atomic)
             return InstalledPack(descriptor: descriptor, pack: try SpeciesPack.open(directory: final))
         } catch {
             try? FileManager.default.removeItem(at: staging)
             throw error
         }
+    }
+
+    /// Puts the unpacked `staging` folder at `final`. An earlier install there is set aside, not deleted, until the
+    /// new one is in place, and put back if the move fails, so a failed update never loses a working pack.
+    private func replace(_ final: URL, with staging: URL) throws {
+        let previous = directory.appending(path: final.lastPathComponent + Self.replacedSuffix, directoryHint: .isDirectory)
+        try? FileManager.default.removeItem(at: previous)
+        let hadPrevious = FileManager.default.fileExists(atPath: final.path(percentEncoded: false))
+        if hadPrevious { try FileManager.default.moveItem(at: final, to: previous) }
+        do {
+            try FileManager.default.moveItem(at: staging, to: final)
+        } catch {
+            if hadPrevious { try? FileManager.default.moveItem(at: previous, to: final) }
+            throw error
+        }
+        try? FileManager.default.removeItem(at: previous)
+    }
+
+    /// The bytes a pack's folder takes on disk, installed or bundled: what removing it frees.
+    public static func diskUsage(of directory: URL) -> Int64 {
+        guard let files = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey]) else { return 0 }
+        var total: Int64 = 0
+        for case let file as URL in files {
+            guard let values = try? file.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey]), values.isRegularFile == true else { continue }
+            total += Int64(values.fileSize ?? 0)
+        }
+        return total
+    }
+
+    /// Free space on the volume the packs go to, for the check before a download; nil when it cannot be read.
+    public func availableCapacity() -> Int64? {
+        let probe = FileManager.default.fileExists(atPath: directory.path(percentEncoded: false)) ? directory : directory.deletingLastPathComponent()
+        return try? probe.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage
     }
 
     /// Deletes the pack's folder; nothing to delete is fine.

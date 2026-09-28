@@ -1,5 +1,5 @@
 /// A species the session has heard convincingly, with what the engine knows about it so far.
-public struct Candidate: Sendable, Equatable, Identifiable {
+public struct Candidate: Sendable, Hashable, Identifiable {
     public let species: Species
     /// The session score: the best single-window score so far, in [0, 1]. A maximum rather than a mean, so one
     /// clear call is not diluted by the quiet windows around it.

@@ -18,10 +18,17 @@ definition="$repo_root/packbuilder/packs/$pack_id/pack.json"
 
 sha256="$(shasum -a 256 "$zip" | cut -d' ' -f1)"
 bytes="$(stat -f%z "$zip")"
+# The built pack's database, for the counts and the region the phone shows before a download (issue #28).
+database="$repo_root/packs/$pack_id/pack.sqlite"
+[ -f "$database" ] || database="$repo_root/build/packs/$pack_id/pack.sqlite"
+[ -f "$database" ] || { echo "no pack.sqlite for $pack_id under packs/ or build/packs/" >&2; exit 1; }
+species="$(sqlite3 "$database" 'select count(*) from species')"
+photos="$(sqlite3 "$database" 'select count(*) from photo')"
+region="$(sqlite3 "$database" 'select region from pack')"
 
-python3 - "$manifest" "$definition" "$pack_id" "$sha256" "$bytes" "$bundled_flag" <<'PY'
+python3 - "$manifest" "$definition" "$pack_id" "$sha256" "$bytes" "$bundled_flag" "$species" "$photos" "$region" <<'PY'
 import json, sys
-path, definition, pack_id, sha256, size, bundled_flag = sys.argv[1:]
+path, definition, pack_id, sha256, size, bundled_flag, species, photos, region = sys.argv[1:]
 manifest = json.load(open(path))
 pack = json.load(open(definition))
 previous = next((p for p in manifest["packs"] if p["id"] == pack_id), None)
@@ -29,6 +36,7 @@ bundled = bundled_flag == "--bundled" or bool(previous and previous.get("bundled
 entry = {
     "id": pack_id, "name": pack["name"], "version": int(pack["version"]), "bundled": bundled,
     "release": f"pack-{pack_id}-v{pack['version']}", "asset": f"{pack_id}.zip", "sha256": sha256, "bytes": int(size),
+    "species": int(species), "photos": int(photos), "region": region,
 }
 manifest["packs"] = [p for p in manifest["packs"] if p["id"] != pack_id] + [entry]
 json.dump(manifest, open(path, "w"), indent=2)

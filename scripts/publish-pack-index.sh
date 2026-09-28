@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Publishes the pack index the phone reads (issue #13): every pack in packs/manifest.json as `PackIndex` in the Swift
-# Pack module decodes it (id, name, version, url, sha256, byteCount), uploaded as index.json to the rolling `packs`
+# Pack module decodes it (id, name, version, url, sha256, byteCount, and since #28 speciesCount, photoCount and
+# region when the manifest has them), uploaded as index.json to the rolling `packs`
 # release of this repository (created on first use, replaced on every run). The pack zips stay on their own
 # per-version releases; the index points at them by URL. Run after `gh release create pack-<id>-v<n> ...` so every
 # listed zip exists.
@@ -22,11 +23,16 @@ import json, sys
 manifest, index, repo = sys.argv[1:]
 packs = []
 for p in json.load(open(manifest))["packs"]:
-    packs.append({
+    entry = {
         "id": p["id"], "name": p["name"], "version": p["version"],
         "url": f"https://github.com/{repo}/releases/download/{p['release']}/{p['asset']}",
         "sha256": p["sha256"], "byteCount": p["bytes"],
-    })
+    }
+    # Counts and the region, when the manifest has them (issue #28): what the packs screen shows before a download.
+    if "species" in p: entry["speciesCount"] = p["species"]
+    if "photos" in p: entry["photoCount"] = p["photos"]
+    if "region" in p: entry["region"] = p["region"]
+    packs.append(entry)
 json.dump({"packs": packs}, open(index, "w"), indent=2)
 open(index, "a").write("\n")
 print(f"wrote {index} with {len(packs)} packs")

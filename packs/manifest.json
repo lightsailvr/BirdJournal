@@ -9,7 +9,10 @@
       "release": "pack-us-ca-la-v2",
       "asset": "us-ca-la.zip",
       "sha256": "9c3de8f1f2fa66fb209632179a6e038d09759b4c101f99c6095acc353d4e5fc5",
-      "bytes": 164716688
+      "bytes": 164716688,
+      "species": 160,
+      "photos": 793,
+      "region": "Los Angeles County, California, US"
     },
     {
       "id": "us-ca-sd",
@@ -19,7 +22,10 @@
       "release": "pack-us-ca-sd-v2",
       "asset": "us-ca-sd.zip",
       "sha256": "7c76d544c2020f3c6198f691f0921d016ca47381123540a825da652e2e500227",
-      "bytes": 39208040
+      "bytes": 39208040,
+      "species": 40,
+      "photos": 200,
+      "region": "San Diego County, California, US"
     }
   ]
 }

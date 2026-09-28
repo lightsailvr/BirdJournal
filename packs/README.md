@@ -39,7 +39,9 @@ this directory and is declared as a package resource, so the pack ships in the p
    pages cached by title and their revisions pinned in the lock).
 2. Bump `version` in `packbuilder/packs/<id>/pack.json` when the contents change for users, and rebuild. The app
    offers a newer version of an installed pack, and of the bundled pack (issue #33), as an update.
-3. `scripts/pin-pack.sh <id>` writes the name, the tag (`pack-<id>-v<version>`), asset name, SHA-256 and byte count
-   into `manifest.json` (a new pack is a download; `--bundled` marks the one the app ships).
+3. `scripts/pin-pack.sh <id>` writes the name, the tag (`pack-<id>-v<version>`), asset name, SHA-256 and byte count,
+   plus the species and photo counts and the region read from the pack's `pack.sqlite` (what the phone's Bird packs
+   screen shows before a download, issue #28), into `manifest.json` (a new pack is a download; `--bundled` marks the
+   one the app ships).
 4. `gh release create pack-<id>-v<version> build/packs/<id>.zip --title "..." --notes "..."`, then
    `scripts/publish-pack-index.sh` to replace `index.json` on the `packs` release, and commit the manifest.
