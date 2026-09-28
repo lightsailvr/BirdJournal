@@ -46,6 +46,7 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
 
     private let wearables: any WearablesInterface
     private let lease: DeviceSessionLease
+    private let onLevel: (@Sendable (AudioLevel) -> Void)?
     private let eventContinuation: AsyncStream<Event>.Continuation
     private var session: DeviceSession?
     private var camera: Camera?
@@ -54,10 +55,12 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
     /// Written straight from the video frame callback; read on confirm.
     private nonisolated let latestVideoFrame = Mutex<VideoFrame?>(nil)
 
-    init(wearables: any WearablesInterface = Wearables.shared, lease: DeviceSessionLease = .own, sampleRate: AudioSampleRate = .rate48000) {
+    /// - Parameter onLevel: told each chunk's level as it arrives (on the toolkit's thread), for the phone's waveform.
+    init(wearables: any WearablesInterface = Wearables.shared, lease: DeviceSessionLease = .own, sampleRate: AudioSampleRate = .rate48000, onLevel: (@Sendable (AudioLevel) -> Void)? = nil) {
         self.wearables = wearables
         self.lease = lease
         self.sampleRate = sampleRate
+        self.onLevel = onLevel
         (events, eventContinuation) = AsyncStream.makeStream(of: Event.self)
     }
 
@@ -112,9 +115,12 @@ final class GlassesAudioSource: FrameKeepingAudioSource {
         }
         self.camera = camera
 
+        let onLevel = onLevel
         camera.stream.audioFramePublisher.listen { frame in
             let chunk = AudioChunk(buffer: frame.pcmBuffer, presentationTime: frame.presentationTimeStamp.seconds)
-            if let chunk { continuation.yield(chunk) }
+            guard let chunk else { return }
+            onLevel?(AudioLevelMeter.level(of: chunk))
+            continuation.yield(chunk)
         }.store(in: tokens)
         camera.stream.videoFramePublisher.listen { [weak self] frame in
             self?.latestVideoFrame.withLock { $0 = frame }

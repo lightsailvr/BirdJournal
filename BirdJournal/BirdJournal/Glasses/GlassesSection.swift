@@ -57,37 +57,3 @@ struct GlassesSection: View {
         }
     }
 }
-
-private struct GlassesDeviceRow: View {
-    @Environment(GlassesConnection.self) private var connection
-    let device: GlassesDeviceStatus
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(device.name).font(.headline)
-            Text("\(linkText) · \(device.state.compatibility.displayString)")
-                .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? .green : .secondary)
-            if let battery = device.state.batteryLevel {
-                Text("Battery \(battery)%\(device.state.chargingState == .charging ? ", charging" : "")")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            switch device.state.compatibility {
-            case .deviceUpdateRequired:
-                Button("Update glasses firmware") { Task { await connection.openFirmwareUpdate() } }
-            case .sdkUpdateRequired:
-                Text("This BirdJournal build needs a newer toolkit.").font(.caption).foregroundStyle(.red)
-            default:
-                EmptyView()
-            }
-        }
-    }
-
-    private var linkText: String {
-        switch device.state.linkState {
-        case .connected: "Connected"
-        case .connecting: "Connecting…"
-        case .disconnected: "Disconnected"
-        }
-    }
-}

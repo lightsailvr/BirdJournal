@@ -78,20 +78,16 @@ final class GlassesListeningSession {
 
     /// One sighting written this run, as the phone lists it. A species saved again in the same run updates its
     /// sighting rather than adding a second (spec user story 33).
-    struct SavedSighting: Identifiable, Equatable {
-        let id: PersistentIdentifier
-        var candidate: Candidate
-        var hasFrame: Bool
-    }
+    typealias SavedSighting = RunSightings.Entry
 
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "glasses-listening")
 
     private(set) var phase: Phase = .idle
     private(set) var sessionState: DeviceSessionState = .idle
     private(set) var streamState: StreamState = .stopped
-    /// Sightings written this run, in first-save order.
-    private(set) var saved: [SavedSighting] = []
     var errorMessage: String?
+    /// Sightings written this run, in first-save order.
+    var saved: [SavedSighting] { sightings.entries }
 
     /// Engine, location and the live list.
     let listening: ListeningSession
@@ -101,7 +97,8 @@ final class GlassesListeningSession {
     @ObservationIgnored private let wearables: any WearablesInterface
     @ObservationIgnored private let connection: GlassesConnection?
     @ObservationIgnored private let makeSource: (DeviceSession) -> any FrameKeepingAudioSource
-    @ObservationIgnored private let recorder: SightingRecorder
+    /// The run's sightings, shared with the phone's "Add to journal" (issue #28) so both add each species once.
+    let sightings: RunSightings
     @ObservationIgnored private let policy: ReconnectPolicy
     @ObservationIgnored private var session: DeviceSession?
     @ObservationIgnored private var source: (any FrameKeepingAudioSource)?
@@ -112,13 +109,12 @@ final class GlassesListeningSession {
     @ObservationIgnored private let tokens = ListenerTokenBag()
     /// The last error the session published, read when it stops to tell a failure from the glasses' own end.
     @ObservationIgnored private var lastSessionError: DeviceSessionError?
-    /// The album records behind `saved`, by species, so a repeat save updates instead of inserting.
-    @ObservationIgnored private var sightings: [Species: Sighting] = [:]
 
     init(
         wearables: any WearablesInterface = Wearables.shared,
         connection: GlassesConnection? = nil,
         recorder: SightingRecorder,
+        sightings: RunSightings? = nil,
         loadEngine: @escaping @Sendable () async throws -> IdentificationEngine = { try await BundledIdentification.engine() },
         makeSource: @escaping (DeviceSession) -> any FrameKeepingAudioSource = { session in
             GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100)
@@ -131,7 +127,7 @@ final class GlassesListeningSession {
     ) {
         self.wearables = wearables
         self.connection = connection
-        self.recorder = recorder
+        self.sightings = sightings ?? RunSightings(recorder: recorder)
         self.makeSource = makeSource
         self.policy = reconnect
         // The closures reach back into the run; both objects live as long as it does.
@@ -163,14 +159,20 @@ final class GlassesListeningSession {
     /// Whether the stream has delivered a frame a save could store.
     var hasCameraFrame: Bool { source?.latestFrame != nil }
 
+    /// The most recent camera frame as a JPEG, encoded off the main actor; nil without a stream or a frame. What
+    /// a phone-side add during a glasses run stores as the sighting's snapshot.
+    func captureFrame() async -> Data? {
+        guard let frame = source?.latestFrame else { return nil }
+        return await Task.detached(priority: .userInitiated) { frame.jpegData() }.value
+    }
+
     // MARK: - Lifecycle
 
     func start() async {
         guard !isActive, phase != .stopping else { return }
         phase = .starting
         errorMessage = nil
-        saved = []
-        sightings = [:]
+        sightings.reset()
         stopTask = nil
         lastSessionError = nil
         do {
@@ -400,25 +402,11 @@ final class GlassesListeningSession {
         }
     }
 
-    /// Writes the sighting; the lens saves each species once per run, and the species map keeps the album clean
-    /// (spec user story 33) should the same species arrive again.
+    /// Writes the sighting; the run's ledger keeps the album clean (spec user story 33) should the same species
+    /// arrive again.
     private func save(_ candidate: Candidate, confirmedAt: Date, frame: Data?) async {
         do {
-            if let existing = sightings[candidate.species], let position = saved.firstIndex(where: { $0.id == existing.persistentModelID }) {
-                try recorder.update(existing, with: candidate, frame: frame)
-                saved[position].candidate = candidate
-                if frame != nil { saved[position].hasFrame = true }
-            } else {
-                let sighting = try recorder.record(
-                    candidate,
-                    confirmedAt: confirmedAt,
-                    location: listening.coordinate,
-                    frame: frame,
-                    source: .glasses
-                )
-                sightings[candidate.species] = sighting
-                saved.append(SavedSighting(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
-            }
+            try sightings.add(candidate, confirmedAt: confirmedAt, location: listening.coordinate, frame: frame, source: .glasses)
         } catch {
             errorMessage = "Could not save the sighting: \(error.localizedDescription)"
             Self.logger.error("save failed: \(error.localizedDescription, privacy: .public)")

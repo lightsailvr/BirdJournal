@@ -50,7 +50,7 @@ struct HeardSection: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(session.list.rows) { candidate in
-                CandidateRow(candidate: candidate)
+                DiagnosticCandidateRow(candidate: candidate)
             }
         }
         .animation(.default, value: session.list.rows.map(\.id))
@@ -127,7 +127,7 @@ struct LocationRow: View {
     }
 }
 
-private struct CandidateRow: View {
+private struct DiagnosticCandidateRow: View {
     let candidate: Candidate
 
     var body: some View {
