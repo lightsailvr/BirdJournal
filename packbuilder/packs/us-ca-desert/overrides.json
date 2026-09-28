@@ -1,0 +1,74 @@
+{
+  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name}. Photo ids are in the pack's report.json and LICENSE.",
+  "Pyrocephalus rubinus": {
+    "trust_article": true,
+    "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird here"
+  },
+  "Anas platyrhynchos": {
+    "exclude": [
+      607235069,
+      612343875,
+      638424202,
+      683986566,
+      715881926,
+      726721861,
+      738575547,
+      740170132,
+      740170180
+    ],
+    "_why": "most desert-park 'Mallards' are domestic breeds; 200 candidates find wild ones; excluded: a buff domestic duck; a white domestic duck; a dark domestic duck; white domestic runner ducks",
+    "limit": 200
+  },
+  "Lanius ludovicianus": {
+    "exclude": [
+      741724181
+    ],
+    "_why": "excluded: not a shrike on the card"
+  },
+  "Junco hyemalis": {
+    "exclude": [
+      620486602
+    ],
+    "_why": "excluded: no bird visible in the crop"
+  },
+  "Passer domesticus": {
+    "exclude": [
+      623298848,
+      623298849
+    ],
+    "_why": "excluded: nest material, no bird"
+  },
+  "Phalaenoptilus nuttallii": {
+    "exclude": [
+      582949107,
+      582949678
+    ],
+    "_why": "excluded: held in a gloved hand; held in a hand"
+  },
+  "Rallus limicola": {
+    "exclude": [
+      723678483,
+      723678808
+    ],
+    "_why": "excluded: held in a gloved hand"
+  },
+  "Plegadis chihi": {
+    "exclude": [
+      615395662
+    ],
+    "_why": "excluded: gulls fill the card"
+  },
+  "Cardellina pusilla": {
+    "exclude": [
+      620121686
+    ],
+    "_why": "excluded: dead on the ground"
+  },
+  "Anas crecca": {
+    "exclude": [
+      453417576,
+      613116124
+    ],
+    "_why": "excluded: dead on a deck; a distant flock"
+  }
+}

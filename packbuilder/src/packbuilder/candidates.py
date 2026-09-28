@@ -12,6 +12,11 @@ from packbuilder.licenses import normalize_license
 OPEN_DATA_BUCKET = "https://inaturalist-open-data.s3.amazonaws.com/photos"
 OBSERVATION_URL = "https://www.inaturalist.org/observations"
 
+# iNaturalist's controlled annotations (GET /v1/controlled_terms): "Alive or Dead" (17) and "Evidence of Presence"
+# (22), whose only value that shows the bird itself is Organism (24); Feather, Bone, Track, Molt and Egg are not a card.
+ALIVE_OR_DEAD, DEAD = 17, 19
+EVIDENCE_OF_PRESENCE, ORGANISM = 22, 24
+
 
 @dataclass(frozen=True)
 class PhotoCandidate:
@@ -27,6 +32,8 @@ class PhotoCandidate:
     width: int | None = None
     height: int | None = None
     position: int | None = None
+    annotations: tuple[tuple[int, int], ...] = ()
+    """The observation's (controlled attribute, controlled value) pairs; the Open Data dump carries none."""
 
     def photo_url(self, size: str = "original") -> str:
         return f"{OPEN_DATA_BUCKET}/{self.photo_id}/{size}.{self.extension}"
@@ -49,6 +56,7 @@ class Rejection(str, Enum):
     LICENSE = "license"
     QUALITY = "quality"
     ATTRIBUTION = "attribution"
+    NOT_A_LIVE_BIRD = "not_a_live_bird"
 
 
 def attribution_name(candidate: PhotoCandidate) -> str | None:
@@ -66,7 +74,21 @@ def rejection_reason(candidate: PhotoCandidate) -> Rejection | None:
         return Rejection.QUALITY
     if attribution_name(candidate) is None or candidate.source_url is None:
         return Rejection.ATTRIBUTION
+    if not shows_a_live_bird(candidate):
+        return Rejection.NOT_A_LIVE_BIRD
     return None
+
+
+def shows_a_live_bird(candidate: PhotoCandidate) -> bool:
+    """False when the observer or the community annotated the observation as a dead bird or as evidence other than the
+    bird itself (a feather, a track). Most observations carry no annotation, so this catches only part of them; the
+    override file handles the rest (issue #37: beached murres, road-killed owls, a feather in a hand)."""
+    for attribute, value in candidate.annotations:
+        if attribute == ALIVE_OR_DEAD and value == DEAD:
+            return False
+        if attribute == EVIDENCE_OF_PRESENCE and value != ORGANISM:
+            return False
+    return True
 
 
 @dataclass

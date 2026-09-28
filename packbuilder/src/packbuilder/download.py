@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
+import threading
 from pathlib import Path
 
 import requests
@@ -28,7 +30,8 @@ def fetch(url: str, target: Path, sha256: str | None = None, timeout: int = 120)
     if target.exists() and (sha256 is None or sha256_of(target) == sha256):
         return target
     target.parent.mkdir(parents=True, exist_ok=True)
-    partial = target.with_suffix(target.suffix + ".download")
+    # One partial file per process and thread: builds running side by side share the cache and may fetch the same photo.
+    partial = target.with_suffix(f"{target.suffix}.{os.getpid()}-{threading.get_ident()}.download")
     with session().get(url, stream=True, timeout=timeout) as response:
         response.raise_for_status()
         with partial.open("wb") as handle:

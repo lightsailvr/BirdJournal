@@ -19,7 +19,8 @@ class ScoredPhoto:
 
 @dataclass(frozen=True)
 class Overrides:
-    """`include` photo ids are forced in, first, in the given order; `exclude` ids are never chosen; `description`
+    """`include` photo ids are forced in, first, in the given order; `exclude` ids are never chosen, nor any other photo
+    of their observations; `description`
     fields (`summary`, `field_marks`, `size`, `habitat`) replace the Wikipedia-derived text; `trust_article` skips
     the check that the article is about the species; `limit` widens the candidate shortlist."""
 
@@ -59,10 +60,12 @@ def select_photos(photos: list[ScoredPhoto], overrides: Overrides, minimum: int 
     by_id = {p.candidate.photo_id: p for p in photos}
     chosen: list[ScoredPhoto] = []
     observations: set = set()
+    photo_ids: set[int] = set()
 
     def take(photo: ScoredPhoto) -> None:
         chosen.append(photo)
         observations.add(_observation_key(photo.candidate))
+        photo_ids.add(photo.candidate.photo_id)
 
     for photo_id in overrides.include:
         if photo_id in by_id and photo_id not in overrides.exclude and len(chosen) < maximum:
@@ -72,8 +75,8 @@ def select_photos(photos: list[ScoredPhoto], overrides: Overrides, minimum: int 
     for photo in ranked:
         if len(chosen) >= maximum:
             break
-        if photo.candidate.photo_id in overrides.exclude or photo in chosen:
-            continue
+        if photo.candidate.photo_id in overrides.exclude or photo.candidate.photo_id in photo_ids:
+            continue  # the same photo uploaded to two observations is still one photo
         if _observation_key(photo.candidate) in observations:
             continue  # one photo per observation: the same bird twice is not a second reference
         take(photo)

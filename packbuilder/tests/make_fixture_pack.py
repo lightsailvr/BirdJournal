@@ -30,7 +30,7 @@ def definition(pack_id: str = "test-pack", version: int = 1) -> PackDefinition:
         name="Test Pack" if pack_id == "test-pack" else "Los Angeles",
         region="Testland",
         version=version,
-    place_id=1,
+    place_ids=(1,),
     bounding_box=BoundingBox(south=0, west=0, north=1, east=1),
         species=[
             SpeciesEntry(scientific_name="Sayornis nigricans", common_name="Black Phoebe", birdnet_label="Sayornis nigricans", inat_taxon_id=17013, wikipedia_url="https://en.wikipedia.org/wiki/Black_phoebe"),

@@ -1,0 +1,128 @@
+{
+  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name}. Photo ids are in the pack's report.json and LICENSE.",
+  "Pyrocephalus rubinus": {
+    "trust_article": true,
+    "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird here"
+  },
+  "Dryobates borealis": {
+    "trust_article": true,
+    "_why": "BirdNET files it under Dryobates; Wikipedia's Red-cockaded woodpecker article still names it Leuconotopicus borealis, the same bird"
+  },
+  "Dumetella carolinensis": {
+    "exclude": [
+      640719537,
+      658937745,
+      741728091
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Geothlypis trichas": {
+    "exclude": [
+      741725932,
+      741725995
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Thryothorus ludovicianus": {
+    "exclude": [
+      663836423,
+      741728560
+    ],
+    "_why": "excluded: held in a hand at a banding station; indoors behind a window"
+  },
+  "Toxostoma rufum": {
+    "exclude": [
+      741726915
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Troglodytes aedon": {
+    "exclude": [
+      473196932,
+      576494802
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Setophaga caerulescens": {
+    "exclude": [
+      457371311,
+      510034876,
+      584897286
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Seiurus aurocapilla": {
+    "exclude": [
+      582306034
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Catharus minimus": {
+    "exclude": [
+      579413268,
+      579413318
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Catharus ustulatus": {
+    "exclude": [
+      582307647,
+      741723658
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Passerina cyanea": {
+    "exclude": [
+      457371490,
+      510015071
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Parkesia noveboracensis": {
+    "exclude": [
+      510034878,
+      579413826
+    ],
+    "_why": "excluded: held in a hand at a banding station"
+  },
+  "Archilochus colubris": {
+    "exclude": [
+      669679755,
+      669679805,
+      673001692
+    ],
+    "_why": "excluded: flowers, no bird; pale, possibly leucistic"
+  },
+  "Columbina passerina": {
+    "exclude": [
+      688625753
+    ],
+    "_why": "excluded: a camera screen showing another bird"
+  },
+  "Megascops asio": {
+    "exclude": [
+      616038740
+    ],
+    "_why": "excluded: a handled owl beside a person"
+  },
+  "Buteo lineatus": {
+    "exclude": [
+      740993822
+    ],
+    "_why": "excluded: not a Red-shouldered Hawk on the card"
+  },
+  "Zenaida macroura": {
+    "exclude": [
+      728638491,
+      728638584
+    ],
+    "_why": "excluded: an injured bird on a blanket"
+  },
+  "Morus bassanus": {
+    "exclude": [
+      574378751,
+      596126520
+    ],
+    "_why": "excluded: beached"
+  }
+}

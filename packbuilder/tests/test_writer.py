@@ -19,7 +19,7 @@ def definition():
         name="Test Pack",
         region="Testland",
         version=1,
-        place_id=1,
+        place_ids=(1,),
         bounding_box=BoundingBox(south=0, west=0, north=1, east=1),
         species=[
             SpeciesEntry(scientific_name="Sayornis nigricans", common_name="Black Phoebe", birdnet_label="Sayornis nigricans", inat_taxon_id=17013, wikipedia_url="https://en.wikipedia.org/wiki/Black_phoebe"),

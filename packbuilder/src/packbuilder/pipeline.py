@@ -70,8 +70,11 @@ class BuildOptions:
 
 def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None) -> WrittenPack:
     raw_overrides = load_overrides(overrides_path)
+    shared = shared_photo_ids(definition.species, metadata)
+    if shared:
+        log.info("%d photos belong to observations of two or more species of the pack; none is chosen", len(shared))
     results = [
-        build_species(entry, Overrides.from_mapping(raw_overrides.get(entry.scientific_name, {})), metadata, detector, options, descriptions)
+        build_species(entry, Overrides.from_mapping(raw_overrides.get(entry.scientific_name, {})), metadata, detector, options, descriptions, shared)
         for entry in definition.species
     ]
     built_at = options.built_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -87,7 +90,19 @@ def build_pack(definition: PackDefinition, overrides_path: Path, metadata: Metad
     return written
 
 
-def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None) -> SpeciesResult:
+def shared_photo_ids(species: list[SpeciesEntry], metadata: MetadataSource) -> frozenset[int]:
+    """Photos attached to observations of more than one species of the pack: one picture of an avocet among pintails
+    serves both observations. The detector's box may be either bird, so the photo is a card for neither (and the pack
+    keys its photos by iNaturalist id, so it could not be both). The metadata is cached, so this pass costs no
+    downloads beyond the ones the build makes anyway."""
+    owners: dict[int, set[int]] = {}
+    for entry in species:
+        for candidate in metadata.candidates_for(entry.inat_taxon_id):
+            owners.setdefault(candidate.photo_id, set()).add(entry.inat_taxon_id)
+    return frozenset(photo_id for photo_id, taxa in owners.items() if len(taxa) > 1)
+
+
+def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None, shared: frozenset[int] = frozenset()) -> SpeciesResult:
     log.info("%s (%s)", entry.common_name, entry.scientific_name)
     description = describe(entry, overrides, descriptions)
     candidates = metadata.candidates_for(entry.inat_taxon_id)
@@ -96,7 +111,12 @@ def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataS
     log.info("  %d candidates, %d cleared, rejected %s", len(candidates), len(filtered.kept), rejected or "none")
 
     limit = overrides.candidate_limit or options.candidate_limit
-    shortlist = [c for c in filtered.kept if c.photo_id not in overrides.exclude][:limit]
+    # An excluded photo takes its observation with it: the other pictures of a dead or hand-held bird are no better.
+    excluded_observations = {c.source_url for c in filtered.kept if c.photo_id in overrides.exclude}
+    shortlist = [
+        c for c in filtered.kept
+        if c.photo_id not in overrides.exclude and c.source_url not in excluded_observations and c.photo_id not in shared
+    ][:limit]
     shortlist += [c for c in filtered.kept if overrides.forces(c.photo_id) and c not in shortlist]
     missing = set(overrides.include) - {c.photo_id for c in filtered.kept}
     if missing:

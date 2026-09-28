@@ -23,6 +23,12 @@ def test_one_photo_per_observation():
     assert [p.candidate.photo_id for p in selection.chosen] == [1, 3]
 
 
+def test_one_photo_uploaded_to_two_observations_is_chosen_once():
+    photos = [scored(1, 0.9, observation_id=77), scored(1, 0.9, observation_id=78), scored(3, 0.5)]
+    selection = select_photos(photos, Overrides(), minimum=1, maximum=5)
+    assert [p.candidate.photo_id for p in selection.chosen] == [1, 3]
+
+
 def test_include_override_goes_first_in_the_given_order():
     photos = [scored(i, total=i / 10) for i in range(1, 9)]
     overrides = Overrides(include=[2, 1])
