@@ -159,9 +159,10 @@ enum DebugSeeds {
         try? context.save()
     }
 
-    /// A stand-in camera frame: a green field with a small ring at the centre.
+    /// A stand-in camera frame at the glasses stream's portrait size (360 × 640, DECISIONS.md): a green field with
+    /// a small ring at the centre.
     static func frameJPEG() -> Data {
-        let size = CGSize(width: 640, height: 480)
+        let size = CGSize(width: 360, height: 640)
         let image = UIGraphicsImageRenderer(size: size).image { renderer in
             UIColor(red: 0.35, green: 0.55, blue: 0.3, alpha: 1).setFill()
             renderer.fill(CGRect(origin: .zero, size: size))

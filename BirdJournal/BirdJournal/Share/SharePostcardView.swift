@@ -249,7 +249,7 @@ private struct PostcardPackImage: View {
         Color(red: 0.906, green: 0.929, blue: 0.875)
             .overlay {
                 if let url, let image = UIImage(contentsOfFile: url.path(percentEncoded: false)) {
-                    Image(uiImage: image).resizable().scaledToFill()
+                    Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)
                 }
             }
             .clipped()
@@ -263,7 +263,7 @@ private struct PostcardFrame: View {
         Color(red: 0.906, green: 0.929, blue: 0.875)
             .overlay {
                 if let url, let image = FrameImage.croppedFrame(at: url, zoom: 2) {
-                    Image(uiImage: image).resizable().scaledToFill()
+                    Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)
                 }
             }
             .clipped()

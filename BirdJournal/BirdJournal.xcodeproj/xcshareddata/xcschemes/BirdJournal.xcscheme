@@ -80,6 +80,16 @@
                ReferencedContainer = "container:BirdJournalKit">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "000000000000000300000000"
+               BuildableName = "BirdJournalUITests.xctest"
+               BlueprintName = "BirdJournalUITests"
+               ReferencedContainer = "container:BirdJournal.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

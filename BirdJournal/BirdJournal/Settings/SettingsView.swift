@@ -8,6 +8,9 @@ struct SettingsView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
+    #if DEBUG
+    @State private var showingDeveloper = false
+    #endif
 
     var body: some View {
         @Bindable var run = run
@@ -62,12 +65,16 @@ struct SettingsView: View {
 
             #if DEBUG
             Section("Developer") {
-                NavigationLink("Developer tools", value: Route.developer)
+                // A sheet, not a push: the hub carries its own navigation stack, which cannot sit inside this one.
+                Button("Developer tools") { showingDeveloper = true }
             }
             #endif
         }
         .paperList()
         .navigationTitle("Settings")
+        #if DEBUG
+        .sheet(isPresented: $showingDeveloper) { DeveloperView() }
+        #endif
     }
 
     private var registrationText: String {

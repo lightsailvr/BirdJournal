@@ -36,11 +36,19 @@
 			remoteGlobalIDString = 000000000000000100000000;
 			remoteInfo = BirdJournal;
 		};
+		000000000000000000000503 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000100000000;
+			remoteInfo = BirdJournal;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* BirdJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BirdJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000121 /* BirdJournalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000123 /* BirdJournalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BirdJournalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000122 /* BirdJournalKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = BirdJournalKit; sourceTree = "<group>"; };
 		61CF3A9130698B9800A0B268 /* MyBirdJournal 2.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal 2.icon"; sourceTree = "<group>"; };
 		61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "MyBirdJournal-HouseFinch.icon"; sourceTree = "<group>"; };
@@ -58,6 +66,11 @@
 		000000000000000000000011 /* BirdJournalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = BirdJournalTests;
+			sourceTree = "<group>";
+		};
+		000000000000000000000012 /* BirdJournalUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BirdJournalUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -87,6 +100,13 @@
 				000000000000000000000414 /* MWDATInputs in Frameworks */,
 			);
 		};
+		000000000000000330000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -96,6 +116,7 @@
 				000000000000000000000122 /* BirdJournalKit */,
 				000000000000000000000010 /* BirdJournal */,
 				000000000000000000000011 /* BirdJournalTests */,
+				000000000000000000000012 /* BirdJournalUITests */,
 				61CF3A9130698B9800A0B268 /* MyBirdJournal 2.icon */,
 				61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */,
 				61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */,
@@ -110,6 +131,7 @@
 			children = (
 				000000000000000000000120 /* BirdJournal.app */,
 				000000000000000000000121 /* BirdJournalTests.xctest */,
+				000000000000000000000123 /* BirdJournalUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -174,6 +196,29 @@
 			productReference = 000000000000000000000121 /* BirdJournalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		000000000000000300000000 /* BirdJournalUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000310000000 /* Build configuration list for PBXNativeTarget "BirdJournalUITests" */;
+			buildPhases = (
+				000000000000000320000000 /* Sources */,
+				000000000000000330000000 /* Frameworks */,
+				000000000000000340000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				000000000000000000000502 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				000000000000000000000012 /* BirdJournalUITests */,
+			);
+			name = BirdJournalUITests;
+			packageProductDependencies = (
+			);
+			productName = BirdJournalUITests;
+			productReference = 000000000000000000000123 /* BirdJournalUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -213,6 +258,7 @@
 			targets = (
 				000000000000000100000000 /* BirdJournal */,
 				000000000000000200000000 /* BirdJournalTests */,
+				000000000000000300000000 /* BirdJournalUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -233,6 +279,13 @@
 			files = (
 			);
 		};
+		000000000000000340000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -246,6 +299,13 @@
 			files = (
 			);
 		};
+		000000000000000320000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -253,6 +313,11 @@
 			isa = PBXTargetDependency;
 			target = 000000000000000100000000 /* BirdJournal */;
 			targetProxy = 000000000000000000000500 /* PBXContainerItemProxy */;
+		};
+		000000000000000000000502 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000100000000 /* BirdJournal */;
+			targetProxy = 000000000000000000000503 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -382,7 +447,7 @@
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "BirdJournal" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "MyBirdJournal-StellersJay";
+				ASSETCATALOG_COMPILER_APPICON_NAME = "MyBirdJournal-RedTailedHawk";
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -430,7 +495,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "";
-				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = "MyBirdJournal-StellersJay";
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = "MyBirdJournal-RedTailedHawk";
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -522,6 +587,44 @@
 			};
 			name = Release;
 		};
+		000000000000000311000000 /* Debug configuration for PBXNativeTarget "BirdJournalUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 647FZYVR5Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.mybirdjournal.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = BirdJournal;
+			};
+			name = Debug;
+		};
+		000000000000000312000000 /* Release configuration for PBXNativeTarget "BirdJournalUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 647FZYVR5Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.matthewcelia.mybirdjournal.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = BirdJournal;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -546,6 +649,14 @@
 			buildConfigurations = (
 				000000000000000211000000 /* Debug configuration for PBXNativeTarget "BirdJournalTests" */,
 				000000000000000212000000 /* Release configuration for PBXNativeTarget "BirdJournalTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		000000000000000310000000 /* Build configuration list for PBXNativeTarget "BirdJournalUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000311000000 /* Debug configuration for PBXNativeTarget "BirdJournalUITests" */,
+				000000000000000312000000 /* Release configuration for PBXNativeTarget "BirdJournalUITests" */,
 			);
 			defaultConfigurationName = Release;
 		};

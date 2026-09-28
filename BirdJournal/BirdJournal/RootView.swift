@@ -17,9 +17,6 @@ enum Route: Hashable {
     case modelLicense(fileName: String)
     case packLicense(id: String)
     case settings
-    #if DEBUG
-    case developer
-    #endif
 }
 
 extension View {
@@ -60,10 +57,6 @@ private struct RouteDestination: View {
             }
         case .settings:
             SettingsView()
-        #if DEBUG
-        case .developer:
-            DeveloperView()
-        #endif
         }
     }
 }

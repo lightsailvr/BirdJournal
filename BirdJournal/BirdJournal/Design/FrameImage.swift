@@ -12,13 +12,16 @@ struct FrameImage: View {
 
     var body: some View {
         // The picture is an overlay, so the slot keeps the size it was given and a wide frame is cropped, not laid
-        // out at its own width.
+        // out at its own width. The overflow that the clip hides would still take touches (a portrait glasses frame
+        // scaled to fill a wide card reaches far above and below it, over whatever control sits there), so the
+        // picture takes none; the slot itself is what a row or card responds to.
         Color.raised
             .overlay {
                 if let image {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
+                        .allowsHitTesting(false)
                 } else {
                     Image(systemName: "camera")
                         .foregroundStyle(Color.inkSecondary)
@@ -55,6 +58,7 @@ struct PackImage: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
+                        .allowsHitTesting(false)  // see FrameImage: the clipped overflow must not take touches
                 } else {
                     Image(systemName: "bird")
                         .foregroundStyle(Color.inkSecondary)
