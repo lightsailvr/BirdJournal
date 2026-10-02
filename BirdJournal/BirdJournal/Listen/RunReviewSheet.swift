@@ -23,7 +23,7 @@ struct RunReviewSheet: View {
                             .padding(.top, 4)
                     }
                     VStack(spacing: 0) {
-                        ForEach(run.candidates) { candidate in
+                        ForEach(run.orderedCandidates) { candidate in
                             CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), startedAt: run.startedAt) {
                                 reviewing = candidate
                             }

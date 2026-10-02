@@ -97,6 +97,9 @@ final class ListeningCoordinator {
     private(set) var runSource: Source?
     /// The last `waveformLength` display levels, oldest first; refreshed a few times a second while listening.
     private(set) var waveform = [Float](repeating: 0, count: ListeningCoordinator.waveformLength)
+    /// The Listen tab's list order (issue #42): calling now first, then most recently heard first. Refreshed with
+    /// the waveform while the run is active, and settled with nothing calling once it ends.
+    private(set) var listOrder = SpeciesListOrder()
     private(set) var acknowledgment: Acknowledgment?
     /// Set when a run that heard something ends, until the review is dismissed.
     var isReviewing = false
@@ -166,8 +169,29 @@ final class ListeningCoordinator {
         }
     }
 
-    /// Every species heard this run, in the order they were admitted: rows never move.
+    /// Every species heard this run, in the order they were admitted: the order the stack and the lens pages keep.
     var candidates: [Candidate] { listening.stack.candidates }
+    /// The same species as the Listen tab lists them: calling now first (newest caller, then the one calling the
+    /// longest), then the rest most recently heard first. Computed from the current stack over the remembered
+    /// order, so a species that just arrived is placed at once.
+    var orderedCandidates: [Candidate] {
+        let candidates = candidates
+        return currentOrder().indices.map { candidates[$0] }
+    }
+    /// Seconds since the run started listening, the clock the candidates' times are read against.
+    var sessionTime: Double { listening.sessionTime }
+
+    func isCalling(_ candidate: Candidate) -> Bool {
+        guard let index = candidates.firstIndex(where: { $0.species == candidate.species }) else { return false }
+        return currentOrder().isCalling(index: index)
+    }
+
+    /// The remembered order brought up to the current stack and clock; nothing is calling once the run has ended.
+    private func currentOrder() -> SpeciesListOrder {
+        var order = listOrder
+        order.update(with: listening.stack, at: state.isActive ? sessionTime : .infinity)
+        return order
+    }
     var startedAt: Date? { listening.startedAt }
     var locationState: ListeningSession.LocationState { listening.locationState }
     /// The location the next add records.
@@ -194,6 +218,7 @@ final class ListeningCoordinator {
         hasRun = true
         runSource = source
         waveform = [Float](repeating: 0, count: Self.waveformLength)
+        listOrder = SpeciesListOrder()
         levels.level = .silence
         switch source {
         case .phone:
@@ -217,6 +242,7 @@ final class ListeningCoordinator {
         case nil: break
         }
         lastEnd = lastEnd ?? .stopped
+        listOrder = currentOrder()
         isReviewing = !candidates.isEmpty
     }
 
@@ -282,6 +308,9 @@ final class ListeningCoordinator {
                 next.removeFirst()
                 next.append(levels.level.displayValue)
                 self.waveform = next
+                // The list order follows the stack and the clock at the same pace; written only when it moves.
+                let order = self.currentOrder()
+                if order != self.listOrder { self.listOrder = order }
             }
         }
     }

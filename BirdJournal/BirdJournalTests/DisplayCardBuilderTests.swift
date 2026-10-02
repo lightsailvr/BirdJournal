@@ -11,19 +11,27 @@ import UIKit
 @Suite("DisplayCardBuilder")
 struct DisplayCardBuilderTests {
     static let stack = FakeLensStack.stack(count: 5) // The fifth species has no profile.
+    /// The order at the fake stack's own clock: the bushtit and the hummingbird calling, so the list has marked rows
+    /// and the other cards name the caller.
+    static let order: SpeciesListOrder = {
+        var order = SpeciesListOrder()
+        order.update(with: stack, at: FakeLensStack.time(count: 5))
+        return order
+    }()
 
     nonisolated static let pages: [LensPage] = [.list, .species(index: 0), .species(index: 4), .details(index: 0), .details(index: 4)]
 
     @Test("every page builds one root FlexBox, saved or not", arguments: pages, [Set<Int>(), [0, 4]])
     func oneRoot(page: LensPage, saved: Set<Int>) {
-        let card = LensCardRenderer.render(page, stack: Self.stack, selection: 4, saved: saved, profile: FakeLensStack.profile(for:))
+        let card = LensCardRenderer.render(page, stack: Self.stack, order: Self.order, selection: 4, saved: saved, profile: FakeLensStack.profile(for:))
+        if case .list(let rows) = card.elements[2] { #expect(rows.map(\.isCalling) == [true, true, false, false, false]) }
         let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: FakeLensStack.image(for:)) { _ in }
         _ = root
     }
 
     @Test("a photo the app cannot load still builds a card")
     func missingPhoto() {
-        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, selection: 0, saved: [], profile: FakeLensStack.profile(for:))
+        let card = LensCardRenderer.render(.species(index: 0), stack: Self.stack, order: Self.order, selection: 0, saved: [], profile: FakeLensStack.profile(for:))
         #expect(card.photo != nil)
         let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: { _ in nil }) { _ in }
         _ = root

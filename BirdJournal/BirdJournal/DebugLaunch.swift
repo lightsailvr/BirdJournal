@@ -16,6 +16,8 @@ import UIKit
 ///   `sighting` (the newest), `share`, `guide`, `profile` (the Black Phoebe), `packs`, `pack` (the bundled pack),
 ///   `credits`, `settings`, `source` (the audio source sheet).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
+/// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
+///   prompting, for the UI tests.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -102,6 +104,12 @@ struct DebugLaunch: ViewModifier {
             }
         }
     }
+}
+
+/// Stands in for Core Location when a simulator run must not prompt (`-autoLocation denied`): every request is
+/// denied, so identification runs without the regional filter and the screen shows the no-location notice.
+struct DeniedLocationProvider: LocationProvider {
+    func currentFix() async -> LocationFix { .denied }
 }
 
 /// Hands a file's chunks out at the pace they were recorded, so a WAV drives the Listen tab like a microphone would

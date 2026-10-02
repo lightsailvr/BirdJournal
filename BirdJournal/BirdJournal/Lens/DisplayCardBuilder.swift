@@ -78,15 +78,19 @@ enum DisplayCardBuilder {
         }
     }
 
-    /// One row of the species list: a caret and a card background mark the selected row; name, match rate, and
+    /// One row of the species list: a caret and a card background mark the selected row; a speaker before the name
+    /// and the primary colour mark a bird calling now (issue #42), so the two can coincide; name, match rate, and
     /// icons for a photo card and a saved sighting.
     private static func row(_ row: LensListRow, onAction: @escaping @Sendable (LensAction) -> Void) -> FlexBox {
         FlexBox(direction: .row, spacing: 12, crossAlignment: .center) {
             if row.isSelected {
                 Icon(name: .caretRight, style: .filled)
             }
+            if row.isCalling {
+                Icon(name: .speakerWithThreeArcs, style: .filled)
+            }
             FlexBox(direction: .row) {
-                Text(row.commonName, style: .body, color: row.isSelected ? .primary : .secondary)
+                Text(row.commonName, style: .body, color: row.isSelected || row.isCalling ? .primary : .secondary)
             }
             .flexGrow(1)
             .flexShrink(1)
