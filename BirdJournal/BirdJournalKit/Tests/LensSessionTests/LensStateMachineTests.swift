@@ -10,7 +10,7 @@ struct LensStateMachineTests {
     /// A machine on `page` with `species` fake species in its stack, reached through gestures alone.
     static func machine(on page: LensPage, species: Int = 3) -> LensStateMachine {
         var machine = LensStateMachine()
-        machine.update(with: Fakes.stack(species))
+        machine.update(with: Fakes.stack(species), at: Fakes.quiet)
         if let index = page.index {
             for _ in 0..<index { _ = machine.apply(.swipeDown) }
             _ = machine.apply(.tap)
@@ -21,13 +21,125 @@ struct LensStateMachineTests {
         return machine
     }
 
-    @Test("starts on the species list with an empty stack, the first row selected and nothing saved")
+    @Test("starts on the species list with an empty stack, the first row selected, unpinned, and nothing saved")
     func initialState() {
         let machine = LensStateMachine()
         #expect(machine.page == .list)
         #expect(machine.stack.isEmpty)
         #expect(machine.selection == 0)
+        #expect(machine.pinnedSpecies == nil)
         #expect(machine.savedIndices.isEmpty)
+    }
+
+    // MARK: - The highlight follows the calling bird until pinned (issue #42)
+
+    /// Phoebe heard early, finch and towhee calling at `time`; the towhee is the newest caller, so row one.
+    static func chorus(at time: Double) -> CandidateStack {
+        CandidateStack(candidates: [
+            Fakes.candidate(Fakes.phoebe, lastHeardAt: 3),
+            Fakes.candidate(Fakes.finch, lastHeardAt: time - 3),
+            Fakes.candidate(Fakes.towhee, lastHeardAt: time - 1),
+        ])
+    }
+
+    @Test("unpinned, the highlight sits on row one and follows the newest caller as the list moves")
+    func unpinnedFollowsRowOne() {
+        var machine = LensStateMachine()
+        machine.update(with: Self.chorus(at: 20), at: 20)
+        #expect(machine.order.indices == [2, 1, 0])
+        #expect(machine.selection == 2)
+        #expect(machine.pinnedSpecies == nil)
+
+        // The finch goes quiet and the phoebe calls: the phoebe is row one and the highlight is on it.
+        var candidates = Self.chorus(at: 20).candidates
+        candidates[0].lastHeardAt = 29
+        let changed = machine.update(with: CandidateStack(candidates: candidates), at: 30)
+        #expect(changed)
+        #expect(machine.order.indices == [0, 2, 1])
+        #expect(machine.selection == 0)
+        _ = machine.apply(.tap)
+        #expect(machine.page == .species(index: 0))
+    }
+
+    @Test("a lapse with no stack change still reorders the list and the highlight")
+    func lapseReorders() {
+        var machine = LensStateMachine()
+        machine.update(with: Self.chorus(at: 20), at: 20)
+        #expect(machine.order.callingCount == 2)
+        #expect(machine.order.nextLapse == 23)
+        let changed = machine.update(with: Self.chorus(at: 20), at: 23)
+        #expect(changed)
+        #expect(machine.order.callingCount == 1)
+        #expect(machine.update(with: Self.chorus(at: 20), at: 24) == false, "nothing lapsed since")
+    }
+
+    @Test("swipe down pins the highlight to that species, and it stays on the bird when the list moves under it")
+    func swipeDownPins() {
+        var machine = LensStateMachine()
+        machine.update(with: Self.chorus(at: 20), at: 20)
+        _ = machine.apply(.swipeDown)
+        #expect(machine.pinnedSpecies == Fakes.finch)
+        #expect(machine.selection == 1)
+
+        // The phoebe starts calling and takes row one; the finch slides to row three and keeps the highlight.
+        var candidates = Self.chorus(at: 20).candidates
+        candidates[0].lastHeardAt = 21
+        machine.update(with: CandidateStack(candidates: candidates), at: 22)
+        #expect(machine.order.indices == [0, 1, 2])
+        #expect(machine.selection == 1)
+        _ = machine.apply(.swipeUp)
+        #expect(machine.pinnedSpecies == Fakes.phoebe, "up moves the pin one row up in list order")
+        #expect(machine.selection == 0)
+    }
+
+    @Test("swipe right on the list unpins and returns the highlight to row one")
+    func swipeRightUnpins() {
+        var machine = LensStateMachine()
+        machine.update(with: Self.chorus(at: 20), at: 20)
+        _ = machine.apply(.swipeDown)
+        _ = machine.apply(.swipeDown)
+        #expect(machine.pinnedSpecies == Fakes.phoebe)
+        #expect(machine.apply(.swipeRight) == nil)
+        #expect(machine.page == .list)
+        #expect(machine.pinnedSpecies == nil)
+        #expect(machine.selection == 2)
+    }
+
+    @Test("opening a card and coming back keeps the pin on that species; an unpinned tap stays unpinned")
+    func cardVisitKeepsPin() {
+        var machine = LensStateMachine()
+        machine.update(with: Self.chorus(at: 20), at: 20)
+        _ = machine.apply(.swipeDown)
+        _ = machine.apply(.tap)
+        #expect(machine.page == .species(index: 1))
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .list)
+        #expect(machine.pinnedSpecies == Fakes.finch)
+
+        machine = LensStateMachine()
+        machine.update(with: Self.chorus(at: 20), at: 20)
+        _ = machine.apply(.tap)
+        #expect(machine.page == .species(index: 2))
+        _ = machine.apply(.swipeRight)
+        #expect(machine.pinnedSpecies == nil)
+        #expect(machine.selection == 2)
+    }
+
+    @Test("paging to the next species on a card pins the highlight to it")
+    func nextSpeciesPins() {
+        var machine = LensStateMachine()
+        machine.update(with: Self.chorus(at: 20), at: 20)
+        _ = machine.apply(.tap)
+        #expect(machine.page == .species(index: 2))
+        #expect(machine.apply(.swipeLeft) == nil, "the towhee is last in the stack")
+        _ = machine.apply(.swipeRight)
+        _ = machine.apply(.swipeDown)
+        _ = machine.apply(.swipeDown)
+        _ = machine.apply(.tap)
+        #expect(machine.page == .species(index: 0))
+        _ = machine.apply(.swipeLeft)
+        #expect(machine.page == .species(index: 1))
+        #expect(machine.pinnedSpecies == Fakes.finch)
     }
 
     // MARK: - Every (page, gesture) pair
@@ -233,7 +345,7 @@ struct LensStateMachineTests {
     func problemSurvivesAppend() {
         var machine = Self.machine(on: .details(index: 1), species: 2)
         machine.report(.noLocation)
-        let changed = machine.update(with: Fakes.stack(3))
+        let changed = machine.update(with: Fakes.stack(3), at: Fakes.quiet)
         #expect(changed)
         #expect(machine.page == .problem(.noLocation))
         _ = machine.apply(.swipeRight)
@@ -244,7 +356,7 @@ struct LensStateMachineTests {
     @Test("a stack that is not a continuation drops the problem along with the page")
     func problemDroppedOnReplacedStack() {
         var machine = Self.machine(on: .problem(.connectionLost))
-        _ = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]))
+        _ = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]), at: Fakes.quiet)
         #expect(machine.page == .list)
     }
 
@@ -256,7 +368,7 @@ struct LensStateMachineTests {
     func appendKeepsPage(page: LensPage) {
         var machine = Self.machine(on: page, species: 2)
         let selection = machine.selection
-        let changed = machine.update(with: Fakes.stack(3))
+        let changed = machine.update(with: Fakes.stack(3), at: Fakes.quiet)
         #expect(changed)
         #expect(machine.page == page)
         #expect(machine.selection == selection)
@@ -270,7 +382,7 @@ struct LensStateMachineTests {
         var candidates = Fakes.stack(3).candidates
         candidates[0].score = 0.1
         candidates[2].score = 0.99
-        let changed = machine.update(with: CandidateStack(candidates: candidates))
+        let changed = machine.update(with: CandidateStack(candidates: candidates), at: Fakes.quiet)
         #expect(changed)
         #expect(machine.page == .details(index: 0))
         #expect(machine.savedIndices == [0])
@@ -281,17 +393,18 @@ struct LensStateMachineTests {
     @Test("an identical stack reports no change")
     func unchangedStack() {
         var machine = Self.machine(on: .species(index: 0), species: 2)
-        #expect(machine.update(with: Fakes.stack(2)) == false)
+        #expect(machine.update(with: Fakes.stack(2), at: Fakes.quiet) == false)
     }
 
     @Test("a stack that is not a continuation of the current one restarts on the list with nothing saved")
     func replacedStackResets() {
         var machine = Self.machine(on: .details(index: 2), species: 3)
         _ = machine.apply(.tap)
-        let changed = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]))
+        let changed = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]), at: Fakes.quiet)
         #expect(changed)
         #expect(machine.page == .list)
         #expect(machine.selection == 0)
+        #expect(machine.pinnedSpecies == nil)
         #expect(machine.savedIndices.isEmpty)
         #expect(machine.stack.count == 1)
     }

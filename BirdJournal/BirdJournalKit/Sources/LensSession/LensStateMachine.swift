@@ -74,21 +74,29 @@ public enum LensEffect: Sendable, Equatable {
 ///
 /// Page map (DECISIONS.md, "Lens UI", issue #24). The list is a menu the app drives, because the glasses hand Nav
 /// and Select to an app that subscribes to Inputs instead of moving focus between tappable rows (and do not scroll
-/// a view either): swipe down/up move `selection`, and a tap or swipe left opens the selected species' photo page.
-/// From the photo page swipe down opens the details page and swipe up returns; on either, swipe left is the next
-/// species' photo and swipe right is back to the list (the only way back on real glasses, which do not deliver
+/// a view either): swipe down/up move the highlight, and a tap or swipe left opens the highlighted species' photo
+/// page. From the photo page swipe down opens the details page and swipe up returns; on either, swipe left is the
+/// next species' photo and swipe right is back to the list (the only way back on real glasses, which do not deliver
 /// Back). A tap or the button on the details page is "Add to my list"; a tap on the photo page does nothing, so a
 /// bird is never added by accident. The stack never reorders and new species append at the end, so an update
 /// never moves the page the wearer is on. A reported problem covers the current page until swipe right, Back or a
 /// tap returns there (issue #10).
+///
+/// The list shows the stack in `order` (issue #42): calling birds first, then the rest most recently heard first.
+/// The highlight is unpinned until the wearer swipes: it sits on row one, so the calling bird is the highlighted
+/// row and a tap opens it. Swipe down or up pins it to a species, and it stays on that bird as the list moves under
+/// it; swipe right on the list unpins it. Opening a card leaves the pin as it is; paging to the next species on a
+/// card pins to that species, so coming back lands on it.
 public struct LensStateMachine: Sendable, Equatable {
     public private(set) var page: LensPage = .list
     /// The page a problem page covers, for the way back.
     private var coveredPage: LensPage = .list
     /// The candidates the pages index into, in admission order.
     public private(set) var stack = CandidateStack()
-    /// The highlighted row of the list, a stack index; follows the card the wearer was on.
-    public private(set) var selection = 0
+    /// The order the list shows the stack in, as of the last update.
+    public private(set) var order = SpeciesListOrder()
+    /// The species the highlight is pinned to by a swipe, nil while it follows row one.
+    public private(set) var pinnedSpecies: Species?
     /// Stack indices whose sighting has been saved this session; their pages show the saved mark instead of the
     /// button. A later tap on a saved details page saves again (the run updates the sighting, spec user story 33);
     /// one press that hardware delivers twice, as a click and a select, is deduplicated by the adapter, which has a
@@ -102,23 +110,36 @@ public struct LensStateMachine: Sendable, Equatable {
         page.index.map { stack.candidates[$0] }
     }
 
+    /// The highlighted row of the list as a stack index: the pinned species, else row one (0 on an empty list).
+    public var selection: Int {
+        if let pinnedSpecies, let index = stack.candidates.firstIndex(where: { $0.species == pinnedSpecies }) {
+            return index
+        }
+        return order.indices.first ?? 0
+    }
+
     // MARK: - Stack
 
-    /// Takes the latest stack. Returns true if anything the pages show changed. A stack that does not continue the
-    /// current one (a new session) restarts on the list with nothing saved, so no page can index past the end.
+    /// Takes the latest stack at session time `time` (seconds since the run started, the clock `Candidate` times
+    /// are on). Returns true if anything the pages show changed: the stack, or the list order, which also moves when a
+    /// calling marker lapses with the stack unchanged. A stack that does not continue the current one (a new
+    /// session) restarts on the list with nothing saved and nothing pinned, so no page can index past the end.
     @discardableResult
-    public mutating func update(with stack: CandidateStack) -> Bool {
-        guard stack != self.stack else { return false }
+    public mutating func update(with stack: CandidateStack, at time: Double) -> Bool {
+        let stackChanged = stack != self.stack
         let continues = stack.count >= self.stack.count
             && zip(stack.candidates, self.stack.candidates).allSatisfy { $0.species == $1.species }
         self.stack = stack
         if !continues {
             page = .list
             coveredPage = .list
-            selection = 0
+            pinnedSpecies = nil
             savedIndices = []
+            order = SpeciesListOrder()
         }
-        return true
+        let previousOrder = order
+        order.update(with: stack, at: time)
+        return stackChanged || order != previousOrder
     }
 
     // MARK: - Problems
@@ -136,13 +157,13 @@ public struct LensStateMachine: Sendable, Equatable {
     public mutating func apply(_ gesture: LensGesture) -> LensEffect? {
         switch (page, gesture) {
         case (.list, .swipeDown):
-            if selection + 1 < stack.count { selection += 1 }
+            pin(rowOffset: 1)
         case (.list, .swipeUp):
-            if selection > 0 { selection -= 1 }
+            pin(rowOffset: -1)
         case (.list, .tap), (.list, .swipeLeft):
             if !stack.isEmpty { page = .species(index: selection) }
         case (.list, .swipeRight):
-            break
+            pinnedSpecies = nil
         case (.list, .back):
             return .endSession
 
@@ -180,9 +201,18 @@ public struct LensStateMachine: Sendable, Equatable {
         }
     }
 
+    /// Pins the highlight to the species `rowOffset` rows from the highlighted one in list order; nothing past the
+    /// ends of the list.
+    private mutating func pin(rowOffset: Int) {
+        guard let position = order.position(of: selection) else { return }
+        let target = position + rowOffset
+        guard order.indices.indices.contains(target) else { return }
+        pinnedSpecies = stack.candidates[order.indices[target]].species
+    }
+
     private mutating func open(_ index: Int) {
         page = .species(index: index)
-        selection = index
+        pinnedSpecies = stack.candidates[index].species
     }
 
     private mutating func save(_ index: Int) -> LensEffect {
