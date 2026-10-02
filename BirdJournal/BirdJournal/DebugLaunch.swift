@@ -9,12 +9,12 @@ import UIKit
 
 /// Launch flags for simulator screenshots and checks (issue #28), read once when the root appears:
 ///
-/// - `-seedJournal YES` adds a few sightings with generated frames (with `-inMemoryAlbum YES` nothing touches the
-///   album on disk).
+/// - `-seedJournal YES` adds a few sightings with generated frames, spread over a kilometre of Griffith Park so the
+///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal`, `species` (the journal's species view),
-///   `sighting` (the newest), `share`, `guide`, `profile` (the Black Phoebe), `packs`, `pack` (the bundled pack),
-///   `credits`, `settings`, `source` (the audio source sheet).
+///   `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
+///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `source` (the audio source sheet).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
 ///   prompting, for the UI tests.
@@ -71,12 +71,13 @@ struct DebugLaunch: ViewModifier {
                 if let newest = try? context.fetch(Sighting.newestFirst()).first {
                     journalPath.append(Route.journalSpecies(speciesID: newest.speciesID))
                 }
-            case "sighting", "share":
+            case "sighting", "share", "map":
                 tab = .journal
                 if let newest = try? context.fetch(Sighting.newestFirst()).first {
                     journalPath.append(Route.sighting(newest.persistentModelID))
                 }
                 if screen == "share" { defaults.set(true, forKey: "autoShare") }
+                if screen == "map" { defaults.set(true, forKey: "autoMap") }
             case "guide":
                 tab = .guide
             case "profile":
@@ -147,14 +148,18 @@ final class PacedAudioSource: AudioSource {
 }
 
 enum DebugSeeds {
-    /// Three sightings over two days with generated frames (a ring at the centre of a 640 × 480 frame with a black
-    /// border, so the 2x crop is visible as such), one with a note, one from the phone without a frame.
+    /// Four sightings over two days with generated frames (a ring at the centre of a 640 × 480 frame with a black
+    /// border, so the 2x crop is visible as such), one with a note, one from the phone without a frame, one without
+    /// a location. The located three are spread over about a kilometre of Griffith Park, so the full map (issue #44)
+    /// shows pins apart.
     static func seedJournal(context: ModelContext, frames: FrameStore?) {
-        let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let bySidewalk = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let byThePond = Coordinate(latitude: 34.1402, longitude: -118.2898, accuracy: 12)
+        let byTheTrailhead = Coordinate(latitude: 34.1334, longitude: -118.2996, accuracy: 25)
         let seeds: [(label: String, minutesAgo: Double, location: Coordinate?, confidence: Double, source: SightingSource, frame: Bool, note: String?)] = [
-            ("Haemorhous mexicanus_House Finch", 3, griffithPark, 0.82, .glasses, true, nil),
-            ("Sayornis nigricans_Black Phoebe", 9, griffithPark, 0.77, .glasses, true, "Tail dipping over the pond, then off after a fly."),
-            ("Zenaida macroura_Mourning Dove", 26 * 60, griffithPark, 0.64, .phone, false, nil),
+            ("Haemorhous mexicanus_House Finch", 3, bySidewalk, 0.82, .glasses, true, nil),
+            ("Sayornis nigricans_Black Phoebe", 9, byThePond, 0.77, .glasses, true, "Tail dipping over the pond, then off after a fly."),
+            ("Zenaida macroura_Mourning Dove", 26 * 60, byTheTrailhead, 0.64, .phone, false, nil),
             ("Calypte anna_Anna's Hummingbird", 27 * 60, nil, 0.71, .glasses, true, nil),
         ]
         for seed in seeds {
