@@ -39,28 +39,88 @@ struct ListeningSessionTests {
         #expect(source.isStopped)
     }
 
-    @Test("one fix at start, another after the refresh interval, and the new place filters the next window")
-    func locationRefreshes() async throws {
-        let prior = SpyOccurrence()
+    @Test("the first fix settles Start; a later fix on the stream updates the coordinate the next add records (issue #44)")
+    func laterFixesUpdateTheCoordinate() async throws {
         let source = ManualAudioSource()
-        let location = ScriptedLocationProvider([Self.losAngeles, Self.newYork])
+        let location = ScriptedLocationProvider([Self.losAngeles])
         let session = ListeningSession(
-            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
+            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
             makeSource: { source },
-            location: location,
-            locationRefreshInterval: .milliseconds(50)
+            location: location
         )
 
         await session.start()
+        #expect(session.phase == .listening)
         #expect(session.locationState == .settled(Self.losAngeles))
         #expect(session.coordinate == Coordinate(latitude: 34.05, longitude: -118.25, accuracy: 12))
-        #expect(location.requests == 1)
+        #expect(session.locationFixedAt == Date(timeIntervalSince1970: 1_790_000_000))
+        #expect(location.streamsOpened == 1)
 
-        try await waitUntil("the location refreshes") { location.requests >= 2 }
+        location.send(Self.newYork)
         try await waitUntil("the new fix shows") { session.locationState == .settled(Self.newYork) }
+        #expect(session.coordinate == Coordinate(latitude: 40.7, longitude: -74, accuracy: 30))
+        #expect(session.locationFixedAt == Date(timeIntervalSince1970: 1_790_000_600))
+
+        await session.stop()
+        #expect(location.isStreaming == false, "Stop closes the location stream, so the blue indicator goes")
+    }
+
+    @Test("the engine's geo filter moves coarsely: a fix 100 m away leaves it alone, one 6 km away updates it (issue #44)")
+    func geoContextMovesCoarsely() async throws {
+        let prior = SpyOccurrence()
+        let source = ManualAudioSource()
+        let location = ScriptedLocationProvider([Self.losAngeles])
+        let session = ListeningSession(
+            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
+            makeSource: { source },
+            location: location
+        )
+
+        await session.start()
         source.feed(seconds: 3)
         try await waitUntil("a window is scored") { session.windowsScored >= 1 }
-        #expect(prior.asked.withLock { $0.map(\.latitude) } == [34.05, 40.7])
+        #expect(prior.asked.withLock { $0.map(\.latitude) } == [34.05])
+
+        // About 100 m north: the coordinate the next add records moves, the filter does not.
+        let nearby = LocationFix.fix(latitude: 34.0509, longitude: -118.25, accuracy: 10, at: Date(timeIntervalSince1970: 1_790_000_060))
+        location.send(nearby)
+        try await waitUntil("the nearby fix shows") { session.locationState == .settled(nearby) }
+        source.feed(seconds: 1.5)
+        try await waitUntil("another window is scored") { session.windowsScored >= 2 }
+        #expect(prior.asked.withLock { $0.map(\.latitude) } == [34.05])
+
+        // About 6 km north: the filter follows.
+        let farther = LocationFix.fix(latitude: 34.104, longitude: -118.25, accuracy: 10, at: Date(timeIntervalSince1970: 1_790_000_120))
+        location.send(farther)
+        try await waitUntil("the farther fix shows") { session.locationState == .settled(farther) }
+        source.feed(seconds: 1.5)
+        try await waitUntil("a window is scored at the new place") { prior.asked.withLock { $0.count } >= 2 }
+        #expect(prior.asked.withLock { $0.map(\.latitude) } == [34.05, 34.104])
+
+        await session.stop()
+    }
+
+    @Test("no fix in time settles Start as unavailable, and a fix that arrives later still filters the next window (issue #44)")
+    func unavailableThenFix() async throws {
+        let prior = SpyOccurrence()
+        let source = ManualAudioSource()
+        let location = ScriptedLocationProvider([.unavailable])
+        let session = ListeningSession(
+            loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: prior) },
+            makeSource: { source },
+            location: location
+        )
+
+        await session.start()
+        #expect(session.phase == .listening)
+        #expect(session.locationState == .settled(.unavailable))
+        #expect(session.coordinate == nil)
+
+        location.send(Self.newYork)
+        try await waitUntil("the fix shows") { session.locationState == .settled(Self.newYork) }
+        source.feed(seconds: 3)
+        try await waitUntil("a window is scored") { session.windowsScored >= 1 }
+        #expect(prior.asked.withLock { $0.map(\.latitude) } == [40.7])
 
         await session.stop()
     }
@@ -178,18 +238,40 @@ final class FailingAudioSource: AudioSource {
     func stop() async {}
 }
 
-/// Hands out the scripted fixes in order, repeating the last one, and counts requests.
+/// A location stream the test scripts: the fixes given up front arrive as soon as the stream is opened (the first
+/// settles Start), and `send` feeds another while the run is on, as Core Location would on a walk. Each start opens
+/// one stream; `isStreaming` says whether the latest is still being read.
 final class ScriptedLocationProvider: LocationProvider {
-    private let fixes: [LocationFix]
-    private(set) var requests = 0
+    private let initial: [LocationFix]
+    private var continuation: AsyncStream<LocationFix>.Continuation?
+    private(set) var streamsOpened = 0
+    /// Cleared from the stream's termination, which runs wherever the consumer dropped it.
+    private nonisolated final class Flag: Sendable {
+        /// Whether the latest stream is still being read.
+        let value = Mutex(false)
+    }
+
+    private let streaming = Flag()
+
+    var isStreaming: Bool { streaming.value.withLock { $0 } }
 
     init(_ fixes: [LocationFix]) {
         precondition(!fixes.isEmpty)
-        self.fixes = fixes
+        initial = fixes
     }
 
-    func currentFix() async -> LocationFix {
-        defer { requests += 1 }
-        return fixes[min(requests, fixes.count - 1)]
+    func fixes() -> AsyncStream<LocationFix> {
+        streamsOpened += 1
+        streaming.value.withLock { $0 = true }
+        let (stream, continuation) = AsyncStream.makeStream(of: LocationFix.self, bufferingPolicy: .unbounded)
+        continuation.onTermination = { [streaming] _ in streaming.value.withLock { $0 = false } }
+        self.continuation = continuation
+        for fix in initial { continuation.yield(fix) }
+        return stream
+    }
+
+    /// Another fix for the run under way.
+    func send(_ fix: LocationFix) {
+        continuation?.yield(fix)
     }
 }

@@ -483,7 +483,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "BirdJournal connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "BirdJournal does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "BirdJournal finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "BirdJournal uses your location to list the birds that live where you are listening.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "BirdJournal uses your location to list the birds that live where you are listening and to record where each bird was heard.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "BirdJournal listens for birdsong with the phone microphone when your glasses are not connected.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "BirdJournal does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -531,7 +531,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "BirdJournal connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "BirdJournal does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "BirdJournal finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "BirdJournal uses your location to list the birds that live where you are listening.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "BirdJournal uses your location to list the birds that live where you are listening and to record where each bird was heard.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "BirdJournal listens for birdsong with the phone microphone when your glasses are not connected.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "BirdJournal does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

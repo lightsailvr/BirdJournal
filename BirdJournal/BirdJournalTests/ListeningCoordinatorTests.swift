@@ -17,6 +17,8 @@ struct ListeningCoordinatorTests {
         let source: ManualAudioSource
         let run: ListeningCoordinator
         let sightings: RunSightings
+        /// The phone run's location stream, fed by the test.
+        let location: ScriptedLocationProvider
 
         var stored: [Sighting] { (try? album.mainContext.fetch(Sighting.newestFirst())) ?? [] }
     }
@@ -27,15 +29,34 @@ struct ListeningCoordinatorTests {
         let recorder = SightingRecorder(container: album, frames: FrameStore(directory: frames))
         let sightings = RunSightings(recorder: recorder)
         let source = ManualAudioSource()
+        let location = ScriptedLocationProvider([ListeningSessionTests.newYork])  // away from Los Angeles, so the jay is admitted too
         let phone = ListeningSession(
             loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
             makeSource: { source },
-            location: ScriptedLocationProvider([ListeningSessionTests.newYork])  // away from Los Angeles, so the jay is admitted too
+            location: location
         )
         let glasses = GlassesListeningSession(recorder: recorder, sightings: sightings, loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, location: ScriptedLocationProvider([.denied]))
         let defaults = UserDefaults(suiteName: "coordinator-tests-\(UUID().uuidString)")!
         let run = ListeningCoordinator(phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: defaults)
-        return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings)
+        return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings, location: location)
+    }
+
+    @Test("an add records the latest fix of the run, not the one Start took (issue #44)")
+    func addRecordsTheLatestFix() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+
+        let aQuarterMileOn = LocationFix.fix(latitude: 40.7036, longitude: -74, accuracy: 8, at: .now)
+        harness.location.send(aQuarterMileOn)
+        try await waitUntil("the fix shows") { run.locationState == .settled(aQuarterMileOn) }
+
+        try #require(await run.add(run.candidates[0]))
+        #expect(harness.stored.first?.location == Coordinate(latitude: 40.7036, longitude: -74, accuracy: 8))
+
+        await run.stop()
     }
 
     @Test("a phone run hears species in admission order; Add to journal writes one sighting with the run's location and acknowledges with an undo")

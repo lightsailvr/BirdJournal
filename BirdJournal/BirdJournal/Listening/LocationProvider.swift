@@ -2,7 +2,7 @@ import CoreLocation
 import Foundation
 import Synchronization
 
-/// What one location request came back with.
+/// What the location stream delivers.
 nonisolated enum LocationFix: Equatable, Sendable {
     /// A fix with its horizontal accuracy in metres.
     case fix(latitude: Double, longitude: Double, accuracy: Double, at: Date)
@@ -13,74 +13,108 @@ nonisolated enum LocationFix: Equatable, Sendable {
     case unavailable
 }
 
-/// The location seam for a listening session: one fix on request. DECISIONS.md: when-in-use permission, one fix
-/// at session start, refreshed every ten minutes, no background location mode.
+/// The location seam for a listening session (issue #44): a stream of fixes for as long as the run reads it. The
+/// first element settles Start (a fix, a denial, or `.unavailable` once the wait runs out); later elements are the
+/// birder moving, so every add records where it was made. DECISIONS.md: when-in-use permission, live updates held
+/// through the background for the whole run.
 protocol LocationProvider {
-    /// Asks for when-in-use permission the first time (the system prompts once) and returns one fix.
-    func currentFix() async -> LocationFix
+    /// Asks for when-in-use permission the first time (the system prompts once) and yields fixes until the stream
+    /// is dropped.
+    func fixes() -> AsyncStream<LocationFix>
 }
 
 /// Core Location through `CLLocationUpdate.liveUpdates`, which prompts for when-in-use permission itself when
-/// the status is undetermined and reports a denial without prompting again (only "Allow Once" reverts to
-/// undetermined after the app leaves the foreground, so a later refresh may ask again). Stops iterating after the
-/// first fix, so the location hardware runs for seconds per request, not for the session.
+/// the status is undetermined and reports a denial without prompting again. A `CLBackgroundActivitySession` is
+/// held while the stream is read, so a pocketed phone keeps receiving updates (the blue indicator shows for the
+/// run); dropping the stream ends both. The activity session is opened on the first authorised update, not before
+/// the prompt: one created without effective authorization never becomes active, and Start keeps the app in the
+/// foreground until that first element, which is when a new session may become active.
 ///
-/// With no background location mode, a refresh while the phone is locked gets no fix and comes back
-/// `.unavailable`; the session then keeps the fix it had.
+/// The first element is guaranteed: a fix, `.denied`, or `.unavailable` after `fixTimeout` of waiting (the clock
+/// pauses while the permission prompt is up). A denial ends the stream. A later Core Location failure ends it
+/// silently; the session keeps the last fix it had.
 final class CoreLocationProvider: LocationProvider {
-    /// How long to wait for a fix once permission is settled. Listening does not start until the first request
-    /// settles, so this caps how long Start can take when no fix is coming.
+    /// How long to wait for the first fix once permission is settled. Listening does not start until the first
+    /// element arrives, so this caps how long Start can take when no fix is coming.
     nonisolated static let fixTimeout: Duration = .seconds(10)
     private nonisolated static let timeoutTick: Duration = .seconds(1)
 
-    /// Shared between the fix task and the timeout task: whether the permission prompt is up.
-    private nonisolated final class PromptFlag: Sendable {
-        private let value = Mutex(false)
+    /// Shared between the update task and the timeout task: whether the permission prompt is up, and whether a
+    /// first element has gone out.
+    private nonisolated final class Progress: Sendable {
+        private let state = Mutex((prompting: false, settled: false))
+
         var isPrompting: Bool {
-            get { value.withLock { $0 } }
-            set { value.withLock { $0 = newValue } }
+            get { state.withLock { $0.prompting } }
+            set { state.withLock { $0.prompting = newValue } }
+        }
+
+        var isSettled: Bool { state.withLock { $0.settled } }
+
+        /// Marks the first element as sent; true the first time only.
+        func settle() -> Bool {
+            state.withLock { state in
+                defer { state.settled = true }
+                return !state.settled
+            }
         }
     }
 
-    func currentFix() async -> LocationFix {
-        let prompt = PromptFlag()
-        return await withTaskGroup(of: LocationFix.self) { group in
-            group.addTask { await Self.firstFix(prompt: prompt) }
+    func fixes() -> AsyncStream<LocationFix> {
+        AsyncStream { continuation in
+            let task = Task.detached { await Self.deliver(to: continuation) }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private nonisolated static func deliver(to continuation: AsyncStream<LocationFix>.Continuation) async {
+        let progress = Progress()
+        await withTaskGroup(of: Void.self) { group in
             group.addTask {
                 // Counted in ticks so the clock pauses while the permission prompt is up.
-                var remaining = Self.fixTimeout
-                while remaining > .zero, !Task.isCancelled {
-                    try? await Task.sleep(for: Self.timeoutTick)
-                    if !prompt.isPrompting { remaining -= Self.timeoutTick }
+                var remaining = fixTimeout
+                while remaining > .zero, !Task.isCancelled, !progress.isSettled {
+                    try? await Task.sleep(for: timeoutTick)
+                    if !progress.isPrompting { remaining -= timeoutTick }
                 }
-                return .unavailable
+                if !Task.isCancelled, progress.settle() { continuation.yield(.unavailable) }
             }
-            let first = await group.next() ?? .unavailable
-            group.cancelAll()
-            return first
+            group.addTask {
+                await forward(updates: CLLocationUpdate.liveUpdates(.default), to: continuation, progress: progress)
+                continuation.finish()
+            }
+            await group.waitForAll()
         }
     }
 
-    private nonisolated static func firstFix(prompt: PromptFlag) async -> LocationFix {
+    private nonisolated static func forward(updates: CLLocationUpdate.Updates, to continuation: AsyncStream<LocationFix>.Continuation, progress: Progress) async {
+        var activity: CLBackgroundActivitySession?
+        defer { activity?.invalidate() }
         do {
-            for try await update in CLLocationUpdate.liveUpdates() {
-                prompt.isPrompting = update.authorizationRequestInProgress
+            for try await update in updates {
+                progress.isPrompting = update.authorizationRequestInProgress
                 if update.authorizationDenied || update.authorizationDeniedGlobally || update.authorizationRestricted {
-                    return .denied
+                    _ = progress.settle()
+                    continuation.yield(.denied)
+                    return
+                }
+                if activity == nil, !update.authorizationRequestInProgress {
+                    activity = CLBackgroundActivitySession()
                 }
                 if let location = update.location {
-                    return .fix(
+                    _ = progress.settle()
+                    continuation.yield(.fix(
                         latitude: location.coordinate.latitude,
                         longitude: location.coordinate.longitude,
                         accuracy: location.horizontalAccuracy,
                         at: location.timestamp
-                    )
+                    ))
                 }
                 // Otherwise the request is in progress or no fix is available yet: keep waiting.
             }
         } catch {
-            // Cancelled by the timeout, or Core Location failed: either way there is no fix.
+            // Cancelled with the stream, or Core Location failed: nothing more is coming.
         }
-        return .unavailable
+        if progress.settle() { continuation.yield(.unavailable) }
     }
 }

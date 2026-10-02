@@ -1,3 +1,4 @@
+import Album
 import Identification
 import Pack
 import SwiftUI
@@ -50,6 +51,10 @@ struct ActiveListeningView: View {
                     .foregroundStyle(Color.ink)
                     .padding(.top, 22)
                     .accessibilityAddTraits(.isHeader)
+                if let coordinate = run.coordinate {
+                    PlaceLine(coordinate: coordinate, fixedAt: run.locationFixedAt, isRunning: run.state.isActive)
+                        .padding(.top, 6)
+                }
 
                 if run.candidates.isEmpty {
                     HStack(spacing: 10) {
@@ -219,6 +224,63 @@ struct Waveform: View {
     }
 }
 
+/// "Near Griffith Park, Los Angeles · updated 3 min ago": where the next add is recorded and how fresh that fix is
+/// (issue #44), ageing once a second while the run is on. The name is looked up once per kilometre of movement, so
+/// a walk does not geocode every step.
+private struct PlaceLine: View {
+    @Environment(PlaceNames.self) private var places
+    let coordinate: Coordinate
+    let fixedAt: Date?
+    let isRunning: Bool
+    /// The coordinate the name was looked up for, within a kilometre of the current one.
+    @State private var lookedUp: Coordinate?
+
+    /// Coordinates within about a kilometre (0.01°) share one lookup.
+    private struct Kilometre: Equatable {
+        let latitude: Int
+        let longitude: Int
+
+        init(_ coordinate: Coordinate) {
+            latitude = Int((coordinate.latitude * 100).rounded())
+            longitude = Int((coordinate.longitude * 100).rounded())
+        }
+    }
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: isRunning ? 1 : 3_600)) { context in
+            Text(Self.text(place: placeText, fixedAt: fixedAt, now: context.date))
+                .font(JournalFont.supporting)
+                .foregroundStyle(Color.inkSecondary)
+                .accessibilityIdentifier("place-line")
+        }
+        .task(id: Kilometre(coordinate)) {
+            lookedUp = coordinate
+            await places.resolve(coordinate)
+        }
+    }
+
+    private var placeText: String {
+        "Near \(places.name(for: lookedUp ?? coordinate) ?? coordinate.formatted)"
+    }
+
+    /// "Near <place> · updated 3 min ago"; the place alone without a fix time.
+    static func text(place: String, fixedAt: Date?, now: Date) -> String {
+        guard let fixedAt else { return place }
+        return "\(place) · updated \(AgeText.text(seconds: now.timeIntervalSince(fixedAt)))"
+    }
+}
+
+/// How long ago something happened, as the screen's lines say it: "just now" within the last minute, then minutes,
+/// then hours and minutes.
+enum AgeText {
+    static func text(seconds: TimeInterval) -> String {
+        if seconds < 60 { return "just now" }
+        let minutes = Int(seconds / 60)
+        if minutes < 60 { return "\(minutes) min ago" }
+        return "\(minutes / 60) h \(minutes % 60) min ago"
+    }
+}
+
 private struct LocationNotice: View {
     @Environment(\.openURL) private var openURL
     let text: String
@@ -311,10 +373,6 @@ struct CandidateRow: View {
     /// "Heard just now" within the last minute, else minutes ago, from the run's own clock.
     static func heardText(_ candidate: Candidate, startedAt: Date?, now: Date) -> String {
         guard let startedAt else { return "Heard" }
-        let secondsAgo = now.timeIntervalSince(startedAt) - candidate.lastHeardAt
-        if secondsAgo < 60 { return "Heard just now" }
-        let minutes = Int(secondsAgo / 60)
-        if minutes < 60 { return "Heard \(minutes) min ago" }
-        return "Heard \(minutes / 60) h \(minutes % 60) min ago"
+        return "Heard \(AgeText.text(seconds: now.timeIntervalSince(startedAt) - candidate.lastHeardAt))"
     }
 }

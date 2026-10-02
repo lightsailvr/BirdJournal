@@ -106,10 +106,15 @@ struct DebugLaunch: ViewModifier {
     }
 }
 
-/// Stands in for Core Location when a simulator run must not prompt (`-autoLocation denied`): every request is
-/// denied, so identification runs without the regional filter and the screen shows the no-location notice.
+/// Stands in for Core Location when a simulator run must not prompt (`-autoLocation denied`): the stream delivers a
+/// denial and ends, so identification runs without the regional filter and the screen shows the no-location notice.
 struct DeniedLocationProvider: LocationProvider {
-    func currentFix() async -> LocationFix { .denied }
+    func fixes() -> AsyncStream<LocationFix> {
+        AsyncStream { continuation in
+            continuation.yield(.denied)
+            continuation.finish()
+        }
+    }
 }
 
 /// Hands a file's chunks out at the pace they were recorded, so a WAV drives the Listen tab like a microphone would

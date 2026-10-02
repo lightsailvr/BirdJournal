@@ -39,8 +39,7 @@ final class PlaceNames {
         let key = Key(coordinate)
         guard !attempted.contains(key) else { return }
         attempted.insert(key)
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        guard let request = MKReverseGeocodingRequest(location: location) else { return }
+        guard let request = MKReverseGeocodingRequest(location: coordinate.location) else { return }
         guard let items = try? await request.mapItems, let item = items.first else { return }
         // A city with its context, or a city, and nothing finer: the name is shown on the phone as the approximate
         // place and shared as the "general area", so a street never comes back from here (issue #28).
@@ -48,4 +47,10 @@ final class PlaceNames {
         guard let name = representations?.cityWithContext ?? representations?.cityName else { return }
         names[key] = name
     }
+}
+
+extension Coordinate {
+    /// The album's coordinate as Core Location and MapKit take it.
+    var clCoordinate: CLLocationCoordinate2D { CLLocationCoordinate2D(latitude: latitude, longitude: longitude) }
+    var location: CLLocation { CLLocation(latitude: latitude, longitude: longitude) }
 }
