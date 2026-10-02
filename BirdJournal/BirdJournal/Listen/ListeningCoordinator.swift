@@ -181,9 +181,14 @@ final class ListeningCoordinator {
     /// Seconds since the run started listening, the clock the candidates' times are read against.
     var sessionTime: Double { listening.sessionTime }
 
+    /// The species calling now, computed once per read; a screen asks this once per pass, not once per row.
+    var callingSpecies: Set<Species> {
+        let candidates = candidates
+        return Set(currentOrder().calling.map { candidates[$0].species })
+    }
+
     func isCalling(_ candidate: Candidate) -> Bool {
-        guard let index = candidates.firstIndex(where: { $0.species == candidate.species }) else { return false }
-        return currentOrder().isCalling(index: index)
+        callingSpecies.contains(candidate.species)
     }
 
     /// The remembered order brought up to the current stack and clock; nothing is calling once the run has ended.

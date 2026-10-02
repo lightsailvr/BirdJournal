@@ -64,9 +64,10 @@ struct ActiveListeningView: View {
                     // rows move with the order (issue #42), animated unless motion is reduced.
                     TimelineView(.periodic(from: .now, by: run.state.isActive ? 1 : 3_600)) { context in
                         let ordered = run.orderedCandidates
+                        let calling = run.callingSpecies
                         VStack(spacing: 0) {
                             ForEach(Array(ordered.enumerated()), id: \.element.id) { position, candidate in
-                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: run.isCalling(candidate), startedAt: run.startedAt, now: context.date, position: position) {
+                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: calling.contains(candidate.species), startedAt: run.startedAt, now: context.date, position: position) {
                                     run.reviewing = candidate
                                 }
                                 RowRule()
@@ -269,22 +270,23 @@ struct CandidateRow: View {
                 Text(reference?.species.commonName ?? candidate.species.commonName)
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
-                if isCalling {
-                    HStack(spacing: 5) {
-                        Image(systemName: "waveform")
-                            .symbolEffect(.variableColor.iterative.reversing, isActive: !reduceMotion)
-                            .accessibilityHidden(true)
-                        Text("Calling now")
-                            .accessibilityIdentifier(position.map { "candidate-status-\($0)" } ?? "")
+                Group {
+                    if isCalling {
+                        HStack(spacing: 5) {
+                            Image(systemName: "waveform")
+                                .symbolEffect(.variableColor.iterative.reversing, isActive: !reduceMotion)
+                                .accessibilityHidden(true)
+                            Text("Calling now")
+                        }
+                        .font(JournalFont.supporting.weight(.medium))
+                        .foregroundStyle(Color.moss)
+                    } else {
+                        Text(isAdded ? "Added to journal" : Self.heardText(candidate, startedAt: startedAt, now: now))
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
                     }
-                    .font(JournalFont.supporting.weight(.medium))
-                    .foregroundStyle(Color.moss)
-                } else {
-                    Text(isAdded ? "Added to journal" : Self.heardText(candidate, startedAt: startedAt, now: now))
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
-                        .accessibilityIdentifier(position.map { "candidate-status-\($0)" } ?? "")
                 }
+                .accessibilityIdentifier(position.map { "candidate-status-\($0)" } ?? "")
             }
             if !stacked { Spacer(minLength: 8) }
             if isAdded {
