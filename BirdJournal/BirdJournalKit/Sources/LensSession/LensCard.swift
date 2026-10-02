@@ -53,6 +53,8 @@ public struct LensListRow: Sendable, Equatable {
     public var isSaved: Bool
     /// The one highlighted row, which a tap opens.
     public var isSelected: Bool
+    /// Whether the species is calling now (issue #42): a speaker before the name and the primary text colour.
+    public var isCalling: Bool
 
     /// The words the row spends on the lens: its name and match rate.
     public var words: Int { commonName.words + confidence.words }
@@ -60,7 +62,7 @@ public struct LensListRow: Sendable, Equatable {
 
 /// One element of a card, in Display DSL terms.
 public enum LensElement: Sendable, Equatable {
-    /// The one-line strip at the top of a species card: species count and position.
+    /// The one-line strip of a species card: species count and position on the photo page, and who is calling now.
     case status(String)
     /// The species photo, full card width, top of the card.
     case photo(LensImage)

@@ -10,3 +10,9 @@ the first-launch states. The journal screens run on `-seedJournal YES` sample si
 field with a ring, standing in for a glasses camera frame); the listening screens are driven by the labeled clip from
 `scripts/download-clips.sh` through the phone-microphone path. Hardware states (a glasses run, pause, reconnect) are
 not pictured: DAT-SETUP-CHECKLIST.md step 9 verifies them on the glasses.
+
+`2026-10-02/` is the evidence for issue #42 (calling-now order): the mock lens list with the newest caller marked
+(`lens-list-calling`), the same list after the one-shot re-send cleared the lapsed marker (`lens-list-lapsed`), a
+details page naming the bird calling now (`lens-details-now`), and the Listen tab with two rows calling and the same
+rows twenty seconds later, aged and reordered (`listening-calling-dark`, `listening-aged-dark`); the lens shots are
+the Developer hub's mock preview, full size.

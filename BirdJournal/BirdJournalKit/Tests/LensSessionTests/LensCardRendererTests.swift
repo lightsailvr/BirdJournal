@@ -12,8 +12,21 @@ struct LensCardRendererTests {
         species == Fakes.phoebe ? Fakes.phoebeProfile : nil
     }
 
+    /// The fake stack's order at a quiet moment: admission order, nothing calling.
+    static let quietOrder: SpeciesListOrder = {
+        var order = SpeciesListOrder()
+        order.update(with: stack, at: Fakes.quiet)
+        return order
+    }()
+
     static func render(_ page: LensPage, selection: Int = 0, saved: Set<Int> = []) -> LensCard {
-        LensCardRenderer.render(page, stack: stack, selection: selection, saved: saved, profile: profile)
+        LensCardRenderer.render(page, stack: stack, order: quietOrder, selection: selection, saved: saved, profile: profile)
+    }
+
+    static func render(_ page: LensPage, stack: CandidateStack, at time: Double, selection: Int = 0, saved: Set<Int> = [], profile: @escaping (Species) -> SpeciesProfile? = profile) -> LensCard {
+        var order = SpeciesListOrder()
+        order.update(with: stack, at: time)
+        return LensCardRenderer.render(page, stack: stack, order: order, selection: selection, saved: saved, profile: profile)
     }
 
     static let saveButton = LensElement.button(LensCardButton(label: "Add to my list", action: .save))
@@ -41,17 +54,17 @@ struct LensCardRendererTests {
 
     @Test("the list counts the species heard and has one row per species, newest last, with the selection marked")
     func list() {
-        #expect(LensCardRenderer.render(.list, stack: CandidateStack(), selection: 0, saved: [], profile: Self.profile).screenfuls == [[
+        #expect(Self.render(.list, stack: CandidateStack(), at: Fakes.quiet).screenfuls == [[
             .heading("No species yet"), .meta("Cards appear as birds call."),
         ]])
-        #expect(LensCardRenderer.render(.list, stack: Fakes.stack(1), selection: 0, saved: [], profile: Self.profile).screenfuls[0][0] == .heading("1 species heard"))
+        #expect(Self.render(.list, stack: Fakes.stack(1), at: Fakes.quiet).screenfuls[0][0] == .heading("1 species heard"))
         #expect(Self.render(.list, selection: 1).screenfuls == [[
             .heading("3 species heard"),
             .meta("Swipe down to choose, tap to open."),
             .list([
-                LensListRow(index: 0, commonName: "Black Phoebe", confidence: "80%", hasPhoto: true, isSaved: false, isSelected: false),
-                LensListRow(index: 1, commonName: "House Finch", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: true),
-                LensListRow(index: 2, commonName: "California Towhee", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: false),
+                LensListRow(index: 0, commonName: "Black Phoebe", confidence: "80%", hasPhoto: true, isSaved: false, isSelected: false, isCalling: false),
+                LensListRow(index: 1, commonName: "House Finch", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: true, isCalling: false),
+                LensListRow(index: 2, commonName: "California Towhee", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: false, isCalling: false),
             ]),
         ]])
     }
@@ -67,7 +80,7 @@ struct LensCardRendererTests {
         let species = (0..<12).map { Species(index: $0, scientificName: "Genus species\($0)", commonName: "Winded Bird \($0)", taxonomicClass: "Aves") }
         let stack = CandidateStack(candidates: species.map { Fakes.candidate($0) })
         func rows(selection: Int) -> (hint: LensElement, indices: [Int], selected: [Int]) {
-            let card = LensCardRenderer.render(.list, stack: stack, selection: selection, saved: [], profile: { _ in nil })
+            let card = Self.render(.list, stack: stack, at: Fakes.quiet, selection: selection, profile: { _ in nil })
             #expect(card.screenfuls.count == 1)
             #expect(card.screenfuls[0].wordCount <= LensCardRenderer.wordBudget)
             guard case .list(let rows) = card.screenfuls[0][2] else { Issue.record("no rows"); return (card.screenfuls[0][1], [], []) }
@@ -81,6 +94,77 @@ struct LensCardRendererTests {
         #expect(second.hint == .meta("Swipe down to choose, tap to open. Page 2 of 3."))
         let last = rows(selection: 11)
         #expect(last.indices == [10, 11] && last.selected == [11])
+    }
+
+    // MARK: - Calling now (issue #42)
+
+    /// Phoebe heard early, finch and towhee calling at `time`; the towhee is the newest caller, so row one.
+    static func chorus(at time: Double) -> CandidateStack {
+        CandidateStack(candidates: [
+            Fakes.candidate(Fakes.phoebe, lastHeardAt: 3),
+            Fakes.candidate(Fakes.finch, lastHeardAt: time - 3),
+            Fakes.candidate(Fakes.towhee, lastHeardAt: time - 1),
+        ])
+    }
+
+    @Test("the list shows the rows in list order, calling birds marked, with the highlight on the given species")
+    func listInOrder() {
+        let card = Self.render(.list, stack: Self.chorus(at: 20), at: 20, selection: 1)
+        #expect(card.screenfuls == [[
+            .heading("3 species heard"),
+            .meta("Swipe down to choose, tap to open."),
+            .list([
+                LensListRow(index: 2, commonName: "California Towhee", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: false, isCalling: true),
+                LensListRow(index: 1, commonName: "House Finch", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: true, isCalling: true),
+                LensListRow(index: 0, commonName: "Black Phoebe", confidence: "80%", hasPhoto: true, isSaved: false, isSelected: false, isCalling: false),
+            ]),
+        ]])
+    }
+
+    @Test("a long list pages by row position, so a pinned bird pushed down the list pages the view with it")
+    func longListPagesByPosition() {
+        let species = (0..<12).map { Species(index: $0, scientificName: "Genus species\($0)", commonName: "Winded Bird \($0)", taxonomicClass: "Aves") }
+        // Admission order, but the first admitted is the one calling: it heads the list; the rest follow by recency.
+        var candidates = species.map { Fakes.candidate($0, lastHeardAt: Double($0.index)) }
+        candidates[0].lastHeardAt = 99
+        let card = Self.render(.list, stack: CandidateStack(candidates: candidates), at: 100, selection: 11, profile: { _ in nil })
+        guard case .list(let rows) = card.screenfuls[0][2] else { Issue.record("no rows"); return }
+        #expect(rows.map(\.index) == [0, 11, 10, 9, 8])
+        #expect(rows.map(\.isCalling) == [true, false, false, false, false])
+        #expect(rows.map(\.isSelected) == [false, true, false, false, false])
+        #expect(card.screenfuls[0][1] == .meta("Swipe down to choose, tap to open. Page 1 of 3."))
+        let second = Self.render(.list, stack: CandidateStack(candidates: candidates), at: 100, selection: 6, profile: { _ in nil })
+        guard case .list(let secondRows) = second.screenfuls[0][2] else { Issue.record("no rows"); return }
+        #expect(secondRows.map(\.index) == [7, 6, 5, 4, 3])
+        #expect(secondRows.map(\.isSelected) == [false, true, false, false, false])
+        #expect(second.screenfuls[0][1] == .meta("Swipe down to choose, tap to open. Page 2 of 3."))
+    }
+
+    @Test("the photo page's strip says calling now for this bird, or names the bird calling now")
+    func stripSaysWhoIsCalling() {
+        let stack = Self.chorus(at: 20)
+        #expect(Self.render(.species(index: 2), stack: stack, at: 20).elements[1] == .status("3 species · 3 of 3 · calling now"))
+        #expect(Self.render(.species(index: 1), stack: stack, at: 20).elements[1] == .status("3 species · 2 of 3 · calling now"))
+        #expect(Self.render(.species(index: 0), stack: stack, at: 20).elements[2] == .status("3 species · 1 of 3 · Now: California Towhee"))
+        #expect(Self.render(.species(index: 0), stack: stack, at: 20, saved: [0]).elements[2] == .status("3 species · 1 of 3 · Added · Now: California Towhee"))
+        #expect(Self.render(.species(index: 0), stack: stack, at: 60).elements[2] == .status("3 species · 1 of 3"), "nothing calling")
+    }
+
+    @Test("the details page gains a strip only while a bird is calling, inside its budget")
+    func detailsStrip() {
+        let stack = Self.chorus(at: 20)
+        let calling = Self.render(.details(index: 1), stack: stack, at: 20)
+        #expect(calling.elements[1] == .status("Calling now"))
+        let other = Self.render(.details(index: 0), stack: stack, at: 20)
+        #expect(other.elements[1] == .status("Now: California Towhee"))
+        #expect(other.wordCount <= LensCardRenderer.detailsWordBudget)
+        let quiet = Self.render(.details(index: 0), stack: stack, at: 60)
+        #expect(quiet.elements[1] == .passage(Fakes.phoebeProfile.fieldMarks))
+
+        var profile = Fakes.phoebeProfile
+        profile.fieldMarks = Array(repeating: "word", count: 80).joined(separator: " ")
+        let full = Self.render(.details(index: 0), stack: stack, at: 20) { _ in profile }
+        #expect(full.wordCount == LensCardRenderer.detailsWordBudget)
     }
 
     // MARK: - Species cards
@@ -131,7 +215,7 @@ struct LensCardRendererTests {
     @Test("a pack entry without a photo says so instead of a credit, and empty text falls back to the scientific name")
     func profileWithoutPhotoOrText() {
         let profile = SpeciesProfile(photo: nil, fieldMarks: "", size: "", habitat: "", photoCredit: "")
-        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        let card = Self.render(.details(index: 0), stack: Self.stack, at: Fakes.quiet) { _ in profile }
         #expect(card.elements == [
             .title("Black Phoebe", detail: "80% match"), .passage("Sayornis nigricans"), .meta("No photo in your pack"), Self.saveButton,
         ])
@@ -142,7 +226,7 @@ struct LensCardRendererTests {
         var profile = Fakes.phoebeProfile
         profile.size = ""
         profile.habitat = "Streams"
-        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        let card = Self.render(.details(index: 0), stack: Self.stack, at: Fakes.quiet) { _ in profile }
         #expect(card.elements[2] == .meta("Streams"))
     }
 
@@ -150,13 +234,13 @@ struct LensCardRendererTests {
     func longFieldMarks() {
         var profile = Fakes.phoebeProfile
         profile.fieldMarks = Array(repeating: "word", count: 80).joined(separator: " ")
-        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        let card = Self.render(.details(index: 0), stack: Self.stack, at: Fakes.quiet) { _ in profile }
         #expect(card.wordCount == LensCardRenderer.detailsWordBudget)
         guard case .passage(let fieldMarks) = card.elements[1] else { Issue.record("no field marks"); return }
         #expect(fieldMarks.hasSuffix("…"))
 
         profile.fieldMarks = Array(repeating: "word", count: 40).joined(separator: " ")
-        let whole = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        let whole = Self.render(.details(index: 0), stack: Self.stack, at: Fakes.quiet) { _ in profile }
         #expect(whole.elements[1] == .passage(profile.fieldMarks), "the pack builder's forty-word field marks are never cut on the lens")
     }
 
@@ -164,7 +248,7 @@ struct LensCardRendererTests {
     func longMetaLines() {
         let long = Array(repeating: "word", count: 30).joined(separator: " ")
         let profile = SpeciesProfile(photo: LensImage(id: "x"), fieldMarks: long, size: long, habitat: long, photoCredit: long)
-        let card = LensCardRenderer.render(.details(index: 0), stack: Self.stack, selection: 0, saved: []) { _ in profile }
+        let card = Self.render(.details(index: 0), stack: Self.stack, at: Fakes.quiet) { _ in profile }
         #expect(card.wordCount <= LensCardRenderer.detailsWordBudget)
         guard case .meta(let credit) = card.elements[3] else { Issue.record("no credit line"); return }
         #expect(credit.hasSuffix("…"))
@@ -192,6 +276,6 @@ struct LensCardRendererTests {
     func confidence() {
         let stack = CandidateStack(candidates: [Fakes.candidate(Fakes.phoebe, score: 0.999), Fakes.candidate(Fakes.finch, score: 0.054)])
         #expect(LensCardRenderer.confidence(stack.candidates[0]) == "100% match")
-        #expect(LensCardRenderer.render(.species(index: 1), stack: stack, selection: 0, saved: [], profile: Self.profile).elements[0] == .title("House Finch", detail: "5% match"))
+        #expect(Self.render(.species(index: 1), stack: stack, at: Fakes.quiet).elements[0] == .title("House Finch", detail: "5% match"))
     }
 }

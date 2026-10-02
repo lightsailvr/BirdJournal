@@ -74,6 +74,26 @@ struct ListeningCoordinatorTests {
         await run.stop()
     }
 
+    @Test("the Listen tab lists calling birds first, newest caller then longest, and nothing is calling once the run ends (issue #42)")
+    func callingNowOrder() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        #expect(run.candidates.map(\.species.commonName) == ["House Finch", "Blue Jay"], "the stack keeps admission order")
+
+        // Both were heard in the same window: the jay, admitted second, is the newer caller and heads the list.
+        try await waitUntil("both are calling") { run.orderedCandidates.count == 2 && run.orderedCandidates.allSatisfy(run.isCalling) }
+        #expect(run.orderedCandidates.map(\.species.commonName) == ["Blue Jay", "House Finch"])
+        try await waitUntil("the remembered order catches up") { run.listOrder.callingCount == 2 }
+
+        await run.stop()
+        #expect(run.orderedCandidates.map(\.species.commonName) == ["House Finch", "Blue Jay"], "heard in the same window: admission order")
+        #expect(!run.orderedCandidates.contains(where: run.isCalling))
+        #expect(run.listOrder.callingCount == 0)
+    }
+
     @Test("adding the same species twice in a run updates its sighting instead of adding a second, and undoing that puts the first back")
     func repeatAddUpdates() async throws {
         let harness = try Self.makeHarness()

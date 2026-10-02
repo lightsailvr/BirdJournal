@@ -23,6 +23,10 @@ import UIKit
 /// the adapter instead of stopping it (issue #10): Display and Inputs are released, the pages stay as the wearer
 /// left them, and the run either resumes them on its next session or stops. A problem the run reports (no
 /// location, a lost link) covers the current page until the wearer swipes right.
+///
+/// Stack updates carry the session time, which the adapter keeps as an origin on its own clock (issue #42): a
+/// calling marker lapses with nothing in the stack changing, so the adapter schedules one re-send at the lapse
+/// the list order reports, and re-evaluates the order before the pages go back on the lens after a suspension.
 @Observable
 final class GlassesLensSession {
     enum Phase: Equatable {
@@ -101,6 +105,10 @@ final class GlassesLensSession {
     @ObservationIgnored private var teardownTask: Task<Void, Never>?
     /// Sends run one after another so a burst of gestures leaves the latest card on the lens.
     @ObservationIgnored private var sendTask: Task<Void, Never>?
+    /// The instant session time zero fell on, from the latest stack update; nil before the first.
+    @ObservationIgnored private var sessionOrigin: ContinuousClock.Instant?
+    /// The one-shot re-send at the next calling marker's lapse.
+    @ObservationIgnored private var lapseTask: Task<Void, Never>?
     @ObservationIgnored private let tokens = ListenerTokenBag()
     /// Written straight from the toolkit callback, so the end of a run can tell a device-side end from a failure.
     @ObservationIgnored private nonisolated let lastSessionError = Mutex<DeviceSessionError?>(nil)
@@ -119,7 +127,7 @@ final class GlassesLensSession {
         self.image = image
         self.saveDebounce = saveDebounce
         self.onEffect = onEffect
-        card = LensCardRenderer.render(.list, stack: CandidateStack(), selection: 0, saved: [], profile: profile)
+        card = LensCardRenderer.render(.list, stack: CandidateStack(), order: SpeciesListOrder(), selection: 0, saved: [], profile: profile)
     }
 
     var page: LensPage { machine.page }
@@ -137,6 +145,9 @@ final class GlassesLensSession {
         errorMessage = nil
         self.lease = lease
         machine = LensStateMachine()
+        sessionOrigin = nil
+        lapseTask?.cancel()
+        lapseTask = nil
         savedSightings = []
         lastSave = nil
         inputRecords = []
@@ -155,6 +166,8 @@ final class GlassesLensSession {
         phase = .starting
         errorMessage = nil
         self.lease = lease
+        // A calling marker may have lapsed while the pages were off the lens.
+        refreshOrder()
         await attachOrFail()
     }
 
@@ -236,10 +249,40 @@ final class GlassesLensSession {
 
     // MARK: - Stack
 
-    /// The latest candidate stack from the engine (or the fake stack): the pages follow it without moving.
-    func update(with stack: CandidateStack) {
-        guard machine.update(with: stack) else { return }
-        refreshCard()
+    /// The latest candidate stack from the engine (or the fake stack) at session time `time`, seconds since the
+    /// run started listening: the pages follow it without moving, and the list order follows the clock.
+    func update(with stack: CandidateStack, at time: Double) {
+        sessionOrigin = .now - .seconds(time)
+        if machine.update(with: stack, at: time) { refreshCard() }
+        scheduleLapse()
+    }
+
+    /// Seconds into the session on the adapter's own clock, from the latest update's origin.
+    private var sessionTime: Double {
+        guard let sessionOrigin else { return 0 }
+        let elapsed = (ContinuousClock.now - sessionOrigin).components
+        return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
+    }
+
+    /// Re-evaluates the list order at the current session time with the stack unchanged (a calling marker
+    /// lapsed) and re-sends the card if it changed; then waits for the next lapse, if any.
+    private func refreshOrder() {
+        if sessionOrigin != nil, machine.update(with: machine.stack, at: sessionTime) { refreshCard() }
+        scheduleLapse()
+    }
+
+    /// One re-send at the next lapse the list order reports (DECISIONS.md: whether a send wakes a dimmed display
+    /// is checked on hardware; the fallback is to clear the marker on the next stack change only).
+    private func scheduleLapse() {
+        lapseTask?.cancel()
+        lapseTask = nil
+        guard sessionOrigin != nil, let lapse = machine.order.nextLapse else { return }
+        let delay = max(lapse - sessionTime, 0)
+        lapseTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled, let self else { return }
+            self.refreshOrder()
+        }
     }
 
     private func attach() async throws {
@@ -298,6 +341,8 @@ final class GlassesLensSession {
         inputTask = nil
         sendTask?.cancel()
         sendTask = nil
+        lapseTask?.cancel()
+        lapseTask = nil
         let display = self.display
         self.display = nil
         let inputs = inputsCapability
@@ -392,7 +437,7 @@ final class GlassesLensSession {
     /// Re-renders the current page and sends it if it changed. Every page shows the stack (count, position, score),
     /// so a stack update on any page can change the card without changing the page.
     private func refreshCard() {
-        let next = LensCardRenderer.render(machine.page, stack: machine.stack, selection: machine.selection, saved: machine.savedIndices, profile: profile)
+        let next = LensCardRenderer.render(machine.page, stack: machine.stack, order: machine.order, selection: machine.selection, saved: machine.savedIndices, profile: profile)
         guard next != card else { return }
         card = next
         resendCard()

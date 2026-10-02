@@ -1,3 +1,5 @@
+import Identification
+import LensSession
 import MWDATCore
 import MWDATMockDevice
 import Testing
@@ -35,6 +37,27 @@ enum MockDeviceKitTests {
         let url = URL.temporaryDirectory.appending(path: "mock-feed.png")
         try #require(image.pngData()).write(to: url)
         return url
+    }
+
+    /// Moves the list highlight to the species at stack `index`, whatever the list order (issue #42: the calling
+    /// bird heads the list and two birds admitted in one window tie on recency), and opens its photo page. Returns
+    /// how many gestures it sent.
+    @discardableResult
+    static func openSpecies(_ index: Int, on lens: GlassesLensSession, glasses: any MockGlasses) async throws -> Int {
+        let input = glasses.services.input
+        var sent = 0
+        for _ in 0..<lens.stack.count where lens.machine.selection != index {
+            let position = lens.machine.order.position(of: lens.machine.selection) ?? 0
+            let target = lens.machine.order.position(of: index) ?? 0
+            let before = lens.inputRecords.count
+            if target > position { input.navDown() } else { input.navUp() }
+            sent += 1
+            try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == before + 1 }
+        }
+        input.navLeft()
+        sent += 1
+        try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: index) }
+        return sent
     }
 
     static func waitUntil(

@@ -21,6 +21,33 @@ final class ListenUITests: XCTestCase {
         XCTAssertTrue(started, "the screen did not change after Start; screen: \(app.debugDescription.prefix(4000))")
     }
 
+    /// Issue #42: a run over the example soundscape marks the bird calling now on row one, and the marker gives way
+    /// to a heard time once the bird goes quiet. Skipped when the clip is not on disk (`scripts/download-clips.sh`).
+    @MainActor
+    func testCallingNowMarksTheFirstRow() throws {
+        let clip = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appending(path: "fixtures/clips/birdnet-example-soundscape.wav")
+        guard FileManager.default.fileExists(atPath: clip.path(percentEncoded: false)) else {
+            throw XCTSkip("no example soundscape at \(clip.path(percentEncoded: false))")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-autoPhoneListening", clip.path(percentEncoded: false), "-autoLocation", "denied", "-autoScreen", "listening"]
+        app.launch()
+
+        let firstRow = app.staticTexts["candidate-status-0"]
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 60), "no species row appeared; screen: \(app.debugDescription.prefix(3000))")
+        let calling = NSPredicate(format: "label == 'Calling now'")
+        let callingOnRowOne = expectation(for: calling, evaluatedWith: firstRow)
+        wait(for: [callingOnRowOne], timeout: 60)
+        XCTAssertTrue(app.staticTexts["Calling now"].exists)
+
+        // The soundscape has quiet stretches: within a minute some bird on the list has stopped and reads as heard.
+        let heard = NSPredicate(format: "label BEGINSWITH 'Heard'")
+        XCTAssertTrue(app.staticTexts.matching(heard).firstMatch.waitForExistence(timeout: 90), "no bird went quiet; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(app.state, .runningForeground)
+    }
+
     @MainActor
     func testDeveloperToolsOpenWithoutEndingTheApp() {
         let app = XCUIApplication()

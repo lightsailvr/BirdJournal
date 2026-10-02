@@ -112,13 +112,15 @@ struct BirdJournalApp: App {
 
     /// The phone listening session over the real microphone, metered for the waveform. In debug builds,
     /// `-autoPhoneListening <path.wav>` feeds that file instead, so the screen can be checked on the simulator, whose
-    /// audio input is not available.
+    /// audio input is not available, and `-autoLocation denied` skips the location request (a UI test cannot answer
+    /// the permission prompt).
     private static func makePhoneListeningSession(levels: LevelSink) -> ListeningSession {
         let meter: @Sendable (AudioLevel) -> Void = { levels.level = $0 }
         #if DEBUG
         if let path = UserDefaults.standard.string(forKey: "autoPhoneListening"), path.hasSuffix(".wav") {
             // Paced like a microphone, so the Listen tab's live state can be seen and screenshotted on the simulator.
-            return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) })
+            let location: any LocationProvider = UserDefaults.standard.string(forKey: "autoLocation") == "denied" ? DeniedLocationProvider() : CoreLocationProvider()
+            return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) }, location: location)
         }
         #endif
         return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) })

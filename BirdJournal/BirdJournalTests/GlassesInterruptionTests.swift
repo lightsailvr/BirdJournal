@@ -58,8 +58,7 @@ extension MockDeviceKitTests {
                 source.feed(seconds: 4.5)
                 try await waitUntil { run.lens.stack.count == 2 }
                 let input = glasses.services.input
-                input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
+                try await openSpecies(0, on: run.lens, glasses: glasses)
                 let windowsBefore = run.listening.windowsScored
 
                 // Off the face: the glasses end the session a few seconds later and the link drops.
@@ -137,8 +136,7 @@ extension MockDeviceKitTests {
 
                 source.feed(seconds: 4.5)
                 try await waitUntil { run.lens.stack.count == 2 }
-                glasses.services.input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
+                try await openSpecies(0, on: run.lens, glasses: glasses)
 
                 glasses.services.captouch.tap()
                 try await waitUntil { run.phase == .paused(.byGlasses) }
@@ -242,9 +240,8 @@ extension MockDeviceKitTests {
                         try await waitUntil { run.lens.inputsState == .active }
                         sources[cycle - 1].feed(seconds: 4.5)
                         try await waitUntil { run.lens.stack.count == 2 }
-                        input.navLeft()
-                        try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
-                        #expect(run.lens.inputRecords.count == 1, "cycle \(cycle): one gesture delivered once")
+                        let gestures = try await openSpecies(0, on: run.lens, glasses: glasses)
+                        #expect(run.lens.inputRecords.count == gestures, "cycle \(cycle): every gesture delivered once")
 
                         await run.stop()
                         #expect(run.phase == .stopped(.phone))
@@ -256,7 +253,7 @@ extension MockDeviceKitTests {
                         // Nothing listens any more: a gesture now goes nowhere.
                         input.select()
                         try await Task.sleep(for: .milliseconds(300))
-                        #expect(run.lens.inputRecords.count == 1)
+                        #expect(run.lens.inputRecords.count == gestures)
                     }
                     #expect(sources.count == 3)
                     #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 0)

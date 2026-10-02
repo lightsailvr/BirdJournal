@@ -60,13 +60,20 @@ struct ActiveListeningView: View {
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 16)
                 } else {
-                    VStack(spacing: 0) {
-                        ForEach(run.candidates) { candidate in
-                            CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), startedAt: run.startedAt) {
-                                run.reviewing = candidate
+                    // Once a second while listening, so "Heard just now" ages and a calling marker lapses on time;
+                    // rows move with the order (issue #42), animated unless motion is reduced.
+                    TimelineView(.periodic(from: .now, by: run.state.isActive ? 1 : 3_600)) { context in
+                        let ordered = run.orderedCandidates
+                        let calling = run.callingSpecies
+                        VStack(spacing: 0) {
+                            ForEach(Array(ordered.enumerated()), id: \.element.id) { position, candidate in
+                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: calling.contains(candidate.species), startedAt: run.startedAt, now: context.date, position: position) {
+                                    run.reviewing = candidate
+                                }
+                                RowRule()
                             }
-                            RowRule()
                         }
+                        .animation(reduceMotion ? nil : .snappy(duration: 0.4), value: ordered.map(\.id))
                     }
                     .padding(.top, 12)
                     Text("Possible matches. Add the birds you recognize.")
@@ -227,14 +234,22 @@ private struct LocationNotice: View {
     }
 }
 
-/// One species heard: thumbnail, name, when it was last heard, and Review or the Added mark. The row is the same
-/// height with and without a photo, and never moves when the scores change.
+/// One species heard: thumbnail, name, whether it is calling now or when it was last heard, and Review or the
+/// Added mark. The row is the same height with and without a photo, and never moves when the scores change; it
+/// moves with the list order (issue #42), a moss ring on the thumbnail and "Calling now" with a level glyph while
+/// the bird is calling.
 struct CandidateRow: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let candidate: Candidate
     let isAdded: Bool
+    var isCalling = false
     let startedAt: Date?
+    /// The moment the heard text is written against, from the screen's clock.
+    var now: Date = .now
+    /// The row's position in the list, for the UI tests.
+    var position: Int?
     let review: () -> Void
 
     var body: some View {
@@ -244,14 +259,34 @@ struct CandidateRow: View {
             PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                .overlay {
+                    if isCalling {
+                        RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous)
+                            .strokeBorder(Color.moss, lineWidth: 2.5)
+                    }
+                }
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(reference?.species.commonName ?? candidate.species.commonName)
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
-                Text(isAdded ? "Added to journal" : Self.heardText(candidate, startedAt: startedAt, now: .now))
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(Color.inkSecondary)
+                Group {
+                    if isCalling {
+                        HStack(spacing: 5) {
+                            Image(systemName: "waveform")
+                                .symbolEffect(.variableColor.iterative.reversing, isActive: !reduceMotion)
+                                .accessibilityHidden(true)
+                            Text("Calling now")
+                        }
+                        .font(JournalFont.supporting.weight(.medium))
+                        .foregroundStyle(Color.moss)
+                    } else {
+                        Text(isAdded ? "Added to journal" : Self.heardText(candidate, startedAt: startedAt, now: now))
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                    }
+                }
+                .accessibilityIdentifier(position.map { "candidate-status-\($0)" } ?? "")
             }
             if !stacked { Spacer(minLength: 8) }
             if isAdded {

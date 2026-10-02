@@ -49,8 +49,7 @@ extension MockDeviceKitTests {
 
                 let input = glasses.services.input
                 let before = Date.now
-                input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
+                try await openSpecies(0, on: run.lens, glasses: glasses)
                 #expect(run.lens.card.elements.contains(.title("House Finch", detail: "90% match")))
                 input.navDown()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.page == .details(index: 0) }
@@ -122,8 +121,7 @@ extension MockDeviceKitTests {
                     try await waitUntil { run.lens.stack.count == 2 }
 
                     let input = glasses.services.input
-                    input.navLeft()
-                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 0) }
+                    try await openSpecies(0, on: run.lens, glasses: glasses)
                     input.navDown()
                     try await waitUntil(timeout: .seconds(1)) { run.lens.page == .details(index: 0) }
                     source.latestFrame = Self.frame(.red)

@@ -49,18 +49,30 @@ enum FakeLensStack {
         ),
     ]
 
-    /// The first `count` fake species as a stack, in admission order.
+    /// Seconds between one fake species' last window and the next's.
+    static let spacing: Double = 3
+    /// A session time at which no fake species is calling.
+    static let quiet: Double = 100
+
+    /// The first `count` fake species as a stack, in admission order, each last heard `spacing` seconds after the
+    /// one before (the first at 3 s).
     static func stack(count: Int) -> CandidateStack {
         CandidateStack(candidates: species.prefix(count).enumerated().map { offset, species in
             Candidate(
                 species: species,
                 score: scores[offset],
                 windowsAboveThreshold: 2,
-                firstHeardAt: Double(offset) * 10,
-                lastHeardAt: Double(offset) * 10 + 3,
-                admittedAt: Double(offset) * 10 + 3
+                firstHeardAt: Double(offset) * spacing,
+                lastHeardAt: Double(offset) * spacing + 3,
+                admittedAt: Double(offset) * spacing + 3
             )
         })
+    }
+
+    /// The session time to feed `stack(count:)` at so the newest species was heard half a second ago and the one
+    /// before it is still inside the calling window (issue #42): two calling rows, the rest heard earlier.
+    static func time(count: Int) -> Double {
+        Double(max(count, 1) - 1) * spacing + 3.5
     }
 
     static func profile(for species: Species) -> SpeciesProfile? {

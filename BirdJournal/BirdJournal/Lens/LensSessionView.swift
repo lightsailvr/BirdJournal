@@ -161,6 +161,7 @@ private struct LensElementView: View {
                 ForEach(rows, id: \.index) { row in
                     HStack {
                         Image(systemName: row.isSelected ? "chevron.right" : "circle").font(.caption2).foregroundStyle(row.isSelected ? .primary : .tertiary)
+                        if row.isCalling { Image(systemName: "speaker.wave.3.fill").font(.caption2) }
                         Text(row.commonName)
                         Text(row.confidence).font(.caption).foregroundStyle(.secondary)
                         if row.hasPhoto { Image(systemName: "photo").font(.caption) }
@@ -213,14 +214,17 @@ private struct FakeStackSection: View {
 
     var body: some View {
         Section {
-            Button("Hear the next species") { lens.update(with: FakeLensStack.stack(count: lens.stack.count + 1)) }
-                .disabled(lens.stack.count >= FakeLensStack.species.count)
-            Button("Clear the stack") { lens.update(with: CandidateStack()) }
+            Button("Hear the next species") {
+                let count = lens.stack.count + 1
+                lens.update(with: FakeLensStack.stack(count: count), at: FakeLensStack.time(count: count))
+            }
+            .disabled(lens.stack.count >= FakeLensStack.species.count)
+            Button("Clear the stack") { lens.update(with: CandidateStack(), at: 0) }
                 .disabled(lens.stack.isEmpty)
         } header: {
             Text("Fake stack")
         } footer: {
-            Text("Adding a species while on a card appends it without moving the page.")
+            Text("Adding a species while on a card appends it without moving the page. The new species and the one before it are calling now; their markers lapse on their own a few seconds later.")
         }
     }
 }

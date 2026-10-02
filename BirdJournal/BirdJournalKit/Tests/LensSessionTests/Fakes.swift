@@ -8,8 +8,11 @@ enum Fakes {
     static let towhee = Species(index: 2, scientificName: "Melozone crissalis", commonName: "California Towhee", taxonomicClass: "Aves")
     static let all = [phoebe, finch, towhee]
 
-    static func candidate(_ species: Species, score: Float = 0.8) -> Candidate {
-        Candidate(species: species, score: score, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
+    /// A session time at which no fake candidate is calling.
+    static let quiet: Double = 100
+
+    static func candidate(_ species: Species, score: Float = 0.8, lastHeardAt: Double = 3) -> Candidate {
+        Candidate(species: species, score: score, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: lastHeardAt, admittedAt: 3)
     }
 
     /// The first `count` fake species as a stack.

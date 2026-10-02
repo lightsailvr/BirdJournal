@@ -72,7 +72,9 @@ struct DeveloperView: View {
 #if DEBUG
 /// Launch with `-autoMockLens YES` to pair the mock, open the lens screen, start the pages, hear three fake
 /// species and walk to the second species card: a screenshot of the simulator then shows the mock lens without any taps.
-/// `-autoMockLensInputs "navLeft select"` walks a different sequence (mock input names, one second apart).
+/// `-autoMockLensInputs "navLeft select"` walks a different sequence (mock input names, one second apart). The
+/// stack is fed again once the sequence is done, so the two newest species are calling now for the next few
+/// seconds (issue #42) and a screenshot taken then shows the marked rows.
 private struct AutoMockLens: ViewModifier {
     @Environment(GlassesConnection.self) private var connection
     @Environment(GlassesLensSession.self) private var lens
@@ -84,7 +86,7 @@ private struct AutoMockLens: ViewModifier {
             connection.pairMockGlasses()
             path = [.lens]
             await lens.start()
-            lens.update(with: FakeLensStack.stack(count: 3))
+            lens.update(with: FakeLensStack.stack(count: 3), at: FakeLensStack.time(count: 3))
             let sequence = UserDefaults.standard.string(forKey: "autoMockLensInputs") ?? "navLeft navLeft"
             let inputs = sequence.split(whereSeparator: \.isWhitespace).compactMap { name in
                 GlassesConnection.MockInput.allCases.first { String(describing: $0) == name }
@@ -93,6 +95,8 @@ private struct AutoMockLens: ViewModifier {
                 try? await Task.sleep(for: .seconds(1))
                 connection.injectMockInput(input)
             }
+            try? await Task.sleep(for: .seconds(1))
+            lens.update(with: FakeLensStack.stack(count: 3), at: FakeLensStack.time(count: 3))
         }
     }
 }

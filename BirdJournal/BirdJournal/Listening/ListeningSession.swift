@@ -61,6 +61,12 @@ final class ListeningSession {
         self.onStack = onStack
     }
 
+    /// Seconds since the run started listening: the clock `Candidate` times are read against (the engine's window
+    /// times run from the first chunk, a beat after). Zero before the run starts.
+    var sessionTime: Double {
+        startedAt.map { Date.now.timeIntervalSince($0) } ?? 0
+    }
+
     /// The latest location fix as the album records it, nil while identification runs without one.
     var coordinate: Coordinate? {
         guard case .settled(.fix(let latitude, let longitude, let accuracy, _)) = locationState else { return nil }

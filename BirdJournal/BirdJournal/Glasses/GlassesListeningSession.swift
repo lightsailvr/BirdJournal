@@ -136,7 +136,10 @@ final class GlassesListeningSession {
             loadEngine: loadEngine,
             location: location,
             locationRefreshInterval: locationRefreshInterval,
-            onStack: { stack in box.run?.lens.update(with: stack) }
+            onStack: { stack in
+                guard let run = box.run else { return }
+                run.lens.update(with: stack, at: run.listening.sessionTime)
+            }
         )
         lens = GlassesLensSession(
             wearables: wearables,
