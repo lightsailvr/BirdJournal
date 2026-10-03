@@ -201,6 +201,8 @@ final class ListeningCoordinator {
     var locationState: ListeningSession.LocationState { listening.locationState }
     /// The location the next add records.
     var coordinate: Coordinate? { listening.coordinate }
+    /// When that location was fixed.
+    var locationFixedAt: Date? { listening.locationFixedAt }
     var errorMessage: String? { runSource == .glasses ? glasses.errorMessage : phone.errorMessage }
     var addedCount: Int { sightings.entries.count }
 

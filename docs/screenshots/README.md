@@ -16,3 +16,8 @@ not pictured: DAT-SETUP-CHECKLIST.md step 9 verifies them on the glasses.
 details page naming the bird calling now (`lens-details-now`), and the Listen tab with two rows calling and the same
 rows twenty seconds later, aged and reordered (`listening-calling-dark`, `listening-aged-dark`); the lens shots are
 the Developer hub's mock preview, full size.
+
+The same folder holds the evidence for issue #44 (a fresh location, the spot on a map), full size from an iPhone 18 Pro
+simulator with a simulated Griffith Park fix: the sighting detail with the map card under the Where row
+(`sighting-map-card-dark`), the full map sheet with the opened sighting's pin selected, two smaller pins and the callout
+(`sighting-map-dark`), and the Listen tab with the place line under the summary (`listening-place-dark`).

@@ -120,7 +120,6 @@ final class GlassesListeningSession {
             GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100)
         },
         location: any LocationProvider = CoreLocationProvider(),
-        locationRefreshInterval: Duration = ListeningSession.locationRefreshInterval,
         reconnect: ReconnectPolicy = ReconnectPolicy(),
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
         image: @escaping (LensImage) -> UIImage? = { _ in nil }
@@ -135,7 +134,6 @@ final class GlassesListeningSession {
         listening = ListeningSession(
             loadEngine: loadEngine,
             location: location,
-            locationRefreshInterval: locationRefreshInterval,
             onStack: { stack in
                 guard let run = box.run else { return }
                 run.lens.update(with: stack, at: run.listening.sessionTime)

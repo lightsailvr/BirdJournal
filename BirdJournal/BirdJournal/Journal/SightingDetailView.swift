@@ -1,12 +1,13 @@
 import Album
 import Identification
+import MapKit
 import Pack
 import SwiftData
 import SwiftUI
 
 /// One sighting in full (issue #28): the glasses snapshot and the reference photo kept apart and labelled, the record
-/// (species, when, roughly where, source), the birder's note, the explained match, and the way to the bird's profile,
-/// to sharing and to a recoverable removal.
+/// (species, when, roughly where, source), the spot on a map card that opens the full map (issue #44), the birder's
+/// note, the explained match, and the way to the bird's profile, to sharing and to a recoverable removal.
 struct SightingDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -16,6 +17,7 @@ struct SightingDetailView: View {
     let id: PersistentIdentifier
     @State private var note = ""
     @State private var isSharing = false
+    @State private var showingMap = false
     @State private var confirmingRemoval = false
     @FocusState private var editingNote: Bool
 
@@ -61,6 +63,27 @@ struct SightingDetailView: View {
                         FactRow(label: "Heard with", value: sighting.source == .glasses ? "Ray-Ban Display" : "iPhone microphone")
                     }
                     .padding(.top, 16)
+
+                    if let location = sighting.location {
+                        // The map is a UIKit view underneath and keeps a tap even with hit testing off, so the
+                        // control sits over it rather than around it.
+                        SightingMapCard(location: location, name: commonName)
+                            .overlay {
+                                Button {
+                                    showingMap = true
+                                } label: {
+                                    Color.clear.contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Map of where you heard this bird. Opens every sighting on a map.")
+                                .accessibilityIdentifier("sighting-map-card")
+                            }
+                            .padding(.top, 12)
+                        Text("Where you were when you added the bird. Tap the map to see every sighting.")
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 6)
+                    }
 
                     SectionTitle(text: "Your note")
                     TextField("Add a note", text: $note, axis: .vertical)
@@ -129,6 +152,9 @@ struct SightingDetailView: View {
             .sheet(isPresented: $isSharing) {
                 SharePostcardView(sighting: sighting)
             }
+            .sheet(isPresented: $showingMap) {
+                SightingMapView(focus: sighting)
+            }
             .confirmationDialog("Remove this sighting from your journal?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button("Remove", role: .destructive) {
                     edits.remove(sighting, commonName: commonName)
@@ -146,6 +172,11 @@ struct SightingDetailView: View {
                     try? await Task.sleep(for: .milliseconds(600))
                     isSharing = true
                 }
+                if UserDefaults.standard.bool(forKey: "autoMap") {
+                    UserDefaults.standard.removeObject(forKey: "autoMap")
+                    try? await Task.sleep(for: .milliseconds(600))
+                    showingMap = true
+                }
                 #endif
             }
             .onDisappear {
@@ -160,6 +191,31 @@ struct SightingDetailView: View {
     private func placeText(for sighting: Sighting) -> String {
         guard let location = sighting.location else { return "No location was recorded" }
         return places.name(for: location).map { "Near \($0)" } ?? "Near \(location.formatted)"
+    }
+}
+
+/// The spot on a small map (issue #44): a kilometre across, the moss marker on the fix and a faint circle for its
+/// accuracy. Not interactive, and like every picture in the detail it takes no touches (DECISIONS.md "Clipped images
+/// take no touches"): the button over it is what opens the full map.
+struct SightingMapCard: View {
+    let location: Coordinate
+    let name: String
+
+    var body: some View {
+        let centre = location.clCoordinate
+        Map(initialPosition: .region(MKCoordinateRegion(center: centre, latitudinalMeters: 1_000, longitudinalMeters: 1_000)), interactionModes: []) {
+            MapCircle(center: centre, radius: max(location.accuracy, 0))
+                .foregroundStyle(Color.moss.opacity(0.15))
+                .stroke(Color.moss.opacity(0.5), lineWidth: 1)
+            Marker(name, coordinate: centre)
+                .tint(Color.moss)
+        }
+        .mapStyle(.standard)
+        .mapControlVisibility(.hidden)
+        .aspectRatio(16 / 10, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

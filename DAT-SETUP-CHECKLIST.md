@@ -121,6 +121,13 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - Doff, out of range, touchpad and the two-finger quit as in step 8, read on the Listen tab: "Paused: glasses off",
      "Paused: glasses disconnected", "Paused by the glasses", "Ended by the glasses"; nothing reads paused after a quit.
    - Record the answers in DECISIONS.md, "The phone as a field journal".
+10. [ ] A fresh location for every sighting (#44), on a walk with the phone locked in a pocket:
+   - Start listening (either source), lock the phone, walk a quarter mile, add a bird, walk another quarter mile, add
+     another. Open the second sighting's map card: the full map shows the two pins apart, not stacked where the walk began.
+   - The blue location indicator shows in the status bar while the run is on, and is gone after Stop.
+   - Battery: note the phone's and the glasses' drop over a 30-minute run against the #3 spike figures in DECISIONS.md
+     "Phase A go/no-go"; live location on top of the audio stream should cost a few percent, not double it.
+   - Record the answers in DECISIONS.md, "A fresh location for every sighting".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.
