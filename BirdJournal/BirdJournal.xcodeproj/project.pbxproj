@@ -479,6 +479,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "My Bird Journal";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "BirdJournal connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "BirdJournal does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
@@ -527,6 +528,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "My Bird Journal";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "BirdJournal connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "BirdJournal does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
