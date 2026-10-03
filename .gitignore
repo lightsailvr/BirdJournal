@@ -27,3 +27,5 @@ packbuilder/**/__pycache__/
 packs/*
 !packs/README.md
 !packs/manifest.json
+docs/My-Bird-Journal-Bird-Variants.zip
+docs/MyBirdJournal_Icon_prompts_ChatGPT.txt
