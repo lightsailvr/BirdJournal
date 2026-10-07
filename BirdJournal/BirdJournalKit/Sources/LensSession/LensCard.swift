@@ -9,6 +9,35 @@ public struct LensImage: Sendable, Hashable {
     }
 }
 
+/// What a reference clip is of, as the pack types it (issue #41).
+public enum LensSoundKind: String, Sendable, Hashable {
+    case song
+    case call
+    /// An untyped recording (iNaturalist), shipped only when the species has neither a song nor a call.
+    case sound
+
+    /// The clip as the photo page names it: "its song", "Playing song…".
+    var noun: String {
+        switch self {
+        case .song: "song"
+        case .call: "call"
+        case .sound: "recording"
+        }
+    }
+}
+
+/// A reference clip the pack holds, named so the app can find and play it; the pure module never touches audio.
+public struct LensSound: Sendable, Hashable {
+    /// The pack's sound id, e.g. `xc-109602`.
+    public var id: String
+    public var kind: LensSoundKind
+
+    public init(id: String, kind: LensSoundKind) {
+        self.id = id
+        self.kind = kind
+    }
+}
+
 /// What the species pack knows about one species, for its card. Nil when the pack lacks the species: it is still
 /// identifiable by name (spec user story 40).
 public struct SpeciesProfile: Sendable, Equatable {
@@ -19,13 +48,16 @@ public struct SpeciesProfile: Sendable, Equatable {
     public var habitat: String
     /// One line, e.g. "Photo: J. Birder, CC BY". Ignored when there is no photo.
     public var photoCredit: String
+    /// The reference clips a tap on the photo page plays in turn, song first (issue #41); empty for none.
+    public var sounds: [LensSound]
 
-    public init(photo: LensImage?, fieldMarks: String, size: String, habitat: String, photoCredit: String) {
+    public init(photo: LensImage?, fieldMarks: String, size: String, habitat: String, photoCredit: String, sounds: [LensSound] = []) {
         self.photo = photo
         self.fieldMarks = fieldMarks
         self.size = size
         self.habitat = habitat
         self.photoCredit = photoCredit
+        self.sounds = sounds
     }
 }
 

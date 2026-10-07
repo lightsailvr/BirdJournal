@@ -46,6 +46,14 @@ public struct SpeciesPack: Sendable, Hashable {
     /// The reference sounds of a species, song first.
     public func sounds(for species: PackSpecies) -> [PackSound] { species.sounds }
 
+    /// The sound with this pack-wide id (`PackSound.id`), if any: what the lens names a clip by.
+    public func sound(id: String) -> PackSound? {
+        for entry in species {
+            if let sound = entry.sounds.first(where: { $0.id == id }) { return sound }
+        }
+        return nil
+    }
+
     public func soundURL(for sound: PackSound) -> URL {
         directory.appending(path: sound.file)
     }

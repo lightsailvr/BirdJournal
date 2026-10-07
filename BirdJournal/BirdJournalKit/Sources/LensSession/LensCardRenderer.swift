@@ -11,6 +11,10 @@ import Identification
 /// The list's rows are in `order`, the calling section first, each calling row marked (issue #42), and paged by
 /// row position so a pinned bird pushed down the list pages the view with it. A species card's strip says
 /// "calling now" for its own bird, or names the bird calling now; the details page carries a strip only then.
+///
+/// A photo page whose species has reference clips (issue #41) says in its hint what a tap plays next ("Tap: its
+/// song"), and while one plays, what and where ("Playing song… tap to stop", "Song on the phone…" when the glasses'
+/// speakers are not the route).
 public enum LensCardRenderer {
     public static let wordBudget = 40
     /// The details page's budget: forty words of field marks in the small style (the pack builder's
@@ -24,13 +28,18 @@ public enum LensCardRenderer {
     public static let listRowsPerPage = 5
     static let saveButton = LensCardButton(label: "Add to my list", action: .save)
 
-    public static func render(_ page: LensPage, stack: CandidateStack, order: SpeciesListOrder, selection: Int, saved: Set<Int>, profile: (Species) -> SpeciesProfile?) -> LensCard {
+    public static func render(
+        _ page: LensPage, stack: CandidateStack, order: SpeciesListOrder, selection: Int, saved: Set<Int>,
+        playing: LensPlayback? = nil, nextSounds: [Int: Int] = [:], profile: (Species) -> SpeciesProfile?
+    ) -> LensCard {
         switch page {
         case .list:
             return list(stack, order: order, selection: selection, saved: saved, profile: profile)
         case .species(let index):
             let candidate = stack.candidates[index]
-            return species(candidate, position: index + 1, of: stack.count, isSaved: saved.contains(index), calling: callingText(for: index, stack: stack, order: order), profile: profile(candidate.species))
+            let profile = profile(candidate.species)
+            let hint = hint(sounds: profile?.sounds ?? [], next: nextSounds[index] ?? 0, playing: playing?.index == index ? playing : nil)
+            return species(candidate, position: index + 1, of: stack.count, isSaved: saved.contains(index), calling: callingText(for: index, stack: stack, order: order), hint: hint, profile: profile)
         case .details(let index):
             let candidate = stack.candidates[index]
             return details(candidate, isSaved: saved.contains(index), calling: callingText(for: index, stack: stack, order: order), profile: profile(candidate.species))
@@ -86,14 +95,25 @@ public enum LensCardRenderer {
         return LensCard(screenfuls: [[.heading(heading), .meta(hint), .list(rows)]])
     }
 
-    static func species(_ candidate: Candidate, position: Int, of count: Int, isSaved: Bool, calling: String?, profile: SpeciesProfile?) -> LensCard {
+    /// The photo page's hint line: the swipes, and with clips what a tap does now. Kept to the one line the plain
+    /// hint takes (checked on the mock lens), so the page stays one screenful.
+    static func hint(sounds: [LensSound], next: Int, playing: LensPlayback?) -> String {
+        if let playing {
+            let what = playing.onPhone ? "\(playing.sound.kind.noun.capitalized) on the phone" : "Playing \(playing.sound.kind.noun)"
+            return "\(what)… tap to stop · right: all species"
+        }
+        guard !sounds.isEmpty else { return "Swipe down for more information · swipe right: all species" }
+        return "Tap: its \(sounds[next % sounds.count].kind.noun) · swipe down: more · right: all species"
+    }
+
+    static func species(_ candidate: Candidate, position: Int, of count: Int, isSaved: Bool, calling: String?, hint: String, profile: SpeciesProfile?) -> LensCard {
         // The photo first, so nothing above it can push it below the fold on the glasses.
         var elements: [LensElement] = []
         if let photo = profile?.photo { elements.append(.photo(photo)) }
         elements.append(.title(candidate.species.commonName, detail: confidence(candidate)))
         let strip = ["\(count) species · \(position) of \(count)", isSaved ? "Added" : nil, calling].compactMap { $0 }
         elements.append(.status(strip.joined(separator: " · ")))
-        elements.append(.meta("Swipe down for more information · swipe right: all species"))
+        elements.append(.meta(hint))
         return LensCard(screenfuls: [elements])
     }
 

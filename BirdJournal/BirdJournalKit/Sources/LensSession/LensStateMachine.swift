@@ -61,12 +61,27 @@ public enum LensAction: Sendable, Hashable {
     case save
 }
 
+/// A reference clip started from a photo page (issue #41), until it ends, is stopped or the wearer moves on.
+public struct LensPlayback: Sendable, Hashable {
+    /// Counts up with every start, so news of a clip that has since been replaced is told apart.
+    public var id: Int
+    /// The stack index of the species whose photo page started it.
+    public var index: Int
+    public var sound: LensSound
+    /// The glasses' speakers were not the audio route, so the clip plays on the phone and the page says so.
+    public var onPhone: Bool
+}
+
 /// What the adapter must do after an event, besides rendering the new page.
 public enum LensEffect: Sendable, Equatable {
     /// The wearer said "Add to my list": write a Sighting with the camera frame from this moment.
     case saveSighting(Candidate)
     /// Back on the root: end the glasses session.
     case endSession
+    /// A tap on a photo page: play the species' next reference clip, replacing nothing (only one plays at a time).
+    case playSound(Candidate, LensPlayback)
+    /// Stop the clip playing: a tap while it plays, a swipe, Back, or a problem page over it.
+    case stopSound
 }
 
 /// Pure lens state machine (spec "Lens session"): folds `CandidateStack` updates and semantic input events into
@@ -77,8 +92,9 @@ public enum LensEffect: Sendable, Equatable {
 /// a view either): swipe down/up move the highlight, and a tap or swipe left opens the highlighted species' photo
 /// page. From the photo page swipe down opens the details page and swipe up returns; on either, swipe left is the
 /// next species' photo and swipe right is back to the list (the only way back on real glasses, which do not deliver
-/// Back). A tap or the button on the details page is "Add to my list"; a tap on the photo page does nothing, so a
-/// bird is never added by accident. The stack never reorders and new species append at the end, so an update
+/// Back). A tap or the button on the details page is "Add to my list". A tap on the photo page never adds a bird:
+/// it plays the species' reference clips (issue #41), the song first; a tap while one plays stops it, and the next
+/// tap plays the call, round again. Any other gesture, and a problem page, stops a clip as it moves on. The stack never reorders and new species append at the end, so an update
 /// never moves the page the wearer is on. A reported problem covers the current page until swipe right, Back or a
 /// tap returns there (issue #10).
 ///
@@ -102,6 +118,12 @@ public struct LensStateMachine: Sendable, Equatable {
     /// one press that hardware delivers twice, as a click and a select, is deduplicated by the adapter, which has a
     /// clock.
     public private(set) var savedIndices: Set<Int> = []
+    /// The clip playing from a photo page, nil when none is.
+    public private(set) var playing: LensPlayback?
+    /// Per stack index, the position in its species' clips of the one the next tap plays (0, the song, when absent).
+    public private(set) var nextSounds: [Int: Int] = [:]
+    /// Playbacks started this session, for their ids.
+    private var playbacks = 0
 
     public init() {}
 
@@ -135,6 +157,8 @@ public struct LensStateMachine: Sendable, Equatable {
             coveredPage = .list
             pinnedSpecies = nil
             savedIndices = []
+            playing = nil
+            nextSounds = [:]
             order = SpeciesListOrder()
         }
         let previousOrder = order
@@ -145,16 +169,33 @@ public struct LensStateMachine: Sendable, Equatable {
     // MARK: - Problems
 
     /// Shows `problem` over the current page (or in place of the problem already showing) until the wearer swipes
-    /// right, taps or goes back.
-    public mutating func report(_ problem: LensProblem) {
+    /// right, taps or goes back. A clip playing under it is stopped.
+    @discardableResult
+    public mutating func report(_ problem: LensProblem) -> LensEffect? {
         if case .problem = page {} else { coveredPage = page }
         page = .problem(problem)
+        return stopPlaying()
     }
 
     // MARK: - Gestures
 
-    /// Applies a gesture to the current page. Gestures with no meaning on the current page are ignored.
-    public mutating func apply(_ gesture: LensGesture) -> LensEffect? {
+    /// Applies a gesture to the current page. Gestures with no meaning on the current page are ignored. `sounds`
+    /// gives a species' reference clips in the order a photo page's taps play them.
+    public mutating func apply(_ gesture: LensGesture, sounds: (Species) -> [LensSound] = { _ in [] }) -> LensEffect? {
+        if gesture != .tap, let stop = stopPlaying() {
+            // A clip plays only on a photo page, whose moves have no effect of their own to lose.
+            let moved = navigate(gesture)
+            assert(moved == nil, "a move from a photo page returned \(String(describing: moved))")
+            return stop
+        }
+        if case let .species(index) = page, gesture == .tap {
+            return stopPlaying() ?? play(index, sounds: sounds(stack.candidates[index].species))
+        }
+        return navigate(gesture)
+    }
+
+    /// The page map's moves. A tap on a photo page is the play control, handled by `apply`.
+    private mutating func navigate(_ gesture: LensGesture) -> LensEffect? {
         switch (page, gesture) {
         case (.list, .swipeDown):
             pin(rowOffset: 1)
@@ -199,6 +240,41 @@ public struct LensStateMachine: Sendable, Equatable {
         case (.list, .save), (.species, .save), (.problem, .save):
             return nil
         }
+    }
+
+    // MARK: - Reference clips
+
+    /// The clip `id` ended on its own (or failed to start). Returns whether it was the one playing.
+    @discardableResult
+    public mutating func soundEnded(_ id: Int) -> Bool {
+        guard playing?.id == id else { return false }
+        playing = nil
+        return true
+    }
+
+    /// The clip `id` is playing on the phone, the glasses' speakers not being the route. Returns whether it was the
+    /// one playing.
+    @discardableResult
+    public mutating func soundPlaysOnPhone(_ id: Int) -> Bool {
+        guard playing?.id == id else { return false }
+        playing?.onPhone = true
+        return true
+    }
+
+    private mutating func play(_ index: Int, sounds: [LensSound]) -> LensEffect? {
+        guard !sounds.isEmpty else { return nil }
+        let position = (nextSounds[index] ?? 0) % sounds.count
+        nextSounds[index] = (position + 1) % sounds.count
+        playbacks += 1
+        let playback = LensPlayback(id: playbacks, index: index, sound: sounds[position], onPhone: false)
+        playing = playback
+        return .playSound(stack.candidates[index], playback)
+    }
+
+    private mutating func stopPlaying() -> LensEffect? {
+        guard playing != nil else { return nil }
+        playing = nil
+        return .stopSound
     }
 
     /// Pins the highlight to the species `rowOffset` rows from the highlighted one in list order; nothing past the

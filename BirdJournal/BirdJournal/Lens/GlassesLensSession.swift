@@ -27,6 +27,11 @@ import UIKit
 /// Stack updates carry the session time, which the adapter keeps as an origin on its own clock (issue #42): a
 /// calling marker lapses with nothing in the stack changing, so the adapter schedules one re-send at the lapse
 /// the list order reports, and re-evaluates the order before the pages go back on the lens after a suspension.
+///
+/// A tap on a photo page plays the species' reference clips through `sounds` (issue #41, phase 4), the player the
+/// phone's profile shares, so one clip plays at a time and listening never hears it. The card says where it plays
+/// ("on the phone" when the glasses' A2DP speakers are not the route) and goes back when it ends. A swipe, a
+/// problem page, a suspension (doff, lost link) and the end of the run stop it.
 @Observable
 final class GlassesLensSession {
     enum Phase: Equatable {
@@ -110,6 +115,15 @@ final class GlassesLensSession {
     /// The one-shot re-send at the next calling marker's lapse.
     @ObservationIgnored private var lapseTask: Task<Void, Never>?
     @ObservationIgnored private let tokens = ListenerTokenBag()
+    /// Plays the photo pages' reference clips; without it the pages offer none.
+    @ObservationIgnored var sounds: (any LensSoundOutput)?
+    /// The machine's playback the lens's clip belongs to, and the player's token for it, once it started.
+    @ObservationIgnored private var soundClip: (playback: Int, clip: Int)?
+    /// The playback waiting for the audio session, which has no token to stop it by yet.
+    @ObservationIgnored private var startingSound: LensPlayback?
+    /// Counts `start()`s: playback ids restart with each run's machine, so the player's late news of a clip from an
+    /// earlier run is told apart by this.
+    @ObservationIgnored private var runs = 0
     /// Written straight from the toolkit callback, so the end of a run can tell a device-side end from a failure.
     @ObservationIgnored private nonisolated let lastSessionError = Mutex<DeviceSessionError?>(nil)
 
@@ -144,6 +158,8 @@ final class GlassesLensSession {
         phase = .starting
         errorMessage = nil
         self.lease = lease
+        stopSound()
+        runs += 1
         machine = LensStateMachine()
         sessionOrigin = nil
         lapseTask?.cancel()
@@ -242,8 +258,7 @@ final class GlassesLensSession {
     /// Shows `problem` over the current page until the wearer swipes right (or taps, or goes back). Sent at once
     /// when the lens is up, or as the first card when the pages resume.
     func report(_ problem: LensProblem) {
-        machine.report(problem)
-        refreshCard()
+        perform(machine.report(problem))
     }
 
 
@@ -254,6 +269,8 @@ final class GlassesLensSession {
     func update(with stack: CandidateStack, at time: Double) {
         sessionOrigin = .now - .seconds(time)
         if machine.update(with: stack, at: time) { refreshCard() }
+        // A stack from a new session restarts the pages, and with them the clip.
+        if let soundClip, machine.playing?.id != soundClip.playback { stopSound() }
         scheduleLapse()
     }
 
@@ -349,6 +366,12 @@ final class GlassesLensSession {
         inputsCapability = nil
         let session = self.session
         self.session = nil
+        // The clip stops with the pages; they come back (after a doff or a lost link) without it.
+        if let playing = machine.playing {
+            machine.soundEnded(playing.id)
+            refreshCard()
+        }
+        stopSound()
         await tokens.cancelAll()
         if inputs != nil {
             try? session?.removeInputs()
@@ -402,7 +425,7 @@ final class GlassesLensSession {
         if inputRecords.count > Self.maxRecords { inputRecords.removeLast(inputRecords.count - Self.maxRecords) }
         // Events that land while the run is ending (after Back on the root, say) must not move the pages.
         guard let gesture = record.gesture, phase == .running else { return }
-        perform(machine.apply(gesture))
+        perform(machine.apply(gesture) { [self] in cardProfile(for: $0)?.sounds ?? [] })
     }
 
     /// A tap on a card element (the Save button), delivered by Display rather than Inputs.
@@ -426,10 +449,68 @@ final class GlassesLensSession {
         case .endSession:
             beginStop(reason: .back)
             onEffect(.endSession)
+        case .playSound(_, let playback):
+            playSound(playback)
+        case .stopSound:
+            stopSound()
         case nil:
             break
         }
         refreshCard()
+    }
+
+    // MARK: - Reference clips
+
+    /// What the cards and the machine see of a species: the pack's profile, without clips when nothing can play them.
+    private func cardProfile(for species: Species) -> SpeciesProfile? {
+        guard var profile = profile(species) else { return nil }
+        if sounds == nil { profile.sounds = [] }
+        return profile
+    }
+
+    private func playSound(_ playback: LensPlayback) {
+        stopSound()
+        guard let sounds else {
+            machine.soundEnded(playback.id)
+            return
+        }
+        let run = runs
+        startingSound = playback
+        Task { [weak self] in
+            let start = await sounds.play(playback.sound) { [weak self] in self?.soundDidEnd(playback.id, run: run) }
+            guard let self else { return }
+            if self.startingSound == playback { self.startingSound = nil }
+            guard let start else {
+                self.soundDidEnd(playback.id, run: run)
+                return
+            }
+            // Stopped on the lens before it started (a stop the player could not cancel), or a later run's.
+            guard self.runs == run, self.machine.playing?.id == playback.id else {
+                sounds.stop(clip: start.clip)
+                return
+            }
+            self.soundClip = (playback.id, start.clip)
+            if !start.onGlasses, self.machine.soundPlaysOnPhone(playback.id) { self.refreshCard() }
+        }
+    }
+
+    /// Stops the lens's clip, or cancels the one waiting for the audio session; a clip the phone started since is
+    /// left alone.
+    private func stopSound() {
+        if let startingSound {
+            self.startingSound = nil
+            sounds?.cancelStart(of: startingSound.sound)
+        }
+        guard let soundClip else { return }
+        self.soundClip = nil
+        sounds?.stop(clip: soundClip.clip)
+    }
+
+    /// The clip ended on its own, failed to start, or was replaced by the phone's: the page goes back.
+    private func soundDidEnd(_ playback: Int, run: Int) {
+        guard run == runs else { return }
+        if soundClip?.playback == playback { soundClip = nil }
+        if machine.soundEnded(playback) { refreshCard() }
     }
 
     // MARK: - Display
@@ -437,7 +518,10 @@ final class GlassesLensSession {
     /// Re-renders the current page and sends it if it changed. Every page shows the stack (count, position, score),
     /// so a stack update on any page can change the card without changing the page.
     private func refreshCard() {
-        let next = LensCardRenderer.render(machine.page, stack: machine.stack, order: machine.order, selection: machine.selection, saved: machine.savedIndices, profile: profile)
+        let next = LensCardRenderer.render(
+            machine.page, stack: machine.stack, order: machine.order, selection: machine.selection, saved: machine.savedIndices,
+            playing: machine.playing, nextSounds: machine.nextSounds, profile: cardProfile(for:)
+        )
         guard next != card else { return }
         card = next
         resendCard()

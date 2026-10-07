@@ -1,12 +1,14 @@
 import Identification
+import LensSession
 import Observation
 import OSLog
 import Pack
 
-/// The pack's reference clips as the phone plays them (issue #41): one at a time, a tap on the playing one stops it.
-/// While a clip plays, and for a tail after it, `suppression` keeps the listening run from hearing it, whichever
-/// microphone the run uses. A phone-microphone run already holds the audio session in `.playAndRecord`, which plays
-/// too, so the clip leaves it alone; otherwise the clip takes the session in `.playback` and lets it go after.
+/// The pack's reference clips as the phone and the lens play them (issue #41): one at a time, whoever starts it; a
+/// tap on the phone's playing row stops it. While a clip plays, and for a tail after it, `suppression` keeps the
+/// listening run from hearing it, whichever microphone the run uses. A phone-microphone run already holds the audio
+/// session in `.playAndRecord`, which plays too, so the clip leaves it alone; otherwise the clip takes the session in
+/// `.playback` and lets it go after.
 @MainActor
 @Observable
 final class ReferenceSounds {
@@ -21,21 +23,31 @@ final class ReferenceSounds {
     @ObservationIgnored private let session: any PlaybackAudioSession
     @ObservationIgnored private let suppression: AudioSuppression
     @ObservationIgnored private let phoneRunHoldsSession: () -> Bool
+    /// The packs' clip and its file for a sound id, for the lens, which names clips by id.
+    @ObservationIgnored private let lookup: (String) -> (sound: PackSound, url: URL)?
     /// Whether the clip took the session, so the release is the clip's to make.
     @ObservationIgnored private var holdsSession = false
     /// Bumped by every tap and stop, so a tap that waited for the session plays only if nothing came after it.
     @ObservationIgnored private var tapGeneration = 0
     /// The clip a tap is waiting on the session for; a second tap on it cancels it.
     @ObservationIgnored private var starting: PackSound.ID?
+    /// Counts clips started; the playing one's number is the token the lens stops it by.
+    @ObservationIgnored private var clipsStarted = 0
+    /// Told once when the playing clip ends, however it ends.
+    @ObservationIgnored private var onEnd: (() -> Void)?
     @ObservationIgnored private var endWatch: Task<Void, Never>?
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "sounds")
 
     /// - Parameter phoneRunHoldsSession: whether a phone-microphone run holds the audio session now.
-    init(player: any SoundPlayer, session: any PlaybackAudioSession, suppression: AudioSuppression, phoneRunHoldsSession: @escaping () -> Bool) {
+    init(
+        player: any SoundPlayer, session: any PlaybackAudioSession, suppression: AudioSuppression, phoneRunHoldsSession: @escaping () -> Bool,
+        lookup: @escaping (String) -> (sound: PackSound, url: URL)? = { _ in nil }
+    ) {
         self.player = player
         self.session = session
         self.suppression = suppression
         self.phoneRunHoldsSession = phoneRunHoldsSession
+        self.lookup = lookup
         player.onFinish = { [weak self] in self?.finished() }
     }
 
@@ -46,13 +58,17 @@ final class ReferenceSounds {
             stop()
             return
         }
+        _ = await start(sound, at: url, onEnd: nil)
+    }
+
+    /// Starts `sound`, stopping any clip playing first. Returns the clip's token and whether the glasses' speakers
+    /// are the route, nil when it did not start.
+    private func start(_ sound: PackSound, at url: URL, onEnd: (() -> Void)?) async -> LensSoundStart? {
         tapGeneration += 1
         let generation = tapGeneration
         if playing != nil {
             player.stop()
-            playing = nil
-            endWatch?.cancel()
-            suppression.end()
+            clear()
         }
         if !phoneRunHoldsSession() && !holdsSession {
             starting = sound.id
@@ -65,20 +81,26 @@ final class ReferenceSounds {
             guard generation == tapGeneration else {
                 // A later tap or a stop took over; it plays or releases, unless nothing is left to.
                 if playing == nil && starting == nil { releaseSession() }
-                return
+                return nil
             }
             starting = nil
         }
+        // The route as the clip starts: the glasses' speakers, or the phone's when they are not an A2DP output.
+        let onGlasses = session.routesToBluetoothA2DP
         suppression.begin()
         do {
             try player.play(url)
-            playing = sound.id
-            watchForEnd(of: sound)
         } catch {
             Self.logger.error("play failed: \(error.localizedDescription, privacy: .public)")
             suppression.end()
             releaseSession()
+            return nil
         }
+        playing = sound.id
+        clipsStarted += 1
+        self.onEnd = onEnd
+        watchForEnd(of: sound)
+        return LensSoundStart(clip: clipsStarted, onGlasses: onGlasses)
     }
 
     /// Stops the clip playing, or the one waiting to start, if any.
@@ -96,11 +118,19 @@ final class ReferenceSounds {
     }
 
     private func ended() {
+        clear()
+        releaseSession()
+    }
+
+    /// The clip is over: listening may hear again after the tail, and whoever started it is told.
+    private func clear() {
         playing = nil
         endWatch?.cancel()
         endWatch = nil
         suppression.end()
-        releaseSession()
+        let onEnd = onEnd
+        self.onEnd = nil
+        onEnd?()
     }
 
     /// Ends the clip if the player stopped without saying so, so listening is not left silenced.
@@ -119,5 +149,25 @@ final class ReferenceSounds {
         guard holdsSession else { return }
         holdsSession = false
         if !phoneRunHoldsSession() { session.deactivate() }
+    }
+}
+
+extension ReferenceSounds: LensSoundOutput {
+    func play(_ sound: LensSound, onEnd: @escaping () -> Void) async -> LensSoundStart? {
+        guard let found = lookup(sound.id) else {
+            Self.logger.error("no clip \(sound.id, privacy: .public) in the packs")
+            return nil
+        }
+        return await start(found.sound, at: found.url, onEnd: onEnd)
+    }
+
+    func stop(clip: Int) {
+        guard playing != nil, clipsStarted == clip else { return }
+        stop()
+    }
+
+    func cancelStart(of sound: LensSound) {
+        guard let starting, lookup(sound.id)?.sound.id == starting else { return }
+        stop()
     }
 }

@@ -1,5 +1,6 @@
 import AVFAudio
 import Foundation
+import LensSession
 import OSLog
 
 /// Plays one reference clip at a time (issue #41). `onFinish` is told when a clip plays to its end or fails part-way,
@@ -19,6 +20,28 @@ protocol SoundPlayer: AnyObject {
 protocol PlaybackAudioSession: AnyObject {
     func activate() async throws
     func deactivate()
+    /// Whether the session's output is a Bluetooth A2DP device (the glasses' speakers), read as a clip starts.
+    var routesToBluetoothA2DP: Bool { get }
+}
+
+/// A clip the lens started (issue #41, phase 4): the token to stop it by, and whether it plays on the glasses.
+struct LensSoundStart: Equatable {
+    let clip: Int
+    /// False when the audio route is not the glasses' A2DP speakers, so the clip plays on the phone.
+    let onGlasses: Bool
+}
+
+/// The player as the lens adapter uses it: clips named by the pack's sound id, one at a time with the phone's.
+@MainActor
+protocol LensSoundOutput: AnyObject {
+    /// Plays `sound`, replacing any clip playing. `onEnd` is called once when it ends for any reason (played out,
+    /// stopped, replaced by another clip). Nil when it did not start: unknown to the packs, a failure, or a later
+    /// tap or stop that came first.
+    func play(_ sound: LensSound, onEnd: @escaping () -> Void) async -> LensSoundStart?
+    /// Stops the clip `clip` names, if it is still the one playing.
+    func stop(clip: Int)
+    /// Cancels `sound` while it waits for the audio session, before it has a token to stop it by.
+    func cancelStart(of sound: LensSound)
 }
 
 /// `SoundPlayer` over `AVAudioPlayer`, for the AAC clips in the packs.
@@ -93,6 +116,10 @@ final class SystemPlaybackAudioSession: PlaybackAudioSession {
                 }
             }
         }
+    }
+
+    var routesToBluetoothA2DP: Bool {
+        AVAudioSession.sharedInstance().currentRoute.outputs.contains { $0.portType == .bluetoothA2DP }
     }
 
     func deactivate() {

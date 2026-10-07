@@ -52,14 +52,20 @@ struct BirdJournalApp: App {
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
-        _lens = State(initialValue: Self.makeLensSession(connection: connection, packs: packs))
+        let lens = Self.makeLensSession(connection: connection, packs: packs)
+        _lens = State(initialValue: lens)
         _phoneListening = State(initialValue: phone)
         _glassesListening = State(initialValue: glasses)
         _listening = State(initialValue: listening)
-        _sounds = State(initialValue: ReferenceSounds(
+        let sounds = ReferenceSounds(
             player: AVSoundPlayer(), session: SystemPlaybackAudioSession(), suppression: suppression,
-            phoneRunHoldsSession: { [weak listening] in listening?.phoneRunHoldsSession ?? false }
-        ))
+            phoneRunHoldsSession: { [weak listening] in listening?.phoneRunHoldsSession ?? false },
+            lookup: { packs.soundAndFile(id: $0) }
+        )
+        // The lens's photo pages play through the same player as the profile (issue #41, phase 4).
+        glasses.lens.sounds = sounds
+        lens.sounds = sounds
+        _sounds = State(initialValue: sounds)
         _journalEdits = State(initialValue: JournalEdits(container: album, frames: frames))
     }
 

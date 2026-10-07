@@ -1,5 +1,6 @@
 import Foundation
 import Identification
+import LensSession
 import Pack
 import Testing
 @testable import BirdJournal
@@ -14,7 +15,9 @@ struct ReferenceSoundsTests {
     let suppression = AudioSuppression(tail: .zero)
 
     func makeSounds(recording: @escaping () -> Bool = { false }) -> ReferenceSounds {
-        ReferenceSounds(player: player, session: session, suppression: suppression, phoneRunHoldsSession: recording)
+        ReferenceSounds(player: player, session: session, suppression: suppression, phoneRunHoldsSession: recording) { id in
+            [Self.song, Self.call].first { $0.id == id }.map { ($0, $0.id == Self.song.id ? Self.songURL : Self.callURL) }
+        }
     }
 
     @Test("a song plays to its end: the session is taken for the clip, listening hears nothing while it plays, and both are let go after")
@@ -152,6 +155,84 @@ struct ReferenceSoundsTests {
         #expect(session.calls == [.activate, .deactivate])
     }
 
+    // MARK: - The lens (phase 4)
+
+    @Test("the lens plays a clip by the pack's id, is told the route, and hears of its end once")
+    func lensPlaysToTheEnd() async throws {
+        let sounds = makeSounds()
+        session.onBluetoothA2DP = true
+        var ends = 0
+
+        let start = try #require(await sounds.play(LensSound(id: "xc-2", kind: .call)) { ends += 1 })
+        #expect(start.onGlasses)
+        #expect(sounds.playing == Self.call.id)
+        #expect(player.played == [Self.callURL])
+        #expect(session.calls == [.activate])
+        #expect(suppression.isSuppressing)
+
+        player.finish()
+        #expect(ends == 1)
+        #expect(sounds.playing == nil)
+        #expect(session.calls == [.activate, .deactivate])
+        #expect(!suppression.isSuppressing)
+    }
+
+    @Test("off the glasses' A2DP route the lens is told the clip plays on the phone")
+    func lensOnPhone() async throws {
+        let sounds = makeSounds()
+        session.onBluetoothA2DP = false
+        let start = try #require(await sounds.play(LensSound(id: "xc-1", kind: .song)) {})
+        #expect(!start.onGlasses)
+    }
+
+    @Test("the lens stops only its own clip: a stale token leaves the clip playing now alone")
+    func lensStopsItsOwnClip() async throws {
+        let sounds = makeSounds()
+        var songEnds = 0
+        let song = try #require(await sounds.play(LensSound(id: "xc-1", kind: .song)) { songEnds += 1 })
+        // The phone's profile plays the call over it: the lens hears its clip ended.
+        await sounds.toggle(Self.call, at: Self.callURL)
+        #expect(songEnds == 1)
+        #expect(sounds.playing == Self.call.id)
+
+        sounds.stop(clip: song.clip)
+        #expect(sounds.playing == Self.call.id, "the phone's clip plays on")
+
+        var callEnds = 0
+        let call = try #require(await sounds.play(LensSound(id: "xc-2", kind: .call)) { callEnds += 1 })
+        #expect(call.clip != song.clip)
+        sounds.stop(clip: call.clip)
+        #expect(callEnds == 1)
+        #expect(sounds.playing == nil)
+        #expect(session.calls == [.activate, .deactivate])
+    }
+
+    @Test("a lens clip cancelled while the session is still being taken never starts, and the session is let go")
+    func lensCancelWhileStarting() async {
+        session.holdActivation = true
+        let sounds = makeSounds()
+        let lensSong = LensSound(id: "xc-1", kind: .song)
+
+        let tap = Task { await sounds.play(lensSong) {} }
+        await session.activationRequested()
+        sounds.cancelStart(of: lensSong)
+        session.releaseActivation()
+        let start = await tap.value
+
+        #expect(start == nil)
+        #expect(player.played.isEmpty)
+        #expect(session.calls == [.activate, .deactivate])
+        #expect(!suppression.isSuppressing)
+    }
+
+    @Test("a clip the packs do not hold is not played")
+    func lensUnknownClip() async {
+        let sounds = makeSounds()
+        let start = await sounds.play(LensSound(id: "xc-404", kind: .song)) {}
+        #expect(start == nil)
+        #expect(player.played.isEmpty && session.calls.isEmpty)
+    }
+
     static let song = PackSound(
         id: "xc-1", speciesID: "s1", rank: 0, kind: .song, file: "sounds/xc-1.m4a", duration: .milliseconds(8_000),
         recordist: "A. Recordist", license: "CC BY-SA 4.0", creditLine: "A. Recordist, XC1, https://xeno-canto.org/1 (CC BY-SA 4.0)",
@@ -212,6 +293,7 @@ final class SpyPlaybackSession: PlaybackAudioSession {
     }
 
     private(set) var calls: [Call] = []
+    var onBluetoothA2DP = false
     /// Keeps `activate()` waiting until `releaseActivation()`.
     var holdActivation = false
     private var held: CheckedContinuation<Void, Never>?
@@ -238,4 +320,5 @@ final class SpyPlaybackSession: PlaybackAudioSession {
         held = nil
     }
     func deactivate() { calls.append(.deactivate) }
+    var routesToBluetoothA2DP: Bool { onBluetoothA2DP }
 }

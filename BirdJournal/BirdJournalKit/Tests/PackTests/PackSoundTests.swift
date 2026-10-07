@@ -27,6 +27,7 @@ struct PackSoundTests {
         #expect((Duration.milliseconds(1_850)...Duration.milliseconds(2_150)).contains(song.duration), "\(song.duration)")
         #expect(pack.species(scientificName: "Calypte anna")?.sounds.isEmpty == true)
         #expect(pack.sounds == [song])
+        #expect(pack.sound(id: "xc-1") == song && pack.sound(id: "xc-2") == nil)
         #expect(pack.info.licenseText.contains(song.creditLine))
 
         let file = try AVAudioFile(forReading: pack.soundURL(for: song))

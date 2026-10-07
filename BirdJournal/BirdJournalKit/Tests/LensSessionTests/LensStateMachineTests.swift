@@ -172,7 +172,7 @@ struct LensStateMachineTests {
         Transition(.list, .back, .list, .endSession),
 
         // The photo page: down opens the details, up has nothing above; left is the next species and stops at the
-        // end; right (and Back, on the mock) is back to the list; a tap does nothing, so no bird is added by accident.
+        // end; right (and Back, on the mock) is back to the list; a tap adds nothing (it plays a clip, LensSoundTests).
         Transition(.species(index: 1), .swipeLeft, .species(index: 2)),
         Transition(.species(index: 1), .swipeRight, .list),
         Transition(.species(index: 1), .swipeUp, .species(index: 1)),

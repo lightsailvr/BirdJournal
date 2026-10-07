@@ -402,6 +402,9 @@ final class GlassesListeningSession {
             }
         case .endSession:
             beginStop(reason: .back)
+        case .playSound, .stopSound:
+            // The lens plays its clips itself, through the shared player.
+            break
         }
     }
 

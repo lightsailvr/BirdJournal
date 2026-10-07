@@ -128,6 +128,21 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - Battery: note the phone's and the glasses' drop over a 30-minute run against the #3 spike figures in DECISIONS.md
      "Phase A go/no-go"; live location on top of the audio stream should cost a few percent, not double it.
    - Record the answers in DECISIONS.md, "A fresh location for every sighting".
+11. [ ] Reference clips on the lens (#41, phase 4), from "Listen with the glasses" with the phone in a pocket and the
+   glasses connected to the phone as a Bluetooth audio device (they show in Control Center's audio route):
+   - A2DP beside the stream: open a species with clips, tap. The song plays through the glasses' speakers, full range,
+     not the phone's speaker, while the camera stream's audio keeps coming (the waveform moves, later birds still
+     arrive). The photo page reads "Playing song… tap to stop", not "Song on the phone…". If it reads "on the phone",
+     the route was not `.bluetoothA2DP`: note what Control Center shows. Record whether A2DP and the DAT stream share.
+   - Latency: time from the tap to the first sound; and whether one tap arrives once (one Inputs select) or twice (the
+     clip would start and stop at once; the Developer screen's input log shows each event).
+   - Leak: play a clip with a bird the run has not heard. It must not appear on the list during the clip or in the 1.5 s
+     after (`AudioSuppression.defaultTail`); then play the same clip with the phone microphone as the source. If a
+     species does appear, lengthen the tail and note by how much.
+   - Dim: let a clip play out without touching anything. The page stays lit and goes back to "Tap: its call" at the end
+     (the 8 s clip is under the 20 s dim); note whether the end's re-send wakes a display that dimmed.
+   - Stop: a swipe, swiping right to the list, a doff and the two-finger quit each stop the clip at once.
+   - Record the answers in DECISIONS.md, "Reference sounds in the packs".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.

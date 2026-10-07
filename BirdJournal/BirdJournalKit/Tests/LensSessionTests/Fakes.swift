@@ -28,3 +28,13 @@ enum Fakes {
         photoCredit: "Photo: J. Birder, CC BY"
     )
 }
+
+extension Fakes {
+    static let phoebeSong = LensSound(id: "xc-1", kind: .song)
+    static let phoebeCall = LensSound(id: "xc-2", kind: .call)
+
+    /// The phoebe's clips, song first as the pack ranks them; the other fake species have none.
+    static func sounds(_ species: Species) -> [LensSound] {
+        species == phoebe ? [phoebeSong, phoebeCall] : []
+    }
+}

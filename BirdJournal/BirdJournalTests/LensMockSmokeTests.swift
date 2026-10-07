@@ -162,6 +162,66 @@ extension MockDeviceKitTests {
             }
         }
 
+        @Test("a tap on a photo page plays the song, the clip's end or a swipe brings the page back, the next tap plays the call, and the end of the run stops it (issue #41)")
+        func playsReferenceClips() async throws {
+            let output = FakeLensSoundOutput()
+            let song = LensSound(id: "xc-1", kind: .song)
+            let call = LensSound(id: "xc-2", kind: .call)
+            let profile: (Species) -> SpeciesProfile? = { species in
+                var profile = FakeLensStack.profile(for: species)
+                profile?.sounds = species == FakeLensStack.species[0] ? [song, call] : []
+                return profile
+            }
+            try await withMockDisplay { glasses in
+                let connection = GlassesConnection()
+                try await waitUntil { connection.connectedDevice != nil }
+                let lens = GlassesLensSession(profile: profile, image: FakeLensStack.image(for:))
+                lens.sounds = output
+                await lens.start()
+                try #require(lens.phase == .running, "\(lens.errorMessage ?? "no error")")
+                try await waitUntil { lens.inputsState == .active }
+                let input = glasses.services.input
+                let hint = { lens.card.elements.last }
+
+                lens.update(with: FakeLensStack.stack(count: 1), at: FakeLensStack.quiet)
+                input.navLeft()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                #expect(hint() == .meta("Tap: its song · swipe down: more · right: all species"))
+
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { output.isPlaying(1) }
+                #expect(output.played == [song])
+                #expect(hint() == .meta("Playing song… tap to stop · right: all species"))
+                #expect(lens.savedSightings.isEmpty)
+
+                output.finish()
+                #expect(lens.machine.playing == nil)
+                #expect(hint() == .meta("Tap: its call · swipe down: more · right: all species"))
+
+                // Off the glasses' A2DP route the clip plays on the phone, and the page says so.
+                output.onGlasses = false
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { hint() == .meta("Call on the phone… tap to stop · right: all species") }
+                #expect(output.played == [song, call])
+
+                // A swipe stops it and still moves the page.
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 0) }
+                #expect(output.stopped == [2])
+                #expect(lens.machine.playing == nil)
+
+                // The end of the run (the glasses end it) stops the clip playing.
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { output.isPlaying(3) }
+                glasses.powerOff()
+                try await waitUntil { lens.phase == .stopped(.glasses) }
+                #expect(output.stopped == [2, 3])
+                #expect(lens.machine.playing == nil)
+            }
+        }
+
         /// Starts a lens session with the fake stack's profiles on a connected mock Display, waits for Inputs to be
         /// active, and always stops it.
         private func withRunningLens(_ body: (GlassesLensSession, any MockGlasses) async throws -> Void) async throws {
@@ -181,5 +241,38 @@ extension MockDeviceKitTests {
                 await lens.stop()
             }
         }
+    }
+}
+
+/// The lens's player as a double: clips start at once on the route `onGlasses` says, and end when told.
+@MainActor
+final class FakeLensSoundOutput: LensSoundOutput {
+    var onGlasses = true
+    private(set) var played: [LensSound] = []
+    /// The clips stopped by the lens, by token.
+    private(set) var stopped: [Int] = []
+    private var ends: [Int: () -> Void] = [:]
+    private var clip = 0
+
+    func play(_ sound: LensSound, onEnd: @escaping () -> Void) async -> LensSoundStart? {
+        clip += 1
+        played.append(sound)
+        ends[clip] = onEnd
+        return LensSoundStart(clip: clip, onGlasses: onGlasses)
+    }
+
+    func stop(clip: Int) {
+        guard let end = ends.removeValue(forKey: clip) else { return }
+        stopped.append(clip)
+        end()
+    }
+
+    func cancelStart(of sound: LensSound) {}
+
+    func isPlaying(_ clip: Int) -> Bool { ends[clip] != nil }
+
+    /// The newest clip plays to its end.
+    func finish() {
+        ends.removeValue(forKey: clip)?()
     }
 }

@@ -41,6 +41,7 @@ struct PackLibraryTests {
         #expect(library.species(scientificName: "Sayornis nigricans")?.pack.info.id == PackIndex.bundledPackID)
         let phoebe = try #require(library.pack(id: "test-pack")?.species(scientificName: "Sayornis nigricans"))
         #expect(library.photo(id: phoebe.photos[0].id)?.pack.info.id == "test-pack")
+        #expect(library.sound(id: "xc-1")?.pack.info.id == "test-pack", "the test pack's song, which the bundled pack lacks")
         #expect(library.storage.installed().map(\.descriptor.id) == ["test-pack"])
 
         // A fresh library on the same storage sees the install.

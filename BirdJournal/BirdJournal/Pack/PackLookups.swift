@@ -40,7 +40,8 @@ extension PackLibrary {
 
     /// What the species card shows: the best photo and the description fields the first pack that has the species
     /// gives (issue #12). A species without field marks falls back to the pack's summary, then (in the renderer) to
-    /// the scientific name, and the size-and-habitat line is left out when both are empty.
+    /// the scientific name, and the size-and-habitat line is left out when both are empty. The species' reference
+    /// clips, song first, are what a tap on its photo page plays (issue #41).
     func profile(for species: Species) -> SpeciesProfile? {
         guard let entry = self.species(scientificName: species.scientificName)?.species else { return nil }
         let best = entry.photos.first
@@ -49,8 +50,14 @@ extension PackLibrary {
             fieldMarks: entry.fieldMarks ?? entry.summary ?? "",
             size: entry.size ?? "",
             habitat: entry.habitat ?? "",
-            photoCredit: best?.shortCredit ?? ""
+            photoCredit: best?.shortCredit ?? "",
+            sounds: entry.sounds.map { LensSound(id: $0.id, kind: LensSoundKind($0.kind)) }
         )
+    }
+
+    /// The clip a lens card names by id, with its file, from the first pack that has it.
+    func soundAndFile(id: String) -> (sound: PackSound, url: URL)? {
+        sound(id: id).map { ($0.sound, $0.pack.soundURL(for: $0.sound)) }
     }
 
     /// The species name the album shows (issue #11): a pack's common name for the sighting's scientific name (the
@@ -63,5 +70,15 @@ extension PackLibrary {
     func image(for image: LensImage) -> UIImage? {
         guard let found = photo(id: image.id) else { return nil }
         return UIImage(contentsOfFile: found.pack.lensImageURL(for: found.photo).path(percentEncoded: false))
+    }
+}
+
+extension LensSoundKind {
+    init(_ kind: PackSound.Kind) {
+        self = switch kind {
+        case .song: .song
+        case .call: .call
+        case .sound: .sound
+        }
     }
 }

@@ -98,6 +98,14 @@ public final class PackLibrary {
         return nil
     }
 
+    /// The first pack that has this sound (`xc-<nr>` or `inat-<id>`; two packs sharing a species may share a clip).
+    public func sound(id: String) -> (pack: SpeciesPack, sound: PackSound)? {
+        for pack in packs {
+            if let sound = pack.sound(id: id) { return (pack, sound) }
+        }
+        return nil
+    }
+
     // MARK: - The index
 
     /// The index's packs that are neither bundled nor installed: what the packs screen offers to download. A build
