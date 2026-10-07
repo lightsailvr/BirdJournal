@@ -195,6 +195,10 @@ struct PackTransferStatus: View {
                 .buttonStyle(.journalOutlined)
                 .padding(.top, 4)
             }
+        case .needsNewerApp:
+            Label("Needs a newer version of BirdJournal", systemImage: "arrow.up.circle")
+                .font(JournalFont.supporting)
+                .foregroundStyle(Color.inkSecondary)
         case .updateAvailable(_, let available):
             if let descriptor {
                 Button {

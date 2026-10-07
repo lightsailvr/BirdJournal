@@ -15,6 +15,8 @@ public final class PackLibrary {
         case updateAvailable(installed: Int, available: Int)
         /// Bytes received so far.
         case downloading(received: Int64)
+        /// The index lists a pack of a schema this build cannot open (issue #41); the app needs updating first.
+        case needsNewerApp
         case installing
         case failed(String)
     }
@@ -106,6 +108,11 @@ public final class PackLibrary {
 
     public func status(of descriptor: PackDescriptor) -> Status {
         if let transfer = transfers[descriptor.id] { return transfer }
+        if !descriptor.isSupported {
+            if let installed = installedPack(id: descriptor.id) { return .installed(version: installed.descriptor.version) }
+            if bundled != nil, isBundled(descriptor.id) { return .bundled }
+            return .needsNewerApp
+        }
         if let installed = installedPack(id: descriptor.id) {
             if descriptor.version > installed.descriptor.version {
                 return .updateAvailable(installed: installed.descriptor.version, available: descriptor.version)
@@ -134,7 +141,7 @@ public final class PackLibrary {
 
     /// Starts downloading `descriptor` in its own task, unless it already is.
     public func startDownload(_ descriptor: PackDescriptor) {
-        guard tasks[descriptor.id] == nil else { return }
+        guard tasks[descriptor.id] == nil, descriptor.isSupported else { return }
         tasks[descriptor.id] = Task { [weak self] in
             await self?.download(descriptor)
         }

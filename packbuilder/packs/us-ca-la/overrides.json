@@ -1,5 +1,5 @@
 {
-  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name}. Photo ids are in the pack's report.json and LICENSE.",
+  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}}. Photo ids are in the pack's report.json and LICENSE.",
   "Melozone crissalis": {
     "exclude": [
       740654177,
@@ -38,5 +38,21 @@
       683434701
     ],
     "_why": "most Los Angeles photos are of a distant bird over a reservoir (the first 60 candidates gave two usable crops); the automatic top two were juveniles, all brown, so the adults with the white head go first"
+  },
+  "Numenius hudsonicus": {
+    "sounds": {
+      "accept": [
+        "Numenius phaeopus"
+      ]
+    },
+    "_why": "BirdNET+ carries both halves of the whimbrel split and hears American recordings as Numenius phaeopus (#41: six xeno-canto and two iNaturalist clips refused that way)"
+  },
+  "Setophaga aestiva": {
+    "sounds": {
+      "accept": [
+        "Setophaga petechia"
+      ]
+    },
+    "_why": "BirdNET+ carries both halves of the yellow warbler split and hears American recordings as Setophaga petechia (#41)"
   }
 }

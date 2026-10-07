@@ -16,8 +16,20 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
     public let photoCount: Int?
     /// The region the pack covers, e.g. "Los Angeles County, California, US".
     public let region: String?
+    /// Reference sounds in the pack (issue #41).
+    public let soundCount: Int?
+    /// The pack database's schema (issue #41); nil in an index written before it was listed, which means schema 2.
+    public let schemaVersion: Int?
 
-    public init(id: String, name: String, version: Int, url: URL, sha256: String, byteCount: Int, speciesCount: Int? = nil, photoCount: Int? = nil, region: String? = nil) {
+    /// Whether this build can open the pack. A pack of a newer schema is listed but not offered for download.
+    public var isSupported: Bool {
+        SpeciesPack.supportedSchemaVersions.contains(schemaVersion ?? 2)
+    }
+
+    public init(
+        id: String, name: String, version: Int, url: URL, sha256: String, byteCount: Int, speciesCount: Int? = nil, photoCount: Int? = nil,
+        region: String? = nil, soundCount: Int? = nil, schemaVersion: Int? = nil
+    ) {
         self.id = id
         self.name = name
         self.version = version
@@ -27,6 +39,8 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
         self.speciesCount = speciesCount
         self.photoCount = photoCount
         self.region = region
+        self.soundCount = soundCount
+        self.schemaVersion = schemaVersion
     }
 }
 

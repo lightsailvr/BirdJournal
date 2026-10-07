@@ -8,6 +8,7 @@ from packbuilder.candidates import PhotoCandidate
 from packbuilder.descriptions import DESCRIPTION_FIELDS
 from packbuilder.geometry import Box
 from packbuilder.scoring import CropScore
+from packbuilder.sounds import SoundOverrides
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,9 @@ class Overrides:
     """Take the Wikipedia article although its lead names neither the binomial nor the common name (a taxonomic split
     where BirdNET and Wikipedia disagree on both, e.g. BirdNET's Scarlet Flycatcher and Wikipedia's Vermilion flycatcher)."""
 
+    sounds: SoundOverrides = field(default_factory=SoundOverrides)
+    """The `sounds` object: pinned and excluded recordings and xeno-canto's name for the species (`sounds.py`)."""
+
     def forces(self, photo_id: int) -> bool:
         return photo_id in self.include
 
@@ -46,6 +50,7 @@ class Overrides:
             description=description,
             trust_article=bool(data.get("trust_article", False)),
             candidate_limit=int(data["limit"]) if data.get("limit") is not None else None,
+            sounds=SoundOverrides.from_mapping(data.get("sounds")),
         )
 
 

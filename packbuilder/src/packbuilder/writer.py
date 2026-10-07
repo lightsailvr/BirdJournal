@@ -1,5 +1,5 @@
-"""Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, LICENSE (every photo and text credit), report.json
-(counts, chosen ids, and the photo and description gaps), and optionally a zip of it (the download format for other
+"""Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, sounds/ clips, LICENSE (every photo, sound and text
+credit), report.json (counts, chosen ids, and the photo, description and sound gaps), and optionally a zip of it (the download format for other
 regions, DECISIONS.md "Species pack")."""
 
 from __future__ import annotations
@@ -20,8 +20,10 @@ from packbuilder.definition import PackDefinition, SpeciesEntry
 from packbuilder.descriptions import Description
 from packbuilder.licenses import credit_line, short_credit
 from packbuilder.selection import ScoredPhoto
+from packbuilder.sounds import SoundResult
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+"""3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack."""
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -69,7 +71,22 @@ CREATE TABLE lookalike (
     other_species_id TEXT NOT NULL REFERENCES species(id),
     one_line_difference TEXT NOT NULL
 );
+CREATE TABLE sound (
+    id TEXT PRIMARY KEY,
+    species_id TEXT NOT NULL REFERENCES species(id),
+    rank INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    file TEXT NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    recordist TEXT NOT NULL,
+    license TEXT NOT NULL,
+    credit_line TEXT NOT NULL,
+    short_credit TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    quality TEXT
+);
 CREATE INDEX photo_species ON photo(species_id, rank);
+CREATE INDEX sound_species ON sound(species_id, rank);
 """
 
 
@@ -120,6 +137,8 @@ class SpeciesResult:
     """Rejected candidates by `Rejection` value."""
     detected: int = 0
     description: Description | None = None
+    sounds: SoundResult | None = None
+    """None when the build skipped sounds; an empty result is a sound gap."""
 
 
 @dataclass
@@ -135,6 +154,7 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
         shutil.rmtree(out_dir)
     (out_dir / "lens").mkdir(parents=True)
     (out_dir / "phone").mkdir()
+    (out_dir / "sounds").mkdir()
 
     photo_rows = []
     for result in results:
@@ -167,6 +187,19 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
                 )
             )
 
+    sound_rows = []
+    for result in results:
+        for rank, chosen in enumerate(result.sounds.sounds if result.sounds else []):
+            candidate = chosen.candidate
+            file = f"sounds/{candidate.id}.m4a"
+            shutil.copyfile(chosen.clip.path, out_dir / file)
+            sound_rows.append(
+                (
+                    candidate.id, result.entry.id, rank, chosen.kind, file, chosen.clip.duration_ms, candidate.recordist, candidate.license,
+                    candidate.credit_line, candidate.short_credit, candidate.source_url, candidate.quality,
+                )
+            )
+
     license_text = _license_text(definition, results, built_at)
     (out_dir / "LICENSE").write_text(license_text)
 
@@ -186,6 +219,7 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
             ],
         )
         db.executemany("INSERT INTO photo VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", photo_rows)
+        db.executemany("INSERT INTO sound VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sound_rows)
         db.commit()
         db.execute("VACUUM")
 
@@ -225,6 +259,12 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         "listed under \"Text credits\", written by Wikipedia contributors and licensed CC BY-SA 4.0",
         "(https://creativecommons.org/licenses/by-sa/4.0/). Each link is the article revision the text was taken from.",
         "",
+        "Sounds come from xeno-canto (https://xeno-canto.org) and, where xeno-canto had none, iNaturalist observation",
+        "sounds. Each clip is an 8-second excerpt of the recording linked under \"Sound credits\", high-passed,",
+        "loudness-normalized, faded and re-encoded, and is redistributed under the Creative Commons license its recordist",
+        "chose, as named on its line (https://creativecommons.org/licenses/). Clips under a ShareAlike license are",
+        "shared under that same license. Recordists retain copyright unless the recording is CC0.",
+        "",
         "Photo credits",
         "=============",
     ]
@@ -234,6 +274,10 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         for chosen in result.photos:
             credit = Credit.of(chosen.candidate)
             lines.append(f"  {credit.line} — {credit.source_url} — photo {chosen.candidate.photo_url('original')}")
+    lines += ["", "Sound credits", "============="]
+    for result in results:
+        for chosen in result.sounds.sounds if result.sounds else []:
+            lines.append(f"  {result.entry.common_name}, {chosen.kind}: {chosen.candidate.credit_line}")
     lines += ["", "Text credits", "============"]
     for result in results:
         if result.description and result.description.source:
@@ -256,11 +300,14 @@ def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: 
                 "gap": r.gap,
                 "chosen": [chosen.candidate.photo_id for chosen in r.photos],
                 "description": r.description.source if r.description and r.description.source else None,
+                **({"sounds": {"chosen": {s.kind: s.id for s in r.sounds.sounds}, "rejected": r.sounds.rejections}} if r.sounds is not None else {}),
             }
             for r in results
         },
         "gaps": {
             "photos": [r.entry.id for r in results if r.gap],
             "descriptions": [r.entry.id for r in results if r.description is None],
+            # Only species whose sounds were looked for: a --no-sounds build has no sound gaps, it has no sounds.
+            "sounds": [r.entry.id for r in results if r.sounds is not None and r.sounds.gap],
         },
     }

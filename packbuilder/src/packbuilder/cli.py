@@ -8,6 +8,7 @@ import logging
 import sys
 from pathlib import Path
 
+from packbuilder import xenocanto
 from packbuilder.definition import PackDefinition
 from packbuilder.descriptions import WikipediaDescriptions
 from packbuilder.detector import BirdDetector, ensure_model
@@ -30,6 +31,10 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--built-at", help="ISO timestamp to record instead of now (for reproducible output)")
     build.add_argument("--workers", type=int, default=8, help="concurrent photo downloads per species (default 8)")
     build.add_argument("--no-descriptions", action="store_true", help="skip the Wikipedia descriptions (overrides.json text still applies)")
+    build.add_argument("--no-sounds", action="store_true", help="skip the reference sounds (the pack then has none)")
+    build.add_argument("--xc-interval", type=float, default=xenocanto.DEFAULT_INTERVAL, help=f"seconds between xeno-canto requests (default {xenocanto.DEFAULT_INTERVAL:g}; {xenocanto.MIN_INTERVAL:g} is the floor)")
+    build.add_argument("--xc-max-requests", type=int, default=xenocanto.DEFAULT_MAX_REQUESTS, help=f"xeno-canto requests after which the run stops; rerun to continue from the cache (default {xenocanto.DEFAULT_MAX_REQUESTS})")
+    build.add_argument("--sound-tries", type=int, default=3, help="recordings downloaded per species and kind before the kind is a gap (default 3)")
     draft = commands.add_parser("draft", help="print a species list for a new pack from iNaturalist observation counts")
     draft.add_argument("--place", type=int, action="append", required=True, help="iNaturalist place id (repeat for several)")
     draft.add_argument("--before", required=True, help="count observations created up to this date (YYYY-MM-DD); goes in the pack as inat_created_before")
@@ -63,10 +68,45 @@ def main(argv: list[str] | None = None) -> int:
         cache_dir=args.cache, out_dir=args.out, candidate_limit=args.limit, min_photos=args.min_photos, max_photos=args.max_photos,
         archive_path=args.zip, built_at=args.built_at, download_workers=args.workers,
     )
-    build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions)
+    sounds = None if args.no_sounds else _sound_picker(args, definition)
+    from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
+
+    try:
+        build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds)
+    except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
+        logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
+        return 2
     if descriptions is not None:
         descriptions.write_lock()
     return 0
+
+
+def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
+    """The sounds stage (issue #41): xeno-canto first, through its paced, capped client, then iNaturalist; the clips
+    checked with the app's BirdNET model; `sounds.lock.json` beside the definition pinning what was chosen."""
+    import json
+
+    from packbuilder.audio import BirdNETCheck, ClipMaker
+    from packbuilder.definition import load_overrides
+    from packbuilder.sounds import SoundLock, SoundOverrides, SoundPicker
+    from packbuilder.sounds_inat import INaturalistSoundSource
+    from packbuilder.xenocanto import XenoCantoClient, XenoCantoSoundSource, api_key_from_environment, xeno_canto_pacer
+
+    repo = Path(__file__).resolve().parents[3]
+    country = json.loads((args.definition / "pack.json").read_text()).get("country", "United States")
+    sound_overrides = {
+        name: SoundOverrides.from_mapping(data.get("sounds"))
+        for name, data in load_overrides(args.definition / "overrides.json").items() if isinstance(data, dict)
+    }
+    names = {name: overrides.xeno_canto_name for name, overrides in sound_overrides.items() if overrides.xeno_canto_name}
+    cache = args.cache / "sounds"
+    client = XenoCantoClient(cache / "xeno-canto", api_key_from_environment(), pacer=xeno_canto_pacer(args.xc_interval), max_requests=args.xc_max_requests)
+    xeno_canto = XenoCantoSoundSource(client, country=country, names=names)
+    inaturalist = INaturalistSoundSource(cache / "inaturalist")
+    return SoundPicker(
+        sources=[xeno_canto, inaturalist], clips=ClipMaker(), check=BirdNETCheck(repo / "models"),
+        clip_dir=cache / "clips", lock=SoundLock(args.definition / "sounds.lock.json"), country=country, max_tries=args.sound_tries,
+    )
 
 
 def _draft(args: argparse.Namespace) -> int:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Records a built pack zip in packs/manifest.json: its name, the release tag and asset it is (or will be) published as,
-# its SHA-256 and byte count, and whether the app bundles it. Run after scripts/build-pack.sh and before
+# its SHA-256 and byte count, its counts and database schema, and whether the app bundles it. Run after scripts/build-pack.sh and before
 # `gh release create` (see packs/README.md). An existing entry keeps its `bundled` flag; a new pack is a download
 # unless --bundled says otherwise (only one pack is bundled: PackIndex.bundledPackID in the Swift Pack module).
 #
@@ -27,10 +27,14 @@ database="$repo_root/packs/$pack_id/pack.sqlite"
 species="$(sqlite3 "$database" 'select count(*) from species')"
 photos="$(sqlite3 "$database" 'select count(*) from photo')"
 region="$(sqlite3 "$database" 'select region from pack')"
+schema="$(sqlite3 "$database" 'select schema_version from pack')"
+# Schema 3 (issue #41) has the sound table; a schema-2 pack has no sounds.
+sounds="$(sqlite3 "$database" "select count(*) from sqlite_master where name = 'sound'")"
+[ "$sounds" = 0 ] || sounds="$(sqlite3 "$database" 'select count(*) from sound')"
 
-python3 - "$manifest" "$definition" "$pack_id" "$sha256" "$bytes" "$bundled_flag" "$species" "$photos" "$region" <<'PY'
+python3 - "$manifest" "$definition" "$pack_id" "$sha256" "$bytes" "$bundled_flag" "$species" "$photos" "$region" "$schema" "$sounds" <<'PY'
 import json, sys
-path, definition, pack_id, sha256, size, bundled_flag, species, photos, region = sys.argv[1:]
+path, definition, pack_id, sha256, size, bundled_flag, species, photos, region, schema, sounds = sys.argv[1:]
 manifest = json.load(open(path))
 pack = json.load(open(definition))
 previous = next((p for p in manifest["packs"] if p["id"] == pack_id), None)
@@ -38,7 +42,7 @@ bundled = bundled_flag == "--bundled" or bool(previous and previous.get("bundled
 entry = {
     "id": pack_id, "name": pack["name"], "version": int(pack["version"]), "bundled": bundled,
     "release": f"pack-{pack_id}-v{pack['version']}", "asset": f"{pack_id}.zip", "sha256": sha256, "bytes": int(size),
-    "species": int(species), "photos": int(photos), "region": region,
+    "species": int(species), "photos": int(photos), "sounds": int(sounds), "region": region, "schema_version": int(schema),
 }
 manifest["packs"] = [p for p in manifest["packs"] if p["id"] != pack_id] + [entry]
 json.dump(manifest, open(path, "w"), indent=2)

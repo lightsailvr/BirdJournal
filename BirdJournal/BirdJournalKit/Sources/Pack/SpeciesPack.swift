@@ -2,12 +2,14 @@ import Foundation
 import SQLite3
 
 /// A species pack as `packbuilder` writes it (spec "Pack store"): `pack.sqlite` beside `lens/` and `phone/` JPEG
-/// folders and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
+/// folders, a `sounds/` folder of reference clips (schema 3) and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
 /// the SQLite connection open.
 public struct SpeciesPack: Sendable, Hashable {
-    /// The schema this reader understands; `packbuilder.writer.SCHEMA_VERSION` must match. Schema 2 (issue #12) added
-    /// the Wikipedia-derived description columns' source.
-    public static let schemaVersion = 2
+    /// The schema `packbuilder.writer.SCHEMA_VERSION` writes. Schema 2 (issue #12) added the Wikipedia-derived
+    /// description columns' source; schema 3 (issue #41) the `sound` table and the `sounds/` folder.
+    public static let schemaVersion = 3
+    /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds.
+    public static let supportedSchemaVersions = 2...schemaVersion
 
     public let info: PackInfo
     /// The folder holding `pack.sqlite` and the image folders.
@@ -36,6 +38,16 @@ public struct SpeciesPack: Sendable, Hashable {
 
     public func phoneImageURL(for photo: PackPhoto) -> URL {
         directory.appending(path: photo.phoneFile)
+    }
+
+    /// Every reference sound in the pack, in species order then rank: the credits screen's list.
+    public var sounds: [PackSound] { species.flatMap(\.sounds) }
+
+    /// The reference sounds of a species, song first.
+    public func sounds(for species: PackSpecies) -> [PackSound] { species.sounds }
+
+    public func soundURL(for sound: PackSound) -> URL {
+        directory.appending(path: sound.file)
     }
 }
 
@@ -73,6 +85,8 @@ public struct PackSpecies: Sendable, Hashable, Identifiable {
     public let descriptionSource: URL?
     /// Best first.
     public let photos: [PackPhoto]
+    /// Song first, then call, or one untyped sound; empty for a schema-2 pack or a species with no usable recording.
+    public let sounds: [PackSound]
 
     /// Whether the pack has any description text for this species.
     public var isDescribed: Bool {
@@ -134,6 +148,63 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
     }
 }
 
+/// One `sound` row (issue #41): an 8 s reference clip of the species, where it is and whom to credit.
+public struct PackSound: Sendable, Hashable, Identifiable {
+    public enum Kind: String, Sendable, Hashable {
+        case song
+        case call
+        /// A recording its source does not type (iNaturalist), used only when xeno-canto had neither a song nor a call.
+        case sound
+    }
+
+    /// `xc-<number>` or `inat-<sound id>`.
+    public let id: String
+    public let speciesID: String
+    public let rank: Int
+    public let kind: Kind
+    /// Path relative to the pack directory, e.g. `sounds/xc-109602.m4a` (AAC, mono, 48 kHz).
+    public let file: String
+    public let duration: Duration
+    public let recordist: String
+    /// With its version, e.g. "CC BY-NC-SA 4.0" or "CC0".
+    public let license: String
+    /// Recordist, catalogue number, the recording's page and the license, as xeno-canto asks.
+    public let creditLine: String
+    /// The line beside the play control, e.g. "Sound: Name, XC109602".
+    public let shortCredit: String
+    /// The recording's page on xeno-canto or its iNaturalist observation.
+    public let sourceURL: URL
+    /// xeno-canto's grade, A (best) to E; nil when unrated.
+    public let quality: String?
+
+    public init(
+        id: String, speciesID: String, rank: Int, kind: Kind, file: String, duration: Duration, recordist: String, license: String,
+        creditLine: String, shortCredit: String, sourceURL: URL, quality: String?
+    ) {
+        self.id = id
+        self.speciesID = speciesID
+        self.rank = rank
+        self.kind = kind
+        self.file = file
+        self.duration = duration
+        self.recordist = recordist
+        self.license = license
+        self.creditLine = creditLine
+        self.shortCredit = shortCredit
+        self.sourceURL = sourceURL
+        self.quality = quality
+    }
+
+    /// The Creative Commons deed for `license` ("CC BY-NC-SA 4.0" → .../licenses/by-nc-sa/4.0/); nil for a license the
+    /// pack builder does not admit.
+    public var licenseURL: URL? {
+        if license == "CC0" { return URL(string: "https://creativecommons.org/publicdomain/zero/1.0/") }
+        let parts = license.split(separator: " ")
+        guard parts.count == 3, parts[0] == "CC", ["BY", "BY-SA", "BY-NC", "BY-NC-SA"].contains(parts[1]) else { return nil }
+        return URL(string: "https://creativecommons.org/licenses/\(parts[1].lowercased())/\(parts[2])/")
+    }
+}
+
 /// Why a pack could not be read.
 public enum PackError: Error, Equatable {
     case missingDatabase(String)
@@ -156,9 +227,10 @@ extension SpeciesPack {
         defer { database.close() }
 
         let info = try readInfo(database)
-        guard info.schemaVersion == schemaVersion else { throw PackError.unsupportedSchema(info.schemaVersion) }
+        guard supportedSchemaVersions.contains(info.schemaVersion) else { throw PackError.unsupportedSchema(info.schemaVersion) }
         let photosBySpecies = try readPhotos(database)
-        let species = try readSpecies(database, photos: photosBySpecies)
+        let soundsBySpecies = info.schemaVersion >= 3 ? try readSounds(database) : [:]
+        let species = try readSpecies(database, photos: photosBySpecies, sounds: soundsBySpecies)
         return SpeciesPack(info: info, directory: directory, species: species)
     }
 
@@ -202,7 +274,25 @@ extension SpeciesPack {
         return Dictionary(grouping: photos, by: \.speciesID)
     }
 
-    private static func readSpecies(_ database: SQLiteDatabase, photos: [String: [PackPhoto]]) throws -> [PackSpecies] {
+    private static func readSounds(_ database: SQLiteDatabase) throws -> [String: [PackSound]] {
+        let sql = """
+            SELECT id, species_id, rank, kind, file, duration_ms, recordist, license, credit_line, short_credit, source_url, quality
+            FROM sound ORDER BY species_id, rank
+            """
+        let sounds = try database.rows(sql) { row in
+            guard let id = row.text(0), let speciesID = row.text(1), let rank = row.int(2), let kind = row.text(3).flatMap(PackSound.Kind.init(rawValue:)),
+                  let file = row.text(4), let durationMS = row.int(5), let recordist = row.text(6), let license = row.text(7),
+                  let credit = row.text(8), let short = row.text(9), let source = row.text(10).flatMap(URL.init(string:))
+            else { throw PackError.malformedRow(table: "sound") }
+            return PackSound(
+                id: id, speciesID: speciesID, rank: rank, kind: kind, file: file, duration: .milliseconds(durationMS), recordist: recordist,
+                license: license, creditLine: credit, shortCredit: short, sourceURL: source, quality: row.text(11)
+            )
+        }
+        return Dictionary(grouping: sounds, by: \.speciesID)
+    }
+
+    private static func readSpecies(_ database: SQLiteDatabase, photos: [String: [PackPhoto]], sounds: [String: [PackSound]]) throws -> [PackSpecies] {
         let sql = """
             SELECT id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat,
                    description_source
@@ -217,7 +307,7 @@ extension SpeciesPack {
                 inatTaxonID: row.int(4), wikipediaURL: row.text(5).flatMap(URL.init(string:)),
                 summary: row.text(6), fieldMarks: row.text(7), size: row.text(8), habitat: row.text(9),
                 descriptionSource: row.text(10).flatMap(URL.init(string:)),
-                photos: photos[id] ?? []
+                photos: photos[id] ?? [], sounds: sounds[id] ?? []
             )
         }
     }

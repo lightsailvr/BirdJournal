@@ -246,3 +246,18 @@ def test_an_excluded_photo_takes_the_rest_of_its_observation_with_it(tmp_path, p
         photos.specs[i] = {"background": 30}
     result = pipeline.build_species(ENTRY, Overrides(exclude=[1]), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos))
     assert sorted(chosen_ids(result)) == [3, 4, 5, 6]
+
+
+def test_species_build_attaches_the_chosen_sounds(tmp_path, photos):
+    from tests.test_sounds import FakeCheck, FakeClips, FakeSource, Fetches, sound, with_fetch
+    from packbuilder.sounds import SoundPicker
+
+    candidates = [make_candidate(photo_id=i, observation_id=i * 10) for i in range(1, 4)]
+    for i in range(1, 4):
+        photos.specs[i] = {"background": 30}
+    xc = FakeSource("xeno-canto", [sound(1, "song"), sound(2, "call")])
+    picker = SoundPicker(sources=[with_fetch(xc, Fetches(tmp_path))], clips=FakeClips(), check=FakeCheck(), clip_dir=tmp_path / "clips")
+
+    result = pipeline.build_species(ENTRY, Overrides.from_mapping({"sounds": {"exclude": ["xc-2"]}}), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos), sounds=picker)
+
+    assert [s.id for s in result.sounds.sounds] == ["xc-1"], "the override's sound exclusion reached the picker"

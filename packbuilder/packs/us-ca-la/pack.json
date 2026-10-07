@@ -2,7 +2,7 @@
   "id": "us-ca-la",
   "name": "Los Angeles",
   "region": "Los Angeles County, California, US",
-  "version": 2,
+  "version": 3,
   "inat_place_id": 962,
   "inat_created_before": "2026-09-26",
   "bounding_box": {

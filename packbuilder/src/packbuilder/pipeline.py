@@ -20,6 +20,7 @@ from packbuilder.download import fetch_photo
 from packbuilder.geometry import Box
 from packbuilder.scoring import score_crop
 from packbuilder.selection import Overrides, ScoredPhoto, select_photos
+from packbuilder.sounds import SoundPicker
 from packbuilder.writer import ChosenPhoto, SpeciesResult, WrittenPack, write_pack
 
 log = logging.getLogger("packbuilder")
@@ -68,24 +69,28 @@ class BuildOptions:
     """Concurrent downloads of a species' `large` renditions; the Open Data bucket is the slow step of a big pack."""
 
 
-def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None) -> WrittenPack:
+def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None, sounds: SoundPicker | None = None) -> WrittenPack:
     raw_overrides = load_overrides(overrides_path)
     shared = shared_photo_ids(definition.species, metadata)
     if shared:
         log.info("%d photos belong to observations of two or more species of the pack; none is chosen", len(shared))
     results = [
-        build_species(entry, Overrides.from_mapping(raw_overrides.get(entry.scientific_name, {})), metadata, detector, options, descriptions, shared)
+        build_species(entry, Overrides.from_mapping(raw_overrides.get(entry.scientific_name, {})), metadata, detector, options, descriptions, shared, sounds)
         for entry in definition.species
     ]
+    if sounds is not None:
+        sounds.lock.write()
     built_at = options.built_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     written = write_pack(definition, results, options.out_dir, built_at=built_at, archive_path=options.archive_path)
     gaps = [r.entry.common_name for r in results if r.gap]
     undescribed = [r.entry.common_name for r in results if r.description is None]
+    silent = [r.entry.common_name for r in results if r.sounds is not None and r.sounds.gap]
     log.info(
-        "wrote %s (%d species, %d photos%s%s)",
-        written.directory, len(results), sum(len(r.photos) for r in results),
+        "wrote %s (%d species, %d photos, %d sounds%s%s%s)",
+        written.directory, len(results), sum(len(r.photos) for r in results), sum(len(r.sounds.sounds) for r in results if r.sounds),
         f"; photo gaps: {', '.join(gaps)}" if gaps else "",
         f"; no description: {', '.join(undescribed)}" if undescribed else "",
+        f"; no sound: {', '.join(silent)}" if silent else "",
     )
     return written
 
@@ -102,9 +107,12 @@ def shared_photo_ids(species: list[SpeciesEntry], metadata: MetadataSource) -> f
     return frozenset(photo_id for photo_id, taxa in owners.items() if len(taxa) > 1)
 
 
-def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None, shared: frozenset[int] = frozenset()) -> SpeciesResult:
+def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None, shared: frozenset[int] = frozenset(), sounds: SoundPicker | None = None) -> SpeciesResult:
     log.info("%s (%s)", entry.common_name, entry.scientific_name)
     description = describe(entry, overrides, descriptions)
+    sound_result = sounds.pick(entry, overrides.sounds) if sounds is not None else None
+    if sound_result is not None and sound_result.gap:
+        log.warning("  SOUND GAP: no clip for %s", entry.common_name)
     candidates = metadata.candidates_for(entry.inat_taxon_id)
     filtered = filter_candidates(candidates)
     rejected = {reason.value: count for reason, count in filtered.rejected.items()}
@@ -166,7 +174,7 @@ def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataS
     gap = len(photos) < options.min_photos
     if gap:
         log.warning("  GAP: only %d photos for %s", len(photos), entry.common_name)
-    return SpeciesResult(entry=entry, photos=photos, gap=gap, candidates=len(candidates), rejected=rejected, detected=detected, description=description)
+    return SpeciesResult(entry=entry, photos=photos, gap=gap, candidates=len(candidates), rejected=rejected, detected=detected, description=description, sounds=sound_result)
 
 
 def describe(entry: SpeciesEntry, overrides: Overrides, descriptions: DescriptionSource | None) -> Description | None:

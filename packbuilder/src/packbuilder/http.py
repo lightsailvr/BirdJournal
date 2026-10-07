@@ -7,6 +7,9 @@ with backoff is safe; 429 is included because the iNaturalist API rate-limits.
 
 from __future__ import annotations
 
+import threading
+import time
+
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
@@ -27,3 +30,28 @@ def session() -> requests.Session:
         created.mount("http://", adapter)
         _session = created
     return _session
+
+
+class Clock:
+    monotonic = staticmethod(time.monotonic)
+    sleep = staticmethod(time.sleep)
+
+
+class Pacer:
+    """At least `interval` seconds between the starts of consecutive requests to one service, across threads.
+    `minimum` is the least interval the service tolerates; a smaller one is refused."""
+
+    def __init__(self, interval: float, clock=Clock, minimum: float = 1.0):
+        if interval < minimum:
+            raise ValueError(f"requests must be at least {minimum} s apart, not {interval}")
+        self.interval = interval
+        self.clock = clock
+        self._last: float | None = None
+        self._lock = threading.Lock()
+
+    def wait(self) -> None:
+        with self._lock:
+            now = self.clock.monotonic()
+            if self._last is not None and now - self._last < self.interval:
+                self.clock.sleep(self.interval - (now - self._last))
+            self._last = self.clock.monotonic()

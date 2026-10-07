@@ -3,8 +3,8 @@ import Pack
 import SwiftUI
 
 /// Sources & credits (issues #11 and #28, spec user story 36): "Powered by BirdNET" with both models' licenses, then,
-/// for every pack on the phone (#13), the text credit and each photo with its observer, exact license and observation
-/// link, and the pack's LICENSE text.
+/// for every pack on the phone (#13), the text credit, each photo with its observer, exact license and observation
+/// link, each reference sound with its recordist, license and recording page (#41), and the pack's LICENSE text.
 struct CreditsView: View {
     @Environment(PackLibrary.self) private var library
 
@@ -78,14 +78,22 @@ private struct PhotoCreditSections: View {
                 Link("Wikipedia text: CC BY-SA 4.0", destination: Self.wikipediaLicense)
                     .font(JournalFont.attribution)
             }
+            if !pack.sounds.isEmpty {
+                Text("\(pack.sounds.count) sounds are 8-second excerpts of recordings from xeno-canto and iNaturalist, filtered and evened in loudness for this app, each under the Creative Commons license its recordist chose. Recordists keep their copyright unless the recording is CC0.")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+            }
             NavigationLink("Pack license (\(pack.info.id) v\(pack.info.version))", value: Route.packLicense(id: pack.info.id))
         } header: {
-            Text("Photos and text: \(pack.info.name)")
+            Text(pack.sounds.isEmpty ? "Photos and text: \(pack.info.name)" : "Photos, sounds and text: \(pack.info.name)")
         }
         ForEach(pack.species) { species in
             Section(species.commonName) {
                 ForEach(species.photos) { photo in
                     PhotoCreditRow(pack: pack, photo: photo)
+                }
+                ForEach(species.sounds) { sound in
+                    SoundCreditRow(sound: sound)
                 }
             }
         }

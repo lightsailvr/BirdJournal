@@ -58,3 +58,9 @@ def synthetic_photo(
 @pytest.fixture
 def candidate():
     return make_candidate()
+
+
+@pytest.fixture(autouse=True)
+def no_xeno_canto_key(monkeypatch):
+    """No test may reach xeno-canto with the developer's key (issue #41): a test that needs a key passes its own."""
+    monkeypatch.delenv("XENO_CANTO_API_KEY", raising=False)
