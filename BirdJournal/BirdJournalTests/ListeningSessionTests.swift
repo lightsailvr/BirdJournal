@@ -143,6 +143,39 @@ struct ListeningSessionTests {
         await session.stop()
     }
 
+    @Test("a reference clip played mid-run neither adds a species nor boosts one already heard (issue #41)")
+    func playbackIsNotHeard() async throws {
+        let source = ManualAudioSource()
+        let suppression = AudioSuppression(tail: .zero)
+        let session = ListeningSession(
+            loadEngine: { IdentificationEngine(model: LoudBirdModel(), occurrenceModel: SpyOccurrence()) },
+            location: ScriptedLocationProvider([Self.losAngeles]),
+            suppression: suppression
+        )
+
+        await session.start(source: source)
+        source.feed(seconds: 4.5, amplitude: 0.5)  // a finch calls: windows at 0, 1.5 and 3 s hear it
+        source.feed(seconds: 1.5)
+        try await waitUntil("three windows are scored") { session.windowsScored == 3 }
+        let heard = try #require(session.stack.candidates.first)
+        #expect(heard.species.commonName == "House Finch")
+        #expect(heard.windowsAboveThreshold == 3)
+
+        suppression.begin()  // the birder plays the finch's song, and the microphone hears it
+        source.feed(seconds: 6, amplitude: 0.5)
+        try await waitUntil("the clip's windows are scored") { session.windowsScored == 7 }  // 4.5 to 9 s
+        suppression.end()
+        source.feed(seconds: 3)
+        try await waitUntil("the windows after it are scored") { session.windowsScored == 9 }
+
+        #expect(session.stack.candidates.map(\.species.commonName) == ["House Finch"])
+        #expect(session.stack.candidates.first?.windowsAboveThreshold == 3, "the clip did not count as hearing the finch again")
+        #expect(session.stack.candidates.first?.score == heard.score)
+
+        await session.stop()
+        #expect(source.isStopped)
+    }
+
     @Test("a source that cannot start leaves the session idle with the error shown")
     func sourceFailureIsReported() async {
         let session = ListeningSession(
@@ -180,6 +213,13 @@ nonisolated struct ScriptedBirdModel: BirdModel {
     ]
     let sampleRate = 32_000
     func scores(for samples: [Float]) throws -> [Float] { [0.9, 0.9, 0] }
+}
+
+/// The finch whenever a window has any loud sample in it; nothing in silence.
+nonisolated struct LoudBirdModel: BirdModel {
+    let species = ScriptedBirdModel().species
+    let sampleRate = 32_000
+    func scores(for samples: [Float]) throws -> [Float] { [samples.contains { abs($0) > 0.1 } ? 0.9 : 0, 0, 0] }
 }
 
 /// Allows the finch everywhere and the jay only away from Los Angeles; records every context it was asked about.
@@ -225,8 +265,8 @@ final class ManualAudioSource: FrameKeepingAudioSource {
         resumedOn.append(session)
     }
 
-    func feed(seconds: Double) {
-        let samples = [Float](repeating: 0, count: Int(seconds * Double(sampleRate)))
+    func feed(seconds: Double, amplitude: Float = 0) {
+        let samples = [Float](repeating: amplitude, count: Int(seconds * Double(sampleRate)))
         continuation.yield(AudioChunk(samples: samples, sampleRate: sampleRate, presentationTime: fedSeconds))
         fedSeconds += seconds
     }

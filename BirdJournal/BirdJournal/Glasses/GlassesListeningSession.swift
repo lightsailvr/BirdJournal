@@ -122,7 +122,8 @@ final class GlassesListeningSession {
         location: any LocationProvider = CoreLocationProvider(),
         reconnect: ReconnectPolicy = ReconnectPolicy(),
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
-        image: @escaping (LensImage) -> UIImage? = { _ in nil }
+        image: @escaping (LensImage) -> UIImage? = { _ in nil },
+        suppression: AudioSuppression? = nil
     ) {
         self.wearables = wearables
         self.connection = connection
@@ -137,7 +138,8 @@ final class GlassesListeningSession {
             onStack: { stack in
                 guard let run = box.run else { return }
                 run.lens.update(with: stack, at: run.listening.sessionTime)
-            }
+            },
+            suppression: suppression
         )
         lens = GlassesLensSession(
             wearables: wearables,

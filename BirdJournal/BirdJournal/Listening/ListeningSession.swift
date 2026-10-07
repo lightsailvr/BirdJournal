@@ -45,6 +45,7 @@ final class ListeningSession {
     @ObservationIgnored private let makeSource: () -> any AudioSource
     @ObservationIgnored private let location: any LocationProvider
     @ObservationIgnored private let onStack: (CandidateStack) -> Void
+    @ObservationIgnored private let suppression: AudioSuppression?
     @ObservationIgnored private var source: (any AudioSource)?
     @ObservationIgnored private var context: LiveGeoContext?
     @ObservationIgnored private var eventTask: Task<Void, Never>?
@@ -54,12 +55,14 @@ final class ListeningSession {
         loadEngine: @escaping @Sendable () async throws -> IdentificationEngine = { try await BundledIdentification.engine() },
         makeSource: @escaping () -> any AudioSource = { PhoneMicAudioSource() },
         location: any LocationProvider = CoreLocationProvider(),
-        onStack: @escaping (CandidateStack) -> Void = { _ in }
+        onStack: @escaping (CandidateStack) -> Void = { _ in },
+        suppression: AudioSuppression? = nil
     ) {
         self.loadEngine = loadEngine
         self.makeSource = makeSource
         self.location = location
         self.onStack = onStack
+        self.suppression = suppression
     }
 
     /// Seconds since the run started listening: the clock `Candidate` times are read against (the engine's window
@@ -87,7 +90,8 @@ final class ListeningSession {
     }
 
     /// Loads the models and waits for the first location fix side by side, then starts `source` and keeps reading
-    /// the location stream. On failure the session is idle again with `errorMessage` set.
+    /// the location stream. On failure the session is idle again with `errorMessage` set. With a `suppression`, the
+    /// engine hears silence while a reference clip plays (issue #41).
     func start(source: any AudioSource) async {
         guard phase == .idle else { return }
         phase = .starting
@@ -105,8 +109,9 @@ final class ListeningSession {
         self.context = context
         do {
             let engine = try await loading
-            self.source = source
-            let events = try await engine.identify(source, in: context)
+            let heard: any AudioSource = suppression.map { SuppressedAudioSource(source, suppression: $0) } ?? source
+            self.source = heard
+            let events = try await engine.identify(heard, in: context)
             startedAt = .now
             phase = .listening
             eventTask = Task { [weak self] in

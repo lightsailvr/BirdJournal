@@ -15,6 +15,7 @@ struct BirdJournalApp: App {
     @State private var phoneListening: ListeningSession
     @State private var glassesListening: GlassesListeningSession
     @State private var listening: ListeningCoordinator
+    @State private var sounds: ReferenceSounds
     @State private var places = PlaceNames()
     @State private var packs: PackLibrary
     @State private var journalEdits: JournalEdits
@@ -36,10 +37,16 @@ struct BirdJournalApp: App {
         let frames = Self.makeFrameStore()
         let packs = PackLibrary.forApp()
         let levels = LevelSink()
+        // The reference clips the profile plays (issue #41) are silenced in whichever run is listening.
+        let suppression = AudioSuppression()
         let recorder = SightingRecorder(container: album, frames: frames)
         let sightings = RunSightings(recorder: recorder)
-        let phone = Self.makePhoneListeningSession(levels: levels)
-        let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels)
+        let phone = Self.makePhoneListeningSession(levels: levels, suppression: suppression)
+        let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels, suppression: suppression)
+        let listening = ListeningCoordinator(
+            phone: phone, glasses: glasses, sightings: sightings, levels: levels,
+            defaultSource: connection.devices.isEmpty ? .phone : .glasses
+        )
         self.album = album
         self.frames = frames
         _connection = State(initialValue: connection)
@@ -48,9 +55,10 @@ struct BirdJournalApp: App {
         _lens = State(initialValue: Self.makeLensSession(connection: connection, packs: packs))
         _phoneListening = State(initialValue: phone)
         _glassesListening = State(initialValue: glasses)
-        _listening = State(initialValue: ListeningCoordinator(
-            phone: phone, glasses: glasses, sightings: sightings, levels: levels,
-            defaultSource: connection.devices.isEmpty ? .phone : .glasses
+        _listening = State(initialValue: listening)
+        _sounds = State(initialValue: ReferenceSounds(
+            player: AVSoundPlayer(), session: SystemPlaybackAudioSession(), suppression: suppression,
+            phoneRunHoldsSession: { [weak listening] in listening?.phoneRunHoldsSession ?? false }
         ))
         _journalEdits = State(initialValue: JournalEdits(container: album, frames: frames))
     }
@@ -97,7 +105,7 @@ struct BirdJournalApp: App {
 
     /// The whole loop on the glasses (issue #9), writing sightings to the album through the run ledger the phone's
     /// adds share (issue #28), and reporting the audio level for the waveform.
-    private static func makeGlassesListeningSession(connection: GlassesConnection, recorder: SightingRecorder, sightings: RunSightings, packs: PackLibrary, levels: LevelSink) -> GlassesListeningSession {
+    private static func makeGlassesListeningSession(connection: GlassesConnection, recorder: SightingRecorder, sightings: RunSightings, packs: PackLibrary, levels: LevelSink, suppression: AudioSuppression) -> GlassesListeningSession {
         GlassesListeningSession(
             connection: connection,
             recorder: recorder,
@@ -106,7 +114,8 @@ struct BirdJournalApp: App {
                 GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100, onLevel: { levels.level = $0 })
             },
             profile: { packs.profile(for: $0) },
-            image: { packs.image(for: $0) }
+            image: { packs.image(for: $0) },
+            suppression: suppression
         )
     }
 
@@ -114,16 +123,16 @@ struct BirdJournalApp: App {
     /// `-autoPhoneListening <path.wav>` feeds that file instead, so the screen can be checked on the simulator, whose
     /// audio input is not available, and `-autoLocation denied` skips the location request (a UI test cannot answer
     /// the permission prompt).
-    private static func makePhoneListeningSession(levels: LevelSink) -> ListeningSession {
+    private static func makePhoneListeningSession(levels: LevelSink, suppression: AudioSuppression) -> ListeningSession {
         let meter: @Sendable (AudioLevel) -> Void = { levels.level = $0 }
         #if DEBUG
         if let path = UserDefaults.standard.string(forKey: "autoPhoneListening"), path.hasSuffix(".wav") {
             // Paced like a microphone, so the Listen tab's live state can be seen and screenshotted on the simulator.
             let location: any LocationProvider = UserDefaults.standard.string(forKey: "autoLocation") == "denied" ? DeniedLocationProvider() : CoreLocationProvider()
-            return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) }, location: location)
+            return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) }, location: location, suppression: suppression)
         }
         #endif
-        return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) })
+        return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) }, suppression: suppression)
     }
 
     var body: some Scene {
@@ -150,6 +159,7 @@ struct BirdJournalApp: App {
             .environment(phoneListening)
             .environment(glassesListening)
             .environment(listening)
+            .environment(sounds)
             .environment(journalEdits)
             .environment(places)
             .environment(packs)

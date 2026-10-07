@@ -9,6 +9,10 @@ import Synchronization
 /// Core Audio activates the session and initializes the input unit with blocking calls (the runtime flags
 /// `setActive` on the main thread as a hang risk, and the simulator deadlocked in `inputNode` there), so setup and
 /// teardown run on a detached task and the engine lives behind a lock. Single use: create one per listening run.
+///
+/// The session is `.playAndRecord`, so a reference clip can play during the run (issue #41): to the speaker, not the
+/// earpiece, or to a Bluetooth speaker over A2DP. Never `.allowBluetoothHFP`: that would make the glasses the input
+/// and drop them to 8 kHz mono (DECISIONS.md, "Toolkit facts").
 nonisolated final class PhoneMicAudioSource: AudioSource {
     nonisolated enum StartError: LocalizedError {
         case permissionDenied
@@ -26,7 +30,7 @@ nonisolated final class PhoneMicAudioSource: AudioSource {
         self.continuation.withLock { $0 = continuation }
         try await Task.detached(priority: .userInitiated) { [self] in
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.record, mode: .measurement)
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.allowBluetoothA2DP, .defaultToSpeaker])
             try audioSession.setActive(true)
 
             let audioEngine = AVAudioEngine()

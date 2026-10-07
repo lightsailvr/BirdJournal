@@ -47,7 +47,7 @@ struct AudioLevelMeterTests {
 }
 
 /// Hands out a stream the test feeds.
-private final class StreamAudioSource: AudioSource {
+final class StreamAudioSource: AudioSource {
     let stream: AsyncStream<AudioChunk>
     let stopped = LockedList<Bool>()
 
@@ -59,7 +59,7 @@ private final class StreamAudioSource: AudioSource {
     func stop() async { stopped.append(true) }
 }
 
-private final class LockedList<Element: Sendable>: @unchecked Sendable {
+final class LockedList<Element: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
     private var storage: [Element] = []
 

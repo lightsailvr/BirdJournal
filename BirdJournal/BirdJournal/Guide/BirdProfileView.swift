@@ -2,9 +2,10 @@ import Identification
 import Pack
 import SwiftUI
 
-/// A bird's profile (issue #28): photo first with its credit, the names, a short introduction, the field marks, size
-/// and habitat, the other photos, and the sources; sections the pack has no text for are left out rather than
-/// filled. Reached from the guide, the journal and a candidate review (with `match`, the live detection).
+/// A bird's profile (issue #28): photo first with its credit, the names, its song and call to play (issue #41), a
+/// short introduction, the field marks, size and habitat, the other photos, and the sources; sections the pack has
+/// no text or sound for are left out rather than filled. Reached from the guide, the journal and a candidate review
+/// (with `match`, the live detection).
 struct BirdProfileView: View {
     @Environment(PackLibrary.self) private var library
     let scientificName: String
@@ -53,6 +54,12 @@ private struct ProfileContent: View {
         if let hero = species.photos.first {
             AttributedImage(pack: pack, photo: hero)
                 .padding(.top, 16)
+        }
+
+        if !species.sounds.isEmpty {
+            SectionTitle(text: "Hear it")
+            SoundRows(pack: pack, sounds: species.sounds)
+                .padding(.top, 8)
         }
 
         if let summary = species.summary, !summary.isEmpty {
@@ -118,8 +125,13 @@ private struct ProfileContent: View {
             Text("\(species.photos.count) \(species.photos.count == 1 ? "photo" : "photos") from iNaturalist observations, cropped for this app, each under the Creative Commons license its photographer chose.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
+            if !species.sounds.isEmpty {
+                Text("\(species.sounds.count) \(species.sounds.count == 1 ? "recording" : "recordings") from xeno-canto or iNaturalist, cut to 8 seconds, each under its recordist's license.")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+            }
             NavigationLink(value: Route.speciesCredits(scientificName: species.scientificName)) {
-                Label("Photo credits and sources", systemImage: "text.document")
+                Label(species.sounds.isEmpty ? "Photo credits and sources" : "Photo and sound credits", systemImage: "text.document")
             }
             .buttonStyle(.journalOutlined)
             if let wikipedia = species.wikipediaURL {
@@ -134,6 +146,72 @@ private struct ProfileContent: View {
                 .foregroundStyle(Color.inkSecondary)
         }
         .padding(.top, 12)
+    }
+}
+
+/// The species' reference clips (issue #41), song first: a tap plays one, a tap on the playing one stops it.
+/// Each carries its length and short credit beside the control; the full credit is on the credits page. Leaving
+/// the profile stops the clip.
+private struct SoundRows: View {
+    @Environment(ReferenceSounds.self) private var playback
+    let pack: SpeciesPack
+    let sounds: [PackSound]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(sounds.enumerated()), id: \.element.id) { position, sound in
+                if position > 0 { RowRule() }
+                SoundRow(sound: sound, isPlaying: playback.playing == sound.id) {
+                    Task { await playback.toggle(sound, at: pack.soundURL(for: sound)) }
+                }
+            }
+        }
+        .onDisappear { playback.stop() }
+    }
+}
+
+private struct SoundRow: View {
+    let sound: PackSound
+    let isPlaying: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: isPlaying ? "stop.fill" : "play.fill")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.mossText)
+                    .frame(width: 44, height: 44)
+                    .background(Color.moss, in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(isPlaying ? "Playing \(sound.kind.title.lowercased())…" : sound.kind.title)
+                        .font(JournalFont.rowTitle)
+                        .foregroundStyle(Color.ink)
+                    Text("\(sound.duration.formatted(.units(allowed: [.seconds]))) · \(sound.shortCredit)")
+                        .font(JournalFont.attribution)
+                        .foregroundStyle(Color.inkSecondary)
+                        .multilineTextAlignment(.leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isPlaying ? "Stop the \(sound.kind.title.lowercased())" : "Play the \(sound.kind.title.lowercased())")
+        .accessibilityValue(sound.shortCredit)
+        .accessibilityIdentifier("sound-\(sound.kind.rawValue)")
+    }
+}
+
+extension PackSound.Kind {
+    /// The row's name for the clip.
+    var title: String {
+        switch self {
+        case .song: "Song"
+        case .call: "Call"
+        case .sound: "Recording"
+        }
     }
 }
 
