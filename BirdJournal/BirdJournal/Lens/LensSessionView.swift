@@ -103,6 +103,8 @@ extension LensPage {
         case .list: "Species list"
         case .species(let index): "Species \(index + 1) · photo"
         case .details(let index): "Species \(index + 1) · details"
+        case .sounds(let index): "Species \(index + 1) · sounds"
+        case .viewfinder(let index): "Species \(index + 1) · viewfinder"
         case .problem(.noLocation): "Problem · no location"
         case .problem(.connectionLost): "Problem · connection lost"
         }
@@ -168,6 +170,16 @@ private struct LensElementView: View {
                         if row.isSaved { Image(systemName: "checkmark.circle.fill").font(.caption) }
                     }
                 }
+            case .sounds(let rows):
+                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                    HStack {
+                        Image(systemName: row.isNext ? "chevron.right" : "circle").font(.caption2).foregroundStyle(row.isNext ? .primary : .tertiary)
+                        if row.isPlaying { Image(systemName: "speaker.wave.3.fill").font(.caption2) }
+                        Text(row.label)
+                    }
+                }
+            case .viewfinder:
+                Label("Camera view", systemImage: "camera.viewfinder").font(.caption).foregroundStyle(.secondary)
             }
         }
     }

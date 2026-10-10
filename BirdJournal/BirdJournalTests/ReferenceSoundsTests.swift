@@ -14,10 +14,59 @@ struct ReferenceSoundsTests {
     let session = SpyPlaybackSession()
     let suppression = AudioSuppression(tail: .zero)
 
-    func makeSounds(recording: @escaping () -> Bool = { false }) -> ReferenceSounds {
-        ReferenceSounds(player: player, session: session, suppression: suppression, phoneRunHoldsSession: recording) { id in
+    func makeSounds(recording: @escaping () -> Bool = { false }, stream: SpyStreamHold? = nil) -> ReferenceSounds {
+        ReferenceSounds(player: player, session: session, suppression: suppression, phoneRunHoldsSession: recording, glassesStream: { stream }) { id in
             [Self.song, Self.call].first { $0.id == id }.map { ($0, $0.id == Self.song.id ? Self.songURL : Self.callURL) }
         }
+    }
+
+    // MARK: - The glasses' stream (silent glasses speakers while the camera streams, 2026-10-10)
+
+    @Test("during a glasses run a clip holds the stream from before it plays until it ends, once across a song then a call")
+    func holdsTheGlassesStream() async {
+        let stream = SpyStreamHold()
+        let sounds = makeSounds(stream: stream)
+
+        await sounds.toggle(Self.song, at: Self.songURL)
+        #expect(stream.calls == [.hold])
+        #expect(stream.heldWhenPlayed(player))
+        await sounds.toggle(Self.call, at: Self.callURL)
+        #expect(stream.calls == [.hold], "the call plays inside the song's hold")
+
+        player.finish()
+        #expect(sounds.playing == nil)
+        #expect(stream.calls == [.hold, .release])
+    }
+
+    @Test("a stop, a clip that cannot play, and a tap while the stream is being held each release it")
+    func releasesTheGlassesStream() async {
+        let stream = SpyStreamHold()
+        let sounds = makeSounds(stream: stream)
+
+        await sounds.toggle(Self.song, at: Self.songURL)
+        sounds.stop()
+        #expect(stream.calls == [.hold, .release])
+
+        player.failNext = true
+        await sounds.toggle(Self.song, at: Self.songURL)
+        #expect(stream.calls == [.hold, .release, .hold, .release])
+
+        stream.gate = true
+        let tap = Task { await sounds.toggle(Self.call, at: Self.callURL) }
+        try? await Task.sleep(for: .milliseconds(50))
+        await sounds.toggle(Self.call, at: Self.callURL)
+        stream.open()
+        await tap.value
+        #expect(sounds.playing == nil)
+        #expect(stream.calls == [.hold, .release, .hold, .release, .hold, .release])
+    }
+
+    @Test("with no glasses run nothing is held")
+    func noGlassesRun() async {
+        let sounds = makeSounds()
+        await sounds.toggle(Self.song, at: Self.songURL)
+        player.finish()
+        #expect(session.calls == [.activate, .deactivate])
     }
 
     @Test("a song plays to its end: the session is taken for the clip, listening hears nothing while it plays, and both are let go after")
@@ -321,4 +370,36 @@ final class SpyPlaybackSession: PlaybackAudioSession {
     }
     func deactivate() { calls.append(.deactivate) }
     var routesToBluetoothA2DP: Bool { onBluetoothA2DP }
+}
+
+/// The glasses run's stream as a clip holds it, recording holds and releases; `gate` keeps a hold waiting until `open()`.
+@MainActor
+final class SpyStreamHold: PlaybackStreamHold {
+    enum Call: Equatable { case hold, release }
+
+    private(set) var calls: [Call] = []
+    var gate = false
+    private var waiting: CheckedContinuation<Void, Never>?
+
+    func holdForPlayback() async {
+        calls.append(.hold)
+        if gate {
+            await withCheckedContinuation { waiting = $0 }
+        }
+    }
+
+    func releaseAfterPlayback() {
+        calls.append(.release)
+    }
+
+    func open() {
+        gate = false
+        waiting?.resume()
+        waiting = nil
+    }
+
+    /// Whether the player's first clip started after the stream was held and before any release.
+    func heldWhenPlayed(_ player: MockSoundPlayer) -> Bool {
+        calls.first == .hold && !player.played.isEmpty && !calls.contains(.release)
+    }
 }

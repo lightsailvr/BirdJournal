@@ -32,7 +32,7 @@ extension MockDeviceKitTests {
                 #expect(lens.card.photo == LensImage(id: "haemorhous-mexicanus"))
                 #expect(lens.card.screenfuls[0].contains(.title("House Finch", detail: "61% match")))
 
-                // A tap on the photo page adds nothing; down opens the details and up brings the photo back.
+                // A tap on the photo page does nothing; down opens the details and up brings the photo back.
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 2 }
                 #expect(lens.page == .species(index: 1))
@@ -45,19 +45,29 @@ extension MockDeviceKitTests {
                 input.navDown()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 1) }
 
-                // "Add to my list": one Select saves and the page shows it; a Select right behind it (one press the
-                // hardware delivered twice) saves nothing more; a deliberate one later saves again.
+                // "Add to my list" opens the viewfinder, which waits for camera frames (a lens on its own has none);
+                // a Select right behind the first (one press the hardware delivered twice) takes no photo; a
+                // deliberate tap later takes it, adds the bird and returns to the details page with the mark.
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .viewfinder(index: 1) }
+                #expect(lens.card.elements.first == .viewfinder)
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 7 }
+                #expect(lens.page == .viewfinder(index: 1))
+                #expect(lens.savedSightings.isEmpty)
+                try await Task.sleep(for: .milliseconds(1100))
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 1 }
                 #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[1]])
                 #expect(lens.page == .details(index: 1))
-                #expect(lens.card.elements.last == .saved("Added to my list ✓"))
+                #expect(lens.card.elements.contains(.saved("Added to my list ✓")))
+
+                // Adding again opens the viewfinder again; a swipe adds the bird without a photo.
                 input.select()
-                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 7 }
-                #expect(lens.savedSightings.count == 1)
-                try await Task.sleep(for: .milliseconds(1100))
-                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .viewfinder(index: 1) }
+                input.navRight()
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 2 }
+                #expect(lens.page == .details(index: 1))
                 input.navUp()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1) }
                 #expect(lens.card.elements.contains(.status("2 species · 2 of 2 · Added")))
@@ -162,7 +172,7 @@ extension MockDeviceKitTests {
             }
         }
 
-        @Test("a tap on a photo page plays the song, the clip's end or a swipe brings the page back, the next tap plays the call, and the end of the run stops it (issue #41)")
+        @Test("a tap on a sounds page plays the song, the clip's end or a swipe brings the page back, the next tap plays the call, and the end of the run stops it (issue #41)")
         func playsReferenceClips() async throws {
             let output = FakeLensSoundOutput()
             let song = LensSound(id: "xc-1", kind: .song)
@@ -186,33 +196,41 @@ extension MockDeviceKitTests {
                 lens.update(with: FakeLensStack.stack(count: 1), at: FakeLensStack.quiet)
                 input.navLeft()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
-                #expect(hint() == .meta("Tap: its song · swipe down: more · right: all species"))
+                #expect(hint() == .meta("Up: its sounds · down: more · right: all species"))
+
+                // A tap on the photo page plays nothing; up opens the sounds, where a tap plays the song.
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == 2 }
+                #expect(output.played.isEmpty)
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .sounds(index: 0) }
+                #expect(hint() == .meta("Tap: play its song · down: photo"))
 
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { output.isPlaying(1) }
                 #expect(output.played == [song])
-                #expect(hint() == .meta("Playing song… tap to stop · right: all species"))
+                #expect(hint() == .meta("Playing song… tap to stop"))
                 #expect(lens.savedSightings.isEmpty)
 
                 output.finish()
                 #expect(lens.machine.playing == nil)
-                #expect(hint() == .meta("Tap: its call · swipe down: more · right: all species"))
+                #expect(hint() == .meta("Tap: play its call · down: photo"))
 
                 // Off the glasses' A2DP route the clip plays on the phone, and the page says so.
                 output.onGlasses = false
                 input.select()
-                try await waitUntil(timeout: .seconds(1)) { hint() == .meta("Call on the phone… tap to stop · right: all species") }
+                try await waitUntil(timeout: .seconds(1)) { hint() == .meta("Call on the phone… tap to stop") }
                 #expect(output.played == [song, call])
 
                 // A swipe stops it and still moves the page.
                 input.navDown()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 0) }
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
                 #expect(output.stopped == [2])
                 #expect(lens.machine.playing == nil)
 
                 // The end of the run (the glasses end it) stops the clip playing.
                 input.navUp()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 0) }
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .sounds(index: 0) }
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { output.isPlaying(3) }
                 glasses.powerOff()

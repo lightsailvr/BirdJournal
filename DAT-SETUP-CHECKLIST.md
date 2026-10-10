@@ -129,20 +129,52 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
      "Phase A go/no-go"; live location on top of the audio stream should cost a few percent, not double it.
    - Record the answers in DECISIONS.md, "A fresh location for every sighting".
 11. [ ] Reference clips on the lens (#41, phase 4), from "Listen with the glasses" with the phone in a pocket and the
-   glasses connected to the phone as a Bluetooth audio device (they show in Control Center's audio route):
-   - A2DP beside the stream: open a species with clips, tap. The song plays through the glasses' speakers, full range,
-     not the phone's speaker, while the camera stream's audio keeps coming (the waveform moves, later birds still
-     arrive). The photo page reads "Playing song… tap to stop", not "Song on the phone…". If it reads "on the phone",
-     the route was not `.bluetoothA2DP`: note what Control Center shows. Record whether A2DP and the DAT stream share.
-   - Latency: time from the tap to the first sound; and whether one tap arrives once (one Inputs select) or twice (the
-     clip would start and stop at once; the Developer screen's input log shows each event).
-   - Leak: play a clip with a bird the run has not heard. It must not appear on the list during the clip or in the 1.5 s
-     after (`AudioSuppression.defaultTail`); then play the same clip with the phone microphone as the source. If a
-     species does appear, lengthen the tail and note by how much.
-   - Dim: let a clip play out without touching anything. The page stays lit and goes back to "Tap: its call" at the end
-     (the 8 s clip is under the 20 s dim); note whether the end's re-send wakes a display that dimmed.
+   glasses connected to the phone as a Bluetooth audio device (they show in Control Center's audio route).
+   First run (2026-10-10): the page read "Playing song…", so iOS routed the clip to the glasses' A2DP output, but
+   nothing played on them or on the phone while the camera streamed. The clip now holds the stream: the camera
+   comes off the session for the clip and goes back 1 s after it ends, the gap filled with silence.
+   - Glasses speakers: open a species, swipe up to its sounds, tap. The song plays through the glasses' speakers, full
+     range, not the phone's speaker; the sounds page reads "Playing song… tap to stop", not "Song on the phone…". If
+     still silent, note it: the camera off the session was not enough (the next try is a stream with no audio codec).
+   - Restart: about a second after the clip ends the waveform moves again and later birds still arrive. Note the time
+     from the clip's end to the first chunk (the phone's stream state goes back to streaming), and whether the
+     restart ever fails. Failed on the first hardware try (2026-10-10, listening never came back); now it waits for the
+     old camera to stop and retries with a fresh one. `glasses-audio` in Console (filter on the subsystem
+     `com.matthewcelia.mybirdjournal`) logs "holding the stream for a clip", then "stream back (attempt N)", or per
+     attempt "stream restart, attempt N: …" and finally "the stream did not come back". Verified on the glasses the
+     same day: listening came back after a clip.
+   - Latency: time from the tap to the first sound, now including the stream stopping; and whether one tap arrives
+     once (one Inputs select) or twice (the clip would start and stop at once; the Developer screen's input log
+     shows each event).
+   - Leak: play a clip with a bird the run has not heard. It must not appear on the list during the clip or in the
+     1.5 s after (`AudioSuppression.defaultTail`); then play the same clip with the phone microphone as the source. If
+     a species does appear, lengthen the tail and note by how much.
+   - Dim: let a clip play out without touching anything. The page stays lit and goes back to "Tap: play its call" at
+     the end (the 8 s clip is under the 20 s dim); note whether the end's re-send wakes a display that dimmed.
    - Stop: a swipe, swiping right to the list, a doff and the two-finger quit each stop the clip at once.
+   - Misread swipes: swipe down on a photo page a dozen times. Nothing plays, whatever the band reads.
    - Record the answers in DECISIONS.md, "Reference sounds in the packs".
+12. [ ] The viewfinder (2026-10-10), from "Listen with the glasses":
+   - "Add to my list" opens the viewfinder. Note how many frames a second reach the lens and how far behind the
+     world they run; whether the additive display makes the picture readable outdoors. The 2 fps `.low` stream was
+     too coarse on the first try; the viewfinder now restarts the stream at `.medium` and 7 fps (`glasses-audio`:
+     "stream for the viewfinder: true", then "stream back"). Note how long the switch takes each way.
+   - Frozen on the third try (one picture, never updated). Open Settings → Developer tools → Glasses run before
+     the test; its camera log shows what the stream did. Expected on opening: "stream for the viewfinder: true",
+     "stream restart, attempt 1: viewfinder (504×896, 7 fps)", "stream: streaming", "first video frame on the
+     viewfinder stream". If the sharper stream fails, attempt 2 says "listening (360×640, 2 fps)"; the lens should
+     read "Waiting for the camera…" in between, never a still picture.
+   - The crop box: what sits inside the white frame is what the journal's picture shows. Check that against the
+     sighting; if the stream's field of view differs from the photo's, the box is off and needs scaling.
+   - One press of "Add to my list": the viewfinder opens and stays (a doubled press, click and select, takes no photo).
+   - A tap takes the photo: the standalone full-resolution still (beta in the toolkit). The journal's sighting shows
+     a sharp crop, and the stored file is about 3024×4032. Note the time from the tap to "full photo taken" in the
+     `glasses-audio` log, its size in bytes, and that listening comes back after ("stream back"). Failures log
+     "full photo, attempt N: …"; the sighting then keeps the stream frame from the tap.
+   - A swipe adds the bird without a photo; the journal shows the pack's photo for it.
+   - Add the same bird again ("Add another" on its details page): the journal has two sightings of it, and the
+     details page reads "Added 2 times ✓".
+   - Record the answers in DECISIONS.md, "Sounds page and viewfinder".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.

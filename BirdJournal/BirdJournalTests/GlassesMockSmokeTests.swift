@@ -26,7 +26,8 @@ extension MockDeviceKitTests {
         @Test("the glasses audio source starts a session and an audio-enabled camera stream")
         func audioSourceSessionPath() async throws {
             try await withStartedSource { source, _, log in
-                #expect(source.sessionState == .started)
+                // The state reaches the source on a hop to the main actor, so it may still read `.starting` here.
+                try await waitUntil { source.sessionState == .started }
                 // The mock stream reaches `.streaming`, then times out for lack of audio frames; only the transition counts.
                 try await waitUntil { log.streamStates.contains(.streaming) }
             }
@@ -64,6 +65,63 @@ extension MockDeviceKitTests {
                 await source.stop()
                 try await waitUntil { chunksEnded.value }
                 second.stop()
+            }
+        }
+
+        @Test("a clip takes the camera off and the stream comes back on the same session once it ends, a song then a call holding it once")
+        func audioSourceRestartsAfterAClip() async throws {
+            try await withStartedSource { source, _, log in
+                try await waitUntil { log.streamStates.contains(.streaming) }
+                let streamed = { log.streamStates.filter { $0 == .streaming }.count }
+
+                await source.holdForPlayback()
+                #expect(source.streamState == .stopped)
+                source.releaseAfterPlayback()
+                // The call starts inside the restart delay: the stream stays off for it.
+                try await Task.sleep(for: .milliseconds(300))
+                await source.holdForPlayback()
+                try await Task.sleep(for: GlassesAudioSource.restartDelay + .milliseconds(500))
+                #expect(streamed() == 1)
+                #expect(source.sessionState == .started)
+
+                source.releaseAfterPlayback()
+                try await waitUntil(timeout: .seconds(15)) { streamed() == 2 }
+                #expect(source.sessionState == .started)
+            }
+        }
+
+        @Test("a full-resolution photo takes the stream off, comes from the photo capability, and the stream comes back")
+        func audioSourceFullPhoto() async throws {
+            try await withStartedSource { source, glasses, log in
+                try await waitUntil { log.streamStates.contains(.streaming) }
+                let photoURL = try makeFeedImage()
+                glasses.services.cameraCapture.setCapturedPhoto(fileURL: photoURL)
+                let streamed = { log.streamStates.filter { $0 == .streaming }.count }
+
+                let photo = await source.capturePhoto()
+                let data = try #require(photo, "the mock's photo")
+                #expect(data.starts(with: [0xFF, 0xD8]), "stored as a JPEG")
+                try await waitUntil(timeout: .seconds(15)) { streamed() == 2 }
+                #expect(source.sessionState == .started)
+            }
+        }
+
+        @Test("the viewfinder restarts the stream sharper and faster, and closing it goes back to the listening stream")
+        func audioSourceViewfinderStream() async throws {
+            try await withStartedSource { source, _, log in
+                try await waitUntil { log.streamStates.contains(.streaming) }
+                let streamed = { log.streamStates.filter { $0 == .streaming }.count }
+                #expect(source.configuration.resolution == .low)
+
+                await source.setViewfinder(open: true)
+                #expect(source.configuration.resolution == .medium)
+                #expect(source.configuration.frameRate == 7)
+                try await waitUntil(timeout: .seconds(15)) { streamed() == 2 }
+
+                await source.setViewfinder(open: false)
+                #expect(source.configuration.resolution == .low)
+                try await waitUntil(timeout: .seconds(15)) { streamed() == 3 }
+                #expect(source.sessionState == .started)
             }
         }
 

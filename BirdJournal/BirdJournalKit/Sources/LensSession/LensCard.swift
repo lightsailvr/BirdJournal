@@ -16,7 +16,7 @@ public enum LensSoundKind: String, Sendable, Hashable {
     /// An untyped recording (iNaturalist), shipped only when the species has neither a song nor a call.
     case sound
 
-    /// The clip as the photo page names it: "its song", "Playing song…".
+    /// The clip as the sounds page names it: "its song", "Playing song…".
     var noun: String {
         switch self {
         case .song: "song"
@@ -31,10 +31,13 @@ public struct LensSound: Sendable, Hashable {
     /// The pack's sound id, e.g. `xc-109602`.
     public var id: String
     public var kind: LensSoundKind
+    /// One line, e.g. "Sound: J. Birder, XC109602", shown under the clips on the sounds page.
+    public var credit: String
 
-    public init(id: String, kind: LensSoundKind) {
+    public init(id: String, kind: LensSoundKind, credit: String = "") {
         self.id = id
         self.kind = kind
+        self.credit = credit
     }
 }
 
@@ -48,7 +51,7 @@ public struct SpeciesProfile: Sendable, Equatable {
     public var habitat: String
     /// One line, e.g. "Photo: J. Birder, CC BY". Ignored when there is no photo.
     public var photoCredit: String
-    /// The reference clips a tap on the photo page plays in turn, song first (issue #41); empty for none.
+    /// The reference clips a tap on the sounds page plays in turn, song first (issue #41); empty for none.
     public var sounds: [LensSound]
 
     public init(photo: LensImage?, fieldMarks: String, size: String, habitat: String, photoCredit: String, sounds: [LensSound] = []) {
@@ -92,6 +95,17 @@ public struct LensListRow: Sendable, Equatable {
     public var words: Int { commonName.words + confidence.words }
 }
 
+/// One clip on a species' sounds page: what it is, whether a tap plays it next, whether it is playing.
+public struct LensSoundRow: Sendable, Equatable {
+    /// "Song", "Call" or "Recording".
+    public var label: String
+    /// The clip a tap plays next, marked like the list's selected row.
+    public var isNext: Bool
+    public var isPlaying: Bool
+
+    public var words: Int { label.words }
+}
+
 /// One element of a card, in Display DSL terms.
 public enum LensElement: Sendable, Equatable {
     /// The one-line strip of a species card: species count and position on the photo page, and who is calling now.
@@ -111,6 +125,10 @@ public enum LensElement: Sendable, Equatable {
     case saved(String)
     /// The rows of the species list's current page, one selected.
     case list([LensListRow])
+    /// A species' reference clips on its sounds page, the next one marked.
+    case sounds([LensSoundRow])
+    /// The live camera picture on the viewfinder page; the adapter fills it with the stream's latest frame.
+    case viewfinder
 }
 
 /// A card, described without the toolkit: one column of elements, sent whole as the single root `FlexBox` of a
@@ -147,7 +165,8 @@ extension LensElement {
         case .title(let name, let detail): name.words + detail.words
         case .button(let button): button.label.words
         case .list(let rows): rows.reduce(0) { $0 + $1.words }
-        case .photo: 0
+        case .sounds(let rows): rows.reduce(0) { $0 + $1.words }
+        case .photo, .viewfinder: 0
         }
     }
 }

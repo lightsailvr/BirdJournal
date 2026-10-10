@@ -16,6 +16,11 @@ struct LensStateMachineTests {
             _ = machine.apply(.tap)
         }
         if case .details = page { _ = machine.apply(.swipeDown) }
+        if case .sounds = page { _ = machine.apply(.swipeUp) }
+        if case .viewfinder = page {
+            _ = machine.apply(.swipeDown)
+            _ = machine.apply(.tap)
+        }
         if case .problem(let problem) = page { machine.report(problem) }
         precondition(machine.page == page, "could not reach \(page)")
         return machine
@@ -171,25 +176,43 @@ struct LensStateMachineTests {
         Transition(.list, .tap, .species(index: 0)),
         Transition(.list, .back, .list, .endSession),
 
-        // The photo page: down opens the details, up has nothing above; left is the next species and stops at the
-        // end; right (and Back, on the mock) is back to the list; a tap adds nothing (it plays a clip, LensSoundTests).
+        // The photo page: down opens the details, up the sounds; left is the next species and stops at the end;
+        // right (and Back, on the mock) is back to the list; a tap does nothing (the band can read a swipe as one).
         Transition(.species(index: 1), .swipeLeft, .species(index: 2)),
         Transition(.species(index: 1), .swipeRight, .list),
-        Transition(.species(index: 1), .swipeUp, .species(index: 1)),
+        Transition(.species(index: 1), .swipeUp, .sounds(index: 1)),
         Transition(.species(index: 1), .swipeDown, .details(index: 1)),
         Transition(.species(index: 1), .tap, .species(index: 1)),
         Transition(.species(index: 1), .back, .list),
         Transition(.species(index: 2), .swipeLeft, .species(index: 2)),
 
         // The details page: up is back to the photo, down has nothing below; left and right as on the photo page;
-        // a tap is "Add to my list".
+        // a tap is "Add to my list", which opens the viewfinder.
         Transition(.details(index: 1), .swipeLeft, .species(index: 2)),
         Transition(.details(index: 1), .swipeRight, .list),
         Transition(.details(index: 1), .swipeUp, .species(index: 1)),
         Transition(.details(index: 1), .swipeDown, .details(index: 1)),
-        Transition(.details(index: 1), .tap, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
+        Transition(.details(index: 1), .tap, .viewfinder(index: 1), .openViewfinder(Fakes.candidate(Fakes.finch))),
         Transition(.details(index: 1), .back, .list),
         Transition(.details(index: 2), .swipeLeft, .details(index: 2)),
+
+        // The sounds page: down is back to the photo, up has nothing above; left and right as on the photo page;
+        // a tap plays a clip (LensSoundTests), and does nothing for a species without any.
+        Transition(.sounds(index: 1), .swipeLeft, .species(index: 2)),
+        Transition(.sounds(index: 1), .swipeRight, .list),
+        Transition(.sounds(index: 1), .swipeUp, .sounds(index: 1)),
+        Transition(.sounds(index: 1), .swipeDown, .species(index: 1)),
+        Transition(.sounds(index: 1), .tap, .sounds(index: 1)),
+        Transition(.sounds(index: 1), .back, .list),
+
+        // The viewfinder: a tap takes the photo and adds the bird; any swipe, or Back, adds it without one. Either
+        // way the details page shows it added.
+        Transition(.viewfinder(index: 1), .tap, .details(index: 1), .takePhoto(Fakes.candidate(Fakes.finch))),
+        Transition(.viewfinder(index: 1), .swipeLeft, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
+        Transition(.viewfinder(index: 1), .swipeRight, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
+        Transition(.viewfinder(index: 1), .swipeUp, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
+        Transition(.viewfinder(index: 1), .swipeDown, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
+        Transition(.viewfinder(index: 1), .back, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
 
         // A problem page over the list (the way back, issue #10): swipe right, Back and a tap return to the page it
         // covers; the other swipes stay on it.
@@ -211,7 +234,7 @@ struct LensStateMachineTests {
 
     @Test("the table covers every page kind and gesture")
     func tableIsComplete() {
-        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1), .problem(.noLocation)]
+        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1), .sounds(index: 1), .viewfinder(index: 1), .problem(.noLocation)]
         for page in pages {
             for gesture in LensGesture.allCases {
                 #expect(Self.transitions.contains { $0.from == page && $0.gesture == gesture }, "\(page) + \(gesture) is not in the table")
@@ -271,25 +294,36 @@ struct LensStateMachineTests {
 
     // MARK: - Saving
 
-    @Test("a tap on the details page adds the species and marks it; a later tap adds it again")
+    @Test("a tap on the details page opens the viewfinder; a tap there adds the species with a photo and marks it; a later add takes another")
     func tapSaves() {
         var machine = Self.machine(on: .details(index: 1))
-        #expect(machine.apply(.tap) == .saveSighting(Fakes.candidate(Fakes.finch)))
+        #expect(machine.apply(.tap) == .openViewfinder(Fakes.candidate(Fakes.finch)))
+        #expect(machine.savedIndices.isEmpty, "opening the viewfinder adds nothing yet")
+        #expect(machine.page == .viewfinder(index: 1))
+        #expect(machine.currentCandidate == Fakes.candidate(Fakes.finch))
+        #expect(machine.apply(.tap) == .takePhoto(Fakes.candidate(Fakes.finch)))
         #expect(machine.savedIndices == [1])
         #expect(machine.page == .details(index: 1))
-        // Saving again updates the sighting (spec user story 33); a press delivered twice is the adapter's to drop.
-        #expect(machine.apply(.tap) == .saveSighting(Fakes.candidate(Fakes.finch)))
+        #expect(machine.savedCounts == [1: 1])
+        // Adding again adds another sighting; a press delivered twice is the adapter's to drop.
+        #expect(machine.apply(.tap) == .openViewfinder(Fakes.candidate(Fakes.finch)))
+        #expect(machine.apply(.swipeRight) == .saveSighting(Fakes.candidate(Fakes.finch)))
         #expect(machine.savedIndices == [1])
+        #expect(machine.savedCounts == [1: 2])
+        #expect(machine.page == .details(index: 1))
     }
 
-    @Test("the Add to my list button saves like a tap, and only on a details page")
+    @Test("the Add to my list button opens the viewfinder like a tap, and only on a details page")
     func saveButton() {
         var machine = Self.machine(on: .details(index: 2))
-        #expect(machine.press(.save) == .saveSighting(Fakes.candidate(Fakes.towhee)))
-        #expect(machine.savedIndices == [2])
-        #expect(machine.page == .details(index: 2))
+        #expect(machine.press(.save) == .openViewfinder(Fakes.candidate(Fakes.towhee)))
+        #expect(machine.page == .viewfinder(index: 2))
+        // The button's click arriving again on the viewfinder (one press delivered twice) does nothing.
+        #expect(machine.press(.save) == nil)
+        #expect(machine.page == .viewfinder(index: 2))
+        #expect(machine.savedIndices.isEmpty)
 
-        for page in [LensPage.list, .species(index: 0)] {
+        for page in [LensPage.list, .species(index: 0), .sounds(index: 0)] {
             machine = Self.machine(on: page)
             #expect(machine.press(.save) == nil)
             #expect(machine.savedIndices.isEmpty)
@@ -299,7 +333,7 @@ struct LensStateMachineTests {
 
     @Test("saved species stay saved while paging away and back")
     func savedSurvivesNavigation() {
-        var machine = Self.machine(on: .details(index: 0))
+        var machine = Self.machine(on: .viewfinder(index: 0))
         _ = machine.apply(.tap)
         _ = machine.apply(.swipeLeft)
         _ = machine.apply(.swipeRight)
@@ -377,7 +411,7 @@ struct LensStateMachineTests {
 
     @Test("a score change on the current species keeps the order, the page and the saved mark")
     func scoreUpdateKeepsOrder() {
-        var machine = Self.machine(on: .details(index: 0), species: 3)
+        var machine = Self.machine(on: .viewfinder(index: 0), species: 3)
         _ = machine.apply(.tap)
         var candidates = Fakes.stack(3).candidates
         candidates[0].score = 0.1
@@ -398,7 +432,7 @@ struct LensStateMachineTests {
 
     @Test("a stack that is not a continuation of the current one restarts on the list with nothing saved")
     func replacedStackResets() {
-        var machine = Self.machine(on: .details(index: 2), species: 3)
+        var machine = Self.machine(on: .viewfinder(index: 2), species: 3)
         _ = machine.apply(.tap)
         let changed = machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]), at: Fakes.quiet)
         #expect(changed)
@@ -414,5 +448,16 @@ struct LensStateMachineTests {
         #expect(Self.machine(on: .list).currentCandidate == nil)
         #expect(Self.machine(on: .species(index: 2)).currentCandidate == Fakes.candidate(Fakes.towhee))
         #expect(Self.machine(on: .details(index: 1)).currentCandidate == Fakes.candidate(Fakes.finch))
+        #expect(Self.machine(on: .sounds(index: 0)).currentCandidate == Fakes.candidate(Fakes.phoebe))
+    }
+
+    @Test("a problem over the viewfinder returns to it, and the add still waits for a tap or a swipe")
+    func problemOverViewfinder() {
+        var machine = Self.machine(on: .viewfinder(index: 1))
+        machine.report(.connectionLost)
+        #expect(machine.apply(.swipeRight) == nil)
+        #expect(machine.page == .viewfinder(index: 1))
+        #expect(machine.savedIndices.isEmpty)
+        #expect(machine.apply(.tap) == .takePhoto(Fakes.candidate(Fakes.finch)))
     }
 }

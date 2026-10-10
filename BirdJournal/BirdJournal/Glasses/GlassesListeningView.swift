@@ -73,6 +73,7 @@ struct GlassesListeningView: View {
 
             HeardSection(session: run.listening)
             ListeningStatsSection(session: run.listening)
+            GlassesLogSection()
         }
         .navigationTitle("Glasses")
     }
@@ -104,6 +105,37 @@ struct GlassesListeningView: View {
         case .paused(.byGlasses): "Paused by the glasses. Tap the touchpad to carry on, or Stop."
         case .resuming: "Glasses back: reconnecting…"
         case .idle, .starting, .listening, .stopping, .stopped: ""
+        }
+    }
+}
+
+/// The camera and stream log (`GlassesLog`), newest first: the restarts, the viewfinder's stream and the photos.
+private struct GlassesLogSection: View {
+    @State private var log = GlassesLog.shared
+
+    var body: some View {
+        Section {
+            if log.entries.isEmpty {
+                Text("Nothing yet").foregroundStyle(.secondary)
+            }
+            ForEach(log.entries.reversed()) { entry in
+                HStack(alignment: .firstTextBaseline) {
+                    Text(entry.at, format: .dateTime.hour().minute().second().secondFraction(.fractional(1)))
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                    Text(entry.text)
+                        .font(.caption)
+                        .foregroundStyle(entry.isError ? .red : .primary)
+                }
+            }
+        } header: {
+            HStack {
+                Text("Camera log")
+                Spacer()
+                if !log.entries.isEmpty {
+                    Button("Clear") { log.clear() }.font(.caption)
+                }
+            }
         }
     }
 }

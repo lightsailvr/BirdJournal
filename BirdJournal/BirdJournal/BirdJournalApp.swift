@@ -60,9 +60,10 @@ struct BirdJournalApp: App {
         let sounds = ReferenceSounds(
             player: AVSoundPlayer(), session: SystemPlaybackAudioSession(), suppression: suppression,
             phoneRunHoldsSession: { [weak listening] in listening?.phoneRunHoldsSession ?? false },
+            glassesStream: { [weak glasses] in glasses?.playbackStreamHold },
             lookup: { packs.soundAndFile(id: $0) }
         )
-        // The lens's photo pages play through the same player as the profile (issue #41, phase 4).
+        // The lens's sounds pages play through the same player as the profile (issue #41, phase 4).
         glasses.lens.sounds = sounds
         lens.sounds = sounds
         _sounds = State(initialValue: sounds)

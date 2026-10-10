@@ -256,6 +256,14 @@ final class ManualAudioSource: FrameKeepingAudioSource {
         continuation.finish()
     }
 
+    /// What the next photo delivers; nil stands for a capture that failed or timed out.
+    var photo: Data?
+
+    func capturePhoto() async -> Data? { photo }
+    /// Every viewfinder change the run passed on, oldest first.
+    var viewfinderChanges: [Bool] = []
+    func setViewfinder(open: Bool) async { viewfinderChanges.append(open) }
+
     func suspend() async {
         suspensions += 1
         latestFrame = nil

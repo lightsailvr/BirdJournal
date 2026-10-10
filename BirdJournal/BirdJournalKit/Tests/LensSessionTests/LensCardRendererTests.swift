@@ -194,12 +194,37 @@ struct LensCardRendererTests {
         ])
     }
 
-    @Test("an added species shows the mark in place of the button and on the photo page's strip")
+    @Test("the viewfinder page is the camera's view, the name with its match rate, and what a tap and a swipe do")
+    func viewfinderPage() {
+        let card = Self.render(.viewfinder(index: 0))
+        #expect(card.elements == [
+            .viewfinder,
+            .title("Black Phoebe", detail: "80% match"),
+            .meta("Tap: take the photo · swipe: add without one"),
+        ])
+        #expect(card.wordCount <= LensCardRenderer.wordBudget)
+    }
+
+    @Test("the sounds page of a species without clips says so and points back to the photo")
+    func soundsPageWithoutClips() {
+        let card = Self.render(.sounds(index: 1))
+        #expect(card.elements == [
+            .title("House Finch", detail: "80% match"),
+            .meta("No recordings in your pack · swipe down: photo"),
+        ])
+    }
+
+    @Test("an added species shows the mark and Add another in place of the button, the count once it is more than one, and the mark on the photo page's strip")
     func savedPages() {
         #expect(Self.render(.species(index: 0), saved: [0, 2]).elements[2] == .status("3 species · 1 of 3 · Added"))
         let details = Self.render(.details(index: 0), saved: [0, 2])
-        #expect(details.elements.last == .saved("Added to my list ✓"))
+        #expect(Array(details.elements.suffix(2)) == [.saved("Added to my list ✓"), .button(LensCardRenderer.addAnotherButton)])
         #expect(!details.elements.contains(Self.saveButton))
+        let twice = LensCardRenderer.render(
+            .details(index: 0), stack: Self.stack, order: Self.quietOrder, selection: 0, saved: [0], savedCounts: [0: 2], profile: Self.profile
+        )
+        #expect(twice.elements.contains(.saved("Added 2 times ✓")))
+        #expect(twice.wordCount <= LensCardRenderer.wordBudget)
     }
 
     @Test("a species outside the pack is still shown by name, with its scientific name as the text")

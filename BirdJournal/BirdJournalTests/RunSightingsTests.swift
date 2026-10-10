@@ -16,8 +16,8 @@ struct RunSightingsTests {
         Candidate(species: finch, score: score, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
     }
 
-    @Test("a species added from the glasses and again from the phone is one sighting that keeps its first time and place and takes the newer frame")
-    func oneSightingPerSpecies() throws {
+    @Test("a species added from the glasses and again from the phone is two sightings, each with its own time, place and frame; undo removes one at a time")
+    func everyAddIsASighting() throws {
         let album = try AlbumSchema.makeContainer(inMemory: true)
         let folder = URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
@@ -29,60 +29,30 @@ struct RunSightingsTests {
         let glasses = try ledger.add(Self.candidate(score: 0.5), confirmedAt: first, location: here, frame: Data([1]), source: .glasses)
         let phone = try ledger.add(Self.candidate(score: 0.75), confirmedAt: first.addingTimeInterval(60), location: nil, frame: Data([2]), source: .phone)
 
-        #expect(glasses.wasNew && !phone.wasNew)
-        #expect(ledger.entries.count == 1)
-        #expect(ledger.entries[0].candidate.score == 0.75)
-        let stored = try #require(try album.mainContext.fetch(Sighting.newestFirst()).first)
-        #expect(try album.mainContext.fetch(Sighting.newestFirst()).count == 1)
-        #expect(stored.confirmedAt == first)
-        #expect(stored.location == here)
-        #expect(stored.soundConfidence == 0.75)
-        #expect(stored.source == .glasses)
-        let newerFrame = try #require(stored.frameImagePath)
-        #expect(newerFrame != phone.previousFramePath)
-        #expect(try Data(contentsOf: frames.url(for: newerFrame)) == Data([2]))
+        #expect(glasses.sightingID != phone.sightingID)
+        #expect(ledger.entries.map(\.candidate.score) == [0.5, 0.75])
+        #expect(ledger.count(of: Self.finch) == 2)
+        let stored = try album.mainContext.fetch(Sighting.newestFirst())
+        #expect(stored.count == 2)
+        #expect(stored.map(\.confirmedAt) == [first.addingTimeInterval(60), first])
+        #expect(stored.map(\.location) == [nil, here])
+        #expect(stored.map(\.source) == [.phone, .glasses])
+        let paths = stored.compactMap(\.frameImagePath)
+        #expect(try paths.map { try Data(contentsOf: frames.url(for: $0)) } == [Data([2]), Data([1])])
 
         try ledger.undo(phone)
-        #expect(stored.soundConfidence == 0.5)
-        #expect(stored.frameImagePath == phone.previousFramePath)
-        #expect(try Data(contentsOf: frames.url(for: try #require(stored.frameImagePath))) == Data([1]))
-        #expect(!FileManager.default.fileExists(atPath: frames.url(for: newerFrame).path(percentEncoded: false)), "the undone frame is gone")
-        #expect(ledger.entries[0].candidate.score == 0.5)
+        #expect(ledger.count(of: Self.finch) == 1)
+        #expect(try album.mainContext.fetch(Sighting.newestFirst()).map(\.source) == [.glasses])
+        #expect(!FileManager.default.fileExists(atPath: frames.url(for: paths[0]).path(percentEncoded: false)), "the undone frame is gone")
+        #expect(FileManager.default.fileExists(atPath: frames.url(for: paths[1]).path(percentEncoded: false)))
 
+        try ledger.undo(glasses)
         try ledger.undo(glasses)
         #expect(ledger.entries.isEmpty)
         #expect(try album.mainContext.fetch(Sighting.newestFirst()).isEmpty)
 
         ledger.reset()
         #expect(!ledger.isAdded(Self.finch))
-    }
-
-    @Test("a frame an update replaced stays on disk until the undo window closes, then goes; an undone update keeps it")
-    func replacedFramesAreDeletedOnCommit() throws {
-        let album = try AlbumSchema.makeContainer(inMemory: true)
-        let folder = URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory)
-        defer { try? FileManager.default.removeItem(at: folder) }
-        let frames = FrameStore(directory: folder)
-        let ledger = RunSightings(recorder: SightingRecorder(container: album, frames: frames))
-        func exists(_ path: String?) -> Bool { path.map { FileManager.default.fileExists(atPath: frames.url(for: $0).path(percentEncoded: false)) } ?? false }
-
-        let first = try ledger.add(Self.candidate(score: 0.5), confirmedAt: .now, location: nil, frame: Data([1]), source: .glasses)
-        let second = try ledger.add(Self.candidate(score: 0.6), confirmedAt: .now, location: nil, frame: Data([2]), source: .glasses)
-        let firstFrame = try #require(second.previousFramePath)
-        #expect(exists(firstFrame), "still there while the update can be undone")
-
-        ledger.commitReplacedFrames()
-        #expect(!exists(firstFrame), "gone once the window closed")
-        let stored = try #require(try album.mainContext.fetch(Sighting.newestFirst()).first)
-        #expect(exists(stored.frameImagePath), "the current frame stays")
-
-        let third = try ledger.add(Self.candidate(score: 0.7), confirmedAt: .now, location: nil, frame: Data([3]), source: .phone)
-        let secondFrame = try #require(third.previousFramePath)
-        try ledger.undo(third)
-        ledger.commitReplacedFrames()
-        #expect(exists(secondFrame), "an undone update's earlier frame is back in use, not deleted")
-        #expect(stored.frameImagePath == secondFrame)
-        _ = first
     }
 
     @Test("a sighting names its species from the packs, else from its label, so a removed pack leaves the journal readable")

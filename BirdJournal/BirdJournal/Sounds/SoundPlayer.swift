@@ -24,6 +24,16 @@ protocol PlaybackAudioSession: AnyObject {
     var routesToBluetoothA2DP: Bool { get }
 }
 
+/// The glasses run's camera stream, which a clip holds while it plays: the glasses do not play audio on their
+/// speakers while the camera streams.
+@MainActor
+protocol PlaybackStreamHold: AnyObject {
+    /// Stops the stream for a clip; returns once it is off.
+    func holdForPlayback() async
+    /// The clip is over; the stream may restart.
+    func releaseAfterPlayback()
+}
+
 /// A clip the lens started (issue #41, phase 4): the token to stop it by, and whether it plays on the glasses.
 struct LensSoundStart: Equatable {
     let clip: Int
