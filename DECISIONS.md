@@ -230,7 +230,10 @@ Committed: `art/` (prompts, workflows, comfybox setup, the plan and the tuning w
   - **Scene plausibility**: the composite fixes the place and the scale. Every bird is pasted at the same height for now, so a hummingbird is as tall as an egret; #68 needs a per-species size.
   - **Style match**: the 4-step look is too tame. Full quality is painterly and close to the style guide's gouache, and the maintainer is tuning it by hand.
   - **Time**: as above.
-  - **The model stays Qwen-Image-Edit-2511.** No FLUX-family model was tried (ADR-0001). If Qwen falls short after tuning, these openly licensed edit models are the untested alternatives: Step1X-Edit and OmniGen2 (Apache 2.0), HiDream-E1 (MIT), and Qwen-Image-Edit-2509 (Apache 2.0).
+  - **The model stays Qwen-Image-Edit-2511 for now**, pending the maintainer's comparison. No non-commercial model was tried (ADR-0001).
+    - Being compared, installed by `art/comfybox/download-alternatives.sh` with adapted ComfyUI templates (`art/README.md`, "Alternative models"): FLUX.2 [klein] 4B, base and distilled, and FireRed Image Edit 1.1, all Apache 2.0, plus consistency LoRAs for Klein 4B and Qwen 2511.
+    - Ruled out: FLUX.2 [klein] 9B and [dev] (non-commercial weights), Qwen-Image 2.1 (its own commercial license) and OmniGen2 (its Qwen2.5-VL-3B encoder is research-only).
+    - Still unchecked as a whole stack: Step1X-Edit, HiDream-E1 and Qwen-Image-Edit-2509.
   - **A style LoRA** is not needed yet. Revisit it if hand-tuned prompts can't hold one style across species, and train it on public-domain plates only.
 - **Tuning by hand** (the maintainer's choice, 2026-10-14):
   - Three editor workflows sit on comfybox under `BirdJournal/`, with copies in `art/comfyui/`. Each holds sample inputs for every species, the prompt template with its placeholders, and a fast-preview switch (`art/README.md`, "Tuning by hand").

@@ -38,6 +38,28 @@ The look is tuned by hand in ComfyUI's editor, then the batch paints with it. On
 
 When a look is right, save the workflow with Fast preview off. Then the template, the negative prompt and the field values go into `prompts.json`, and the graph, exported in API format with the node titles `image 1`, `prompt`, `negative`, `sampler` and `output` kept, into `workflows/<kind>-art.json`. Bump both versions, and `python -m packbuilder.bakeoff paint` repaints the plan.
 
+## Alternative models
+
+`comfybox/download-alternatives.sh` installs the Apache 2.0 alternatives to compare with Qwen-Image-Edit-2511 at putting a real bird into a scene. Each is SHA-256-checked:
+
+- FLUX.2 [klein] 4B, base and distilled, in fp8, with BFL's small-decoder VAE.
+- FireRed Image Edit 1.1 as the official Q4_K_M GGUF, with its 8-step Lightning LoRA.
+- Three consistency LoRAs: one for Klein 4B (lrzjason) and two for Qwen 2511 (lrzjason, Kalaido).
+
+`comfyui/alternatives/` holds ComfyUI's own templates for them, adapted, and they sit on comfybox under `BirdJournal/alternatives/`:
+
+- **Inputs**: the bird cut out onto white (`birdjournal-bird-<species>`) and a zoomed glasses photo (`birdjournal-glasses-<scene>`).
+- **Prompt and seed**: the research's prompt and a fixed seed.
+- **Licensing and memory**:
+  - The distilled Klein uses the small-decoder VAE in place of `flux2-vae`, whose repository declares the FLUX non-commercial license.
+  - FireRed loads the GGUF in place of its 41 GB bf16 file.
+
+Left out on purpose (ADR-0001):
+
+- FLUX.2 [klein] 9B and FLUX.2 [dev]: non-commercial weights.
+- Qwen-Image 2.1: its own commercial license.
+- OmniGen2: its Qwen2.5-VL-3B encoder is research-only.
+
 ## comfybox
 
 ComfyUI has no authentication, so it listens on loopback and the box's tailnet address only (`http://comfybox:8188`, 100.80.25.1), never the home LAN. `comfybox/tailnet-only.conf` is a systemd drop-in for `comfyui.service` that sets that up and waits for tailscaled before binding. Install or update it with sudo on the box:
