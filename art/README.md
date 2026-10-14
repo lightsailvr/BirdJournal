@@ -38,6 +38,8 @@ The look is tuned by hand in ComfyUI's editor, then the batch paints with it. On
 
 When a look is right, save the workflow with Fast preview off. Then the template, the negative prompt and the field values go into `prompts.json`, and the graph, exported in API format with the node titles `image 1`, `prompt`, `negative`, `sampler` and `output` kept, into `workflows/<kind>-art.json`. Bump both versions, and `python -m packbuilder.bakeoff paint` repaints the plan.
 
+**Style pass** (`comfyui/style-pass.json`, on comfybox as `BirdJournal/style pass`) restyles a finished telephoto painting (`birdjournal-telephoto-<spot>`) with the photo-art graph. The reference bird goes in as image 2, so the restyle keeps the species. Its note holds six style paragraphs, from fantasy line art to an epic Renaissance myth painting, to paste in. `comfyui/alternatives/klein-4b-distilled-style-pass.json` does the same with Klein 4B distilled, from one image.
+
 ## Alternative models
 
 `comfybox/download-alternatives.sh` installs the Apache 2.0 alternatives to compare with Qwen-Image-Edit-2511 at putting a real bird into a scene. Each is SHA-256-checked:
