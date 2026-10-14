@@ -204,3 +204,34 @@ _The confirm page and Save button described here were replaced by the species de
 - **Lens**: the state machine counts saves per stack index (`savedCounts`). A saved species' details page shows "Added to my list ✓" (or "Added N times ✓" from the second) and an **Add another** button, which opens the viewfinder like the first add.
 - **Phone**: the review sheet of an added species reads "Added to your journal · N sightings" and offers **Add another sighting**; the acknowledgment reads "Added to your journal · N sightings this run" from the second.
 
+## Art model bake-off (issue #49) — run 2026-10-14; the style is being tuned by hand
+Qwen-Image-Edit-2511 on comfybox painted ten hard species: Black Phoebe, Anna's Hummingbird, Red-tailed Hawk, Cooper's Hawk, House Finch, California Towhee, Western Bluebird, Great Egret, Great Horned Owl and Townsend's Warbler. Each was painted as pack art in the Los Angeles and San Diego editions, as scene art in three glasses photos plus a Legendary one, and as photo art from two bird photos plus a Legendary one. The rounds covered six prompt versions at two qualities.
+
+Committed: `art/` (prompts, workflows, comfybox setup, the plan and the tuning workflows) and `packbuilder.art`, `packbuilder.comfy` and `python -m packbuilder.bakeoff`. The paintings, composites and contact sheets stay in `build/art-bakeoff/`, because the scenes are the maintainer's glasses photos.
+- **The box**:
+  - ComfyUI listens on loopback and the tailnet address only, through a systemd drop-in (`art/comfybox/tailnet-only.conf`). Checked: two sockets, 127.0.0.1 and 100.80.25.1, and the box's LAN address refused.
+  - The drop-in also dropped two flags. `--highvram` forbade partly offloading a model, so the 20.5 GB model ran out of the 24 GB card. `--use-sage-attention` made every Qwen image black.
+  - The models are installed and SHA-256-checked by `art/comfybox/download-models.sh`: Qwen-Image-Edit-2511 fp8mixed, its text encoder and VAE, and the 4-step Lightning LoRA (all Apache 2.0), plus BiRefNet-general for the cut-out. The comfyui-rmbg node fetches BiRefNet from a re-host that declares no license (upstream is MIT); confirm it before the art worker ships (#68).
+- **Time per image** (rubric):
+  - The 4-step Lightning LoRA takes about 12 s per 864 × 1152 painting, 20 s for a two-image graph.
+  - Full quality (40 steps, cfg 4) takes 207 s, so 90 paintings take about 5 hours.
+  - The same inputs and seed give the same image.
+- **References**: open-license (CC0, CC BY) photos among the Los Angeles and San Diego packs' cached candidates, picked by hand (`art/bakeoff/plan.json`, with credits).
+  - The pack scorer favours dark backgrounds for the lens, so it ranks dim photos high. From a dim or dull reference the model paints its stereotype: the House Finch became cardinal-like, and the female bluebird an Eastern-like male. **Art references must be picked for art: a well-lit, typical adult.**
+  - A scene reference must also be unobstructed, because a twig across the bird cuts a hole in the cut-out.
+- **What the rounds showed**:
+  - Named in a prompt, a species pulls in the model's stereotype of it. Scene and photo art no longer name it.
+  - Asked to add the bird from a second image, Qwen drew its own bird, at the wrong scale and with the reference's perch. **Scene art is now a composite**: the glasses photo zoomed 2× to the viewfinder's crop, the reference bird cut out (BiRefNet) and pasted near the middle at 38 % of the height (`packbuilder.art.paste_bird`), then painted.
+  - The 4-step LoRA keeps the input faithfully but paints flat, almost photographic, pictures. Wording that forces a painted look makes it reinvent the bird: a hunched hawk stood up, and a female bluebird turned male.
+  - Full quality paints richly and keeps sharp inputs: pack and photo art kept the pose and the markings. But it invents a new picture when the input is blurry, which a 360 × 640 stream frame is once zoomed, or when the wording asks for a "wilderness quest". Scene art therefore needs the full-resolution glasses photo, and wording that keeps the photographed moment (prompts v6).
+  - "Adventure-cover painting" makes the model letter a title onto the picture. The negative prompt removes it, but only at cfg above 1.
+- **Verdict against the rubric** (Claude's reading of the sheets; the maintainer's eye decides):
+  - **Anatomy and field marks**: hold whenever the bird's pixels come from a good photo: pack art from a typical adult reference, photo art, and scene art from a composite. They fail where the model is left to imagine the bird.
+  - **Scene plausibility**: the composite fixes the place and the scale. Every bird is pasted at the same height for now, so a hummingbird is as tall as an egret; #68 needs a per-species size.
+  - **Style match**: the 4-step look is too tame. Full quality is painterly and close to the style guide's gouache, and the maintainer is tuning it by hand.
+  - **Time**: as above.
+  - **The model stays Qwen-Image-Edit-2511.** No FLUX-family model was tried (ADR-0001). If Qwen falls short after tuning, these openly licensed edit models are the untested alternatives: Step1X-Edit and OmniGen2 (Apache 2.0), HiDream-E1 (MIT), and Qwen-Image-Edit-2509 (Apache 2.0).
+  - **A style LoRA** is not needed yet. Revisit it if hand-tuned prompts can't hold one style across species, and train it on public-domain plates only.
+- **Tuning by hand** (the maintainer's choice, 2026-10-14):
+  - Three editor workflows sit on comfybox under `BirdJournal/`, with copies in `art/comfyui/`. Each holds sample inputs for every species, the prompt template with its placeholders, and a fast-preview switch (`art/README.md`, "Tuning by hand").
+  - The tuned templates and graphs go back into `art/prompts.json` and `art/workflows/`, and the batch repaints.

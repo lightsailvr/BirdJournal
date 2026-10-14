@@ -1,0 +1,1772 @@
+{
+  "id": "d3fac34f-b3fd-466f-a166-2e6700eab197",
+  "revision": 0,
+  "last_node_id": 33,
+  "last_link_id": 40,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -1000,
+        -420
+      ],
+      "size": [
+        680,
+        1240
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# BirdJournal · scene art · tuning\n\nTune the look here, then the batch paints every card with it.\n\n**1 · Picture.** **image 1** is a composite: one of your glasses photos, zoomed 2x to the viewfinder's crop, with the species' reference bird cut out and pasted near the middle at 38 % of the height (`scene-<species>-<garden|lawn|driveway>.png`). The paste happens in Python before ComfyUI (`packbuilder.art.paste_bird`); ask Claude to change the bird's size or placement. Pick another in the dropdown; everything is under `birdjournal-tuning/`.\n\n**2 · Prompt.** Edit the green **prompt template** and **negative prompt**. Words in braces (`{edition_light}`, `{edition_colors}`, `{light}`) are filled from the small field nodes beside it: keep the braces in the template so it goes straight back into `art/prompts.json`, and edit a field's value to try another edition or light. Legendary light, to paste into `{light}`:\n\n> Light it dramatically with a warm golden rim light around the bird, a luminous sky, deep soft shadows and drifting gold motes; the bird keeps its true colours.\n\n**3 · Quality.** **Fast preview** on: the 4-step Lightning LoRA, about 12 s, good for trying wording. Off: full quality (40 steps, cfg 4, about 3.5 min), which paints richer and follows the prompt harder, so judge the style with it off. The seed is fixed on **sampler** so runs compare; change it to see variety.\n\n**4 · Model.** Leave as is: Qwen-Image-Edit-2511 fp8mixed, its text encoder and VAE (all Apache 2.0).\n\n**Run** with Queue (Ctrl+Enter). Paintings land in ComfyUI's `output/birdjournal-tuning/`.\n\n**When you're happy:** turn Fast preview **off**, save (Ctrl+S), and tell Claude. Claude reads this workflow from `user/default/workflows/BirdJournal/`, copies the template, negative prompt and field values into `art/prompts.json` and the graph into `art/workflows/scene-art.json`, and runs the batch. Keep the node titles **image 1**, **prompt**, **negative**, **sampler** and **output**: the batch finds those nodes by title.\n\nWhat the bake-off learned (DECISIONS.md, \"Art model bake-off\"):\n- Naming the species pulls in the model's stereotype of it (a red finch becomes a Northern Cardinal), so scene and photo art never name it.\n- Wording about a 'wilderness quest' replaces the photo's scene with an invented one; keep the photographed moment as the composition.\n- 'Adventure-cover painting' invites the model to letter a title onto the picture. The negative prompt bans text, but it only works with Fast preview **off**: at cfg 1 the negative prompt is ignored."
+      ],
+      "title": "Read me first",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -260,
+        -340
+      ],
+      "size": [
+        380,
+        560
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "birdjournal-tuning/scene-house-finch-lawn.png",
+        "image"
+      ],
+      "title": "image 1",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "ImageScale",
+      "pos": [
+        -260,
+        280
+      ],
+      "size": [
+        380,
+        160
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            22,
+            26,
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "lanczos",
+        864,
+        1152,
+        "center"
+      ],
+      "title": "card size"
+    },
+    {
+      "id": 4,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        220,
+        -340
+      ],
+      "size": [
+        720,
+        760
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Repaint image 1, a photograph with a real bird pasted into it, as an epic fantasy adventure-cover painting, using the existing photographed moment as the complete composition.\n\nUse richly layered, opaque gouache with a matte painted surface, visible directional brush strokes, sculpted forms, and bold, deliberate light-and-shadow shapes. Simplify incidental background detail into expressive painted masses while retaining precise detail around the bird's eye, bill, and identifying markings. The result must clearly look hand-painted, not like a photograph with a texture filter.\n\nPreserve the bird exactly as it appears: its pose, anatomy, proportions, silhouette, and field marks. Preserve the local plumage colour of every body region, including the head, throat, breast, back, and wings. A dull female or juvenile must remain dull. Do not invent iridescence, brighten feathers, or replace the bird with an idealised breeding male.\n\nPreserve the photograph's framing, viewpoint, setting, and object placement. Keep the bird where it is and at its size; blend it into the scene with believable contact, perspective, and shadows, adding only what it needs to stand on, such as a twig, branch, or stone. Do not add scenery, landscape, props, creatures, or accessories.\n\nBring the drama of a classic fantasy quest illustration entirely through painterly execution and lighting: luminous highlights, deep but readable shadows, and a strong focal hierarchy around the bird. Embellish the existing light with {edition_light}, and let {edition_colors} shape the environment and atmosphere without recolouring the bird. {light} Keep the bird's diagnostic colours readable beneath the lighting.\n\nNo armour, clothing, magical anatomy, glowing eyes, or invented plumage. Paint edge to edge. No people, typography, letters, borders, frames, logos, or watermarks."
+      ],
+      "title": "prompt template",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 5,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        220,
+        470
+      ],
+      "size": [
+        720,
+        230
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "a photograph, photorealistic rendering, a photo with a texture filter, blurry, low resolution, text, letters, watermark, logo, border, frame, paper edge, a second bird, extra birds, deformed anatomy, extra legs, extra wings, armour, clothing, jewellery, glowing eyes"
+      ],
+      "title": "negative prompt",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 6,
+      "type": "PrimitiveString",
+      "pos": [
+        990,
+        -340
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveString"
+      },
+      "widgets_values": [
+        "warm garden light"
+      ],
+      "title": "{edition_light}",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 7,
+      "type": "StringReplace",
+      "pos": [
+        1450,
+        -340
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "string"
+          }
+        },
+        {
+          "name": "replace",
+          "type": "STRING",
+          "link": 3,
+          "widget": {
+            "name": "replace"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringReplace"
+      },
+      "widgets_values": [
+        "",
+        "{edition_light}",
+        ""
+      ],
+      "title": "fill {edition_light}"
+    },
+    {
+      "id": 8,
+      "type": "PrimitiveString",
+      "pos": [
+        990,
+        -240
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveString"
+      },
+      "widgets_values": [
+        "terracotta and valley greens"
+      ],
+      "title": "{edition_colors}",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 9,
+      "type": "StringReplace",
+      "pos": [
+        1450,
+        -240
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "string"
+          }
+        },
+        {
+          "name": "replace",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "replace"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringReplace"
+      },
+      "widgets_values": [
+        "",
+        "{edition_colors}",
+        ""
+      ],
+      "title": "fill {edition_colors}"
+    },
+    {
+      "id": 10,
+      "type": "PrimitiveString",
+      "pos": [
+        990,
+        -140
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveString"
+      },
+      "widgets_values": [
+        "Add subtle atmospheric light and a few quiet gold flecks."
+      ],
+      "title": "{light}",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 11,
+      "type": "StringReplace",
+      "pos": [
+        1450,
+        -140
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "link": 6,
+          "widget": {
+            "name": "string"
+          }
+        },
+        {
+          "name": "replace",
+          "type": "STRING",
+          "link": 7,
+          "widget": {
+            "name": "replace"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringReplace"
+      },
+      "widgets_values": [
+        "",
+        "{light}",
+        ""
+      ],
+      "title": "fill {light}"
+    },
+    {
+      "id": 12,
+      "type": "CLIPLoader",
+      "pos": [
+        220,
+        1260
+      ],
+      "size": [
+        420,
+        130
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            20,
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "qwen_image",
+        "default"
+      ],
+      "title": "text encoder"
+    },
+    {
+      "id": 13,
+      "type": "VAELoader",
+      "pos": [
+        220,
+        1420
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            21,
+            25,
+            31,
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "qwen_image_vae.safetensors"
+      ],
+      "title": "vae"
+    },
+    {
+      "id": 14,
+      "type": "UNETLoader",
+      "pos": [
+        220,
+        1530
+      ],
+      "size": [
+        420,
+        110
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "qwen_image_edit_2511_fp8mixed.safetensors",
+        "default"
+      ],
+      "title": "model"
+    },
+    {
+      "id": 15,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [
+        680,
+        1530
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingAuraFlow"
+      },
+      "widgets_values": [
+        3.1
+      ],
+      "title": "shift"
+    },
+    {
+      "id": 16,
+      "type": "CFGNorm",
+      "pos": [
+        1010,
+        1530
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "patched_model",
+          "type": "MODEL",
+          "links": [
+            10,
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CFGNorm"
+      },
+      "widgets_values": [
+        1.0,
+        false
+      ],
+      "title": "cfg norm"
+    },
+    {
+      "id": 17,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        1010,
+        1680
+      ],
+      "size": [
+        420,
+        110
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+        1.0
+      ],
+      "title": "lightning 4 steps"
+    },
+    {
+      "id": 18,
+      "type": "PrimitiveBoolean",
+      "pos": [
+        220,
+        820
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "BOOLEAN",
+          "type": "BOOLEAN",
+          "links": [
+            13,
+            16,
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveBoolean"
+      },
+      "widgets_values": [
+        true
+      ],
+      "title": "Fast preview (4-step Lightning)",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 19,
+      "type": "PrimitiveInt",
+      "pos": [
+        220,
+        930
+      ],
+      "size": [
+        300,
+        100
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        40,
+        "fixed"
+      ],
+      "title": "steps, full quality",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 20,
+      "type": "PrimitiveInt",
+      "pos": [
+        220,
+        1060
+      ],
+      "size": [
+        300,
+        100
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        4,
+        "fixed"
+      ],
+      "title": "steps, fast preview",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 21,
+      "type": "PrimitiveFloat",
+      "pos": [
+        560,
+        930
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        4.0
+      ],
+      "title": "cfg, full quality",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 22,
+      "type": "PrimitiveFloat",
+      "pos": [
+        560,
+        1060
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        1.0
+      ],
+      "title": "cfg, fast preview",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 23,
+      "type": "ComfySwitchNode",
+      "pos": [
+        900,
+        820
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "MODEL",
+          "link": 11
+        },
+        {
+          "name": "on_true",
+          "type": "MODEL",
+          "link": 12
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "link": 13,
+          "widget": {
+            "name": "switch"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "MODEL",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "title": "switch model"
+    },
+    {
+      "id": 24,
+      "type": "ComfySwitchNode",
+      "pos": [
+        900,
+        950
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "INT",
+          "link": 14
+        },
+        {
+          "name": "on_true",
+          "type": "INT",
+          "link": 15
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "link": 16,
+          "widget": {
+            "name": "switch"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "INT",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "title": "switch steps"
+    },
+    {
+      "id": 25,
+      "type": "ComfySwitchNode",
+      "pos": [
+        900,
+        1080
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "FLOAT",
+          "link": 17
+        },
+        {
+          "name": "on_true",
+          "type": "FLOAT",
+          "link": 18
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "link": 19,
+          "widget": {
+            "name": "switch"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "FLOAT",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "title": "switch cfg"
+    },
+    {
+      "id": 26,
+      "type": "TextEncodeQwenImageEditPlus",
+      "pos": [
+        1800,
+        -340
+      ],
+      "size": [
+        420,
+        200
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 20
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 21
+        },
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 22
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 23,
+          "widget": {
+            "name": "prompt"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEncodeQwenImageEditPlus"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "prompt"
+    },
+    {
+      "id": 27,
+      "type": "TextEncodeQwenImageEditPlus",
+      "pos": [
+        1800,
+        -100
+      ],
+      "size": [
+        420,
+        200
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 24
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 25
+        },
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 26
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 27,
+          "widget": {
+            "name": "prompt"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEncodeQwenImageEditPlus"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "negative"
+    },
+    {
+      "id": 28,
+      "type": "FluxKontextMultiReferenceLatentMethod",
+      "pos": [
+        1800,
+        140
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxKontextMultiReferenceLatentMethod"
+      },
+      "widgets_values": [
+        "index_timestep_zero"
+      ],
+      "title": "positive references"
+    },
+    {
+      "id": 29,
+      "type": "FluxKontextMultiReferenceLatentMethod",
+      "pos": [
+        1800,
+        250
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxKontextMultiReferenceLatentMethod"
+      },
+      "widgets_values": [
+        "index_timestep_zero"
+      ],
+      "title": "negative references"
+    },
+    {
+      "id": 30,
+      "type": "VAEEncode",
+      "pos": [
+        1800,
+        380
+      ],
+      "size": [
+        420,
+        60
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 30
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            35
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": [],
+      "title": "canvas"
+    },
+    {
+      "id": 31,
+      "type": "KSampler",
+      "pos": [
+        2260,
+        -340
+      ],
+      "size": [
+        320,
+        300
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 32
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 33
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 34
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 35
+        },
+        {
+          "name": "steps",
+          "type": "INT",
+          "link": 36,
+          "widget": {
+            "name": "steps"
+          }
+        },
+        {
+          "name": "cfg",
+          "type": "FLOAT",
+          "link": 37,
+          "widget": {
+            "name": "cfg"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        49,
+        "fixed",
+        40,
+        4.0,
+        "euler",
+        "simple",
+        1.0
+      ],
+      "title": "sampler",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 32,
+      "type": "VAEDecode",
+      "pos": [
+        2260,
+        0
+      ],
+      "size": [
+        320,
+        60
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 38
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 39
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "title": "decode"
+    },
+    {
+      "id": 33,
+      "type": "SaveImage",
+      "pos": [
+        2620,
+        -340
+      ],
+      "size": [
+        640,
+        900
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 40
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "birdjournal-tuning/scene-art"
+      ],
+      "title": "output",
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      4,
+      0,
+      7,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      6,
+      0,
+      7,
+      1,
+      "STRING"
+    ],
+    [
+      4,
+      7,
+      0,
+      9,
+      0,
+      "STRING"
+    ],
+    [
+      5,
+      8,
+      0,
+      9,
+      1,
+      "STRING"
+    ],
+    [
+      6,
+      9,
+      0,
+      11,
+      0,
+      "STRING"
+    ],
+    [
+      7,
+      10,
+      0,
+      11,
+      1,
+      "STRING"
+    ],
+    [
+      8,
+      14,
+      0,
+      15,
+      0,
+      "MODEL"
+    ],
+    [
+      9,
+      15,
+      0,
+      16,
+      0,
+      "MODEL"
+    ],
+    [
+      10,
+      16,
+      0,
+      17,
+      0,
+      "MODEL"
+    ],
+    [
+      11,
+      16,
+      0,
+      23,
+      0,
+      "MODEL"
+    ],
+    [
+      12,
+      17,
+      0,
+      23,
+      1,
+      "MODEL"
+    ],
+    [
+      13,
+      18,
+      0,
+      23,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      14,
+      19,
+      0,
+      24,
+      0,
+      "INT"
+    ],
+    [
+      15,
+      20,
+      0,
+      24,
+      1,
+      "INT"
+    ],
+    [
+      16,
+      18,
+      0,
+      24,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      17,
+      21,
+      0,
+      25,
+      0,
+      "FLOAT"
+    ],
+    [
+      18,
+      22,
+      0,
+      25,
+      1,
+      "FLOAT"
+    ],
+    [
+      19,
+      18,
+      0,
+      25,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      20,
+      12,
+      0,
+      26,
+      0,
+      "CLIP"
+    ],
+    [
+      21,
+      13,
+      0,
+      26,
+      1,
+      "VAE"
+    ],
+    [
+      22,
+      3,
+      0,
+      26,
+      2,
+      "IMAGE"
+    ],
+    [
+      23,
+      11,
+      0,
+      26,
+      3,
+      "STRING"
+    ],
+    [
+      24,
+      12,
+      0,
+      27,
+      0,
+      "CLIP"
+    ],
+    [
+      25,
+      13,
+      0,
+      27,
+      1,
+      "VAE"
+    ],
+    [
+      26,
+      3,
+      0,
+      27,
+      2,
+      "IMAGE"
+    ],
+    [
+      27,
+      5,
+      0,
+      27,
+      3,
+      "STRING"
+    ],
+    [
+      28,
+      26,
+      0,
+      28,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      29,
+      27,
+      0,
+      29,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      30,
+      3,
+      0,
+      30,
+      0,
+      "IMAGE"
+    ],
+    [
+      31,
+      13,
+      0,
+      30,
+      1,
+      "VAE"
+    ],
+    [
+      32,
+      23,
+      0,
+      31,
+      0,
+      "MODEL"
+    ],
+    [
+      33,
+      28,
+      0,
+      31,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      34,
+      29,
+      0,
+      31,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      35,
+      30,
+      0,
+      31,
+      3,
+      "LATENT"
+    ],
+    [
+      36,
+      24,
+      0,
+      31,
+      4,
+      "INT"
+    ],
+    [
+      37,
+      25,
+      0,
+      31,
+      5,
+      "FLOAT"
+    ],
+    [
+      38,
+      31,
+      0,
+      32,
+      0,
+      "LATENT"
+    ],
+    [
+      39,
+      13,
+      0,
+      32,
+      1,
+      "VAE"
+    ],
+    [
+      40,
+      32,
+      0,
+      33,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "1 · Picture",
+      "bounding": [
+        -290,
+        -420,
+        440,
+        890
+      ],
+      "color": "#b58b2a",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "2 · Prompt",
+      "bounding": [
+        190,
+        -420,
+        1250,
+        1150
+      ],
+      "color": "#3f789e",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "3 · Quality",
+      "bounding": [
+        190,
+        740,
+        1040,
+        480
+      ],
+      "color": "#8A8",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "4 · Model (leave as is)",
+      "bounding": [
+        190,
+        1180,
+        1270,
+        640
+      ],
+      "color": "#444",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Painting",
+      "bounding": [
+        1770,
+        -420,
+        1520,
+        1010
+      ],
+      "color": "#a1309b",
+      "font_size": 28,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        1100,
+        520
+      ]
+    }
+  },
+  "version": 0.4
+}

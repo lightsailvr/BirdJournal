@@ -1,0 +1,230 @@
+{
+  "version": 3,
+  "comment": "Scene art: the glasses photo from the add, zoomed to the viewfinder's crop (the middle half of each side), with the species' reference bird cut out (bird-cutout.json) and pasted in by packbuilder.art.paste_bird; image 1 is that composite, and the painting blends the bird in and paints the whole picture. The Legendary variant is the same graph with the Legendary prompt. Version 3 (#49): the composite instead of asking the model to add the bird from a second image, which drew its own idea of the species (a red finch became a Northern Cardinal) at the wrong scale; full quality instead of the 4-step Lightning LoRA. Qwen-Image-Edit-2511 (fp8mixed) at full quality, after ComfyUI's image_qwen_image_edit_2511 template with the Lightning LoRA off: 40 steps, cfg 4 (so the negative prompt counts), euler/simple, shift 3.1. The output is 864 x 1152 (3:4 portrait, about 1 megapixel); image 1 is scaled and centre-cropped to it and sets the canvas. ComfyUI API format under 'graph'; packbuilder.art.Workflow fills the nodes titled 'image 1', 'prompt', 'negative' and 'sampler' (the seed). Bump the version when the graph changes.",
+  "graph": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "qwen_image_edit_2511_fp8mixed.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "model"
+      }
+    },
+    "2": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "type": "qwen_image",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "text encoder"
+      }
+    },
+    "3": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "_meta": {
+        "title": "vae"
+      }
+    },
+    "4": {
+      "class_type": "ModelSamplingAuraFlow",
+      "inputs": {
+        "model": [
+          "1",
+          0
+        ],
+        "shift": 3.1
+      },
+      "_meta": {
+        "title": "shift"
+      }
+    },
+    "5": {
+      "class_type": "CFGNorm",
+      "inputs": {
+        "model": [
+          "4",
+          0
+        ],
+        "strength": 1.0
+      },
+      "_meta": {
+        "title": "cfg norm"
+      }
+    },
+    "10": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": ""
+      },
+      "_meta": {
+        "title": "image 1"
+      }
+    },
+    "11": {
+      "class_type": "ImageScale",
+      "inputs": {
+        "image": [
+          "10",
+          0
+        ],
+        "upscale_method": "lanczos",
+        "width": 864,
+        "height": 1152,
+        "crop": "center"
+      },
+      "_meta": {
+        "title": "card size"
+      }
+    },
+    "20": {
+      "class_type": "TextEncodeQwenImageEditPlus",
+      "inputs": {
+        "clip": [
+          "2",
+          0
+        ],
+        "prompt": "",
+        "vae": [
+          "3",
+          0
+        ],
+        "image1": [
+          "11",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "prompt"
+      }
+    },
+    "21": {
+      "class_type": "TextEncodeQwenImageEditPlus",
+      "inputs": {
+        "clip": [
+          "2",
+          0
+        ],
+        "prompt": "",
+        "vae": [
+          "3",
+          0
+        ],
+        "image1": [
+          "11",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "negative"
+      }
+    },
+    "22": {
+      "class_type": "FluxKontextMultiReferenceLatentMethod",
+      "inputs": {
+        "conditioning": [
+          "20",
+          0
+        ],
+        "reference_latents_method": "index_timestep_zero"
+      },
+      "_meta": {
+        "title": "positive references"
+      }
+    },
+    "23": {
+      "class_type": "FluxKontextMultiReferenceLatentMethod",
+      "inputs": {
+        "conditioning": [
+          "21",
+          0
+        ],
+        "reference_latents_method": "index_timestep_zero"
+      },
+      "_meta": {
+        "title": "negative references"
+      }
+    },
+    "30": {
+      "class_type": "VAEEncode",
+      "inputs": {
+        "pixels": [
+          "11",
+          0
+        ],
+        "vae": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "canvas"
+      }
+    },
+    "40": {
+      "class_type": "KSampler",
+      "inputs": {
+        "model": [
+          "5",
+          0
+        ],
+        "seed": 0,
+        "steps": 40,
+        "cfg": 4.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "positive": [
+          "22",
+          0
+        ],
+        "negative": [
+          "23",
+          0
+        ],
+        "latent_image": [
+          "30",
+          0
+        ],
+        "denoise": 1.0
+      },
+      "_meta": {
+        "title": "sampler"
+      }
+    },
+    "50": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "40",
+          0
+        ],
+        "vae": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "decode"
+      }
+    },
+    "60": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "50",
+          0
+        ],
+        "filename_prefix": "birdjournal/art"
+      },
+      "_meta": {
+        "title": "output"
+      }
+    }
+  }
+}
