@@ -78,6 +78,13 @@ public struct LensPlayback: Sendable, Hashable {
     public var onPhone: Bool
 }
 
+/// The card an add earned, known once its sighting is written (issue #51): the birder's first of the species, which
+/// is Legendary, or another card of a species already in the collection.
+public enum LensEarnedCard: Sendable, Hashable {
+    case legendary
+    case newCard
+}
+
 /// What the adapter must do after an event, besides rendering the new page.
 public enum LensEffect: Sendable, Equatable {
     /// "Add to my list" opened the viewfinder: show the camera's view until the wearer taps or swipes.
@@ -130,8 +137,8 @@ public struct LensStateMachine: Sendable, Equatable {
     /// details page ("Add another") saves another sighting; one press that hardware delivers twice, as a click and a
     /// select, is deduplicated by the adapter, which has a clock.
     public private(set) var savedIndices: Set<Int> = []
-    /// How many sightings each stack index has had saved this session.
-    public private(set) var savedCounts: [Int: Int] = [:]
+    /// Per stack index, the card its latest written add earned; the details page's saved line names it.
+    public private(set) var earnedCards: [Int: LensEarnedCard] = [:]
     /// The clip playing from a sounds page, nil when none is.
     public private(set) var playing: LensPlayback?
     /// Per stack index, the position in its species' clips of the one the next tap plays (0, the song, when absent).
@@ -171,7 +178,7 @@ public struct LensStateMachine: Sendable, Equatable {
             coveredPage = .list
             pinnedSpecies = nil
             savedIndices = []
-            savedCounts = [:]
+            earnedCards = [:]
             playing = nil
             nextSounds = [:]
             order = SpeciesListOrder()
@@ -265,6 +272,17 @@ public struct LensStateMachine: Sendable, Equatable {
         }
     }
 
+    // MARK: - Cards
+
+    /// The sighting an add of `species` wrote has earned `card`. Returns whether the species is on the stack: a
+    /// write that lands after the stack was replaced (a new session) is dropped.
+    @discardableResult
+    public mutating func earned(_ card: LensEarnedCard, for species: Species) -> Bool {
+        guard let index = stack.candidates.firstIndex(where: { $0.species == species }) else { return false }
+        earnedCards[index] = card
+        return true
+    }
+
     // MARK: - Reference clips
 
     /// The clip `id` ended on its own (or failed to start). Returns whether it was the one playing.
@@ -322,7 +340,8 @@ public struct LensStateMachine: Sendable, Equatable {
     /// Adds the bird from the viewfinder, with a photo taken now or without one, and returns to its details page.
     private mutating func save(_ index: Int, photo: Bool) -> LensEffect {
         savedIndices.insert(index)
-        savedCounts[index, default: 0] += 1
+        // Until this add's sighting is written, the line names no card: not the previous add's.
+        earnedCards[index] = nil
         page = .details(index: index)
         let candidate = stack.candidates[index]
         return photo ? .takePhoto(candidate) : .saveSighting(candidate)

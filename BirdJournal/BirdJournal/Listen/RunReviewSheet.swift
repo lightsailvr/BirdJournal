@@ -6,6 +6,7 @@ import SwiftUI
 struct RunReviewSheet: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openCollection) private var openCollection
     @State private var reviewing: Candidate?
 
     var body: some View {
@@ -54,6 +55,12 @@ struct RunReviewSheet: View {
                         .padding(.bottom, 8)
                 }
             }
+        }
+        .legendaryReveal()
+        // Back to my collection from a reveal over this sheet: the review closes, as Done does, so the collection shows.
+        .environment(\.openCollection) {
+            dismiss()
+            openCollection()
         }
         .onDisappear { run.dismissEnded() }
     }

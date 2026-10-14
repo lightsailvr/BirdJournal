@@ -60,7 +60,7 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { lens.savedSightings.count == 1 }
                 #expect(lens.savedSightings.map(\.species) == [FakeLensStack.species[1]])
                 #expect(lens.page == .details(index: 1))
-                #expect(lens.card.elements.contains(.saved("Added to my list ✓")))
+                #expect(lens.card.elements.contains(.saved("Added to my list", legendary: false)), "a lens without a run writes nothing, so no card is named")
 
                 // Adding again opens the viewfinder again; a swipe adds the bird without a photo.
                 input.select()

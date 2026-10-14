@@ -86,6 +86,16 @@ final class ListeningCoordinator {
         let undo: RunSightings.Addition?
     }
 
+    /// The Legendary reveal after an add that was the birder's first of a species (issue #51). An event of the add,
+    /// not of the card: it shows once, and reopening the card never shows it again.
+    struct Reveal: Identifiable, Equatable {
+        let addition: RunSightings.Addition
+        let commonName: String
+
+        var id: UUID { addition.identifier }
+        var title: String { "Your first \(commonName)" }
+    }
+
     static let waveformLength = 40
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "listening")
 
@@ -101,6 +111,8 @@ final class ListeningCoordinator {
     /// the waveform while the run is active, and settled with nothing calling once it ends.
     private(set) var listOrder = SpeciesListOrder()
     private(set) var acknowledgment: Acknowledgment?
+    /// The Legendary reveal showing, until the birder dismisses it or undoes the add.
+    private(set) var reveal: Reveal?
     /// Set when a run that heard something ends, until the review is dismissed.
     var isReviewing = false
     /// The candidate the birder is reviewing, nil when none.
@@ -267,15 +279,21 @@ final class ListeningCoordinator {
     // MARK: - Adding
 
     /// Writes `candidate` to the journal with the location the run has and, on the glasses, the frame from this
-    /// moment; acknowledges with an undo. Every add is a new sighting, even of a species already added this run.
+    /// moment; acknowledges with an undo. Every add is a new sighting and a new card, even of a species already added
+    /// this run; the birder's first of a species is revealed as Legendary.
     @discardableResult
     func add(_ candidate: Candidate) async -> RunSightings.Addition? {
         let confirmedAt = Date.now
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone)
-            let count = sightings.count(of: candidate.species)
-            acknowledge(count > 1 ? "Added to your journal · \(count) sightings this run" : "Added to your journal", undo: addition)
+            if addition.isLegendary {
+                let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
+                self.reveal = reveal
+                acknowledge(reveal.title, undo: addition)
+            } else {
+                acknowledge("A new card for your collection", undo: addition)
+            }
             return addition
         } catch {
             Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
@@ -284,10 +302,24 @@ final class ListeningCoordinator {
         }
     }
 
+    #if DEBUG
+    /// The reveal for a seeded sighting, for `-autoScreen reveal`; there is no add to undo.
+    func showRevealForScreenshot(of sighting: Sighting) {
+        let species = Species(index: 0, scientificName: sighting.scientificName, commonName: sighting.commonName, taxonomicClass: "Aves")
+        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: true), commonName: sighting.commonName)
+    }
+    #endif
+
+    /// Closes the reveal; the sighting was saved before it opened.
+    func dismissReveal() {
+        reveal = nil
+    }
+
     func undo(_ addition: RunSightings.Addition) {
         do {
             try sightings.undo(addition)
             acknowledgment = nil
+            if reveal?.addition == addition { reveal = nil }
         } catch {
             Self.logger.error("undo failed: \(error.localizedDescription, privacy: .public)")
             acknowledge("Could not undo: \(error.localizedDescription)", undo: nil)

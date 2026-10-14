@@ -31,7 +31,13 @@ struct JournalEditsTests {
         let edits = JournalEdits(container: album, frames: frames)
         let path = try frames.write(jpeg: Data([0xFF, 0xD8, 0xFF]))
         let coordinate = Coordinate(latitude: 34.1, longitude: -118.3, accuracy: 10)
-        let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: Date(timeIntervalSince1970: 1_800_000_000), location: coordinate, soundConfidence: 0.8, frameImagePath: path, source: .glasses, note: "Over the pond")
+        let attached = try frames.write(jpeg: Data([0xFF, 0xD8, 0xFE]))
+        let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: Date(timeIntervalSince1970: 1_800_000_000), location: coordinate, soundConfidence: 0.8, frameImagePath: path, source: .glasses, note: "Over the pond", method: .seen)
+        sighting.rarity = RaritySnapshot(occurrence: 0.2, label: .rare, calibrationVersion: 1, week: 40)
+        sighting.caption = CardCaption(text: "The pond's dark keeper.", generatorVersion: "fm-1")
+        sighting.art = CardArt(prefersPackArt: true)
+        sighting.attachedPhotoPaths = [attached]
+        let identifier = sighting.identifier
         album.mainContext.insert(sighting)
         try album.mainContext.save()
 
@@ -49,11 +55,18 @@ struct JournalEditsTests {
         #expect(restored.location == coordinate)
         #expect(restored.frameImagePath == path)
         #expect(restored.note == "Over the pond")
+        #expect(restored.identifier == identifier, "the same card comes back, not a new one")
+        #expect(restored.method == .seen)
+        #expect(restored.rarity?.label == .rare)
+        #expect(restored.caption?.text == "The pond's dark keeper.")
+        #expect(restored.art.prefersPackArt)
+        #expect(restored.attachedPhotoPaths == [attached])
         #expect(edits.pendingRemoval == nil)
 
         edits.remove(restored, commonName: "Black Phoebe")
         edits.commitPendingRemoval()
         #expect(edits.pendingRemoval == nil)
         #expect(!FileManager.default.fileExists(atPath: frames.url(for: path).path(percentEncoded: false)), "the frame goes once the removal stands")
+        #expect(!FileManager.default.fileExists(atPath: frames.url(for: attached).path(percentEncoded: false)), "and the attached photo with it")
     }
 }

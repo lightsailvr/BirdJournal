@@ -5,14 +5,15 @@ import OSLog
 import SwiftData
 
 /// Edits to the journal from the phone (issue #28): a note on a sighting, and a removal that can be taken back for a
-/// few seconds. A removed sighting's record is kept here with its frame on disk until the window closes; Undo puts
-/// it back as a new record with the same fields.
+/// few seconds. A removed sighting's record is kept here with its files on disk until the window closes; Undo puts
+/// it back as a new record with the same fields, its identifier included, so the same card returns (issue #51).
 @MainActor
 @Observable
 final class JournalEdits {
     /// What a removed sighting was, so it can come back.
     struct Removed: Identifiable, Equatable {
         let id = UUID()
+        let identifier: UUID
         let speciesID: String
         let confirmedAt: Date
         let location: Coordinate?
@@ -20,6 +21,12 @@ final class JournalEdits {
         let frameImagePath: String?
         let source: SightingSource
         let note: String?
+        let method: SightingMethod
+        let rarity: RaritySnapshot?
+        let caption: CardCaption?
+        let art: CardArt
+        let attachedPhotoPaths: [String]
+        let filePaths: [String]
         let commonName: String
     }
 
@@ -52,9 +59,10 @@ final class JournalEdits {
     func remove(_ sighting: Sighting, commonName: String) {
         commitPendingRemoval()
         let removed = Removed(
-            speciesID: sighting.speciesID, confirmedAt: sighting.confirmedAt, location: sighting.location,
+            identifier: sighting.identifier, speciesID: sighting.speciesID, confirmedAt: sighting.confirmedAt, location: sighting.location,
             soundConfidence: sighting.soundConfidence, frameImagePath: sighting.frameImagePath, source: sighting.source,
-            note: sighting.note, commonName: commonName
+            note: sighting.note, method: sighting.method, rarity: sighting.rarity, caption: sighting.caption, art: sighting.art,
+            attachedPhotoPaths: sighting.attachedPhotoPaths, filePaths: sighting.filePaths, commonName: commonName
         )
         container.mainContext.delete(sighting)
         save()
@@ -72,21 +80,27 @@ final class JournalEdits {
         expiry?.cancel()
         expiry = nil
         pendingRemoval = nil
-        container.mainContext.insert(Sighting(
-            speciesID: removed.speciesID, confirmedAt: removed.confirmedAt, location: removed.location,
-            soundConfidence: removed.soundConfidence, frameImagePath: removed.frameImagePath, source: removed.source, note: removed.note
-        ))
+        let sighting = Sighting(
+            identifier: removed.identifier, speciesID: removed.speciesID, confirmedAt: removed.confirmedAt, location: removed.location,
+            soundConfidence: removed.soundConfidence, frameImagePath: removed.frameImagePath, source: removed.source,
+            note: removed.note, method: removed.method
+        )
+        sighting.rarity = removed.rarity
+        sighting.caption = removed.caption
+        sighting.art = removed.art
+        sighting.attachedPhotoPaths = removed.attachedPhotoPaths
+        container.mainContext.insert(sighting)
         save()
     }
 
-    /// Lets the last removal stand: its frame leaves the disk.
+    /// Lets the last removal stand: its files leave the disk.
     func commitPendingRemoval() {
         expiry?.cancel()
         expiry = nil
         guard let removed = pendingRemoval else { return }
         pendingRemoval = nil
-        if let frame = removed.frameImagePath {
-            try? FileManager.default.removeItem(at: frames.url(for: frame))
+        for path in removed.filePaths {
+            try? FileManager.default.removeItem(at: frames.url(for: path))
         }
     }
 

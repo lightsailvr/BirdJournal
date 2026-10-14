@@ -201,6 +201,42 @@ _The confirm page and Save button described here were replaced by the species de
 ## Every add is a sighting (2026-10-10, user's choice after the third field run)
 
 - Spec user story 33 (one sighting per species and run, a repeat add updating it) is dropped: the birder wants to add the same bird as often as they like. `RunSightings` writes a new sighting on every add, from the lens or the phone, each with its own time, place, confidence and photo; undo deletes the sighting that add wrote and nothing else. The ledger keeps one entry per sighting, so "N added" on the Listen tab counts sightings, and `count(of:)` gives a species' sightings this run. The update path (`SightingRecorder.update`/`restore`, the replaced frames kept for the undo window) is gone.
-- **Lens**: the state machine counts saves per stack index (`savedCounts`). A saved species' details page shows "Added to my list ✓" (or "Added N times ✓" from the second) and an **Add another** button, which opens the viewfinder like the first add.
-- **Phone**: the review sheet of an added species reads "Added to your journal · N sightings" and offers **Add another sighting**; the acknowledgment reads "Added to your journal · N sightings this run" from the second.
+- **Lens**: the state machine counts saves per stack index (`savedCounts`). A saved species' details page shows "Added to my list ✓" (or "Added N times ✓" from the second) and an **Add another** button, which opens the viewfinder like the first add. _Since #51 the line names the card the add earned instead: "Your first House Finch" or "New card" (see "Every sighting is a card")._
+- **Phone**: the review sheet of an added species reads "Added to your journal · N sightings" and offers **Add another sighting**; the acknowledgment reads "Added to your journal · N sightings this run" from the second. _Since #51 an add is acknowledged as a card: the Legendary reveal for a first, else "A new card for your collection"._
 
+
+## Every sighting is a card (issue #51) — built 2026-10-14, hardware check pending
+The first slice of "Collection and circles": local cards with no backend.
+- **Album schema 3** (`AlbumSchemaV3`) adds every field the collection needs, so later tickets fill them in without another migration:
+  - a stable `identifier` (UUID)
+  - the `method` (Heard, the default; Seen comes later, on the phone)
+  - the `rarity` snapshot (occurrence, label, calibration version, week)
+  - the `caption` (text and generator version)
+  - the art state
+  - `attachedPhotoPaths`
+  
+  The art state is stored as JSON (`artState`, read through `art: CardArt`) so the art pipeline can grow without a schema version. The stage from schema 2 is a custom one: a column default would give every migrated sighting the same identifier, so `didMigrate` assigns each its own and sets Heard. Tested both ways (a schema 2 store and the first schema's store, through both stages); identifiers survive a reopen. A removal undone in the journal comes back with the same identifier and card fields, and the files a sighting refers to (frame, attached photos, painted art; `Sighting.filePaths`) go with it.
+- **The collection** (`CardCollection`, Album) is pure over value snapshots (identifier, species, confirmation time):
+  - Legendary is the earliest surviving sighting of a species, ties broken by the identifier's string.
+  - Deleting it passes Legendary on, and deleting the last card removes the species, because nothing is stored.
+  - Counts and the Cards summary ("5 cards · 4 species").
+  
+  Sets, collector numbers and editions wait for pack schema 4.
+- **Recording an add**: `SightingRecorder.record` writes the identifier and Heard and reports whether the add is Legendary: no other surviving sighting of the species in the album at that moment (`CardCollection.addMakesLegendary`). `RunSightings.Addition` carries both to the lens and the phone. The rarity snapshot, captions, art jobs and finds come with their tickets.
+- **Phone**:
+  - **Reveal**: a first add shows the Legendary reveal (`ListeningCoordinator.reveal`), an overlay over the tabs and their bars, and over the run review sheet when the add happened there. It shows the Legendary card, "Your first <species>", **Back to my collection** (opens the Journal tab on Cards, closing the run review first when the add happened there), **Share this discovery** (the existing postcard share) and **Undo** while the add's six-second window is open.
+  - **Acknowledgment**: the toast reads "Your first <species>" for a first and "A new card for your collection" for a repeat, both with Undo.
+  - **Lifetime**: the reveal belongs to the add, not the card, so closing it keeps the sighting, reopening the card never shows it again, and an undo removes the card and the reveal. Adds from the lens show no phone reveal: the lens has its own line.
+- **Journal tab**: Cards / Sightings / Species, Cards by default (the mode lives in `RootView` so the reveal can open it).
+  - Cards is newest first in two columns, one at accessibility text sizes. A card is the evergreen face with ivory text, framed in gold foil and labelled "Legendary · Your first" with sparkles when Legendary, in sage otherwise.
+  - Its art is the glasses photo, else the pack's reference photo, labelled either way. Search filters cards but never changes which is Legendary.
+  - New tokens: `CollectibleGoldInk`, `CollectibleGoldWash` and `CollectibleSage` in the asset catalog (dark and Increase Contrast variants), plus the fixed card face, ivory and foil in `Design/Collectible.swift`. Gold ink is 4.9:1 on paper; the card's gold label is 10:1 and its ivory 13:1 on the face.
+- **The one-time intro** (`CollectionIntro`, a `collectionIntroShown` default): "Your collection so far", an inline card at the top of the Journal the first time the collection has a card. It is inline, not modal, so it never covers anything, and it is marked shown when it appears. A brand-new birder sees it after their first add too, as the spec's rule says ("first computes with at least one sighting"); it explains Legendary.
+- **Lens**: after the sighting is written, the run tells the lens what the add earned (`LensStateMachine.earned(_:for:)`, `LensEarnedCard`). The details page's saved line reads "Your first House Finch" with a star (`.star`; the Display DSL has no sparkle) or "New card" with a check, and "Added to my list" until the write lands (an "Add another" clears the previous add's line until its own write lands). "Added N times ✓" is gone. No page or gesture is added. The line counts against the details page's budget, and the field marks give way to it.
+- **Debug flags**: `-autoScreen cards|sightings|reveal` and `-collectionIntroShown NO|YES`. The seed adds an older House Finch, so the Cards view shows a repeat card beside its Legendary first. `scripts/screenshots.sh` captures the cards, the intro, the sightings and the reveal.
+- **Tests**:
+  - Album: migration, collection, intro.
+  - LensSession: the saved line and its budget, earned cards per species.
+  - App: recording an add, the reveal and undo in the coordinator, the edits' undo keeping the card, and the Mock Device Kit glasses run naming "Your first House Finch" then "New card".
+  - UI (`CardsUITests`): a real add shows the reveal, Back to my collection lands on its Legendary card, a repeat add is the quiet acknowledgment, and reopening the card replays nothing.
+- **Not verified on hardware**: the saved line on the glasses (DAT-SETUP-CHECKLIST.md step 13).

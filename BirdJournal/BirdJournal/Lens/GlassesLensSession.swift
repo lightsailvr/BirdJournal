@@ -459,6 +459,11 @@ final class GlassesLensSession {
         perform(machine.press(action))
     }
 
+    /// The sighting an add of `species` wrote earned `card` (issue #51): the details page's saved line names it.
+    func earned(_ card: LensEarnedCard, for species: Species) {
+        if machine.earned(card, for: species) { refreshCard() }
+    }
+
     private func perform(_ effect: LensEffect?) {
         switch effect {
         case .openViewfinder(let candidate):
@@ -589,7 +594,7 @@ final class GlassesLensSession {
     private func refreshCard() {
         let next = LensCardRenderer.render(
             machine.page, stack: machine.stack, order: machine.order, selection: machine.selection, saved: machine.savedIndices,
-            playing: machine.playing, nextSounds: machine.nextSounds, savedCounts: machine.savedCounts, profile: cardProfile(for:)
+            playing: machine.playing, nextSounds: machine.nextSounds, earned: machine.earnedCards, profile: cardProfile(for:)
         )
         guard next != card else { return }
         card = next
