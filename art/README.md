@@ -54,6 +54,8 @@ When a look is right, save the workflow with Fast preview off. Then the template
   - The distilled Klein uses the small-decoder VAE in place of `flux2-vae`, whose repository declares the FLUX non-commercial license.
   - FireRed loads the GGUF in place of its 41 GB bf16 file.
 
+**Telephoto scene** (`comfyui/alternatives/klein-4b-distilled-telephoto.json`, on comfybox as `Klein 4B distilled - telephoto scene`): through the glasses' wide lens a bird is the size of a leaf. So the workflow crops a 10–15× frame out of the full-resolution glasses photo (`birdjournal-glasses-<scene>-3024`) around a perch, the way a long lens would frame it from the same spot. It blurs the crop into a 300 mm lens's bokeh and gives it to FLUX.2 [klein] 4B distilled as image 2, with the bird cut out onto white as image 1. The read-me note holds the crop sizes per zoom and the audition's spots. About 7 s a painting.
+
 Left out on purpose (ADR-0001):
 
 - FLUX.2 [klein] 9B and FLUX.2 [dev]: non-commercial weights.

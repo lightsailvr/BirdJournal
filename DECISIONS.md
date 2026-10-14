@@ -238,3 +238,13 @@ Committed: `art/` (prompts, workflows, comfybox setup, the plan and the tuning w
 - **Tuning by hand** (the maintainer's choice, 2026-10-14):
   - Three editor workflows sit on comfybox under `BirdJournal/`, with copies in `art/comfyui/`. Each holds sample inputs for every species, the prompt template with its placeholders, and a fast-preview switch (`art/README.md`, "Tuning by hand").
   - The tuned templates and graphs go back into `art/prompts.json` and `art/workflows/`, and the batch repaints.
+- **Telephoto scenes** (the maintainer's idea, auditioned 2026-10-14 with FLUX.2 [klein] 4B distilled and the House Finch, 69 paintings, sheets in `build/art-bakeoff/telephoto/`):
+  - The glasses' wide lens makes a bird the size of a leaf, so a bird at card size looks huge in the whole picture or the 2× zoom. A 12× crop of the full-resolution photo around a perch keeps the perspective a long lens would have from the same spot. Blurred like a 300 mm lens wide open (Gaussian, sigma 10 on the 864-wide canvas) and given to Klein as image 2, with the bird cut out onto white as image 1, it gives a believable scale, a sharp bird on a sharp perch and the photo's colours. It takes 7 s a painting. The workflow is `art/comfyui/alternatives/klein-4b-distilled-telephoto.json`.
+  - Pasting the bird onto the crop first failed, sharp or blurred: Klein kept the paste, and the bird floated with nothing under its feet. An unblurred crop as image 2 kept the scale but also the background's focus, so there was no bokeh.
+  - One seed for every scene drew the same diagonal log under the bird. A seed per painting and "perched on something that belongs to the place in image 2 … never a bare log" gave twigs and stems of the scene's own plants.
+  - The dim House Finch reference, brightened (autocontrast, gamma 0.75) and cleaned of twig scraps, gave a true male House Finch, red only on the head and breast with streaked brown flanks, where the dim one gave an all-red bird. That supports picking art references for art (above).
+  - Open:
+    - The crop spot was picked by hand. The art worker could crop around the photo's centre, where the wearer aimed the viewfinder.
+    - A 15× crop paints the bird the same size and only shows less of the place.
+    - Some paintings have an overlong tail or a yellow forehead.
+    - The look is photographic. The art style would have to come on top, from the prompt or a second pass.
