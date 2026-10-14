@@ -64,6 +64,11 @@ private struct RouteDestination: View {
     }
 }
 
+extension EnvironmentValues {
+    /// Opens the Journal tab on the Cards view: the Legendary reveal's "Back to my collection" (issue #51).
+    @Entry var openCollection: @MainActor () -> Void = {}
+}
+
 /// The three destinations (issue #28): Listen, Journal and Field Guide, with the compact listening strip above the
 /// tab bar while a run is on and another tab is showing.
 struct RootView: View {
@@ -73,6 +78,7 @@ struct RootView: View {
 
     @Environment(ListeningCoordinator.self) private var run
     @State private var tab: Tab = .listen
+    @State private var journalMode: JournalView.Mode = .cards
     @State private var listenPath = NavigationPath()
     @State private var journalPath = NavigationPath()
     @State private var guidePath = NavigationPath()
@@ -90,7 +96,7 @@ struct RootView: View {
             }
             SwiftUI.Tab("Journal", systemImage: "book", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
-                    JournalView()
+                    JournalView(mode: $journalMode)
                         .appDestinations()
                 }
             }
@@ -105,9 +111,16 @@ struct RootView: View {
             ListeningAccessory { tab = .listen }
         }
         .tint(Color.moss)
+        // Over the tabs and their bars; the run review sheet carries its own, since an add there happens over it.
+        .legendaryReveal()
+        .environment(\.openCollection) {
+            journalMode = .cards
+            journalPath = NavigationPath()
+            tab = .journal
+        }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
-        .modifier(DebugLaunch(tab: $tab, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, showingDeveloper: $showingDeveloper))
+        .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, showingDeveloper: $showingDeveloper))
         #endif
     }
 }

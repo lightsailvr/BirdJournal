@@ -17,7 +17,7 @@ import UIKit
 extension MockDeviceKitTests {
     @Suite("Glasses listening run")
     struct GlassesListening {
-        @Test("a species heard on the glasses shows on the lens and Add to my list writes it to the album")
+        @Test("a species heard on the glasses shows on the lens, Add to my list writes it to the album, and the lens names the card it earned")
         func hearConfirmSave() async throws {
             try await withMockDisplay { glasses in
                 let connection = GlassesConnection()
@@ -61,7 +61,9 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
                 #expect(run.lens.page == .details(index: 0))
                 try await waitUntil(timeout: .seconds(1)) { source.viewfinderChanges == [true, false] }
-                #expect(run.lens.card.elements.contains(.saved("Added to my list ✓")))
+                // The birder's first House Finch: the saved line is the Legendary reveal (issue #51).
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("Your first House Finch", legendary: true)) }
+                #expect(run.lens.card.wordCount <= LensCardRenderer.detailsWordBudget)
 
                 let sightings = try album.mainContext.fetch(FetchDescriptor<Sighting>())
                 #expect(sightings.count == 1)
@@ -89,7 +91,8 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
                 try await waitUntil(timeout: .seconds(5)) { run.saved.count == 2 }
                 #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 2)
-                #expect(run.lens.card.elements.contains(.saved("Added 2 times ✓")))
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New card", legendary: false)) }
+                #expect(Set(try album.mainContext.fetch(FetchDescriptor<Sighting>()).map(\.identifier)).count == 2)
 
                 // Back (the middle-finger tap) returns to the list; Back on the root ends the whole run: lens, engine,
                 // source and session.
