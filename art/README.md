@@ -30,7 +30,7 @@ What the bake-off taught the templates (details in `DECISIONS.md`, "Art model ba
 
 The look is tuned by hand in ComfyUI's editor, then the batch paints with it. On comfybox the three workflows sit in the Workflows sidebar under `BirdJournal/` (`pack art tuning`, `scene art tuning`, `photo art tuning`; copies in `comfyui/`). Each has a read-me note and five groups:
 
-1. **Picture**: `image 1`, a dropdown of sample inputs under `birdjournal-tuning/`. That is every species' pack reference, two photo-art photos each, and scene composites of every species in three full-resolution glasses photos.
+1. **Picture**: `image 1`, a dropdown in which the sample inputs start with `birdjournal-` (ComfyUI lists only the top of its input folder). That is every species' pack reference, two photo-art photos each, and scene composites of every species in three full-resolution glasses photos.
 2. **Prompt**: the template with its `{placeholders}` kept, the negative prompt, and one small node per placeholder that fills it in.
 3. **Quality**: Fast preview on (4-step Lightning, about 12 s) or off (40 steps, cfg 4, about 3.5 minutes).
 4. **Model**.
