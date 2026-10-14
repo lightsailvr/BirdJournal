@@ -38,10 +38,11 @@ struct CandidateReviewView: View {
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 8) {
                     if run.isAdded(candidate) {
-                        Label("Added to your journal", systemImage: "checkmark.circle.fill")
+                        let count = run.sightings.count(of: candidate.species)
+                        Label(count > 1 ? "Added to your journal · \(count) sightings" : "Added to your journal", systemImage: "checkmark.circle.fill")
                             .font(JournalFont.supporting.weight(.medium))
                             .foregroundStyle(Color.moss)
-                        Button(isAdding ? "Updating…" : "Add again to update the sighting") { add() }
+                        Button(isAdding ? "Adding…" : "Add another sighting") { add() }
                             .buttonStyle(.journalOutlined)
                             .disabled(isAdding)
                     } else {

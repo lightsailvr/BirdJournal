@@ -8,7 +8,8 @@ import Pack
 /// tap on the phone's playing row stops it. While a clip plays, and for a tail after it, `suppression` keeps the
 /// listening run from hearing it, whichever microphone the run uses. A phone-microphone run already holds the audio
 /// session in `.playAndRecord`, which plays too, so the clip leaves it alone; otherwise the clip takes the session in
-/// `.playback` and lets it go after.
+/// `.playback` and lets it go after. During a glasses run the clip also holds the camera stream from before it starts
+/// until it ends, since the glasses' speakers stay silent while the camera streams.
 @MainActor
 @Observable
 final class ReferenceSounds {
@@ -23,6 +24,10 @@ final class ReferenceSounds {
     @ObservationIgnored private let session: any PlaybackAudioSession
     @ObservationIgnored private let suppression: AudioSuppression
     @ObservationIgnored private let phoneRunHoldsSession: () -> Bool
+    /// The glasses run's stream, when one is running.
+    @ObservationIgnored private let glassesStream: () -> (any PlaybackStreamHold)?
+    /// The stream the playing (or starting) clip holds, released when it ends.
+    @ObservationIgnored private var heldStream: (any PlaybackStreamHold)?
     /// The packs' clip and its file for a sound id, for the lens, which names clips by id.
     @ObservationIgnored private let lookup: (String) -> (sound: PackSound, url: URL)?
     /// Whether the clip took the session, so the release is the clip's to make.
@@ -38,15 +43,19 @@ final class ReferenceSounds {
     @ObservationIgnored private var endWatch: Task<Void, Never>?
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "sounds")
 
-    /// - Parameter phoneRunHoldsSession: whether a phone-microphone run holds the audio session now.
+    /// - Parameters:
+    ///   - phoneRunHoldsSession: whether a phone-microphone run holds the audio session now.
+    ///   - glassesStream: the glasses run's stream, nil when no glasses run is on.
     init(
         player: any SoundPlayer, session: any PlaybackAudioSession, suppression: AudioSuppression, phoneRunHoldsSession: @escaping () -> Bool,
+        glassesStream: @escaping () -> (any PlaybackStreamHold)? = { nil },
         lookup: @escaping (String) -> (sound: PackSound, url: URL)? = { _ in nil }
     ) {
         self.player = player
         self.session = session
         self.suppression = suppression
         self.phoneRunHoldsSession = phoneRunHoldsSession
+        self.glassesStream = glassesStream
         self.lookup = lookup
         player.onFinish = { [weak self] in self?.finished() }
     }
@@ -70,6 +79,17 @@ final class ReferenceSounds {
             player.stop()
             clear()
         }
+        if heldStream == nil, let stream = glassesStream() {
+            heldStream = stream
+            starting = sound.id
+            await stream.holdForPlayback()
+            guard generation == tapGeneration else {
+                // A later tap or a stop took over; it plays or releases, unless nothing is left to.
+                if playing == nil && starting == nil { releaseStream() }
+                return nil
+            }
+            starting = nil
+        }
         if !phoneRunHoldsSession() && !holdsSession {
             starting = sound.id
             do {
@@ -80,7 +100,10 @@ final class ReferenceSounds {
             }
             guard generation == tapGeneration else {
                 // A later tap or a stop took over; it plays or releases, unless nothing is left to.
-                if playing == nil && starting == nil { releaseSession() }
+                if playing == nil && starting == nil {
+                    releaseSession()
+                    releaseStream()
+                }
                 return nil
             }
             starting = nil
@@ -94,6 +117,7 @@ final class ReferenceSounds {
             Self.logger.error("play failed: \(error.localizedDescription, privacy: .public)")
             suppression.end()
             releaseSession()
+            releaseStream()
             return nil
         }
         playing = sound.id
@@ -120,6 +144,7 @@ final class ReferenceSounds {
     private func ended() {
         clear()
         releaseSession()
+        releaseStream()
     }
 
     /// The clip is over: listening may hear again after the tail, and whoever started it is told.
@@ -142,6 +167,12 @@ final class ReferenceSounds {
             Self.logger.info("clip \(sound.id, privacy: .public) stopped unreported")
             self.ended()
         }
+    }
+
+    /// Lets the glasses' stream go if the clip held it.
+    private func releaseStream() {
+        heldStream?.releaseAfterPlayback()
+        heldStream = nil
     }
 
     /// Lets the session go if the clip took it; a phone run that started meanwhile has made it its own.

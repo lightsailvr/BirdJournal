@@ -53,10 +53,15 @@ extension MockDeviceKitTests {
                 #expect(run.lens.card.elements.contains(.title("House Finch", detail: "90% match")))
                 input.navDown()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.page == .details(index: 0) }
+                // "Add to my list" opens the viewfinder; a swipe there adds the bird without a photo.
                 input.select()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .viewfinder(index: 0) }
+                try await waitUntil(timeout: .seconds(1)) { source.viewfinderChanges == [true] }
+                input.navRight()
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
                 #expect(run.lens.page == .details(index: 0))
-                #expect(run.lens.card.elements.last == .saved("Added to my list ✓"))
+                try await waitUntil(timeout: .seconds(1)) { source.viewfinderChanges == [true, false] }
+                #expect(run.lens.card.elements.contains(.saved("Added to my list ✓")))
 
                 let sightings = try album.mainContext.fetch(FetchDescriptor<Sighting>())
                 #expect(sightings.count == 1)
@@ -65,22 +70,26 @@ extension MockDeviceKitTests {
                 #expect(sighting.location == Coordinate(latitude: 40.7, longitude: -74, accuracy: 30))
                 #expect(abs(sighting.soundConfidence - 0.9) < 1e-6)
                 #expect(sighting.source == .glasses)
-                #expect(sighting.frameImagePath == nil, "the test source has no camera")
+                #expect(sighting.frameImagePath == nil, "added without a photo")
                 #expect(sighting.confirmedAt >= before && sighting.confirmedAt <= .now)
                 #expect(run.saved.first?.hasFrame == false)
 
-                // A Select right behind the first (one press the hardware delivered twice) saves nothing more; a
-                // deliberate one later updates the sighting instead of adding a second (story 33).
+                // Adding again opens the viewfinder; a Select right behind the press that opened it (one press the
+                // hardware delivered twice) takes no photo; a deliberate one later takes it and adds a second sighting
+                // of the same bird.
                 input.select()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.inputRecords.count == 4 }
+                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .viewfinder(index: 0) }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { run.lens.inputRecords.count == 6 }
                 try await Task.sleep(for: .milliseconds(300))
                 #expect(run.lens.savedSightings.count == 1)
+                #expect(run.lens.page == .viewfinder(index: 0))
                 try await Task.sleep(for: .milliseconds(1100))
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
-                try await Task.sleep(for: .milliseconds(300))
-                #expect(run.saved.count == 1)
-                #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 1)
+                try await waitUntil(timeout: .seconds(5)) { run.saved.count == 2 }
+                #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 2)
+                #expect(run.lens.card.elements.contains(.saved("Added 2 times ✓")))
 
                 // Back (the middle-finger tap) returns to the list; Back on the root ends the whole run: lens, engine,
                 // source and session.
@@ -96,7 +105,7 @@ extension MockDeviceKitTests {
             }
         }
 
-        @Test("the sighting stores the frame from the moment of the tap, not from when the write finishes")
+        @Test("a tap on the viewfinder stores the photo it takes, and without one the frame from the moment of the tap, not from when the write finishes")
         func frameFromTapTime() async throws {
             try await withMockDisplay { glasses in
                 let connection = GlassesConnection()
@@ -124,10 +133,13 @@ extension MockDeviceKitTests {
                     try await openSpecies(0, on: run.lens, glasses: glasses)
                     input.navDown()
                     try await waitUntil(timeout: .seconds(1)) { run.lens.page == .details(index: 0) }
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .viewfinder(index: 0) }
                     source.latestFrame = Self.frame(.red)
                     #expect(run.hasCameraFrame)
+                    try await Task.sleep(for: .milliseconds(1100))
+                    // No photo comes from this source, so the frame from the moment of the tap stands in.
                     input.select()
-                    // The lens records the save the moment the tap lands, when the frame is taken.
                     try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 1 }
                     source.latestFrame = Self.frame(.blue) // The stream moves on while the frame is encoded and written.
                     try await waitUntil(timeout: .seconds(5)) { run.saved.count == 1 }
@@ -138,6 +150,19 @@ extension MockDeviceKitTests {
                     let path = try #require(sighting.frameImagePath)
                     let stored = try #require(UIImage(contentsOfFile: frames.url(for: path).path()), "the stored frame decodes as an image")
                     #expect(Self.dominantChannel(of: stored) == "red", "the frame from the tap is stored, not a later one")
+
+                    // With a photo, the photo is what is stored, over the frame.
+                    source.photo = Self.frame(.green).jpegData()
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .viewfinder(index: 0) }
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
+                    try await waitUntil(timeout: .seconds(5)) { run.saved.count == 2 }
+                    try await waitUntil(timeout: .seconds(5)) {
+                        let path = try? album.mainContext.fetch(Sighting.newestFirst()).first?.frameImagePath
+                        return path.flatMap { UIImage(contentsOfFile: frames.url(for: $0).path()) }.map(Self.dominantChannel(of:)) == "green"
+                    }
                 } catch {
                     await run.stop()
                     throw error

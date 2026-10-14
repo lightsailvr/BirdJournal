@@ -28,10 +28,16 @@ import UIKit
 /// calling marker lapses with nothing in the stack changing, so the adapter schedules one re-send at the lapse
 /// the list order reports, and re-evaluates the order before the pages go back on the lens after a suspension.
 ///
-/// A tap on a photo page plays the species' reference clips through `sounds` (issue #41, phase 4), the player the
+/// A tap on a sounds page plays the species' reference clips through `sounds` (issue #41, phase 4), the player the
 /// phone's profile shares, so one clip plays at a time and listening never hears it. The card says where it plays
 /// ("on the phone" when the glasses' A2DP speakers are not the route) and goes back when it ends. A swipe, a
 /// problem page, a suspension (doff, lost link) and the end of the run stop it.
+///
+/// "Add to my list" opens the viewfinder: while it is the page, the camera's latest frame from `viewfinderFrame` is
+/// re-sent as fast as the Display takes it (at most every `viewfinderInterval`). A tap there takes the photo and a
+/// swipe adds the bird without one; both go to `onEffect` for the run to write. Hardware may deliver the Add press
+/// twice, as a click and a select (DECISIONS.md, "Lens UI"), so a tap landing on the viewfinder within `echoWindow`
+/// of its opening is that echo and is ignored rather than taking a photo of nothing in particular.
 @Observable
 final class GlassesLensSession {
     enum Phase: Equatable {
@@ -84,7 +90,8 @@ final class GlassesLensSession {
     private(set) var machine = LensStateMachine()
     /// What the lens shows, kept in step with `machine`.
     private(set) var card: LensCard
-    /// Candidates saved this run, newest last; the listening run writes them to the album.
+    /// Candidates added this run (from the viewfinder, with or without a photo), newest last; the listening run
+    /// writes them to the album.
     private(set) var savedSightings: [Candidate] = []
     /// Newest first, capped at `maxRecords`.
     private(set) var inputRecords: [InputRecord] = []
@@ -96,11 +103,21 @@ final class GlassesLensSession {
     @ObservationIgnored private let profile: (Species) -> SpeciesProfile?
     /// Pixels for the images the pack names.
     @ObservationIgnored private let image: (LensImage) -> UIImage?
-    /// Told about saves; ending the session on Back is handled here.
+    /// Told about the viewfinder and saves; ending the session on Back is handled here.
     @ObservationIgnored private let onEffect: (LensEffect) -> Void
-    /// How close two saves of one species must be to count as one press delivered twice.
-    @ObservationIgnored private let saveDebounce: Duration
-    @ObservationIgnored private var lastSave: (species: Species, at: ContinuousClock.Instant)?
+    /// How soon after the viewfinder opens a tap counts as the Add press delivered twice.
+    @ObservationIgnored private let echoWindow: Duration
+    @ObservationIgnored private var viewfinderOpenedAt: ContinuousClock.Instant?
+    /// The camera's latest frame for the viewfinder; nil without a camera (a lens-only session), which the page says.
+    @ObservationIgnored var viewfinderFrame: (() -> CameraFrame?)?
+    /// Told when the viewfinder opens on the lens (true) and when it closes (false), so the camera can stream for it.
+    @ObservationIgnored var onViewfinderChange: ((Bool) -> Void)?
+    /// The least time between two viewfinder sends.
+    @ObservationIgnored private let viewfinderInterval: Duration
+    /// Re-sends the viewfinder page with each new frame while it is the page.
+    @ObservationIgnored private var viewfinderTask: Task<Void, Never>?
+    /// The frame the viewfinder page shows, sized for the lens.
+    @ObservationIgnored private var viewfinderImage: UIImage?
     @ObservationIgnored private var lease: DeviceSessionLease = .own
     @ObservationIgnored private var session: DeviceSession?
     @ObservationIgnored private var display: Display?
@@ -132,14 +149,16 @@ final class GlassesLensSession {
         connection: GlassesConnection? = nil,
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
         image: @escaping (LensImage) -> UIImage? = { _ in nil },
-        saveDebounce: Duration = .seconds(1),
+        echoWindow: Duration = .seconds(1),
+        viewfinderInterval: Duration = .milliseconds(150),
         onEffect: @escaping (LensEffect) -> Void = { _ in }
     ) {
         self.wearables = wearables
         self.connection = connection
         self.profile = profile
         self.image = image
-        self.saveDebounce = saveDebounce
+        self.echoWindow = echoWindow
+        self.viewfinderInterval = viewfinderInterval
         self.onEffect = onEffect
         card = LensCardRenderer.render(.list, stack: CandidateStack(), order: SpeciesListOrder(), selection: 0, saved: [], profile: profile)
     }
@@ -165,7 +184,7 @@ final class GlassesLensSession {
         lapseTask?.cancel()
         lapseTask = nil
         savedSightings = []
-        lastSave = nil
+        viewfinderOpenedAt = nil
         inputRecords = []
         teardownTask = nil
         refreshCard()
@@ -192,6 +211,8 @@ final class GlassesLensSession {
         do {
             try await attach()
             phase = .running
+            // Back from a suspension onto the viewfinder (or a problem over it, cleared later).
+            syncViewfinder()
         } catch {
             errorMessage = error.localizedDescription
             connection?.noteSessionFailure(error)
@@ -360,6 +381,7 @@ final class GlassesLensSession {
         sendTask = nil
         lapseTask?.cancel()
         lapseTask = nil
+        stopViewfinder()
         let display = self.display
         self.display = nil
         let inputs = inputsCapability
@@ -425,6 +447,9 @@ final class GlassesLensSession {
         if inputRecords.count > Self.maxRecords { inputRecords.removeLast(inputRecords.count - Self.maxRecords) }
         // Events that land while the run is ending (after Back on the root, say) must not move the pages.
         guard let gesture = record.gesture, phase == .running else { return }
+        if gesture == .tap, case .viewfinder = machine.page, let viewfinderOpenedAt, ContinuousClock.now - viewfinderOpenedAt < echoWindow {
+            return
+        }
         perform(machine.apply(gesture) { [self] in cardProfile(for: $0)?.sounds ?? [] })
     }
 
@@ -436,14 +461,13 @@ final class GlassesLensSession {
 
     private func perform(_ effect: LensEffect?) {
         switch effect {
+        case .openViewfinder(let candidate):
+            viewfinderOpenedAt = .now
+            onEffect(.openViewfinder(candidate))
+        case .takePhoto(let candidate):
+            savedSightings.append(candidate)
+            onEffect(.takePhoto(candidate))
         case .saveSighting(let candidate):
-            // Hardware may deliver one press as both a button click and an Inputs select (DECISIONS.md, "Lens UI"):
-            // a second save of the same species inside `saveDebounce` is that echo, not a wish to save again.
-            let now = ContinuousClock.now
-            if let lastSave, lastSave.species == candidate.species, now - lastSave.at < saveDebounce {
-                break
-            }
-            lastSave = (candidate.species, now)
             savedSightings.append(candidate)
             onEffect(.saveSighting(candidate))
         case .endSession:
@@ -457,6 +481,7 @@ final class GlassesLensSession {
             break
         }
         refreshCard()
+        syncViewfinder()
     }
 
     // MARK: - Reference clips
@@ -513,6 +538,50 @@ final class GlassesLensSession {
         if machine.soundEnded(playback) { refreshCard() }
     }
 
+    // MARK: - Viewfinder
+
+    /// Starts the frame pump when the viewfinder is the page on a running lens, and stops it otherwise.
+    private func syncViewfinder() {
+        guard case .viewfinder = machine.page, phase == .running, display != nil else {
+            stopViewfinder()
+            return
+        }
+        guard viewfinderTask == nil else { return }
+        viewfinderTask = Task { [weak self] in await self?.pumpViewfinder() }
+        onViewfinderChange?(true)
+    }
+
+    private func stopViewfinder() {
+        viewfinderImage = nil
+        guard let viewfinderTask else { return }
+        viewfinderTask.cancel()
+        self.viewfinderTask = nil
+        onViewfinderChange?(false)
+    }
+
+    /// Sends the newest frame, waits for the Display to take it, and again: the Bluetooth link sets the pace, and
+    /// `viewfinderInterval` keeps it from spending the link on frames no faster than the stream's own.
+    private func pumpViewfinder() async {
+        while !Task.isCancelled {
+            let started = ContinuousClock.now
+            if let frame = viewfinderFrame?() {
+                if let image = await Task.detached(priority: .userInitiated, operation: { frame.image().map(DisplayCardBuilder.viewfinderImage) }).value,
+                   !Task.isCancelled {
+                    viewfinderImage = image
+                    resendCard()
+                    await sendTask?.value
+                }
+            } else if viewfinderImage != nil {
+                // The camera is off or restarting: say so rather than leave the last picture standing.
+                viewfinderImage = nil
+                resendCard()
+                await sendTask?.value
+            }
+            let rest = viewfinderInterval - (ContinuousClock.now - started)
+            if rest > .zero { try? await Task.sleep(for: rest) }
+        }
+    }
+
     // MARK: - Display
 
     /// Re-renders the current page and sends it if it changed. Every page shows the stack (count, position, score),
@@ -520,7 +589,7 @@ final class GlassesLensSession {
     private func refreshCard() {
         let next = LensCardRenderer.render(
             machine.page, stack: machine.stack, order: machine.order, selection: machine.selection, saved: machine.savedIndices,
-            playing: machine.playing, nextSounds: machine.nextSounds, profile: cardProfile(for:)
+            playing: machine.playing, nextSounds: machine.nextSounds, savedCounts: machine.savedCounts, profile: cardProfile(for:)
         )
         guard next != card else { return }
         card = next
@@ -528,7 +597,7 @@ final class GlassesLensSession {
     }
 
     private func renderedCard() -> FlexBox {
-        DisplayCardBuilder.flexBox(for: card, image: image) { [weak self] action in
+        DisplayCardBuilder.flexBox(for: card, image: image, viewfinder: viewfinderImage) { [weak self] action in
             Task { @MainActor in self?.tapped(action) }
         }
     }

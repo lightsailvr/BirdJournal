@@ -267,14 +267,15 @@ final class ListeningCoordinator {
     // MARK: - Adding
 
     /// Writes `candidate` to the journal with the location the run has and, on the glasses, the frame from this
-    /// moment; acknowledges with an undo. A species already added this run has its sighting updated instead.
+    /// moment; acknowledges with an undo. Every add is a new sighting, even of a species already added this run.
     @discardableResult
     func add(_ candidate: Candidate) async -> RunSightings.Addition? {
         let confirmedAt = Date.now
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone)
-            acknowledge(addition.wasNew ? "Added to your journal" : "Journal entry updated", undo: addition)
+            let count = sightings.count(of: candidate.species)
+            acknowledge(count > 1 ? "Added to your journal · \(count) sightings this run" : "Added to your journal", undo: addition)
             return addition
         } catch {
             Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
@@ -301,7 +302,6 @@ final class ListeningCoordinator {
             try? await Task.sleep(for: .seconds(6))
             guard !Task.isCancelled, let self, self.acknowledgment == acknowledgment else { return }
             self.acknowledgment = nil
-            self.sightings.commitReplacedFrames()  // the undo window has closed
         }
     }
 

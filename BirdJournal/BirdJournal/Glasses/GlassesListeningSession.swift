@@ -10,9 +10,10 @@ import SwiftData
 import UIKit
 
 /// The whole loop on the glasses (issue #9): one device session shared by the camera stream, Display and Inputs;
-/// glasses audio through the engine into the lens pages; "Add to my list" on a species' details page writes the sighting to
-/// the album with the most recent camera frame (issue #24). Start from the phone, then pocket it: nothing here needs
-/// the screen.
+/// glasses audio through the engine into the lens pages; "Add to my list" on a species' details page opens the
+/// viewfinder on the camera's frames, and a tap there writes the sighting with a full-resolution photo taken then (the
+/// latest frame if the photo does not come), a swipe without one. Start from the phone, then pocket it: nothing here
+/// needs the screen.
 ///
 /// Order: the device session (which waits for connected display glasses), camera and microphone permission, the
 /// lens (so the wearer sees the empty species list while the models load), then the listening session over the stream. The run ends from the phone, from Back on the root,
@@ -76,8 +77,7 @@ final class GlassesListeningSession {
         init() {}
     }
 
-    /// One sighting written this run, as the phone lists it. A species saved again in the same run updates its
-    /// sighting rather than adding a second (spec user story 33).
+    /// One sighting written this run, as the phone lists it; a species saved again is another sighting.
     typealias SavedSighting = RunSightings.Entry
 
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "glasses-listening")
@@ -86,7 +86,7 @@ final class GlassesListeningSession {
     private(set) var sessionState: DeviceSessionState = .idle
     private(set) var streamState: StreamState = .stopped
     var errorMessage: String?
-    /// Sightings written this run, in first-save order.
+    /// Sightings written this run, in save order.
     var saved: [SavedSighting] { sightings.entries }
 
     /// Engine, location and the live list.
@@ -148,6 +148,10 @@ final class GlassesListeningSession {
             image: image,
             onEffect: { effect in box.run?.handle(effect) }
         )
+        lens.viewfinderFrame = { box.run?.source?.latestFrame }
+        lens.onViewfinderChange = { open in
+            Task { await box.run?.source?.setViewfinder(open: open) }
+        }
         box.run = self
     }
 
@@ -157,6 +161,11 @@ final class GlassesListeningSession {
         case .starting, .listening, .interrupted, .paused, .resuming: true
         case .idle, .stopping, .stopped: false
         }
+    }
+
+    /// The stream a reference clip holds while it plays, so the glasses' speakers play it; nil without a run.
+    var playbackStreamHold: (any PlaybackStreamHold)? {
+        isActive ? source as? any PlaybackStreamHold : nil
     }
 
     /// Whether the stream has delivered a frame a save could store.
@@ -391,25 +400,31 @@ final class GlassesListeningSession {
 
     private func handle(_ effect: LensEffect) {
         switch effect {
-        case .saveSighting(let candidate):
-            // The frame is taken now, at the tap, so the sighting shows what the wearer was looking at; it is
-            // encoded off the main actor.
+        case .takePhoto(let candidate):
+            // The photo is taken now, at the tap on the viewfinder. Should none come, the frame from this moment
+            // stands in, so the sighting still shows what the wearer framed; it is encoded off the main actor.
             let frame = source?.latestFrame
             let confirmedAt = Date.now
             Task {
-                let jpeg = await Task.detached(priority: .userInitiated) { frame?.jpegData() }.value
+                var jpeg = await source?.capturePhoto()
+                if jpeg == nil {
+                    jpeg = await Task.detached(priority: .userInitiated) { frame?.jpegData() }.value
+                }
                 await save(candidate, confirmedAt: confirmedAt, frame: jpeg)
             }
+        case .saveSighting(let candidate):
+            // Swiped off the viewfinder: added without a photo.
+            let confirmedAt = Date.now
+            Task { await save(candidate, confirmedAt: confirmedAt, frame: nil) }
         case .endSession:
             beginStop(reason: .back)
-        case .playSound, .stopSound:
-            // The lens plays its clips itself, through the shared player.
+        case .openViewfinder, .playSound, .stopSound:
+            // The lens shows the viewfinder and plays its clips itself.
             break
         }
     }
 
-    /// Writes the sighting; the run's ledger keeps the album clean (spec user story 33) should the same species
-    /// arrive again.
+    /// Writes a new sighting through the run's ledger, which the phone shares.
     private func save(_ candidate: Candidate, confirmedAt: Date, frame: Data?) async {
         do {
             try sightings.add(candidate, confirmedAt: confirmedAt, location: listening.coordinate, frame: frame, source: .glasses)

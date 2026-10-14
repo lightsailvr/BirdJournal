@@ -10,6 +10,12 @@ public enum LensPage: Sendable, Hashable {
     /// The details page under the photo page: identification text, credit and the "Add to my list" action (or its
     /// saved mark).
     case details(index: Int)
+    /// The sounds page above the photo page: the species' reference clips, which a tap here plays (issue #41). A
+    /// page of its own so a swipe the band reads as a tap elsewhere never starts one.
+    case sounds(index: Int)
+    /// The camera's view after "Add to my list", to frame the bird: a tap takes the photo and adds it, any swipe
+    /// adds it without one.
+    case viewfinder(index: Int)
     /// A problem the run wants the wearer to know about, over whichever page they were on (issue #10). Swipe right,
     /// Back or a tap is the way back to that page.
     case problem(LensProblem)
@@ -18,7 +24,7 @@ public enum LensPage: Sendable, Hashable {
     public var index: Int? {
         switch self {
         case .list, .problem: nil
-        case .species(let index), .details(let index): index
+        case .species(let index), .details(let index), .sounds(let index), .viewfinder(let index): index
         }
     }
 }
@@ -61,11 +67,11 @@ public enum LensAction: Sendable, Hashable {
     case save
 }
 
-/// A reference clip started from a photo page (issue #41), until it ends, is stopped or the wearer moves on.
+/// A reference clip started from a sounds page (issue #41), until it ends, is stopped or the wearer moves on.
 public struct LensPlayback: Sendable, Hashable {
     /// Counts up with every start, so news of a clip that has since been replaced is told apart.
     public var id: Int
-    /// The stack index of the species whose photo page started it.
+    /// The stack index of the species whose sounds page started it.
     public var index: Int
     public var sound: LensSound
     /// The glasses' speakers were not the audio route, so the clip plays on the phone and the page says so.
@@ -74,11 +80,15 @@ public struct LensPlayback: Sendable, Hashable {
 
 /// What the adapter must do after an event, besides rendering the new page.
 public enum LensEffect: Sendable, Equatable {
-    /// The wearer said "Add to my list": write a Sighting with the camera frame from this moment.
+    /// "Add to my list" opened the viewfinder: show the camera's view until the wearer taps or swipes.
+    case openViewfinder(Candidate)
+    /// A tap on the viewfinder: take a photo now and write the Sighting with it.
+    case takePhoto(Candidate)
+    /// A swipe off the viewfinder: write the Sighting without a photo.
     case saveSighting(Candidate)
     /// Back on the root: end the glasses session.
     case endSession
-    /// A tap on a photo page: play the species' next reference clip, replacing nothing (only one plays at a time).
+    /// A tap on a sounds page: play the species' next reference clip, replacing nothing (only one plays at a time).
     case playSound(Candidate, LensPlayback)
     /// Stop the clip playing: a tap while it plays, a swipe, Back, or a problem page over it.
     case stopSound
@@ -90,12 +100,15 @@ public enum LensEffect: Sendable, Equatable {
 /// Page map (DECISIONS.md, "Lens UI", issue #24). The list is a menu the app drives, because the glasses hand Nav
 /// and Select to an app that subscribes to Inputs instead of moving focus between tappable rows (and do not scroll
 /// a view either): swipe down/up move the highlight, and a tap or swipe left opens the highlighted species' photo
-/// page. From the photo page swipe down opens the details page and swipe up returns; on either, swipe left is the
-/// next species' photo and swipe right is back to the list (the only way back on real glasses, which do not deliver
-/// Back). A tap or the button on the details page is "Add to my list". A tap on the photo page never adds a bird:
-/// it plays the species' reference clips (issue #41), the song first; a tap while one plays stops it, and the next
-/// tap plays the call, round again. Any other gesture, and a problem page, stops a clip as it moves on. The stack never reorders and new species append at the end, so an update
-/// never moves the page the wearer is on. A reported problem covers the current page until swipe right, Back or a
+/// page. From the photo page swipe down opens the details page and swipe up the sounds page, and the opposite swipe
+/// returns; on any of the three, swipe left is the next species' photo and swipe right is back to the list (the only
+/// way back on real glasses, which do not deliver Back). A tap on the photo page does nothing: the band can read a
+/// swipe as a tap, and the photo page is where the wearer swipes most. A tap or the button on the details page is
+/// "Add to my list", which opens the viewfinder: a tap there takes the photo and adds the bird, any swipe (or Back)
+/// adds it without one, and either returns to the details page with the saved mark. A tap on the sounds page plays
+/// the species' reference clips (issue #41), the song first; a tap while one plays stops it, and the next tap plays
+/// the call, round again. Any other gesture, and a problem page, stops a clip as it moves on. The stack never
+/// reorders and new species append at the end, so an update never moves the page the wearer is on. A reported problem covers the current page until swipe right, Back or a
 /// tap returns there (issue #10).
 ///
 /// The list shows the stack in `order` (issue #42): calling birds first, then the rest most recently heard first.
@@ -113,12 +126,13 @@ public struct LensStateMachine: Sendable, Equatable {
     public private(set) var order = SpeciesListOrder()
     /// The species the highlight is pinned to by a swipe, nil while it follows row one.
     public private(set) var pinnedSpecies: Species?
-    /// Stack indices whose sighting has been saved this session; their pages show the saved mark instead of the
-    /// button. A later tap on a saved details page saves again (the run updates the sighting, spec user story 33);
-    /// one press that hardware delivers twice, as a click and a select, is deduplicated by the adapter, which has a
-    /// clock.
+    /// Stack indices with a sighting saved this session; their pages show the saved mark. A later tap on a saved
+    /// details page ("Add another") saves another sighting; one press that hardware delivers twice, as a click and a
+    /// select, is deduplicated by the adapter, which has a clock.
     public private(set) var savedIndices: Set<Int> = []
-    /// The clip playing from a photo page, nil when none is.
+    /// How many sightings each stack index has had saved this session.
+    public private(set) var savedCounts: [Int: Int] = [:]
+    /// The clip playing from a sounds page, nil when none is.
     public private(set) var playing: LensPlayback?
     /// Per stack index, the position in its species' clips of the one the next tap plays (0, the song, when absent).
     public private(set) var nextSounds: [Int: Int] = [:]
@@ -157,6 +171,7 @@ public struct LensStateMachine: Sendable, Equatable {
             coveredPage = .list
             pinnedSpecies = nil
             savedIndices = []
+            savedCounts = [:]
             playing = nil
             nextSounds = [:]
             order = SpeciesListOrder()
@@ -180,21 +195,21 @@ public struct LensStateMachine: Sendable, Equatable {
     // MARK: - Gestures
 
     /// Applies a gesture to the current page. Gestures with no meaning on the current page are ignored. `sounds`
-    /// gives a species' reference clips in the order a photo page's taps play them.
+    /// gives a species' reference clips in the order a sounds page's taps play them.
     public mutating func apply(_ gesture: LensGesture, sounds: (Species) -> [LensSound] = { _ in [] }) -> LensEffect? {
         if gesture != .tap, let stop = stopPlaying() {
-            // A clip plays only on a photo page, whose moves have no effect of their own to lose.
+            // A clip plays only on a sounds page, whose moves have no effect of their own to lose.
             let moved = navigate(gesture)
-            assert(moved == nil, "a move from a photo page returned \(String(describing: moved))")
+            assert(moved == nil, "a move from a sounds page returned \(String(describing: moved))")
             return stop
         }
-        if case let .species(index) = page, gesture == .tap {
+        if case let .sounds(index) = page, gesture == .tap {
             return stopPlaying() ?? play(index, sounds: sounds(stack.candidates[index].species))
         }
         return navigate(gesture)
     }
 
-    /// The page map's moves. A tap on a photo page is the play control, handled by `apply`.
+    /// The page map's moves. A tap on a sounds page is the play control, handled by `apply`.
     private mutating func navigate(_ gesture: LensGesture) -> LensEffect? {
         switch (page, gesture) {
         case (.list, .swipeDown):
@@ -208,20 +223,28 @@ public struct LensStateMachine: Sendable, Equatable {
         case (.list, .back):
             return .endSession
 
-        case let (.species(index), .swipeLeft), let (.details(index), .swipeLeft):
+        case let (.species(index), .swipeLeft), let (.details(index), .swipeLeft), let (.sounds(index), .swipeLeft):
             if index + 1 < stack.count { open(index + 1) }
-        case (.species, .swipeRight), (.species, .back), (.details, .swipeRight), (.details, .back):
+        case (.species, .swipeRight), (.species, .back), (.details, .swipeRight), (.details, .back),
+             (.sounds, .swipeRight), (.sounds, .back):
             page = .list
         case let (.species(index), .swipeDown):
             page = .details(index: index)
-        case (.species, .swipeUp), (.species, .tap):
+        case let (.species(index), .swipeUp):
+            page = .sounds(index: index)
+        case (.species, .tap):
             break
-        case let (.details(index), .swipeUp):
+        case let (.details(index), .swipeUp), let (.sounds(index), .swipeDown):
             page = .species(index: index)
-        case (.details, .swipeDown):
+        case (.details, .swipeDown), (.sounds, .swipeUp), (.sounds, .tap):
             break
         case let (.details(index), .tap):
-            return save(index)
+            return openViewfinder(index)
+
+        case let (.viewfinder(index), .tap):
+            return save(index, photo: true)
+        case let (.viewfinder(index), _):
+            return save(index, photo: false)
 
         case (.problem, .swipeRight), (.problem, .back), (.problem, .tap):
             page = coveredPage
@@ -231,13 +254,13 @@ public struct LensStateMachine: Sendable, Equatable {
         return nil
     }
 
-    /// A tap on a card element, delivered by the Display: the Add button on its own details page. Anything else is
-    /// ignored.
+    /// A tap on a card element, delivered by the Display: the Add button on its own details page opens the
+    /// viewfinder. Anything else is ignored.
     public mutating func press(_ action: LensAction) -> LensEffect? {
         switch (page, action) {
         case let (.details(index), .save):
-            return save(index)
-        case (.list, .save), (.species, .save), (.problem, .save):
+            return openViewfinder(index)
+        case (.list, .save), (.species, .save), (.sounds, .save), (.viewfinder, .save), (.problem, .save):
             return nil
         }
     }
@@ -291,8 +314,17 @@ public struct LensStateMachine: Sendable, Equatable {
         pinnedSpecies = stack.candidates[index].species
     }
 
-    private mutating func save(_ index: Int) -> LensEffect {
+    private mutating func openViewfinder(_ index: Int) -> LensEffect {
+        page = .viewfinder(index: index)
+        return .openViewfinder(stack.candidates[index])
+    }
+
+    /// Adds the bird from the viewfinder, with a photo taken now or without one, and returns to its details page.
+    private mutating func save(_ index: Int, photo: Bool) -> LensEffect {
         savedIndices.insert(index)
-        return .saveSighting(stack.candidates[index])
+        savedCounts[index, default: 0] += 1
+        page = .details(index: index)
+        let candidate = stack.candidates[index]
+        return photo ? .takePhoto(candidate) : .saveSighting(candidate)
     }
 }

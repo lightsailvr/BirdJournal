@@ -41,7 +41,7 @@ extension PackLibrary {
     /// What the species card shows: the best photo and the description fields the first pack that has the species
     /// gives (issue #12). A species without field marks falls back to the pack's summary, then (in the renderer) to
     /// the scientific name, and the size-and-habitat line is left out when both are empty. The species' reference
-    /// clips, song first, are what a tap on its photo page plays (issue #41).
+    /// clips, song first, with their credits, are what a tap on its sounds page plays (issue #41).
     func profile(for species: Species) -> SpeciesProfile? {
         guard let entry = self.species(scientificName: species.scientificName)?.species else { return nil }
         let best = entry.photos.first
@@ -51,7 +51,7 @@ extension PackLibrary {
             size: entry.size ?? "",
             habitat: entry.habitat ?? "",
             photoCredit: best?.shortCredit ?? "",
-            sounds: entry.sounds.map { LensSound(id: $0.id, kind: LensSoundKind($0.kind)) }
+            sounds: entry.sounds.map { LensSound(id: $0.id, kind: LensSoundKind($0.kind), credit: $0.shortCredit) }
         )
     }
 

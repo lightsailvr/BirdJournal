@@ -76,7 +76,6 @@ struct ListeningCoordinatorTests {
 
         let finch = run.candidates[0]
         let addition = try #require(await run.add(finch))
-        #expect(addition.wasNew)
         #expect(run.isAdded(finch))
         #expect(run.summary == "2 species heard · 1 added")
         #expect(run.acknowledgment?.text == "Added to your journal")
@@ -115,8 +114,8 @@ struct ListeningCoordinatorTests {
         #expect(run.listOrder.callingCount == 0)
     }
 
-    @Test("adding the same species twice in a run updates its sighting instead of adding a second, and undoing that puts the first back")
-    func repeatAddUpdates() async throws {
+    @Test("adding the same species twice in a run adds a second sighting, and undoing that removes only the second")
+    func repeatAddAddsAnother() async throws {
         let harness = try Self.makeHarness()
         let run = harness.run
         await run.start()
@@ -129,15 +128,16 @@ struct ListeningCoordinatorTests {
         try await waitUntil("more windows") { run.candidates[1].windowsAboveThreshold >= 4 }
         let again = try #require(await run.add(run.candidates[1]))
 
-        #expect(first.wasNew && !again.wasNew)
-        #expect(again.sightingID == first.sightingID)
-        #expect(harness.stored.count == 1)
-        #expect(run.acknowledgment?.text == "Journal entry updated")
-        #expect(run.sightings.entries.count == 1)
+        #expect(again.sightingID != first.sightingID)
+        #expect(harness.stored.count == 2)
+        #expect(run.acknowledgment?.text == "Added to your journal · 2 sightings this run")
+        #expect(run.sightings.entries.count == 2)
+        #expect(run.sightings.count(of: jay.species) == 2)
 
         run.undo(again)
         #expect(harness.stored.count == 1, "the first add stands")
         #expect(run.isAdded(jay))
+        #expect(run.sightings.count(of: jay.species) == 1)
 
         await run.stop()
     }
