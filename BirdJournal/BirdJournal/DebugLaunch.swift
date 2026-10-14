@@ -13,12 +13,15 @@ import UIKit
 ///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Cards view), `sightings`,
-///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab), `species` (the journal's species view),
+///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab), `card` and `card-back` (the newest
+///   card, front or back up), `species` (the journal's species view),
 ///   `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `source` (the audio source sheet).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
+/// - `-reduceMotion YES` makes the card flip switch faces as with the system's Reduce Motion, which a UI test cannot
+///   turn on.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
 ///   prompting, for the UI tests.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
@@ -79,6 +82,13 @@ struct DebugLaunch: ViewModifier {
                 if let newest = try? context.fetch(Sighting.newestFirst()).first {
                     run.showRevealForScreenshot(of: newest)
                 }
+            case "card", "card-back":
+                tab = .journal
+                journalMode = .cards
+                if let newest = try? context.fetch(Sighting.newestFirst()).first {
+                    journalPath.append(Route.card(newest.persistentModelID))
+                }
+                if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }
             case "species":
                 tab = .journal
                 journalMode = .species
@@ -162,11 +172,12 @@ final class PacedAudioSource: AudioSource {
 }
 
 enum DebugSeeds {
-    /// Five sightings over three days with generated frames (a ring at the centre of a 640 × 480 frame with a black
-    /// border, so the 2x crop is visible as such), one with a note, two from the phone without a frame, one without
+    /// Six sightings over nine days with generated frames (a ring at the centre of a 640 × 480 frame with a black
+    /// border, so the 2x crop is visible as such), one with a note, three from the phone without a frame, two without
     /// a location. The located ones are spread over about a kilometre of Griffith Park, so the full map (issue #44)
     /// shows pins apart. The House Finch is there twice, so the Cards view shows its Legendary first (the older,
-    /// heard from the phone) and a newer card of it (issue #51).
+    /// heard from the phone) and a newer card of it (issue #51). The located ones carry the rarity the real geomodel
+    /// gives them; the oldest, a Common Blackbird no pack describes, has no place, no rarity and no art (issue #52).
     static func seedJournal(context: ModelContext, frames: FrameStore?) {
         let bySidewalk = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
         let byThePond = Coordinate(latitude: 34.1402, longitude: -118.2898, accuracy: 12)
@@ -177,10 +188,12 @@ enum DebugSeeds {
             ("Zenaida macroura_Mourning Dove", 26 * 60, byTheTrailhead, 0.64, .phone, false, nil),
             ("Calypte anna_Anna's Hummingbird", 27 * 60, nil, 0.71, .glasses, true, nil),
             ("Haemorhous mexicanus_House Finch", 50 * 60, byTheTrailhead, 0.68, .phone, false, nil),
+            ("Turdus merula_Common Blackbird", 9 * 24 * 60, nil, 0.58, .phone, false, nil),
         ]
+        let rarity = BundledIdentification.rarityReader()
         for seed in seeds {
             let frame = seed.frame ? try? frames?.write(jpeg: frameJPEG()) : nil
-            context.insert(Sighting(
+            let sighting = Sighting(
                 speciesID: seed.label,
                 confirmedAt: Date.now.addingTimeInterval(-seed.minutesAgo * 60),
                 location: seed.location,
@@ -188,7 +201,9 @@ enum DebugSeeds {
                 frameImagePath: frame,
                 source: seed.source,
                 note: seed.note
-            ))
+            )
+            sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: seed.location, at: sighting.confirmedAt)
+            context.insert(sighting)
         }
         try? context.save()
     }

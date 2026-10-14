@@ -117,7 +117,7 @@ private struct EmptyJournal: View {
 }
 
 /// The Cards view (issue #51): every card newest first, two columns, one at accessibility text sizes, each opening
-/// its sighting. Legendary comes from the whole collection, so a search never changes which card is the first.
+/// its card (issue #52). Legendary comes from the whole collection, so a search never changes which card is the first.
 private struct CardsGrid: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let sightings: [Sighting]
@@ -128,7 +128,7 @@ private struct CardsGrid: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: JournalLayout.rowGap, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2)
         LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
             ForEach(collection.cards.compactMap { byIdentifier[$0.identifier] }) { sighting in
-                NavigationLink(value: Route.sighting(sighting.persistentModelID)) {
+                NavigationLink(value: Route.card(sighting.persistentModelID)) {
                     CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier))
                 }
                 .buttonStyle(.plain)

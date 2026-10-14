@@ -39,6 +39,8 @@ for appearance in light dark; do
     shot "intro-$appearance"     7  "${common[@]}" -autoScreen cards -collectionIntroShown NO
     shot "sightings-$appearance" 7  "${common[@]}" -autoScreen sightings
     shot "reveal-$appearance"    7  "${common[@]}" -autoScreen reveal
+    shot "card-$appearance"      8  "${common[@]}" -autoScreen card -collectionIntroShown YES
+    shot "card-back-$appearance" 8  "${common[@]}" -autoScreen card-back -collectionIntroShown YES
     shot "sighting-$appearance"  7  "${common[@]}" -autoScreen sighting
     shot "share-$appearance"     9  "${common[@]}" -autoScreen share
     shot "guide-$appearance"     7  "${common[@]}" -autoScreen guide
@@ -63,6 +65,8 @@ shot "listen-ax5"      7 -inMemoryAlbum YES -seedJournal YES -autoScreen listen
 shot "listening-ax5"  22 -inMemoryAlbum YES -autoPhoneListening "$wav" -autoScreen listening
 shot "cards-ax5"       7 -inMemoryAlbum YES -seedJournal YES -autoScreen cards -collectionIntroShown YES
 shot "reveal-ax5"      7 -inMemoryAlbum YES -seedJournal YES -autoScreen reveal
+shot "card-ax5"        8 -inMemoryAlbum YES -seedJournal YES -autoScreen card -collectionIntroShown YES
+shot "card-back-ax5"   8 -inMemoryAlbum YES -seedJournal YES -autoScreen card-back -collectionIntroShown YES
 shot "packs-ax5"       9 -inMemoryAlbum YES -autoScreen packs
 xcrun simctl ui "$udid" content_size medium
 xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true

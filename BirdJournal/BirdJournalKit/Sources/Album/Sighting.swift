@@ -176,8 +176,10 @@ public enum RarityLabel: String, Codable, Sendable, CaseIterable {
     case exceptional
 }
 
-/// The rarity taken at the add: the geomodel's occurrence probability (nil when the species fell below what the
-/// geomodel reports), the label it mapped to under `calibrationVersion`, and the week of the year it was read for.
+/// The rarity taken at the add (issue #52, ADR-0006): the geomodel's occurrence probability, the label it mapped to
+/// under `calibrationVersion`, and the week of BirdNET's 48-week year it was read for. A sighting without a location
+/// or of a species the geomodel doesn't know has no snapshot at all. `occurrence` is optional only in the schema;
+/// every reading saves it.
 public struct RaritySnapshot: Codable, Sendable, Equatable {
     public var occurrence: Double?
     public var label: RarityLabel

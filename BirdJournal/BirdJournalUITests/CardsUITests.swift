@@ -51,13 +51,13 @@ final class CardsUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["A new card for your collection"].waitForExistence(timeout: 5), "no quiet acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
 
-        // Two cards of the species now; reopening the Legendary one shows the sighting, not the reveal again.
+        // Two cards of the species now; reopening the Legendary one shows the card (issue #52), not the reveal again.
         app.buttons["Journal"].firstMatch.tap()
         let cards = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name))
         XCTAssertTrue(legendary.waitForExistence(timeout: 10))
         XCTAssertEqual(cards.count, 2, "one card per add; screen: \(app.debugDescription.prefix(4000))")
         legendary.tap()
-        XCTAssertTrue(app.staticTexts["When"].waitForExistence(timeout: 10), "the sighting did not open; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the card did not open; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.waitForExistence(timeout: 2), "reopening a card never replays the reveal")
         XCTAssertEqual(app.state, .runningForeground)
     }

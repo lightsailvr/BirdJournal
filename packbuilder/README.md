@@ -105,6 +105,14 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 The Swift `Pack` module (`SpeciesPack`) reads the output; `SCHEMA_VERSION` in `writer.py` and
 `SpeciesPack.schemaVersion` move together.
 
+## Rarity calibration
+
+`uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
+species of every definition under `packs/`, over a 6 × 6 grid across each pack's bounding box and all 48 weeks, and
+writes the label thresholds the app ships to `BirdJournal/BirdJournalKit/Sources/Identification/RarityCalibration.json`
+(`rarity.py`; ADR-0006, issue #52). It takes a few seconds. Run it again only for a new calibration, with the next
+version: cards keep the version they were labelled under.
+
 ## Layout
 
 | Path | What |
