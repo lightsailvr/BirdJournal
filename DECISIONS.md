@@ -254,3 +254,17 @@ Committed: `art/` (prompts, workflows, comfybox setup, the plan and the tuning w
   - **Qwen at full quality** (40 steps, cfg 4, 200 s) painted the most convincing old masters, but all nine birds lost their streaks and two turned yellow. Not a style pass for field marks as it stands.
   - **Signatures**: old-master styles make the model sign the painting, more often on some seeds than others. "Unsigned" in the prompt doesn't stop it at cfg 1. At full quality the negative prompt ("signature, initials") mostly does.
   - Workflows on comfybox: `BirdJournal/style pass` (Qwen, bird as image 2, Fast preview switch) and `BirdJournal/alternatives/Klein 4B distilled - style pass`, with copies in `art/comfyui/`.
+- **Repeatability** (2026-10-15). The maintainer's pick, Klein 4B distilled with the Renaissance oil study, was tried on six more species in four spots across the three glasses photos: Black Phoebe, Anna's Hummingbird, California Towhee, Western Bluebird, Townsend's Warbler and Cooper's Hawk. That made 144 paintings, with sheets in `build/art-bakeoff/repeat/`.
+  - **The zoom scales with the bird's length.** The finch (14.5 cm) gets 12×, so a 42 cm Cooper's Hawk gets 4× and a 10 cm hummingbird 17×. Every bird stays at card size, and at its true size against the place.
+  - **The telephoto pass repeats.** Five species of six kept their field marks in all four spots.
+    - The hummingbird failed in all four. Its reference is a back view in shade with no gorget, and from it Klein painted a songbird's body with a long bill.
+    - A hole in a cut-out comes out as a white patch. On the bluebird, a leaf had covered its back.
+  - **The two-pass Renaissance restyle does not repeat.** Strongly marked birds (bluebird, hawk) held, but plain ones gained head marks they don't have. The phoebe and towhee got a rufous cap, a pale collar or a black mask in most spots, and the warbler's yellow turned orange.
+  - **Three fixes failed:**
+    - the reference bird as image 2;
+    - a neutral underpainting instead of the warm umber and varnish;
+    - restyling from the telephoto painting's own latent, partway through an 8-step schedule (starting at step 2 to 5). These partial repaints stayed photographs, and the phoebe's cap was already appearing at step 2.
+  - **One pass** paints the style straight from the reference bird, in 7 s. It uses the telephoto prompt with the Renaissance look in place of the 300 mm photograph, plus "do not add a cap, mask or eye stripe it does not have".
+    - It kept plain birds plain and marked birds marked.
+    - Its background is less repainted and keeps more of the photo's colours.
+    - The phoebe came out grey-brown rather than sooty, and one warbler of four drifted.
