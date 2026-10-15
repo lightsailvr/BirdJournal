@@ -268,3 +268,10 @@ Committed: `art/` (prompts, workflows, comfybox setup, the plan and the tuning w
     - It kept plain birds plain and marked birds marked.
     - Its background is less repainted and keeps more of the photo's colours.
     - The phoebe came out grey-brown rather than sooty, and one warbler of four drifted.
+- **Portrait with a backdrop** (the maintainer's design, 2026-10-15). The bird's markings may not change at all. So the bird is cut out, framed as a three-quarter portrait (cut at the belly, so there are no legs and no perch) and painted. The glasses crop behind it is painted on its own, and the two are composited. Six species (the House Finch plus the five above) on the four spots; sheets in `build/art-bakeoff/portrait/`.
+  - **Measuring it.** Each painted bird's colours are compared with the photo's, inside the bird, after a 6 px blur: the mean CIE76 ΔE, where about 2.3 is just noticeable.
+  - **Repainting the bird with Klein fails.** The colour error was ΔE 18–41: the finch lost its red, the warbler's yellow turned cream, and the towhee gained a black throat. That rules out a generative repaint of the bird.
+  - **"The background of a Renaissance portrait" painted people** into the backdrops. "An empty background of foliage, walls, ground, sky and light only" gave classical landscapes.
+  - **Colour-locked bird.** It takes the painting's luminance detail above a 4 px blur (the brushwork and the eye's highlight) and the photo's blurred luminance and all of its colour. Its error is ΔE 0.8–1.4, every marking unchanged by construction. A Kuwahara brush filter also keeps the colours, but it reads as a mosaic.
+  - **Still open: one light and one surface.** The locked bird reads as a detailed photo set into a painted landscape. Shifting the backdrop back to the photo's daylight, or putting one warm glaze over everything (ΔE 2.3–4.2 on the bird), only narrows the gap.
+  - **Cut-out holes show through.** On the bluebird and the hawk, the backdrop shows where leaves covered the bird in its photo. A reference check should reject such cut-outs.
