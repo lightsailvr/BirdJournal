@@ -10,6 +10,8 @@ enum Route: Hashable {
     case species(scientificName: String, commonName: String)
     case speciesCredits(scientificName: String)
     case sighting(PersistentIdentifier)
+    /// One card, front first (issue #52).
+    case card(PersistentIdentifier)
     case journalSpecies(speciesID: String)
     case packs
     case pack(id: String)
@@ -41,6 +43,8 @@ private struct RouteDestination: View {
             SpeciesCreditsView(scientificName: scientificName)
         case .sighting(let id):
             SightingDetailView(id: id)
+        case .card(let id):
+            CardDetailView(id: id)
         case .journalSpecies(let speciesID):
             SpeciesJournalView(speciesID: speciesID)
         case .packs:

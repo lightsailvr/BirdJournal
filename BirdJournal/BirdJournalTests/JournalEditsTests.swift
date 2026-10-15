@@ -22,6 +22,22 @@ struct JournalEditsTests {
         #expect(try album.mainContext.fetch(Sighting.newestFirst()).first?.note == nil)
     }
 
+    @Test("a sighting is Heard until the birder says Seen on the card's back; the change persists and can go back (issue #52)")
+    func method() throws {
+        let album = try AlbumSchema.makeContainer(inMemory: true)
+        let edits = JournalEdits(container: album, frames: FrameStore(directory: URL.temporaryDirectory))
+        let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, soundConfidence: 0.8, source: .glasses)
+        album.mainContext.insert(sighting)
+        try album.mainContext.save()
+        func persisted() throws -> SightingMethod? { try ModelContext(album).fetch(Sighting.newestFirst()).first?.method }
+        #expect(try persisted() == .heard)
+
+        edits.setMethod(.seen, on: sighting)
+        #expect(try persisted() == .seen)
+        edits.setMethod(.heard, on: sighting)
+        #expect(try persisted() == .heard)
+    }
+
     @Test("a removed sighting is gone from the album, comes back whole on undo, and its frame outlives the window only until it closes")
     func removeAndUndo() throws {
         let album = try AlbumSchema.makeContainer(inMemory: true)

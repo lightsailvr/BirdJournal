@@ -39,7 +39,8 @@ struct BirdJournalApp: App {
         let levels = LevelSink()
         // The reference clips the profile plays (issue #41) are silenced in whichever run is listening.
         let suppression = AudioSuppression()
-        let recorder = SightingRecorder(container: album, frames: frames)
+        let recorder = SightingRecorder(container: album, frames: frames, rarity: BundledIdentification.rarityReader())
+        Self.backfillRarity(recorder)
         let sightings = RunSightings(recorder: recorder)
         let phone = Self.makePhoneListeningSession(levels: levels, suppression: suppression)
         let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels, suppression: suppression)
@@ -83,6 +84,15 @@ struct BirdJournalApp: App {
         } catch {
             fatalError("album store unavailable: \(error)")
         }
+    }
+
+    /// Sightings saved before rarity existed get theirs once (issue #52), after launch and with the geomodel read off
+    /// the main actor. The debug in-memory album is skipped: it would mark the album on disk as done.
+    private static func backfillRarity(_ recorder: SightingRecorder) {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "inMemoryAlbum") { return }
+        #endif
+        Task { await recorder.backfillRarity() }
     }
 
     /// Where sightings' frames go, beside the album; the album screens read them from the same store. With the

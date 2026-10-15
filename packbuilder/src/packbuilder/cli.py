@@ -1,5 +1,6 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
-`packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`)."""
+`packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
+`packbuilder calibrate-rarity --version <n>`: writes the rarity label thresholds the app ships (`rarity.py`)."""
 
 from __future__ import annotations
 
@@ -44,9 +45,14 @@ def main(argv: list[str] | None = None) -> int:
     draft.add_argument("--add", action="append", default=[], help="a species taken by hand, by scientific name (repeat)")
     draft.add_argument("--exclude", action="append", default=[], help="a species never taken, by scientific name (repeat)")
     draft.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
+    calibrate = commands.add_parser("calibrate-rarity", help="write the rarity label thresholds from the geomodel over every pack definition")
+    calibrate.add_argument("--version", type=int, required=True, help="the calibration version; bump it for any new calibration")
+    calibrate.add_argument("--out", type=Path, help="file to write (default: the Identification module's RarityCalibration.json)")
     args = parser.parse_args(argv)
     if args.command == "draft":
         return _draft(args)
+    if args.command == "calibrate-rarity":
+        return _calibrate_rarity(args)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     definition = PackDefinition.load(args.definition / "pack.json")
@@ -131,6 +137,28 @@ def _draft(args: argparse.Namespace) -> int:
     print(f"{len(result.species)} species", file=sys.stderr)
     json.dump(result.species, sys.stdout, indent=2, ensure_ascii=False)
     print()
+    return 0
+
+
+def _calibrate_rarity(args: argparse.Namespace) -> int:
+    import json
+
+    import onnxruntime
+
+    from packbuilder.rarity import GRID_SIZE, Region, calibration, readings
+
+    repo = Path(__file__).resolve().parents[3]
+    model = "BirdNET+_Geomodel_V3.0.4_Global_14K_FP16.onnx"
+    session = onnxruntime.InferenceSession(str(repo / "models" / model))
+    labels_file = repo / "models" / "BirdNET+_Geomodel_V3.0.4_Global_14K_Labels.txt"
+    labels = [line.split("\t")[1] for line in labels_file.read_text(encoding="utf-8").splitlines() if line]
+    definitions = [PackDefinition.load(folder / "pack.json") for folder in sorted((repo / "packbuilder" / "packs").iterdir())]
+    regions = [Region(d.bounding_box, [s.scientific_name for s in d.species]) for d in definitions]
+    values, unknown = readings(lambda inputs: session.run(["probabilities"], {"input": inputs})[0], labels, regions)
+    document = calibration(values, version=args.version, geomodel=model, packs=[d.id for d in definitions], grid_size=GRID_SIZE, unknown=unknown)
+    out = args.out or repo / "BirdJournal" / "BirdJournalKit" / "Sources" / "Identification" / "RarityCalibration.json"
+    out.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+    print(f"calibration {args.version}: {document['thresholds']} from {document['readings']} readings; geomodel lacks {document['unknown_species']}", file=sys.stderr)
     return 0
 
 

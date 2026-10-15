@@ -13,6 +13,11 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
+## Pull requests and closing issues
+
+- **Open a PR against `dev`**, the default branch: `gh pr create --base dev`. Put `Closes #<n>` in the body; GitHub closes the issue when the PR merges into `dev` (closing keywords only act on the default branch).
+- **`main` is the release branch.** It takes a `dev` → `main` PR only when a release is struck for the public beta channel, never a feature PR.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

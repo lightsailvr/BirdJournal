@@ -67,7 +67,7 @@ struct CardTile: View {
             if isLegendary {
                 LegendaryLabel()
             }
-            CardArtView(sighting: sighting, reference: reference)
+            CardArtView(sighting: sighting, reference: reference, commonName: library.commonName(for: sighting))
             VStack(alignment: .leading, spacing: 2) {
                 Text(library.commonName(for: sighting))
                     .font(JournalFont.heading)
@@ -96,7 +96,7 @@ struct CardTile: View {
             isLegendary ? "Legendary, your first" : nil,
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
-            CardArtView.label(for: sighting, reference: library.species(scientificName: sighting.scientificName)),
+            CardArtView.art(for: sighting, reference: library.species(scientificName: sighting.scientificName)).label,
         ]
         .compactMap { $0 }
         .joined(separator: ", ")
@@ -104,33 +104,59 @@ struct CardTile: View {
 }
 
 /// A card's art for now: the glasses photo at the album's crop, else the pack's reference photo, each labelled, so a
-/// reference photo is never taken for the birder's own.
+/// reference photo is never taken for the birder's own; with neither, a typographic face naming the bird (issue #52).
 struct CardArtView: View {
     let sighting: Sighting
     let reference: (pack: SpeciesPack, species: PackSpecies)?
+    let commonName: String
 
-    /// What the picture is, shown under it and read by VoiceOver.
-    static func label(for sighting: Sighting, reference: (pack: SpeciesPack, species: PackSpecies)?) -> String {
-        if sighting.frameImagePath != nil { return "Your glasses photo" }
-        return reference?.species.photos.isEmpty == false ? "Reference photo" : "No photo yet"
+    /// What the art is.
+    static func art(for sighting: Sighting, reference: (pack: SpeciesPack, species: PackSpecies)?) -> CardText.Art {
+        CardText.Art(sighting: sighting, referenceCredit: reference?.species.photos.first?.creditLine)
     }
 
     var body: some View {
+        let art = Self.art(for: sighting, reference: reference)
         VStack(alignment: .leading, spacing: 4) {
             Color.clear
                 .aspectRatio(CollectibleLayout.artAspectRatio, contentMode: .fit)
                 .overlay {
-                    if sighting.frameImagePath != nil {
-                        FrameImage(frameImagePath: sighting.frameImagePath)
-                    } else {
+                    switch art {
+                    case .glassesPhoto(let path):
+                        FrameImage(frameImagePath: path)
+                    case .referencePhoto:
                         PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.phoneImageURL(for:)) })
+                    case .none:
+                        TypographicArt(commonName: commonName)
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 .accessibilityHidden(true)
-            Text(Self.label(for: sighting, reference: reference))
+            Text(art.label)
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.cardIvory.opacity(0.8))
         }
+    }
+}
+
+/// The missing-art face: the bird's name set large on the card's own colours, so the card reads as unfinished rather
+/// than broken.
+private struct TypographicArt: View {
+    let commonName: String
+
+    var body: some View {
+        Color.cardIvory.opacity(0.08)
+            .overlay {
+                VStack(spacing: 8) {
+                    Image(systemName: "bird")
+                        .font(.title)
+                    Text(commonName)
+                        .font(JournalFont.title)
+                        .multilineTextAlignment(.center)
+                        .minimumScaleFactor(0.5)
+                }
+                .foregroundStyle(Color.cardIvory.opacity(0.7))
+                .padding(12)
+            }
     }
 }
