@@ -331,8 +331,9 @@ extension Coordinate {
     /// place name.
     public var formatted: String { formatted(locale: .current) }
 
-    public func formatted(locale: Locale) -> String {
-        let degrees = FloatingPointFormatStyle<Double>.number.locale(locale).precision(.fractionLength(2))
+    /// `fractionDigits` 1 is about 11 km: the species gallery's place while no name has arrived (issue #53).
+    public func formatted(fractionDigits: Int = 2, locale: Locale) -> String {
+        let degrees = FloatingPointFormatStyle<Double>.number.locale(locale).precision(.fractionLength(fractionDigits))
         let lat = "\(abs(latitude).formatted(degrees))° \(latitude < 0 ? "S" : "N")"
         let lon = "\(abs(longitude).formatted(degrees))° \(longitude < 0 ? "W" : "E")"
         return "\(lat), \(lon)"
