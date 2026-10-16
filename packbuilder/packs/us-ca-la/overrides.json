@@ -18,9 +18,11 @@
   "Zenaida macroura": {
     "exclude": [
       731073363,
-      731073307
+      731073307,
+      717379684
     ],
-    "_why": "macros of feathers in a hand, not a bird"
+    "_why": "macros of feathers in a hand, not a bird",
+    "_why_50": "open-license review (#50): out 717379684: a splayed wing with no head, possibly dead"
   },
   "Pyrocephalus rubinus": {
     "trust_article": true,
@@ -28,16 +30,11 @@
   },
   "Haliaeetus leucocephalus": {
     "limit": 200,
-    "include": [
-      656965711,
-      652806174,
-      656964977
-    ],
     "exclude": [
       677370682,
       683434701
     ],
-    "_why": "most Los Angeles photos are of a distant bird over a reservoir (the first 60 candidates gave two usable crops); the automatic top two were juveniles, all brown, so the adults with the white head go first"
+    "_why": "most Los Angeles photos are of a distant bird over a reservoir (the first 60 candidates gave two usable crops)"
   },
   "Numenius hudsonicus": {
     "sounds": {
@@ -54,5 +51,403 @@
       ]
     },
     "_why": "BirdNET+ carries both halves of the yellow warbler split and hears American recordings as Setophaga petechia (#41)"
+  },
+  "Anas platyrhynchos": {
+    "exclude": [
+      649074599,
+      689499641,
+      617097864,
+      674477146,
+      679992718,
+      689501607
+    ],
+    "_why_50": "open-license review (#50): out 649074599: domestic white Pekin duck; out 689499641: domestic-type brown duck; out 617097864: buff domestic-type duck; out 674477146: pied domestic hybrid; out 679992718: black domestic duck with a white bib; out 689501607: black domestic duck with a white bib; in 613917690: wild drake, ahead of the domestic ducks the scorer favours; in 686362677: wild hen, ahead of the domestic ducks the scorer favours",
+    "include": [
+      613917690,
+      686362677
+    ]
+  },
+  "Sayornis nigricans": {
+    "exclude": [
+      640224688,
+      632063781
+    ],
+    "_why_50": "open-license review (#50): out 640224688: brown colour cast hides the black and white; out 632063781: brown colour cast hides the black and white"
+  },
+  "Euphagus cyanocephalus": {
+    "exclude": [
+      270314180,
+      301683541
+    ],
+    "_why_50": "open-license review (#50): out 270314180: held in a hand, on a blanket; out 301683541: slumped and fluffed with drooped wings, possibly sick"
+  },
+  "Baeolophus inornatus": {
+    "exclude": [
+      453138341
+    ],
+    "_why_50": "open-license review (#50): out 453138341: overexposed, half hidden by foliage"
+  },
+  "Corthylio calendula": {
+    "exclude": [
+      455833681,
+      455833651,
+      458289112,
+      458495950
+    ],
+    "_why_50": "open-license review (#50): out 455833681: head macro in hand at a banding station; out 455833651: head macro in hand at a banding station; out 458289112: dark and unreadable; out 458495950: brown bird that does not read as a kinglet"
+  },
+  "Larus californicus": {
+    "exclude": [
+      474052484,
+      612003526,
+      613283022
+    ],
+    "_why_50": "open-license review (#50): out 474052484: feeding frenzy of mixed species, subject unclear; out 612003526: an arrow drawn on the photo; out 613283022: distant mixed flock, each bird tiny"
+  },
+  "Actitis macularius": {
+    "exclude": [
+      462063825
+    ],
+    "_why_50": "open-license review (#50): out 462063825: bird tiny on a rock"
+  },
+  "Setophaga townsendi": {
+    "exclude": [
+      597361261
+    ],
+    "_why_50": "open-license review (#50): out 597361261: dark, backlit, hidden behind leaves"
+  },
+  "Colaptes auratus": {
+    "exclude": [
+      356826902,
+      327562970,
+      346910001
+    ],
+    "_why_50": "open-license review (#50): out 356826902: blurry, backlit from below; out 327562970: dark silhouette, date stamp; out 346910001: silhouette, date stamp"
+  },
+  "Cairina moschata": {
+    "exclude": [
+      183220671,
+      178089912,
+      462971121,
+      107102096
+    ],
+    "_why_50": "open-license review (#50): out 183220671: domestic form, grey and white patches; out 178089912: domestic form, mostly white; out 462971121: domestic form, white and black patches; out 107102096: head close-up"
+  },
+  "Pheucticus melanocephalus": {
+    "exclude": [
+      282219540
+    ],
+    "_why_50": "open-license review (#50): out 282219540: lying on the ground with wings splayed"
+  },
+  "Bombycilla cedrorum": {
+    "exclude": [
+      349770577
+    ],
+    "_why_50": "open-license review (#50): out 349770577: black silhouette, date stamp"
+  },
+  "Sitta carolinensis": {
+    "exclude": [
+      229068158
+    ],
+    "_why_50": "open-license review (#50): out 229068158: dark, half hidden on a feeder"
+  },
+  "Phainopepla nitens": {
+    "exclude": [
+      515011173
+    ],
+    "_why_50": "open-license review (#50): out 515011173: black silhouette against the sky"
+  },
+  "Stelgidopteryx serripennis": {
+    "exclude": [
+      130554665
+    ],
+    "_why_50": "open-license review (#50): out 130554665: blurry and overexposed, date stamp"
+  },
+  "Catharus guttatus": {
+    "exclude": [
+      465399052
+    ],
+    "_why_50": "open-license review (#50): out 465399052: head close-up in hand at a banding station"
+  },
+  "Falco peregrinus": {
+    "exclude": [
+      160326266
+    ],
+    "_why_50": "open-license review (#50): out 160326266: small and motion-blurred"
+  },
+  "Molothrus ater": {
+    "exclude": [
+      279261852
+    ],
+    "_why_50": "open-license review (#50): out 279261852: badly underexposed"
+  },
+  "Spatula cyanoptera": {
+    "exclude": [
+      100320920
+    ],
+    "_why_50": "open-license review (#50): out 100320920: hazy, cut off at the edge, date stamp"
+  },
+  "Mareca strepera": {
+    "exclude": [
+      354689141,
+      608682821
+    ],
+    "_why_50": "open-license review (#50): out 354689141: head tucked, back view only; out 608682821: mixed group of ducks, subject unclear"
+  },
+  "Empidonax difficilis": {
+    "exclude": [
+      309529942
+    ],
+    "_why_50": "open-license review (#50): out 309529942: downy fledgling on the ground"
+  },
+  "Cardellina pusilla": {
+    "exclude": [
+      488583617
+    ],
+    "_why_50": "open-license review (#50): out 488583617: out of focus"
+  },
+  "Tyrannus verticalis": {
+    "exclude": [
+      294538029
+    ],
+    "_why_50": "open-license review (#50): out 294538029: mostly hidden behind a trunk"
+  },
+  "Podiceps nigricollis": {
+    "exclude": [
+      353234067
+    ],
+    "_why_50": "open-license review (#50): out 353234067: motion-blurred"
+  },
+  "Melanitta perspicillata": {
+    "exclude": [
+      483312246,
+      180129885,
+      176333618
+    ],
+    "_why_50": "open-license review (#50): out 483312246: hunched on rocks with ragged feathers, looks stranded; out 180129885: distant flock, birds too small; out 176333618: resting ashore, likely stranded"
+  },
+  "Dryobates pubescens": {
+    "exclude": [
+      99703960
+    ],
+    "_why_50": "open-license review (#50): out 99703960: dark, half hidden"
+  },
+  "Melospiza lincolnii": {
+    "exclude": [
+      110234771
+    ],
+    "_why_50": "open-license review (#50): out 110234771: heavily obscured by leaves"
+  },
+  "Aratinga nenday": {
+    "exclude": [
+      271488622
+    ],
+    "_why_50": "open-license review (#50): out 271488622: half hidden at a nest hole and a blur"
+  },
+  "Plegadis chihi": {
+    "exclude": [
+      189348305
+    ],
+    "_why_50": "open-license review (#50): out 189348305: distant flock of silhouettes"
+  },
+  "Aimophila ruficeps": {
+    "exclude": [
+      203423898
+    ],
+    "_why_50": "open-license review (#50): out 203423898: backlit behind twigs"
+  },
+  "Nyctanassa violacea": {
+    "exclude": [
+      204573102
+    ],
+    "_why_50": "open-license review (#50): out 204573102: nestling behind sticks"
+  },
+  "Brotogeris chiriri": {
+    "exclude": [
+      554763880
+    ],
+    "_why_50": "open-license review (#50): out 554763880: blurry and grainy"
+  },
+  "Archilochus alexandri": {
+    "exclude": [
+      273751528
+    ],
+    "_why_50": "open-license review (#50): out 273751528: underexposed, gorget not visible"
+  },
+  "Cyanocitta stelleri": {
+    "exclude": [
+      86704500
+    ],
+    "_why_50": "open-license review (#50): out 86704500: dark silhouette in foliage"
+  },
+  "Poecile gambeli": {
+    "exclude": [
+      696977117,
+      115008499
+    ],
+    "_why_50": "open-license review (#50): out 696977117: strong blue cast, colours wrong; out 115008499: backlit silhouette, blurred"
+  },
+  "Vireo huttoni": {
+    "exclude": [
+      618844261
+    ],
+    "_why_50": "open-license review (#50): out 618844261: blurred, face hidden"
+  },
+  "Geococcyx californianus": {
+    "exclude": [
+      325132678
+    ],
+    "_why_50": "open-license review (#50): out 325132678: blurry video frame"
+  },
+  "Spinus psaltria": {
+    "exclude": [
+      708246522
+    ],
+    "_why_50": "open-license review (#50): out 708246522: blurred and dark, no field marks"
+  },
+  "Aphelocoma californica": {
+    "exclude": [
+      664263588
+    ],
+    "_why_50": "open-license review (#50): out 664263588: very dark, head hidden"
+  },
+  "Astur cooperii": {
+    "exclude": [
+      709876746
+    ],
+    "_why_50": "open-license review (#50): out 709876746: dark and soft through branches"
+  },
+  "Calypte anna": {
+    "exclude": [
+      599164180,
+      604260846
+    ],
+    "_why_50": "open-license review (#50): out 599164180: tiny and half hidden, a dead leaf dominates; out 604260846: head hidden in leaves"
+  },
+  "Melanerpes formicivorus": {
+    "exclude": [
+      658119400,
+      654338693
+    ],
+    "_why_50": "open-license review (#50): out 658119400: backlit, hidden by the branch; out 654338693: dark behind blurred foliage"
+  },
+  "Sialia mexicana": {
+    "exclude": [
+      677562203
+    ],
+    "_why_50": "open-license review (#50): out 677562203: backlit silhouette, no colour"
+  },
+  "Columba livia": {
+    "exclude": [
+      689907948
+    ],
+    "_why_50": "open-license review (#50): out 689907948: all-white domestic dove"
+  },
+  "Bubo virginianus": {
+    "exclude": [
+      587672724
+    ],
+    "_why_50": "open-license review (#50): out 587672724: noisy night flash, back view"
+  },
+  "Buteo lineatus": {
+    "exclude": [
+      603537832
+    ],
+    "_why_50": "open-license review (#50): out 603537832: hazy back view through twigs"
+  },
+  "Cathartes aura": {
+    "exclude": [
+      603540047
+    ],
+    "_why_50": "open-license review (#50): out 603540047: backlit behind branches"
+  },
+  "Leiothlypis celata": {
+    "exclude": [
+      484960115,
+      604025812
+    ],
+    "_why_50": "open-license review (#50): out 484960115: held in a hand; out 604025812: obscured in leaves"
+  },
+  "Dryobates nuttallii": {
+    "exclude": [
+      608914991,
+      517883799
+    ],
+    "_why_50": "open-license review (#50): out 608914991: dark backlit silhouette; out 517883799: silhouetted from below"
+  },
+  "Sturnus vulgaris": {
+    "exclude": [
+      395880279
+    ],
+    "_why_50": "open-license review (#50): out 395880279: silhouette buried in foliage"
+  },
+  "Falco sparverius": {
+    "exclude": [
+      452547834
+    ],
+    "_why_50": "open-license review (#50): out 452547834: close-up of a handled or captive bird"
+  },
+  "Sayornis saya": {
+    "exclude": [
+      470805339,
+      602611385
+    ],
+    "_why_50": "open-license review (#50): out 470805339: blurred, a branch across the bird; out 602611385: backlit silhouette"
+  },
+  "Quiscalus mexicanus": {
+    "exclude": [
+      739638372
+    ],
+    "_why_50": "open-license review (#50): out 739638372: underexposed, in shadow"
+  },
+  "Thryomanes bewickii": {
+    "exclude": [
+      465399045,
+      604350365
+    ],
+    "_why_50": "open-license review (#50): out 465399045: fluffed with drooped wings, looks handled; out 604350365: indoors on a towel, rescued or captive"
+  },
+  "Patagioenas fasciata": {
+    "exclude": [
+      339279706
+    ],
+    "_why_50": "open-license review (#50): out 339279706: a phone screenshot with a Crop button"
+  },
+  "Tyto furcata": {
+    "include": [
+      125029450,
+      148143364,
+      674475351,
+      325110853
+    ],
+    "_why_50": "open-license review (#50): in 125029450: missed by the detector; perched, dark background; in 148143364: missed by the detector; perched in a pine; in 674475351: missed by the detector; perched in a palm; in 325110853: missed by the detector; perched in a pine"
+  },
+  "Phalaenoptilus nuttallii": {
+    "include": [
+      27578347,
+      27035889,
+      360352886
+    ],
+    "_why_50": "open-license review (#50): in 27578347: missed by the detector; roosting on mulch; in 27035889: missed by the detector; roosting on gravel; in 360352886: missed by the detector; on a trail at night"
+  },
+  "Megascops kennicottii": {
+    "include": [
+      283508436
+    ],
+    "_why_50": "open-license review (#50): in 283508436: the only usable open photo; perched at night"
+  },
+  "Aeronautes saxatalis": {
+    "include": [
+      148948986,
+      121061463,
+      79276700
+    ],
+    "_why_50": "open-license review (#50): in 148948986: in flight, under the size floor but sharp; in 121061463: in flight, under the size floor but sharp; in 79276700: in flight, under the size floor but sharp"
+  },
+  "Vireo bellii": {
+    "include": [
+      712450451
+    ],
+    "_why_50": "open-license review (#50): in 712450451: missed by the shortlist; perched in branches"
   }
 }

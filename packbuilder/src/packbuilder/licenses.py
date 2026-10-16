@@ -1,30 +1,46 @@
-"""Photo licenses the pack may redistribute (DECISIONS.md, "Species pack") and the credit lines they require."""
+"""The licenses each kind of asset may carry (ADR-0001, DECISIONS.md "Species pack") and the credit lines they require."""
 
 from __future__ import annotations
 
-# Canonical spellings, as stored in the pack.
+# Canonical photo spellings, as stored in the pack. iNaturalist offers these seven; the photo license set is a choice
+# among them.
 CC0 = "CC0"
 CC_BY = "CC BY"
+CC_BY_SA = "CC BY-SA"
 CC_BY_NC = "CC BY-NC"
+CC_BY_NC_SA = "CC BY-NC-SA"
+CC_BY_ND = "CC BY-ND"
+CC_BY_NC_ND = "CC BY-NC-ND"
 
-ALLOWED_LICENSES: frozenset[str] = frozenset({CC0, CC_BY, CC_BY_NC})
-
-_SPELLINGS = {
-    "cc0": CC0,
-    "cc-by": CC_BY,
-    "cc by": CC_BY,
-    "cc-by-nc": CC_BY_NC,
-    "cc by-nc": CC_BY_NC,
+# iNaturalist's license codes (the API's `license_code` and `photo_license` parameter), in a fixed order so a set of
+# them always spells the same way.
+INAT_CODES: dict[str, str] = {
+    CC0: "cc0", CC_BY: "cc-by", CC_BY_SA: "cc-by-sa", CC_BY_NC: "cc-by-nc", CC_BY_NC_SA: "cc-by-nc-sa", CC_BY_ND: "cc-by-nd", CC_BY_NC_ND: "cc-by-nc-nd",
 }
+
+# Photos (ADR-0001): open licenses only. NonCommercial photos were allowed until the app took tips, a gray area under
+# NonCommercial terms; no-derivatives never, since every photo is cropped. A pack's photos stay under their own
+# license, so a CC BY-SA crop is shared under CC BY-SA.
+PHOTO_LICENSES: frozenset[str] = frozenset({CC0, CC_BY, CC_BY_SA})
+
+_SPELLINGS = {code: license for license, code in INAT_CODES.items()} | {license.lower(): license for license in INAT_CODES}
 
 
 def normalize_license(raw: str | None) -> str | None:
-    """The canonical allowed license for an iNaturalist spelling (`cc-by-nc` from the API, `CC-BY-NC` in the Open
-    Data CSVs), or None for anything the pack may not carry: share-alike, no-derivatives, all rights reserved,
-    unknown."""
+    """The canonical spelling of an iNaturalist photo license (`cc-by-nc` from the API, `CC-BY-NC` in the Open Data
+    CSVs), or None for all rights reserved and anything unknown. Whether the pack may carry it is the license set's
+    call (`candidates.filter_candidates`)."""
     if raw is None:
         return None
     return _SPELLINGS.get(raw.strip().lower())
+
+
+def inat_codes(licenses: frozenset[str]) -> list[str]:
+    """iNaturalist's codes for a license set, always in the same order (the API query and the cache file names)."""
+    unknown = set(licenses) - INAT_CODES.keys()
+    if unknown:
+        raise ValueError(f"not an iNaturalist photo license: {', '.join(sorted(unknown))}")
+    return [code for license, code in INAT_CODES.items() if license in licenses]
 
 
 def credit_line(observer: str, license: str) -> str:
@@ -39,8 +55,8 @@ def short_credit(observer: str, license: str) -> str:
     return f"Photo: {observer}, {license}"
 
 
-# Sounds (issue #41, option A in DECISIONS.md): CC0, CC BY and CC BY-SA preferred, CC BY-NC and CC BY-NC-SA as the
-# fallback (the posture the photos took with CC BY-NC), no-derivatives never: the pack trims, filters and re-encodes
+# Sounds (issue #41, option A in DECISIONS.md; kept by ADR-0001): CC0, CC BY and CC BY-SA preferred, CC BY-NC and
+# CC BY-NC-SA as the fallback (only 20–30 species per pack have both an open song and an open call), no-derivatives never: the pack trims, filters and re-encodes
 # every clip, which is an adaptation. Share-alike clips stay under their own license in the pack LICENSE. Unlike the
 # photos, the version is kept (xeno-canto carries 2.5, 3.0 and 4.0), because the share-alike terms differ by version.
 _AUDIO_FAMILIES = {"by": "CC BY", "by-sa": "CC BY-SA", "by-nc": "CC BY-NC", "by-nc-sa": "CC BY-NC-SA"}

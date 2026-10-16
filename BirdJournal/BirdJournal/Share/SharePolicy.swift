@@ -38,7 +38,8 @@ enum SharePolicy {
     }
 
     /// Licenses under which a pack photo may be redistributed on a personal, non-commercial share card with credit.
-    static let shareableLicenses: Set<String> = ["CC0", "CC BY", "CC BY-NC"]
+    /// Packs carry CC0, CC BY and CC BY-SA photos (ADR-0001); CC BY-NC stays for packs built before that rebuild.
+    static let shareableLicenses: Set<String> = ["CC0", "CC BY", "CC BY-SA", "CC BY-NC"]
 
     static func mayShare(_ photo: PackPhoto) -> Bool {
         shareableLicenses.contains(photo.license)

@@ -79,15 +79,22 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 4. **Metadata.** Research-grade observations of each species in the region, with their photos, observers and
    licenses. Two sources describe the same iNaturalist data:
    - `--source api` (default): `api.inaturalist.org/v1/observations`, newest first up to `inat_created_before`
-     (the most-faved observations are the oddities), cached under `cache/api/` so a rebuild is offline. Photos
+     (the most-faved observations are the oddities), asking only for observations with a photo under the photo
+     license set, so the shortlist reaches as far back in time as those licenses need; cached under `cache/api/`
+     (the file names carry the license set, so another set is another query) so a rebuild is offline. Photos
      deleted from iNaturalist since the pin drop out of the candidate set; `overrides.json` pins the rest.
    - `--source opendata --metadata-dir DIR`: the [iNaturalist Open Data](https://github.com/inaturalist/inaturalist-open-data)
      metadata dump (`observations.csv`, `photos.csv`, `observers.csv`, tens of gigabytes), scanned with DuckDB inside
      the pack's bounding box, in one scan for every species of the pack.
-5. **Filter.** Keeps CC0, CC BY and CC BY-NC photos of research-grade observations that have an observer and an
-   observation URL; everything else is counted in `report.json` (`candidates.py`, `licenses.py`).
-6. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates from the Open Data bucket
-   into `cache/photos/`, `--workers` (default 8) at a time, and the `original` of the chosen ones.
+5. **Filter.** Keeps photos under the photo license set of research-grade observations that have an observer and an
+   observation URL; everything else is counted in `report.json` (`candidates.py`, `licenses.py`). The set is
+   configuration per asset kind in `licenses.py`: photos take `PHOTO_LICENSES`, CC0, CC BY and CC BY-SA (ADR-0001:
+   no NonCommercial photo since the app takes tips; `--photo-licenses cc0,cc-by,cc-by-sa` overrides it for one
+   build), and a crop of a CC BY-SA photo is shared under CC BY-SA. Sounds keep their own rules (step 3).
+6. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates, at most two per observation
+   (only one photo of an observation is chosen, and a burst of frames from one prolific observer would otherwise fill
+   the shortlist), from the Open Data bucket into `cache/photos/`, `--workers` (default 8) at a time, and the
+   `original` of the chosen ones.
 7. **Detect.** A COCO SSD MobileNet v1 from the ONNX model zoo (Apache-2.0, pinned by SHA-256 in `detector.py`)
    finds the bird; originals smaller than the 552 × 368 lens crop, photos without a bird, with a bird under 2 % of the
    frame, or with a bird that, padded, cannot fill the lens crop's 368-pixel height in the original (about 263 pixels
