@@ -11,10 +11,12 @@ import UIKit
 ///
 /// - `-seedJournal YES` adds a few sightings with generated frames, spread over a kilometre of Griffith Park so the
 ///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
+/// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
+///   the species gallery (issue #53).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Cards view), `sightings`,
 ///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab), `card` and `card-back` (the newest
-///   card, front or back up), `species` (the journal's species view),
+///   card, front or back up), `species` or `gallery` (the gallery of the newest card's species),
 ///   `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `source` (the audio source sheet).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
@@ -42,6 +44,7 @@ struct DebugLaunch: ViewModifier {
         content.task {
             let defaults = UserDefaults.standard
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
+            if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if let id = defaults.string(forKey: "autoDownloadPack") {
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -89,11 +92,11 @@ struct DebugLaunch: ViewModifier {
                     journalPath.append(Route.card(newest.persistentModelID))
                 }
                 if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }
-            case "species":
+            case "species", "gallery":
                 tab = .journal
                 journalMode = .species
                 if let newest = try? context.fetch(Sighting.newestFirst()).first {
-                    journalPath.append(Route.journalSpecies(speciesID: newest.speciesID))
+                    journalPath.append(Route.gallery(scientificName: newest.scientificName, commonName: library.commonName(for: newest)))
                 }
             case "sighting", "share", "map":
                 tab = .journal
@@ -203,6 +206,32 @@ enum DebugSeeds {
                 note: seed.note
             )
             sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: seed.location, at: sighting.confirmedAt)
+            context.insert(sighting)
+        }
+        try? context.save()
+    }
+
+    /// Fifteen House Finch cards over three weeks for the species gallery (issue #53): nine around Griffith Park in Los
+    /// Angeles and six in Balboa Park in San Diego, two of them on one day, some Seen, some with a glasses photo, each
+    /// with the rarity the real geomodel gives it. The oldest, in Los Angeles, is Legendary.
+    static func seedGallery(context: ModelContext, frames: FrameStore?) {
+        let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let balboaPark = Coordinate(latitude: 32.7341, longitude: -117.1446, accuracy: 15)
+        let hoursAgo: [Double] = [2, 5, 26, 50, 74, 76, 120, 170, 200, 260, 300, 340, 410, 460, 500]
+        let rarity = BundledIdentification.rarityReader()
+        for (index, hours) in hoursAgo.enumerated() {
+            let location = [3, 4, 5, 9, 10, 12].contains(index) ? balboaPark : griffithPark
+            let frame = index.isMultiple(of: 3) ? try? frames?.write(jpeg: frameJPEG()) : nil
+            let sighting = Sighting(
+                speciesID: "Haemorhous mexicanus_House Finch",
+                confirmedAt: Date.now.addingTimeInterval(-hours * 3600),
+                location: location,
+                soundConfidence: 0.7,
+                frameImagePath: frame,
+                source: frame == nil ? .phone : .glasses,
+                method: index.isMultiple(of: 4) ? .seen : .heard
+            )
+            sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: location, at: sighting.confirmedAt)
             context.insert(sighting)
         }
         try? context.save()

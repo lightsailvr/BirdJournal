@@ -27,20 +27,34 @@ enum CardFlip {
 /// front is the collectible (the art, the place and species, the rarity, the date and method); the back is the
 /// encounter story (the time and place, Heard or Seen, the note, the original photo, what the art is and where the
 /// rarity came from). Opening a card shows its front.
+///
+/// Above the card, "3 of 15" with Previous and Next (issue #53): within the gallery's filter and sort when the card
+/// was opened from a gallery, else among all the species' cards newest first. Each opens that card in place, front
+/// up; at either end the unavailable direction is disabled. All encounters goes back to the gallery, or opens one.
 struct CardDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(PlaceNames.self) private var places
     @Environment(PackLibrary.self) private var library
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.dismiss) private var dismiss
     @Query private var sightings: [Sighting]
-    let id: PersistentIdentifier
+    /// The gallery this card was opened from, nil from anywhere else.
+    let browse: GalleryBrowse?
+    /// The card shown: the one opened, until Previous or Next opens another.
+    @State private var id: PersistentIdentifier
     @State private var showsBack = false
     @State private var showingOriginal = false
     @State private var isSharing = false
     @AccessibilityFocusState private var flipControlFocused: Bool
 
+    init(id: PersistentIdentifier, browse: GalleryBrowse? = nil) {
+        self.browse = browse
+        _id = State(initialValue: id)
+    }
+
     /// Fetched, not `model(for:)`: a deleted id would come back as a placeholder that faults on first access.
     private var sighting: Sighting? {
+        let id = id
         var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.persistentModelID == id })
         descriptor.fetchLimit = 1
         return try? context.fetch(descriptor).first
@@ -57,8 +71,12 @@ struct CardDetailView: View {
         if let sighting {
             let commonName = library.commonName(for: sighting)
             let isLegendary = CardCollection(sightings: sightings).isLegendary(sighting.identifier)
+            let gallery = (browse ?? GalleryBrowse(scientificName: sighting.scientificName)).gallery(sightings, places: places)
             PaperPage {
                 VStack(spacing: JournalLayout.rowGap) {
+                    if let position = gallery.position(of: sighting.identifier) {
+                        CardStepper(position: position, previous: gallery.previous(of: sighting.identifier), next: gallery.next(of: sighting.identifier), open: open)
+                    }
                     Button(action: flip) {
                         Label(showsBack ? "Flip to artwork" : "Flip to encounter story", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
                             .frame(maxWidth: .infinity)
@@ -71,6 +89,21 @@ struct CardDetailView: View {
                         CardFront(sighting: sighting, isLegendary: isLegendary, flip: flip)
                     } back: {
                         CardBack(sighting: sighting, isLegendary: isLegendary, showOriginal: { showingOriginal = true })
+                    }
+                    if browse != nil {
+                        Button {
+                            dismiss()
+                        } label: {
+                            AllEncountersLabel()
+                        }
+                        .buttonStyle(.journalOutlined)
+                        .accessibilityIdentifier("card-all-encounters")
+                    } else {
+                        NavigationLink(value: Route.gallery(scientificName: sighting.scientificName, commonName: commonName, selected: sighting.identifier)) {
+                            AllEncountersLabel()
+                        }
+                        .buttonStyle(.journalOutlined)
+                        .accessibilityIdentifier("card-all-encounters")
                     }
                     NavigationLink(value: Route.sighting(id)) {
                         Label("Sighting details", systemImage: "list.bullet.rectangle")
@@ -101,6 +134,7 @@ struct CardDetailView: View {
                 SharePostcardView(sighting: sighting)
             }
             .task(id: id) {
+                browse?.selected = sighting.identifier
                 if let location = sighting.location { await places.resolve(location) }
                 #if DEBUG
                 if UserDefaults.standard.bool(forKey: "autoCardBack") {
@@ -114,6 +148,13 @@ struct CardDetailView: View {
         }
     }
 
+    /// Opens another card of the gallery in place, front up: a different card is a different object, not a turn.
+    private func open(_ identifier: UUID) {
+        guard let target = sightings.first(where: { $0.identifier == identifier }) else { return }
+        showsBack = false
+        id = target.persistentModelID
+    }
+
     /// Turns the card over and says which face is up. A tap during a turn retargets it, so rapid taps settle on one
     /// face: the state, not the animation, decides which face is readable. VoiceOver's focus goes to the Flip control,
     /// since the art that may have been activated is on the face now hidden.
@@ -121,6 +162,68 @@ struct CardDetailView: View {
         withAnimation(CardFlip.animation(reduceMotion: reduceMotion)) { showsBack.toggle() }
         flipControlFocused = true
         AccessibilityNotification.Announcement(showsBack ? "Back, encounter story" : "Front, collectible art").post()
+    }
+}
+
+/// The way from a card to its species' gallery.
+private struct AllEncountersLabel: View {
+    var body: some View {
+        Label("All encounters", systemImage: "square.grid.2x2")
+            .frame(maxWidth: .infinity)
+    }
+}
+
+/// "3 of 15" between Previous and Next; at either end the unavailable direction is disabled. At accessibility text
+/// sizes the buttons keep only their chevrons, so the position keeps its room.
+private struct CardStepper: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let position: SpeciesGallery.Position
+    let previous: UUID?
+    let next: UUID?
+    let open: (UUID) -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Button {
+                if let previous { open(previous) }
+            } label: {
+                Label("Previous", systemImage: "chevron.left")
+                    .labelStyle(StepperLabelStyle(iconOnly: typeSize.isAccessibilitySize, iconTrailing: false))
+            }
+            .disabled(previous == nil)
+            .accessibilityLabel("Previous card")
+            .accessibilityIdentifier("card-previous")
+            Text(position.text)
+                .font(JournalFont.supporting.weight(.semibold))
+                .foregroundStyle(Color.ink)
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel("Card \(position.index) of \(position.count)")
+                .accessibilityIdentifier("card-position")
+            Button {
+                if let next { open(next) }
+            } label: {
+                Label("Next", systemImage: "chevron.right")
+                    .labelStyle(StepperLabelStyle(iconOnly: typeSize.isAccessibilitySize, iconTrailing: true))
+            }
+            .disabled(next == nil)
+            .accessibilityLabel("Next card")
+            .accessibilityIdentifier("card-next")
+        }
+        .buttonStyle(.journalOutlined)
+    }
+}
+
+/// A stepper button's label: the chevron on the side it points to, alone at accessibility text sizes.
+private struct StepperLabelStyle: LabelStyle {
+    let iconOnly: Bool
+    let iconTrailing: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 6) {
+            if !iconTrailing { configuration.icon }
+            if !iconOnly { configuration.title }
+            if iconTrailing { configuration.icon }
+        }
     }
 }
 

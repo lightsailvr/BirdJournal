@@ -78,14 +78,7 @@ struct CardTile: View {
                     .foregroundStyle(Color.cardIvory.opacity(0.8))
             }
         }
-        .padding(10)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.cardFace, in: RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous)
-                .strokeBorder(isLegendary ? AnyShapeStyle(.legendaryFoil) : AnyShapeStyle(Color.editionSage), lineWidth: isLegendary ? 4 : 2)
-        }
-        .contentShape(RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous))
+        .modifier(TileFrame(isLegendary: isLegendary))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
     }
@@ -96,6 +89,81 @@ struct CardTile: View {
             isLegendary ? "Legendary, your first" : nil,
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
+            CardArtView.art(for: sighting, reference: library.species(scientificName: sighting.scientificName)).label,
+        ]
+        .compactMap { $0 }
+        .joined(separator: ", ")
+    }
+}
+
+/// A grid tile's card face: the evergreen face in a gold frame when Legendary, a sage one otherwise, and a moss ring
+/// around it when it is the card last opened from a gallery. A gallery's tiles (`isSelected` set) keep room for the
+/// ring whether or not it shows, so every tile is the same size.
+private struct TileFrame: ViewModifier {
+    let isLegendary: Bool
+    var isSelected: Bool?
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous)
+        content
+            .padding(10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color.cardFace, in: shape)
+            .overlay {
+                shape.strokeBorder(isLegendary ? AnyShapeStyle(.legendaryFoil) : AnyShapeStyle(Color.editionSage), lineWidth: isLegendary ? 4 : 2)
+            }
+            .padding(isSelected == nil ? 0 : 4)
+            .overlay {
+                if isSelected == true {
+                    RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius + 4, style: .continuous)
+                        .strokeBorder(Color.moss, lineWidth: 3)
+                }
+            }
+            .contentShape(shape)
+    }
+}
+
+/// One tile of a species gallery (issue #53): the Legendary label on the birder's first (set editions wait for pack
+/// schema 4), the art, and what tells two cards of one bird apart: the place, the date and time, and Heard or Seen.
+struct GalleryTile: View {
+    @Environment(PackLibrary.self) private var library
+    let sighting: Sighting
+    /// The gallery's place for the card, nil for "Place not recorded".
+    let place: String?
+    let isLegendary: Bool
+    let isSelected: Bool
+
+    var body: some View {
+        let reference = library.species(scientificName: sighting.scientificName)
+        VStack(alignment: .leading, spacing: 8) {
+            if isLegendary {
+                LegendaryLabel()
+            }
+            CardArtView(sighting: sighting, reference: reference, commonName: library.commonName(for: sighting))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(place ?? SpeciesGallery.PlaceFilter.notRecorded.title)
+                    .font(JournalFont.rowTitle)
+                    .foregroundStyle(Color.cardIvory)
+                Text(sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted))
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.cardIvory.opacity(0.8))
+                Text("\(sighting.confirmedAt.formatted(date: .omitted, time: .shortened)) · \(sighting.method.title)")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.cardIvory.opacity(0.8))
+            }
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .modifier(TileFrame(isLegendary: isLegendary, isSelected: isSelected))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var accessibilityText: String {
+        [
+            place ?? SpeciesGallery.PlaceFilter.notRecorded.title,
+            sighting.confirmedAt.formatted(date: .long, time: .shortened),
+            sighting.method.title,
+            isLegendary ? "Legendary, your first" : nil,
             CardArtView.art(for: sighting, reference: library.species(scientificName: sighting.scientificName)).label,
         ]
         .compactMap { $0 }

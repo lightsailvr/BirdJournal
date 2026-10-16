@@ -10,9 +10,11 @@ enum Route: Hashable {
     case species(scientificName: String, commonName: String)
     case speciesCredits(scientificName: String)
     case sighting(PersistentIdentifier)
-    /// One card, front first (issue #52).
-    case card(PersistentIdentifier)
-    case journalSpecies(speciesID: String)
+    /// One card, front first (issue #52); opened from a species gallery, it browses that gallery's filtered order
+    /// (issue #53).
+    case card(PersistentIdentifier, browse: GalleryBrowse? = nil)
+    /// One species' cards (issue #53), marking `selected` when a card's All encounters opened it.
+    case gallery(scientificName: String, commonName: String, selected: UUID? = nil)
     case packs
     case pack(id: String)
     case credits
@@ -43,10 +45,10 @@ private struct RouteDestination: View {
             SpeciesCreditsView(scientificName: scientificName)
         case .sighting(let id):
             SightingDetailView(id: id)
-        case .card(let id):
-            CardDetailView(id: id)
-        case .journalSpecies(let speciesID):
-            SpeciesJournalView(speciesID: speciesID)
+        case .card(let id, let browse):
+            CardDetailView(id: id, browse: browse)
+        case .gallery(let scientificName, let commonName, let selected):
+            SpeciesGalleryView(scientificName: scientificName, commonName: commonName, selected: selected)
         case .packs:
             BirdPacksView()
         case .pack(let id):
@@ -71,6 +73,8 @@ private struct RouteDestination: View {
 extension EnvironmentValues {
     /// Opens the Journal tab on the Cards view: the Legendary reveal's "Back to my collection" (issue #51).
     @Entry var openCollection: @MainActor () -> Void = {}
+    /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
+    @Entry var openListen: @MainActor () -> Void = {}
 }
 
 /// The three destinations (issue #28): Listen, Journal and Field Guide, with the compact listening strip above the
@@ -122,6 +126,7 @@ struct RootView: View {
             journalPath = NavigationPath()
             tab = .journal
         }
+        .environment(\.openListen) { tab = .listen }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
         .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, showingDeveloper: $showingDeveloper))
