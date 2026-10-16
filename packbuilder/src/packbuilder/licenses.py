@@ -55,38 +55,53 @@ def short_credit(observer: str, license: str) -> str:
     return f"Photo: {observer}, {license}"
 
 
-# Sounds (issue #41, option A in DECISIONS.md; kept by ADR-0001): CC0, CC BY and CC BY-SA preferred, CC BY-NC and
-# CC BY-NC-SA as the fallback (only 20–30 species per pack have both an open song and an open call), no-derivatives never: the pack trims, filters and re-encodes
-# every clip, which is an adaptation. Share-alike clips stay under their own license in the pack LICENSE. Unlike the
-# photos, the version is kept (xeno-canto carries 2.5, 3.0 and 4.0), because the share-alike terms differ by version.
-_AUDIO_FAMILIES = {"by": "CC BY", "by-sa": "CC BY-SA", "by-nc": "CC BY-NC", "by-nc-sa": "CC BY-NC-SA"}
-# iNaturalist names a license without a version; its current terms are 4.0.
-_INAT_AUDIO = {"cc0": "CC0", "cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0", "cc-by-nc": "CC BY-NC 4.0", "cc-by-nc-sa": "CC BY-NC-SA 4.0"}
+# Sounds (issue #41, option A in DECISIONS.md; kept by ADR-0001): open licenses preferred (tier 0), NonCommercial as
+# the fallback (tier 1; only 20–30 species per pack have both an open song and an open call), no-derivatives never:
+# the pack trims, filters and re-encodes every clip, which is an adaptation. Share-alike clips stay under their own
+# license in the pack LICENSE. Unlike the photos, the version is kept (xeno-canto carries 2.5, 3.0 and 4.0), because
+# the share-alike terms differ by version.
+SOUND_LICENSE_TIERS: dict[str, int] = {CC0: 0, CC_BY: 0, CC_BY_SA: 0, CC_BY_NC: 1, CC_BY_NC_SA: 1}
+
+# A Creative Commons URL's license segment ("by-nc-sa"), and iNaturalist's code ("cc-by-nc-sa"), name the same family.
+_URL_FAMILIES = {code.removeprefix("cc-"): license for license, code in INAT_CODES.items() if license != CC0}
 
 
 def normalize_audio_license(raw: str | None) -> str | None:
     """The canonical license of a sound ("CC BY-NC-SA 4.0", "CC0") from a xeno-canto license URL
     (`//creativecommons.org/licenses/by-nc-sa/4.0/`) or an iNaturalist code (`cc-by-sa`), or None for anything the
-    pack may not carry: no-derivatives, all rights reserved, unknown."""
+    sound tiers leave out: no-derivatives, all rights reserved, unknown."""
     if not raw:
         return None
     value = raw.strip().lower()
-    if value in _INAT_AUDIO:
-        return _INAT_AUDIO[value]
+    if value in _SPELLINGS:
+        # iNaturalist names a license without a version; its current terms are 4.0.
+        family = _SPELLINGS[value]
+        license = family if family == CC0 else f"{family} 4.0"
+    else:
+        license = _license_of_url(value)
+    return license if license is not None and _family(license) in SOUND_LICENSE_TIERS else None
+
+
+def _license_of_url(value: str) -> str | None:
     path = value.split("creativecommons.org/", 1)
     if len(path) != 2:
         return None
     parts = [p for p in path[1].split("/") if p]
     if parts[:2] == ["publicdomain", "zero"]:
         return CC0
-    if len(parts) >= 3 and parts[0] == "licenses" and parts[1] in _AUDIO_FAMILIES:
-        return f"{_AUDIO_FAMILIES[parts[1]]} {parts[2]}"
+    if len(parts) >= 3 and parts[0] == "licenses" and parts[1] in _URL_FAMILIES:
+        return f"{_URL_FAMILIES[parts[1]]} {parts[2]}"
     return None
+
+
+def _family(license: str) -> str:
+    """"CC BY-NC-SA 4.0" → "CC BY-NC-SA"."""
+    return license if license == CC0 else license.rsplit(" ", 1)[0]
 
 
 def audio_license_tier(license: str) -> int:
     """0 for the open licenses the pack prefers, 1 for the NonCommercial fallback."""
-    return 1 if "-NC" in license else 0
+    return SOUND_LICENSE_TIERS[_family(license)]
 
 
 def audio_license_url(license: str) -> str:

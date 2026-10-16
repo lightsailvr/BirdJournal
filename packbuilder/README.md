@@ -90,7 +90,7 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
    observation URL; everything else is counted in `report.json` (`candidates.py`, `licenses.py`). The set is
    configuration per asset kind in `licenses.py`: photos take `PHOTO_LICENSES`, CC0, CC BY and CC BY-SA (ADR-0001:
    no NonCommercial photo since the app takes tips; `--photo-licenses cc0,cc-by,cc-by-sa` overrides it for one
-   build), and a crop of a CC BY-SA photo is shared under CC BY-SA. Sounds keep their own rules (step 3).
+   build), and a crop of a CC BY-SA photo is shared under CC BY-SA. Sounds take `SOUND_LICENSE_TIERS`, the rules of step 3.
 6. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates, at most two per observation
    (only one photo of an observation is chosen, and a burst of frames from one prolific observer would otherwise fill
    the shortlist), from the Open Data bucket into `cache/photos/`, `--workers` (default 8) at a time, and the

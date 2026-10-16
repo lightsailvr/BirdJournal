@@ -245,13 +245,11 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
 
 def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> str:
     carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
-    licenses = [license for license in INAT_CODES if license in carried]
-    named = ", ".join(licenses[:-1]) + f" or {licenses[-1]}" if len(licenses) > 1 else "".join(licenses)
     lines = [
         f"{definition.name} species pack for BirdJournal (pack id {definition.id}, version {definition.version}, built {built_at})",
         "",
         "Photos come from iNaturalist Open Data (https://github.com/inaturalist/inaturalist-open-data). Each photo is",
-        f"redistributed under the Creative Commons license its photographer chose on iNaturalist: {named}",
+        f"redistributed under the Creative Commons license its photographer chose on iNaturalist: {_one_of(carried)}",
         "(https://creativecommons.org/licenses/; the observation page below states the exact terms).",
         "Photographers retain copyright unless the photo is CC0. The crops in this pack are derived from the",
         "originals linked below.",
@@ -287,6 +285,12 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         if result.description and result.description.source:
             lines.append(f"  {result.entry.common_name} — {result.description.source}")
     return "\n".join(lines) + "\n"
+
+
+def _one_of(licenses: set[str]) -> str:
+    """The licenses in iNaturalist's order, as "CC0, CC BY or CC BY-SA"."""
+    ordered = [license for license in INAT_CODES if license in licenses] or ["none"]
+    return ordered[0] if len(ordered) == 1 else ", ".join(ordered[:-1]) + f" or {ordered[-1]}"
 
 
 def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> dict:

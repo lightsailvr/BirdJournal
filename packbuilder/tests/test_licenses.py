@@ -1,7 +1,7 @@
 import pytest
 
 from packbuilder.licenses import (
-    PHOTO_LICENSES, audio_license_tier, audio_license_url, credit_line, inat_codes, normalize_audio_license, normalize_license, short_credit,
+    PHOTO_LICENSES, SOUND_LICENSE_TIERS, audio_license_tier, audio_license_url, credit_line, inat_codes, normalize_audio_license, normalize_license, short_credit,
     sound_credit_line, sound_short_credit,
 )
 
@@ -77,6 +77,11 @@ def test_audio_licenses_normalize_with_their_version(raw, expected):
 )
 def test_no_derivatives_and_unknown_audio_licenses_are_refused(raw):
     assert normalize_audio_license(raw) is None
+
+
+def test_sound_licenses_are_their_own_configuration():
+    # Issue #50: sounds keep open ahead of NonCommercial and refuse no-derivatives, beside the photos' open-only set.
+    assert SOUND_LICENSE_TIERS == {"CC0": 0, "CC BY": 0, "CC BY-SA": 0, "CC BY-NC": 1, "CC BY-NC-SA": 1}
 
 
 def test_open_audio_licenses_rank_ahead_of_noncommercial():

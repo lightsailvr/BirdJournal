@@ -17,8 +17,8 @@ from packbuilder.definition import PackDefinition, SpeciesEntry, load_overrides
 from packbuilder.descriptions import Description
 from packbuilder.detector import Detection
 from packbuilder.download import fetch_photo
-from packbuilder.licenses import PHOTO_LICENSES
 from packbuilder.geometry import Box
+from packbuilder.licenses import PHOTO_LICENSES
 from packbuilder.scoring import score_crop
 from packbuilder.selection import Overrides, ScoredPhoto, select_photos
 from packbuilder.sounds import SoundPicker
