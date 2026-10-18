@@ -18,7 +18,7 @@ from packbuilder.candidates import PhotoCandidate, attribution_name
 from packbuilder.crops import JPEG_QUALITY, render_lens, render_phone, upright
 from packbuilder.definition import PackDefinition, SpeciesEntry
 from packbuilder.descriptions import Description
-from packbuilder.licenses import credit_line, short_credit
+from packbuilder.licenses import CC_BY_SA, INAT_CODES, credit_line, short_credit
 from packbuilder.selection import ScoredPhoto
 from packbuilder.sounds import SoundResult
 
@@ -244,14 +244,16 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
 
 
 def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> str:
+    carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
     lines = [
         f"{definition.name} species pack for BirdJournal (pack id {definition.id}, version {definition.version}, built {built_at})",
         "",
         "Photos come from iNaturalist Open Data (https://github.com/inaturalist/inaturalist-open-data). Each photo is",
-        "redistributed under the Creative Commons license its photographer chose on iNaturalist: CC0, CC BY or",
-        "CC BY-NC (https://creativecommons.org/licenses/; the observation page below states the exact terms).",
+        f"redistributed under the Creative Commons license its photographer chose on iNaturalist: {_one_of(carried)}",
+        "(https://creativecommons.org/licenses/; the observation page below states the exact terms).",
         "Photographers retain copyright unless the photo is CC0. The crops in this pack are derived from the",
         "originals linked below.",
+        *(["Crops of CC BY-SA photos are shared under CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0/)."] if CC_BY_SA in carried else []),
         "",
         "Species names and the BirdNET labels are from the BirdNET+ label file (CC BY-SA 4.0, https://birdnet.cornell.edu).",
         "",
@@ -283,6 +285,12 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         if result.description and result.description.source:
             lines.append(f"  {result.entry.common_name} — {result.description.source}")
     return "\n".join(lines) + "\n"
+
+
+def _one_of(licenses: set[str]) -> str:
+    """The licenses in iNaturalist's order, as "CC0, CC BY or CC BY-SA"."""
+    ordered = [license for license in INAT_CODES if license in licenses] or ["none"]
+    return ordered[0] if len(ordered) == 1 else ", ".join(ordered[:-1]) + f" or {ordered[-1]}"
 
 
 def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> dict:

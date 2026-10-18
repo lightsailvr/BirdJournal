@@ -18,6 +18,7 @@ from packbuilder.descriptions import Description
 from packbuilder.detector import Detection
 from packbuilder.download import fetch_photo
 from packbuilder.geometry import Box
+from packbuilder.licenses import PHOTO_LICENSES
 from packbuilder.scoring import score_crop
 from packbuilder.selection import Overrides, ScoredPhoto, select_photos
 from packbuilder.sounds import SoundPicker
@@ -35,6 +36,10 @@ MIN_SHARPNESS = 0.4
 MIN_BIRD_PIXELS = round(LENS_HEIGHT / (1 + 2 * LENS_PADDING))
 
 FULL_FRAME = Box(0.0, 0.0, 1.0, 1.0)
+
+# Photos of one observation the shortlist may take: the best of two frames is worth a download, the rest of a burst
+# crowds out older observations.
+PHOTOS_PER_OBSERVATION = 2
 
 
 class MetadataSource(Protocol):
@@ -67,6 +72,8 @@ class BuildOptions:
     fetch: PhotoFetcher = field(default=fetch_photo)
     download_workers: int = 8
     """Concurrent downloads of a species' `large` renditions; the Open Data bucket is the slow step of a big pack."""
+    photo_licenses: frozenset[str] = PHOTO_LICENSES
+    """The licenses a photo may carry (canonical spellings); the API metadata source must be asked for the same set."""
 
 
 def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None, sounds: SoundPicker | None = None) -> WrittenPack:
@@ -114,17 +121,17 @@ def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataS
     if sound_result is not None and sound_result.gap:
         log.warning("  SOUND GAP: no clip for %s", entry.common_name)
     candidates = metadata.candidates_for(entry.inat_taxon_id)
-    filtered = filter_candidates(candidates)
+    filtered = filter_candidates(candidates, options.photo_licenses)
     rejected = {reason.value: count for reason, count in filtered.rejected.items()}
     log.info("  %d candidates, %d cleared, rejected %s", len(candidates), len(filtered.kept), rejected or "none")
 
     limit = overrides.candidate_limit or options.candidate_limit
     # An excluded photo takes its observation with it: the other pictures of a dead or hand-held bird are no better.
     excluded_observations = {c.source_url for c in filtered.kept if c.photo_id in overrides.exclude}
-    shortlist = [
+    shortlist = per_observation([
         c for c in filtered.kept
         if c.photo_id not in overrides.exclude and c.source_url not in excluded_observations and c.photo_id not in shared
-    ][:limit]
+    ])[:limit]
     shortlist += [c for c in filtered.kept if overrides.forces(c.photo_id) and c not in shortlist]
     missing = set(overrides.include) - {c.photo_id for c in filtered.kept}
     if missing:
@@ -175,6 +182,20 @@ def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataS
     if gap:
         log.warning("  GAP: only %d photos for %s", len(photos), entry.common_name)
     return SpeciesResult(entry=entry, photos=photos, gap=gap, candidates=len(candidates), rejected=rejected, detected=detected, description=description, sounds=sound_result)
+
+
+def per_observation(candidates: list[PhotoCandidate]) -> list[PhotoCandidate]:
+    """The first `PHOTOS_PER_OBSERVATION` photos of each observation, in candidate order. Only one photo per
+    observation is chosen, and a prolific observer's burst of near-identical frames would otherwise fill the shortlist
+    (issue #50: 48 of the first 60 open-license Red-tailed Hawk photos were 12 observations by one observer)."""
+    taken: dict[str | None, int] = {}
+    kept = []
+    for candidate in candidates:
+        count = taken.get(candidate.source_url, 0)
+        if count < PHOTOS_PER_OBSERVATION:
+            kept.append(candidate)
+            taken[candidate.source_url] = count + 1
+    return kept
 
 
 def describe(entry: SpeciesEntry, overrides: Overrides, descriptions: DescriptionSource | None) -> Description | None:

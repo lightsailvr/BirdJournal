@@ -150,6 +150,7 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
         switch license {
         case "CC0": URL(string: "https://creativecommons.org/publicdomain/zero/1.0/")
         case "CC BY": URL(string: "https://creativecommons.org/licenses/by/4.0/")
+        case "CC BY-SA": URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")
         case "CC BY-NC": URL(string: "https://creativecommons.org/licenses/by-nc/4.0/")
         default: nil
         }
