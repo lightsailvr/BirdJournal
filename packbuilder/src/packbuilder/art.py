@@ -1,10 +1,13 @@
 """Card art (issue #49): prompts from the committed templates in `art/prompts.json`, the committed ComfyUI workflows,
 and the image work around them.
 
-Pack art paints a species in its set's edition theme from an open-license reference photo. Scene art pastes the
-species' cut-out reference bird into the zoomed glasses photo from the add and paints the composite, so the bird's
-identity comes from a real photo rather than the model's idea of the species. Photo art embellishes the birder's own
-photo. Legendary scene and photo art get more dramatic light. The model is Qwen-Image-Edit-2511 on comfybox (ADR-0003).
+Every painting is a natural-history watercolour by FLUX.3 Image Klein on comfybox (ADR-0007, proposed), which takes
+the bird from a reference image so that its identity comes from a real photo rather than the model's idea of the
+species. Pack art paints the species' open-license reference bird in its set's edition theme. Scene art paints the
+same bird into a telephoto crop of the glasses photo from the add. For both, the reference is first isolated: FLUX.3
+paints the bird alone on white, with whatever its perch hid completed, and its colours are fitted back to the photo's
+(`packbuilder.fidelity`). Photo art paints the birder's own photo, keeping its setting. Legendary scene and photo art
+get more dramatic light.
 """
 
 from __future__ import annotations
@@ -24,7 +27,13 @@ ART_DIR = Path(__file__).resolve().parents[3] / "art"
 ArtKind = Literal["pack", "scene", "photo"]
 ART_KINDS: tuple[ArtKind, ...] = ("pack", "scene", "photo")
 CARD_ASPECT = 3 / 4
+CARD_SIZE = (864, 1152)
 """Card art is 3:4 portrait (#57); the workflows paint 864 x 1152."""
+TELEPHOTO_ZOOM_CM = 12 * 14.5
+"""A scene's crop zooms 12x for a 14.5 cm House Finch, and in proportion to length for other species, so that every
+bird is painted at card size and at its true size against the place."""
+PERCH = (0.5, 0.72)
+"""Where the perch point lands in a scene's crop: centred, a little below the middle."""
 
 
 @dataclass(frozen=True)
@@ -39,13 +48,13 @@ class ArtPrompts:
     editions: dict[str, dict[str, str]]
     light: dict[str, str]
     templates: dict[str, str]
-    negative: str
-    """What every painting steers away from (the sampler runs at cfg 4, so the negative prompt counts)."""
+    isolate: str
+    """The prompt that isolates a reference bird on white (workflow `bird-isolate`)."""
 
     @classmethod
     def load(cls, path: Path = ART_DIR / "prompts.json") -> "ArtPrompts":
         data = json.loads(Path(path).read_text())
-        return cls(version=data["version"], editions=data["editions"], light=data["light"], templates=data["templates"], negative=data["negative"])
+        return cls(version=data["version"], editions=data["editions"], light=data["light"], templates=data["templates"], isolate=data["isolate"])
 
     def render(self, kind: ArtKind, species: Species, edition: str, legendary: bool = False) -> str:
         """The prompt for one painting of `species` in the theme of `edition` (a pack id). Pack art is the same for
@@ -66,9 +75,10 @@ class ArtPrompts:
 
 @dataclass(frozen=True)
 class Workflow:
-    """A committed ComfyUI graph (`art/workflows/<name>.json`, API format: `pack-art`, `scene-art`, `photo-art` and
-    `bird-cutout`) with its inputs left empty. Its nodes are found by title: "image 1", "image 2", ... (LoadImage),
-    "prompt" and "negative" (the text encoders) and "sampler" (the seed); the cut-out has only an image."""
+    """A committed ComfyUI graph (`art/workflows/<name>.json`, API format: `pack-art`, `scene-art`, `photo-art`,
+    `bird-isolate` and `bird-cutout`) with its inputs left empty. Its nodes are found by title: "image 1", "image 2",
+    ... (LoadImage), "prompt" (the text encoder), "canvas" (the empty latent) and "sampler" (the seed); the cut-out has
+    only an image."""
 
     name: str
     version: int
@@ -83,8 +93,9 @@ class Workflow:
     def image_count(self) -> int:
         return sum(1 for node in self.graph.values() if _title(node).startswith("image "))
 
-    def fill(self, images: list[str], prompt: str | None = None, negative: str | None = None, seed: int | None = None) -> dict:
-        """A copy of the graph ready to queue: `images` are names ComfyUI's upload returned, in order."""
+    def fill(self, images: list[str], prompt: str | None = None, seed: int | None = None, size: tuple[int, int] | None = None) -> dict:
+        """A copy of the graph ready to queue: `images` are names ComfyUI's upload returned, in order; `size` is the
+        canvas (multiples of 16) where it isn't the card's."""
         if len(images) != self.image_count:
             raise ValueError(f"{self.name} takes {self.image_count} image(s), got {len(images)}")
         graph = copy.deepcopy(self.graph)
@@ -92,11 +103,13 @@ class Workflow:
         for index, image in enumerate(images, start=1):
             nodes[f"image {index}"]["inputs"]["image"] = image
         if prompt is not None:
-            nodes["prompt"]["inputs"]["prompt"] = prompt
-        if negative is not None:
-            nodes["negative"]["inputs"]["prompt"] = negative
+            nodes["prompt"]["inputs"]["text"] = prompt
         if seed is not None:
             nodes["sampler"]["inputs"]["seed"] = seed
+        if size is not None:
+            if size[0] % 16 or size[1] % 16:
+                raise ValueError(f"the canvas must be a multiple of 16, got {size}")
+            nodes["canvas"]["inputs"]["width"], nodes["canvas"]["inputs"]["height"] = size
         return graph
 
 
@@ -124,19 +137,22 @@ def card_crop_box(box: Box | None, size: tuple[int, int], padding: float = 0.5, 
     return left, top, left + crop_width, top + crop_height
 
 
-def paste_bird(scene: Image.Image, cutout: Image.Image, height_fraction: float = 0.38, ground: float = 0.72) -> Image.Image:
-    """The scene with the cut-out bird (RGBA, transparent around the bird) pasted in: scaled so the bird is
-    `height_fraction` of the scene's height (narrower than seven tenths of its width), centred, its lowest point at
-    `ground` of the height. The painting then gives it a perch and shadows; the zoomed scene makes the size believable."""
-    bird = cutout.convert("RGBA")
-    bounds = bird.getchannel("A").point(lambda a: 255 if a > 127 else 0).getbbox()
-    if bounds is None:
-        raise ValueError("the cut-out has no bird")
-    bird = bird.crop(bounds)
-    scale = min(scene.height * height_fraction / bird.height, scene.width * 0.7 / bird.width)
-    bird = bird.resize((max(1, round(bird.width * scale)), max(1, round(bird.height * scale))), Image.Resampling.LANCZOS)
-    left = round(scene.width / 2 - bird.width / 2)
-    top = round(scene.height * ground) - bird.height
-    composite = scene.convert("RGB").copy()
-    composite.paste(bird, (left, top), bird)
-    return composite
+def telephoto_zoom(length_cm: float) -> float:
+    """How far a scene's crop zooms into the glasses photo for a bird `length_cm` long (TELEPHOTO_ZOOM_CM), never
+    less than 1."""
+    return max(1.0, TELEPHOTO_ZOOM_CM / length_cm)
+
+
+def telephoto_crop(scene: Image.Image, length_cm: float, perch: tuple[float, float] | None = None) -> Image.Image:
+    """The card-size crop of a glasses photo that a long lens would frame from the same spot: zoomed for the bird's
+    length, with the `perch` point (fractions of the photo; the middle, where the wearer aimed, if not given) at
+    PERCH in the crop, shifted to stay inside the photo. Cropping keeps the photo's perspective; only the depth of
+    field differs, and the painting softens the place."""
+    width, height = scene.size
+    zoom = telephoto_zoom(length_cm)
+    crop_width = min(width / zoom, height * CARD_ASPECT)
+    crop_height = crop_width / CARD_ASPECT
+    px, py = perch or (0.5, 0.5)
+    left = min(max(px * width - PERCH[0] * crop_width, 0), width - crop_width)
+    top = min(max(py * height - PERCH[1] * crop_height, 0), height - crop_height)
+    return scene.convert("RGB").resize(CARD_SIZE, Image.Resampling.LANCZOS, box=(left, top, left + crop_width, top + crop_height))

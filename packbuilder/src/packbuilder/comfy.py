@@ -52,12 +52,13 @@ class ComfyClient:
         uploaded = response.json()
         return f"{uploaded['subfolder']}/{uploaded['name']}" if uploaded.get("subfolder") else uploaded["name"]
 
-    def paint(self, workflow: Workflow, images: list[tuple[str, bytes]], prompt: str | None = None, negative: str | None = None, seed: int | None = None) -> Painting:
+    def paint(self, workflow: Workflow, images: list[tuple[str, bytes]], prompt: str | None = None, seed: int | None = None, size: tuple[int, int] | None = None) -> Painting:
         """Runs a workflow once and returns the image it saved: `images` are (file name, bytes) for "image 1",
-        "image 2", ... in order. Any failure, the network's included, is a `PaintingFailed`."""
+        "image 2", ... in order, and `size` the canvas where it isn't the card's. Any failure, the network's included,
+        is a `PaintingFailed`."""
         try:
             names = [self.upload(name, data) for name, data in images]
-            graph = workflow.fill(images=names, prompt=prompt, negative=negative, seed=seed)
+            graph = workflow.fill(images=names, prompt=prompt, seed=seed, size=size)
             response = self.http.post(f"{self.base_url}/prompt", json={"prompt": graph, "client_id": self.client_id}, timeout=60)
             if response.status_code != 200:
                 raise PaintingFailed(f"ComfyUI refused the {workflow.name} workflow: {_refusal(response)}")

@@ -1,20 +1,32 @@
 {
-  "comment": "The art bake-off of issue #49. Every bird photo is a CC0 or CC BY iNaturalist photo among the Los Angeles and San Diego packs' candidates (`python -m packbuilder.bakeoff references`, then picked by hand from build/art-bakeoff/references.jpg): `reference` is the pack-art and scene-art reference, `photos` stand in for a birder's own photos (photo art). Not references: 718923160 (hazy, through glass), 696473222 (a red object over the owl's head; kept as a photo), 739414068 (the warbler's face at the frame edge). Version 2 of the plan (after the first round) takes well-lit adult references for the House Finch (705561778, not the dim 696977499) and the Western Bluebird (729326231, not 738434109): from a dim or dull reference the model painted the stereotype. Version 3 of the plan (the full-quality pass) takes typical adults the 12-photo ranking found: the sooty Black Phoebe 715715037 (the grey 732853833 gave grey pack art), an adult male Western Bluebird 729928057 (from the dull 729326231 the model invented an Eastern-like male), the Great Horned Owl 696473222 with its ear tufts showing (689760759 lost them); and `scene_reference`, the bird pasted into scenes, is a perched light-morph Red-tailed Hawk 725544855 rather than the flight shot; for the House Finch (696977499) and the Western Bluebird (738434109) it is an unobstructed bird, because twigs across their references cut holes in the cut-out. Left out by hand: 738661333 (a photographer's watermark) and 716140587 (a streaked sparrow, not a towhee). Scenes are full-resolution glasses photos (3024 x 4032) the maintainer took in Los Angeles on 2026-10-10; they are not committed. The first rounds used 360 x 640 stream frames from sightings, too blurry once zoomed for scene art at full quality.",
+  "comment": "The art bake-off of issue #49. Every bird photo is a CC0 or CC BY iNaturalist photo among the Los Angeles and San Diego packs' candidates (`python -m packbuilder.bakeoff references`, then picked by hand from build/art-bakeoff/references.jpg): `reference` is the pack-art and scene-art reference, `photos` stand in for a birder's own photos (photo art). Not references: 718923160 (hazy, through glass), 696473222 (a red object over the owl's head; kept as a photo), 739414068 (the warbler's face at the frame edge). Version 2 of the plan (after the first round) takes well-lit adult references for the House Finch (705561778, not the dim 696977499) and the Western Bluebird (729326231, not 738434109): from a dim or dull reference the model painted the stereotype. Version 3 of the plan (the full-quality pass) takes typical adults the 12-photo ranking found: the sooty Black Phoebe 715715037 (the grey 732853833 gave grey pack art), an adult male Western Bluebird 729928057 (from the dull 729326231 the model invented an Eastern-like male), the Great Horned Owl 696473222 with its ear tufts showing (689760759 lost them); and `scene_reference`, the bird pasted into scenes, is a perched light-morph Red-tailed Hawk 725544855 rather than the flight shot; for the House Finch (696977499) and the Western Bluebird (738434109) it is an unobstructed bird, because twigs across their references cut holes in the cut-out. Left out by hand: 738661333 (a photographer's watermark) and 716140587 (a streaked sparrow, not a towhee). Scenes are full-resolution glasses photos (3024 x 4032) the maintainer took in Los Angeles on 2026-10-10; they are not committed. The first rounds used 360 x 640 stream frames from sightings, too blurry once zoomed for scene art at full quality. Version 4 of the plan (FLUX.3, prompts v7): every species has `length_cm`, its typical length, which sets how far scene art zooms into the glasses photo (12x for the 14.5 cm House Finch, in proportion for the others, at least 1x); every scene has `perch`, the point (fractions of the upright photo) the bird is painted at, picked by hand in the telephoto audition: the garden's lamp post, the lawn's fallen leaves and the driveway's roses. Isolating the reference bird completes what its perch hid, so `scene_reference` no longer has to be unobstructed; the plan keeps it so that this round is comparable with the last.",
   "scenes": [
     {
       "id": "garden",
       "file": "20261010_165922_80c6cd52.jpg",
-      "label": "a front garden: lawn, cannas and a palm"
+      "label": "a front garden: lawn, cannas and a palm",
+      "perch": [
+        0.777778,
+        0.117063
+      ]
     },
     {
       "id": "lawn",
       "file": "20261010_165912_5eced1c9.jpg",
-      "label": "a lawn by a lamp post and a sidewalk"
+      "label": "a lawn by a lamp post and a sidewalk",
+      "perch": [
+        0.26455,
+        0.595238
+      ]
     },
     {
       "id": "driveway",
       "file": "20261010_165851_09bc66e8.jpg",
-      "label": "a driveway in front of a garage"
+      "label": "a driveway in front of a garage",
+      "perch": [
+        0.906085,
+        0.414683
+      ]
     }
   ],
   "species": [
@@ -22,6 +34,7 @@
       "common_name": "Black Phoebe",
       "scientific_name": "Sayornis nigricans",
       "inat_taxon_id": 17013,
+      "length_cm": 17.8,
       "reference": 715715037,
       "photos": [
         715370865,
@@ -99,6 +112,7 @@
       "common_name": "Anna's Hummingbird",
       "scientific_name": "Calypte anna",
       "inat_taxon_id": 6317,
+      "length_cm": 10.0,
       "reference": 693694920,
       "photos": [
         718923161,
@@ -189,6 +203,7 @@
       "common_name": "Red-tailed Hawk",
       "scientific_name": "Buteo jamaicensis",
       "inat_taxon_id": 5212,
+      "length_cm": 55.0,
       "reference": 737329828,
       "scene_reference": 725544855,
       "photos": [
@@ -293,6 +308,7 @@
       "common_name": "Cooper's Hawk",
       "scientific_name": "Astur cooperii",
       "inat_taxon_id": 1579017,
+      "length_cm": 42.0,
       "reference": 704357530,
       "photos": [
         712395997,
@@ -383,6 +399,7 @@
       "common_name": "House Finch",
       "scientific_name": "Haemorhous mexicanus",
       "inat_taxon_id": 199840,
+      "length_cm": 14.5,
       "reference": 705561778,
       "scene_reference": 696977499,
       "photos": [
@@ -445,7 +462,7 @@
         {
           "id": 705561778,
           "license": "CC BY",
-          "observer": "Julio Cesar Ruiz Garc\u00eda",
+          "observer": "Julio Cesar Ruiz García",
           "source_url": "https://www.inaturalist.org/observations/385404607",
           "original_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/705561778/original.jpg",
           "box": [
@@ -474,6 +491,7 @@
       "common_name": "California Towhee",
       "scientific_name": "Melozone crissalis",
       "inat_taxon_id": 73044,
+      "length_cm": 22.0,
       "reference": 740039119,
       "photos": [
         709156691,
@@ -564,6 +582,7 @@
       "common_name": "Western Bluebird",
       "scientific_name": "Sialia mexicana",
       "inat_taxon_id": 12937,
+      "length_cm": 18.0,
       "reference": 729928057,
       "scene_reference": 738434109,
       "photos": [
@@ -668,6 +687,7 @@
       "common_name": "Great Egret",
       "scientific_name": "Ardea alba",
       "inat_taxon_id": 144455,
+      "length_cm": 97.0,
       "reference": 718923183,
       "photos": [
         692428034,
@@ -758,6 +778,7 @@
       "common_name": "Great Horned Owl",
       "scientific_name": "Bubo virginianus",
       "inat_taxon_id": 20044,
+      "length_cm": 55.0,
       "reference": 696473222,
       "photos": [
         689760759,
@@ -822,6 +843,7 @@
       "common_name": "Townsend's Warbler",
       "scientific_name": "Setophaga townsendi",
       "inat_taxon_id": 145255,
+      "length_cm": 12.5,
       "reference": 604858831,
       "photos": [
         740729003,

@@ -95,16 +95,25 @@ def _titled(graph, title):
 def test_paint_uploads_the_images_queues_the_filled_workflow_and_returns_the_painting(stub):
     client = ComfyClient(stub.url, poll_seconds=0)
 
-    painting = client.paint(Workflow.load("scene-art"), images=[("composite.png", b"composite")], prompt="Paint the bird", negative="a photograph", seed=7)
+    painting = client.paint(Workflow.load("scene-art"), images=[("bird.png", b"bird"), ("scene.png", b"scene")], prompt="Paint the bird", seed=7)
 
     assert painting.image == PNG
     assert painting.seconds == pytest.approx(34.5)
-    assert stub.uploads == {"birdjournal/composite.png": b"composite"}
+    assert stub.uploads == {"birdjournal/bird.png": b"bird", "birdjournal/scene.png": b"scene"}
     (queued,) = stub.queued
-    assert _titled(queued, "image 1")["inputs"]["image"] == "birdjournal/composite.png"
-    assert _titled(queued, "prompt")["inputs"]["prompt"] == "Paint the bird"
-    assert _titled(queued, "negative")["inputs"]["prompt"] == "a photograph"
+    assert _titled(queued, "image 1")["inputs"]["image"] == "birdjournal/bird.png"
+    assert _titled(queued, "image 2")["inputs"]["image"] == "birdjournal/scene.png"
+    assert _titled(queued, "prompt")["inputs"]["text"] == "Paint the bird"
     assert _titled(queued, "sampler")["inputs"]["seed"] == 7
+
+
+def test_paint_sets_the_canvas_where_it_isnt_the_cards(stub):
+    client = ComfyClient(stub.url, poll_seconds=0)
+
+    client.paint(Workflow.load("bird-isolate"), images=[("crop.png", b"crop")], prompt="isolate", seed=49, size=(1152, 1536))
+
+    (queued,) = stub.queued
+    assert (_titled(queued, "canvas")["inputs"]["width"], _titled(queued, "canvas")["inputs"]["height"]) == (1152, 1536)
 
 
 def test_a_failed_painting_raises_with_comfyuis_message(stub):

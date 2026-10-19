@@ -1,79 +1,70 @@
 # Card art
 
-Card art is painted by Qwen-Image-Edit-2511 in ComfyUI on comfybox, the home GPU box (ADR-0003). This folder holds what the painting depends on, so that the pack builder (pack art, #57) and the art worker (scene art and photo art, #68 and #69) paint the same way:
+Card art is painted by FLUX.3 Image Klein in ComfyUI on comfybox, the home GPU box (ADR-0003; the model is ADR-0007, proposed). This folder holds what the painting depends on, so that the pack builder (pack art, #57) and the art worker (scene art and photo art, #68 and #69) paint the same way:
 
-- `prompts.json`: the prompt templates for pack, scene and photo art, the negative prompt, the editions' themes and the standard and Legendary light, with a version.
-- `workflows/{pack,scene,photo}-art.json` and `workflows/bird-cutout.json`: the ComfyUI graphs (API format, under `graph`), with a version each. `packbuilder.art.Workflow` fills the nodes titled `image 1`, `prompt`, `negative` and `sampler` (the seed); `packbuilder.comfy.ComfyClient` uploads the images, queues the graph and fetches the image it saved.
-- `comfybox/`: the ComfyUI service drop-in that keeps it on the tailnet, and the model download script.
-- `bakeoff/plan.json`: the species, reference photos and glasses scenes of the #49 bake-off.
-- `comfyui/{pack,scene,photo}-art-tuning.json`: the same paintings as ComfyUI editor workflows, for tuning the style by hand (below).
+- `prompts.json`: the prompt templates for pack, scene and photo art, the isolation prompt, the editions' themes and the standard and Legendary light, with a version.
+- `workflows/{pack,scene,photo}-art.json`, `workflows/bird-isolate.json` and `workflows/bird-cutout.json`: the ComfyUI graphs (API format, under `graph`), with a version each. `packbuilder.art.Workflow` fills the nodes titled `image 1`, `image 2`, `prompt`, `canvas` (the size, where it isn't the card's) and `sampler` (the seed); `packbuilder.comfy.ComfyClient` uploads the images, queues the graph and fetches the image it saved.
+- `comfybox/`: the FLUX.3 ComfyUI's install script, systemd unit and model download, and the shared ComfyUI's tailnet-only drop-in.
+- `bakeoff/plan.json`: the species (with their lengths), reference photos and glasses scenes (with their perch points) of the #49 bake-off.
+- `comfyui/`: editor workflows from the Qwen-Image-Edit-2511 and FLUX.2 [klein] rounds of the bake-off, kept for the record (`DECISIONS.md`, "Art model bake-off").
 
 Bump a file's `version` when its content changes; a pack's art lock (#57) records both versions with each painting.
 
+## How a painting is made
+
+Every painting is a natural-history watercolour with touches of gouache, and every bird in it comes from a real photo, given to FLUX.3 as `<ref_image_0>`. FLUX.3 reads a caption of the finished picture, not an instruction, so the templates describe the result. No template names the species: a name pulls in the model's stereotype of it (a red finch became a Northern Cardinal, a dull female a bright male), and the reference is the identity.
+
+- **Pack art** (`pack-art.json`, one image): the species' open-license reference bird, isolated (below), framed by the edition's motifs on a pale paper ground.
+- **Scene art** (`scene-art.json`, two images): the same isolated bird as `<ref_image_0>` and, as `<ref_image_1>`, the telephoto crop of the glasses photo from the add (`packbuilder.art.telephoto_crop`). The glasses' wide lens makes a bird the size of a leaf, so the crop zooms in as a long lens would from the same spot: 12× for a 14.5 cm House Finch and in proportion to the bird's length for others (4× for a Cooper's Hawk, 17× for a hummingbird), so that every bird is painted at card size and at its true size against the place. The crop's perch point (the bake-off plan's `perch`, the middle of the photo otherwise) lands a little below the middle. The place keeps its own shapes and colours; the edition adds only its light and a few accents of its colours, because its motifs would be claims about a place the photo doesn't show.
+- **Photo art** (`photo-art.json`, one image): the birder's own photo, cropped to 3:4 around the bird with room around it, painted with its setting.
+- **Legendary** scene and photo art get a golden glow behind the bird, a warm rim of light and deeper corners; the bird keeps its true colours. Pack art, the same for every birder, has none.
+
+**Isolating the reference** (`bird-isolate.json`, `prompts.json`'s `isolate`). Given a photo crop as `<ref_image_0>`, FLUX.3 carries the photo's perch, leaves and framing into the painting. Given a cut-out (BiRefNet), it paints the cut-out's flaws: a tail tip cut off by a branch becomes a loose strip, a twig across the shoulder a notch. So FLUX.3 first paints the reference bird alone on white at the crop's own size, completing what the perch hid, in the photo's own light. Then the bird is cut out of that painting, and its colours are fitted back to the photo's (below), with the same retries if it isn't faithful. Pack and scene art then paint from this bird.
+
+**Fidelity, the colour fit and the gate** (`packbuilder.fidelity`). The bird's markings are its identification and must not change. FLUX.3 mostly keeps the pattern, but it shifts colour and tone, most for a dim photo, and now and then paints a different bird (a Great Egret came out a streaked brown bird). Both birds are cut out, the photo's is registered onto the painted one (a scale and a shift maximising the outlines' IoU), and the colours are compared inside both after a 6 px blur: the mean CIE76 ΔE, where 2.3 is just noticeable, and its 95th percentile. The fit then gives the painted bird the photo's colour and tone: each Lab channel's mean and spread over the painted bird's own interior are matched to the photo bird's, inside the bird only, so the brushwork stays and nothing outside the bird moves. (A line fitted pixel by pixel did better on paper but needs the outlines to line up; where they didn't, it flattened the bird into a silhouette.) A painting is **faithful** when, after the fit, its bird is within ΔE 10 of the photo's and the outlines overlap by at least 0.65: a colour or exposure shift is fitted away, a different pattern or shape is not. An unfaithful painting is painted again with the next seed, three times at most, and if none is faithful the closest is kept and marked for review. The fitted painting is the card art. A dim photo therefore gives a dim bird: art references must be well-lit.
+
 ## The model
 
-| File (ComfyUI `models/` folder) | Source | License |
+| File (the FLUX.3 ComfyUI's `models/` folder) | Source | License |
 | --- | --- | --- |
-| `diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors` | `Comfy-Org/Qwen-Image-Edit_ComfyUI` | Apache 2.0 |
-| `loras/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors` (installed for quick tests; the workflows don't use it) | `lightx2v/Qwen-Image-Edit-2511-Lightning` | Apache 2.0 |
-| `text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors` | `Comfy-Org/Qwen-Image_ComfyUI` | Apache 2.0 |
-| `vae/qwen_image_vae.safetensors` | `Comfy-Org/Qwen-Image_ComfyUI` | Apache 2.0 |
+| `diffusion_models/flux3_image_klein_sd_int8_convrot.safetensors` | `black-forest-labs/flux-3-image-klein-comfy` (gated) | FLUX Kommunity License v1.0 |
+| `text_encoders/qwen3vl_4b_int8_convrot.safetensors` | the same | Qwen3-VL-4B-Instruct, Apache 2.0 |
+| `vae/flux2-vae.safetensors` | the same | FLUX Kommunity License v1.0 |
 | `RMBG/BiRefNet/BiRefNet-general.safetensors` and its three code and config files | `1038lab/BiRefNet`, a re-host of BiRefNet-general | MIT upstream (ZhengPeng7/BiRefNet); the re-host declares none |
 
-`comfybox/download-models.sh` fetches them on the box and checks their SHA-256. The art graphs follow ComfyUI's `image_qwen_image_edit_2511` template at full quality: 40 steps, cfg 4 (so the negative prompt counts), euler and simple, shift 3.1, and the `index_timestep_zero` reference method. Every painting is 864 × 1152 (3:4 portrait, about a megapixel): image 1 is scaled and centre-cropped to that size and sets the canvas, so crop inputs to 3:4 first (`packbuilder.art.card_crop_box`). A painting takes about 3.5 minutes (with the 4-step Lightning LoRA it took 12 s, but painted flatter), and the same inputs and seed give the same image. FLUX-family models are excluded by their non-commercial licenses (ADR-0001, ADR-0003).
+The distilled checkpoint in int8, which runs on the 3090 Ti (Ampere has no FP8 or FP4; the NVFP4 files need Blackwell): 16 steps, no guidance (cfg 1, the negative zeroed, so there is no negative prompt), euler and simple, the references at their own resolution (at most 1536 px a side) and an 864 × 1152 canvas, as ComfyUI 0.41's `image_flux3_klein_distilled_image_edit` template. A painting takes about 14 s on the box (18 s for scene art's two references), an isolation 13 s and a BiRefNet cut-out 1.3 s, and the same inputs and seed give the same image. The FLUX Kommunity License allows a Qualifying User (under US$5M gross annual revenue) to use the outputs commercially and to run the model in production to make them, on two conditions: content filtering or review of the outputs, and a disclosure that they are AI-generated. ADR-0007 sets out how BirdJournal meets them; until it is accepted, the model is an evaluation.
 
-**Scene art is a composite**: the glasses photo is zoomed to the viewfinder's crop (the middle half of each side, `card_crop_box(..., zoom=2)`), the species' reference bird is cut out onto transparency by `bird-cutout.json` and pasted in near the middle at card size (`packbuilder.art.paste_bird`), and the painting blends it in. The bird's identity comes from a real photo: asked to add the bird from a second image, Qwen drew its own idea of the species (a red finch became a Northern Cardinal) at the wrong scale. The scene reference must be unobstructed, since a twig across the bird cuts a hole in it. The cut-out runs BiRefNet-general through the `BiRefNetRMBG` node of the comfyui-rmbg custom node pack (commit 58f1947 on the box). The same pack's `RMBG` node runs RMBG-2.0, which is CC BY-NC and must not be used (ADR-0001). The node fetches the weights from the `1038lab/BiRefNet` re-host, whose file differs from upstream's `model.safetensors`; confirm the provenance, or switch to the upstream weights, before the art worker ships (#68).
-
-What the bake-off taught the templates (details in `DECISIONS.md`, "Art model bake-off"): scene and photo art never name the species, because a name pulls in the model's stereotype of it (a female or young bird became a bright male); pack art does, and needs a well-lit, typical adult reference for the same reason.
-
-## Tuning by hand
-
-The look is tuned by hand in ComfyUI's editor, then the batch paints with it. On comfybox the three workflows sit in the Workflows sidebar under `BirdJournal/` (`pack art tuning`, `scene art tuning`, `photo art tuning`; copies in `comfyui/`). Each has a read-me note and five groups:
-
-1. **Picture**: `image 1`, a dropdown in which the sample inputs start with `birdjournal-` (ComfyUI lists only the top of its input folder). That is every species' pack reference, two photo-art photos each, and scene composites of every species in three full-resolution glasses photos.
-2. **Prompt**: the template with its `{placeholders}` kept, the negative prompt, and one small node per placeholder that fills it in.
-3. **Quality**: Fast preview on (4-step Lightning, about 12 s) or off (40 steps, cfg 4, about 3.5 minutes).
-4. **Model**.
-5. The painting itself.
-
-When a look is right, save the workflow with Fast preview off. Then the template, the negative prompt and the field values go into `prompts.json`, and the graph, exported in API format with the node titles `image 1`, `prompt`, `negative`, `sampler` and `output` kept, into `workflows/<kind>-art.json`. Bump both versions, and `python -m packbuilder.bakeoff paint` repaints the plan.
-
-**Style pass** (`comfyui/style-pass.json`, on comfybox as `BirdJournal/style pass`) restyles a finished telephoto painting (`birdjournal-telephoto-<spot>`) with the photo-art graph. The reference bird goes in as image 2, so the restyle keeps the species. Its note holds six style paragraphs, from fantasy line art to an epic Renaissance myth painting, to paste in. `comfyui/alternatives/klein-4b-distilled-style-pass.json` does the same with Klein 4B distilled, from one image.
-
-## Alternative models
-
-`comfybox/download-alternatives.sh` installs the Apache 2.0 alternatives to compare with Qwen-Image-Edit-2511 at putting a real bird into a scene. Each is SHA-256-checked:
-
-- FLUX.2 [klein] 4B, base and distilled, in fp8, with BFL's small-decoder VAE.
-- FireRed Image Edit 1.1 as the official Q4_K_M GGUF, with its 8-step Lightning LoRA.
-- Three consistency LoRAs: one for Klein 4B (lrzjason) and two for Qwen 2511 (lrzjason, Kalaido).
-
-`comfyui/alternatives/` holds ComfyUI's own templates for them, adapted, and they sit on comfybox under `BirdJournal/alternatives/`:
-
-- **Inputs**: the bird cut out onto white (`birdjournal-bird-<species>`) and a zoomed glasses photo (`birdjournal-glasses-<scene>`).
-- **Prompt and seed**: the research's prompt and a fixed seed.
-- **Licensing and memory**:
-  - The distilled Klein uses the small-decoder VAE in place of `flux2-vae`, whose repository declares the FLUX non-commercial license.
-  - FireRed loads the GGUF in place of its 41 GB bf16 file.
-
-**Telephoto scene** (`comfyui/alternatives/klein-4b-distilled-telephoto.json`, on comfybox as `Klein 4B distilled - telephoto scene`): through the glasses' wide lens a bird is the size of a leaf. So the workflow crops a 10–15× frame out of the full-resolution glasses photo (`birdjournal-glasses-<scene>-3024`) around a perch, the way a long lens would frame it from the same spot. It blurs the crop into a 300 mm lens's bokeh and gives it to FLUX.2 [klein] 4B distilled as image 2, with the bird cut out onto white as image 1. The read-me note holds the crop sizes per zoom and the audition's spots. Scale the zoom with the bird's length, so that every species is painted at its true size against the place: 12× for a 14.5 cm House Finch, so 4× for a 42 cm Cooper's Hawk and 17× for a 10 cm hummingbird. About 7 s a painting.
-
-Left out on purpose (ADR-0001):
-
-- FLUX.2 [klein] 9B and FLUX.2 [dev]: non-commercial weights.
-- Qwen-Image 2.1: its own commercial license.
-- OmniGen2: its Qwen2.5-VL-3B encoder is research-only.
+The cut-out runs BiRefNet-general through the `BiRefNetRMBG` node of the comfyui-rmbg custom node pack (commit 58f1947). The same pack's `RMBG` node runs RMBG-2.0, which is CC BY-NC and must not be used (ADR-0001). The node fetches the weights from the `1038lab/BiRefNet` re-host, whose file differs from upstream's `model.safetensors`; confirm the provenance, or switch to the upstream weights, before the art worker ships (#68).
 
 ## comfybox
 
-ComfyUI has no authentication, so it listens on loopback and the box's tailnet address only (`http://comfybox:8188`, 100.80.25.1), never the home LAN. `comfybox/tailnet-only.conf` is a systemd drop-in for `comfyui.service` that sets that up and waits for tailscaled before binding. Install or update it with sudo on the box:
+The box runs two ComfyUIs, both on loopback and the box's tailnet address only (`comfybox`, 100.80.25.1), never the home LAN, because ComfyUI has no authentication:
+
+- **Port 8188**, `comfyui.service`: the shared ComfyUI 0.34 (`~/comfyui-easy-install`), with ivan-parallax's custom node packs, Qwen-Image-Edit-2511 and the earlier rounds' alternatives. `comfybox/tailnet-only.conf` is its systemd drop-in.
+- **Port 8189**, `comfyui-flux3.service`: ComfyUI 0.41.1 (`~/comfyui-flux3`) for FLUX.3, which needs 0.41 and which the shared install's node packs are not ready for. It borrows the shared install's Python and torch and adds only what 0.41.1 pins differently, plus comfyui-rmbg for BiRefNet. All card art runs here.
+
+Set up or update the FLUX.3 ComfyUI on the box (it needs `hf auth login` with an account that has accepted the FLUX Kommunity License on the gated repository, and `download-models.sh` run once for BiRefNet):
+
+```sh
+scp art/comfybox/install-flux3.sh art/comfybox/fetch-gated.py art/comfybox/comfyui-flux3.service art/comfybox/install-flux3-service.sh matt@100.80.25.1:birdjournal-art/
+ssh matt@100.80.25.1 'sh ~/birdjournal-art/install-flux3.sh'
+ssh -t matt@100.80.25.1 'sudo sh ~/birdjournal-art/install-flux3-service.sh'
+```
+
+`install-flux3.sh` is safe to run again: it checks the ComfyUI tag, the node's commit and every model file's SHA-256. `fetch-gated.py` downloads in 16 ranged parts, because on FLUX.3's release day Hugging Face's Xet transfer stalled and a single connection gave about 1.5 MB/s. Check the service with `ss -ltn | grep 8189` on the box: two sockets, 127.0.0.1 and 100.80.25.1.
+
+The shared drop-in: install or update it with sudo on the box.
 
 ```sh
 scp art/comfybox/tailnet-only.conf art/comfybox/install-tailnet-only.sh matt@100.80.25.1:birdjournal-art/
 ssh -t matt@100.80.25.1 'sudo sh ~/birdjournal-art/install-tailnet-only.sh'
 ```
 
-Check it with `ss -ltn | grep 8188` on the box: two sockets, 127.0.0.1 and 100.80.25.1. A request to the box's LAN address is refused. The drop-in also runs ComfyUI without `--highvram` and `--use-sage-attention`: the first stops ComfyUI offloading part of a model, so the 20.5 GB Qwen model ran out of the 24 GB card, and the second turned every Qwen image black.
+It also runs ComfyUI without `--highvram` and `--use-sage-attention`: the first stops ComfyUI offloading part of a model, so the 20.5 GB Qwen model ran out of the 24 GB card, and the second turned every Qwen image black. `comfyui-flux3.service` leaves both out too.
+
+## Tuning by hand
+
+On the FLUX.3 ComfyUI (`http://comfybox:8189`), open the template "Flux.3 Image Klein Distilled: Image Edit", plug a second `Load Image` into `Set Reference Multi Latent` for scene art (the bird first, then the place), and paste the prompt from `prompts.json` with its placeholders filled. The inputs the bake-off painted from are in `build/art-bakeoff/v<prompts version>/` (`isolated/` for the birds). When a look is right, its template goes into `prompts.json` and any graph change into `workflows/`, with the versions bumped, and `python -m packbuilder.bakeoff paint` repaints the plan into a new folder.
 
 ## The bake-off (#49)
 
@@ -84,4 +75,6 @@ uv run python -m packbuilder.bakeoff paint --scenes ../build/art-bakeoff/scenes
 uv run python -m packbuilder.bakeoff sheets --scenes ../build/art-bakeoff/scenes
 ```
 
-`references` ranks each species' CC0 and CC BY photos among the Los Angeles and San Diego packs' cached candidates the way a pack build ranks photos, and draws them on `build/art-bakeoff/references.jpg`. Pick the reference, the two stand-in birder photos and, where the reference isn't a clean perched bird, a `scene_reference` in `plan.json` by hand. The scenes are the sightings' glasses photos, pulled from the phone with `xcrun devicectl device copy from --device <udid> --domain-type appDataContainer --domain-identifier com.matthewcelia.mybirdjournal --source "Library/Application Support/Frames/<file>.jpg" --destination ../build/art-bakeoff/scenes/`; they stay out of the repository. `paint` is resumable and writes the paintings, the cut-outs and composites, `results.json` (prompt, seed, versions, ComfyUI's time per painting) and, with `sheets`, one contact sheet per species plus an overview to `build/art-bakeoff/`. At full quality all 90 paintings take about five hours.
+`references` ranks each species' CC0 and CC BY photos among the Los Angeles and San Diego packs' cached candidates the way a pack build ranks photos, and draws them on `build/art-bakeoff/references.jpg`. Pick the reference, the two stand-in birder photos and, where it should differ, a `scene_reference` in `plan.json` by hand: a well-lit, typical adult, because a dim photo gives a dim bird. The scenes are the sightings' glasses photos, pulled from the phone with `xcrun devicectl device copy from --device <udid> --domain-type appDataContainer --domain-identifier com.matthewcelia.mybirdjournal --source "Library/Application Support/Frames/<file>.jpg" --destination ../build/art-bakeoff/scenes/`; they stay out of the repository, and each needs a `perch` in the plan.
+
+`paint` is resumable and writes `build/art-bakeoff/v<prompts version>/`: per species each painting (the card art, colours fitted) and `<name>-raw.png` (FLUX.3's own), `isolated/` (the reference birds on white), `cutouts/`, and `results.json` (prompt, seed, versions, ComfyUI's time and both birds' fidelity per painting). `sheets` adds one contact sheet per species (the references, FLUX.3's paintings and the fitted ones) and an overview to `sheets/`. The whole plan, 90 paintings and 13 isolations with their retries, takes about 40 minutes run on the box itself. From the Mac it waits on the tailnet, which has run at 420 KB/s; to run it on the box, copy `packbuilder/src`, `art/` and the scenes to a checkout-shaped folder there and run with the FLUX.3 venv's Python (`PYTHONPATH=src ~/comfyui-flux3/.venv/bin/python -m packbuilder.bakeoff paint --comfy http://127.0.0.1:8189 ...`).

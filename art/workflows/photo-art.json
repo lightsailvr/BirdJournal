@@ -1,11 +1,11 @@
 {
-  "version": 2,
-  "comment": "Photo art: the birder's own photo of the bird, embellished. image 1 is the photo, cropped to 3:4 around the bird. The Legendary variant is the same graph with the Legendary prompt. Version 2 (#49): full quality instead of the 4-step Lightning LoRA. Qwen-Image-Edit-2511 (fp8mixed) at full quality, after ComfyUI's image_qwen_image_edit_2511 template with the Lightning LoRA off: 40 steps, cfg 4 (so the negative prompt counts), euler/simple, shift 3.1. The output is 864 x 1152 (3:4 portrait, about 1 megapixel); image 1 is scaled and centre-cropped to it and sets the canvas. ComfyUI API format under 'graph'; packbuilder.art.Workflow fills the nodes titled 'image 1', 'prompt', 'negative' and 'sampler' (the seed). Bump the version when the graph changes.",
+  "version": 3,
+  "comment": "ComfyUI's image_flux3_klein_distilled_image_edit template (ComfyUI 0.41) in API format: FLUX.3 Image Klein distilled, int8, 16 steps, no guidance (cfg 1, the negative zeroed), euler and simple. The references keep their own resolution (packbuilder.art sizes them, at most 1536 px a side); the canvas is 864 x 1152 (3:4) unless the caller sets it. Photo art: image 1 is the birder's photo, cropped to 3:4 around the bird; its setting is kept. Version 3: FLUX.3 (prompts v7); versions 1-2 were Qwen-Image-Edit-2511.",
   "graph": {
     "1": {
       "class_type": "UNETLoader",
       "inputs": {
-        "unet_name": "qwen_image_edit_2511_fp8mixed.safetensors",
+        "unet_name": "flux3_image_klein_sd_int8_convrot.safetensors",
         "weight_dtype": "default"
       },
       "_meta": {
@@ -15,8 +15,8 @@
     "2": {
       "class_type": "CLIPLoader",
       "inputs": {
-        "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-        "type": "qwen_image",
+        "clip_name": "qwen3vl_4b_int8_convrot.safetensors",
+        "type": "flux3",
         "device": "default"
       },
       "_meta": {
@@ -26,36 +26,10 @@
     "3": {
       "class_type": "VAELoader",
       "inputs": {
-        "vae_name": "qwen_image_vae.safetensors"
+        "vae_name": "flux2-vae.safetensors"
       },
       "_meta": {
         "title": "vae"
-      }
-    },
-    "4": {
-      "class_type": "ModelSamplingAuraFlow",
-      "inputs": {
-        "model": [
-          "1",
-          0
-        ],
-        "shift": 3.1
-      },
-      "_meta": {
-        "title": "shift"
-      }
-    },
-    "5": {
-      "class_type": "CFGNorm",
-      "inputs": {
-        "model": [
-          "4",
-          0
-        ],
-        "strength": 1.0
-      },
-      "_meta": {
-        "title": "cfg norm"
       }
     },
     "10": {
@@ -67,36 +41,12 @@
         "title": "image 1"
       }
     },
-    "11": {
-      "class_type": "ImageScale",
-      "inputs": {
-        "image": [
-          "10",
-          0
-        ],
-        "upscale_method": "lanczos",
-        "width": 864,
-        "height": 1152,
-        "crop": "center"
-      },
-      "_meta": {
-        "title": "card size"
-      }
-    },
     "20": {
-      "class_type": "TextEncodeQwenImageEditPlus",
+      "class_type": "CLIPTextEncode",
       "inputs": {
+        "text": "",
         "clip": [
           "2",
-          0
-        ],
-        "prompt": "",
-        "vae": [
-          "3",
-          0
-        ],
-        "image1": [
-          "11",
           0
         ]
       },
@@ -105,63 +55,48 @@
       }
     },
     "21": {
-      "class_type": "TextEncodeQwenImageEditPlus",
-      "inputs": {
-        "clip": [
-          "2",
-          0
-        ],
-        "prompt": "",
-        "vae": [
-          "3",
-          0
-        ],
-        "image1": [
-          "11",
-          0
-        ]
-      },
-      "_meta": {
-        "title": "negative"
-      }
-    },
-    "22": {
-      "class_type": "FluxKontextMultiReferenceLatentMethod",
+      "class_type": "ConditioningZeroOut",
       "inputs": {
         "conditioning": [
           "20",
           0
-        ],
-        "reference_latents_method": "index_timestep_zero"
+        ]
       },
       "_meta": {
-        "title": "positive references"
+        "title": "no negative"
       }
     },
-    "23": {
-      "class_type": "FluxKontextMultiReferenceLatentMethod",
+    "22": {
+      "class_type": "ReferenceMultiLatent",
       "inputs": {
-        "conditioning": [
-          "21",
+        "positive": [
+          "20",
           0
         ],
-        "reference_latents_method": "index_timestep_zero"
-      },
-      "_meta": {
-        "title": "negative references"
-      }
-    },
-    "30": {
-      "class_type": "VAEEncode",
-      "inputs": {
-        "pixels": [
-          "11",
+        "negative": [
+          "21",
           0
         ],
         "vae": [
           "3",
           0
+        ],
+        "resolution": "keep resolution",
+        "images.image0": [
+          "10",
+          0
         ]
+      },
+      "_meta": {
+        "title": "references"
+      }
+    },
+    "30": {
+      "class_type": "EmptyFlux2LatentImage",
+      "inputs": {
+        "width": 864,
+        "height": 1152,
+        "batch_size": 1
       },
       "_meta": {
         "title": "canvas"
@@ -171,26 +106,26 @@
       "class_type": "KSampler",
       "inputs": {
         "model": [
-          "5",
+          "1",
           0
         ],
-        "seed": 0,
-        "steps": 40,
-        "cfg": 4.0,
-        "sampler_name": "euler",
-        "scheduler": "simple",
         "positive": [
           "22",
           0
         ],
         "negative": [
-          "23",
-          0
+          "22",
+          1
         ],
         "latent_image": [
           "30",
           0
         ],
+        "seed": 0,
+        "steps": 16,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
         "denoise": 1.0
       },
       "_meta": {
@@ -220,7 +155,7 @@
           "50",
           0
         ],
-        "filename_prefix": "birdjournal/art"
+        "filename_prefix": "birdjournal/photo-art"
       },
       "_meta": {
         "title": "output"
