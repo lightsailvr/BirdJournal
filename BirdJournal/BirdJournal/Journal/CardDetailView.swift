@@ -70,7 +70,9 @@ struct CardDetailView: View {
     var body: some View {
         if let sighting {
             let commonName = library.commonName(for: sighting)
-            let isLegendary = CardCollection(sightings: sightings).isLegendary(sighting.identifier)
+            let collection = library.collection(of: sightings)
+            let isLegendary = collection.isLegendary(sighting.identifier)
+            let placement = collection.placement(of: sighting.identifier)
             let gallery = (browse ?? GalleryBrowse(scientificName: sighting.scientificName)).gallery(sightings, places: places)
             PaperPage {
                 VStack(spacing: JournalLayout.rowGap) {
@@ -86,7 +88,7 @@ struct CardDetailView: View {
                     .accessibilityIdentifier("card-flip")
                     .accessibilityFocused($flipControlFocused)
                     CollectibleCard(showsBack: showsBack, rotates: !reduceMotion) {
-                        CardFront(sighting: sighting, isLegendary: isLegendary, flip: flip)
+                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, flip: flip)
                     } back: {
                         CardBack(sighting: sighting, isLegendary: isLegendary, showOriginal: { showingOriginal = true })
                     }
@@ -288,22 +290,24 @@ private struct CardFrame: ViewModifier {
     }
 }
 
-/// The collectible face: the Legendary label, the art (a tap flips the card), the place and species, the rarity for
-/// that place and season, and the date and method.
+/// The collectible face: the Legendary label or the edition with the collector number, the art (a tap flips the card),
+/// the place and species, the rarity for that place and season, and the date and method.
 private struct CardFront: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
     let sighting: Sighting
     let isLegendary: Bool
+    let placement: CardPlacement?
     let flip: () -> Void
 
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
         let commonName = library.commonName(for: sighting)
         VStack(alignment: .leading, spacing: 12) {
-            if isLegendary {
-                LegendaryLabel()
-            }
+            CardHeading(isLegendary: isLegendary, placement: placement)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement).compactMap { $0 }.joined(separator: ", "))
+                .accessibilityIdentifier("card-heading")
             Button(action: flip) {
                 CardArtView(sighting: sighting, reference: reference, commonName: commonName)
             }

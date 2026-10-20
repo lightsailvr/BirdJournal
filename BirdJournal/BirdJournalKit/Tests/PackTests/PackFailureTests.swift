@@ -53,7 +53,7 @@ struct PackFailureTests {
         }
         #expect(library.pack(id: "test-pack")?.species.count == 2, "the working pack is still there")
         #expect(storage.installed().map(\.descriptor.version) == [1])
-        #expect(try FileManager.default.contentsOfDirectory(atPath: storage.directory.path(percentEncoded: false)).sorted() == ["test-pack"], "no staging or set-aside folder is left")
+        #expect(try FileManager.default.contentsOfDirectory(atPath: storage.directory.path(percentEncoded: false)).sorted() == ["index.json", "test-pack"], "no staging or set-aside folder is left, only the pack and the kept index")
         #expect(PackStorage.diskUsage(of: installed.pack.directory) > 0)
     }
 

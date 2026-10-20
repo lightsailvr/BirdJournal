@@ -16,8 +16,9 @@ import UIKit
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Cards view), `sightings`,
 ///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab), `card` and `card-back` (the newest
-///   card, front or back up), `species` or `gallery` (the gallery of the newest card's species),
-///   `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
+///   card, front or back up), `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
+///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
+///   `-autoSet <id>`), `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `source` (the audio source sheet).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
@@ -98,6 +99,12 @@ struct DebugLaunch: ViewModifier {
                 if let newest = try? context.fetch(Sighting.newestFirst()).first {
                     journalPath.append(Route.gallery(scientificName: newest.scientificName, commonName: library.commonName(for: newest)))
                 }
+            case "species-list":
+                tab = .journal
+                journalMode = .species
+            case "set":
+                tab = .guide
+                guidePath.append(Route.set(id: defaults.string(forKey: "autoSet") ?? PackIndex.bundledPackID))
             case "sighting", "share", "map":
                 tab = .journal
                 if let newest = try? context.fetch(Sighting.newestFirst()).first {

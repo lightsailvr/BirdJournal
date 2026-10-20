@@ -1,0 +1,74 @@
+{
+  "type": "Feature",
+  "properties": {
+    "name": "Anza-Borrego Desert State Park",
+    "note": "Hand-drawn for the Deserts set (issue #54), following the region's landforms at a few kilometres' accuracy; neither a Census county nor an NPS park, so no public-domain boundary exists."
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -116.53,
+          33.43
+        ],
+        [
+          -116.38,
+          33.5
+        ],
+        [
+          -116.2,
+          33.43
+        ],
+        [
+          -116.08,
+          33.42
+        ],
+        [
+          -116.08,
+          33.2
+        ],
+        [
+          -116.1,
+          33.05
+        ],
+        [
+          -116.05,
+          32.95
+        ],
+        [
+          -116.1,
+          32.8
+        ],
+        [
+          -116.2,
+          32.7
+        ],
+        [
+          -116.3,
+          32.72
+        ],
+        [
+          -116.4,
+          32.85
+        ],
+        [
+          -116.45,
+          33.0
+        ],
+        [
+          -116.48,
+          33.12
+        ],
+        [
+          -116.57,
+          33.3
+        ],
+        [
+          -116.53,
+          33.43
+        ]
+      ]
+    ]
+  }
+}

@@ -222,15 +222,15 @@ struct LensCardRendererTests {
         #expect(!details.elements.contains(Self.saveButton))
     }
 
-    @Test("once the sighting is written the saved line names the card it earned: the birder's first of the species, or a new card (issue #51)")
+    @Test("once the sighting is written the saved line names the card it earned: the birder's first of the species, or a new card with its number (issues #51, #54)")
     func earnedCards() {
         func details(_ index: Int, earned: [Int: LensEarnedCard], profile: @escaping (Species) -> SpeciesProfile? = Self.profile) -> LensCard {
             LensCardRenderer.render(.details(index: index), stack: Self.stack, order: Self.quietOrder, selection: 0, saved: [index], earned: earned, profile: profile)
         }
         let first = details(0, earned: [0: .legendary])
         #expect(Array(first.elements.suffix(2)) == [.saved("Your first Black Phoebe", legendary: true), .button(LensCardRenderer.addAnotherButton)])
-        #expect(details(0, earned: [0: .newCard]).elements.contains(.saved("New card", legendary: false)))
-        #expect(details(1, earned: [0: .legendary, 1: .newCard]).elements.contains(.saved("New card", legendary: false)), "each species' own card")
+        #expect(details(0, earned: [0: .newCard(collectorNumber: "021/160")]).elements.contains(.saved("New card · 021/160", legendary: false)))
+        #expect(details(1, earned: [0: .legendary, 1: .newCard(collectorNumber: "Uncharted")]).elements.contains(.saved("New card · Uncharted", legendary: false)), "each species' own card")
 
         // The longest line still fits: the field marks give way to it.
         var long = Fakes.phoebeProfile
@@ -240,6 +240,7 @@ struct LensCardRendererTests {
         #expect(full.elements.contains(.saved("Your first Black Phoebe", legendary: true)))
         for index in 0..<3 {
             #expect(details(index, earned: [index: .legendary]).wordCount <= LensCardRenderer.detailsWordBudget)
+            #expect(details(index, earned: [index: .newCard(collectorNumber: "021/160")]).wordCount <= LensCardRenderer.detailsWordBudget)
         }
     }
 

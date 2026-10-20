@@ -1,0 +1,216 @@
+{
+  "id": "us-ca-bay",
+  "name": "SF Bay Area",
+  "edition": {"name": "Fog edition", "theme": "fog rolling over the bay, oak hills and redwoods in cool silver light"},
+  "taxonomy": "IOC World Bird List 15.1",
+  "regions": [
+    {"name": "Alameda County", "source": "US Census Bureau TIGER county 06001 (public domain)", "polygons": [
+      [
+        [[-122.3731,37.8839],[-122.3467,37.811],[-122.2818,37.7082],[-122.1096,37.4976],[-122.0519,37.4593],[-121.9967,37.4672],[-121.9496,37.4614],[-121.9449,37.4692],[-121.925,37.4542],[-121.8812,37.4711],[-121.8653,37.4846],[-121.4719,37.4818],[-121.4693,37.4897],[-121.496,37.5049],[-121.5015,37.525],[-121.5406,37.5298],[-121.5567,37.5427],[-121.557,37.8165],[-121.96,37.7185],[-122.0118,37.7474],[-121.9974,37.7634],[-122.0455,37.7981],[-122.1407,37.8047],[-122.1574,37.818],[-122.1669,37.8134],[-122.1856,37.8207],[-122.1851,37.8374],[-122.2089,37.8519],[-122.2214,37.8655],[-122.2176,37.8722],[-122.2441,37.8832],[-122.264,37.9038],[-122.3731,37.8839]]
+      ]
+    ]},
+    {"name": "Contra Costa County", "source": "US Census Bureau TIGER county 06013 (public domain)", "polygons": [
+      [
+        [[-121.6973,37.7824],[-121.557,37.8165],[-121.5495,37.8336],[-121.5381,37.8378],[-121.5406,37.8576],[-121.5528,37.8612],[-121.562,37.8531],[-121.5794,37.8602],[-121.5759,37.8883],[-121.5659,37.8977],[-121.5728,37.9043],[-121.5564,37.9236],[-121.5636,37.9434],[-121.5578,37.947],[-121.5674,37.944],[-121.5635,37.9547],[-121.5752,37.955],[-121.565,37.959],[-121.5802,37.9764],[-121.5724,37.979],[-121.5824,37.9835],[-121.5792,37.9981],[-121.5688,38.0022],[-121.5799,38.0078],[-121.5671,38.012],[-121.5721,38.0184],[-121.5575,38.0166],[-121.573,38.0422],[-121.5802,38.0413],[-121.5788,38.0326],[-121.5844,38.036],[-121.5822,38.0684],[-121.5729,38.0737],[-121.5853,38.0964],[-121.6274,38.0984],[-121.6381,38.0861],[-121.6731,38.0935],[-121.6819,38.082],[-121.6809,38.0621],[-121.6998,38.0452],[-121.7378,38.0266],[-121.7831,38.0185],[-121.8281,38.028],[-121.8468,38.06],[-121.8621,38.0661],[-121.8747,38.0507],[-121.9068,38.045],[-121.9354,38.0488],[-121.9774,38.0668],[-122.0284,38.0592],[-122.0611,38.0621],[-122.1486,38.0317],[-122.2008,38.0579],[-122.2453,38.064],[-122.2653,38.0599],[-122.3475,38.0733],[-122.4416,37.9739],[-122.4323,37.9298],[-122.3738,37.8837],[-122.264,37.9038],[-122.2441,37.8832],[-122.2176,37.8722],[-122.2214,37.8655],[-122.2089,37.8519],[-122.1851,37.8374],[-122.1856,37.8207],[-122.1669,37.8134],[-122.1574,37.818],[-122.1407,37.8047],[-122.0455,37.7981],[-121.9974,37.7634],[-122.0118,37.7474],[-121.96,37.7185],[-121.6973,37.7824]]
+      ]
+    ]},
+    {"name": "Marin County", "source": "US Census Bureau TIGER county 06041 (public domain)", "polygons": [
+      [
+        [[-122.4728,37.8319],[-122.4187,37.8525],[-122.4416,37.9739],[-122.3475,38.0733],[-122.5019,38.1124],[-122.5201,38.1407],[-122.5445,38.1587],[-122.5579,38.1602],[-122.552,38.169],[-122.5632,38.1693],[-122.5706,38.1871],[-122.6358,38.1786],[-122.7399,38.207],[-122.8999,38.3168],[-122.9095,38.3144],[-122.9081,38.3208],[-122.921,38.3168],[-122.9216,38.3086],[-122.9661,38.317],[-122.97,38.3101],[-122.9948,38.3062],[-123.0027,38.2957],[-123.1345,38.2963],[-123.0496,38.2143],[-123.0148,38.1491],[-123.0638,38.0365],[-123.0851,38.0084],[-123.0839,37.9834],[-123.068,37.9587],[-123.0225,37.9421],[-122.9532,37.9411],[-122.9192,37.9548],[-122.9023,37.9774],[-122.8505,37.9456],[-122.8254,37.9071],[-122.789,37.8938],[-122.7668,37.8658],[-122.7243,37.8477],[-122.6757,37.8485],[-122.6123,37.8152],[-122.528,37.8151],[-122.5229,37.8249],[-122.4991,37.8199],[-122.4728,37.8319]]
+      ]
+    ]},
+    {"name": "Napa County", "source": "US Census Bureau TIGER county 06055 (public domain)", "polygons": [
+      [
+        [[-122.1036,38.5122],[-122.1344,38.6046],[-122.1494,38.6255],[-122.1665,38.6197],[-122.1687,38.6299],[-122.1592,38.6351],[-122.1661,38.6552],[-122.1901,38.6635],[-122.2021,38.6777],[-122.2014,38.6907],[-122.2222,38.6986],[-122.2251,38.7274],[-122.2487,38.7551],[-122.2545,38.7816],[-122.2876,38.84],[-122.3154,38.8396],[-122.324,38.8463],[-122.3507,38.8359],[-122.3956,38.8643],[-122.4038,38.8558],[-122.3754,38.8265],[-122.3755,38.8083],[-122.4044,38.7986],[-122.4127,38.786],[-122.4031,38.773],[-122.4163,38.768],[-122.4641,38.7061],[-122.6335,38.6693],[-122.6233,38.6644],[-122.6341,38.6376],[-122.6283,38.623],[-122.6466,38.5981],[-122.6302,38.5785],[-122.6318,38.5694],[-122.5873,38.5526],[-122.5666,38.5256],[-122.5439,38.52],[-122.5417,38.5133],[-122.55,38.5112],[-122.5353,38.5017],[-122.5449,38.4963],[-122.5296,38.4696],[-122.5159,38.4709],[-122.5058,38.4647],[-122.5096,38.4574],[-122.4798,38.4513],[-122.4979,38.4246],[-122.4481,38.3795],[-122.4569,38.3707],[-122.4531,38.3628],[-122.412,38.3343],[-122.3946,38.3047],[-122.4038,38.2998],[-122.4047,38.2817],[-122.3964,38.2712],[-122.3876,38.2738],[-122.3898,38.2608],[-122.3739,38.2439],[-122.3653,38.246],[-122.3642,38.2153],[-122.3496,38.194],[-122.3603,38.1971],[-122.3579,38.1826],[-122.3687,38.1827],[-122.3676,38.1588],[-122.3968,38.1615],[-122.4068,38.1556],[-122.1954,38.155],[-122.1953,38.1673],[-122.2151,38.1797],[-122.193,38.2231],[-122.2119,38.2508],[-122.2015,38.2489],[-122.1933,38.2564],[-122.2166,38.2647],[-122.2121,38.2731],[-122.1882,38.2717],[-122.2034,38.2934],[-122.2061,38.3158],[-122.0648,38.3159],[-122.0617,38.3257],[-122.0736,38.3615],[-122.1261,38.4275],[-122.1036,38.5122]]
+      ]
+    ]},
+    {"name": "San Francisco County", "source": "US Census Bureau TIGER county 06075 (public domain)", "polygons": [
+      [
+        [[-122.4054,37.7083],[-122.2818,37.7082],[-122.3467,37.811],[-122.3738,37.8837],[-122.4323,37.9298],[-122.4187,37.8525],[-122.4991,37.8199],[-122.5207,37.8253],[-122.528,37.8151],[-122.6123,37.8152],[-122.5882,37.7894],[-122.5752,37.7067],[-122.4054,37.7083]]
+      ],
+      [
+        [[-123.1738,37.7757],[-123.1568,37.7378],[-123.1261,37.7167],[-123.0929,37.7137],[-123.0686,37.673],[-123.0407,37.6503],[-122.9867,37.6418],[-122.9491,37.6634],[-122.9357,37.6976],[-122.95,37.7322],[-122.9975,37.7708],[-123.0338,37.7784],[-123.0705,37.8138],[-123.0953,37.8219],[-123.1323,37.8197],[-123.166,37.7969],[-123.1738,37.7757]]
+      ]
+    ]},
+    {"name": "San Mateo County", "source": "US Census Bureau TIGER county 06081 (public domain)", "polygons": [
+      [
+        [[-122.5868,37.59],[-122.571,37.4845],[-122.5373,37.4507],[-122.5099,37.4416],[-122.5035,37.4119],[-122.467,37.3499],[-122.484,37.2499],[-122.4641,37.1778],[-122.4456,37.15],[-122.3969,37.1099],[-122.3931,37.0872],[-122.3761,37.0656],[-122.3482,37.0557],[-122.3139,37.0548],[-122.2894,37.1135],[-122.3118,37.1475],[-122.3177,37.1869],[-122.2427,37.19],[-122.2426,37.2151],[-122.1528,37.2154],[-122.1527,37.2886],[-122.1668,37.2952],[-122.1621,37.3042],[-122.1708,37.312],[-122.1823,37.3095],[-122.1931,37.3183],[-122.1751,37.3257],[-122.2025,37.3603],[-122.1905,37.3853],[-122.1905,37.4313],[-122.1652,37.453],[-122.1444,37.4583],[-122.1241,37.4528],[-122.1177,37.4652],[-122.0968,37.4619],[-122.0815,37.4778],[-122.1096,37.4976],[-122.2818,37.7082],[-122.5752,37.7067],[-122.5675,37.6392],[-122.5868,37.59]]
+      ]
+    ]},
+    {"name": "Santa Clara County", "source": "US Census Bureau TIGER county 06085 (public domain)", "polygons": [
+      [
+        [[-122.2026,37.3632],[-122.1751,37.3257],[-122.1931,37.3183],[-122.1621,37.3042],[-122.1668,37.2952],[-122.1534,37.2897],[-122.1505,37.2759],[-122.1216,37.2586],[-122.1042,37.2343],[-122.0659,37.2104],[-122.0551,37.2125],[-122.0307,37.19],[-122.0262,37.1669],[-122.0025,37.1583],[-121.9911,37.1443],[-121.8909,37.1053],[-121.86,37.1042],[-121.8619,37.0993],[-121.8182,37.0837],[-121.8091,37.0693],[-121.7555,37.049],[-121.7261,37.0213],[-121.7362,37.0153],[-121.7188,37.0076],[-121.7387,36.99],[-121.7179,36.9956],[-121.6954,36.9851],[-121.6978,36.9721],[-121.6648,36.9637],[-121.6458,36.9323],[-121.6248,36.9405],[-121.6072,36.9261],[-121.5904,36.9262],[-121.5902,36.9193],[-121.5812,36.9193],[-121.5757,36.893],[-121.5603,36.8971],[-121.5585,36.9105],[-121.5138,36.9452],[-121.5124,36.9588],[-121.4889,36.9831],[-121.4679,36.9768],[-121.4506,36.9889],[-121.4182,36.9605],[-121.2154,36.9612],[-121.2466,36.9852],[-121.2331,36.9993],[-121.2333,37.0117],[-121.2486,37.0337],[-121.2245,37.0397],[-121.2245,37.0562],[-121.2126,37.0551],[-121.2082,37.0613],[-121.2455,37.0891],[-121.2304,37.0969],[-121.2173,37.123],[-121.2366,37.1567],[-121.2621,37.1593],[-121.2811,37.1836],[-121.2986,37.166],[-121.3284,37.1659],[-121.3596,37.1845],[-121.3843,37.1662],[-121.3836,37.1515],[-121.399,37.1501],[-121.4134,37.1723],[-121.4088,37.1825],[-121.4218,37.2213],[-121.4417,37.2311],[-121.4557,37.2494],[-121.4581,37.2841],[-121.4436,37.2966],[-121.4235,37.2953],[-121.4058,37.311],[-121.4237,37.3588],[-121.4091,37.3807],[-121.4241,37.3936],[-121.4567,37.3955],[-121.4564,37.4067],[-121.4726,37.4233],[-121.4629,37.4515],[-121.4868,37.4757],[-121.473,37.4823],[-121.8653,37.4846],[-121.8812,37.4711],[-121.925,37.4542],[-121.9449,37.4692],[-121.9496,37.4614],[-121.9967,37.4672],[-122.0512,37.459],[-122.0815,37.4778],[-122.0968,37.4619],[-122.1133,37.4675],[-122.1284,37.4519],[-122.1525,37.4577],[-122.1823,37.4394],[-122.1945,37.4079],[-122.1905,37.3853],[-122.2026,37.3632]]
+      ]
+    ]},
+    {"name": "Solano County", "source": "US Census Bureau TIGER county 06095 (public domain)", "polygons": [
+      [
+        [[-121.8616,38.0699],[-121.8424,38.0767],[-121.8001,38.0596],[-121.7432,38.0872],[-121.7121,38.0855],[-121.6856,38.1596],[-121.6629,38.1819],[-121.6154,38.1957],[-121.6024,38.2204],[-121.6053,38.2954],[-121.5933,38.3131],[-121.6939,38.3144],[-121.6947,38.5271],[-121.712,38.538],[-121.7387,38.5376],[-121.7651,38.5259],[-121.7717,38.5323],[-121.7858,38.5231],[-121.8601,38.5385],[-121.8844,38.539],[-121.909,38.5296],[-121.9403,38.5334],[-122.0135,38.4887],[-122.0356,38.4961],[-122.0574,38.5174],[-122.1041,38.5134],[-122.1261,38.4275],[-122.0736,38.3615],[-122.0616,38.3261],[-122.0648,38.3159],[-122.2061,38.3158],[-122.2034,38.2934],[-122.1882,38.2717],[-122.2121,38.2731],[-122.2166,38.2647],[-122.1933,38.2564],[-122.2015,38.2489],[-122.2119,38.2508],[-122.193,38.2231],[-122.2151,38.1797],[-122.1953,38.1673],[-122.1954,38.155],[-122.407,38.1556],[-122.3475,38.0733],[-122.2653,38.0599],[-122.2453,38.064],[-122.2008,38.0579],[-122.1839,38.054],[-122.1589,38.0332],[-122.124,38.0357],[-122.0611,38.0621],[-122.0284,38.0592],[-121.9832,38.0673],[-121.931,38.0476],[-121.8933,38.0462],[-121.8711,38.053],[-121.8616,38.0699]]
+      ]
+    ]},
+    {"name": "Sonoma County", "source": "US Census Bureau TIGER county 06097 (public domain)", "polygons": [
+      [
+        [[-122.6351,38.583],[-122.6466,38.5991],[-122.6284,38.6227],[-122.6341,38.6376],[-122.6232,38.6625],[-122.6335,38.6692],[-122.6255,38.6744],[-122.637,38.6937],[-122.6475,38.7069],[-122.6955,38.7131],[-122.7007,38.7286],[-122.7104,38.7321],[-122.7093,38.749],[-122.7482,38.7878],[-122.7482,38.8038],[-122.796,38.839],[-122.8121,38.8384],[-122.8177,38.8498],[-123.081,38.8524],[-123.0812,38.8384],[-123.1366,38.8394],[-123.1363,38.8091],[-123.3684,38.8066],[-123.3682,38.7771],[-123.497,38.7786],[-123.5202,38.7586],[-123.5332,38.7684],[-123.6325,38.7581],[-123.592,38.7402],[-123.578,38.7176],[-123.5106,38.6809],[-123.3609,38.5102],[-123.3238,38.4986],[-123.3067,38.4787],[-123.2692,38.4576],[-123.2202,38.442],[-123.1962,38.4101],[-123.1648,38.3883],[-123.1343,38.3458],[-123.1413,38.3113],[-123.1345,38.2963],[-123.0027,38.2957],[-122.9948,38.3062],[-122.97,38.3101],[-122.9661,38.317],[-122.9216,38.3086],[-122.921,38.3168],[-122.9081,38.3208],[-122.9095,38.3144],[-122.8999,38.3168],[-122.7399,38.207],[-122.6358,38.1786],[-122.5706,38.1871],[-122.5632,38.1693],[-122.552,38.169],[-122.5579,38.1602],[-122.5445,38.1587],[-122.5201,38.1407],[-122.5019,38.1124],[-122.3475,38.0733],[-122.4075,38.1578],[-122.3676,38.1588],[-122.3687,38.1827],[-122.3579,38.1826],[-122.3603,38.1971],[-122.3496,38.194],[-122.3642,38.2153],[-122.3653,38.246],[-122.3739,38.2439],[-122.3898,38.2608],[-122.3876,38.2738],[-122.3964,38.2712],[-122.4047,38.2817],[-122.3963,38.3091],[-122.4268,38.349],[-122.4573,38.3677],[-122.4481,38.3795],[-122.4979,38.4246],[-122.4798,38.4513],[-122.5096,38.4574],[-122.5058,38.4647],[-122.5159,38.4709],[-122.5296,38.4696],[-122.5449,38.4963],[-122.5353,38.5017],[-122.55,38.5112],[-122.5417,38.5133],[-122.5439,38.52],[-122.5666,38.5256],[-122.5873,38.5526],[-122.6208,38.5603],[-122.6351,38.583]]
+      ]
+    ]}
+  ],
+  "species": [
+    {"scientificName": "Branta canadensis", "commonName": "Canada Goose"},
+    {"scientificName": "Cygnus olor", "commonName": "Mute Swan"},
+    {"scientificName": "Aix sponsa", "commonName": "Wood Duck"},
+    {"scientificName": "Spatula cyanoptera", "commonName": "Cinnamon Teal"},
+    {"scientificName": "Spatula clypeata", "commonName": "Northern Shoveler"},
+    {"scientificName": "Mareca strepera", "commonName": "Gadwall"},
+    {"scientificName": "Mareca americana", "commonName": "American Wigeon"},
+    {"scientificName": "Anas platyrhynchos", "commonName": "Mallard"},
+    {"scientificName": "Anas acuta", "commonName": "Northern Pintail"},
+    {"scientificName": "Anas crecca", "commonName": "Eurasian Teal"},
+    {"scientificName": "Aythya valisineria", "commonName": "Canvasback"},
+    {"scientificName": "Aythya collaris", "commonName": "Ring-necked Duck"},
+    {"scientificName": "Aythya marila", "commonName": "Greater Scaup"},
+    {"scientificName": "Aythya affinis", "commonName": "Lesser Scaup"},
+    {"scientificName": "Melanitta perspicillata", "commonName": "Surf Scoter"},
+    {"scientificName": "Bucephala albeola", "commonName": "Bufflehead"},
+    {"scientificName": "Bucephala clangula", "commonName": "Common Goldeneye"},
+    {"scientificName": "Lophodytes cucullatus", "commonName": "Hooded Merganser"},
+    {"scientificName": "Mergus merganser", "commonName": "Common Merganser"},
+    {"scientificName": "Oxyura jamaicensis", "commonName": "Ruddy Duck"},
+    {"scientificName": "Callipepla californica", "commonName": "California Quail"},
+    {"scientificName": "Meleagris gallopavo", "commonName": "Wild Turkey"},
+    {"scientificName": "Calypte anna", "commonName": "Anna's Hummingbird"},
+    {"scientificName": "Selasphorus sasin", "commonName": "Allen's Hummingbird"},
+    {"scientificName": "Columba livia", "commonName": "Rock Dove"},
+    {"scientificName": "Patagioenas fasciata", "commonName": "Band-tailed Pigeon"},
+    {"scientificName": "Streptopelia decaocto", "commonName": "Eurasian Collared Dove"},
+    {"scientificName": "Zenaida macroura", "commonName": "Mourning Dove"},
+    {"scientificName": "Rallus limicola", "commonName": "Virginia Rail"},
+    {"scientificName": "Porzana carolina", "commonName": "Sora"},
+    {"scientificName": "Gallinula galeata", "commonName": "Common Gallinule"},
+    {"scientificName": "Fulica americana", "commonName": "American Coot"},
+    {"scientificName": "Podilymbus podiceps", "commonName": "Pied-billed Grebe"},
+    {"scientificName": "Podiceps auritus", "commonName": "Horned Grebe"},
+    {"scientificName": "Podiceps nigricollis", "commonName": "Black-necked Grebe"},
+    {"scientificName": "Aechmophorus occidentalis", "commonName": "Western Grebe"},
+    {"scientificName": "Aechmophorus clarkii", "commonName": "Clark's Grebe"},
+    {"scientificName": "Haematopus bachmani", "commonName": "Black Oystercatcher"},
+    {"scientificName": "Himantopus mexicanus", "commonName": "Black-necked Stilt"},
+    {"scientificName": "Recurvirostra americana", "commonName": "American Avocet"},
+    {"scientificName": "Pluvialis squatarola", "commonName": "Grey Plover"},
+    {"scientificName": "Charadrius vociferus", "commonName": "Killdeer"},
+    {"scientificName": "Charadrius semipalmatus", "commonName": "Semipalmated Plover"},
+    {"scientificName": "Anarhynchus nivosus", "commonName": "Snowy Plover"},
+    {"scientificName": "Numenius hudsonicus", "commonName": "Hudsonian Whimbrel"},
+    {"scientificName": "Numenius americanus", "commonName": "Long-billed Curlew"},
+    {"scientificName": "Limosa fedoa", "commonName": "Marbled Godwit"},
+    {"scientificName": "Actitis macularius", "commonName": "Spotted Sandpiper"},
+    {"scientificName": "Tringa semipalmata", "commonName": "Willet"},
+    {"scientificName": "Tringa melanoleuca", "commonName": "Greater Yellowlegs"},
+    {"scientificName": "Arenaria melanocephala", "commonName": "Black Turnstone"},
+    {"scientificName": "Calidris alba", "commonName": "Sanderling"},
+    {"scientificName": "Calidris alpina", "commonName": "Dunlin"},
+    {"scientificName": "Calidris minutilla", "commonName": "Least Sandpiper"},
+    {"scientificName": "Calidris mauri", "commonName": "Western Sandpiper"},
+    {"scientificName": "Hydroprogne caspia", "commonName": "Caspian Tern"},
+    {"scientificName": "Sterna forsteri", "commonName": "Forster's Tern"},
+    {"scientificName": "Thalasseus elegans", "commonName": "Elegant Tern"},
+    {"scientificName": "Larus heermanni", "commonName": "Heermann's Gull"},
+    {"scientificName": "Larus brachyrhynchus", "commonName": "Short-billed Gull"},
+    {"scientificName": "Larus delawarensis", "commonName": "Ring-billed Gull"},
+    {"scientificName": "Larus occidentalis", "commonName": "Western Gull"},
+    {"scientificName": "Larus californicus", "commonName": "California Gull"},
+    {"scientificName": "Larus glaucescens", "commonName": "Glaucous-winged Gull"},
+    {"scientificName": "Uria aalge", "commonName": "Common Murre"},
+    {"scientificName": "Gavia immer", "commonName": "Common Loon"},
+    {"scientificName": "Urile penicillatus", "commonName": "Brandt's Cormorant"},
+    {"scientificName": "Urile pelagicus", "commonName": "Pelagic Cormorant"},
+    {"scientificName": "Nannopterum auritum", "commonName": "Double-crested Cormorant"},
+    {"scientificName": "Nycticorax nycticorax", "commonName": "Black-crowned Night Heron"},
+    {"scientificName": "Egretta thula", "commonName": "Snowy Egret"},
+    {"scientificName": "Butorides virescens", "commonName": "Green Heron"},
+    {"scientificName": "Ardea alba", "commonName": "Great Egret"},
+    {"scientificName": "Ardea herodias", "commonName": "Great Blue Heron"},
+    {"scientificName": "Pelecanus erythrorhynchos", "commonName": "American White Pelican"},
+    {"scientificName": "Pelecanus occidentalis", "commonName": "Brown Pelican"},
+    {"scientificName": "Cathartes aura", "commonName": "Turkey Vulture"},
+    {"scientificName": "Pandion haliaetus", "commonName": "Osprey"},
+    {"scientificName": "Elanus leucurus", "commonName": "White-tailed Kite"},
+    {"scientificName": "Astur cooperii", "commonName": "Cooper's Hawk"},
+    {"scientificName": "Circus hudsonius", "commonName": "Northern Harrier"},
+    {"scientificName": "Haliaeetus leucocephalus", "commonName": "Bald Eagle"},
+    {"scientificName": "Buteo lineatus", "commonName": "Red-shouldered Hawk"},
+    {"scientificName": "Buteo jamaicensis", "commonName": "Red-tailed Hawk"},
+    {"scientificName": "Tyto furcata", "commonName": "American Barn Owl"},
+    {"scientificName": "Athene cunicularia", "commonName": "Burrowing Owl"},
+    {"scientificName": "Glaucidium gnoma", "commonName": "Mountain Pygmy Owl"},
+    {"scientificName": "Bubo virginianus", "commonName": "Great Horned Owl"},
+    {"scientificName": "Megascops kennicottii", "commonName": "Western Screech Owl"},
+    {"scientificName": "Megaceryle alcyon", "commonName": "Belted Kingfisher"},
+    {"scientificName": "Melanerpes formicivorus", "commonName": "Acorn Woodpecker"},
+    {"scientificName": "Dryobates nuttallii", "commonName": "Nuttall's Woodpecker"},
+    {"scientificName": "Dryobates pubescens", "commonName": "Downy Woodpecker"},
+    {"scientificName": "Dryobates villosus", "commonName": "Hairy Woodpecker"},
+    {"scientificName": "Colaptes auratus", "commonName": "Northern Flicker"},
+    {"scientificName": "Falco sparverius", "commonName": "American Kestrel"},
+    {"scientificName": "Falco peregrinus", "commonName": "Peregrine Falcon"},
+    {"scientificName": "Sayornis nigricans", "commonName": "Black Phoebe"},
+    {"scientificName": "Sayornis saya", "commonName": "Say's Phoebe"},
+    {"scientificName": "Empidonax difficilis", "commonName": "Western Flycatcher"},
+    {"scientificName": "Myiarchus cinerascens", "commonName": "Ash-throated Flycatcher"},
+    {"scientificName": "Vireo huttoni", "commonName": "Hutton's Vireo"},
+    {"scientificName": "Cyanocitta stelleri", "commonName": "Steller's Jay"},
+    {"scientificName": "Aphelocoma californica", "commonName": "California Scrub Jay"},
+    {"scientificName": "Corvus brachyrhynchos", "commonName": "American Crow"},
+    {"scientificName": "Corvus corax", "commonName": "Northern Raven"},
+    {"scientificName": "Bombycilla cedrorum", "commonName": "Cedar Waxwing"},
+    {"scientificName": "Baeolophus inornatus", "commonName": "Oak Titmouse"},
+    {"scientificName": "Poecile rufescens", "commonName": "Chestnut-backed Chickadee"},
+    {"scientificName": "Tachycineta bicolor", "commonName": "Tree Swallow"},
+    {"scientificName": "Tachycineta thalassina", "commonName": "Violet-green Swallow"},
+    {"scientificName": "Hirundo rustica", "commonName": "Barn Swallow"},
+    {"scientificName": "Petrochelidon pyrrhonota", "commonName": "American Cliff Swallow"},
+    {"scientificName": "Psaltriparus minimus", "commonName": "American Bushtit"},
+    {"scientificName": "Chamaea fasciata", "commonName": "Wrentit"},
+    {"scientificName": "Corthylio calendula", "commonName": "Ruby-crowned Kinglet"},
+    {"scientificName": "Regulus satrapa", "commonName": "Golden-crowned Kinglet"},
+    {"scientificName": "Thryomanes bewickii", "commonName": "Bewick's Wren"},
+    {"scientificName": "Troglodytes pacificus", "commonName": "Pacific Wren"},
+    {"scientificName": "Sitta carolinensis", "commonName": "White-breasted Nuthatch"},
+    {"scientificName": "Sitta pygmaea", "commonName": "Pygmy Nuthatch"},
+    {"scientificName": "Certhia americana", "commonName": "Brown Creeper"},
+    {"scientificName": "Mimus polyglottos", "commonName": "Northern Mockingbird"},
+    {"scientificName": "Toxostoma redivivum", "commonName": "California Thrasher"},
+    {"scientificName": "Sturnus vulgaris", "commonName": "Common Starling"},
+    {"scientificName": "Sialia mexicana", "commonName": "Western Bluebird"},
+    {"scientificName": "Ixoreus naevius", "commonName": "Varied Thrush"},
+    {"scientificName": "Catharus ustulatus", "commonName": "Swainson's Thrush"},
+    {"scientificName": "Catharus guttatus", "commonName": "Hermit Thrush"},
+    {"scientificName": "Turdus migratorius", "commonName": "American Robin"},
+    {"scientificName": "Passer domesticus", "commonName": "House Sparrow"},
+    {"scientificName": "Haemorhous purpureus", "commonName": "Purple Finch"},
+    {"scientificName": "Haemorhous mexicanus", "commonName": "House Finch"},
+    {"scientificName": "Spinus tristis", "commonName": "American Goldfinch"},
+    {"scientificName": "Spinus psaltria", "commonName": "Lesser Goldfinch"},
+    {"scientificName": "Chondestes grammacus", "commonName": "Lark Sparrow"},
+    {"scientificName": "Passerella iliaca", "commonName": "Red Fox Sparrow"},
+    {"scientificName": "Junco hyemalis", "commonName": "Dark-eyed Junco"},
+    {"scientificName": "Zonotrichia leucophrys", "commonName": "White-crowned Sparrow"},
+    {"scientificName": "Zonotrichia atricapilla", "commonName": "Golden-crowned Sparrow"},
+    {"scientificName": "Passerculus sandwichensis", "commonName": "Savannah Sparrow"},
+    {"scientificName": "Melospiza melodia", "commonName": "Song Sparrow"},
+    {"scientificName": "Melozone crissalis", "commonName": "California Towhee"},
+    {"scientificName": "Pipilo maculatus", "commonName": "Spotted Towhee"},
+    {"scientificName": "Sturnella neglecta", "commonName": "Western Meadowlark"},
+    {"scientificName": "Icterus cucullatus", "commonName": "Hooded Oriole"},
+    {"scientificName": "Agelaius phoeniceus", "commonName": "Red-winged Blackbird"},
+    {"scientificName": "Molothrus ater", "commonName": "Brown-headed Cowbird"},
+    {"scientificName": "Euphagus cyanocephalus", "commonName": "Brewer's Blackbird"},
+    {"scientificName": "Quiscalus mexicanus", "commonName": "Great-tailed Grackle"},
+    {"scientificName": "Leiothlypis celata", "commonName": "Orange-crowned Warbler"},
+    {"scientificName": "Geothlypis trichas", "commonName": "Common Yellowthroat"},
+    {"scientificName": "Setophaga aestiva", "commonName": "American Yellow Warbler"},
+    {"scientificName": "Setophaga coronata", "commonName": "Myrtle Warbler"},
+    {"scientificName": "Setophaga townsendi", "commonName": "Townsend's Warbler"},
+    {"scientificName": "Cardellina pusilla", "commonName": "Wilson's Warbler"},
+    {"scientificName": "Piranga ludoviciana", "commonName": "Western Tanager"},
+    {"scientificName": "Pheucticus melanocephalus", "commonName": "Black-headed Grosbeak"}
+  ]
+}

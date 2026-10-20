@@ -53,20 +53,78 @@ struct LegendaryLabel: View {
     }
 }
 
-/// One card of the collection (issue #51): the Legendary label on the birder's first of a species, the art, the
-/// species and the date and method, on the card face inside a gold frame when Legendary and a sage one otherwise.
-/// Until pack art arrives the art is the glasses photo, else the pack's reference photo, labelled as such.
+/// The card's top line (issue #54): the Legendary label, or the set's edition ("Citrus edition", or "Uncharted"), and the
+/// collector number ("021/160"). An Uncharted card has no number; a Legendary one says "Uncharted" where the number
+/// would be, since its label names no set. On a narrow tile the number goes under the label.
+struct CardHeading: View {
+    let isLegendary: Bool
+    /// Nil until the collection has placed the card.
+    let placement: CardPlacement?
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                label
+                Spacer(minLength: 0)
+                number
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                label
+                number
+            }
+        }
+    }
+
+    @ViewBuilder private var label: some View {
+        if isLegendary {
+            LegendaryLabel()
+        } else if let placement {
+            Text(placement.editionLabel)
+                .font(JournalFont.attribution.weight(.semibold))
+                .foregroundStyle(Color.cardIvory.opacity(0.85))
+        }
+    }
+
+    @ViewBuilder private var number: some View {
+        if let text = Self.numberText(isLegendary: isLegendary, placement: placement) {
+            Text(text)
+                .font(JournalFont.attribution.monospacedDigit())
+                .foregroundStyle(Color.cardIvory.opacity(0.85))
+        }
+    }
+
+    static func numberText(isLegendary: Bool, placement: CardPlacement?) -> String? {
+        guard let placement else { return nil }
+        if case .numbered = placement { return placement.collectorNumber }
+        return isLegendary ? placement.collectorNumber : nil
+    }
+
+    /// The heading for VoiceOver: "Legendary, your first" or the edition, then "number 21 of 160 in Los Angeles", or
+    /// "Uncharted".
+    static func accessibilityText(isLegendary: Bool, placement: CardPlacement?) -> [String?] {
+        let edition = isLegendary ? "Legendary, your first" : placement.map(\.editionLabel)
+        guard let placement else { return [edition] }
+        switch placement {
+        case .numbered(_, let setName, _, let number, let total): return [edition, "number \(number) of \(total) in \(setName)"]
+        case .uncharted: return isLegendary ? [edition, CardPlacement.unchartedTitle] : [edition]
+        }
+    }
+}
+
+/// One card of the collection (issue #51): the Legendary label on the birder's first of a species or the set's
+/// edition with the collector number (issue #54), the art, the species and the date and method, on the card face
+/// inside a gold frame when Legendary and a sage one otherwise. Until pack art arrives the art is the glasses photo,
+/// else the pack's reference photo, labelled as such.
 struct CardTile: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
     let isLegendary: Bool
+    let placement: CardPlacement?
 
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
         VStack(alignment: .leading, spacing: 8) {
-            if isLegendary {
-                LegendaryLabel()
-            }
+            CardHeading(isLegendary: isLegendary, placement: placement)
             CardArtView(sighting: sighting, reference: reference, commonName: library.commonName(for: sighting))
             VStack(alignment: .leading, spacing: 2) {
                 Text(library.commonName(for: sighting))
@@ -84,13 +142,11 @@ struct CardTile: View {
     }
 
     private var accessibilityText: String {
-        [
-            library.commonName(for: sighting),
-            isLegendary ? "Legendary, your first" : nil,
+        ([library.commonName(for: sighting)] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
             CardArtView.art(for: sighting, reference: library.species(scientificName: sighting.scientificName)).label,
-        ]
+        ])
         .compactMap { $0 }
         .joined(separator: ", ")
     }
@@ -123,22 +179,22 @@ private struct TileFrame: ViewModifier {
     }
 }
 
-/// One tile of a species gallery (issue #53): the Legendary label on the birder's first (set editions wait for pack
-/// schema 4), the art, and what tells two cards of one bird apart: the place, the date and time, and Heard or Seen.
+/// One tile of a species gallery (issue #53): the Legendary label on the birder's first or the set's edition with the
+/// collector number (issue #54), the art, and what tells two cards of one bird apart: the place, the date and time,
+/// and Heard or Seen.
 struct GalleryTile: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
     /// The gallery's place for the card, nil for "Place not recorded".
     let place: String?
     let isLegendary: Bool
+    let placement: CardPlacement?
     let isSelected: Bool
 
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
         VStack(alignment: .leading, spacing: 8) {
-            if isLegendary {
-                LegendaryLabel()
-            }
+            CardHeading(isLegendary: isLegendary, placement: placement)
             CardArtView(sighting: sighting, reference: reference, commonName: library.commonName(for: sighting))
             VStack(alignment: .leading, spacing: 2) {
                 Text(place ?? SpeciesGallery.PlaceFilter.notRecorded.title)
@@ -159,13 +215,13 @@ struct GalleryTile: View {
     }
 
     private var accessibilityText: String {
-        [
+        ([
             place ?? SpeciesGallery.PlaceFilter.notRecorded.title,
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
-            isLegendary ? "Legendary, your first" : nil,
+        ] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
             CardArtView.art(for: sighting, reference: library.species(scientificName: sighting.scientificName)).label,
-        ]
+        ])
         .compactMap { $0 }
         .joined(separator: ", ")
     }

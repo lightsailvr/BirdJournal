@@ -2,21 +2,6 @@
   "comment": "Built species packs, published as zips on this repository's GitHub Releases. Written by scripts/pin-pack.sh after scripts/build-pack.sh; never edit the checksum by hand. A pack marked bundled is fetched into packs/<id>/ by scripts/download-pack.sh and ships in the app; the others are what the phone downloads, listed for it by scripts/publish-pack-index.sh as index.json on the `packs` release.",
   "packs": [
     {
-      "id": "us-ca-la",
-      "name": "Los Angeles",
-      "version": 4,
-      "bundled": true,
-      "release": "pack-us-ca-la-v4",
-      "asset": "us-ca-la.zip",
-      "sha256": "fb1bb4c32f1f12833a65531150b7dcc4f8e6113776f68fd9dc7ca889e538a2c1",
-      "bytes": 172641303,
-      "species": 160,
-      "photos": 785,
-      "sounds": 266,
-      "region": "Los Angeles County, California, US",
-      "schema_version": 3
-    },
-    {
       "id": "us-ca-sd",
       "name": "San Diego",
       "version": 4,
@@ -75,6 +60,21 @@
       "sounds": 247,
       "region": "Orlando, the Space Coast and Central Florida, US",
       "schema_version": 3
+    },
+    {
+      "id": "us-ca-la",
+      "name": "Los Angeles",
+      "version": 5,
+      "bundled": true,
+      "release": "pack-us-ca-la-v5",
+      "asset": "us-ca-la.zip",
+      "sha256": "29fec8da856a767f198eb8a5a08c5a0d1bc2b696a645e05abd6ae8e8e04c3212",
+      "bytes": 172646954,
+      "species": 160,
+      "photos": 785,
+      "sounds": 266,
+      "region": "Los Angeles County, California, US",
+      "schema_version": 4
     }
   ]
 }

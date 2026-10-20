@@ -12,6 +12,18 @@
     "east": -116.08
   },
   "comment": "About 150 San Diego County species, widening the #13 starter pack to the Los Angeles shape: the 150 bird species with the most research-grade iNaturalist observations in place 829 created up to 2026-09-27, plus nine heard far more than seen (Hutton's and Bell's Vireos, Cactus and Canyon Wrens, Common Poorwill, Western Screech Owl, Swainson's Thrush, Virginia Rail, Sora). Established exotics stay in, as in LA. `packbuilder draft --place 829 --before 2026-09-27 --top 150 --add ...`. scientific_name and common_name follow the BirdNET+ label file as in us-ca-la (species the committed packs already list reuse their entries); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the observation ranking, then the species added by hand. Drafted with `packbuilder draft` (the command is below) and read over by a person; tests/test_definition.py checks the labels.",
+  "set": {
+    "edition": {
+      "name": "Coastal edition",
+      "theme": "sandstone sea cliffs, kelp and soft marine-layer light over the Pacific"
+    },
+    "boundary": [
+      {
+        "name": "San Diego County",
+        "census_county": "06073"
+      }
+    ]
+  },
   "species": [
     {
       "scientific_name": "Larus occidentalis",
