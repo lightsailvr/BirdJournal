@@ -34,7 +34,7 @@ def result_for(entry, photo_ids, tmp_path, description=None):
     for offset, photo_id in enumerate(photo_ids):
         path = tmp_path / f"src-{photo_id}.jpg"
         synthetic_photo(size=(1600, 1200)).save(path)
-        candidate = make_candidate(photo_id=photo_id, observation_id=photo_id * 10, license="CC BY-NC" if offset else "CC0")
+        candidate = make_candidate(photo_id=photo_id, observation_id=photo_id * 10, license="CC BY-SA" if offset else "CC0")
         score = CropScore(0.5, 0.5, 0.5, 0.5 - offset * 0.1)
         photos.append(ChosenPhoto(scored=ScoredPhoto(candidate=candidate, box=Box(0.3, 0.3, 0.7, 0.7), score=score), original=path))
     return SpeciesResult(entry=entry, photos=photos, gap=len(photo_ids) < 3, description=description)
@@ -61,7 +61,7 @@ def test_pack_output(tmp_path):
     photos = db.execute("SELECT * FROM photo ORDER BY species_id, rank").fetchall()
     assert len(photos) == 5
     for photo in photos:
-        assert photo["observer"] and photo["license"] in {"CC0", "CC BY", "CC BY-NC"} and photo["source_url"].startswith("https://www.inaturalist.org/observations/")
+        assert photo["observer"] and photo["license"] in {"CC0", "CC BY", "CC BY-SA"} and photo["source_url"].startswith("https://www.inaturalist.org/observations/")
         assert (out / photo["file_lens"]).exists() and (out / photo["file_phone"]).exists()
         assert Image.open(out / photo["file_lens"]).size == (552, 368)
         assert max(Image.open(out / photo["file_phone"]).size) <= 1200
@@ -76,6 +76,9 @@ def test_pack_output(tmp_path):
     for photo in photos:
         assert photo["credit_line"] in license_text and photo["source_url"] in license_text
     assert "Anna's Hummingbird" in license_text
+    assert "chose on iNaturalist: CC0 or CC BY-SA" in license_text, "the photo licenses the pack carries"
+    assert "Crops of CC BY-SA photos are shared under CC BY-SA" in license_text
+    assert "CC BY-NC" not in license_text
     assert "CC BY-SA 4.0" in license_text and "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245" in license_text
 
     report = json.loads((out / "report.json").read_text())

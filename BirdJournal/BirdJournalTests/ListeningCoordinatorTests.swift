@@ -19,6 +19,8 @@ struct ListeningCoordinatorTests {
         let sightings: RunSightings
         /// The phone run's location stream, fed by the test.
         let location: ScriptedLocationProvider
+        /// The geo prior the recorder reads rarity from (issue #52).
+        let rarityPrior: ScriptedOccurrence
 
         var stored: [Sighting] { (try? album.mainContext.fetch(Sighting.newestFirst())) ?? [] }
     }
@@ -26,7 +28,8 @@ struct ListeningCoordinatorTests {
     static func makeHarness() throws -> Harness {
         let album = try AlbumSchema.makeContainer(inMemory: true)
         let frames = URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory)
-        let recorder = SightingRecorder(container: album, frames: FrameStore(directory: frames))
+        let rarityPrior = ScriptedOccurrence(["Haemorhous mexicanus": 0.25])
+        let recorder = SightingRecorder(container: album, frames: FrameStore(directory: frames), rarity: RarityReader(occurrenceModel: rarityPrior, calibration: .forTests))
         let sightings = RunSightings(recorder: recorder)
         let source = ManualAudioSource()
         let location = ScriptedLocationProvider([ListeningSessionTests.newYork])  // away from Los Angeles, so the jay is admitted too
@@ -38,7 +41,7 @@ struct ListeningCoordinatorTests {
         let glasses = GlassesListeningSession(recorder: recorder, sightings: sightings, loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, location: ScriptedLocationProvider([.denied]))
         let defaults = UserDefaults(suiteName: "coordinator-tests-\(UUID().uuidString)")!
         let run = ListeningCoordinator(phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: defaults)
-        return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings, location: location)
+        return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings, location: location, rarityPrior: rarityPrior)
     }
 
     @Test("an add records the latest fix of the run, not the one Start took (issue #44)")
@@ -56,6 +59,26 @@ struct ListeningCoordinatorTests {
         try #require(await run.add(run.candidates[0]))
         #expect(harness.stored.first?.location == Coordinate(latitude: 40.7036, longitude: -74, accuracy: 8))
 
+        await run.stop()
+    }
+
+    @Test("an add saves the rarity snapshot read at the add's place and week (issue #52)")
+    func addSavesTheRaritySnapshot() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let griffithPark = LocationFix.fix(latitude: 34.1365, longitude: -118.2942, accuracy: 15, at: .now)
+        harness.location.send(griffithPark)
+        try await waitUntil("the fix shows") { run.locationState == .settled(griffithPark) }
+
+        try #require(await run.add(run.candidates[0]))
+
+        let stored = try #require(harness.stored.first)
+        let week = GeoContext.week(of: stored.confirmedAt)
+        #expect(stored.rarity == RaritySnapshot(occurrence: 0.25, label: .rare, calibrationVersion: RarityCalibration.forTests.version, week: week))
+        #expect(harness.rarityPrior.asked == [GeoContext(latitude: 34.1365, longitude: -118.2942, week: week)])
         await run.stop()
     }
 
@@ -78,7 +101,7 @@ struct ListeningCoordinatorTests {
         let addition = try #require(await run.add(finch))
         #expect(run.isAdded(finch))
         #expect(run.summary == "2 species heard · 1 added")
-        #expect(run.acknowledgment?.text == "Added to your journal")
+        #expect(run.acknowledgment?.text == "Your first House Finch")
         #expect(run.acknowledgment?.undo == addition)
         let stored = harness.stored
         #expect(stored.map(\.speciesID) == ["Haemorhous mexicanus_House Finch"])
@@ -130,7 +153,7 @@ struct ListeningCoordinatorTests {
 
         #expect(again.sightingID != first.sightingID)
         #expect(harness.stored.count == 2)
-        #expect(run.acknowledgment?.text == "Added to your journal · 2 sightings this run")
+        #expect(run.acknowledgment?.text == "A new card for your collection")
         #expect(run.sightings.entries.count == 2)
         #expect(run.sightings.count(of: jay.species) == 2)
 
@@ -138,6 +161,44 @@ struct ListeningCoordinatorTests {
         #expect(harness.stored.count == 1, "the first add stands")
         #expect(run.isAdded(jay))
         #expect(run.sightings.count(of: jay.species) == 1)
+
+        await run.stop()
+    }
+
+    @Test("the first add of a species reveals its Legendary card once; a repeat add is a quieter new card; dismissing never loses the sighting; an undo removes the card (issue #51)")
+    func legendaryReveal() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let finch = run.candidates[0]
+
+        let first = try #require(await run.add(finch))
+        #expect(first.isLegendary)
+        let reveal = try #require(run.reveal)
+        #expect(reveal.title == "Your first House Finch")
+        #expect(reveal.addition == first)
+
+        run.dismissReveal()
+        #expect(run.reveal == nil)
+        #expect(harness.stored.map(\.identifier) == [first.identifier], "dismissing keeps the sighting")
+
+        // The same species again: a new card, no reveal replayed.
+        let again = try #require(await run.add(finch))
+        #expect(!again.isLegendary)
+        #expect(run.reveal == nil)
+        #expect(run.acknowledgment?.text == "A new card for your collection")
+        #expect(run.acknowledgment?.undo == again)
+
+        // A first of another species, taken back inside the window: the card and its reveal are gone.
+        let jay = try #require(await run.add(run.candidates[1]))
+        #expect(run.reveal?.addition == jay)
+        #expect(run.acknowledgment?.text == "Your first Blue Jay")
+        run.undo(jay)
+        #expect(run.reveal == nil)
+        #expect(!harness.stored.contains { $0.identifier == jay.identifier })
+        #expect(harness.stored.count == 2)
 
         await run.stop()
     }

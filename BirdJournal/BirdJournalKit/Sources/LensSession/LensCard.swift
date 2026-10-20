@@ -121,8 +121,8 @@ public enum LensElement: Sendable, Equatable {
     case passage(String)
     case meta(String)
     case button(LensCardButton)
-    /// The saved mark that replaces the button once the sighting is written.
-    case saved(String)
+    /// The saved line above "Add another" once the species is added: a star for a Legendary card, else a check.
+    case saved(String, legendary: Bool)
     /// The rows of the species list's current page, one selected.
     case list([LensListRow])
     /// A species' reference clips on its sounds page, the next one marked.
@@ -161,7 +161,7 @@ extension LensElement {
     /// The words the element spends on the lens.
     public var words: Int {
         switch self {
-        case .status(let text), .heading(let text), .body(let text), .passage(let text), .meta(let text), .saved(let text): text.words
+        case .status(let text), .heading(let text), .body(let text), .passage(let text), .meta(let text), .saved(let text, _): text.words
         case .title(let name, let detail): name.words + detail.words
         case .button(let button): button.label.words
         case .list(let rows): rows.reduce(0) { $0 + $1.words }

@@ -75,8 +75,10 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
-/// A secondary action: an outlined moss capsule, 44 pt tall.
+/// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled.
 struct OutlinedButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.semibold))
@@ -85,6 +87,7 @@ struct OutlinedButtonStyle: ButtonStyle {
             .frame(minHeight: 40)
             .background(Color.moss.opacity(configuration.isPressed ? 0.15 : 0), in: Capsule())
             .overlay(Capsule().strokeBorder(Color.moss, lineWidth: 1))
+            .opacity(isEnabled ? 1 : 0.4)
             .contentShape(Capsule())
     }
 }

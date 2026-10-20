@@ -8,6 +8,8 @@ Layout: `BirdJournal/` is the Xcode project (the app target: `RootView` with the
 
 Build and test: `scripts/build-and-test.sh` (iOS 27 simulator; `swift test` does not work because the toolkit is iOS-only). The app scheme's tests include `BirdJournalUITests` (XCUITest, real taps on the running app); run just those with `-only-testing:BirdJournalUITests`. Models: `scripts/download-models.sh` fetches the files in `models/manifest.json` and verifies SHA-256. Packs: `scripts/download-pack.sh` fetches the bundled pack's zip from `packs/manifest.json` (public GitHub Releases, no credentials; the `PackTests` bundle reads the bundled pack). Test clips: `scripts/download-clips.sh` fetches the entries in `fixtures/clips.json`; the engine tests skip clips that are absent. Pack builder tests: `cd packbuilder && uv run pytest`. A pack build's sounds step needs ffmpeg and a xeno-canto key in `XENO_CANTO_API_KEY` (shell profile, never the repo); it paces every xeno-canto request (see `packbuilder/README.md`), so never parallelize it or lower `--xc-interval` below its default without a reason.
 
+Branches: `dev` is the default branch. Feature branches open their PRs against `dev`, and a PR's `Closes #N` closes the issue when it merges there. `main` takes a merge from `dev` only to strike a release on the public beta channel, so never open a feature PR against `main`.
+
 ## Agent skills
 
 ### Issue tracker

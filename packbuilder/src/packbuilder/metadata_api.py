@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from packbuilder.http import session
 
 from packbuilder.candidates import PhotoCandidate
+from packbuilder.licenses import PHOTO_LICENSES, inat_codes
 
 API = "https://api.inaturalist.org/v1/observations"
 USER_AGENT = "BirdJournal packbuilder (https://github.com/lightsailvr/BirdJournal)"
@@ -22,12 +23,14 @@ PER_PAGE = 200
 
 
 class APIMetadata:
-    def __init__(self, place_ids: tuple[int, ...], cache_dir: Path, created_before: str | None = None, per_species: int = 200, pause_seconds: float = 1.0):
+    def __init__(self, place_ids: tuple[int, ...], cache_dir: Path, created_before: str | None = None, licenses: frozenset[str] = PHOTO_LICENSES, per_species: int = 200, pause_seconds: float = 1.0):
         """`created_before` (YYYY-MM-DD) pins the newest-first query to observations created up to that date, so a
         rebuild from a clean checkout sees the same candidates as the committed pack (barring deletions). Several
-        `place_ids` are one query over their union."""
+        `place_ids` are one query over their union. Only observations with a photo under one of `licenses` are asked
+        for, so the newest `per_species` photos reach as far back as those licenses need."""
         self.place_ids = tuple(place_ids)
         self.created_before = created_before
+        self.license_codes = inat_codes(licenses)
         self.cache_dir = Path(cache_dir) / "api"
         self.per_species = per_species
         self.pause_seconds = pause_seconds
@@ -49,14 +52,16 @@ class APIMetadata:
 
     def _page(self, taxon_id: int, page: int) -> list[dict]:
         pin = f"-before-{self.created_before}" if self.created_before else ""
-        cache_file = self.cache_dir / f"taxon-{taxon_id}-place-{"-".join(map(str, self.place_ids))}{pin}-page-{page}.json"
+        # The license set is in the name: another set is another query.
+        licenses = "-".join(self.license_codes)
+        cache_file = self.cache_dir / f"taxon-{taxon_id}-place-{"-".join(map(str, self.place_ids))}{pin}-licenses-{licenses}-page-{page}.json"
         if cache_file.exists():
             return json.loads(cache_file.read_text())["results"]
         params = {
             "taxon_id": taxon_id,
             "place_id": ",".join(map(str, self.place_ids)),
             "quality_grade": "research",
-            "photo_license": "cc0,cc-by,cc-by-nc",
+            "photo_license": ",".join(self.license_codes),
             "photos": "true",
             # Newest first: the most-faved observations are the oddities (leucistic birds, rare plumages), which
             # make misleading reference cards.

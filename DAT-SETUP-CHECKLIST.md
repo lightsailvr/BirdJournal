@@ -173,8 +173,15 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
      "full photo, attempt N: …"; the sighting then keeps the stream frame from the tap.
    - A swipe adds the bird without a photo; the journal shows the pack's photo for it.
    - Add the same bird again ("Add another" on its details page): the journal has two sightings of it, and the
-     details page reads "Added 2 times ✓".
+     details page reads "New card" (issue #51; see step 13).
    - Record the answers in DECISIONS.md, "Sounds page and viewfinder".
+13. [ ] Cards on the lens (issue #51), from "Listen with the glasses" with a species the journal does not have yet:
+   - Add it: back on the details page the saved line reads "Your first <species>" with a star, within a second or two
+     of the photo (the line names the card once the sighting is written; "Added to my list" shows until then).
+   - "Add another": the line reads "New card" with a check. The phone's Cards view shows both, the first framed gold.
+   - A long name ("Your first Northern Rough-winged Swallow") fits on one line or wraps without pushing the button
+     off the page; the field marks above give way.
+   - Record the answers in DECISIONS.md, "Every sighting is a card".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.

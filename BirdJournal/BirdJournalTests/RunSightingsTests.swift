@@ -55,6 +55,43 @@ struct RunSightingsTests {
         #expect(!ledger.isAdded(Self.finch))
     }
 
+    @Test("an add writes a card: its own identifier and Heard, and a Legendary only when no other surviving sighting of the species exists (issue #51)")
+    func addEarnsACard() throws {
+        let album = try AlbumSchema.makeContainer(inMemory: true)
+        let folder = URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let ledger = RunSightings(recorder: SightingRecorder(container: album, frames: FrameStore(directory: folder)))
+        let start = Date(timeIntervalSince1970: 1_800_000_000)
+        func stored() throws -> [Sighting] { try album.mainContext.fetch(Sighting.newestFirst()) }
+
+        let first = try ledger.add(Self.candidate(score: 0.5), confirmedAt: start, location: nil, frame: nil, source: .glasses)
+        #expect(first.isLegendary)
+        let written = try #require(try stored().first)
+        #expect(written.identifier == first.identifier)
+        #expect(written.method == .heard)
+
+        let second = try ledger.add(Self.candidate(score: 0.6), confirmedAt: start.addingTimeInterval(60), location: nil, frame: nil, source: .phone)
+        #expect(!second.isLegendary, "a repeat add is a new card")
+        #expect(second.identifier != first.identifier)
+        #expect(Set(try stored().map(\.identifier)) == [first.identifier, second.identifier])
+
+        // With the first gone, the second survives: another add is still not the birder's first.
+        try ledger.undo(first)
+        #expect(!(try ledger.add(Self.candidate(score: 0.7), confirmedAt: start.addingTimeInterval(120), location: nil, frame: nil, source: .phone).isLegendary))
+
+        // Once no sighting of the species survives, the next add is Legendary again.
+        for sighting in try stored() { album.mainContext.delete(sighting) }
+        try album.mainContext.save()
+        #expect(try ledger.add(Self.candidate(score: 0.8), confirmedAt: start.addingTimeInterval(180), location: nil, frame: nil, source: .phone).isLegendary)
+
+        // A sighting from an earlier run counts as surviving too.
+        let otherAlbum = try AlbumSchema.makeContainer(inMemory: true)
+        otherAlbum.mainContext.insert(Sighting(speciesID: Self.finch.birdnetLabel, confirmedAt: start.addingTimeInterval(-86_400), soundConfidence: 0.5, source: .glasses))
+        try otherAlbum.mainContext.save()
+        let nextRun = RunSightings(recorder: SightingRecorder(container: otherAlbum, frames: FrameStore(directory: folder)))
+        #expect(!(try nextRun.add(Self.candidate(score: 0.9), confirmedAt: start, location: nil, frame: nil, source: .phone).isLegendary))
+    }
+
     @Test("a sighting names its species from the packs, else from its label, so a removed pack leaves the journal readable")
     func namesFallBack() throws {
         let library = PackLibrary.forApp()

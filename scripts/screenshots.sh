@@ -35,7 +35,13 @@ for appearance in light dark; do
     shot "listen-$appearance"    7  "${common[@]}" -autoScreen listen
     shot "listening-$appearance" 22 -inMemoryAlbum YES -autoPhoneListening "$wav" -autoScreen listening
     shot "review-$appearance"    34 -inMemoryAlbum YES -autoPhoneListening "$wav" -autoScreen review
-    shot "journal-$appearance"   7  "${common[@]}" -autoScreen journal
+    shot "journal-$appearance"   7  "${common[@]}" -autoScreen journal -collectionIntroShown YES
+    shot "intro-$appearance"     7  "${common[@]}" -autoScreen cards -collectionIntroShown NO
+    shot "sightings-$appearance" 7  "${common[@]}" -autoScreen sightings
+    shot "reveal-$appearance"    7  "${common[@]}" -autoScreen reveal
+    shot "card-$appearance"      8  "${common[@]}" -autoScreen card -collectionIntroShown YES
+    shot "card-back-$appearance" 8  "${common[@]}" -autoScreen card-back -collectionIntroShown YES
+    shot "gallery-$appearance"   9  -inMemoryAlbum YES -seedGallery YES -autoScreen gallery -collectionIntroShown YES
     shot "sighting-$appearance"  7  "${common[@]}" -autoScreen sighting
     shot "share-$appearance"     9  "${common[@]}" -autoScreen share
     shot "guide-$appearance"     7  "${common[@]}" -autoScreen guide
@@ -53,11 +59,16 @@ shot "listen-empty"    7 -inMemoryAlbum YES -autoScreen listen
 xcrun simctl ui "$udid" content_size extra-extra-extra-large
 shot "listen-xxxl"     7 -inMemoryAlbum YES -seedJournal YES -autoScreen listen
 shot "listening-xxxl" 22 -inMemoryAlbum YES -autoPhoneListening "$wav" -autoScreen listening
-shot "journal-xxxl"    7 -inMemoryAlbum YES -seedJournal YES -autoScreen journal
+shot "journal-xxxl"    7 -inMemoryAlbum YES -seedJournal YES -autoScreen journal -collectionIntroShown YES
 shot "profile-xxxl"    7 -inMemoryAlbum YES -autoScreen profile
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shot "listen-ax5"      7 -inMemoryAlbum YES -seedJournal YES -autoScreen listen
 shot "listening-ax5"  22 -inMemoryAlbum YES -autoPhoneListening "$wav" -autoScreen listening
+shot "cards-ax5"       7 -inMemoryAlbum YES -seedJournal YES -autoScreen cards -collectionIntroShown YES
+shot "reveal-ax5"      7 -inMemoryAlbum YES -seedJournal YES -autoScreen reveal
+shot "card-ax5"        8 -inMemoryAlbum YES -seedJournal YES -autoScreen card -collectionIntroShown YES
+shot "card-back-ax5"   8 -inMemoryAlbum YES -seedJournal YES -autoScreen card-back -collectionIntroShown YES
+shot "gallery-ax5"     9 -inMemoryAlbum YES -seedGallery YES -autoScreen gallery -collectionIntroShown YES
 shot "packs-ax5"       9 -inMemoryAlbum YES -autoScreen packs
 xcrun simctl ui "$udid" content_size medium
 xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true

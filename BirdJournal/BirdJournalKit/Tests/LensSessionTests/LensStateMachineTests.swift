@@ -304,13 +304,35 @@ struct LensStateMachineTests {
         #expect(machine.apply(.tap) == .takePhoto(Fakes.candidate(Fakes.finch)))
         #expect(machine.savedIndices == [1])
         #expect(machine.page == .details(index: 1))
-        #expect(machine.savedCounts == [1: 1])
         // Adding again adds another sighting; a press delivered twice is the adapter's to drop.
         #expect(machine.apply(.tap) == .openViewfinder(Fakes.candidate(Fakes.finch)))
         #expect(machine.apply(.swipeRight) == .saveSighting(Fakes.candidate(Fakes.finch)))
         #expect(machine.savedIndices == [1])
-        #expect(machine.savedCounts == [1: 2])
         #expect(machine.page == .details(index: 1))
+    }
+
+    @Test("the card an add earned is kept per species until the next add, and forgotten with the stack (issue #51)")
+    func earnedCards() {
+        var machine = Self.machine(on: .viewfinder(index: 1))
+        _ = machine.apply(.tap)
+        #expect(machine.earnedCards.isEmpty, "the sighting is not written yet")
+
+        let onStack = machine.earned(.legendary, for: Fakes.finch)
+        #expect(onStack)
+        #expect(machine.earnedCards == [1: .legendary])
+        #expect(machine.page == .details(index: 1), "no page of its own")
+
+        _ = machine.apply(.tap)
+        _ = machine.apply(.swipeDown)
+        #expect(machine.earnedCards.isEmpty, "Add another: no card named until its own sighting is written")
+        machine.earned(.newCard, for: Fakes.finch)
+        #expect(machine.earnedCards == [1: .newCard])
+        let offStack = machine.earned(.newCard, for: Species(index: 9, scientificName: "Avis ignota", commonName: "Unknown", taxonomicClass: "Aves"))
+        #expect(!offStack, "a species not on the stack")
+        #expect(machine.earnedCards == [1: .newCard])
+
+        machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]), at: Fakes.quiet)
+        #expect(machine.earnedCards.isEmpty)
     }
 
     @Test("the Add to my list button opens the viewfinder like a tap, and only on a details page")

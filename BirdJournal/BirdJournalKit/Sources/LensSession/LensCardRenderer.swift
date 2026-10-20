@@ -3,7 +3,7 @@ import Identification
 /// Maps a page and the stack to its card (spec "Card renderer", issue #24): the species list (count, one row per
 /// species on the page holding the selected row, which is highlighted), the photo page (photo, name and match rate,
 /// status strip and a hint) and the details page (name, field marks, size and habitat, credit and "Add to my list"
-/// or the saved mark) and the problem page (what went wrong, what it means for the run, the way back). Every page
+/// or the saved line) and the problem page (what went wrong, what it means for the run, the way back). Every page
 /// fits the canvas. No page exceeds `wordBudget` words (spec user story 24) but the details page, whose field marks
 /// are set in the small style and get `detailsWordBudget` less the fixed lines (issue #32); pack text is cut to
 /// fit, field marks first.
@@ -33,7 +33,7 @@ public enum LensCardRenderer {
 
     public static func render(
         _ page: LensPage, stack: CandidateStack, order: SpeciesListOrder, selection: Int, saved: Set<Int>,
-        playing: LensPlayback? = nil, nextSounds: [Int: Int] = [:], savedCounts: [Int: Int] = [:], profile: (Species) -> SpeciesProfile?
+        playing: LensPlayback? = nil, nextSounds: [Int: Int] = [:], earned: [Int: LensEarnedCard] = [:], profile: (Species) -> SpeciesProfile?
     ) -> LensCard {
         switch page {
         case .list:
@@ -50,7 +50,7 @@ public enum LensCardRenderer {
             return viewfinder(stack.candidates[index])
         case .details(let index):
             let candidate = stack.candidates[index]
-            return details(candidate, isSaved: saved.contains(index), savedCount: savedCounts[index] ?? 0, calling: callingText(for: index, stack: stack, order: order), profile: profile(candidate.species))
+            return details(candidate, isSaved: saved.contains(index), earned: earned[index], calling: callingText(for: index, stack: stack, order: order), profile: profile(candidate.species))
         case .problem(let problem):
             return self.problem(problem)
         }
@@ -160,6 +160,14 @@ public enum LensCardRenderer {
         return LensCard(screenfuls: [elements])
     }
 
+    static func savedLine(_ candidate: Candidate, earned: LensEarnedCard?) -> LensElement {
+        switch earned {
+        case .legendary: .saved("Your first \(candidate.species.commonName)", legendary: true)
+        case .newCard: .saved("New card", legendary: false)
+        case nil: .saved("Added to my list", legendary: false)
+        }
+    }
+
     static func problem(_ problem: LensProblem) -> LensCard {
         let (heading, body) = switch problem {
         case .noLocation:
@@ -170,8 +178,9 @@ public enum LensCardRenderer {
         return LensCard(screenfuls: [[.heading(heading), .body(body), .meta("Swipe right to continue")]])
     }
 
-    /// A saved species shows how many sightings it has had this session and "Add another", which adds a new one.
-    static func details(_ candidate: Candidate, isSaved: Bool, savedCount: Int = 0, calling: String?, profile: SpeciesProfile?) -> LensCard {
+    /// A saved species shows what its latest add earned ("Your first House Finch" for a Legendary card, else "New
+    /// card"; "Added to my list" until the sighting is written) and "Add another", which adds a new one.
+    static func details(_ candidate: Candidate, isSaved: Bool, earned: LensEarnedCard? = nil, calling: String?, profile: SpeciesProfile?) -> LensCard {
         // The fixed lines first, then the field marks take what is left of the budget.
         var fixed: [LensElement] = []
         if let profile {
@@ -182,8 +191,7 @@ public enum LensCardRenderer {
             fixed.append(.meta("Not in your pack"))
         }
         if isSaved {
-            let count = max(savedCount, 1)
-            fixed.append(.saved(count > 1 ? "Added \(count) times ✓" : "Added to my list ✓"))
+            fixed.append(savedLine(candidate, earned: earned))
             fixed.append(.button(addAnotherButton))
         } else {
             fixed.append(.button(saveButton))

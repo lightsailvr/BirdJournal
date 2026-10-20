@@ -9,7 +9,8 @@ import Testing
 /// call clip per species with its recordist, license and recording page).
 @Suite("SpeciesPack")
 struct SpeciesPackTests {
-    static let allowedLicenses: Set<String> = ["CC0", "CC BY", "CC BY-NC"]
+    /// Open licenses only (ADR-0001, issue #50): no NonCommercial photo in the bundled pack.
+    static let allowedLicenses: Set<String> = ["CC0", "CC BY", "CC BY-SA"]
 
     @Test("the bundled pack opens with about 150 species in the definition's order")
     func bundledPack() throws {

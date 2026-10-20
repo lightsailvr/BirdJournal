@@ -18,10 +18,14 @@ final class RunSightings {
         var hasFrame: Bool
     }
 
-    /// What one add did, so it can be undone.
+    /// What one add did, so it can be undone, and the card it earned.
     struct Addition: Equatable {
         let species: Species
         let sightingID: PersistentIdentifier
+        /// The sighting's stable identifier.
+        let identifier: UUID
+        /// The add was the birder's first surviving sighting of the species: a Legendary card, revealed once.
+        let isLegendary: Bool
     }
 
     /// In add order.
@@ -51,10 +55,11 @@ final class RunSightings {
     /// Writes a new sighting of `candidate` to the album.
     @discardableResult
     func add(_ candidate: Candidate, confirmedAt: Date, location: Coordinate?, frame: Data?, source: SightingSource) throws -> Addition {
-        let sighting = try recorder.record(candidate, confirmedAt: confirmedAt, location: location, frame: frame, source: source)
+        let recorded = try recorder.record(candidate, confirmedAt: confirmedAt, location: location, frame: frame, source: source)
+        let sighting = recorded.sighting
         records[sighting.persistentModelID] = sighting
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
-        return Addition(species: candidate.species, sightingID: sighting.persistentModelID)
+        return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: recorded.isLegendary)
     }
 
     /// Takes an addition back: its sighting is deleted with its frame. Nothing happens if it is already gone.

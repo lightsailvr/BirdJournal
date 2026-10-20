@@ -1,11 +1,13 @@
+import Album
 import Identification
 import Pack
+import SwiftData
 import SwiftUI
 
 /// A bird's profile (issue #28): photo first with its credit, the names, its song and call to play (issue #41), a
 /// short introduction, the field marks, size and habitat, the other photos, and the sources; sections the pack has
 /// no text or sound for are left out rather than filled. Reached from the guide, the journal and a candidate review
-/// (with `match`, the live detection).
+/// (with `match`, the live detection). Outside a review it links to the bird's gallery of cards (issue #53).
 struct BirdProfileView: View {
     @Environment(PackLibrary.self) private var library
     let scientificName: String
@@ -26,6 +28,11 @@ struct BirdProfileView: View {
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 2)
 
+                if match == nil {
+                    YourCardsLink(scientificName: scientificName, commonName: reference?.species.commonName ?? commonName)
+                        .padding(.top, 12)
+                }
+
                 if let match {
                     // No score in the headline: it lives in the "About this match" disclosure, explained.
                     Text("Heard \(match.windowsAboveThreshold)× this run")
@@ -42,6 +49,22 @@ struct BirdProfileView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// The way from the guide to the bird's gallery: how many cards the birder has of it, or none yet.
+private struct YourCardsLink: View {
+    @Query private var sightings: [Sighting]
+    let scientificName: String
+    let commonName: String
+
+    var body: some View {
+        let count = sightings.count { $0.scientificName == scientificName }
+        NavigationLink(value: Route.gallery(scientificName: scientificName, commonName: commonName)) {
+            Label(count == 0 ? "Your cards · none yet" : "Your cards · \(count)", systemImage: "rectangle.stack")
+        }
+        .buttonStyle(.journalOutlined)
+        .accessibilityIdentifier("profile-your-cards")
     }
 }
 

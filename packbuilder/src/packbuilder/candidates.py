@@ -1,4 +1,4 @@
-"""Photo candidates as the metadata sources describe them, and the filter that keeps only redistributable ones."""
+"""Photo candidates as the metadata sources describe them, and the filter that keeps only the ones the license set allows."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Iterable
 
-from packbuilder.licenses import normalize_license
+from packbuilder.licenses import PHOTO_LICENSES, normalize_license
 
 OPEN_DATA_BUCKET = "https://inaturalist-open-data.s3.amazonaws.com/photos"
 OBSERVATION_URL = "https://www.inaturalist.org/observations"
@@ -67,8 +67,8 @@ def attribution_name(candidate: PhotoCandidate) -> str | None:
     return None
 
 
-def rejection_reason(candidate: PhotoCandidate) -> Rejection | None:
-    if candidate.normalized_license is None:
+def rejection_reason(candidate: PhotoCandidate, licenses: frozenset[str] = PHOTO_LICENSES) -> Rejection | None:
+    if candidate.normalized_license not in licenses:
         return Rejection.LICENSE
     if candidate.quality_grade != "research":
         return Rejection.QUALITY
@@ -97,10 +97,11 @@ class FilterResult:
     rejected: Counter = field(default_factory=Counter)
 
 
-def filter_candidates(candidates: Iterable[PhotoCandidate]) -> FilterResult:
+def filter_candidates(candidates: Iterable[PhotoCandidate], licenses: frozenset[str] = PHOTO_LICENSES) -> FilterResult:
+    """Keeps the candidates the pack may carry under the photo license set `licenses` (canonical spellings)."""
     result = FilterResult()
     for candidate in candidates:
-        reason = rejection_reason(candidate)
+        reason = rejection_reason(candidate, licenses)
         if reason is None:
             result.kept.append(candidate)
         else:

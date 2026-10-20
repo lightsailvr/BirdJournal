@@ -157,8 +157,8 @@ private struct LensElementView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(.tint.opacity(0.3), in: Capsule())
-            case .saved(let text):
-                Label(text, systemImage: "checkmark.circle.fill").font(.caption.bold())
+            case .saved(let text, let legendary):
+                Label(text, systemImage: legendary ? "star.fill" : "checkmark.circle.fill").font(.caption.bold())
             case .list(let rows):
                 ForEach(rows, id: \.index) { row in
                     HStack {
