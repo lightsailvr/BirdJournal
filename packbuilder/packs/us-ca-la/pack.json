@@ -2,7 +2,7 @@
   "id": "us-ca-la",
   "name": "Los Angeles",
   "region": "Los Angeles County, California, US",
-  "version": 4,
+  "version": 5,
   "inat_place_id": 962,
   "inat_created_before": "2026-09-26",
   "bounding_box": {
@@ -12,6 +12,18 @@
     "east": -117.65
   },
   "comment": "About 150 Los Angeles County species for issue #12: the 150 bird species with the most research-grade iNaturalist observations in place 962 on 2026-09-27 (GET /v1/observations/species_counts?place_id=962&taxon_id=3&quality_grade=research), minus hybrids, domestic geese (Swan Goose, Greylag Goose) and the California Condor (no BirdNET class), plus ten species heard far more than seen (jays and chickadees of the mountains, wrens, vireos, gnatcatcher, poorwill, screech owl, roadrunner, Swainson's Thrush). scientific_name and common_name follow the BirdNET+ label file so the engine, the lens and the phone name a bird the same way (iNaturalist's Vireo swainsoni is BirdNET's Vireo gilvus); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the observation ranking. tests/test_definition.py checks the labels.",
+  "set": {
+    "edition": {
+      "name": "Citrus edition",
+      "theme": "citrus groves, chaparral hills and warm golden valley light"
+    },
+    "boundary": [
+      {
+        "name": "Los Angeles County",
+        "census_county": "06037"
+      }
+    ]
+  },
   "species": [
     {
       "scientific_name": "Buteo jamaicensis",

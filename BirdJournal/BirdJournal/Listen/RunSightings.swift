@@ -26,6 +26,8 @@ final class RunSightings {
         let identifier: UUID
         /// The add was the birder's first surviving sighting of the species: a Legendary card, revealed once.
         let isLegendary: Bool
+        /// The card's set and collector number (issue #54).
+        let placement: CardPlacement
     }
 
     /// In add order.
@@ -59,7 +61,7 @@ final class RunSightings {
         let sighting = recorded.sighting
         records[sighting.persistentModelID] = sighting
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
-        return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: recorded.isLegendary)
+        return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: recorded.isLegendary, placement: recorded.placement)
     }
 
     /// Takes an addition back: its sighting is deleted with its frame. Nothing happens if it is already gone.

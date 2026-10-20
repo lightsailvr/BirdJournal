@@ -15,6 +15,9 @@ final class SightingRecorder {
     let frames: FrameStore
     /// Where a card's rarity is read at the add (issue #52); nil records none, as before rarity existed.
     let rarity: RarityReader?
+    /// The sets the phone knows when an add is written (issue #54), which place its card; none places every card in
+    /// Uncharted.
+    var sets: () -> [CardSet] = { [] }
 
     init(container: ModelContainer, frames: FrameStore, rarity: RarityReader? = nil) {
         self.container = container
@@ -22,16 +25,17 @@ final class SightingRecorder {
         self.rarity = rarity
     }
 
-    /// One written sighting and whether it earned the Legendary reveal.
+    /// One written sighting, whether it earned the Legendary reveal, and its card's set and collector number.
     struct Recorded {
         let sighting: Sighting
         /// No other surviving sighting of the species existed when it was written: the card is Legendary.
         let isLegendary: Bool
+        let placement: CardPlacement
     }
 
     /// Saves one sighting of `candidate`, with the JPEG `frame` captured when it was confirmed, if there was one. The
     /// sighting is a card from the start (issue #51): a stable identifier, the method Heard and, with a location, the
-    /// rarity snapshot for its place and week (issue #52).
+    /// rarity snapshot for its place and week (issue #52), placed in its set as the collection will place it (#54).
     @discardableResult
     func record(
         _ candidate: Candidate,
@@ -56,7 +60,7 @@ final class SightingRecorder {
         sighting.rarity = raritySnapshot(scientificName: candidate.species.scientificName, location: location, at: confirmedAt)
         context.insert(sighting)
         try context.save()
-        return Recorded(sighting: sighting, isLegendary: isLegendary)
+        return Recorded(sighting: sighting, isLegendary: isLegendary, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets()))
     }
 
     /// Gives each sighting saved before rarity existed its snapshot from its saved coordinate and date, once per album

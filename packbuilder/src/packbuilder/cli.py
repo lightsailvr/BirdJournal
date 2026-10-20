@@ -1,4 +1,6 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
+`packbuilder set <definition-dir>`: builds the pack's set definition into set.json beside pack.json (`sets.py`).
+`packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
 `packbuilder calibrate-rarity --version <n>`: writes the rarity label thresholds the app ships (`rarity.py`)."""
 
@@ -15,6 +17,7 @@ from packbuilder.descriptions import WikipediaDescriptions
 from packbuilder.detector import BirdDetector, ensure_model
 from packbuilder.licenses import PHOTO_LICENSES, inat_codes, normalize_license
 from packbuilder.pipeline import BuildOptions, build_pack
+from packbuilder.sets import check_set, load_set
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,6 +41,13 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--xc-interval", type=float, default=xenocanto.DEFAULT_INTERVAL, help=f"seconds between xeno-canto requests (default {xenocanto.DEFAULT_INTERVAL:g}; {xenocanto.MIN_INTERVAL:g} is the floor)")
     build.add_argument("--xc-max-requests", type=int, default=xenocanto.DEFAULT_MAX_REQUESTS, help=f"xeno-canto requests after which the run stops; rerun to continue from the cache (default {xenocanto.DEFAULT_MAX_REQUESTS})")
     build.add_argument("--sound-tries", type=int, default=3, help="recordings downloaded per species and kind before the kind is a gap (default 3)")
+    set_command = commands.add_parser("set", help="build the set definition (boundary, taxonomic order, edition) into set.json")
+    set_command.add_argument("definition", type=Path, help="folder holding pack.json")
+    set_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
+    set_command.add_argument("--tolerance-km", type=float, default=None, help="boundary simplification tolerance in km (default sets.DEFAULT_TOLERANCE_KM)")
+    index_command = commands.add_parser("index", help="write the pack index from packs/manifest.json and every pack's set.json")
+    index_command.add_argument("--out", type=Path, required=True, help="index file to write")
+    index_command.add_argument("--repo", default="lightsailvr/BirdJournal", help="GitHub repository the pack zips are released on")
     draft = commands.add_parser("draft", help="print a species list for a new pack from iNaturalist observation counts")
     draft.add_argument("--place", type=int, action="append", required=True, help="iNaturalist place id (repeat for several)")
     draft.add_argument("--before", required=True, help="count observations created up to this date (YYYY-MM-DD); goes in the pack as inat_created_before")
@@ -53,11 +63,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "draft":
         return _draft(args)
+    if args.command == "set":
+        return _set(args)
+    if args.command == "index":
+        return _index(args)
     if args.command == "calibrate-rarity":
         return _calibrate_rarity(args)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     definition = PackDefinition.load(args.definition / "pack.json")
+    # The pinned set first, so a stale one stops the build before any download (issue #54).
+    card_set = load_set(args.definition / "set.json")
+    check_set(card_set, definition)
 
     if args.source == "opendata":
         if not args.metadata_dir:
@@ -80,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
     from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
 
     try:
-        build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds)
+        build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds, card_set=card_set)
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
         return 2
@@ -124,6 +141,31 @@ def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
         sources=[xeno_canto, inaturalist], clips=ClipMaker(), check=BirdNETCheck(repo / "models"),
         clip_dir=cache / "clips", lock=SoundLock(args.definition / "sounds.lock.json"), country=country, max_tries=args.sound_tries,
     )
+
+
+def _set(args: argparse.Namespace) -> int:
+    from packbuilder.sets import DEFAULT_TOLERANCE_KM, PublicBoundaries, Taxonomy, build_set, dump_set, polygon_area_km2
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    tolerance = args.tolerance_km if args.tolerance_km is not None else DEFAULT_TOLERANCE_KM
+    document = build_set(definition, args.definition, PublicBoundaries(args.cache), Taxonomy.load(args.cache), tolerance_km=tolerance)
+    text = dump_set(document)
+    (args.definition / "set.json").write_text(text, encoding="utf-8")
+    for region in document["regions"]:
+        points = sum(len(ring) for polygon in region["polygons"] for ring in polygon)
+        area = sum(polygon_area_km2(polygon) for polygon in region["polygons"])
+        print(f"{region['name']}: {len(region['polygons'])} polygons, {points} points, {area:,.0f} km²", file=sys.stderr)
+    print(f"wrote {args.definition / 'set.json'}: {len(document['species'])} species, {len(text):,} bytes", file=sys.stderr)
+    return 0
+
+
+def _index(args: argparse.Namespace) -> int:
+    from packbuilder.index import write_index
+
+    repo_root = Path(__file__).resolve().parents[3]
+    index = write_index(repo_root / "packs" / "manifest.json", repo_root / "packbuilder" / "packs", args.out, args.repo)
+    print(f"wrote {args.out} with {len(index['packs'])} packs", file=sys.stderr)
+    return 0
 
 
 def _draft(args: argparse.Namespace) -> int:

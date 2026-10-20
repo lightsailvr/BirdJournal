@@ -76,7 +76,7 @@ private struct LegendaryRevealView: View {
                         .multilineTextAlignment(.center)
                 }
                 if let sighting {
-                    CardTile(sighting: sighting, isLegendary: true)
+                    CardTile(sighting: sighting, isLegendary: true, placement: reveal.addition.placement)
                         .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : 260)
                 }
                 VStack(spacing: 10) {

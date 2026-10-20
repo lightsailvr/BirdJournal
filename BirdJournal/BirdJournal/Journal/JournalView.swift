@@ -32,7 +32,7 @@ struct JournalView: View {
             if sightings.isEmpty {
                 EmptyJournal()
             } else {
-                let collection = CardCollection(sightings: sightings)
+                let collection = library.collection(of: sightings)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         Picker("Show", selection: $mode) {
@@ -57,7 +57,11 @@ struct JournalView: View {
                             switch mode {
                             case .cards: CardsGrid(sightings: shown, collection: collection)
                             case .sightings: SightingsByDay(sightings: shown)
-                            case .species: SpeciesRows(entries: Journal.species(shown))
+                            case .species:
+                                if query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
+                                    SetProgressList(collection: collection)
+                                }
+                                SpeciesRows(entries: Journal.species(shown))
                             }
                             Text(mode == .cards ? "Every add is a card. Your first of each species is Legendary." : "Your notes, one bird at a time.")
                                 .multilineTextAlignment(.center)
@@ -130,7 +134,7 @@ private struct CardsGrid: View {
         LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
             ForEach(collection.cards.compactMap { byIdentifier[$0.identifier] }) { sighting in
                 NavigationLink(value: Route.card(sighting.persistentModelID)) {
-                    CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier))
+                    CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier), placement: collection.placement(of: sighting.identifier))
                 }
                 .buttonStyle(.plain)
             }
@@ -257,6 +261,68 @@ struct SightingRow: View {
             if let location = sighting.location { await places.resolve(location) }
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Set progress above the Species list (issue #54): each set the birder has a card in, "Los Angeles · 87 of 160" with
+/// a bar, opening the set's page; then how many species are Uncharted.
+private struct SetProgressList: View {
+    let collection: CardCollection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Sets")
+                .font(JournalFont.section)
+                .foregroundStyle(Color.ink)
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, JournalLayout.sectionGap)
+            ForEach(collection.progress) { progress in
+                NavigationLink(value: Route.set(id: progress.setID)) {
+                    SetProgressRow(progress: progress)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("set-progress-\(progress.setID)")
+                RowRule()
+            }
+            if collection.unchartedSpeciesCount > 0 {
+                Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedSpeciesCount) species outside every set")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .padding(.vertical, 12)
+                RowRule()
+            }
+        }
+    }
+}
+
+/// One set's progress: "Los Angeles · 87 of 160" over a bar.
+struct SetProgressRow: View {
+    let progress: SetProgress
+    var detail: String?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(progress.text)
+                    .font(JournalFont.rowTitle)
+                    .foregroundStyle(Color.ink)
+                if let detail {
+                    Text(detail)
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+                ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
+                    .tint(Color.moss)
+                    .accessibilityHidden(true)
+            }
+            Image(systemName: "chevron.right")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkSecondary)
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel([progress.name, "\(progress.collected) of \(progress.total) species collected", detail].compactMap { $0 }.joined(separator: ", "))
     }
 }
 

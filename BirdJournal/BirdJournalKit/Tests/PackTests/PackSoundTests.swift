@@ -8,13 +8,13 @@ import Testing
 /// before it is downloaded.
 @Suite("PackSound")
 struct PackSoundTests {
-    @Test("a schema-3 pack's sounds are read with their credits, and the clip decodes")
+    @Test("a pack's sounds are read with their credits, and the clip decodes")
     func readsSounds() throws {
         let root = try Fixtures.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: root) }
         let pack = try Self.install(Fixtures.testPackZip(), root: root)
 
-        #expect(pack.info.schemaVersion == 3)
+        #expect(pack.info.schemaVersion == SpeciesPack.schemaVersion)
         let phoebe = try #require(pack.species(scientificName: "Sayornis nigricans"))
         let song = try #require(phoebe.sounds.first)
         #expect(phoebe.sounds.count == 1 && pack.sounds(for: phoebe) == phoebe.sounds)
@@ -54,17 +54,18 @@ struct PackSoundTests {
         #expect(Self.sound(license: "All rights reserved").licenseURL == nil)
     }
 
-    @Test("the index's schema decides whether this build can open a pack; a missing schema means 2")
+    @Test("the index's schema decides whether this build can open a pack (#54: schemas 2 to 4); a missing schema means 2")
     func indexSchema() throws {
         let json = Data("""
             {"packs": [
               {"id": "a", "name": "A", "version": 1, "url": "https://example.com/a.zip", "sha256": "ab", "byteCount": 1, "schemaVersion": 3, "soundCount": 300},
               {"id": "b", "name": "B", "version": 1, "url": "https://example.com/b.zip", "sha256": "ab", "byteCount": 1},
-              {"id": "c", "name": "C", "version": 1, "url": "https://example.com/c.zip", "sha256": "ab", "byteCount": 1, "schemaVersion": 4}
+              {"id": "c", "name": "C", "version": 1, "url": "https://example.com/c.zip", "sha256": "ab", "byteCount": 1, "schemaVersion": 4},
+              {"id": "d", "name": "D", "version": 1, "url": "https://example.com/d.zip", "sha256": "ab", "byteCount": 1, "schemaVersion": 5}
             ]}
             """.utf8)
         let index = try PackIndex.decode(from: json)
-        #expect(index.packs.map(\.isSupported) == [true, true, false])
+        #expect(index.packs.map(\.isSupported) == [true, true, true, false])
         #expect(index.packs[0].soundCount == 300 && index.packs[1].soundCount == nil && index.packs[1].schemaVersion == nil)
     }
 

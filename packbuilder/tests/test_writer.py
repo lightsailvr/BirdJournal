@@ -70,7 +70,7 @@ def test_pack_output(tmp_path):
 
     info = db.execute("SELECT * FROM pack").fetchone()
     assert info["id"] == "test-pack" and info["version"] == 1 and info["built_at"] == "2026-09-27T00:00:00Z"
-    assert info["schema_version"] == 3
+    assert info["schema_version"] == 4
 
     license_text = (out / "LICENSE").read_text()
     for photo in photos:
@@ -136,3 +136,39 @@ def test_sounds_are_written_with_their_credits(tmp_path):
 
     with zipfile.ZipFile(written.archive) as archive:
         assert "sounds/xc-11.m4a" in archive.namelist()
+
+
+CARD_SET = {
+    "id": "test-pack", "name": "Test Pack", "edition": {"name": "Citrus edition", "theme": "citrus groves"}, "taxonomy": "IOC World Bird List 15.1",
+    "regions": [{"name": "Testland County", "source": "US Census Bureau TIGER county 06037 (public domain)", "polygons": [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]]]]}],
+    "species": [{"scientificName": "Calypte anna", "commonName": "Anna's Hummingbird"}, {"scientificName": "Sayornis nigricans", "commonName": "Black Phoebe"}],
+}
+
+SCHEMA_4_TABLES = {"set_definition", "stats", "fact", "lore", "pack_art", "threatened", "family"}
+
+
+def test_schema_4_carries_the_set_definition_and_empty_tables_for_what_later_tickets_fill(tmp_path):
+    """Issue #54: every schema-4 table lands at once; this ticket fills the set, the rest stay empty until theirs do."""
+    pack = definition()
+    results = [result_for(pack.species[0], [1], tmp_path), result_for(pack.species[1], [2], tmp_path)]
+    written = write_pack(pack, results, tmp_path / "out", built_at="2026-10-18T00:00:00Z", card_set=CARD_SET)
+
+    db = sqlite3.connect(written.database)
+    tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+    assert SCHEMA_4_TABLES <= tables
+    [(stored,)] = db.execute("SELECT definition FROM set_definition").fetchall()
+    assert json.loads(stored) == CARD_SET
+    for table in SCHEMA_4_TABLES - {"set_definition"}:
+        assert db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0, table
+
+    license_text = (tmp_path / "out" / "LICENSE").read_text()
+    assert "IOC World Bird List 15.1" in license_text and "CC BY 3.0" in license_text
+    assert "US Census Bureau TIGER county 06037 (public domain)" in license_text
+
+
+def test_a_pack_without_a_set_has_an_empty_set_table(tmp_path):
+    pack = definition()
+    written = write_pack(pack, [result_for(pack.species[0], [1], tmp_path)], tmp_path / "out", built_at="2026-10-18T00:00:00Z")
+    db = sqlite3.connect(written.database)
+    assert db.execute("SELECT COUNT(*) FROM set_definition").fetchone()[0] == 0
+    assert "IOC World Bird List" not in (tmp_path / "out" / "LICENSE").read_text()

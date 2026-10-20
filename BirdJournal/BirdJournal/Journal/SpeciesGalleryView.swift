@@ -63,7 +63,7 @@ struct SpeciesGalleryView: View {
                     if ofSpecies.isEmpty {
                         NoCardsYet(scientificName: scientificName, commonName: name)
                     } else {
-                        GalleryContents(ofSpecies: ofSpecies, collection: CardCollection(sightings: sightings), commonName: name, browse: browse)
+                        GalleryContents(ofSpecies: ofSpecies, collection: library.collection(of: sightings), commonName: name, browse: browse)
                     }
                     NavigationLink(value: Route.species(scientificName: scientificName, commonName: name)) {
                         Label("Open in Field Guide", systemImage: "book")
@@ -159,7 +159,10 @@ private struct GalleryContents: View {
                 ForEach(gallery.shown) { card in
                     if let sighting = byIdentifier[card.identifier] {
                         NavigationLink(value: Route.card(sighting.persistentModelID, browse: browse)) {
-                            GalleryTile(sighting: sighting, place: card.place, isLegendary: collection.isLegendary(card.identifier), isSelected: browse.selected == card.identifier)
+                            GalleryTile(
+                                sighting: sighting, place: card.place, isLegendary: collection.isLegendary(card.identifier),
+                                placement: collection.placement(of: card.identifier), isSelected: browse.selected == card.identifier
+                            )
                         }
                         .buttonStyle(.plain)
                         .accessibilityAddTraits(browse.selected == card.identifier ? .isSelected : [])

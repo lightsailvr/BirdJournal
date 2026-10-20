@@ -8,7 +8,8 @@ hash the checked-in file rather than pin a digest).
 
 The second form writes the same two species under another pack id and version: the `PackLibrary` test's newer
 version of the bundled Los Angeles pack (issue #33). `test-pack-schema2.zip` beside them is the schema-2 pack from
-before #41, kept as written then, which the reader must still open.
+before #41 and `test-pack-schema3.zip` the schema-3 pack from before #54, kept as written then, which the reader must
+still open. Since #54 the test pack carries a set (`CARD_SET`): a box around Testland with its two species.
 """
 
 from __future__ import annotations
@@ -41,6 +42,13 @@ def definition(pack_id: str = "test-pack", version: int = 1) -> PackDefinition:
             SpeciesEntry(scientific_name="Calypte anna", common_name="Anna's Hummingbird", birdnet_label="Calypte anna", inat_taxon_id=6317, wikipedia_url=None),
         ],
     )
+
+
+CARD_SET = {
+    "id": "test-pack", "name": "Test Pack", "edition": {"name": "Test edition", "theme": "a test card's light"}, "taxonomy": "IOC World Bird List 15.1",
+    "regions": [{"name": "Testland", "source": "hand-drawn polygon committed with the pack definition (regions/testland.geojson)", "polygons": [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]]]}],
+    "species": [{"scientificName": "Calypte anna", "commonName": "Anna's Hummingbird"}, {"scientificName": "Sayornis nigricans", "commonName": "Black Phoebe"}],
+}
 
 
 def result_for(entry: SpeciesEntry, photo_ids: list[int], work: Path, description: Description | None = None) -> SpeciesResult:
@@ -80,7 +88,8 @@ def main(target: Path, pack_id: str = "test-pack", version: int = 1) -> None:
         results[0].sounds = SoundResult(sounds=[tone_sound(work)])
         results[1].sounds = SoundResult()
         target.parent.mkdir(parents=True, exist_ok=True)
-        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target)
+        card_set = CARD_SET if pack_id == "test-pack" else None
+        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set)
         print(f"wrote {target} ({target.stat().st_size} bytes)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
