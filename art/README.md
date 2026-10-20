@@ -38,7 +38,7 @@ The cut-out runs BiRefNet-general through the `BiRefNetRMBG` node of the comfyui
 
 ## comfybox
 
-The box runs two ComfyUIs, both on loopback and the box's tailnet address only (`comfybox`, 100.80.25.1), never the home LAN, because ComfyUI has no authentication:
+The box runs two ComfyUIs, both on loopback and the box's tailnet address only (`comfybox` on the tailnet), never the home LAN, because ComfyUI has no authentication. The units carry `@TAILNET_ADDRESS@`, which the install scripts replace with the box's address (`tailscale ip -4`), so the address stays out of this public repository:
 
 - **Port 8188**, `comfyui.service`: the shared ComfyUI 0.34 (`~/comfyui-easy-install`), with ivan-parallax's custom node packs, Qwen-Image-Edit-2511 and the earlier rounds' alternatives. `comfybox/tailnet-only.conf` is its systemd drop-in.
 - **Port 8189**, `comfyui-flux3.service`: ComfyUI 0.41.1 (`~/comfyui-flux3`) for FLUX.3, which needs 0.41 and which the shared install's node packs are not ready for. It borrows the shared install's Python and torch and adds only what 0.41.1 pins differently, plus comfyui-rmbg for BiRefNet. All card art runs here.
@@ -46,18 +46,18 @@ The box runs two ComfyUIs, both on loopback and the box's tailnet address only (
 Set up or update the FLUX.3 ComfyUI on the box (it needs `hf auth login` with an account that has accepted the FLUX Kommunity License on the gated repository, and `download-models.sh` run once for BiRefNet):
 
 ```sh
-scp art/comfybox/install-flux3.sh art/comfybox/fetch-gated.py art/comfybox/comfyui-flux3.service art/comfybox/install-flux3-service.sh matt@100.80.25.1:birdjournal-art/
-ssh matt@100.80.25.1 'sh ~/birdjournal-art/install-flux3.sh'
-ssh -t matt@100.80.25.1 'sudo sh ~/birdjournal-art/install-flux3-service.sh'
+scp art/comfybox/install-flux3.sh art/comfybox/fetch-gated.py art/comfybox/comfyui-flux3.service art/comfybox/install-flux3-service.sh matt@comfybox:birdjournal-art/
+ssh matt@comfybox 'sh ~/birdjournal-art/install-flux3.sh'
+ssh -t matt@comfybox 'sudo sh ~/birdjournal-art/install-flux3-service.sh'
 ```
 
-`install-flux3.sh` is safe to run again: it checks the ComfyUI tag, the node's commit and every model file's SHA-256. `fetch-gated.py` downloads in 16 ranged parts, because on FLUX.3's release day Hugging Face's Xet transfer stalled and a single connection gave about 1.5 MB/s. Check the service with `ss -ltn | grep 8189` on the box: two sockets, 127.0.0.1 and 100.80.25.1.
+`install-flux3.sh` is safe to run again: it checks the ComfyUI tag, the node's commit and every model file's SHA-256. `fetch-gated.py` downloads in 16 ranged parts, because on FLUX.3's release day Hugging Face's Xet transfer stalled and a single connection gave about 1.5 MB/s. Check the service with `ss -ltn | grep 8189` on the box: two sockets, 127.0.0.1 and the box's tailnet address.
 
 The shared drop-in: install or update it with sudo on the box.
 
 ```sh
-scp art/comfybox/tailnet-only.conf art/comfybox/install-tailnet-only.sh matt@100.80.25.1:birdjournal-art/
-ssh -t matt@100.80.25.1 'sudo sh ~/birdjournal-art/install-tailnet-only.sh'
+scp art/comfybox/tailnet-only.conf art/comfybox/install-tailnet-only.sh matt@comfybox:birdjournal-art/
+ssh -t matt@comfybox 'sudo sh ~/birdjournal-art/install-tailnet-only.sh'
 ```
 
 It also runs ComfyUI without `--highvram` and `--use-sage-attention`: the first stops ComfyUI offloading part of a model, so the 20.5 GB Qwen model ran out of the 24 GB card, and the second turned every Qwen image black. `comfyui-flux3.service` leaves both out too.

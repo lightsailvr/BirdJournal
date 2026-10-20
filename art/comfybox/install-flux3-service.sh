@@ -1,11 +1,15 @@
 #!/bin/sh
 # Installs comfyui-flux3.service and starts it, after install-flux3.sh. Run on comfybox with sudo:
-#   scp art/comfybox/comfyui-flux3.service art/comfybox/install-flux3-service.sh matt@100.80.25.1:birdjournal-art/
-#   ssh -t matt@100.80.25.1 'sudo sh ~/birdjournal-art/install-flux3-service.sh'
-# A ComfyUI started by hand on port 8189 is stopped first, so the service can bind it.
+#   scp art/comfybox/comfyui-flux3.service art/comfybox/install-flux3-service.sh matt@comfybox:birdjournal-art/
+#   ssh -t matt@comfybox 'sudo sh ~/birdjournal-art/install-flux3-service.sh'
+# The unit's @TAILNET_ADDRESS@ becomes the box's tailnet address. A ComfyUI started by hand on port 8189 is stopped
+# first, so the service can bind it.
 set -eu
 here=$(dirname "$0")
-install -m 644 "$here/comfyui-flux3.service" /etc/systemd/system/comfyui-flux3.service
+address=$(tailscale ip -4 | head -n 1)
+[ -n "$address" ] || { echo "no tailnet address: is Tailscale up?" >&2; exit 1; }
+umask 022
+sed "s/@TAILNET_ADDRESS@/$address/g" "$here/comfyui-flux3.service" > /etc/systemd/system/comfyui-flux3.service
 systemctl daemon-reload
 systemctl is-active --quiet comfyui-flux3 || fuser -k 8189/tcp 2>/dev/null || true
 systemctl enable comfyui-flux3

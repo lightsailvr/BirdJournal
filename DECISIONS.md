@@ -290,7 +290,7 @@ Qwen-Image-Edit-2511 on comfybox painted ten hard species: Black Phoebe, Anna's 
 
 Committed: `art/` (prompts, workflows, comfybox setup, the plan and the tuning workflows) and `packbuilder.art`, `packbuilder.comfy` and `python -m packbuilder.bakeoff`. The paintings, composites and contact sheets stay in `build/art-bakeoff/`, because the scenes are the maintainer's glasses photos.
 - **The box**:
-  - ComfyUI listens on loopback and the tailnet address only, through a systemd drop-in (`art/comfybox/tailnet-only.conf`). Checked: two sockets, 127.0.0.1 and 100.80.25.1, and the box's LAN address refused.
+  - ComfyUI listens on loopback and the tailnet address only, through a systemd drop-in (`art/comfybox/tailnet-only.conf`). Checked: two sockets, 127.0.0.1 and the tailnet address, and the box's LAN address refused.
   - The drop-in also dropped two flags. `--highvram` forbade partly offloading a model, so the 20.5 GB model ran out of the 24 GB card. `--use-sage-attention` made every Qwen image black.
   - The models are installed and SHA-256-checked by `art/comfybox/download-models.sh`: Qwen-Image-Edit-2511 fp8mixed, its text encoder and VAE, and the 4-step Lightning LoRA (all Apache 2.0), plus BiRefNet-general for the cut-out. The comfyui-rmbg node fetches BiRefNet from a re-host that declares no license (upstream is MIT); confirm it before the art worker ships (#68).
 - **Time per image** (rubric):

@@ -2,6 +2,8 @@
 # it up, install-flux3-service.sh installs it). Like comfyui.service it listens on loopback and the box's tailnet
 # address only, never the home LAN (ADR-0003), on port 8189 beside the shared ComfyUI's 8188. No --highvram (it
 # forbids partly offloading a model) and no --use-sage-attention, as for the shared one.
+# @TAILNET_ADDRESS@ is the box's tailnet IPv4 address: install-flux3-service.sh fills it in from `tailscale ip -4`,
+# so the address stays out of this public repository.
 [Unit]
 Description=ComfyUI 0.41 for BirdJournal card art (FLUX.3 Image Klein), port 8189
 After=network-online.target tailscaled.service
@@ -11,8 +13,8 @@ Wants=network-online.target tailscaled.service
 User=matt
 WorkingDirectory=/home/matt/comfyui-flux3
 # Binding the tailnet address fails until tailscaled has assigned it, so wait for it (up to a minute) first.
-ExecStartPre=/usr/bin/timeout 60 /bin/sh -c 'until /usr/sbin/ip -4 addr show tailscale0 | grep -q "inet 100.80.25.1/"; do sleep 1; done'
-ExecStart=/home/matt/comfyui-flux3/.venv/bin/python -W ignore::FutureWarning main.py --listen 127.0.0.1,100.80.25.1 --port 8189
+ExecStartPre=/usr/bin/timeout 60 /bin/sh -c 'until /usr/sbin/ip -4 addr show tailscale0 | grep -q "inet @TAILNET_ADDRESS@/"; do sleep 1; done'
+ExecStart=/home/matt/comfyui-flux3/.venv/bin/python -W ignore::FutureWarning main.py --listen 127.0.0.1,@TAILNET_ADDRESS@ --port 8189
 Restart=on-failure
 RestartSec=10
 

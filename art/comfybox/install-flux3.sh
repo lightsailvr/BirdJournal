@@ -1,13 +1,13 @@
 #!/bin/sh
-# Sets up the ComfyUI that paints card art with FLUX.3 Image Klein (ADR-0007, proposed): ComfyUI 0.41.1 beside the
+# Sets up the ComfyUI that paints card art with FLUX.3 Image Klein (ADR-0007): ComfyUI 0.41.1 beside the
 # shared ComfyUI 0.34 that comfyui.service runs, which ivan-parallax's custom node packs depend on and which FLUX.3 is
 # too new for. It borrows the shared install's Python and torch, adds only what 0.41.1 pins differently, and takes
 # the comfyui-rmbg node (BiRefNet, for the cut-outs) at the commit the shared install runs. Safe to run again.
 #
 # Run on the box as matt, after `hf auth login` with an account that has accepted the FLUX Kommunity License on
 # huggingface.co/black-forest-labs/flux-3-image-klein-comfy, and after download-models.sh (for BiRefNet):
-#   scp art/comfybox/install-flux3.sh art/comfybox/fetch-gated.py matt@100.80.25.1:birdjournal-art/
-#   ssh matt@100.80.25.1 'sh ~/birdjournal-art/install-flux3.sh'
+#   scp art/comfybox/install-flux3.sh art/comfybox/fetch-gated.py matt@comfybox:birdjournal-art/
+#   ssh matt@comfybox 'sh ~/birdjournal-art/install-flux3.sh'
 # Then install-flux3-service.sh runs it as comfyui-flux3.service on port 8189.
 set -eu
 ROOT=${ROOT:-$HOME/comfyui-flux3}
