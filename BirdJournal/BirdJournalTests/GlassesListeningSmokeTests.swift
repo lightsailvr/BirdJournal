@@ -91,7 +91,8 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
                 try await waitUntil(timeout: .seconds(5)) { run.saved.count == 2 }
                 #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 2)
-                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New card", legendary: false)) }
+                // A New York sighting with no set known: the card is Uncharted (issue #54).
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New card · Uncharted", legendary: false)) }
                 #expect(Set(try album.mainContext.fetch(FetchDescriptor<Sighting>()).map(\.identifier)).count == 2)
 
                 // Back (the middle-finger tap) returns to the list; Back on the root ends the whole run: lens, engine,

@@ -12,6 +12,50 @@
     "east": -121.21
   },
   "comment": "About 150 San Francisco Bay Area species: the 150 bird species with the most research-grade iNaturalist observations in place 54321 (the nine Bay Area counties) created up to 2026-09-27, minus the domestic Muscovy Duck, plus heard-more-than-seen forest and marsh birds (Pacific Wren, Hutton's Vireo, Varied Thrush, Western Screech Owl, Mountain Pygmy Owl, Virginia Rail, Sora, Swainson's Thrush, Brown Creeper, Golden-crowned Kinglet). `packbuilder draft --place 54321 --before 2026-09-27 --top 150 --exclude 'Cairina moschata' --add ...`. scientific_name and common_name follow the BirdNET+ label file as in us-ca-la (species the committed packs already list reuse their entries); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the observation ranking, then the species added by hand. Drafted with `packbuilder draft` (the command is below) and read over by a person; tests/test_definition.py checks the labels.",
+  "set": {
+    "edition": {
+      "name": "Fog edition",
+      "theme": "fog rolling over the bay, oak hills and redwoods in cool silver light"
+    },
+    "boundary": [
+      {
+        "name": "Alameda County",
+        "census_county": "06001"
+      },
+      {
+        "name": "Contra Costa County",
+        "census_county": "06013"
+      },
+      {
+        "name": "Marin County",
+        "census_county": "06041"
+      },
+      {
+        "name": "Napa County",
+        "census_county": "06055"
+      },
+      {
+        "name": "San Francisco County",
+        "census_county": "06075"
+      },
+      {
+        "name": "San Mateo County",
+        "census_county": "06081"
+      },
+      {
+        "name": "Santa Clara County",
+        "census_county": "06085"
+      },
+      {
+        "name": "Solano County",
+        "census_county": "06095"
+      },
+      {
+        "name": "Sonoma County",
+        "census_county": "06097"
+      }
+    ]
+  },
   "species": [
     {
       "scientific_name": "Buteo jamaicensis",

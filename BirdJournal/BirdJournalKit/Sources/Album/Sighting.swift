@@ -8,7 +8,7 @@ public enum SightingSource: String, Codable, Sendable {
 }
 
 /// A location fix with its horizontal accuracy in metres.
-public struct Coordinate: Codable, Sendable, Equatable {
+public struct Coordinate: Codable, Sendable, Hashable {
     public var latitude: Double
     public var longitude: Double
     public var accuracy: Double
@@ -311,7 +311,10 @@ extension Sighting {
     }
 
     /// The scientific name half of the BirdNET label; the whole label when it has no underscore.
-    public var scientificName: String { String(speciesID.prefix { $0 != "_" }) }
+    public var scientificName: String { Self.scientificName(ofLabel: speciesID) }
+
+    /// The scientific name half of a BirdNET label, e.g. "Haemorhous mexicanus" of "Haemorhous mexicanus_House Finch".
+    public static func scientificName(ofLabel label: String) -> String { String(label.prefix { $0 != "_" }) }
 
     /// Every file on disk the sighting refers to, relative to the `FrameStore`: the glasses photo, the attached
     /// originals and the painted art. What goes when the sighting does.

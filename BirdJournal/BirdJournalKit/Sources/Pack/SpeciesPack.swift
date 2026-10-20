@@ -2,13 +2,16 @@ import Foundation
 import SQLite3
 
 /// A species pack as `packbuilder` writes it (spec "Pack store"): `pack.sqlite` beside `lens/` and `phone/` JPEG
-/// folders, a `sounds/` folder of reference clips (schema 3) and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
+/// folders, a `sounds/` folder of reference clips (schema 3), the set definition (schema 4) and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
 /// the SQLite connection open.
 public struct SpeciesPack: Sendable, Hashable {
     /// The schema `packbuilder.writer.SCHEMA_VERSION` writes. Schema 2 (issue #12) added the Wikipedia-derived
-    /// description columns' source; schema 3 (issue #41) the `sound` table and the `sounds/` folder.
-    public static let schemaVersion = 3
-    /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds.
+    /// description columns' source; schema 3 (issue #41) the `sound` table and the `sounds/` folder; schema 4 (issue
+    /// #54) the set definition and the tables for stats, the fact sheet, lore, pack art, the threatened flag and the
+    /// family, which stay empty until the tickets that fill them (an empty table means "not available yet").
+    public static let schemaVersion = 4
+    /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds; a schema-3
+    /// pack without its set.
     public static let supportedSchemaVersions = 2...schemaVersion
 
     public let info: PackInfo
@@ -16,6 +19,8 @@ public struct SpeciesPack: Sendable, Hashable {
     public let directory: URL
     /// In the pack's order.
     public let species: [PackSpecies]
+    /// The set the pack's species make (schema 4); nil for an older pack, whose set the index may still know.
+    public let set: PackSet?
 
     public func species(scientificName: String) -> PackSpecies? {
         species.first { $0.scientificName == scientificName }
@@ -240,7 +245,8 @@ extension SpeciesPack {
         let photosBySpecies = try readPhotos(database)
         let soundsBySpecies = info.schemaVersion >= 3 ? try readSounds(database) : [:]
         let species = try readSpecies(database, photos: photosBySpecies, sounds: soundsBySpecies)
-        return SpeciesPack(info: info, directory: directory, species: species)
+        let set = info.schemaVersion >= 4 ? try readSet(database) : nil
+        return SpeciesPack(info: info, directory: directory, species: species, set: set)
     }
 
     /// The pack compiled into the package's `Packs` resource folder (the symlink to the repo's `packs/` directory).
@@ -299,6 +305,16 @@ extension SpeciesPack {
             )
         }
         return Dictionary(grouping: sounds, by: \.speciesID)
+    }
+
+    /// The one `set_definition` row's JSON; nil while the table is empty.
+    private static func readSet(_ database: SQLiteDatabase) throws -> PackSet? {
+        let rows = try database.rows("SELECT definition FROM set_definition") { row in
+            guard let json = row.text(0), let set = try? PackSet.decode(from: Data(json.utf8)) else { throw PackError.malformedRow(table: "set_definition") }
+            return set
+        }
+        guard rows.count <= 1 else { throw PackError.malformedRow(table: "set_definition") }
+        return rows.first
     }
 
     private static func readSpecies(_ database: SQLiteDatabase, photos: [String: [PackPhoto]], sounds: [String: [PackSound]]) throws -> [PackSpecies] {

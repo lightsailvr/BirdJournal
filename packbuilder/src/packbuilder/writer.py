@@ -22,8 +22,11 @@ from packbuilder.licenses import CC_BY_SA, INAT_CODES, credit_line, short_credit
 from packbuilder.selection import ScoredPhoto
 from packbuilder.sounds import SoundResult
 
-SCHEMA_VERSION = 3
-"""3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack."""
+SCHEMA_VERSION = 4
+"""3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
+added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
+lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that
+fill them, so they need no further schema change."""
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -85,9 +88,62 @@ CREATE TABLE sound (
     source_url TEXT NOT NULL,
     quality TEXT
 );
+CREATE TABLE set_definition (
+    definition TEXT NOT NULL
+);
+CREATE TABLE stats (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    avibase_id TEXT,
+    wingspan_cm REAL,
+    wingspan_predicted INTEGER NOT NULL DEFAULT 0,
+    mass_g REAL,
+    diet TEXT,
+    habitat TEXT,
+    migration TEXT,
+    nest TEXT,
+    clutch_min REAL,
+    clutch_max REAL,
+    lifestyle TEXT,
+    sources TEXT NOT NULL
+);
+CREATE TABLE fact (
+    species_id TEXT NOT NULL REFERENCES species(id),
+    rank INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    source TEXT NOT NULL
+);
+CREATE TABLE lore (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    text TEXT NOT NULL,
+    tagline TEXT NOT NULL,
+    sources TEXT NOT NULL
+);
+CREATE TABLE pack_art (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    file TEXT NOT NULL,
+    source_photo_ids TEXT NOT NULL,
+    workflow_version TEXT NOT NULL
+);
+CREATE TABLE threatened (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    threatened INTEGER NOT NULL,
+    iucn_category TEXT,
+    source TEXT NOT NULL
+);
+CREATE TABLE family (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    order_name TEXT NOT NULL,
+    family TEXT NOT NULL,
+    group_word TEXT NOT NULL,
+    family_word TEXT NOT NULL
+);
 CREATE INDEX photo_species ON photo(species_id, rank);
 CREATE INDEX sound_species ON sound(species_id, rank);
+CREATE INDEX fact_species ON fact(species_id, rank);
 """
+"""`set_definition` holds one row, the pack's set (`sets.py`) as the same JSON the index carries, so the two never
+disagree. Every other schema-4 table has one row per species once its ticket fills it (several per species for
+`fact`); `threatened` then has a row for every species, threatened or not, so an empty table still means "unknown"."""
 
 
 @dataclass(frozen=True)
@@ -148,7 +204,9 @@ class WrittenPack:
     archive: Path | None
 
 
-def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None) -> WrittenPack:
+def write_pack(
+    definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None, card_set: dict | None = None,
+) -> WrittenPack:
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -200,7 +258,7 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
                 )
             )
 
-    license_text = _license_text(definition, results, built_at)
+    license_text = _license_text(definition, results, built_at, card_set)
     (out_dir / "LICENSE").write_text(license_text)
 
     database = out_dir / "pack.sqlite"
@@ -220,6 +278,8 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
         )
         db.executemany("INSERT INTO photo VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", photo_rows)
         db.executemany("INSERT INTO sound VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sound_rows)
+        if card_set is not None:
+            db.execute("INSERT INTO set_definition VALUES (?)", (json.dumps(card_set, ensure_ascii=False, separators=(",", ":")),))
         db.commit()
         db.execute("VACUUM")
 
@@ -243,7 +303,7 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
     return tuple(value or None for value in (description.summary, description.field_marks, description.size, description.habitat, description.source))
 
 
-def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> str:
+def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None) -> str:
     carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
     lines = [
         f"{definition.name} species pack for BirdJournal (pack id {definition.id}, version {definition.version}, built {built_at})",
@@ -267,6 +327,7 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         "chose, as named on its line (https://creativecommons.org/licenses/). Clips under a ShareAlike license are",
         "shared under that same license. Recordists retain copyright unless the recording is CC0.",
         "",
+        *(_set_credits(card_set) if card_set else []),
         "Photo credits",
         "=============",
     ]
@@ -285,6 +346,17 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         if result.description and result.description.source:
             lines.append(f"  {result.entry.common_name} — {result.description.source}")
     return "\n".join(lines) + "\n"
+
+
+def _set_credits(card_set: dict) -> list[str]:
+    """Where the set's order and boundary come from (issue #54)."""
+    return [
+        f"The set's taxonomic order (the collector numbers) follows the {card_set['taxonomy']} by Gill, Donsker and",
+        "Rasmussen (https://www.worldbirdnames.org, CC BY 3.0, https://creativecommons.org/licenses/by/3.0/). The region",
+        "boundary is simplified from:",
+        *(f"  {region['name']}: {region['source']}" for region in card_set["regions"]),
+        "",
+    ]
 
 
 def _one_of(licenses: set[str]) -> str:

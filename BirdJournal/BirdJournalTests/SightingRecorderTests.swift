@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import Pack
 import SwiftData
 import Synchronization
 import Testing
@@ -138,4 +139,58 @@ nonisolated final class ScriptedOccurrence: SpeciesOccurrenceModel {
 extension RarityCalibration {
     /// Round thresholds under a version no shipped calibration has.
     static let forTests = RarityCalibration(version: 7, floor: 0.03, thresholds: .init(rare: 0.1, uncommon: 0.4, common: 0.75))
+}
+
+// Issue #54: an add is placed in its set as it is written, so the lens can name the card's collector number.
+@Suite("Sighting recorder sets")
+@MainActor
+struct SightingRecorderSetTests {
+    static let losAngeles = CardSet(
+        id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition",
+        species: ["Branta canadensis", "Haemorhous mexicanus"],
+        regions: [CardSet.Region(name: "Los Angeles County", polygons: [[[
+            CardSet.Point(longitude: -118.95, latitude: 33.7), CardSet.Point(longitude: -117.65, latitude: 33.7),
+            CardSet.Point(longitude: -117.65, latitude: 34.82), CardSet.Point(longitude: -118.95, latitude: 34.82),
+            CardSet.Point(longitude: -118.95, latitude: 33.7),
+        ]]])]
+    )
+
+    @Test("an add in a set's region gets its collector number; one with no location, or before any set is known, is Uncharted")
+    func addIsPlaced() throws {
+        let fixture = try SightingRecorderTests.makeFixture()
+        let ledger = RunSightings(recorder: fixture.recorder)
+        let start = SightingRecorderTests.start
+
+        let beforeSets = try ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: start, location: SightingRecorderTests.losFeliz, frame: nil, source: .glasses)
+        #expect(beforeSets.placement == .uncharted)
+
+        fixture.recorder.sets = { [Self.losAngeles] }
+        let numbered = try ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: start.addingTimeInterval(60), location: SightingRecorderTests.losFeliz, frame: nil, source: .glasses)
+        #expect(numbered.placement.collectorNumber == "002/002")
+        #expect(!numbered.isLegendary)
+
+        let nowhere = try ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: start.addingTimeInterval(120), location: nil, frame: nil, source: .glasses)
+        #expect(nowhere.placement == .uncharted)
+    }
+}
+
+// Issue #54: the bundled Los Angeles pack's own set, its real simplified boundary carried into the collection.
+@Suite("Bundled set placement")
+@MainActor
+struct BundledSetPlacementTests {
+    @Test("a Griffith Park House Finch gets its Los Angeles number from the shipped boundary; Balboa Park is outside it")
+    func shippedBoundary() throws {
+        let packSet = try #require(try SpeciesPack.bundled().set)
+        let set = CardSet(packSet)
+        let number = try #require(packSet.species.firstIndex { $0.scientificName == "Haemorhous mexicanus" }) + 1
+        let finch = "Haemorhous mexicanus_House Finch"
+        let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let balboaPark = Coordinate(latitude: 32.7341, longitude: -117.1446, accuracy: 15)
+        let catalina = Coordinate(latitude: 33.3879, longitude: -118.4163, accuracy: 15)
+
+        let placed = CardSet.placement(speciesID: finch, at: griffithPark, in: [set])
+        #expect(placed == .numbered(setID: "us-ca-la", setName: "Los Angeles", edition: packSet.edition.name, number: number, total: packSet.species.count))
+        #expect(CardSet.placement(speciesID: finch, at: catalina, in: [set]).setID == "us-ca-la", "Santa Catalina Island is part of the county")
+        #expect(CardSet.placement(speciesID: finch, at: balboaPark, in: [set]) == .uncharted)
+    }
 }

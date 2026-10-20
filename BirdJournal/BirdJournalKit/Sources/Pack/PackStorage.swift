@@ -145,6 +145,22 @@ public struct PackStorage: Sendable {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    /// The last good pack index, kept beside the packs (issue #54) so the sets it carries still place cards after a
+    /// relaunch with no network. The folder scan skips it: it is a file, not a pack folder.
+    var indexCacheURL: URL { directory.appending(path: "index.json") }
+
+    /// The kept index; nil before the first good fetch or when the file no longer decodes.
+    public func cachedIndex() -> PackIndex? {
+        guard let data = try? Data(contentsOf: indexCacheURL) else { return nil }
+        return try? PackIndex.decode(from: data)
+    }
+
+    /// Keeps `index` as the last good one.
+    public func cacheIndex(_ index: PackIndex) throws {
+        try createDirectoryExcludedFromBackup()
+        try JSONEncoder().encode(index).write(to: indexCacheURL, options: .atomic)
+    }
+
     private func createDirectoryExcludedFromBackup() throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         var values = URLResourceValues()

@@ -25,14 +25,14 @@ def sha256_of(path: Path) -> str:
     return digest.hexdigest()
 
 
-def fetch(url: str, target: Path, sha256: str | None = None, timeout: int = 120) -> Path:
+def fetch(url: str, target: Path, sha256: str | None = None, timeout: int = 120, headers: dict[str, str] | None = None) -> Path:
     """Downloads `url` to `target` unless it is already there (and matches `sha256` when given)."""
     if target.exists() and (sha256 is None or sha256_of(target) == sha256):
         return target
     target.parent.mkdir(parents=True, exist_ok=True)
     # One partial file per process and thread: builds running side by side share the cache and may fetch the same photo.
     partial = target.with_suffix(f"{target.suffix}.{os.getpid()}-{threading.get_ident()}.download")
-    with session().get(url, stream=True, timeout=timeout) as response:
+    with session().get(url, stream=True, timeout=timeout, headers=headers) as response:
         response.raise_for_status()
         with partial.open("wb") as handle:
             for chunk in response.iter_content(1 << 20):

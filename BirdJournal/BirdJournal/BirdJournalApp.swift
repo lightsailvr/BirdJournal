@@ -40,6 +40,7 @@ struct BirdJournalApp: App {
         // The reference clips the profile plays (issue #41) are silenced in whichever run is listening.
         let suppression = AudioSuppression()
         let recorder = SightingRecorder(container: album, frames: frames, rarity: BundledIdentification.rarityReader())
+        recorder.sets = { packs.cardSets }
         Self.backfillRarity(recorder)
         let sightings = RunSightings(recorder: recorder)
         let phone = Self.makePhoneListeningSession(levels: levels, suppression: suppression)
