@@ -1,7 +1,7 @@
 """Card art (issue #49): prompts from the committed templates in `art/prompts.json`, the committed ComfyUI workflows,
 and the image work around them.
 
-Every painting is a natural-history watercolour by FLUX.3 Image Klein on comfybox (ADR-0007, proposed), which takes
+Every painting is a natural-history watercolour by FLUX.3 Image Klein on comfybox (ADR-0007), which takes
 the bird from a reference image so that its identity comes from a real photo rather than the model's idea of the
 species. Pack art paints the species' open-license reference bird in its set's edition theme. Scene art paints the
 same bird into a telephoto crop of the glasses photo from the add. For both, the reference is first isolated: FLUX.3
