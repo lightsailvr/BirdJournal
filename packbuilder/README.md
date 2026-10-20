@@ -11,6 +11,8 @@ Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Pytho
 `pyproject.toml` and `uv.lock` on first run. The sounds step also needs ffmpeg (`brew install ffmpeg`), the BirdNET
 models (`scripts/download-models.sh`) and a xeno-canto API key in `XENO_CANTO_API_KEY` (from
 https://xeno-canto.org/account; keep it in your shell profile, never in the repo); `--no-sounds` skips the step.
+The pack-art step paints on comfybox's FLUX.3 ComfyUI over the tailnet (`--comfy`, default `http://comfybox:8189`;
+`art/README.md`) whatever `art.lock.json` lacks; `--no-art` skips it.
 Tests: `cd packbuilder && uv run pytest` (they never see the key and make no request).
 
 ## What a build does
@@ -105,10 +107,11 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
    is what `overrides.json` is for (see the Los Angeles file for examples).
 9. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
    logged gap (`selection.py`).
-10. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
-   pinned `set.json`, the joined `stats`, `threatened` and `family` (see "Stats and type lines"), and the empty `fact`, `lore` and `pack_art` that later tickets fill), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
-   `phone/<photo>.jpg` (looser crop, 1200 px max), `sounds/<id>.m4a`, `LICENSE` with every photo, sound and text credit and link, `report.json`
-   with counts, chosen ids, description sources, chosen and rejected sounds and the photo, description, sound and stats gaps, and optionally a zip (`writer.py`).
+10. **Pack art.** One painting per species in the set's edition theme, painted from its best-lit photo (below).
+11. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
+   pinned `set.json`, the joined `stats`, `threatened` and `family` (see "Stats and type lines"), `pack_art` with each approved painting's file, source photo ids and workflow versions, and the empty `fact` and `lore` that later tickets fill), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
+   `phone/<photo>.jpg` (looser crop, 1200 px max), `sounds/<id>.m4a`, `art/<species>.avif` (864 × 1152, 3:4), `LICENSE` with every photo, sound, art and text credit and link, `report.json`
+   with counts, chosen ids, description sources, chosen and rejected sounds, each species' art review, the photo, description, sound, stats and art gaps and the art not yet approved (`unreviewed.art`), and optionally a zip (`writer.py`).
 
 The Swift `Pack` module (`SpeciesPack`) reads the output; `SCHEMA_VERSION` in `writer.py` and
 `SpeciesPack.schemaVersion` move together.
@@ -155,6 +158,39 @@ Two committed files steer it, shared by every pack:
   group where it differs (gulls are Seabirds) and a genus's own word (an Eagle among the Hawks). A family it lacks
   fails the build.
 
+## Pack art
+
+Every card shows painted art the moment it exists (issue #57). After the photos are chosen, `pack_art.py` paints each
+species once per pack with the committed `pack-art` workflow and prompts (`art/`), in the set's edition theme
+(`set.edition.theme` in `pack.json`):
+
+- **The reference** is the species' best-lit photo among the pack's chosen photos (`lighting`: the light on the
+  middle of the bird, less for a bird darker than the frame around it or for blown highlights), not the lens score's
+  first, which favours a dark background; the colour fit makes a dim reference a dim bird. `overrides.json` pins one
+  with `{"art": {"reference": <photo id>}}`. A species with no photo is painted from text alone (`pack-art-text`,
+  which names it) and must be looked at closely.
+- **The painting** isolates the reference bird on white, paints from it and keeps it only through the fidelity gate
+  (`painting.py`, `fidelity.py`): an unfaithful painting is painted again with the next seed, three times at most,
+  and the closest is kept and flagged NOT FAITHFUL.
+- **The lock**, `packs/<id>/art.lock.json` (committed), pins each species' source photo, workflow, isolation and
+  prompts versions, theme, seeds, the painting's SHA-256 and its review. Paintings live in `cache/art/paintings/`
+  under their SHA-256 (isolated birds in `cache/art/isolated/`). A rebuild whose lock is warm paints nothing; changed
+  inputs paint again and go back to review; a painting gone from the cache is repainted from its locked seeds, which
+  give the same picture.
+- **The review.** The build draws contact sheets into `build/pack-art/<id>/` (`sheet-NN.jpg`: each reference crop
+  beside its painting with its state and fidelity; `overview.jpg`: every painting). Record the verdicts, then rebuild:
+
+  ```sh
+  uv run packbuilder art-review packs/us-ca-la --approve-all --reject "House Finch" --why "invented a crest"
+  uv run packbuilder art-review packs/us-ca-la --gap "Bushtit" --why "three rounds, never the right bird"
+  ```
+
+  Only `approved` art goes into the pack. A rejected painting is painted again by the next build with new seeds
+  (its rejected seeds and the reason stay in the lock); a gap gets none and is listed under `gaps.art` in
+  `report.json`, and its cards show another pack's painting of the species, else the reference photo. `--approve-all`
+  approves only faithful paintings from a photo: one from text, or one flagged NOT FAITHFUL, needs `--approve` by
+  name. Painting the Los Angeles pack takes about an hour and a half from the Mac.
+
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
@@ -168,14 +204,15 @@ version: cards keep the version they were labelled under.
 | Path | What |
 | --- | --- |
 | `src/packbuilder/` | The package; `cli.py` is the `packbuilder` command, `pipeline.py` the build order. |
-| `src/packbuilder/art.py`, `comfy.py`, `fidelity.py`, `bakeoff.py` | Card art (#49): prompts and workflows from the repo's `art/`, the 3:4 card crop and the telephoto crop of a glasses photo, a ComfyUI client for comfybox, the painted bird's fidelity to its photo and the colour fit, and the art model bake-off (`python -m packbuilder.bakeoff`; see `art/README.md`). |
-| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from and the recordings the sounds came from (committed). |
+| `src/packbuilder/art.py`, `comfy.py`, `fidelity.py`, `painting.py`, `contact_sheets.py`, `bakeoff.py` | Card art (#49): prompts and workflows from the repo's `art/`, the 3:4 card crop and the telephoto crop of a glasses photo, a ComfyUI client for comfybox, the painted bird's fidelity to its photo and the colour fit, painting through the fidelity gate, contact sheets, and the art model bake-off (`python -m packbuilder.bakeoff`; see `art/README.md`). |
+| `src/packbuilder/pack_art.py` | The pack-art step (#57): the reference by lighting, the lock, the review and the contact sheets. |
+| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from and the pack art's sources and review (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
 | `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, and the committed definitions against the BirdNET label file. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `cache/wikipedia/` | Fetched article pages (gitignored with the rest of `cache/`). |
-| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks). |
+| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks), `art/` (the paintings by SHA-256 and the isolated reference birds). |
 
 Output goes to the repo's `packs/<id>/`, which is not committed: the built pack is published as a GitHub Release asset
 and fetched by `scripts/download-pack.sh` (see `packs/README.md`).

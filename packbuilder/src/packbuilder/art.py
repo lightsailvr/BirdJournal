@@ -4,7 +4,8 @@ and the image work around them.
 Every painting is a natural-history watercolour by FLUX.3 Image Klein on comfybox (ADR-0007), which takes
 the bird from a reference image so that its identity comes from a real photo rather than the model's idea of the
 species. Pack art paints the species' open-license reference bird in its set's edition theme. Scene art paints the
-same bird into a telephoto crop of the glasses photo from the add. For both, the reference is first isolated: FLUX.3
+same bird into a telephoto crop of the glasses photo from the add. A species with no open-license photo gets pack art
+painted from text alone (`pack-art-text`), which names it and is always reviewed. For both, the reference is first isolated: FLUX.3
 paints the bird alone on white, with whatever its perch hid completed, and its colours are fitted back to the photo's
 (`packbuilder.fidelity`). Photo art paints the birder's own photo, keeping its setting. Legendary scene and photo art
 get more dramatic light.
@@ -18,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from packbuilder.geometry import Box
 
@@ -32,6 +33,10 @@ CARD_SIZE = (864, 1152)
 TELEPHOTO_ZOOM_CM = 12 * 14.5
 """A scene's crop zooms 12x for a 14.5 cm House Finch, and in proportion to length for other species, so that every
 bird is painted at card size and at its true size against the place."""
+REFERENCE_PADDING = 0.35
+"""A reference crop's padding around the bird, of its binding side on each side."""
+MAX_INPUT_SIDE = 1536
+"""FLUX.3 takes its references at their own resolution, at most this a side."""
 PERCH = (0.5, 0.72)
 """Where the perch point lands in a scene's crop: centred, a little below the middle."""
 
@@ -56,19 +61,30 @@ class ArtPrompts:
         data = json.loads(Path(path).read_text())
         return cls(version=data["version"], editions=data["editions"], light=data["light"], templates=data["templates"], isolate=data["isolate"])
 
-    def render(self, kind: ArtKind, species: Species, edition: str, legendary: bool = False) -> str:
-        """The prompt for one painting of `species` in the theme of `edition` (a pack id). Pack art is the same for
-        every birder, so it has no Legendary variant."""
+    def render(self, kind: ArtKind, species: Species, edition: str, legendary: bool = False, theme: str | None = None) -> str:
+        """The prompt for one painting of `species` in the theme of `edition` (a pack id). Pack art is painted in the
+        set's edition `theme` (`sets.Edition`, #57); scene and photo art take the edition's light and colours from
+        `editions`. Pack art is the same for every birder, so it has no Legendary variant."""
         if legendary and kind == "pack":
             raise ValueError("pack art has no Legendary variant")
-        theme = self.editions[edition]
-        return self.templates[kind].format(
+        if kind == "pack" and not theme:
+            raise ValueError("pack art is painted in its set's edition theme")
+        return self._fill(self.templates[kind], species, {} if kind == "pack" else self.editions[edition], theme, legendary)
+
+    def render_from_text(self, species: Species, theme: str) -> str:
+        """Pack art for a species with no open-license photo (#57): with no reference to take its identity from, the
+        prompt names it, and the painting is always reviewed by hand."""
+        return self._fill(self.templates["pack_text"], species, {}, theme, legendary=False)
+
+    def _fill(self, template: str, species: Species, edition: dict[str, str], theme: str | None, legendary: bool) -> str:
+        return template.format(
             common_name=species.common_name,
             scientific_name=species.scientific_name,
-            place=theme["place"],
-            edition_light=theme["light"],
-            edition_colors=theme["colors"],
-            edition_motifs=theme["motifs"],
+            place=edition.get("place", ""),
+            edition_light=edition.get("light", ""),
+            edition_colors=edition.get("colors", ""),
+            edition_motifs=edition.get("motifs", ""),
+            edition_theme=theme or "",
             light=self.light["legendary" if legendary else "standard"],
         )
 
@@ -76,7 +92,7 @@ class ArtPrompts:
 @dataclass(frozen=True)
 class Workflow:
     """A committed ComfyUI graph (`art/workflows/<name>.json`, API format: `pack-art`, `scene-art`, `photo-art`,
-    `bird-isolate` and `bird-cutout`) with its inputs left empty. Its nodes are found by title: "image 1", "image 2",
+    `pack-art-text`, `bird-isolate` and `bird-cutout`) with its inputs left empty. Its nodes are found by title: "image 1", "image 2",
     ... (LoadImage), "prompt" (the text encoder), "canvas" (the empty latent) and "sampler" (the seed); the cut-out has
     only an image."""
 
@@ -88,6 +104,11 @@ class Workflow:
     def load(cls, name: str, directory: Path = ART_DIR / "workflows") -> "Workflow":
         data = json.loads((Path(directory) / f"{name}.json").read_text())
         return cls(name=name, version=data["version"], graph=data["graph"])
+
+    @property
+    def tag(self) -> str:
+        """The name and version, as a lock records them: "pack-art@3"."""
+        return f"{self.name}@{self.version}"
 
     @property
     def image_count(self) -> int:
@@ -135,6 +156,40 @@ def card_crop_box(box: Box | None, size: tuple[int, int], padding: float = 0.5, 
     left = min(max(int(round(cx - crop_width / 2)), 0), width - crop_width)
     top = min(max(int(round(cy - crop_height / 2)), 0), height - crop_height)
     return left, top, left + crop_width, top + crop_height
+
+
+def photo_crop(image: Image.Image, box: Box, padding: float = REFERENCE_PADDING) -> Image.Image:
+    """A bird photo's 3:4 crop around the bird `box`, padded by `padding` (REFERENCE_PADDING for a reference, more of
+    the photo for photo art), at most MAX_INPUT_SIDE a side."""
+    crop = image.convert("RGB").crop(card_crop_box(box, image.size, padding=padding))
+    crop.thumbnail((MAX_INPUT_SIDE, MAX_INPUT_SIDE), Image.Resampling.LANCZOS)
+    return crop
+
+
+def reference_crop(image: Image.Image, box: Box) -> Image.Image:
+    """A reference photo cropped to 3:4 around the whole bird, padded by REFERENCE_PADDING, at most MAX_INPUT_SIDE a
+    side and in multiples of 16 (the isolation paints at its size). Where a 3:4 box inside the photo can't hold the
+    bird (a wide bird in a landscape photo), the crop reaches past the photo's edge and the photo's own colours,
+    stretched and blurred, fill the rest; the isolation paints them white. A crop that cut the bird would leave
+    FLUX.3 to invent the missing part (#57: a House Finch's head)."""
+    image = image.convert("RGB")
+    width, height = image.size
+    bx0, by0, bx1, by1 = box.clamped().pixels(image.size)
+    crop_height = max(by1 - by0, (bx1 - bx0) / CARD_ASPECT, 1) * (1 + 2 * REFERENCE_PADDING)
+    crop_width = crop_height * CARD_ASPECT
+    if crop_width <= width and crop_height <= height:
+        crop = photo_crop(image, box)
+    else:
+        def start(centre: float, size: float, limit: int) -> float:
+            # Centred on the bird, shifted to cover as much of the photo as it can.
+            return min(max(centre - size / 2, min(0.0, limit - size)), max(0.0, limit - size))
+
+        left, top = start((bx0 + bx1) / 2, crop_width, width), start((by0 + by1) / 2, crop_height, height)
+        canvas = image.resize((round(crop_width), round(crop_height)), Image.Resampling.BILINEAR).filter(ImageFilter.GaussianBlur(40))
+        canvas.paste(image, (round(-left), round(-top)))
+        crop = canvas
+        crop.thumbnail((MAX_INPUT_SIDE, MAX_INPUT_SIDE), Image.Resampling.LANCZOS)
+    return crop.resize((crop.width // 16 * 16, crop.height // 16 * 16), Image.Resampling.LANCZOS)
 
 
 def telephoto_zoom(length_cm: float) -> float:

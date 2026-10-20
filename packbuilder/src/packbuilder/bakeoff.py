@@ -17,7 +17,6 @@ A painting's file is the card art: the bird's colours fitted back to its photo (
 from __future__ import annotations
 
 import argparse
-import io
 import json
 import logging
 import math
@@ -28,15 +27,16 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
-from packbuilder.art import ART_KINDS, ArtKind, ArtPrompts, Species, Workflow, card_crop_box, telephoto_crop
+from packbuilder.art import ART_KINDS, REFERENCE_PADDING, ArtKind, ArtPrompts, Species, Workflow, photo_crop, reference_crop, telephoto_crop
 from packbuilder.comfy import ComfyClient, PaintingFailed
+from packbuilder.contact_sheets import grid
 from packbuilder.crops import upright
 from packbuilder.definition import PackDefinition
 from packbuilder.download import fetch
-from packbuilder.fidelity import Fidelity, bird_mask, fit_colours, on_white
 from packbuilder.geometry import Box
+from packbuilder.painting import ATTEMPTS, Attempt, Painter, png
 from packbuilder.licenses import CC0, CC_BY, credit_line, normalize_license
 
 log = logging.getLogger("packbuilder.bakeoff")
@@ -54,13 +54,7 @@ SPECIES = [
 EDITIONS = ("us-ca-la", "us-ca-sd")
 # The glasses photos are from Los Angeles, and so are most of the bird photos.
 HOME_EDITION = "us-ca-la"
-REFERENCE_PADDING = 0.35
 PHOTO_PADDING = 0.8
-MAX_INPUT_SIDE = 1536
-ISOLATE_SEED = 49
-ATTEMPTS = 3
-"""A painting whose bird isn't faithful to its photo (packbuilder.fidelity) is painted again with the next seed, at most
-this many times in all; then the closest is kept and marked for review."""
 
 
 class OpenLicensePhotos:
@@ -146,26 +140,13 @@ def references(args) -> int:
     return 0
 
 
-@dataclass(frozen=True)
-class Attempt:
-    """One painting of a bird and how faithful it came out."""
-
-    seed: int
-    seconds: float
-    raw: Image.Image
-    mask: np.ndarray
-    fitted: Image.Image
-    before: Fidelity
-    after: Fidelity
-
-
 class Studio:
     """Everything one round of painting reads and caches: the isolated reference birds, the cut-outs the fidelity is
     measured with, and the results. All of it lives under `out`."""
 
     def __init__(self, plan: dict, prompts: ArtPrompts, client: ComfyClient, scenes_dir: Path, out: Path):
         self.plan, self.prompts, self.client, self.scenes_dir, self.out = plan, prompts, client, scenes_dir, out
-        self.isolate, self.cutout = Workflow.load("bird-isolate"), Workflow.load("bird-cutout")
+        self.painter = Painter(client, cutouts=out / "cutouts")
         self.results_path = out / "results.json"
         self.results = json.loads(self.results_path.read_text()) if self.results_path.exists() else {}
 
@@ -174,62 +155,38 @@ class Studio:
 
     def mask(self, name: str, image: Image.Image) -> np.ndarray:
         """The bird in `image` (BiRefNet), cached as cutouts/<name>.png."""
-        target = self.out / "cutouts" / f"{name}.png"
-        if not target.exists():
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(self.client.paint(self.cutout, images=[(f"cutout-{name.replace('/', '-')}.png", _png(image))]).image)
-        return bird_mask(Image.open(target))
+        return self.painter.mask(image, name)
 
     def best_of(self, workflow: Workflow, images: list[tuple[str, bytes]], prompt: str, seed: int, photo: Image.Image, photo_mask: np.ndarray,
                 name: str, size: tuple[int, int] | None = None) -> tuple[Attempt, int]:
-        """Paints with `seed`, then the next seeds, until the bird is faithful to `photo` after its colour fit, at most
-        ATTEMPTS times; returns the faithful painting or else the closest, and how many were painted."""
-        best = None
-        for attempt in range(ATTEMPTS):
-            painting = self.client.paint(workflow, images=images, prompt=prompt, seed=seed + attempt, size=size)
-            raw = Image.open(io.BytesIO(painting.image)).convert("RGB")
-            mask = self.mask(f"{name}@{seed + attempt}", raw)
-            try:
-                fitted, before, after = fit_colours(raw, mask, photo, photo_mask)
-            except ValueError as error:  # no bird, or none where the photo's is
-                log.warning("%s seed %d: %s", name, seed + attempt, error)
-                continue
-            current = Attempt(seed + attempt, painting.seconds, raw, mask, fitted, before, after)
-            if best is None or (after.faithful, -after.dE_mean) > (best.after.faithful, -best.after.dE_mean):
-                best = current
-            if after.faithful:
-                return best, attempt + 1
-        if best is None:
-            raise ValueError(f"{name}: no painting had a bird to measure")
-        return best, ATTEMPTS
+        """`Painter.best_of`: the first faithful painting of ATTEMPTS seeds from `seed`, or else the closest."""
+        return self.painter.best_of(workflow, images, prompt, seed, photo, photo_mask, name, size=size)
 
     def reference_crop(self, species: dict, photo_id: int) -> Image.Image:
         """A reference photo cropped to 3:4 around the bird, in multiples of 16 (the isolation's canvas)."""
-        crop = _photo_crop(species, photo_id, "pack")
-        return crop.resize((crop.width // 16 * 16, crop.height // 16 * 16), Image.Resampling.LANCZOS)
+        photo = _photo(species, photo_id)
+        return reference_crop(upright(Image.open(_original(photo))), Box(*photo["box"]))
 
     def isolated(self, species: dict, photo_id: int) -> Image.Image:
-        """The reference bird alone on white (bird-isolate at the crop's own size, so it stays where it is in the
-        photo, its hidden parts completed), its colours fitted back to the photo's. Cached as isolated/<id>.png, with
-        FLUX.3's own picture beside it as <id>-raw.png."""
+        """The reference bird alone on white (`Painter.isolate`), cached as isolated/<id>.png, with FLUX.3's own
+        picture beside it as <id>-raw.png."""
         target = self.out / "isolated" / f"{photo_id}.png"
         if target.exists():
             return Image.open(target).convert("RGB")
         crop = self.reference_crop(species, photo_id)
-        best, attempts = self.best_of(self.isolate, [(f"isolate-{photo_id}.png", _png(crop))], self.prompts.isolate, ISOLATE_SEED,
-                                      crop, self.mask(f"photos/{photo_id}", crop), f"isolated/{photo_id}", size=crop.size)
+        isolation = self.painter.isolate(crop, self.mask(f"photos/{photo_id}", crop), self.prompts.isolate, str(photo_id))
+        best, attempts = isolation.attempt, isolation.attempts
         target.parent.mkdir(parents=True, exist_ok=True)
         best.raw.save(target.with_name(f"{photo_id}-raw.png"))
-        isolated = on_white(best.fitted, best.mask)
-        isolated.save(target)
+        isolation.image.save(target)
         self.results[f"isolated/{photo_id}"] = {
             "species": species["common_name"], "kind": "isolate", "photo": photo_id, "seed": best.seed, "attempts": attempts,
             "seconds": best.seconds, "fidelity": {"painted": best.before.as_dict(), "fitted": best.after.as_dict()},
-            "prompts_version": self.prompts.version, "workflow_version": self.isolate.version,
+            "prompts_version": self.prompts.version, "workflow_version": self.painter.isolate_workflow.version,
         }
         self.save()
         _log(species, f"isolate {photo_id}", best, attempts)
-        return isolated
+        return isolation.image
 
     def reference(self, key: str, species: dict) -> tuple[str, Image.Image]:
         """One of a painting's inputs, named for the upload."""
@@ -260,6 +217,7 @@ def paint(args) -> int:
     workflows = {kind: Workflow.load(f"{kind}-art") for kind in ART_KINDS}
     out = BUILD / f"v{prompts.version}"
     studio = Studio(plan, prompts, ComfyClient(args.comfy, poll_seconds=1.0), Path(args.scenes), out)
+    themes = {edition: PackDefinition.load(REPO / "packbuilder" / "packs" / edition / "pack.json").set.edition.theme for edition in EDITIONS}
     selected = [s for s in plan["species"] if not args.species or s["common_name"] in args.species]
     for species in selected:
         slug = _slug(species["common_name"])
@@ -270,11 +228,12 @@ def paint(args) -> int:
             if target.exists() and not args.again:
                 continue
             target.parent.mkdir(parents=True, exist_ok=True)
-            prompt = prompts.render(planned.kind, Species(species["common_name"], species["scientific_name"]), planned.edition, legendary=planned.legendary)
+            prompt = prompts.render(planned.kind, Species(species["common_name"], species["scientific_name"]), planned.edition, legendary=planned.legendary,
+                                    theme=themes[planned.edition] if planned.kind == "pack" else None)
             seed = zlib.crc32(f"{species['scientific_name']}/{planned.name}".encode())
             started = time.monotonic()
             try:
-                images = [(name, _png(image)) for name, image in (studio.reference(key, species) for key in planned.inputs)]
+                images = [(name, png(image)) for name, image in (studio.reference(key, species) for key in planned.inputs)]
                 photo, photo_mask = studio.measured_against(planned, species)
                 best, attempts = studio.best_of(workflows[planned.kind], images, prompt, seed, photo, photo_mask, f"paintings/{slug}/{planned.name}")
             except (PaintingFailed, ValueError) as error:
@@ -313,14 +272,10 @@ def _log(species: dict, name: str, best: Attempt, attempts: int) -> None:
 
 
 def _photo_crop(species: dict, photo_id: int, kind: ArtKind) -> Image.Image:
-    """A bird photo's 3:4 crop around the bird: tighter for a reference, with more of the photo for photo art, at
-    most MAX_INPUT_SIDE a side."""
+    """A bird photo's 3:4 crop around the bird: tighter for a reference, with more of the photo for photo art."""
     photo = _photo(species, photo_id)
-    image = upright(Image.open(_original(photo))).convert("RGB")
-    padding = PHOTO_PADDING if kind == "photo" else REFERENCE_PADDING
-    crop = image.crop(card_crop_box(Box(*photo["box"]), image.size, padding=padding))
-    crop.thumbnail((MAX_INPUT_SIDE, MAX_INPUT_SIDE), Image.Resampling.LANCZOS)
-    return crop
+    image = upright(Image.open(_original(photo)))
+    return photo_crop(image, Box(*photo["box"]), padding=PHOTO_PADDING if kind == "photo" else REFERENCE_PADDING)
 
 
 def _photo(species: dict, photo_id: int) -> dict:
@@ -333,55 +288,11 @@ def _original(photo: dict) -> Path:
     return fetch(photo["original_url"], CACHE / "photos" / "original" / f"{photo['id']}.{extension}")
 
 
-def _png(image: Image.Image) -> bytes:
-    buffer = io.BytesIO()
-    image.save(buffer, "PNG")
-    return buffer.getvalue()
-
-
 def _slug(name: str) -> str:
     return "".join(c if c.isalnum() else "-" for c in name.lower().replace("'", "")).strip("-")
 
 
 # Contact sheets ---------------------------------------------------------------------------------------------------
-
-CELL = (288, 384)
-LABEL_HEIGHT = 44
-
-
-def _font(size: int):
-    return ImageFont.load_default(size=size)
-
-
-def _fit(image: Image.Image, size=CELL) -> Image.Image:
-    canvas = Image.new("RGB", size, (235, 232, 224))
-    image = image.copy()
-    image.thumbnail(size, Image.Resampling.LANCZOS)
-    canvas.paste(image, ((size[0] - image.width) // 2, (size[1] - image.height) // 2))
-    return canvas
-
-
-def _grid(rows: list[list[tuple[Image.Image | None, str]]], title: str, footer: list[str]) -> Image.Image:
-    columns = max(len(row) for row in rows)
-    header, line = 56, 22
-    width = columns * CELL[0] + (columns + 1) * 8
-    height = header + len(rows) * (CELL[1] + LABEL_HEIGHT + 8) + 16 + line * len(footer)
-    sheet = Image.new("RGB", (width, height), (248, 245, 237))
-    draw = ImageDraw.Draw(sheet)
-    draw.text((12, 12), title, fill=(38, 51, 41), font=_font(28))
-    for r, row in enumerate(rows):
-        for c, (image, label) in enumerate(row):
-            x, y = 8 + c * (CELL[0] + 8), header + r * (CELL[1] + LABEL_HEIGHT + 8)
-            if image is not None:
-                sheet.paste(_fit(image), (x, y))
-            for i, text in enumerate(label.split("\n")[:2]):
-                draw.text((x + 2, y + CELL[1] + 3 + i * 19), text, fill=(38, 51, 41), font=_font(16))
-    y = header + len(rows) * (CELL[1] + LABEL_HEIGHT + 8) + 8
-    for text in footer:
-        draw.text((12, y), text, fill=(93, 103, 94), font=_font(15))
-        y += line
-    return sheet
-
 
 def _species_sheet(species: dict, studio: Studio, target: Path) -> None:
     """Three rows: each painting's first reference (with the scene it goes into), FLUX.3's painting, and the card art
@@ -407,7 +318,7 @@ def _species_sheet(species: dict, studio: Studio, target: Path) -> None:
     credits = [f"{p['id']}: {credit_line(p['observer'], p['license'])} {p['source_url']}" for p in (_photo(species, i) for i in used)]
     target.parent.mkdir(parents=True, exist_ok=True)
     title = f"{species['common_name']} ({species['scientific_name']}): FLUX.3 Image Klein, prompts v{studio.prompts.version}"
-    _grid([inputs, painted, fitted], title, credits).save(target, quality=88)
+    grid([inputs, painted, fitted], title, credits).save(target, quality=88)
 
 
 def _overview(plan: dict, studio: Studio, target: Path) -> None:
@@ -420,7 +331,7 @@ def _overview(plan: dict, studio: Studio, target: Path) -> None:
             label = f"{species['common_name']}\n{planned.name}" + (f" dE {result['fidelity']['fitted']['dE_mean']}" if result else "")
             row.append((Image.open(path) if path.exists() else None, label))
         rows.append(row)
-    _grid(rows, f"Art bake-off: FLUX.3 Image Klein, prompts v{studio.prompts.version}, colours fitted", []).save(target, quality=85)
+    grid(rows, f"Art bake-off: FLUX.3 Image Klein, prompts v{studio.prompts.version}, colours fitted", []).save(target, quality=85)
 
 
 def _candidate_sheet(plan: dict, target: Path) -> None:
@@ -431,7 +342,7 @@ def _candidate_sheet(plan: dict, target: Path) -> None:
             image = _photo_crop(species, photo["id"], "pack")
             row.append((image, f"{species['common_name']}\n{photo['id']} {photo['license']}"))
         rows.append(row)
-    _grid(rows, "Open-license candidates (reference = first, photos = next two, unless the plan says otherwise)", []).save(target, quality=85)
+    grid(rows, "Open-license candidates (reference = first, photos = next two, unless the plan says otherwise)", []).save(target, quality=85)
 
 
 def _timings(results: dict) -> None:

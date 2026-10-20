@@ -1,5 +1,6 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
 `packbuilder set <definition-dir>`: builds the pack's set definition into set.json beside pack.json (`sets.py`).
+`packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
 `packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
 `packbuilder calibrate-rarity --version <n>`: writes the rarity label thresholds the app ships (`rarity.py`)."""
@@ -18,6 +19,9 @@ from packbuilder.detector import BirdDetector, ensure_model
 from packbuilder.licenses import PHOTO_LICENSES, inat_codes, normalize_license
 from packbuilder.pipeline import BuildOptions, build_pack
 from packbuilder.sets import check_set, load_set
+
+COMFY = "http://comfybox:8189"
+"""The FLUX.3 ComfyUI on comfybox (art/README.md), reached over the tailnet."""
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,6 +45,16 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--xc-interval", type=float, default=xenocanto.DEFAULT_INTERVAL, help=f"seconds between xeno-canto requests (default {xenocanto.DEFAULT_INTERVAL:g}; {xenocanto.MIN_INTERVAL:g} is the floor)")
     build.add_argument("--xc-max-requests", type=int, default=xenocanto.DEFAULT_MAX_REQUESTS, help=f"xeno-canto requests after which the run stops; rerun to continue from the cache (default {xenocanto.DEFAULT_MAX_REQUESTS})")
     build.add_argument("--sound-tries", type=int, default=3, help="recordings downloaded per species and kind before the kind is a gap (default 3)")
+    build.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints the pack art the lock lacks (default {COMFY}, on the tailnet)")
+    build.add_argument("--no-art", action="store_true", help="skip the pack art (the pack then has none)")
+    build.add_argument("--art-sheets", type=Path, help="folder for the pack art's contact sheets (default build/pack-art/<pack id>)")
+    art_review = commands.add_parser("art-review", help="record the review of the pack art's contact sheets in art.lock.json")
+    art_review.add_argument("definition", type=Path, help="folder holding pack.json and art.lock.json")
+    art_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve a painting (species id or common name; repeat)")
+    art_review.add_argument("--approve-all", action="store_true", help="approve every painting still pending")
+    art_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a painting: the next build paints it again with new seeds (repeat)")
+    art_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on a species' art: its cards fall back to the reference photo (repeat)")
+    art_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
     set_command = commands.add_parser("set", help="build the set definition (boundary, taxonomic order, edition) into set.json")
     set_command.add_argument("definition", type=Path, help="folder holding pack.json")
     set_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
@@ -69,6 +83,8 @@ def main(argv: list[str] | None = None) -> int:
         return _index(args)
     if args.command == "calibrate-rarity":
         return _calibrate_rarity(args)
+    if args.command == "art-review":
+        return _art_review(args)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     definition = PackDefinition.load(args.definition / "pack.json")
@@ -98,10 +114,15 @@ def main(argv: list[str] | None = None) -> int:
         archive_path=args.zip, built_at=args.built_at, download_workers=args.workers, photo_licenses=args.photo_licenses,
     )
     sounds = None if args.no_sounds else _sound_picker(args, definition)
+    artist = None if args.no_art else _artist(args, definition)
+    sheets = args.art_sheets or Path(__file__).resolve().parents[3] / "build" / "pack-art" / definition.id
     from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
 
     try:
-        build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds, card_set=card_set, joined=joined)
+        build_pack(
+            definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds,
+            card_set=card_set, joined=joined, artist=artist, art_sheets=sheets,
+        )
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
         return 2
@@ -145,6 +166,49 @@ def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
         sources=[xeno_canto, inaturalist], clips=ClipMaker(), check=BirdNETCheck(repo / "models"),
         clip_dir=cache / "clips", lock=SoundLock(args.definition / "sounds.lock.json"), country=country, max_tries=args.sound_tries,
     )
+
+
+def _artist(args: argparse.Namespace, definition: PackDefinition):
+    """The pack-art step (issue #57): paints in the set's edition theme on comfybox what `art.lock.json` lacks, into
+    the art cache, with the reference photos `overrides.json` pins as `art.reference`."""
+    from packbuilder.comfy import ComfyClient
+    from packbuilder.definition import load_overrides
+    from packbuilder.pack_art import LOCK_FILE, ArtLock, PackArtist
+
+    if definition.set is None:
+        raise SystemExit(f"{definition.id}: pack art is painted in the set's edition theme, and pack.json has no set (or pass --no-art)")
+    overrides = load_overrides(args.definition / "overrides.json")
+    references = {
+        entry.id: int(data["art"]["reference"])
+        for entry in definition.species
+        if isinstance(data := overrides.get(entry.scientific_name), dict) and isinstance(data.get("art"), dict) and data["art"].get("reference") is not None
+    }
+    return PackArtist(
+        ComfyClient(args.comfy), pack_id=definition.id, theme=definition.set.edition.theme, lock=ArtLock.load(args.definition / LOCK_FILE),
+        cache_dir=args.cache / "art", references=references,
+    )
+
+
+def _art_review(args: argparse.Namespace) -> int:
+    from collections import Counter
+
+    from packbuilder.pack_art import APPROVED, GAP, LOCK_FILE, PENDING, REJECTED, ArtLock, review
+
+    lock = ArtLock.load(args.definition / LOCK_FILE)
+    if not lock.species:
+        print(f"{lock.path} has no pack art yet: build the pack first", file=sys.stderr)
+        return 1
+    try:
+        review(lock, approve=args.approve, reject=args.reject, gap=args.gap, approve_all=args.approve_all, why=args.why)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    counts = Counter(entry["review"] for entry in lock.species.values())
+    print(f"{lock.path}: " + ", ".join(f"{counts[state]} {state}" for state in (APPROVED, PENDING, REJECTED, GAP)), file=sys.stderr)
+    unchecked = [entry["common_name"] for entry in lock.species.values() if entry["review"] == PENDING]
+    if unchecked:
+        print(f"still pending (from text or not faithful, approve by name): {', '.join(unchecked)}", file=sys.stderr)
+    return 0
 
 
 def _set(args: argparse.Namespace) -> int:
