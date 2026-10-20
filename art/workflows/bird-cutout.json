@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "comment": "The bird cut out of its reference photo onto transparency, for scene art's composite (#49). image 1 is the species' reference photo cropped to 3:4 around the bird; the output is an RGBA PNG. BiRefNet-general (MIT upstream) through the comfyui-rmbg custom node, which downloads it from the 1038lab/BiRefNet re-host on first use (art/comfybox/download-models.sh pins it); the node pack's RMBG-2.0 is CC BY-NC and must not be used (ADR-0001). packbuilder.art.Workflow fills the node titled 'image 1'.",
+  "graph": {
+    "10": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": ""
+      },
+      "_meta": {
+        "title": "image 1"
+      }
+    },
+    "13": {
+      "class_type": "BiRefNetRMBG",
+      "inputs": {
+        "image": [
+          "10",
+          0
+        ],
+        "model": "BiRefNet-general",
+        "sensitivity": 1.0,
+        "mask_blur": 0,
+        "mask_offset": 0,
+        "invert_output": false,
+        "refine_foreground": true,
+        "background": "Alpha",
+        "background_color": "#FFFFFF"
+      },
+      "_meta": {
+        "title": "bird cut-out"
+      }
+    },
+    "60": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "13",
+          0
+        ],
+        "filename_prefix": "birdjournal/cutout"
+      },
+      "_meta": {
+        "title": "output"
+      }
+    }
+  }
+}
