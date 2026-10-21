@@ -1,0 +1,6725 @@
+{
+  "comment": "Pack art (issue #57), written by `packbuilder build` and `packbuilder art-review`; review on the contact sheets in build/pack-art/<pack id>/. Per species: the source photo ids, the workflow, isolation and prompts versions and the set's edition theme it was painted with, the seeds, the painting's SHA-256 (the art cache's file name), its fidelity, and the review: pending, approved (in the pack), rejected (repainted with new seeds by the next build) or gap (no art; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "photos": [
+        462069561
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 679364587,
+      "isolate_seed": 49,
+      "sha256": "0918152aeb0c96fb3356afa93cae4c0eb9d6bf3983b79dc28dea6f7e5080f01a",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.938,
+          "dE_mean": 6.4,
+          "dE_p95": 12.3,
+          "dL": 1.8,
+          "dC": 3.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.938,
+          "dE_mean": 3.7,
+          "dE_p95": 11.3,
+          "dL": -0.8,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.973,
+          "dE_mean": 2.6,
+          "dE_p95": 6.7,
+          "dL": -0.3,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "aechmophorus-occidentalis": {
+      "common_name": "Western Grebe",
+      "photos": [
+        593312044
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 944099057,
+      "isolate_seed": 49,
+      "sha256": "26c8c7d6f0d45d9bb530581aa02a88929e59bc41f9a0201cf71d35520e3c4c3e",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.798,
+          "dE_mean": 8.0,
+          "dE_p95": 24.0,
+          "dL": -0.1,
+          "dC": 1.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.798,
+          "dE_mean": 7.6,
+          "dE_p95": 23.7,
+          "dL": -0.4,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.915,
+          "dE_mean": 6.3,
+          "dE_p95": 19.1,
+          "dL": 0.4,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "aeronautes-saxatalis": {
+      "common_name": "White-throated Swift",
+      "photos": [
+        148948986
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2130641529,
+      "isolate_seed": 49,
+      "sha256": "805029efb9ac569befc06fdf7d1203a796d4f0b8ef282ac30ee014d9d84cabcf",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.946,
+          "dE_mean": 9.3,
+          "dE_p95": 14.2,
+          "dL": 4.8,
+          "dC": 2.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.946,
+          "dE_mean": 3.9,
+          "dE_p95": 8.1,
+          "dL": 0.0,
+          "dC": 0.7,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.986,
+          "dE_mean": 1.5,
+          "dE_p95": 4.0,
+          "dL": 0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "photos": [
+        454315615
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2700235774,
+      "isolate_seed": 49,
+      "sha256": "1ac80992b24ee5d277ce0592f85807371bc97ab44929e9efce33fee5cddc9d93",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.932,
+          "dE_mean": 5.2,
+          "dE_p95": 10.3,
+          "dL": -3.1,
+          "dC": 1.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.932,
+          "dE_mean": 3.4,
+          "dE_p95": 7.7,
+          "dL": -0.4,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.929,
+          "dE_mean": 2.9,
+          "dE_p95": 7.2,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "aimophila-ruficeps": {
+      "common_name": "Rufous-crowned Sparrow",
+      "photos": [
+        173050688
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2050968270,
+      "isolate_seed": 49,
+      "sha256": "7195bb2b0b90267468f93e8c4dbd8e88668e44a9a9a8fbfd9f977cf2fdfd8d8e",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.931,
+          "dE_mean": 6.1,
+          "dE_p95": 9.3,
+          "dL": -2.8,
+          "dC": 4.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.931,
+          "dE_mean": 2.9,
+          "dE_p95": 6.3,
+          "dL": -0.1,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.932,
+          "dE_mean": 2.5,
+          "dE_p95": 6.0,
+          "dL": -0.2,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "alopochen-aegyptiaca": {
+      "common_name": "Egyptian Goose",
+      "photos": [
+        578296243
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3103449670,
+      "isolate_seed": 49,
+      "sha256": "204da852a3fe234c8cc676594dfba46ede02ac2733cca82408a3a02b5d5c84b0",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.871,
+          "dE_mean": 14.1,
+          "dE_p95": 21.0,
+          "dL": 4.8,
+          "dC": -1.1,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.871,
+          "dE_mean": 6.3,
+          "dE_p95": 13.7,
+          "dL": -1.5,
+          "dC": 0.4,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.98,
+          "dE_mean": 3.3,
+          "dE_p95": 7.2,
+          "dL": -0.4,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "amazona-oratrix": {
+      "common_name": "Yellow-headed Amazon",
+      "photos": [
+        55179658
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1266378714,
+      "isolate_seed": 49,
+      "sha256": "d9a403e6357fde9ee988020ff6061cab622ee63fc52d6b615135d560bf5cf333",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.781,
+          "dE_mean": 17.4,
+          "dE_p95": 39.2,
+          "dL": -7.9,
+          "dC": -7.0,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.781,
+          "dE_mean": 13.4,
+          "dE_p95": 35.9,
+          "dL": 0.2,
+          "dC": 0.5,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.966,
+          "dE_mean": 8.7,
+          "dE_p95": 24.1,
+          "dL": -0.7,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "amazona-viridigenalis": {
+      "common_name": "Red-crowned Amazon",
+      "photos": [
+        453219663
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3073409723,
+      "isolate_seed": 49,
+      "sha256": "081cc4c9fb51a62e2f242f7ce19c61223252b851ddcaccfd95c2de7591c10675",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.887,
+          "dE_mean": 5.5,
+          "dE_p95": 9.8,
+          "dL": -0.8,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.887,
+          "dE_mean": 4.1,
+          "dE_p95": 8.9,
+          "dL": 0.1,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.892,
+          "dE_mean": 2.6,
+          "dE_p95": 6.1,
+          "dL": 0.0,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "anarhynchus-nivosus": {
+      "common_name": "Snowy Plover",
+      "photos": [
+        357592335
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 427301712,
+      "isolate_seed": 49,
+      "sha256": "5ceff8d1bcb90fdf985f16c9f0102b22189a1e94f714dc80ef6aa4feb6d0a82e",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.924,
+          "dE_mean": 6.0,
+          "dE_p95": 10.4,
+          "dL": -1.3,
+          "dC": 2.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.924,
+          "dE_mean": 3.3,
+          "dE_p95": 8.8,
+          "dL": 0.2,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.917,
+          "dE_mean": 3.2,
+          "dE_p95": 9.1,
+          "dL": 0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "photos": [
+        101505879
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1787608992,
+      "isolate_seed": 49,
+      "sha256": "ed4480b15edde9244065a63c8fd6a71235f1d4d74338e3f5319385bc2334379e",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.808,
+          "dE_mean": 9.9,
+          "dE_p95": 20.0,
+          "dL": 1.2,
+          "dC": 6.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.808,
+          "dE_mean": 6.8,
+          "dE_p95": 17.9,
+          "dL": -1.3,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 2.6,
+          "dE_p95": 5.8,
+          "dL": -0.4,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "photos": [
+        689499146
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 290009167,
+      "isolate_seed": 49,
+      "sha256": "2d689c21b8c5e28ecc4b01723c43387106474389f2d4bbe119beb3786b746699",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.939,
+          "dE_mean": 7.5,
+          "dE_p95": 13.3,
+          "dL": -6.0,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.939,
+          "dE_mean": 4.6,
+          "dE_p95": 9.0,
+          "dL": -0.6,
+          "dC": -0.4,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.958,
+          "dE_mean": 3.1,
+          "dE_p95": 7.3,
+          "dL": -0.3,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "anthus-rubescens": {
+      "common_name": "American Pipit",
+      "photos": [
+        179887871
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 419503553,
+      "isolate_seed": 49,
+      "sha256": "697f15336ac1d02c49836e516f5e38a0d84aa15dba638c7c00670ba4e6d26a3c",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.915,
+          "dE_mean": 7.6,
+          "dE_p95": 11.7,
+          "dL": -3.1,
+          "dC": 0.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.915,
+          "dE_mean": 3.5,
+          "dE_p95": 7.3,
+          "dL": 0.3,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.925,
+          "dE_mean": 3.3,
+          "dE_p95": 8.4,
+          "dL": 0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "photos": [
+        674449029
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4108206277,
+      "isolate_seed": 49,
+      "sha256": "add1e4d71ebe37ef6d247a7816ef3cda5c59fcfd67daec908bd3b23ea0271043",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.916,
+          "dE_mean": 7.0,
+          "dE_p95": 16.3,
+          "dL": 3.2,
+          "dC": -2.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.916,
+          "dE_mean": 4.0,
+          "dE_p95": 8.5,
+          "dL": 0.2,
+          "dC": -0.7,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 4.0,
+          "dE_p95": 10.0,
+          "dL": 0.7,
+          "dC": -0.6,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "aratinga-nenday": {
+      "common_name": "Nanday Parakeet",
+      "photos": [
+        179653275
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 374200048,
+      "isolate_seed": 49,
+      "sha256": "3c0e95979933be28d8fdcc7cf2421f8ab02e33015939c743faad2551e107568a",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.937,
+          "dE_mean": 13.6,
+          "dE_p95": 22.2,
+          "dL": 1.3,
+          "dC": -8.9,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.937,
+          "dE_mean": 6.5,
+          "dE_p95": 13.1,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.952,
+          "dE_mean": 3.3,
+          "dE_p95": 7.3,
+          "dL": -0.8,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "archilochus-alexandri": {
+      "common_name": "Black-chinned Hummingbird",
+      "photos": [
+        282787652
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 245347309,
+      "isolate_seed": 49,
+      "sha256": "b039415be8fd68b00da714daf8793c0f55117689576db7eb4597c7d956a0eb15",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.717,
+          "dE_mean": 11.5,
+          "dE_p95": 26.0,
+          "dL": 4.1,
+          "dC": 6.2,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.717,
+          "dE_mean": 7.9,
+          "dE_p95": 21.1,
+          "dL": 1.7,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.741,
+          "dE_mean": 8.1,
+          "dE_p95": 23.9,
+          "dL": 1.9,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "photos": [
+        469358926
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3654736298,
+      "isolate_seed": 49,
+      "sha256": "e8f6bb32967b9be4484a3366a90fc29d0f233d4e5a13b15f3d439359abb5ac47",
+      "faithful": true,
+      "attempts": 2,
+      "fidelity": {
+        "painted": {
+          "iou": 0.782,
+          "dE_mean": 13.4,
+          "dE_p95": 18.5,
+          "dL": -11.8,
+          "dC": 5.1,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.782,
+          "dE_mean": 3.4,
+          "dE_p95": 7.2,
+          "dL": -1.1,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.95,
+          "dE_mean": 3.0,
+          "dE_p95": 7.8,
+          "dL": -0.4,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "photos": [
+        613538389
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2671692637,
+      "isolate_seed": 49,
+      "sha256": "783cefdafa18eca43a4a75691283ada811ca291e04313d0bdbbe5f9568c422d1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.932,
+          "dE_mean": 7.7,
+          "dE_p95": 11.4,
+          "dL": -0.2,
+          "dC": -5.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.932,
+          "dE_mean": 3.1,
+          "dE_p95": 7.3,
+          "dL": -0.3,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.954,
+          "dE_mean": 3.2,
+          "dE_p95": 9.0,
+          "dL": 0.2,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "photos": [
+        641173951
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2137638282,
+      "isolate_seed": 50,
+      "sha256": "db0b855aec34fa862b2a814637bc766c641d5140cf41fd66d80152ad4ad20318",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.516,
+          "dE_mean": 20.3,
+          "dE_p95": 43.7,
+          "dL": 4.7,
+          "dC": 1.3,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.516,
+          "dE_mean": 19.5,
+          "dE_p95": 43.5,
+          "dL": -1.5,
+          "dC": -1.2,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.518,
+          "dE_mean": 21.7,
+          "dE_p95": 48.8,
+          "dL": -1.8,
+          "dC": -1.1,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "photos": [
+        176873736
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3823571946,
+      "isolate_seed": 49,
+      "sha256": "de1f27c4768f4a89ad6ed87ca2298c955013a4165b6da9ee8f1cc1b091140c03",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.75,
+          "dE_mean": 13.4,
+          "dE_p95": 33.7,
+          "dL": 3.5,
+          "dC": 4.8,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.75,
+          "dE_mean": 12.0,
+          "dE_p95": 32.8,
+          "dL": -0.2,
+          "dC": 0.8,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.972,
+          "dE_mean": 3.1,
+          "dE_p95": 7.4,
+          "dL": 0.3,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "baeolophus-inornatus": {
+      "common_name": "Oak Titmouse",
+      "photos": [
+        625537293
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3539584225,
+      "isolate_seed": 49,
+      "sha256": "28945724950d5dcd981e0b0b362f01d34d53803ebe321ca42d0e30f656e680e9",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.857,
+          "dE_mean": 6.9,
+          "dE_p95": 11.1,
+          "dL": 4.6,
+          "dC": 3.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.857,
+          "dE_mean": 2.5,
+          "dE_p95": 6.4,
+          "dL": 0.1,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.85,
+          "dE_mean": 2.1,
+          "dE_p95": 5.8,
+          "dL": 0.0,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "photos": [
+        532606207
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1475623281,
+      "isolate_seed": 49,
+      "sha256": "1b3d48c42736aa2f049c1e9e59933f0b1a281e851c5cac00432b88538b576282",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.898,
+          "dE_mean": 7.2,
+          "dE_p95": 12.9,
+          "dL": 2.0,
+          "dC": 2.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.898,
+          "dE_mean": 3.7,
+          "dE_p95": 7.6,
+          "dL": -0.2,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.923,
+          "dE_mean": 1.9,
+          "dE_p95": 4.8,
+          "dL": -0.0,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "photos": [
+        634048653
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3847924389,
+      "isolate_seed": 49,
+      "sha256": "0bc768b91dfc4440e9f983cb29597a261477baf9ea442ed88cc963bffdea85e2",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.922,
+          "dE_mean": 11.2,
+          "dE_p95": 16.4,
+          "dL": 9.4,
+          "dC": 4.5,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.922,
+          "dE_mean": 2.3,
+          "dE_p95": 5.4,
+          "dL": 0.2,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 1.8,
+          "dE_p95": 5.9,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "brotogeris-chiriri": {
+      "common_name": "Yellow-chevroned Parakeet",
+      "photos": [
+        455584468
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1705756356,
+      "isolate_seed": 49,
+      "sha256": "8c872d265f0323b08186832be39c6e8d7f44ca8b6c38a26896eaed683920569d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.891,
+          "dE_mean": 22.3,
+          "dE_p95": 33.6,
+          "dL": -8.4,
+          "dC": -17.7,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.891,
+          "dE_mean": 8.2,
+          "dE_p95": 18.9,
+          "dL": -0.4,
+          "dC": 0.7,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.907,
+          "dE_mean": 3.9,
+          "dE_p95": 8.7,
+          "dL": 0.4,
+          "dC": 1.5,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "photos": [
+        524149099
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3069541981,
+      "isolate_seed": 51,
+      "sha256": "fccd2d436635b121685b6476572b7687ca43b2b9c720bd2e86d1a875f85ad3a3",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.617,
+          "dE_mean": 12.8,
+          "dE_p95": 27.5,
+          "dL": -1.5,
+          "dC": 3.4,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.617,
+          "dE_mean": 11.6,
+          "dE_p95": 26.5,
+          "dL": 1.2,
+          "dC": 0.3,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.62,
+          "dE_mean": 12.4,
+          "dE_p95": 28.4,
+          "dL": 1.2,
+          "dC": 0.2,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "bucephala-albeola": {
+      "common_name": "Bufflehead",
+      "photos": [
+        603992548
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4122999735,
+      "isolate_seed": 49,
+      "sha256": "195db2238dbaf4729250f9acdb663522aada17bd0742efcd72075bcc29b542bc",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.663,
+          "dE_mean": 19.6,
+          "dE_p95": 44.3,
+          "dL": -0.7,
+          "dC": 0.8,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.663,
+          "dE_mean": 17.7,
+          "dE_p95": 49.0,
+          "dL": 0.1,
+          "dC": 0.7,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.901,
+          "dE_mean": 4.2,
+          "dE_p95": 10.0,
+          "dL": 1.8,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "photos": [
+        685715513
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1015025633,
+      "isolate_seed": 49,
+      "sha256": "80b7180567c18c965d134275ea83e40c71759e8e774dd66e1fdf86de68a22596",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.853,
+          "dE_mean": 6.2,
+          "dE_p95": 13.7,
+          "dL": -0.9,
+          "dC": 1.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.853,
+          "dE_mean": 5.9,
+          "dE_p95": 13.3,
+          "dL": -0.5,
+          "dC": -0.4,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.877,
+          "dE_mean": 3.6,
+          "dE_p95": 7.6,
+          "dL": -0.3,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "photos": [
+        475706597
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1550631325,
+      "isolate_seed": 49,
+      "sha256": "feaaf5cccee1dd0812c76be06f493731bf937c774f8caa3cdaa44cf9b1baa3f6",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.961,
+          "dE_mean": 5.8,
+          "dE_p95": 10.9,
+          "dL": 1.1,
+          "dC": 1.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.961,
+          "dE_mean": 4.8,
+          "dE_p95": 9.6,
+          "dL": -0.2,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.966,
+          "dE_mean": 3.9,
+          "dE_p95": 7.5,
+          "dL": -0.8,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "photos": [
+        554765103
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4251107118,
+      "isolate_seed": 49,
+      "sha256": "1a5afe91d2aa702a66a5794c24f42b7ad79c988312977da2b2260ba072bf5da8",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.968,
+          "dE_mean": 9.0,
+          "dE_p95": 13.5,
+          "dL": -6.9,
+          "dC": -1.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.968,
+          "dE_mean": 3.9,
+          "dE_p95": 9.3,
+          "dL": 0.2,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.972,
+          "dE_mean": 2.7,
+          "dE_p95": 6.3,
+          "dL": 0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "cairina-moschata": {
+      "common_name": "Muscovy Duck",
+      "photos": [
+        570864575
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 801944356,
+      "isolate_seed": 49,
+      "sha256": "e51f7234463f4e27ae8156f9571cf09d0119bf33c3a1c9259b4646d6ac8c47cb",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.919,
+          "dE_mean": 7.2,
+          "dE_p95": 15.3,
+          "dL": 0.5,
+          "dC": 3.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.919,
+          "dE_mean": 5.1,
+          "dE_p95": 11.8,
+          "dL": -0.5,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.978,
+          "dE_mean": 3.1,
+          "dE_p95": 7.7,
+          "dL": -0.2,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "calidris-alba": {
+      "common_name": "Sanderling",
+      "photos": [
+        354867752
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2690040258,
+      "isolate_seed": 49,
+      "sha256": "4783d72f8cfacc1d9d023cbbfa78005354182d77bf07a404bba8defa3d222c56",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.939,
+          "dE_mean": 7.8,
+          "dE_p95": 13.8,
+          "dL": 5.6,
+          "dC": 4.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.939,
+          "dE_mean": 3.3,
+          "dE_p95": 8.9,
+          "dL": -0.0,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 2.6,
+          "dE_p95": 7.6,
+          "dL": 0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "calidris-mauri": {
+      "common_name": "Western Sandpiper",
+      "photos": [
+        155736188
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 556909058,
+      "isolate_seed": 49,
+      "sha256": "b1cc9b9314138eed71b42f398a6f8c7fcea7cc97d63a0c414283be0d08ecc42d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.895,
+          "dE_mean": 6.5,
+          "dE_p95": 11.0,
+          "dL": -1.6,
+          "dC": 3.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.895,
+          "dE_mean": 3.4,
+          "dE_p95": 8.4,
+          "dL": -0.2,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.979,
+          "dE_mean": 2.6,
+          "dE_p95": 6.6,
+          "dL": 0.0,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "photos": [
+        155699097
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1818612008,
+      "isolate_seed": 49,
+      "sha256": "3c9b75e970cd2dfe5dc8498affc0d77b135c0e3da02dc0f73579bb4a051aecd0",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.95,
+          "dE_mean": 5.3,
+          "dE_p95": 8.3,
+          "dL": -0.7,
+          "dC": 4.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.95,
+          "dE_mean": 2.8,
+          "dE_p95": 6.5,
+          "dL": -0.0,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.953,
+          "dE_mean": 2.4,
+          "dE_p95": 6.4,
+          "dL": 0.0,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "callipepla-californica": {
+      "common_name": "California Quail",
+      "photos": [
+        599186670
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1389094296,
+      "isolate_seed": 49,
+      "sha256": "eb090f72595c5a13f902e045a76b9e28201fef63157d49905cb0888e84b01888",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.952,
+          "dE_mean": 6.8,
+          "dE_p95": 11.7,
+          "dL": 3.0,
+          "dC": 3.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.952,
+          "dE_mean": 4.6,
+          "dE_p95": 9.2,
+          "dL": -0.3,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 4.0,
+          "dE_p95": 9.0,
+          "dL": -0.3,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "photos": [
+        593312089
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3509726517,
+      "isolate_seed": 49,
+      "sha256": "2b08a2aa98a71c8f22a38caf7f6143a4e06debe819d48f2b8100587e6fef92f1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.943,
+          "dE_mean": 6.7,
+          "dE_p95": 11.5,
+          "dL": 5.5,
+          "dC": 0.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.943,
+          "dE_mean": 3.8,
+          "dE_p95": 7.4,
+          "dL": -0.5,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.991,
+          "dE_mean": 2.7,
+          "dE_p95": 5.5,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "campylorhynchus-brunneicapillus": {
+      "common_name": "Cactus Wren",
+      "photos": [
+        28298063
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3839147195,
+      "isolate_seed": 49,
+      "sha256": "a638039abad93d616b3839dd2d6ac72acf454796f0fc77640a8b5bf388389c7d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.932,
+          "dE_mean": 7.8,
+          "dE_p95": 11.5,
+          "dL": -3.8,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.932,
+          "dE_mean": 3.7,
+          "dE_p95": 8.5,
+          "dL": -0.5,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.954,
+          "dE_mean": 2.7,
+          "dE_p95": 7.2,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "cardellina-pusilla": {
+      "common_name": "Wilson's Warbler",
+      "photos": [
+        158723694
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1683306533,
+      "isolate_seed": 49,
+      "sha256": "7bd926feef26b21591e2fe2757a4e374f4c1db33cbf17f595b34f6b4847173e9",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.869,
+          "dE_mean": 10.2,
+          "dE_p95": 18.0,
+          "dL": -0.5,
+          "dC": 2.9,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.869,
+          "dE_mean": 7.7,
+          "dE_p95": 18.0,
+          "dL": 0.0,
+          "dC": 1.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.924,
+          "dE_mean": 3.7,
+          "dE_p95": 9.1,
+          "dL": -0.1,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "photos": [
+        698218415
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2264058485,
+      "isolate_seed": 49,
+      "sha256": "a79c33c367624768b561fecafa4f57819c9a0350a279228aa74a9cd12418bd43",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.92,
+          "dE_mean": 6.1,
+          "dE_p95": 12.0,
+          "dL": 2.5,
+          "dC": -0.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.92,
+          "dE_mean": 3.1,
+          "dE_p95": 9.0,
+          "dL": -0.1,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.963,
+          "dE_mean": 2.5,
+          "dE_p95": 7.9,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "catharus-guttatus": {
+      "common_name": "Hermit Thrush",
+      "photos": [
+        262701129
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1832234170,
+      "isolate_seed": 49,
+      "sha256": "60ea95033f8357e688dfa4829adf1c935465a37dbb690722af8872a0ca0991f9",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.946,
+          "dE_mean": 4.6,
+          "dE_p95": 8.5,
+          "dL": 3.2,
+          "dC": 0.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.946,
+          "dE_mean": 3.4,
+          "dE_p95": 7.7,
+          "dL": -0.2,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 3.4,
+          "dE_p95": 7.3,
+          "dL": -0.4,
+          "dC": -1.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "catharus-ustulatus": {
+      "common_name": "Swainson's Thrush",
+      "photos": [
+        376487034
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3148144719,
+      "isolate_seed": 49,
+      "sha256": "2eb292b4d8585f7ee15a009b01c8d416c5587276523eb38024a63e966794eb76",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.906,
+          "dE_mean": 8.4,
+          "dE_p95": 13.7,
+          "dL": 5.3,
+          "dC": 3.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.906,
+          "dE_mean": 4.4,
+          "dE_p95": 9.7,
+          "dL": -0.3,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.971,
+          "dE_mean": 2.7,
+          "dE_p95": 6.3,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "catherpes-mexicanus": {
+      "common_name": "Canyon Wren",
+      "photos": [
+        334250292
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 13309629,
+      "isolate_seed": 49,
+      "sha256": "43c90ffd924b5a608711de7bb013da4599be8a51b7dae0eab9fc84ebe3d15dd7",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.895,
+          "dE_mean": 8.1,
+          "dE_p95": 14.3,
+          "dL": 1.1,
+          "dC": 4.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.895,
+          "dE_mean": 5.9,
+          "dE_p95": 11.7,
+          "dL": 0.3,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.902,
+          "dE_mean": 5.4,
+          "dE_p95": 14.4,
+          "dL": 0.3,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "chamaea-fasciata": {
+      "common_name": "Wrentit",
+      "photos": [
+        10533807
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2804827495,
+      "isolate_seed": 49,
+      "sha256": "e76d58d8bb0e9ad78d9727be2637d508aebe70117488df06f412f04b604974e3",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.711,
+          "dE_mean": 9.3,
+          "dE_p95": 18.8,
+          "dL": 2.9,
+          "dC": 4.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.711,
+          "dE_mean": 7.0,
+          "dE_p95": 16.3,
+          "dL": 1.6,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.708,
+          "dE_mean": 7.5,
+          "dE_p95": 17.7,
+          "dL": 1.3,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "photos": [
+        277638149
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 296925346,
+      "isolate_seed": 49,
+      "sha256": "37979a88293ea3d1d6f444db42e3794e6105bfcdc99d71a77b20c0d3d7bb0cbf",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.945,
+          "dE_mean": 4.2,
+          "dE_p95": 9.0,
+          "dL": 1.6,
+          "dC": 2.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.945,
+          "dE_mean": 3.2,
+          "dE_p95": 8.2,
+          "dL": -0.4,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.95,
+          "dE_mean": 3.1,
+          "dE_p95": 9.3,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "chondestes-grammacus": {
+      "common_name": "Lark Sparrow",
+      "photos": [
+        265549818
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3410689057,
+      "isolate_seed": 49,
+      "sha256": "5054ffd5a93b705d3cb3125aa55fef827979803ceaacc2185d1a813ab01d77ef",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.936,
+          "dE_mean": 5.3,
+          "dE_p95": 9.9,
+          "dL": -1.0,
+          "dC": 3.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.936,
+          "dE_mean": 3.8,
+          "dE_p95": 8.6,
+          "dL": -0.7,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 3.3,
+          "dE_p95": 8.0,
+          "dL": -0.5,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "photos": [
+        242825399
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3588824807,
+      "isolate_seed": 50,
+      "sha256": "a7309f87b0ce5d21a185c7bb8877ad0243ba32519d407cea6a509d52968c26e4",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.589,
+          "dE_mean": 16.9,
+          "dE_p95": 34.1,
+          "dL": -8.3,
+          "dC": 7.1,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.589,
+          "dE_mean": 11.2,
+          "dE_p95": 31.2,
+          "dL": 2.3,
+          "dC": 0.5,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.588,
+          "dE_mean": 11.9,
+          "dE_p95": 32.8,
+          "dL": 3.4,
+          "dC": 0.5,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "photos": [
+        621490600
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3245441185,
+      "isolate_seed": 51,
+      "sha256": "411b229cc97995c23038d58d529ca212de0a6353b60599cf1ef9108110a04758",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.584,
+          "dE_mean": 8.8,
+          "dE_p95": 18.4,
+          "dL": 2.7,
+          "dC": -3.9,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.584,
+          "dE_mean": 6.4,
+          "dE_p95": 15.3,
+          "dL": 1.4,
+          "dC": 0.0,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.605,
+          "dE_mean": 7.3,
+          "dE_p95": 17.0,
+          "dL": 0.7,
+          "dC": -0.3,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "contopus-sordidulus": {
+      "common_name": "Western Wood Pewee",
+      "photos": [
+        434020063
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4001342925,
+      "isolate_seed": 49,
+      "sha256": "a1bdfe5478cb2dd4f40f628885d276aa4d8a84a1093143fe01dbd41c2fec670f",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.848,
+          "dE_mean": 7.3,
+          "dE_p95": 13.1,
+          "dL": -5.3,
+          "dC": 2.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.848,
+          "dE_mean": 4.4,
+          "dE_p95": 9.5,
+          "dL": -1.3,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.896,
+          "dE_mean": 3.2,
+          "dE_p95": 7.6,
+          "dL": -1.0,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "photos": [
+        602540146
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1323197091,
+      "isolate_seed": 49,
+      "sha256": "2c097bf3b5ed984b004cf63d132df0faa758647fa3955123930adf91c5a8d148",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.88,
+          "dE_mean": 9.6,
+          "dE_p95": 24.4,
+          "dL": -5.5,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.88,
+          "dE_mean": 6.7,
+          "dE_p95": 21.5,
+          "dL": 0.2,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.927,
+          "dE_mean": 3.9,
+          "dE_p95": 10.7,
+          "dL": 0.2,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "photos": [
+        497351689
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 327719799,
+      "isolate_seed": 49,
+      "sha256": "541dfeaff558f088a386008283b1e2e8ce33239bc2daf74a615ec3fac63a5206",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.947,
+          "dE_mean": 6.5,
+          "dE_p95": 13.0,
+          "dL": 1.7,
+          "dC": 0.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.947,
+          "dE_mean": 3.7,
+          "dE_p95": 8.5,
+          "dL": 0.0,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.978,
+          "dE_mean": 2.8,
+          "dE_p95": 7.2,
+          "dL": 0.3,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "photos": [
+        604259110
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2554053642,
+      "isolate_seed": 49,
+      "sha256": "9625137e1ca89b78a450c1864fb1a264dc281088ae0ce5408f2ac475d71253c0",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.97,
+          "dE_mean": 8.7,
+          "dE_p95": 15.0,
+          "dL": 8.3,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.97,
+          "dE_mean": 1.8,
+          "dE_p95": 5.1,
+          "dL": 0.1,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.977,
+          "dE_mean": 1.4,
+          "dE_p95": 5.0,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "cyanocitta-stelleri": {
+      "common_name": "Steller's Jay",
+      "photos": [
+        51260557
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2947684899,
+      "isolate_seed": 49,
+      "sha256": "f309f1b81996f811b6403f15133071658646ed53b27d0b798b374171ba659386",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.922,
+          "dE_mean": 6.6,
+          "dE_p95": 12.5,
+          "dL": 1.2,
+          "dC": -1.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.922,
+          "dE_mean": 5.3,
+          "dE_p95": 10.9,
+          "dL": -0.1,
+          "dC": 0.8,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.93,
+          "dE_mean": 3.5,
+          "dE_p95": 8.4,
+          "dL": 0.2,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "dryobates-nuttallii": {
+      "common_name": "Nuttall's Woodpecker",
+      "photos": [
+        459998856
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1705064052,
+      "isolate_seed": 49,
+      "sha256": "c3c4782f7c3bea697386029767a72ba55d7a10fb116f8cd2c9c8ba27024d5e50",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.853,
+          "dE_mean": 8.4,
+          "dE_p95": 18.7,
+          "dL": 3.7,
+          "dC": 3.0,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.853,
+          "dE_mean": 7.0,
+          "dE_p95": 16.9,
+          "dL": -0.2,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.892,
+          "dE_mean": 5.4,
+          "dE_p95": 13.3,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "photos": [
+        105628199
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 749879408,
+      "isolate_seed": 49,
+      "sha256": "38a1a91f3ffa286977914128caa34b972950d4fc2c0fb453372115f9af46644f",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.822,
+          "dE_mean": 8.3,
+          "dE_p95": 18.0,
+          "dL": 6.4,
+          "dC": 3.0,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.822,
+          "dE_mean": 4.7,
+          "dE_p95": 13.3,
+          "dL": 1.2,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.861,
+          "dE_mean": 3.6,
+          "dE_p95": 9.9,
+          "dL": 1.8,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "photos": [
+        588919285
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2201038787,
+      "isolate_seed": 49,
+      "sha256": "1d3d7afb318f422c071084ca78a5a3b47f0cc6c7686b9648533285f73f1175ea",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.945,
+          "dE_mean": 7.4,
+          "dE_p95": 11.6,
+          "dL": -6.2,
+          "dC": 2.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.945,
+          "dE_mean": 2.4,
+          "dE_p95": 7.1,
+          "dL": -0.4,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.973,
+          "dE_mean": 1.8,
+          "dE_p95": 4.7,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "empidonax-difficilis": {
+      "common_name": "Western Flycatcher",
+      "photos": [
+        298192498
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3278380386,
+      "isolate_seed": 49,
+      "sha256": "9a9b082a2f8403b466d17b48055a07259b43263c11cb6eab5500da4363683019",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.882,
+          "dE_mean": 9.1,
+          "dE_p95": 18.8,
+          "dL": 0.8,
+          "dC": 4.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.882,
+          "dE_mean": 7.0,
+          "dE_p95": 18.5,
+          "dL": -0.3,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.901,
+          "dE_mean": 5.4,
+          "dE_p95": 16.4,
+          "dL": -0.4,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "euphagus-cyanocephalus": {
+      "common_name": "Brewer's Blackbird",
+      "photos": [
+        362428535
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1371753161,
+      "isolate_seed": 49,
+      "sha256": "1cfc000f06285d8140315bf8a7801867083a807a3e93d973301cad07b896cf76",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.972,
+          "dE_mean": 3.3,
+          "dE_p95": 7.9,
+          "dL": 1.3,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.972,
+          "dE_mean": 3.1,
+          "dE_p95": 7.1,
+          "dL": -0.3,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.984,
+          "dE_mean": 2.3,
+          "dE_p95": 5.3,
+          "dL": -0.0,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "photos": [
+        139560480
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 446133127,
+      "isolate_seed": 49,
+      "sha256": "098cca11b2a6e92c33119b3a8abbff6944dc2fb0888440706fa5f016b40f7db1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.959,
+          "dE_mean": 3.6,
+          "dE_p95": 7.2,
+          "dL": -0.2,
+          "dC": 1.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.959,
+          "dE_mean": 3.0,
+          "dE_p95": 6.8,
+          "dL": 0.7,
+          "dC": 0.4,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 3.2,
+          "dE_p95": 7.3,
+          "dL": 0.8,
+          "dC": 0.7,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "photos": [
+        550175555
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2704172581,
+      "isolate_seed": 49,
+      "sha256": "909d396d3fd15d0741de0ca91605d037204b3de00c6b14482d4a5698e7c3da50",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.938,
+          "dE_mean": 6.9,
+          "dE_p95": 11.5,
+          "dL": -4.8,
+          "dC": 2.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.938,
+          "dE_mean": 4.2,
+          "dE_p95": 8.9,
+          "dL": -0.9,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.946,
+          "dE_mean": 3.9,
+          "dE_p95": 8.5,
+          "dL": -0.9,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "photos": [
+        597027262
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 816066956,
+      "isolate_seed": 49,
+      "sha256": "1233280e0633031e10a23c082eb3ed2bc272747c0013f673aeecf4420fb0c0f8",
+      "faithful": true,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.773,
+          "dE_mean": 8.6,
+          "dE_p95": 18.4,
+          "dL": -2.2,
+          "dC": -2.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.773,
+          "dE_mean": 6.8,
+          "dE_p95": 16.4,
+          "dL": -2.3,
+          "dC": 0.9,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 3.6,
+          "dE_p95": 10.0,
+          "dL": -0.1,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "geococcyx-californianus": {
+      "common_name": "Greater Roadrunner",
+      "photos": [
+        512435698
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3218912483,
+      "isolate_seed": 49,
+      "sha256": "da347acff389b5e84c4f02210e70ef93c06b66a31f1faa4bbd03d0834557a70f",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.682,
+          "dE_mean": 17.4,
+          "dE_p95": 28.9,
+          "dL": 12.5,
+          "dC": 1.2,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.682,
+          "dE_mean": 8.2,
+          "dE_p95": 21.0,
+          "dL": -0.1,
+          "dC": 1.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.685,
+          "dE_mean": 6.8,
+          "dE_p95": 18.1,
+          "dL": -0.3,
+          "dC": 0.6,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "photos": [
+        262973245
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1083498998,
+      "isolate_seed": 50,
+      "sha256": "88479a3aa8b62a9bf08700bca910086811cee70c43c372da4be41d9429903e46",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.637,
+          "dE_mean": 8.9,
+          "dE_p95": 21.5,
+          "dL": -3.9,
+          "dC": -2.9,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.637,
+          "dE_mean": 7.0,
+          "dE_p95": 18.8,
+          "dL": 1.0,
+          "dC": -0.3,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.649,
+          "dE_mean": 6.3,
+          "dE_p95": 17.3,
+          "dL": 0.9,
+          "dC": 0.1,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "haematopus-bachmani": {
+      "common_name": "Black Oystercatcher",
+      "photos": [
+        127561861
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1241328003,
+      "isolate_seed": 49,
+      "sha256": "94648aa03adbd6d07373b2658c31bc18cca09c11f1a4fa527bb4fbbbd7652ff6",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.966,
+          "dE_mean": 7.6,
+          "dE_p95": 12.5,
+          "dL": -4.7,
+          "dC": 3.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.966,
+          "dE_mean": 3.3,
+          "dE_p95": 8.0,
+          "dL": -0.4,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.975,
+          "dE_mean": 2.9,
+          "dE_p95": 7.8,
+          "dL": -0.3,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "photos": [
+        696977106
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1266896593,
+      "isolate_seed": 49,
+      "sha256": "da168cbbc23459ba58f9ceebd386c117f4f6301f54e20964fad4599672d9f25c",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.605,
+          "dE_mean": 13.1,
+          "dE_p95": 23.1,
+          "dL": 10.5,
+          "dC": 3.1,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.605,
+          "dE_mean": 5.4,
+          "dE_p95": 11.6,
+          "dL": 0.2,
+          "dC": 0.2,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.6,
+          "dE_mean": 6.0,
+          "dE_p95": 13.4,
+          "dL": 0.2,
+          "dC": -0.1,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "haliaeetus-leucocephalus": {
+      "common_name": "Bald Eagle",
+      "photos": [
+        29411459
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1398056773,
+      "isolate_seed": 49,
+      "sha256": "71c2a95225b7a92a1f1a027ab92c3f50d4243857e3b443d3e2c7b9495a726488",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.765,
+          "dE_mean": 21.0,
+          "dE_p95": 48.9,
+          "dL": -4.2,
+          "dC": -1.0,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.765,
+          "dE_mean": 20.9,
+          "dE_p95": 49.8,
+          "dL": -0.6,
+          "dC": -0.1,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.779,
+          "dE_mean": 20.0,
+          "dE_p95": 49.2,
+          "dL": -0.4,
+          "dC": -0.2,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "photos": [
+        460820478
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3576547138,
+      "isolate_seed": 49,
+      "sha256": "62be0cae64c5925b4fef0667af8e028c31ff0376340ad7948c268c26df4c4225",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.765,
+          "dE_mean": 5.9,
+          "dE_p95": 10.8,
+          "dL": -0.5,
+          "dC": 3.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.765,
+          "dE_mean": 4.1,
+          "dE_p95": 9.7,
+          "dL": 0.5,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.827,
+          "dE_mean": 4.4,
+          "dE_p95": 10.8,
+          "dL": 0.9,
+          "dC": 0.6,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "hirundo-rustica": {
+      "common_name": "Barn Swallow",
+      "photos": [
+        373640247
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2182663861,
+      "isolate_seed": 49,
+      "sha256": "4d11c2248907285d8b9031b6fdbb724e6169dd61939e3f75ef1b3fb348b78d54",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.616,
+          "dE_mean": 24.6,
+          "dE_p95": 46.4,
+          "dL": 15.1,
+          "dC": 0.7,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.616,
+          "dE_mean": 15.7,
+          "dE_p95": 48.7,
+          "dL": -3.4,
+          "dC": -1.8,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.606,
+          "dE_mean": 14.9,
+          "dE_p95": 49.7,
+          "dL": -4.2,
+          "dC": -2.8,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "photos": [
+        72492465
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1792091278,
+      "isolate_seed": 49,
+      "sha256": "9afe50e35e6dc99136cc8704e1b3dbc3291de05c0fb48e58b10fcffc6ec44ed6",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.9,
+          "dE_mean": 10.5,
+          "dE_p95": 16.6,
+          "dL": 0.5,
+          "dC": 3.6,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.9,
+          "dE_mean": 4.8,
+          "dE_p95": 11.3,
+          "dL": 0.5,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.945,
+          "dE_mean": 2.2,
+          "dE_p95": 6.2,
+          "dL": 0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "icterus-bullockii": {
+      "common_name": "Bullock's Oriole",
+      "photos": [
+        365158109
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2015184782,
+      "isolate_seed": 49,
+      "sha256": "905e38b6aaf5959dd48e3daa07ced4a6b82b1a71876cbe7c4a079db4c14b3376",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.96,
+          "dE_mean": 7.5,
+          "dE_p95": 13.8,
+          "dL": 5.6,
+          "dC": 1.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.96,
+          "dE_mean": 5.0,
+          "dE_p95": 10.3,
+          "dL": 0.3,
+          "dC": 0.7,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.983,
+          "dE_mean": 2.8,
+          "dE_p95": 6.3,
+          "dL": 0.0,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "icterus-cucullatus": {
+      "common_name": "Hooded Oriole",
+      "photos": [
+        570259728
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2791129029,
+      "isolate_seed": 49,
+      "sha256": "1a2f5cee05c196d25415fe9ae63994b3750ba2ebf3d3826e7a5194a6153c091a",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.928,
+          "dE_mean": 5.9,
+          "dE_p95": 10.0,
+          "dL": 1.5,
+          "dC": 0.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.928,
+          "dE_mean": 4.3,
+          "dE_p95": 8.5,
+          "dL": -0.7,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.953,
+          "dE_mean": 3.5,
+          "dE_p95": 7.8,
+          "dL": -0.9,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "photos": [
+        740001274
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2496657917,
+      "isolate_seed": 49,
+      "sha256": "1e1facdbc2c3af8ab587bd96c6d78351cd7aacc81a91bcf922960d56cc438557",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.922,
+          "dE_mean": 6.6,
+          "dE_p95": 12.6,
+          "dL": 2.5,
+          "dC": -4.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.922,
+          "dE_mean": 4.6,
+          "dE_p95": 9.4,
+          "dL": 0.3,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.931,
+          "dE_mean": 3.6,
+          "dE_p95": 8.5,
+          "dL": 0.1,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "lanius-ludovicianus": {
+      "common_name": "Loggerhead Shrike",
+      "photos": [
+        454561513
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3530672546,
+      "isolate_seed": 49,
+      "sha256": "bb50755d742a42cf422d411aeb75a1934f22a259b527941cc52b9ef3cfc23ef6",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.955,
+          "dE_mean": 5.0,
+          "dE_p95": 10.5,
+          "dL": 2.4,
+          "dC": 2.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.955,
+          "dE_mean": 3.4,
+          "dE_p95": 8.5,
+          "dL": 0.6,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 3.5,
+          "dE_p95": 10.4,
+          "dL": 0.3,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "larus-californicus": {
+      "common_name": "California Gull",
+      "photos": [
+        454544999
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 792020078,
+      "isolate_seed": 49,
+      "sha256": "48b57f57382f88421f42c4d184a43b2797726206d4bec2f9e92680b1f82ae3cf",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.927,
+          "dE_mean": 5.3,
+          "dE_p95": 8.9,
+          "dL": -1.1,
+          "dC": 1.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.927,
+          "dE_mean": 3.7,
+          "dE_p95": 8.1,
+          "dL": -0.1,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.988,
+          "dE_mean": 2.4,
+          "dE_p95": 6.3,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "photos": [
+        355357677
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3433969475,
+      "isolate_seed": 49,
+      "sha256": "ea9d4f4e4c97a78e81c1f4f5952d2f7775892e82c182fbe68bcffc697c8bf704",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.966,
+          "dE_mean": 9.0,
+          "dE_p95": 19.4,
+          "dL": 7.8,
+          "dC": 0.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.966,
+          "dE_mean": 3.7,
+          "dE_p95": 7.7,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.98,
+          "dE_mean": 2.8,
+          "dE_p95": 8.0,
+          "dL": -0.2,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "larus-heermanni": {
+      "common_name": "Heermann's Gull",
+      "photos": [
+        639682377
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3520504209,
+      "isolate_seed": 49,
+      "sha256": "71bbf3f049f40c4c3afa983f3ba79ad8c812607838677eff400a02c3164356f0",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.963,
+          "dE_mean": 10.1,
+          "dE_p95": 15.3,
+          "dL": 9.0,
+          "dC": 3.5,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.963,
+          "dE_mean": 2.1,
+          "dE_p95": 5.9,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.979,
+          "dE_mean": 1.7,
+          "dE_p95": 4.3,
+          "dL": 0.0,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "larus-occidentalis": {
+      "common_name": "Western Gull",
+      "photos": [
+        658626211
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 215560645,
+      "isolate_seed": 49,
+      "sha256": "484b7b4fb78dce2162f4a70d4c95905b01ddb6d07d919c03bb93baf479a0c29b",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.919,
+          "dE_mean": 8.3,
+          "dE_p95": 14.6,
+          "dL": -4.4,
+          "dC": 2.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.919,
+          "dE_mean": 4.5,
+          "dE_p95": 9.3,
+          "dL": 0.1,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.96,
+          "dE_mean": 1.9,
+          "dE_p95": 5.5,
+          "dL": 0.2,
+          "dC": -0.5,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "larus-smithsonianus": {
+      "common_name": "American Herring Gull",
+      "photos": [
+        251279386
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2295323238,
+      "isolate_seed": 49,
+      "sha256": "28a8ca6c30dfd3abc84e3f3f32ea88d6ff723d35d482293c768236b80eafb977",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.921,
+          "dE_mean": 8.3,
+          "dE_p95": 12.0,
+          "dL": -4.9,
+          "dC": 5.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.921,
+          "dE_mean": 3.2,
+          "dE_p95": 7.6,
+          "dL": -0.2,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.96,
+          "dE_mean": 2.3,
+          "dE_p95": 5.9,
+          "dL": -0.4,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "photos": [
+        477452926
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2283897885,
+      "isolate_seed": 49,
+      "sha256": "e4e7819882a6149581493a0a21d9a99fda2a1fe22473b170b07f56b85458c8ce",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.953,
+          "dE_mean": 8.8,
+          "dE_p95": 15.3,
+          "dL": -5.7,
+          "dC": -2.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.953,
+          "dE_mean": 4.6,
+          "dE_p95": 8.7,
+          "dL": -0.0,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.961,
+          "dE_mean": 3.8,
+          "dE_p95": 8.2,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "limosa-fedoa": {
+      "common_name": "Marbled Godwit",
+      "photos": [
+        360168301
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3717967518,
+      "isolate_seed": 49,
+      "sha256": "69d9ad255a76b2c688bcecbad1e67931d4ac2b4225c827f4cfccd1c746160f37",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.937,
+          "dE_mean": 5.8,
+          "dE_p95": 9.5,
+          "dL": -3.1,
+          "dC": 2.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.937,
+          "dE_mean": 3.6,
+          "dE_p95": 8.0,
+          "dL": -0.2,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.983,
+          "dE_mean": 2.8,
+          "dE_p95": 6.9,
+          "dL": -0.0,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "lonchura-punctulata": {
+      "common_name": "Scaly-breasted Munia",
+      "photos": [
+        466251849
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2668909354,
+      "isolate_seed": 49,
+      "sha256": "399a2ee4c8448125ad8f8b579784d84f271fcd7aa89a117a310bcf2a5c5b23cb",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.964,
+          "dE_mean": 6.0,
+          "dE_p95": 10.1,
+          "dL": -0.5,
+          "dC": 4.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.964,
+          "dE_mean": 3.0,
+          "dE_p95": 6.4,
+          "dL": -0.1,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.974,
+          "dE_mean": 2.3,
+          "dE_p95": 5.0,
+          "dL": -0.0,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "lophodytes-cucullatus": {
+      "common_name": "Hooded Merganser",
+      "photos": [
+        175110432
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 887271674,
+      "isolate_seed": 49,
+      "sha256": "61c727be0cc34f18b2511c34169c1634edf2729e1e34c00dc99751d6f73ca7e9",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.815,
+          "dE_mean": 12.1,
+          "dE_p95": 34.6,
+          "dL": 0.3,
+          "dC": 1.2,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.815,
+          "dE_mean": 11.4,
+          "dE_p95": 34.9,
+          "dL": -0.5,
+          "dC": 0.6,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.954,
+          "dE_mean": 4.1,
+          "dE_p95": 8.5,
+          "dL": -0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "photos": [
+        342127424
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1706589691,
+      "isolate_seed": 49,
+      "sha256": "385c75e2ddf771b3c5f4d75f5d31614c2f1c4b14993454ed5752ef46800187b5",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.721,
+          "dE_mean": 12.1,
+          "dE_p95": 32.0,
+          "dL": -5.0,
+          "dC": -0.0,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.721,
+          "dE_mean": 11.1,
+          "dE_p95": 31.0,
+          "dL": -3.4,
+          "dC": 0.6,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.891,
+          "dE_mean": 5.6,
+          "dE_p95": 14.6,
+          "dL": -1.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "mareca-strepera": {
+      "common_name": "Gadwall",
+      "photos": [
+        227535929
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4214890746,
+      "isolate_seed": 49,
+      "sha256": "8abc472e7a5d265ae50ed2942de6ea4f64c7d2d763ff326d37125417b8bdda8a",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.867,
+          "dE_mean": 4.1,
+          "dE_p95": 10.1,
+          "dL": 2.2,
+          "dC": 1.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.867,
+          "dE_mean": 3.6,
+          "dE_p95": 8.0,
+          "dL": -1.3,
+          "dC": -0.4,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.875,
+          "dE_mean": 3.1,
+          "dE_p95": 7.0,
+          "dL": -1.2,
+          "dC": -0.7,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "photos": [
+        342130685
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1208721233,
+      "isolate_seed": 49,
+      "sha256": "81c0a8ff7d002ae9db24d835015def640d4eea9c3bc96fdbf5c42618b7671b7d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.897,
+          "dE_mean": 10.9,
+          "dE_p95": 15.4,
+          "dL": -7.5,
+          "dC": -1.9,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.897,
+          "dE_mean": 4.0,
+          "dE_p95": 9.0,
+          "dL": -0.1,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.937,
+          "dE_mean": 3.1,
+          "dE_p95": 8.1,
+          "dL": -0.2,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "megascops-kennicottii": {
+      "common_name": "Western Screech Owl",
+      "photos": [
+        283508436
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2376463230,
+      "isolate_seed": 50,
+      "sha256": "a3f41986112679bff8b0a5fa4d7bb44f13e6c4a552a4ea4192e4f1b89998db5b",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.723,
+          "dE_mean": 12.4,
+          "dE_p95": 31.6,
+          "dL": -1.5,
+          "dC": 1.3,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.723,
+          "dE_mean": 12.1,
+          "dE_p95": 31.8,
+          "dL": -0.4,
+          "dC": -0.1,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.727,
+          "dE_mean": 7.8,
+          "dE_p95": 19.5,
+          "dL": -1.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "melanerpes-formicivorus": {
+      "common_name": "Acorn Woodpecker",
+      "photos": [
+        705003277
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2174012414,
+      "isolate_seed": 49,
+      "sha256": "a4bc3ee2aca06f8cc77335a7397915ba398b573e0484bcd4d3cdf6235afd479c",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.928,
+          "dE_mean": 5.0,
+          "dE_p95": 10.6,
+          "dL": -1.3,
+          "dC": 1.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.928,
+          "dE_mean": 4.3,
+          "dE_p95": 9.7,
+          "dL": -0.7,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.93,
+          "dE_mean": 3.7,
+          "dE_p95": 10.1,
+          "dL": -1.2,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "melanitta-perspicillata": {
+      "common_name": "Surf Scoter",
+      "photos": [
+        593312066
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2033565988,
+      "isolate_seed": 49,
+      "sha256": "ecb2bbfddec52547fe41f3d42a2a31e7842c1ef79c3c43576d72a2dd185871e1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.674,
+          "dE_mean": 7.6,
+          "dE_p95": 21.9,
+          "dL": 6.1,
+          "dC": 1.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.674,
+          "dE_mean": 4.9,
+          "dE_p95": 17.1,
+          "dL": 0.4,
+          "dC": 1.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.908,
+          "dE_mean": 3.0,
+          "dE_p95": 12.2,
+          "dL": 0.2,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "melospiza-lincolnii": {
+      "common_name": "Lincoln's Sparrow",
+      "photos": [
+        171734227
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4281051211,
+      "isolate_seed": 49,
+      "sha256": "ed33fc01124718f296a1e7d44a3b576195264048731f2228c65a30b031d24bd2",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.9,
+          "dE_mean": 4.2,
+          "dE_p95": 7.5,
+          "dL": -1.8,
+          "dC": 1.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.9,
+          "dE_mean": 3.2,
+          "dE_p95": 6.7,
+          "dL": -0.3,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.902,
+          "dE_mean": 2.6,
+          "dE_p95": 6.5,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "photos": [
+        573624499
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2792360916,
+      "isolate_seed": 49,
+      "sha256": "feaee480371bc9911ca3720e289e2ae2880cc01cfa3c286e8254f27869270e4d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.943,
+          "dE_mean": 6.8,
+          "dE_p95": 12.7,
+          "dL": 0.1,
+          "dC": 3.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.943,
+          "dE_mean": 4.4,
+          "dE_p95": 11.2,
+          "dL": 0.0,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.945,
+          "dE_mean": 4.5,
+          "dE_p95": 11.7,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "melozone-crissalis": {
+      "common_name": "California Towhee",
+      "photos": [
+        683068044
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3032983442,
+      "isolate_seed": 49,
+      "sha256": "c5f0dbe935df11ed8245e96577515005d8611218a3f55ac773111f3711cd2f85",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.957,
+          "dE_mean": 5.1,
+          "dE_p95": 8.1,
+          "dL": -2.0,
+          "dC": 3.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.957,
+          "dE_mean": 3.1,
+          "dE_p95": 7.1,
+          "dL": -0.2,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.977,
+          "dE_mean": 2.5,
+          "dE_p95": 6.2,
+          "dL": -0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "photos": [
+        677927552
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 326537389,
+      "isolate_seed": 49,
+      "sha256": "fa58259ce41f9fac0a6f56cc4ac680d46ed9945ff1a9276ab0cd4d4067c51f13",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.874,
+          "dE_mean": 6.9,
+          "dE_p95": 15.4,
+          "dL": 1.9,
+          "dC": 4.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.874,
+          "dE_mean": 4.7,
+          "dE_p95": 11.5,
+          "dL": -0.4,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 3.3,
+          "dE_p95": 7.3,
+          "dL": -0.5,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "photos": [
+        129501932
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 714479489,
+      "isolate_seed": 49,
+      "sha256": "cd089ea6dfdeb274ffab09e4400bfe37e58956989204fde1294ec11e912732f6",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.879,
+          "dE_mean": 4.2,
+          "dE_p95": 10.9,
+          "dL": 0.9,
+          "dC": 1.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.879,
+          "dE_mean": 3.3,
+          "dE_p95": 8.3,
+          "dL": 1.0,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.894,
+          "dE_mean": 3.1,
+          "dE_p95": 9.0,
+          "dL": 0.6,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "myiarchus-cinerascens": {
+      "common_name": "Ash-throated Flycatcher",
+      "photos": [
+        374754506
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3296673745,
+      "isolate_seed": 49,
+      "sha256": "71eeca81e58cf95b0681c768e699a75b1f77e6f014a0548d164b26a70043c48e",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.955,
+          "dE_mean": 8.7,
+          "dE_p95": 13.1,
+          "dL": -4.6,
+          "dC": 5.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.955,
+          "dE_mean": 4.1,
+          "dE_p95": 8.0,
+          "dL": -0.4,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.971,
+          "dE_mean": 3.2,
+          "dE_p95": 7.1,
+          "dL": -0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "photos": [
+        615582387
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 831583406,
+      "isolate_seed": 49,
+      "sha256": "bb75f82b8021a0a1dcd75d342ac373eda7ac2e5b4c899c6ac4a9b8be6690fcdd",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.904,
+          "dE_mean": 4.2,
+          "dE_p95": 10.2,
+          "dL": 1.3,
+          "dC": 1.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.904,
+          "dE_mean": 3.7,
+          "dE_p95": 9.2,
+          "dL": -1.0,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.941,
+          "dE_mean": 3.9,
+          "dE_p95": 10.2,
+          "dL": -0.8,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "numenius-hudsonicus": {
+      "common_name": "Hudsonian Whimbrel",
+      "photos": [
+        608718632
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 370237446,
+      "isolate_seed": 49,
+      "sha256": "1f0a661c88c2485477a7f43ef8e75addd40d003202fa1f81fe0b1215af33e1f6",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.838,
+          "dE_mean": 6.8,
+          "dE_p95": 11.0,
+          "dL": -2.4,
+          "dC": 4.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.838,
+          "dE_mean": 4.0,
+          "dE_p95": 9.4,
+          "dL": -0.9,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.911,
+          "dE_mean": 3.6,
+          "dE_p95": 8.7,
+          "dL": -0.6,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "nyctanassa-violacea": {
+      "common_name": "Yellow-crowned Night Heron",
+      "photos": [
+        395401394
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3676297124,
+      "isolate_seed": 49,
+      "sha256": "105e615c2147c6b94bcd8846fc7dd8e43e1abbcc4a3441bd3f7f26eb41fd865c",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.939,
+          "dE_mean": 5.7,
+          "dE_p95": 10.6,
+          "dL": -1.8,
+          "dC": -1.0,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.939,
+          "dE_mean": 4.1,
+          "dE_p95": 9.8,
+          "dL": -1.3,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.963,
+          "dE_mean": 3.9,
+          "dE_p95": 9.9,
+          "dL": -1.0,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "photos": [
+        504130111
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1194754810,
+      "isolate_seed": 49,
+      "sha256": "a037f57f7bb4d69f1ffc43b0dbbeb0881b7e63961a9d2b3dc8499802f4df93ee",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.958,
+          "dE_mean": 4.5,
+          "dE_p95": 7.4,
+          "dL": -1.0,
+          "dC": 3.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.958,
+          "dE_mean": 2.5,
+          "dE_p95": 5.6,
+          "dL": -0.3,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.96,
+          "dE_mean": 1.8,
+          "dE_p95": 4.6,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "photos": [
+        196036954
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2790568880,
+      "isolate_seed": 49,
+      "sha256": "69a074356f649ee88f11abeb4e4f24bccee41867655097dce4bf596213076fc8",
+      "faithful": true,
+      "attempts": 2,
+      "fidelity": {
+        "painted": {
+          "iou": 0.763,
+          "dE_mean": 10.1,
+          "dE_p95": 21.3,
+          "dL": 0.5,
+          "dC": -0.8,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.763,
+          "dE_mean": 9.7,
+          "dE_p95": 22.9,
+          "dL": -1.5,
+          "dC": -0.8,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.848,
+          "dE_mean": 8.3,
+          "dE_p95": 21.4,
+          "dL": -0.7,
+          "dC": -0.7,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "photos": [
+        603488181
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 482325760,
+      "isolate_seed": 50,
+      "sha256": "b8f5dfca947226b1ae36c29cb6e30efc4584ffe90bd2ff12b6af87c31d7c4bdf",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.887,
+          "dE_mean": 8.9,
+          "dE_p95": 16.4,
+          "dL": 2.9,
+          "dC": 4.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.887,
+          "dE_mean": 4.1,
+          "dE_p95": 9.9,
+          "dL": 0.2,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.959,
+          "dE_mean": 2.5,
+          "dE_p95": 6.5,
+          "dL": 0.3,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "photos": [
+        591010154
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2013668983,
+      "isolate_seed": 49,
+      "sha256": "7e04bdc7ced3b9398c0878ba2a9a80864b645d5ceb9b9ddd5d423d6694467c45",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.972,
+          "dE_mean": 8.7,
+          "dE_p95": 12.5,
+          "dL": -7.8,
+          "dC": 2.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.972,
+          "dE_mean": 2.6,
+          "dE_p95": 5.6,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 2.0,
+          "dE_p95": 5.1,
+          "dL": -0.0,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "photos": [
+        106336564
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1832197150,
+      "isolate_seed": 49,
+      "sha256": "86cacb8eb6d5a132e60c1f95eb1b770698f7a698250216cb043ccd97c3dcab3c",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.969,
+          "dE_mean": 5.5,
+          "dE_p95": 10.4,
+          "dL": -0.5,
+          "dC": 3.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.969,
+          "dE_mean": 3.6,
+          "dE_p95": 8.3,
+          "dL": -0.0,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.974,
+          "dE_mean": 3.0,
+          "dE_p95": 7.4,
+          "dL": -0.0,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "passerina-amoena": {
+      "common_name": "Lazuli Bunting",
+      "photos": [
+        189925731
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2706392673,
+      "isolate_seed": 49,
+      "sha256": "b7c9ed36b27e8dac6f39742f41969174231dcfe3629a66cb5022085b1b51c107",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.895,
+          "dE_mean": 7.2,
+          "dE_p95": 13.4,
+          "dL": -3.6,
+          "dC": 1.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.895,
+          "dE_mean": 5.3,
+          "dE_p95": 11.6,
+          "dL": -1.2,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.899,
+          "dE_mean": 5.4,
+          "dE_p95": 10.8,
+          "dL": -0.9,
+          "dC": -0.6,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "patagioenas-fasciata": {
+      "common_name": "Band-tailed Pigeon",
+      "photos": [
+        373653773
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1973804647,
+      "isolate_seed": 49,
+      "sha256": "14a1f6c3704addbc7473784648589832ed82578e78e79f0ba830a4d092498a95",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.829,
+          "dE_mean": 8.8,
+          "dE_p95": 17.8,
+          "dL": -0.3,
+          "dC": -4.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.829,
+          "dE_mean": 6.0,
+          "dE_p95": 16.5,
+          "dL": -1.0,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.963,
+          "dE_mean": 2.9,
+          "dE_p95": 8.0,
+          "dL": -0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pavo-cristatus": {
+      "common_name": "Indian Peafowl",
+      "photos": [
+        459533707
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 282036827,
+      "isolate_seed": 49,
+      "sha256": "fb15edb3fb5a2600877de007f5dc4a490cc40451d10e6d2d39085620b0f81bbe",
+      "faithful": true,
+      "attempts": 2,
+      "fidelity": {
+        "painted": {
+          "iou": 0.854,
+          "dE_mean": 9.2,
+          "dE_p95": 17.7,
+          "dL": -0.7,
+          "dC": -2.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.854,
+          "dE_mean": 7.6,
+          "dE_p95": 16.2,
+          "dL": -0.8,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.895,
+          "dE_mean": 7.8,
+          "dE_p95": 19.2,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "photos": [
+        185274990
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 836728497,
+      "isolate_seed": 49,
+      "sha256": "7d0cd4029797e0ddc1e4adef240c2488faf21ad6534e68b4c3e1c251e188eb43",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.934,
+          "dE_mean": 7.8,
+          "dE_p95": 15.1,
+          "dL": 5.1,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.934,
+          "dE_mean": 4.0,
+          "dE_p95": 8.6,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.927,
+          "dE_mean": 4.3,
+          "dE_p95": 11.0,
+          "dL": -0.2,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "photos": [
+        593312023
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3385963343,
+      "isolate_seed": 50,
+      "sha256": "e164e417ddc85e70a37d64e94ccc56420c889b9d8370923f50929d30cfe8f477",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.555,
+          "dE_mean": 10.3,
+          "dE_p95": 17.9,
+          "dL": 5.8,
+          "dC": 3.0,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.555,
+          "dE_mean": 4.9,
+          "dE_p95": 16.1,
+          "dL": -2.7,
+          "dC": -0.3,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.459,
+          "dE_mean": 6.8,
+          "dE_p95": 18.1,
+          "dL": -5.3,
+          "dC": -0.7,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "petrochelidon-pyrrhonota": {
+      "common_name": "American Cliff Swallow",
+      "photos": [
+        311645778
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2257786075,
+      "isolate_seed": 49,
+      "sha256": "ed85cefc389c34a5856ce2cae2f1a03f8b9fe0029d6b612abb43746c9be1a80d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.824,
+          "dE_mean": 10.3,
+          "dE_p95": 22.4,
+          "dL": 0.3,
+          "dC": 0.7,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.824,
+          "dE_mean": 9.9,
+          "dE_p95": 22.4,
+          "dL": 0.3,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.819,
+          "dE_mean": 9.5,
+          "dE_p95": 23.0,
+          "dL": 0.3,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "phainopepla-nitens": {
+      "common_name": "Phainopepla",
+      "photos": [
+        265185077
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2650179816,
+      "isolate_seed": 49,
+      "sha256": "c03e4c8883d88adebb33b52451f898c5a6fdef1f6b778347c1caf0403db918b1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.931,
+          "dE_mean": 7.3,
+          "dE_p95": 16.3,
+          "dL": 2.5,
+          "dC": -0.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.931,
+          "dE_mean": 6.1,
+          "dE_p95": 14.9,
+          "dL": -0.2,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.93,
+          "dE_mean": 4.7,
+          "dE_p95": 11.8,
+          "dL": -0.2,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "phalaenoptilus-nuttallii": {
+      "common_name": "Common Poorwill",
+      "photos": [
+        27035889
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3125109184,
+      "isolate_seed": 49,
+      "sha256": "293dfa3cd2bd46150dae86d026c731bbb7b73743b15d5f484e709aab8d92f358",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.819,
+          "dE_mean": 7.6,
+          "dE_p95": 17.3,
+          "dL": -2.9,
+          "dC": -0.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.819,
+          "dE_mean": 6.5,
+          "dE_p95": 16.1,
+          "dL": -0.6,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.874,
+          "dE_mean": 5.7,
+          "dE_p95": 13.9,
+          "dL": -0.7,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pheucticus-melanocephalus": {
+      "common_name": "Black-headed Grosbeak",
+      "photos": [
+        187415416
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 329802493,
+      "isolate_seed": 49,
+      "sha256": "e3be608b98ec2ccec384a6fd46f4dc2fc00b38daf2d31d7b5540a5c4813f65ad",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.871,
+          "dE_mean": 7.5,
+          "dE_p95": 17.2,
+          "dL": -1.7,
+          "dC": 3.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.871,
+          "dE_mean": 6.0,
+          "dE_p95": 16.2,
+          "dL": 0.1,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 3.8,
+          "dE_p95": 9.2,
+          "dL": -0.2,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pipilo-maculatus": {
+      "common_name": "Spotted Towhee",
+      "photos": [
+        489597210
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2873608182,
+      "isolate_seed": 49,
+      "sha256": "ed2efc1b0c0a5414c4de8c60b40435f94838a5fd4a7f329b1a51f12bef62bb6c",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.941,
+          "dE_mean": 10.1,
+          "dE_p95": 16.4,
+          "dL": -3.8,
+          "dC": -2.2,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.941,
+          "dE_mean": 4.6,
+          "dE_p95": 8.8,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 3.3,
+          "dE_p95": 8.1,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "piranga-ludoviciana": {
+      "common_name": "Western Tanager",
+      "photos": [
+        378816896
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 52625513,
+      "isolate_seed": 49,
+      "sha256": "13e8b585b5083fc637be4e49ed238a95dfc923597bdadbcb9d71838c2a0a99dd",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.862,
+          "dE_mean": 14.4,
+          "dE_p95": 26.7,
+          "dL": 8.5,
+          "dC": 1.1,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.862,
+          "dE_mean": 9.8,
+          "dE_p95": 25.2,
+          "dL": 0.1,
+          "dC": 0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.919,
+          "dE_mean": 3.0,
+          "dE_p95": 7.1,
+          "dL": 0.1,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "plegadis-chihi": {
+      "common_name": "White-faced Ibis",
+      "photos": [
+        346321106
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1538554919,
+      "isolate_seed": 49,
+      "sha256": "84677cbe814d55c1282b66d8d4c99edda6bcc1f2cde695be4cb936c149f27d5a",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.877,
+          "dE_mean": 6.2,
+          "dE_p95": 11.6,
+          "dL": -5.3,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.877,
+          "dE_mean": 3.4,
+          "dE_p95": 8.3,
+          "dL": -0.8,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.935,
+          "dE_mean": 2.9,
+          "dE_p95": 5.5,
+          "dL": -0.7,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pluvialis-squatarola": {
+      "common_name": "Grey Plover",
+      "photos": [
+        603766626
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 109175544,
+      "isolate_seed": 49,
+      "sha256": "2115abe2f0c6038c821c55a53d2ead13b900d36d1d4e7ad737a91fc494f1b361",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.871,
+          "dE_mean": 7.2,
+          "dE_p95": 14.7,
+          "dL": -3.6,
+          "dC": 3.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.871,
+          "dE_mean": 5.4,
+          "dE_p95": 13.4,
+          "dL": -1.4,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.86,
+          "dE_mean": 5.1,
+          "dE_p95": 13.2,
+          "dL": -1.4,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "podiceps-nigricollis": {
+      "common_name": "Black-necked Grebe",
+      "photos": [
+        118363170
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2216746888,
+      "isolate_seed": 49,
+      "sha256": "632bb9f57a729df4fe2e43afc8668b85a24b1d91313f25a9b58bbc3ff7b18b9d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.91,
+          "dE_mean": 7.0,
+          "dE_p95": 13.2,
+          "dL": 0.9,
+          "dC": 2.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.91,
+          "dE_mean": 5.4,
+          "dE_p95": 12.2,
+          "dL": 0.3,
+          "dC": 0.4,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.951,
+          "dE_mean": 4.6,
+          "dE_p95": 11.5,
+          "dL": 0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "photos": [
+        414242221
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 761053135,
+      "isolate_seed": 49,
+      "sha256": "ad58a00ee037c3d36a5f90f20ea5afaac5e96875c91e845011895e1423dca4f1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.938,
+          "dE_mean": 5.2,
+          "dE_p95": 8.3,
+          "dL": 0.1,
+          "dC": 3.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.938,
+          "dE_mean": 3.0,
+          "dE_p95": 6.5,
+          "dL": -0.5,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.971,
+          "dE_mean": 2.5,
+          "dE_p95": 5.8,
+          "dL": -0.0,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "poecile-gambeli": {
+      "common_name": "Mountain Chickadee",
+      "photos": [
+        162993740
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2801388929,
+      "isolate_seed": 49,
+      "sha256": "4ae70c820bea0f280d8c30a65a545bf061ea3da46f5fe67c4768016fdfe0b10e",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.655,
+          "dE_mean": 17.2,
+          "dE_p95": 41.9,
+          "dL": 1.1,
+          "dC": 4.8,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.655,
+          "dE_mean": 16.3,
+          "dE_p95": 41.2,
+          "dL": -0.0,
+          "dC": 3.3,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.651,
+          "dE_mean": 16.3,
+          "dE_p95": 41.3,
+          "dL": -0.1,
+          "dC": 3.0,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "polioptila-caerulea": {
+      "common_name": "Blue-grey Gnatcatcher",
+      "photos": [
+        265549857
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3122748884,
+      "isolate_seed": 49,
+      "sha256": "9e99ffb0ab3a936ede9986dadc2160f0577854d3626789cebc2077f9cf9987a1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.866,
+          "dE_mean": 6.4,
+          "dE_p95": 15.0,
+          "dL": 1.9,
+          "dC": 1.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.866,
+          "dE_mean": 5.2,
+          "dE_p95": 12.6,
+          "dL": 2.2,
+          "dC": -0.5,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.874,
+          "dE_mean": 4.2,
+          "dE_p95": 11.8,
+          "dL": 2.3,
+          "dC": -0.9,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "polioptila-californica": {
+      "common_name": "California Gnatcatcher",
+      "photos": [
+        162994586
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 240167842,
+      "isolate_seed": 50,
+      "sha256": "4a56da33427fffdaa4380967dcf8284b835cc57e6a00cb10aaabd58d3db9f2b5",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.701,
+          "dE_mean": 11.0,
+          "dE_p95": 28.8,
+          "dL": 0.6,
+          "dC": 1.9,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.701,
+          "dE_mean": 10.3,
+          "dE_p95": 29.1,
+          "dL": -0.5,
+          "dC": -0.2,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.738,
+          "dE_mean": 10.9,
+          "dE_p95": 27.3,
+          "dL": -0.0,
+          "dC": -0.2,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "photos": [
+        595472606
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1153751164,
+      "isolate_seed": 49,
+      "sha256": "f1c859a38b5501b18470a09e7882494c4574eae7e6c1d0860c321c7a8be09c05",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.909,
+          "dE_mean": 7.2,
+          "dE_p95": 13.0,
+          "dL": -0.4,
+          "dC": -3.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.909,
+          "dE_mean": 4.7,
+          "dE_p95": 10.1,
+          "dL": -0.2,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.915,
+          "dE_mean": 4.1,
+          "dE_p95": 10.1,
+          "dL": -0.0,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "psittacara-mitratus": {
+      "common_name": "Mitred Parakeet",
+      "photos": [
+        185005450
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1362593162,
+      "isolate_seed": 49,
+      "sha256": "d114e81224551ab75db27adfd3d05d482ba86de9d3fac1e92a468c27b573526b",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.824,
+          "dE_mean": 13.2,
+          "dE_p95": 24.0,
+          "dL": -2.1,
+          "dC": -8.2,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.824,
+          "dE_mean": 8.0,
+          "dE_p95": 19.4,
+          "dL": -0.1,
+          "dC": 0.7,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.863,
+          "dE_mean": 6.5,
+          "dE_p95": 18.3,
+          "dL": 0.3,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pycnonotus-jocosus": {
+      "common_name": "Red-whiskered Bulbul",
+      "photos": [
+        683078953
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1751239726,
+      "isolate_seed": 49,
+      "sha256": "44e8a55d0c9ffd4ca3cb028af148b0a3b6e4e8d43253443e2c94e07ffbed8a13",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.875,
+          "dE_mean": 10.2,
+          "dE_p95": 22.1,
+          "dL": 6.2,
+          "dC": 4.7,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.875,
+          "dE_mean": 7.1,
+          "dE_p95": 16.0,
+          "dL": -0.6,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.93,
+          "dE_mean": 3.9,
+          "dE_p95": 8.7,
+          "dL": -0.4,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "pyrocephalus-rubinus": {
+      "common_name": "Scarlet Flycatcher",
+      "photos": [
+        462069577
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1145012852,
+      "isolate_seed": 49,
+      "sha256": "e326eb5b177b3c24aa3ff03151f5a7474b15db8e686738e76879edb343a57672",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.851,
+          "dE_mean": 10.1,
+          "dE_p95": 19.6,
+          "dL": 2.8,
+          "dC": 4.4,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.851,
+          "dE_mean": 8.4,
+          "dE_p95": 16.8,
+          "dL": 0.4,
+          "dC": 1.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.824,
+          "dE_mean": 6.6,
+          "dE_p95": 16.8,
+          "dL": 0.4,
+          "dC": 0.5,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "quiscalus-mexicanus": {
+      "common_name": "Great-tailed Grackle",
+      "photos": [
+        428630110
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1887859754,
+      "isolate_seed": 49,
+      "sha256": "0e41198fdf780f885131f099db7ea3cf92e39a137c9b892bf4e5d60330bbdf34",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.935,
+          "dE_mean": 8.0,
+          "dE_p95": 14.7,
+          "dL": 5.6,
+          "dC": 1.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.935,
+          "dE_mean": 4.6,
+          "dE_p95": 11.0,
+          "dL": 1.0,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.96,
+          "dE_mean": 3.0,
+          "dE_p95": 7.3,
+          "dL": -0.1,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "photos": [
+        636417717
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3149484567,
+      "isolate_seed": 49,
+      "sha256": "720809165285b4b7ae00d0f46ddc1bc25da776304a9ffc09d880dcc91f16f047",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.934,
+          "dE_mean": 9.7,
+          "dE_p95": 20.5,
+          "dL": 6.9,
+          "dC": 3.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.934,
+          "dE_mean": 5.1,
+          "dE_p95": 10.9,
+          "dL": -0.0,
+          "dC": 1.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.978,
+          "dE_mean": 3.4,
+          "dE_p95": 8.0,
+          "dL": 0.0,
+          "dC": 0.6,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "sayornis-saya": {
+      "common_name": "Say's Phoebe",
+      "photos": [
+        603998675
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1421892825,
+      "isolate_seed": 49,
+      "sha256": "fe2cd552bfad08ec7a1c79b95c25b5b40a452e747d1722b5f3579fb3593de132",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.84,
+          "dE_mean": 4.9,
+          "dE_p95": 9.4,
+          "dL": -0.8,
+          "dC": 3.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.84,
+          "dE_mean": 3.3,
+          "dE_p95": 7.6,
+          "dL": 1.4,
+          "dC": -0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.844,
+          "dE_mean": 2.6,
+          "dE_p95": 6.7,
+          "dL": 1.7,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "selasphorus-sasin": {
+      "common_name": "Allen's Hummingbird",
+      "photos": [
+        603534698
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1721696552,
+      "isolate_seed": 49,
+      "sha256": "c4c5eaf6201acc1fa0cff1dbae68eebdef91a27a742300f0bab38150dfb58ee2",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.926,
+          "dE_mean": 9.8,
+          "dE_p95": 15.5,
+          "dL": 3.8,
+          "dC": -1.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.926,
+          "dE_mean": 4.7,
+          "dE_p95": 8.8,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 2.7,
+          "dE_p95": 5.6,
+          "dL": 0.2,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "photos": [
+        316616677
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2211153458,
+      "isolate_seed": 49,
+      "sha256": "a70cb72caf5ca7945d2fef5acc5e042896b0ce784d9368b430a5153ac808e38e",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.773,
+          "dE_mean": 14.6,
+          "dE_p95": 31.8,
+          "dL": -2.6,
+          "dC": -4.0,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.773,
+          "dE_mean": 14.0,
+          "dE_p95": 30.8,
+          "dL": -0.9,
+          "dC": -0.4,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.774,
+          "dE_mean": 14.3,
+          "dE_p95": 33.4,
+          "dL": -1.2,
+          "dC": -0.7,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "photos": [
+        616227519
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1225709206,
+      "isolate_seed": 49,
+      "sha256": "7ca853fb76c3cd4945f105fb0d7b556bfd3001d87d72e84b53bab597d41a9405",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.959,
+          "dE_mean": 15.3,
+          "dE_p95": 22.1,
+          "dL": 14.3,
+          "dC": 4.5,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.959,
+          "dE_mean": 3.5,
+          "dE_p95": 7.4,
+          "dL": 0.2,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.981,
+          "dE_mean": 2.5,
+          "dE_p95": 5.3,
+          "dL": 0.0,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "setophaga-nigrescens": {
+      "common_name": "Black-throated Grey Warbler",
+      "photos": [
+        165872786
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3120621633,
+      "isolate_seed": 49,
+      "sha256": "7070423436e216d8abdff60a43706cdb7edcb9458e46c4138cd010856e91f6b7",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.951,
+          "dE_mean": 5.7,
+          "dE_p95": 12.6,
+          "dL": 1.6,
+          "dC": 2.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.951,
+          "dE_mean": 4.8,
+          "dE_p95": 11.7,
+          "dL": -0.2,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.941,
+          "dE_mean": 5.0,
+          "dE_p95": 13.6,
+          "dL": -0.2,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "setophaga-townsendi": {
+      "common_name": "Townsend's Warbler",
+      "photos": [
+        366528062
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2988775894,
+      "isolate_seed": 49,
+      "sha256": "7d123cb1c0cf0354bfd2a9eedf6f800584acf8c029907ec4c44567065fba21b1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.897,
+          "dE_mean": 6.2,
+          "dE_p95": 11.9,
+          "dL": 0.7,
+          "dC": -1.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.897,
+          "dE_mean": 5.1,
+          "dE_p95": 11.2,
+          "dL": -0.3,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.97,
+          "dE_mean": 3.9,
+          "dE_p95": 9.3,
+          "dL": -0.5,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "sialia-mexicana": {
+      "common_name": "Western Bluebird",
+      "photos": [
+        608932921
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2381719207,
+      "isolate_seed": 49,
+      "sha256": "ddc1e3ce374b22a1059089d95851d5aa527d1641d907dbd38f93bbdd2fbac967",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.838,
+          "dE_mean": 6.4,
+          "dE_p95": 10.2,
+          "dL": -4.0,
+          "dC": 1.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.838,
+          "dE_mean": 4.8,
+          "dE_p95": 8.7,
+          "dL": -0.5,
+          "dC": -0.6,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.864,
+          "dE_mean": 4.1,
+          "dE_p95": 7.3,
+          "dL": -0.7,
+          "dC": -0.5,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "photos": [
+        201115486
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 253805889,
+      "isolate_seed": 49,
+      "sha256": "d185cabe64729ad29cc965cfde7ccb89aebb5234b0743be3bc040ddf81944973",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.917,
+          "dE_mean": 5.2,
+          "dE_p95": 13.7,
+          "dL": 2.0,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.917,
+          "dE_mean": 4.7,
+          "dE_p95": 11.2,
+          "dL": 0.1,
+          "dC": -0.6,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.984,
+          "dE_mean": 3.8,
+          "dE_p95": 11.2,
+          "dL": -0.2,
+          "dC": -0.6,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "photos": [
+        227536108
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4029703629,
+      "isolate_seed": 50,
+      "sha256": "b3044e79ea518313359da53367eac1e4585ff8c69d121873c4c29f50b8cdb770",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.719,
+          "dE_mean": 12.9,
+          "dE_p95": 34.7,
+          "dL": 0.9,
+          "dC": 2.7,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.719,
+          "dE_mean": 12.8,
+          "dE_p95": 33.7,
+          "dL": -3.0,
+          "dC": 0.4,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.843,
+          "dE_mean": 8.9,
+          "dE_p95": 25.3,
+          "dL": -2.2,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "spatula-cyanoptera": {
+      "common_name": "Cinnamon Teal",
+      "photos": [
+        93140720
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 883397009,
+      "isolate_seed": 49,
+      "sha256": "ad1eb08837c40256be0ba6b0e3423e5ef2187e6a161e6a623dc100d8c07d0762",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.971,
+          "dE_mean": 11.8,
+          "dE_p95": 16.3,
+          "dL": -7.5,
+          "dC": 6.3,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.971,
+          "dE_mean": 3.6,
+          "dE_p95": 6.5,
+          "dL": -0.1,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.98,
+          "dE_mean": 2.6,
+          "dE_p95": 5.7,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "spatula-discors": {
+      "common_name": "Blue-winged Teal",
+      "photos": [
+        444126513
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4226156768,
+      "isolate_seed": 50,
+      "sha256": "67beac828dcdd64e034683628a4d368f67d430fc7c214560b6a2ea414815b6be",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.768,
+          "dE_mean": 7.5,
+          "dE_p95": 16.8,
+          "dL": -0.3,
+          "dC": 3.5,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.768,
+          "dE_mean": 6.8,
+          "dE_p95": 16.7,
+          "dL": 0.1,
+          "dC": -1.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.916,
+          "dE_mean": 3.7,
+          "dE_p95": 8.7,
+          "dL": -0.0,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "photos": [
+        674483011
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 805569875,
+      "isolate_seed": 49,
+      "sha256": "e600f866912d4f1fbb8d1d703f079900be19e611917dfcdf39bb8ba77844d039",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.95,
+          "dE_mean": 6.7,
+          "dE_p95": 11.5,
+          "dL": -2.2,
+          "dC": 3.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.95,
+          "dE_mean": 4.5,
+          "dE_p95": 9.5,
+          "dL": 0.2,
+          "dC": 0.8,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 3.3,
+          "dE_p95": 9.1,
+          "dL": 0.3,
+          "dC": 0.5,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "spinus-tristis": {
+      "common_name": "American Goldfinch",
+      "photos": [
+        254001420
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 884123729,
+      "isolate_seed": 49,
+      "sha256": "b8bc0b8d028ea38bfec3ab022e6c0213b171a794efac0971652df9e0ddf9a407",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.968,
+          "dE_mean": 5.5,
+          "dE_p95": 8.5,
+          "dL": -0.5,
+          "dC": 3.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.968,
+          "dE_mean": 3.8,
+          "dE_p95": 7.6,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.969,
+          "dE_mean": 2.8,
+          "dE_p95": 6.8,
+          "dL": -0.2,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "spizella-passerina": {
+      "common_name": "Chipping Sparrow",
+      "photos": [
+        176335061
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 284894801,
+      "isolate_seed": 49,
+      "sha256": "3a8b0b0c187dc6b54821bf17297f3d1d2e3a5b1a0748cd8e6e723aaf75c5c248",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.685,
+          "dE_mean": 10.0,
+          "dE_p95": 18.5,
+          "dL": 0.4,
+          "dC": 5.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.685,
+          "dE_mean": 7.0,
+          "dE_p95": 16.5,
+          "dL": -0.4,
+          "dC": 0.7,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.682,
+          "dE_mean": 6.6,
+          "dE_p95": 15.8,
+          "dL": -0.2,
+          "dC": 0.8,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "stelgidopteryx-serripennis": {
+      "common_name": "Northern Rough-winged Swallow",
+      "photos": [
+        294156439
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 69626485,
+      "isolate_seed": 49,
+      "sha256": "4b9101596333ee5fac114e8cdd787ca40be2c2b80c8b7540dcfd61a4b4b56a86",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.966,
+          "dE_mean": 7.4,
+          "dE_p95": 14.5,
+          "dL": 3.4,
+          "dC": 0.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.966,
+          "dE_mean": 4.7,
+          "dE_p95": 11.9,
+          "dL": 0.1,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.986,
+          "dE_mean": 3.0,
+          "dE_p95": 7.6,
+          "dL": 0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "photos": [
+        246504775
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2690754588,
+      "isolate_seed": 49,
+      "sha256": "74c6abb246e9c59306137d96668dd8e73fac553f29b3d0d3f78482d512c3abca",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.855,
+          "dE_mean": 8.8,
+          "dE_p95": 13.6,
+          "dL": -3.2,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.855,
+          "dE_mean": 3.6,
+          "dE_p95": 8.1,
+          "dL": -0.5,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 2.0,
+          "dE_p95": 4.7,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "photos": [
+        106237602
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3789409775,
+      "isolate_seed": 49,
+      "sha256": "5fff2c23576d7fd304de61ee659e7edb457fa6f8c2748a05bf254356142b08af",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.923,
+          "dE_mean": 7.2,
+          "dE_p95": 20.6,
+          "dL": -1.3,
+          "dC": 2.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.923,
+          "dE_mean": 5.8,
+          "dE_p95": 18.9,
+          "dL": -0.2,
+          "dC": 1.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.961,
+          "dE_mean": 4.3,
+          "dE_p95": 11.8,
+          "dL": -0.4,
+          "dC": 0.7,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "photos": [
+        365288719
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2521801693,
+      "isolate_seed": 49,
+      "sha256": "f3cb3e65748cca5b2f139e26b040d66e3b005da103f93c9ffa20fa7d849af15d",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.879,
+          "dE_mean": 28.1,
+          "dE_p95": 37.0,
+          "dL": 2.2,
+          "dC": -25.6,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.879,
+          "dE_mean": 6.5,
+          "dE_p95": 14.6,
+          "dL": 0.4,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.949,
+          "dE_mean": 3.3,
+          "dE_p95": 7.3,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "thalasseus-elegans": {
+      "common_name": "Elegant Tern",
+      "photos": [
+        117732234
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3179628922,
+      "isolate_seed": 49,
+      "sha256": "59da0569f900d2a3e68d435ff0da8cde5bd790717dfb4c2be32ecd931e19c682",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.887,
+          "dE_mean": 11.2,
+          "dE_p95": 17.3,
+          "dL": -8.1,
+          "dC": 5.4,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.887,
+          "dE_mean": 4.1,
+          "dE_p95": 10.9,
+          "dL": -0.3,
+          "dC": 0.6,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.919,
+          "dE_mean": 2.8,
+          "dE_p95": 8.3,
+          "dL": 0.4,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "thalasseus-maximus": {
+      "common_name": "Royal Tern",
+      "photos": [
+        603780707
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3276777603,
+      "isolate_seed": 49,
+      "sha256": "81211a707c132536bf33aec7c79e0fc6fbad995c204c03584ac4a12ba0b04b82",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.632,
+          "dE_mean": 4.0,
+          "dE_p95": 11.0,
+          "dL": 0.3,
+          "dC": 0.5,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.632,
+          "dE_mean": 4.2,
+          "dE_p95": 11.0,
+          "dL": -0.5,
+          "dC": -0.2,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.638,
+          "dE_mean": 3.9,
+          "dE_p95": 11.7,
+          "dL": -0.9,
+          "dC": -0.4,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "thryomanes-bewickii": {
+      "common_name": "Bewick's Wren",
+      "photos": [
+        467071257
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 39060035,
+      "isolate_seed": 49,
+      "sha256": "431b107153ecc493e6b10344d3c0e9e6ea9583cf96c519aa86833b575312afd0",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.93,
+          "dE_mean": 14.0,
+          "dE_p95": 21.2,
+          "dL": -0.5,
+          "dC": 7.4,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.93,
+          "dE_mean": 3.4,
+          "dE_p95": 7.0,
+          "dL": -0.1,
+          "dC": 0.4,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.958,
+          "dE_mean": 2.0,
+          "dE_p95": 5.6,
+          "dL": 0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "toxostoma-redivivum": {
+      "common_name": "California Thrasher",
+      "photos": [
+        489597169
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2333368187,
+      "isolate_seed": 49,
+      "sha256": "fffa011b2864fd49c0388430f8125bbdd4ddd861708a263044281bb3a551db13",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.905,
+          "dE_mean": 9.6,
+          "dE_p95": 16.2,
+          "dL": -2.9,
+          "dC": -1.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.905,
+          "dE_mean": 3.8,
+          "dE_p95": 8.2,
+          "dL": -0.0,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.918,
+          "dE_mean": 2.6,
+          "dE_p95": 6.4,
+          "dL": 0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "photos": [
+        104430031
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 934664735,
+      "isolate_seed": 49,
+      "sha256": "a0a37ed63f16de7c2246572e56556f743069b4a5e35345a4cfdaf1875e499fa1",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.867,
+          "dE_mean": 6.1,
+          "dE_p95": 11.9,
+          "dL": -1.4,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.867,
+          "dE_mean": 4.1,
+          "dE_p95": 10.3,
+          "dL": 0.0,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.884,
+          "dE_mean": 3.2,
+          "dE_p95": 8.7,
+          "dL": -0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "photos": [
+        630634221
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 914334568,
+      "isolate_seed": 49,
+      "sha256": "a9d81a03cd483593b9e82edf87d2131abbfa2a90710ac9497bdaa6efe41d1def",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.929,
+          "dE_mean": 6.1,
+          "dE_p95": 11.0,
+          "dL": 3.4,
+          "dC": 3.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.929,
+          "dE_mean": 2.5,
+          "dE_p95": 5.9,
+          "dL": 0.1,
+          "dC": 0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.98,
+          "dE_mean": 1.8,
+          "dE_p95": 4.2,
+          "dL": 0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "troglodytes-aedon": {
+      "common_name": "Northern House Wren",
+      "photos": [
+        280539183
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 462193884,
+      "isolate_seed": 49,
+      "sha256": "98125e01456ccebc5724127a3230d03e71b0746d2e3c787170bd831f04df8099",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.957,
+          "dE_mean": 8.4,
+          "dE_p95": 12.5,
+          "dL": -5.9,
+          "dC": -1.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.957,
+          "dE_mean": 2.8,
+          "dE_p95": 6.2,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 2.4,
+          "dE_p95": 6.0,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "photos": [
+        489597214
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2641898521,
+      "isolate_seed": 49,
+      "sha256": "96e82475439da251b644c9f24b41e0caca4c7747834b445166a52ef6b486495b",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.943,
+          "dE_mean": 9.0,
+          "dE_p95": 13.1,
+          "dL": -0.5,
+          "dC": 3.4,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.943,
+          "dE_mean": 3.8,
+          "dE_p95": 8.2,
+          "dL": -0.1,
+          "dC": 0.2,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 2.5,
+          "dE_p95": 5.3,
+          "dL": 0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "tyrannus-verticalis": {
+      "common_name": "Western Kingbird",
+      "photos": [
+        263626145
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1821598693,
+      "isolate_seed": 49,
+      "sha256": "ec8211c6a44e64666e9fef73de3df104899221fb0b268dfb1337f131b0bcb065",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.902,
+          "dE_mean": 6.1,
+          "dE_p95": 12.6,
+          "dL": 3.5,
+          "dC": 2.0,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.902,
+          "dE_mean": 4.5,
+          "dE_p95": 10.3,
+          "dL": -0.4,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.921,
+          "dE_mean": 3.4,
+          "dE_p95": 9.1,
+          "dL": -0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "tyrannus-vociferans": {
+      "common_name": "Cassin's Kingbird",
+      "photos": [
+        605543868
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 682308224,
+      "isolate_seed": 50,
+      "sha256": "eb46a6eb3221bc8ef37e8530c3d3cb0cc1c9c2acee54168a4237bba6ece5863c",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.56,
+          "dE_mean": 16.2,
+          "dE_p95": 30.5,
+          "dL": -3.3,
+          "dC": 2.3,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.56,
+          "dE_mean": 16.4,
+          "dE_p95": 30.3,
+          "dL": 2.6,
+          "dC": 1.7,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.574,
+          "dE_mean": 16.5,
+          "dE_p95": 33.5,
+          "dL": 3.8,
+          "dC": 1.3,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "tyto-furcata": {
+      "common_name": "American Barn Owl",
+      "photos": [
+        148143364
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3781239716,
+      "isolate_seed": 49,
+      "sha256": "9dca3e423e67d8baceb0f67740cf4871d3dc3f4a4bb43c5dedf5bcd87fbe5bda",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.83,
+          "dE_mean": 12.5,
+          "dE_p95": 23.4,
+          "dL": 2.7,
+          "dC": 6.9,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.83,
+          "dE_mean": 9.5,
+          "dE_p95": 20.6,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.827,
+          "dE_mean": 8.0,
+          "dE_p95": 18.2,
+          "dL": 0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "urile-penicillatus": {
+      "common_name": "Brandt's Cormorant",
+      "photos": [
+        630638859
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2605238797,
+      "isolate_seed": 49,
+      "sha256": "7c04bbc24afc452f8e243c693d404ab33cbbe0f3bbdf833bd5ef79bdeaf56be2",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.794,
+          "dE_mean": 7.1,
+          "dE_p95": 14.3,
+          "dL": 3.2,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.794,
+          "dE_mean": 4.9,
+          "dE_p95": 12.8,
+          "dL": -0.5,
+          "dC": 0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.988,
+          "dE_mean": 1.9,
+          "dE_p95": 4.0,
+          "dL": -0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "vidua-macroura": {
+      "common_name": "Pin-tailed Whydah",
+      "photos": [
+        109160133
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 1678997244,
+      "isolate_seed": 49,
+      "sha256": "22619bc97ded30bb63e295a2ad6e5113b02a14985499aeb44474f192228f038c",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.872,
+          "dE_mean": 4.8,
+          "dE_p95": 8.4,
+          "dL": -2.1,
+          "dC": 1.8,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.872,
+          "dE_mean": 3.6,
+          "dE_p95": 7.9,
+          "dL": -0.5,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.918,
+          "dE_mean": 3.4,
+          "dE_p95": 7.9,
+          "dL": -0.3,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "vireo-bellii": {
+      "common_name": "Bell's Vireo",
+      "photos": [
+        356387267
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2215020982,
+      "isolate_seed": 49,
+      "sha256": "3e681195cfd02a494ed5d7c146cca74d7d3b6259464e6674741bd0f3f6fd9a80",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.953,
+          "dE_mean": 7.1,
+          "dE_p95": 10.3,
+          "dL": 5.1,
+          "dC": -0.7,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.953,
+          "dE_mean": 3.1,
+          "dE_p95": 5.6,
+          "dL": -0.2,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 2.1,
+          "dE_p95": 5.4,
+          "dL": -0.0,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "vireo-gilvus": {
+      "common_name": "Warbling Vireo",
+      "photos": [
+        223883512
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2879212217,
+      "isolate_seed": 49,
+      "sha256": "2c531c126073be6cd507e44221211c29549d0a111c271e1c93788506af43e221",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.882,
+          "dE_mean": 6.8,
+          "dE_p95": 11.0,
+          "dL": -4.2,
+          "dC": 3.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.882,
+          "dE_mean": 2.9,
+          "dE_p95": 7.2,
+          "dL": -0.2,
+          "dC": -0.0,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.926,
+          "dE_mean": 2.5,
+          "dE_p95": 6.2,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "vireo-huttoni": {
+      "common_name": "Hutton's Vireo",
+      "photos": [
+        489597129
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 3109632278,
+      "isolate_seed": 49,
+      "sha256": "58f3f462a72c98cd47e22214dc261f7eef78fb0369e3aaf509f8324df949878f",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.945,
+          "dE_mean": 5.3,
+          "dE_p95": 9.8,
+          "dL": 2.7,
+          "dC": 2.6,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.945,
+          "dE_mean": 3.0,
+          "dE_p95": 6.1,
+          "dL": 0.2,
+          "dC": 0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 2.4,
+          "dE_p95": 4.9,
+          "dL": 0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "photos": [
+        677926671
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 2346565908,
+      "isolate_seed": 51,
+      "sha256": "8707cf9920152cab7d58a79750283ad6b5574622d52cc439a8d31af3e7694968",
+      "faithful": false,
+      "attempts": 3,
+      "fidelity": {
+        "painted": {
+          "iou": 0.624,
+          "dE_mean": 14.8,
+          "dE_p95": 38.6,
+          "dL": -0.7,
+          "dC": 4.6,
+          "faithful": false
+        },
+        "fitted": {
+          "iou": 0.624,
+          "dE_mean": 13.5,
+          "dE_p95": 38.8,
+          "dL": -0.2,
+          "dC": 0.7,
+          "faithful": false
+        },
+        "isolated": {
+          "iou": 0.626,
+          "dE_mean": 13.6,
+          "dE_p95": 38.0,
+          "dL": 0.6,
+          "dC": 0.8,
+          "faithful": false
+        }
+      },
+      "review": "pending"
+    },
+    "zonotrichia-atricapilla": {
+      "common_name": "Golden-crowned Sparrow",
+      "photos": [
+        261560260
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 4113217895,
+      "isolate_seed": 49,
+      "sha256": "7a0666b13f5c0ab7e0a183fcd9588e215327d01fd150fa6d3716fb2cf7943bf4",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.905,
+          "dE_mean": 5.6,
+          "dE_p95": 10.2,
+          "dL": 0.5,
+          "dC": 3.9,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.905,
+          "dE_mean": 3.4,
+          "dE_p95": 7.6,
+          "dL": 0.1,
+          "dC": -0.1,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.917,
+          "dE_mean": 2.4,
+          "dE_p95": 5.9,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    },
+    "zonotrichia-leucophrys": {
+      "common_name": "White-crowned Sparrow",
+      "photos": [
+        624286978
+      ],
+      "workflow": "pack-art@3",
+      "isolate": "bird-isolate@1",
+      "prompts": 9,
+      "theme": "citrus groves, chaparral hills and warm golden valley light",
+      "seed": 662324594,
+      "isolate_seed": 49,
+      "sha256": "3da0f1302a5b54b87261557902f021fae2cfe1995a770c73146428f75562c472",
+      "faithful": true,
+      "attempts": 1,
+      "fidelity": {
+        "painted": {
+          "iou": 0.949,
+          "dE_mean": 7.5,
+          "dE_p95": 12.8,
+          "dL": 1.2,
+          "dC": 5.2,
+          "faithful": true
+        },
+        "fitted": {
+          "iou": 0.949,
+          "dE_mean": 2.8,
+          "dE_p95": 6.8,
+          "dL": 0.2,
+          "dC": -0.3,
+          "faithful": true
+        },
+        "isolated": {
+          "iou": 0.949,
+          "dE_mean": 2.1,
+          "dE_p95": 5.6,
+          "dL": 0.0,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "pending"
+    }
+  }
+}
