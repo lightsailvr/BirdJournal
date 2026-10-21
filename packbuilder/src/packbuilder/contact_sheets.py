@@ -26,6 +26,16 @@ def fit(image: Image.Image, size: tuple[int, int] = CELL) -> Image.Image:
     return canvas
 
 
+def fitted_text(text: str, size: int, width: int) -> str:
+    """`text` shortened with an ellipsis to fit `width` pixels at `size`, so a label never runs into the next cell."""
+    face = font(size)
+    if face.getlength(text) <= width:
+        return text
+    while text and face.getlength(text + "…") > width:
+        text = text[:-1]
+    return text + "…"
+
+
 def grid(rows: list[list[tuple[Image.Image | None, str]]], title: str, footer: list[str], cell: tuple[int, int] = CELL) -> Image.Image:
     """Rows of (picture or None, label of up to two lines) under a title, with footer lines (credits) below."""
     columns = max(len(row) for row in rows)
@@ -43,7 +53,7 @@ def grid(rows: list[list[tuple[Image.Image | None, str]]], title: str, footer: l
             if image is not None:
                 sheet.paste(fit(image, cell), (x, y))
             for i, text in enumerate(label.split("\n")[:2]):
-                draw.text((x + 2, y + cell[1] + 3 + i * (label_size + 3)), text, fill=INK, font=font(label_size))
+                draw.text((x + 2, y + cell[1] + 3 + i * (label_size + 3)), fitted_text(text, label_size, cell[0] - 4), fill=INK, font=font(label_size))
     y = header + len(rows) * (cell[1] + label_height + 8) + 8
     for text in footer:
         draw.text((12, y), text, fill=FADED_INK, font=font(15))

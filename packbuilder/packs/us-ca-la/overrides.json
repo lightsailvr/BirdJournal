@@ -1,5 +1,5 @@
 {
-  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}}. Photo ids are in the pack's report.json and LICENSE.",
+  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}, \"art\": {\"reference\": inat photo id: the pack photo pack art is painted from, instead of the best-lit one (#57)}}. Photo ids are in the pack's report.json and LICENSE.",
   "Melozone crissalis": {
     "exclude": [
       740654177,
@@ -13,7 +13,11 @@
       739958088,
       739958089
     ],
-    "_why": "birds held in a hand, and a dead bird on pavement"
+    "_why": "birds held in a hand, and a dead bird on pavement",
+    "art": {
+      "reference": 696977106,
+      "_why": "the best-lit photo is a dull female; a red male with streaked flanks, the bird birders picture"
+    }
   },
   "Zenaida macroura": {
     "exclude": [
@@ -25,7 +29,11 @@
   },
   "Pyrocephalus rubinus": {
     "trust_article": true,
-    "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird for Los Angeles"
+    "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird for Los Angeles",
+    "art": {
+      "reference": 462069577,
+      "_why": "the best-lit photo is a drab female; the red male, the bird birders picture"
+    }
   },
   "Haliaeetus leucocephalus": {
     "limit": 200,
@@ -37,7 +45,11 @@
     "include": [
       250483714,
       29411459
-    ]
+    ],
+    "art": {
+      "reference": 29411459,
+      "_why": "a dark juvenile in flight was the best-lit photo; the white-headed adult the #50 review forced in"
+    }
   },
   "Numenius hudsonicus": {
     "sounds": {
@@ -152,25 +164,41 @@
     "exclude": [
       229068158
     ],
-    "_why": "open-license review (#50): out 229068158: dark, half hidden on a feeder"
+    "_why": "open-license review (#50): out 229068158: dark, half hidden on a feeder",
+    "art": {
+      "reference": 201115486,
+      "_why": "a bird upside down at a feeder came out a strange shape; one perched on a branch"
+    }
   },
   "Phainopepla nitens": {
     "exclude": [
       515011173
     ],
-    "_why": "open-license review (#50): out 515011173: black silhouette against the sky"
+    "_why": "open-license review (#50): out 515011173: black silhouette against the sky",
+    "art": {
+      "reference": 265185077,
+      "_why": "a flight shot; a sunlit male with its crest and red eye"
+    }
   },
   "Stelgidopteryx serripennis": {
     "exclude": [
       130554665
     ],
-    "_why": "open-license review (#50): out 130554665: blurry and overexposed, date stamp"
+    "_why": "open-license review (#50): out 130554665: blurry and overexposed, date stamp",
+    "art": {
+      "reference": 294156439,
+      "_why": "a bird with drooping wings against the sky; one perched side-on"
+    }
   },
   "Catharus guttatus": {
     "exclude": [
       465399052
     ],
-    "_why": "open-license review (#50): out 465399052: head close-up in hand at a banding station"
+    "_why": "open-license review (#50): out 465399052: head close-up in hand at a banding station",
+    "art": {
+      "reference": 262701129,
+      "_why": "a dim bird among needles lost its spots; one side-on with its spotted breast"
+    }
   },
   "Falco peregrinus": {
     "exclude": [
@@ -182,7 +210,11 @@
     "exclude": [
       279261852
     ],
-    "_why": "open-license review (#50): out 279261852: badly underexposed"
+    "_why": "open-license review (#50): out 279261852: badly underexposed",
+    "art": {
+      "reference": 129501932,
+      "_why": "a dull female against the sky; a male on grass, brown head showing"
+    }
   },
   "Spatula cyanoptera": {
     "exclude": [
@@ -227,7 +259,11 @@
       180129885,
       176333618
     ],
-    "_why": "open-license review (#50): out 483312246: hunched on rocks with ragged feathers, looks stranded; out 180129885: distant flock, birds too small; out 176333618: resting ashore, likely stranded"
+    "_why": "open-license review (#50): out 483312246: hunched on rocks with ragged feathers, looks stranded; out 180129885: distant flock, birds too small; out 176333618: resting ashore, likely stranded",
+    "art": {
+      "reference": 593312066,
+      "_why": "a distant bird came out a black blob; a male close on the water"
+    }
   },
   "Dryobates pubescens": {
     "exclude": [
@@ -275,7 +311,11 @@
     "exclude": [
       273751528
     ],
-    "_why": "open-license review (#50): out 273751528: underexposed, gorget not visible"
+    "_why": "open-license review (#50): out 273751528: underexposed, gorget not visible",
+    "art": {
+      "reference": 282787652,
+      "_why": "a hunched bird among leaves, its bill hanging; one on an open twig"
+    }
   },
   "Cyanocitta stelleri": {
     "exclude": [
@@ -312,7 +352,11 @@
     "exclude": [
       664263588
     ],
-    "_why": "open-license review (#50): out 664263588: very dark, head hidden"
+    "_why": "open-license review (#50): out 664263588: very dark, head hidden",
+    "art": {
+      "reference": 674449029,
+      "_why": "the first pick is shaded and its head came out dark; a bird with its blue head in light"
+    }
   },
   "Astur cooperii": {
     "exclude": [
@@ -325,7 +369,11 @@
       599164180,
       604260846
     ],
-    "_why": "open-license review (#50): out 599164180: tiny and half hidden, a dead leaf dominates; out 604260846: head hidden in leaves"
+    "_why": "open-license review (#50): out 599164180: tiny and half hidden, a dead leaf dominates; out 604260846: head hidden in leaves",
+    "art": {
+      "reference": 593312089,
+      "_why": "the hovering reference became a bird standing on a rock with its wings raised; a perched male in good light"
+    }
   },
   "Melanerpes formicivorus": {
     "exclude": [
@@ -356,13 +404,21 @@
     "exclude": [
       603537832
     ],
-    "_why": "open-license review (#50): out 603537832: hazy back view through twigs"
+    "_why": "open-license review (#50): out 603537832: hazy back view through twigs",
+    "art": {
+      "reference": 475706597,
+      "_why": "a flight shot became a hawk flapping over a rock; a perched adult with the rufous barring"
+    }
   },
   "Cathartes aura": {
     "exclude": [
       603540047
     ],
-    "_why": "open-license review (#50): out 603540047: backlit behind branches"
+    "_why": "open-license review (#50): out 603540047: backlit behind branches",
+    "art": {
+      "reference": 698218415,
+      "_why": "a flight shot against the sky; a bird perched on a post with its red head showing"
+    }
   },
   "Leiothlypis celata": {
     "exclude": [
@@ -423,7 +479,11 @@
       674475351,
       325110853
     ],
-    "_why": "open-license review (#50): in 125029450: missed by the detector; perched, dark background; in 148143364: missed by the detector; perched in a pine; in 674475351: missed by the detector; perched in a palm; in 325110853: missed by the detector; perched in a pine"
+    "_why": "open-license review (#50): in 125029450: missed by the detector; perched, dark background; in 148143364: missed by the detector; perched in a pine; in 674475351: missed by the detector; perched in a palm; in 325110853: missed by the detector; perched in a pine",
+    "art": {
+      "reference": 148143364,
+      "_why": "a dim bird inside a palm came out odd (dE 17); one face-on in a pine"
+    }
   },
   "Phalaenoptilus nuttallii": {
     "include": [
@@ -451,6 +511,136 @@
     "include": [
       712450451
     ],
-    "_why": "open-license review (#50): in 712450451: missed by the shortlist; perched in branches"
+    "_why": "open-license review (#50): in 712450451: missed by the shortlist; perched in branches",
+    "art": {
+      "reference": 356387267,
+      "_why": "a singing bird, open-mouthed against the sky, came out with a pink throat; one perched quietly"
+    }
+  },
+  "Buteo jamaicensis": {
+    "art": {
+      "reference": 685715513,
+      "_why": "the pack's first photo is a blurred flight shot; the painting made a malformed bird; a front-lit adult on a fence instead"
+    }
+  },
+  "Setophaga coronata": {
+    "art": {
+      "reference": 616227519,
+      "_why": "a distant bird against the sky gave a wrong head (dE 24); a close full-body bird"
+    }
+  },
+  "Corvus corax": {
+    "art": {
+      "reference": 604259110,
+      "_why": "a branch across the tail became a long blade; a bird standing in the open"
+    }
+  },
+  "Branta canadensis": {
+    "art": {
+      "reference": 634048653,
+      "_why": "the reference stands among coots (dE 23); a goose alone"
+    }
+  },
+  "Ardea herodias": {
+    "art": {
+      "reference": 613538389,
+      "_why": "the reference is dim and painted near-black; a well-lit bird on grass"
+    }
+  },
+  "Nannopterum auritum": {
+    "art": {
+      "reference": 615582387,
+      "_why": "the reference is a group drying their wings, painted as several birds; one bird standing on sand"
+    }
+  },
+  "Pelecanus occidentalis": {
+    "art": {
+      "reference": 593312023,
+      "_why": "several birds in flight became a muddle; one bird standing on a rock"
+    }
+  },
+  "Psaltriparus minimus": {
+    "art": {
+      "reference": 595472606,
+      "_why": "a dim, partly hidden bird came out chunky and short-tailed; a sharp, well-lit bird"
+    }
+  },
+  "Pipilo maculatus": {
+    "art": {
+      "reference": 489597210,
+      "_why": "a backlit bird against the sky came out near-black; a front-lit adult on a post"
+    }
+  },
+  "Alopochen aegyptiaca": {
+    "art": {
+      "reference": 578296243,
+      "_why": "a head-only close-up became a head among leaves; the whole bird in good light"
+    }
+  },
+  "Toxostoma redivivum": {
+    "art": {
+      "reference": 489597169,
+      "_why": "a head-only close-up left FLUX.3 to invent the body; the whole bird in profile"
+    }
+  },
+  "Larus delawarensis": {
+    "art": {
+      "reference": 355357677,
+      "_why": "a distant bird on dark sand came out a chunky dove-like bird; a standing adult with the ring on its bill"
+    }
+  },
+  "Oxyura jamaicensis": {
+    "art": {
+      "reference": 196036954,
+      "_why": "a drab bird half in the water was painted stuck on a rock; a breeding male, the bird birders picture"
+    }
+  },
+  "Polioptila caerulea": {
+    "art": {
+      "reference": 265549857,
+      "_why": "a bird half behind twigs came out chunky; a slim bird in the open"
+    }
+  },
+  "Piranga ludoviciana": {
+    "art": {
+      "reference": 378816896,
+      "_why": "a dull bird against the sky became a generic green bird; a male in breeding plumage"
+    }
+  },
+  "Bucephala albeola": {
+    "art": {
+      "reference": 603992548,
+      "_why": "a female half on rocks was painted on a branch; a male on the water"
+    }
+  },
+  "Psittacara mitratus": {
+    "art": {
+      "reference": 185005450,
+      "_why": "a half-hidden bird painted blotchy (dE 26); the whole bird on a branch"
+    }
+  },
+  "Petrochelidon pyrrhonota": {
+    "art": {
+      "reference": 311645778,
+      "_why": "a flight shot; a bird perched on a ledge with its face showing"
+    }
+  },
+  "Setophaga nigrescens": {
+    "art": {
+      "reference": 165872786,
+      "_why": "a bird behind leaves was painted with yellow underparts it doesn't have (dE 20); one in the open"
+    }
+  },
+  "Haematopus bachmani": {
+    "art": {
+      "reference": 127561861,
+      "_why": "two birds in the reference, two in the painting; one bird, well lit"
+    }
+  },
+  "Campylorhynchus brunneicapillus": {
+    "art": {
+      "reference": 28298063,
+      "_why": "a cactus pad merged into the bird as a black fan; one in the open on a branch"
+    }
   }
 }

@@ -41,7 +41,6 @@ from packbuilder.contact_sheets import grid
 from packbuilder.crops import upright
 from packbuilder.fidelity import lab
 from packbuilder.geometry import Box
-from packbuilder.licenses import short_credit
 from packbuilder.painting import ATTEMPTS, ISOLATE_SEED, Painter, png
 from packbuilder.writer import ChosenPhoto, SpeciesResult
 
@@ -248,8 +247,10 @@ class PackArtist:
         }
 
     def _isolated(self, photo_id: int, crop: Image.Image, crop_mask: np.ndarray, seed: int, attempts: int) -> "_Isolated":
-        """The reference bird on white, cached by photo, seed and versions, so a repainted species reuses it."""
-        key = f"{photo_id}-s{seed}-{self.painter.isolate_workflow.tag}-p{self.prompts.version}"
+        """The reference bird on white, cached by photo, seed, workflow and isolation prompt (not the prompts version,
+        which a pack-art template bumps), so a repainted species reuses it."""
+        prompt = hashlib.sha256(self.prompts.isolate.encode()).hexdigest()[:10]
+        key = f"{photo_id}-s{seed}-{self.painter.isolate_workflow.tag}-i{prompt}"
         image_path, info_path = self.cache_dir / "isolated" / f"{key}.png", self.cache_dir / "isolated" / f"{key}.json"
         if image_path.exists() and info_path.exists():
             info = json.loads(info_path.read_text())
@@ -304,8 +305,7 @@ class PackArtist:
             if reference is not None:
                 crop = _reference_crop(reference)
                 crop.thumbnail((576, 768))
-                credit = short_credit(reference.candidate.observer_name or reference.candidate.observer_login or "", reference.candidate.normalized_license or "")
-                photo_cell = (crop, f"{number:03d} {result.entry.common_name}\nphoto {reference.candidate.photo_id} · {credit}")
+                photo_cell = (crop, f"{number:03d} {result.entry.common_name}\nphoto {reference.candidate.photo_id}, {reference.candidate.normalized_license}")
             else:
                 photo_cell = (None, f"{number:03d} {result.entry.common_name}\nno photo: painted from text")
             painting = _thumbnail(artwork.file) if artwork and artwork.file and artwork.file.exists() else None
@@ -313,7 +313,7 @@ class PackArtist:
             measured = f"dE {fitted['dE_mean']:.1f} iou {fitted['iou']:.2f}" if fitted else "not measured"
             flag = "" if entry.get("faithful", True) is not False else " · NOT FAITHFUL"
             state = artwork.review if artwork else UNPAINTED
-            cells.append((photo_cell, (painting, f"{result.entry.id}\n{state.upper()} · {measured}{flag}")))
+            cells.append((photo_cell, (painting, f"{state.upper()}{flag}\n{measured}")))
         sheets = []
         for start in range(0, len(cells), per_sheet):
             chunk = cells[start:start + per_sheet]

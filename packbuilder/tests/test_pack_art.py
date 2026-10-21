@@ -246,7 +246,7 @@ def test_the_build_paints_then_ships_only_what_the_review_approved_and_a_rebuild
 
     assert len(comfy.jobs) == jobs
     [(species_id, file, photos, version)] = sqlite3.connect(written.database).execute("SELECT * FROM pack_art").fetchall()
-    assert (species_id, file, version) == ("haemorhous-mexicanus", "art/haemorhous-mexicanus.avif", "pack-art@3 bird-isolate@1 prompts@8")
+    assert (species_id, file, version) == ("haemorhous-mexicanus", "art/haemorhous-mexicanus.avif", "pack-art@3 bird-isolate@1 prompts@9")
     assert json.loads(photos)[0] in (12, 13) and (tmp_path / "pack" / file).exists()
     report = json.loads((tmp_path / "pack" / "report.json").read_text())
     assert report["gaps"]["art"] == [] and report["unreviewed"] == {"art": []}
