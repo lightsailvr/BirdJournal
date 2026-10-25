@@ -8,10 +8,11 @@ import UIKit
 
 /// Ambient audio from the glasses, which only arrives in-band on a camera stream (DECISIONS.md, "Toolkit facts").
 /// Video runs at the lowest resolution and frame rate to save battery; frames are not used for identification, but
-/// the most recent one is kept for the lens's viewfinder and as the stand-in for a sighting's photo (issue #9). While
-/// the viewfinder is open (`setViewfinder(open:)`) the stream runs at a higher resolution and frame rate so the wearer
-/// can frame the shot, and the photo itself (`capturePhoto()`) is a standalone full-resolution still: the stream and
-/// the photo share the camera, so the stream comes off for it and goes back on after, as it does for a clip.
+/// the most recent one is kept for the lens's viewfinder and as the stand-in for a sighting's photo (issue #9). The
+/// viewfinder shows the listening stream as it is: switching to a sharper stream took the camera off and cost the
+/// wearer 10 to 14 s of a blank viewfinder on the glasses (#46), and birds do not wait. The photo itself
+/// (`capturePhoto()`) is taken in the stream; a standalone full-resolution still (`fullResolutionPhotos`, off since
+/// #46) shares the camera with the stream, so the stream comes off for it and goes back on after, as it does for a clip.
 ///
 /// A pause the toolkit reports (`.paused` on the session and stream) is left to it to resume. A session the glasses
 /// end (a doff ends it and drops the link, DECISIONS.md phase A) is survived instead (issue #10): the run calls
@@ -26,7 +27,10 @@ import UIKit
 /// and its clock stays on the run's. `camera.stop()` finishes asynchronously and a stopped camera cannot be reused, so
 /// the restart waits for the old camera to reach `.stopped`, adds a fresh one, and waits for its stream to reach
 /// `.streaming`; a start that does not get there is stopped and tried again with another fresh camera (the toolkit's
-/// capabilities fail to start intermittently, and the next attempt then succeeds), up to `restartAttempts` times.
+/// capabilities fail to start intermittently, and the next attempt then succeeds), up to `restartAttempts` times, and
+/// after that again every `retryDelay` while the run lasts. A stream that stopped with nothing holding it, or went
+/// quiet, is put back when the lens asks for it (`ensureStreaming(_:)`: landing on the species list, opening the
+/// viewfinder), since a field test lost listening after several adds and clips (#46).
 ///
 /// Explicitly main-actor: conforming to the `Sendable` `AudioSource` protocol would otherwise make the class
 /// nonisolated under the target's default main-actor isolation. Single use: create one per listening run.
@@ -67,20 +71,19 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     private var chunkContinuation: AsyncStream<AudioChunk>.Continuation?
     /// The session's listeners.
     private let tokens = ListenerTokenBag()
-    /// The camera stream's listeners, released on their own when a clip holds the stream.
-    private let cameraTokens = ListenerTokenBag()
+    /// The current camera stream's listeners, released on their own when a clip holds the stream. A fresh bag for
+    /// each camera, so releasing an old camera's listeners can never take a newer camera's with them.
+    private var cameraTokens = ListenerTokenBag()
     /// Written straight from the video frame callback; read on confirm.
     private nonisolated let latestVideoFrame = Mutex<VideoFrame?>(nil)
     /// When a clip took the camera off, until the first audio after it comes back fills the span with silence.
     private nonisolated let heldSince = Mutex<ContinuousClock.Instant?>(nil)
+    /// When the current camera last delivered audio, or was added if it has not yet: how `ensureStreaming(_:)` tells
+    /// a stream that went quiet.
+    private nonisolated let lastAudio = Mutex<ContinuousClock.Instant?>(nil)
     /// What has the camera off the session: a clip playing, or a full-resolution photo being taken.
     private enum Hold { case playback, photo }
     private var holds: Set<Hold> = []
-    /// Whether the lens's viewfinder is open, which sets the stream's configuration.
-    private var viewfinderOpen = false
-    /// The viewfinder's sharper stream did not start this time it was open: the rest of the visit uses the
-    /// listening configuration, which is known to work on the glasses.
-    private var viewfinderStreamFailed = false
     /// Puts the camera back once the last clip has been over for `restartDelay`.
     private var restartTask: Task<Void, Never>?
     /// Finishes once the camera a clip took off has stopped (or `stopTimeout` passed); the restart waits for it.
@@ -94,16 +97,20 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     static let restartAttempts = 3
     /// How long a camera taken off may take to stop.
     static let stopTimeout: Duration = .seconds(3)
-    /// How long a restarted stream may take to reach `.streaming`.
+    /// How long a restarted stream may take to reach `.streaming`; one that stops first has failed already.
     static let startTimeout: Duration = .seconds(8)
-    /// How long the viewfinder's sharper stream may take before the listening one is used instead.
-    static let viewfinderStartTimeout: Duration = .seconds(4)
     /// How long the session may take to come back to `.started` before a restart.
     static let sessionTimeout: Duration = .seconds(10)
-    /// Whether a sighting's photo is the standalone full-resolution still rather than one taken in the stream. The
-    /// standalone capture is beta in the toolkit 1.0 and an app using it cannot be published yet (DECISIONS.md), so
-    /// this is the switch back to the in-stream photo.
-    static let fullResolutionPhotos = true
+    /// How long after `restartAttempts` failed starts the restart tries again.
+    static let retryDelay: Duration = .seconds(10)
+    /// How long a running camera may go without audio before `ensureStreaming(_:)` takes it for stalled; audio
+    /// arrives about 0.2 s after `.streaming` and then continuously.
+    static let audioStall: Duration = .seconds(5)
+    /// Whether a sighting's photo is the standalone full-resolution still rather than one taken in the stream. Off
+    /// since #46: on the glasses the standalone capture failed and cost 25 s without listening, while the in-stream
+    /// photo (1080×1440) keeps the stream running. It is also beta in the toolkit 1.0, and an app using it cannot be
+    /// published yet (DECISIONS.md). The Mock Device Kit test turns it on.
+    var fullResolutionPhotos = false
     /// How many fresh cameras a full-resolution photo tries (the docs: setup fails intermittently, retry once).
     static let photoAttempts = 2
     /// How long the photo capability may take to start.
@@ -124,20 +131,16 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     /// The most recent video frame the stream delivered, nil until the first one arrives and after `stop()`.
     var latestFrame: CameraFrame? { latestVideoFrame.withLock { $0 }.map(CameraFrame.init) }
 
-    /// The stream configuration: raw video at 360×640 and 2 fps (the toolkit's minimum), PCM mono audio; while the
-    /// viewfinder is open, 504×896 at 7 fps unless that failed to start. A camera keeps the configuration it was
-    /// added with.
+    /// The stream configuration: raw video at 360×640 and 2 fps (the toolkit's minimum), PCM mono audio. The glasses
+    /// rejected 504×896 at 7 fps with PCM audio (#46).
     var configuration: StreamConfiguration {
-        let sharp = usesViewfinderStream
-        return StreamConfiguration(
+        StreamConfiguration(
             videoCodec: .raw,
             audioCodec: .pcm(sampleRate: sampleRate, numberOfChannels: 1),
-            resolution: sharp ? .medium : .low,
-            frameRate: sharp ? 7 : 2
+            resolution: .low,
+            frameRate: 2
         )
     }
-
-    private var usesViewfinderStream: Bool { viewfinderOpen && !viewfinderStreamFailed }
 
     func start() async throws -> AsyncStream<AudioChunk> {
         do {
@@ -178,13 +181,16 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
             throw StartError.cameraUnavailable
         }
         self.camera = camera
+        let cameraTokens = ListenerTokenBag()
+        self.cameraTokens = cameraTokens
+        lastAudio.withLock { $0 = .now }
 
         let onLevel = onLevel
         let firstAudio = Once()
         let firstFrame = Once()
-        let label = usesViewfinderStream ? "viewfinder" : "listening"
         camera.stream.audioFramePublisher.listen { [weak self] frame in
-            if firstAudio.claim() { Task { @MainActor in GlassesLog.shared.note("first audio on the \(label) stream") } }
+            if firstAudio.claim() { Task { @MainActor in GlassesLog.shared.note("first audio on the stream") } }
+            self?.lastAudio.withLock { $0 = .now }
             let chunk = AudioChunk(buffer: frame.pcmBuffer, presentationTime: frame.presentationTimeStamp.seconds)
             guard let chunk else { return }
             if let since = self?.heldSince.withLock({ held in defer { held = nil }; return held }) {
@@ -197,7 +203,7 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
             continuation.yield(chunk)
         }.store(in: cameraTokens)
         camera.stream.videoFramePublisher.listen { [weak self] frame in
-            if firstFrame.claim() { Task { @MainActor in GlassesLog.shared.note("first video frame on the \(label) stream") } }
+            if firstFrame.claim() { Task { @MainActor in GlassesLog.shared.note("first video frame on the stream") } }
             self?.latestVideoFrame.withLock { $0 = frame }
         }.store(in: cameraTokens)
         camera.stream.statePublisher.listen { [weak self] state in
@@ -224,8 +230,10 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     }
 
     /// The session ended under the stream (doff, link loss): the camera, its listeners and the stale frame go; the
-    /// chunk stream stays open for `resume(on:)`.
+    /// chunk stream stays open for `resume(on:)`, which puts the camera back itself.
     func suspend() async {
+        restartTask?.cancel()
+        restartTask = nil
         await releaseCamera()
     }
 
@@ -246,27 +254,32 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     /// clip's hold is not filled across a lost session.
     private func releaseCamera() async {
         await tokens.cancelAll()
-        await cameraTokens.cancelAll()
+        await releaseListeners()
         camera?.stop()
         if lease.isOwned { session?.stop() }
         camera = nil
         session = nil
         latestVideoFrame.withLock { $0 = nil }
         heldSince.withLock { $0 = nil }
+        lastAudio.withLock { $0 = nil }
         streamState = .stopped
     }
 
     // MARK: - Photos
 
-    /// A photo from the camera, taken now: the full-resolution still, or the stream's own when
-    /// `fullResolutionPhotos` is off; nil when none came.
+    /// A photo from the camera, taken now: the stream's own, or the full-resolution still when
+    /// `fullResolutionPhotos` is on; nil when none came.
     func capturePhoto() async -> Data? {
-        Self.fullResolutionPhotos ? await captureFullPhoto() : await captureStreamPhoto()
+        fullResolutionPhotos ? await captureFullPhoto() : await captureStreamPhoto()
     }
 
     /// A JPEG taken in the stream; nil when the stream is not running or no photo came within `photoTimeout`.
     private func captureStreamPhoto() async -> Data? {
-        guard let camera, streamState == .streaming else { return nil }
+        guard let camera, streamState == .streaming else {
+            GlassesLog.shared.error("photo not taken: the stream is \(streamState)")
+            return nil
+        }
+        let began = ContinuousClock.now
         let photo = PhotoBox()
         var accepted = false
         let taken = await camera.stream.photoDataPublisher.waitUntil(timeout: Self.photoTimeout, after: {
@@ -279,6 +292,7 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
             GlassesLog.shared.error("photo not taken (accepted: \(accepted))")
             return nil
         }
+        GlassesLog.shared.note("photo taken in \(Self.seconds(since: began)) (\(photo.data?.count ?? 0) bytes)")
         return photo.data
     }
 
@@ -350,18 +364,26 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
         return UIImage(data: data)?.jpegData(compressionQuality: 0.9)
     }
 
-    // MARK: - The viewfinder
+    // MARK: - Keeping the stream up
 
-    /// Puts the stream at the viewfinder's resolution and frame rate while it is open, and back to the listening ones
-    /// after: a fresh camera either way. Left to the next restart while a clip or a photo has the camera off.
-    func setViewfinder(open: Bool) async {
-        guard open != viewfinderOpen else { return }
-        viewfinderOpen = open
-        viewfinderStreamFailed = false
-        guard holds.isEmpty, chunkContinuation != nil, session != nil else { return }
-        GlassesLog.shared.note("stream for the viewfinder: \(open)")
-        restartTask?.cancel()
-        restartTask = nil
+    /// The stream should be running now (`reason` names the moment, for the log): a camera that is off with nothing
+    /// holding it and no restart under way, or one that has not delivered audio for `audioStall`, is replaced by a
+    /// fresh one. Leaves a session that is not started (paused, ended) to the run, and a stream the toolkit paused
+    /// to the toolkit.
+    func ensureStreaming(_ reason: String) async {
+        guard holds.isEmpty, restartTask == nil, chunkContinuation != nil, let session, session.state == .started else { return }
+        let quiet = lastAudio.withLock { $0 }.map { ContinuousClock.now - $0 }
+        let stalled: String
+        if camera == nil {
+            stalled = "the camera is off"
+        } else if streamState == .paused {
+            return
+        } else if let quiet, quiet > Self.audioStall {
+            stalled = "no audio for \(Self.seconds(quiet)), the stream is \(streamState)"
+        } else {
+            return
+        }
+        GlassesLog.shared.error("stream down at the \(reason) (\(stalled)): restarting")
         await takeCameraOff()
         scheduleRestart(after: .zero)
     }
@@ -391,7 +413,7 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
         guard let camera else { return }
         self.camera = nil
         heldSince.withLock { $0 = $0 ?? .now }
-        await cameraTokens.cancelAll()
+        await releaseListeners()
         // The viewfinder says it is waiting rather than showing a picture that no longer moves.
         latestVideoFrame.withLock { $0 = nil }
         cameraStopped = Self.stopping(camera)
@@ -411,7 +433,8 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     }
 
     /// Puts a fresh camera on the session and waits for its stream, trying again with another one if it does not
-    /// start. Gives up quietly when cancelled (a clip, a photo, or the run stopping) or when the session has gone.
+    /// start, and again after `retryDelay` once `restartAttempts` have failed. Gives up quietly when cancelled (a
+    /// clip, a photo, or the run stopping) or when the session has gone.
     private func restartAfterHold() async {
         await cameraStopped?.value
         cameraStopped = nil
@@ -419,43 +442,74 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
             guard !Task.isCancelled, holds.isEmpty, camera == nil, let session, let continuation = chunkContinuation else { return }
             guard await session.waitUntilStarted(timeout: Self.sessionTimeout) else {
                 GlassesLog.shared.error("stream restart: the session is \(String(describing: session.state)), not started")
+                // A session the glasses paused may come back; one that ended is suspended by the run, which ends this.
+                retryLater(on: session)
                 return
             }
             guard !Task.isCancelled, holds.isEmpty, camera == nil, self.session === session else { return }
-            let sharp = usesViewfinderStream
-            GlassesLog.shared.note("stream restart, attempt \(attempt): \(sharp ? "viewfinder (504×896, 7 fps)" : "listening (360×640, 2 fps)")")
+            GlassesLog.shared.note("stream restart, attempt \(attempt)")
+            let began = ContinuousClock.now
             let camera: Camera
             do {
                 camera = try attachCamera(to: session, feeding: continuation, start: false)
             } catch {
                 GlassesLog.shared.error("stream restart, attempt \(attempt): \(error.localizedDescription)")
-                if sharp { viewfinderStreamFailed = true }
                 try? await Task.sleep(for: Self.restartDelay)
                 continue
             }
-            let streaming = await camera.stream.statePublisher.waitUntil(timeout: sharp ? Self.viewfinderStartTimeout : Self.startTimeout, after: {
+            // The stream reports `.stopped` only once it has left it: a stream the glasses reject stops within a
+            // second, and waiting out the timeout after that only keeps the wearer waiting (#46).
+            let left = Once()
+            let streaming = await camera.stream.statePublisher.waitUntil(timeout: Self.startTimeout, after: {
                 camera.stream.start()
             }) { state in
-                state == .streaming ? true : nil
+                switch state {
+                case .streaming: return true
+                case .stopped: return left.claim() ? nil : false
+                default:
+                    _ = left.claim()
+                    return nil
+                }
             }
             // Another clip or the run's stop may have taken this camera off during the wait.
             guard self.camera === camera else { return }
             if streaming {
-                GlassesLog.shared.note("stream back (attempt \(attempt))")
+                GlassesLog.shared.note("stream back (attempt \(attempt), \(Self.seconds(since: began)))")
                 return
             }
-            GlassesLog.shared.error("stream restart, attempt \(attempt): the stream did not start")
-            if sharp {
-                // Fall back to the stream the glasses are known to run, so the viewfinder still shows something.
-                viewfinderStreamFailed = true
-            }
+            GlassesLog.shared.error("stream restart, attempt \(attempt): the stream did not start (\(Self.seconds(since: began)))")
             self.camera = nil
-            await cameraTokens.cancelAll()
+            await releaseListeners()
             await Self.stopping(camera).value
             handle(.streamState(.stopped))
         }
-        GlassesLog.shared.error("the stream did not come back")
         handle(.streamError(.internalError))
+        if let session { retryLater(on: session) }
+    }
+
+    /// Tries the restart again after `retryDelay` while `session` is still the source's, rather than leave the run
+    /// without listening.
+    private func retryLater(on session: DeviceSession) {
+        guard !Task.isCancelled, self.session === session, chunkContinuation != nil else { return }
+        GlassesLog.shared.error("the stream did not come back; trying again in \(Self.seconds(Self.retryDelay))")
+        scheduleRestart(after: Self.retryDelay)
+    }
+
+    /// Releases the current camera's listeners; a camera added meanwhile has its own.
+    private func releaseListeners() async {
+        let tokens = cameraTokens
+        cameraTokens = ListenerTokenBag()
+        await tokens.cancelAll()
+    }
+
+    /// `duration` for the log, to a tenth of a second.
+    private static func seconds(_ duration: Duration) -> String {
+        let seconds = Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
+        return String(format: "%.1f s", seconds)
+    }
+
+    private static func seconds(since instant: ContinuousClock.Instant) -> String {
+        seconds(ContinuousClock.now - instant)
     }
 
     /// Stops `camera` and finishes once it reports `.stopped`, or after `stopTimeout`. One that already reports

@@ -35,10 +35,11 @@ nonisolated struct CameraFrame: Sendable {
 @MainActor
 protocol FrameKeepingAudioSource: AudioSource {
     var latestFrame: CameraFrame? { get }
-    /// A full-resolution photo from the camera as a JPEG, nil when none came (no camera, a failure, a timeout).
+    /// A photo from the camera as a JPEG, nil when none came (no camera, a failure, a timeout).
     func capturePhoto() async -> Data?
-    /// The lens's viewfinder opened or closed: the camera streams sharper and faster while it is open.
-    func setViewfinder(open: Bool) async
+    /// The lens needs the stream now (`reason`: the species list, the viewfinder): put it back if it stopped or
+    /// stalled with nothing holding it.
+    func ensureStreaming(_ reason: String) async
     /// The session ended under the stream: release what was on it, keep the chunk stream open.
     func suspend() async
     /// Continue the same chunk stream on `session`.

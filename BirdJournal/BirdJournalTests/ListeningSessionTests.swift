@@ -260,9 +260,9 @@ final class ManualAudioSource: FrameKeepingAudioSource {
     var photo: Data?
 
     func capturePhoto() async -> Data? { photo }
-    /// Every viewfinder change the run passed on, oldest first.
-    var viewfinderChanges: [Bool] = []
-    func setViewfinder(open: Bool) async { viewfinderChanges.append(open) }
+    /// Every moment the run asked for the stream, oldest first.
+    var streamChecks: [String] = []
+    func ensureStreaming(_ reason: String) async { streamChecks.append(reason) }
 
     func suspend() async {
         suspensions += 1
