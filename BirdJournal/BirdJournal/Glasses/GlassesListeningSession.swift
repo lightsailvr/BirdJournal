@@ -11,9 +11,9 @@ import UIKit
 
 /// The whole loop on the glasses (issue #9): one device session shared by the camera stream, Display and Inputs;
 /// glasses audio through the engine into the lens pages; "Add to my list" on a species' details page opens the
-/// viewfinder on the camera's frames, and a tap there writes the sighting with a full-resolution photo taken then (the
-/// latest frame if the photo does not come), a swipe without one. Start from the phone, then pocket it: nothing here
-/// needs the screen.
+/// viewfinder on the camera's frames, and a tap there writes the sighting with a photo taken then (the latest frame if
+/// the photo does not come), a swipe without one. Landing on the species list and opening the viewfinder check that
+/// the stream is up and put it back if not (#46). Start from the phone, then pocket it: nothing here needs the screen.
 ///
 /// Order: the device session (which waits for connected display glasses), camera and microphone permission, the
 /// lens (so the wearer sees the empty species list while the models load), then the listening session over the stream. The run ends from the phone, from Back on the root,
@@ -149,8 +149,8 @@ final class GlassesListeningSession {
             onEffect: { effect in box.run?.handle(effect) }
         )
         lens.viewfinderFrame = { box.run?.source?.latestFrame }
-        lens.onViewfinderChange = { open in
-            Task { await box.run?.source?.setViewfinder(open: open) }
+        lens.onStreamNeeded = { reason in
+            Task { await box.run?.source?.ensureStreaming(reason) }
         }
         box.run = self
     }

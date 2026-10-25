@@ -154,23 +154,22 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - Stop: a swipe, swiping right to the list, a doff and the two-finger quit each stop the clip at once.
    - Misread swipes: swipe down on a photo page a dozen times. Nothing plays, whatever the band reads.
    - Record the answers in DECISIONS.md, "Reference sounds in the packs".
-12. [ ] The viewfinder (2026-10-10), from "Listen with the glasses":
-   - "Add to my list" opens the viewfinder. Note how many frames a second reach the lens and how far behind the
-     world they run; whether the additive display makes the picture readable outdoors. The 2 fps `.low` stream was
-     too coarse on the first try; the viewfinder now restarts the stream at `.medium` and 7 fps (`glasses-audio`:
-     "stream for the viewfinder: true", then "stream back"). Note how long the switch takes each way.
-   - Frozen on the third try (one picture, never updated). Open Settings → Developer tools → Glasses run before
-     the test; its camera log shows what the stream did. Expected on opening: "stream for the viewfinder: true",
-     "stream restart, attempt 1: viewfinder (504×896, 7 fps)", "stream: streaming", "first video frame on the
-     viewfinder stream". If the sharper stream fails, attempt 2 says "listening (360×640, 2 fps)"; the lens should
-     read "Waiting for the camera…" in between, never a still picture.
+12. [ ] The viewfinder (2026-10-10; fast camera since #46, 2026-10-25), from "Listen with the glasses":
+   - "Add to my list" opens the viewfinder at once on the listening stream's frames (360×640, 2 fps): no stream
+     switch, no "Waiting for the camera…" unless a clip just took the camera off. Note the time from the press to
+     the first picture, and from a tap to "photo taken in N s" in the camera log.
+   - The camera log is also a file now: after the walk, pull it with
+     `xcrun devicectl device copy from --device <udid> --domain-type appDataContainer --domain-identifier
+     com.matthewcelia.mybirdjournal --source "Library/Application Support/Logs/glasses-<yyyy-MM-dd>.log"
+     --destination <path>`.
    - The crop box: what sits inside the white frame is what the journal's picture shows. Check that against the
      sighting; if the stream's field of view differs from the photo's, the box is off and needs scaling.
    - One press of "Add to my list": the viewfinder opens and stays (a doubled press, click and select, takes no photo).
-   - A tap takes the photo: the standalone full-resolution still (beta in the toolkit). The journal's sighting shows
-     a sharp crop, and the stored file is about 3024×4032. Note the time from the tap to "full photo taken" in the
-     `glasses-audio` log, its size in bytes, and that listening comes back after ("stream back"). Failures log
-     "full photo, attempt N: …"; the sighting then keeps the stream frame from the tap.
+   - A tap takes the photo in the stream (the standalone full-resolution still is off since #46: it failed on every
+     hardware try, 2026-10-10 and 2026-10-25). The stored file is about 1080×1440 and the stream stays on for it; a
+     failure logs "photo not taken …" and the sighting keeps the stream frame from the tap (360×640).
+   - Listening survives a walk of adds and clips: after several of each, back on the species list, new birds still
+     come in. A stream that died logs "stream down at the species list (…): restarting", then "stream back".
    - A swipe adds the bird without a photo; the journal shows the pack's photo for it.
    - Add the same bird again ("Add another" on its details page): the journal has two sightings of it, and the
      details page reads "New card" (issue #51; see step 13).
