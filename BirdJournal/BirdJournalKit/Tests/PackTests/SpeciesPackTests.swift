@@ -131,7 +131,7 @@ struct SpeciesPackTests {
 
     /// The species ids the builder logged under `key` in `report.json`'s "gaps": "photos" (fewer than three) or
     /// "sounds" (no clip).
-    private static func gaps(in pack: SpeciesPack, key: String) throws -> Set<String> {
+    static func gaps(in pack: SpeciesPack, key: String) throws -> Set<String> {
         let data = try Data(contentsOf: pack.directory.appending(path: "report.json"))
         let report = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let gaps = report?["gaps"] as? [String: [String]]

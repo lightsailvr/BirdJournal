@@ -8,7 +8,8 @@ public struct SpeciesPack: Sendable, Hashable {
     /// The schema `packbuilder.writer.SCHEMA_VERSION` writes. Schema 2 (issue #12) added the Wikipedia-derived
     /// description columns' source; schema 3 (issue #41) the `sound` table and the `sounds/` folder; schema 4 (issue
     /// #54) the set definition and the tables for stats, the fact sheet, lore, pack art, the threatened flag and the
-    /// family, which stay empty until the tickets that fill them (an empty table means "not available yet").
+    /// family, which stay empty until the tickets that fill them (an empty table means "not available yet"); issue #55
+    /// fills the stats, the threatened flag and the family.
     public static let schemaVersion = 4
     /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds; a schema-3
     /// pack without its set.
@@ -100,6 +101,14 @@ public struct PackSpecies: Sendable, Hashable, Identifiable {
     public let photos: [PackPhoto]
     /// Song first, then call, or one untyped sound; empty for a schema-2 pack or a species with no usable recording.
     public let sounds: [PackSound]
+    /// The card stats (issue #55); nil for a pack before schema 4 or one built without them, and for a species the
+    /// datasets lack (a known gap of the pack build, listed in its `report.json`).
+    public var stats: PackStats? = nil
+    /// The card's type line, "Songbird — Finch"; nil where `stats` is nil for want of the table.
+    public var typeLine: PackTypeLine? = nil
+    /// IUCN Vulnerable, Endangered or Critically Endangered, or on the pack builder's hand list; nil when the pack does
+    /// not say (before schema 4, or built without the flag).
+    public var isThreatened: Bool? = nil
 
     /// Whether the pack has any description text for this species.
     public var isDescribed: Bool {
@@ -244,8 +253,19 @@ extension SpeciesPack {
         guard supportedSchemaVersions.contains(info.schemaVersion) else { throw PackError.unsupportedSchema(info.schemaVersion) }
         let photosBySpecies = try readPhotos(database)
         let soundsBySpecies = info.schemaVersion >= 3 ? try readSounds(database) : [:]
-        let species = try readSpecies(database, photos: photosBySpecies, sounds: soundsBySpecies)
+        var species = try readSpecies(database, photos: photosBySpecies, sounds: soundsBySpecies)
         let set = info.schemaVersion >= 4 ? try readSet(database) : nil
+        if info.schemaVersion >= 4 {
+            let stats = try readStats(database)
+            let typeLines = try readTypeLines(database)
+            let threatened = try readThreatened(database)
+            for index in species.indices {
+                let id = species[index].id
+                species[index].stats = stats[id]
+                species[index].typeLine = typeLines[id]
+                species[index].isThreatened = threatened[id]
+            }
+        }
         return SpeciesPack(info: info, directory: directory, species: species, set: set)
     }
 
@@ -315,6 +335,59 @@ extension SpeciesPack {
         }
         guard rows.count <= 1 else { throw PackError.malformedRow(table: "set_definition") }
         return rows.first
+    }
+
+    /// The `stats` rows by species id. A category this reader doesn't know (a newer builder's) is left off, as a stat
+    /// the datasets lack is.
+    private static func readStats(_ database: SQLiteDatabase) throws -> [String: PackStats] {
+        let sql = """
+            SELECT species_id, avibase_id, wingspan_cm, wingspan_predicted, mass_g, diet, habitat, migration, nest, clutch_min, clutch_max,
+                   lifestyle, sources
+            FROM stats
+            """
+        let rows = try database.rows(sql) { row in
+            guard let speciesID = row.text(0), let sources = row.text(12).flatMap({ try? JSONDecoder().decode([String].self, from: Data($0.utf8)) }) else {
+                throw PackError.malformedRow(table: "stats")
+            }
+            let clutch: ClosedRange<Double>? = switch (row.double(9), row.double(10)) {
+            case let (low?, high?) where low <= high: low...high
+            case let (low?, nil): low...low
+            case let (nil, high?): high...high
+            default: nil
+            }
+            let stats = PackStats(
+                avibaseID: row.text(1),
+                wingspan: row.double(2).map { PackStats.Wingspan(centimetres: $0, isPredicted: row.int(3) == 1) },
+                massGrams: row.double(4),
+                diet: row.text(5).flatMap(PackStats.Diet.init(rawValue:)),
+                habitat: row.text(6).flatMap(PackStats.Habitat.init(rawValue:)),
+                migration: row.text(7).flatMap(PackStats.Migration.init(rawValue:)),
+                nests: (row.text(8) ?? "").split(separator: ",").compactMap { PackStats.Nest(rawValue: String($0)) },
+                clutch: clutch,
+                lifestyle: row.text(11).flatMap(PackStats.Lifestyle.init(rawValue:)),
+                sources: sources.compactMap(PackStats.Source.init(rawValue:))
+            )
+            return (speciesID, stats)
+        }
+        return Dictionary(rows, uniquingKeysWith: { first, _ in first })
+    }
+
+    private static func readTypeLines(_ database: SQLiteDatabase) throws -> [String: PackTypeLine] {
+        let rows = try database.rows("SELECT species_id, order_name, family, group_word, family_word FROM family") { row in
+            guard let speciesID = row.text(0), let order = row.text(1), let family = row.text(2), let group = row.text(3), let word = row.text(4) else {
+                throw PackError.malformedRow(table: "family")
+            }
+            return (speciesID, PackTypeLine(order: order, family: family, groupWord: group, familyWord: word))
+        }
+        return Dictionary(rows, uniquingKeysWith: { first, _ in first })
+    }
+
+    private static func readThreatened(_ database: SQLiteDatabase) throws -> [String: Bool] {
+        let rows = try database.rows("SELECT species_id, threatened FROM threatened") { row in
+            guard let speciesID = row.text(0), let threatened = row.int(1) else { throw PackError.malformedRow(table: "threatened") }
+            return (speciesID, threatened != 0)
+        }
+        return Dictionary(rows, uniquingKeysWith: { first, _ in first })
     }
 
     private static func readSpecies(_ database: SQLiteDatabase, photos: [String: [PackPhoto]], sounds: [String: [PackSound]]) throws -> [PackSpecies] {

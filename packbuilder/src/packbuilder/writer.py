@@ -21,12 +21,13 @@ from packbuilder.descriptions import Description
 from packbuilder.licenses import CC_BY_SA, INAT_CODES, credit_line, short_credit
 from packbuilder.selection import ScoredPhoto
 from packbuilder.sounds import SoundResult
+from packbuilder.stats import DATASETS, LICENSE as STATS_LICENSE, JoinedSpecies
 
 SCHEMA_VERSION = 4
 """3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
 added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
 lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that
-fill them, so they need no further schema change."""
+fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family."""
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -206,7 +207,10 @@ class WrittenPack:
 
 def write_pack(
     definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None, card_set: dict | None = None,
+    joined: dict[str, JoinedSpecies] | None = None,
 ) -> WrittenPack:
+    """`joined` is the joined stats, threatened flags and type lines by scientific name (`stats.join`); None leaves
+    their tables empty."""
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -258,7 +262,7 @@ def write_pack(
                 )
             )
 
-    license_text = _license_text(definition, results, built_at, card_set)
+    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined))
     (out_dir / "LICENSE").write_text(license_text)
 
     database = out_dir / "pack.sqlite"
@@ -280,10 +284,12 @@ def write_pack(
         db.executemany("INSERT INTO sound VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sound_rows)
         if card_set is not None:
             db.execute("INSERT INTO set_definition VALUES (?)", (json.dumps(card_set, ensure_ascii=False, separators=(",", ":")),))
+        if joined:
+            _insert_joined(db, results, joined)
         db.commit()
         db.execute("VACUUM")
 
-    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at), indent=2) + "\n")
+    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined), indent=2) + "\n")
 
     archive = None
     if archive_path is not None:
@@ -296,6 +302,25 @@ def write_pack(
     return WrittenPack(directory=out_dir, database=database, archive=archive)
 
 
+def _insert_joined(db: sqlite3.Connection, results: list[SpeciesResult], joined: dict[str, JoinedSpecies]) -> None:
+    """A stats row per species with stats (a known gap has none), a threatened row for every species, and the type line."""
+    for result in results:
+        species = joined[result.entry.scientific_name]
+        if (stats := species.stats) is not None:
+            db.execute(
+                "INSERT INTO stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    result.entry.id, stats.avibase_id, stats.wingspan_cm, int(stats.wingspan_predicted), stats.mass_g, stats.diet, stats.habitat,
+                    stats.migration, ",".join(stats.nest) or None, stats.clutch_min, stats.clutch_max, stats.lifestyle,
+                    json.dumps(list(stats.sources), separators=(",", ":")),
+                ),
+            )
+        threat = species.threat
+        db.execute("INSERT INTO threatened VALUES (?, ?, ?, ?)", (result.entry.id, int(threat.threatened), threat.iucn_category, threat.source))
+        if (line := species.type_line) is not None:
+            db.execute("INSERT INTO family VALUES (?, ?, ?, ?, ?)", (result.entry.id, line.order, line.family, line.group_word, line.family_word))
+
+
 def _description_columns(description: Description | None) -> tuple[str | None, str | None, str | None, str | None, str | None]:
     """summary, field_marks, size, habitat, description_source; NULL rather than empty text for what is missing."""
     if description is None:
@@ -303,7 +328,7 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
     return tuple(value or None for value in (description.summary, description.field_marks, description.size, description.habitat, description.source))
 
 
-def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None) -> str:
+def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None, stats: bool = False) -> str:
     carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
     lines = [
         f"{definition.name} species pack for BirdJournal (pack id {definition.id}, version {definition.version}, built {built_at})",
@@ -328,6 +353,7 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         "shared under that same license. Recordists retain copyright unless the recording is CC0.",
         "",
         *(_set_credits(card_set) if card_set else []),
+        *(_stats_credits() if stats else []),
         "Photo credits",
         "=============",
     ]
@@ -359,13 +385,25 @@ def _set_credits(card_set: dict) -> list[str]:
     ]
 
 
+def _stats_credits() -> list[str]:
+    """Where the card stats come from (issue #55)."""
+    return [
+        "The card stats (wingspan, weight, diet, habitat, migration, nest, clutch and lifestyle), the threatened flag and",
+        f"the type line's family come from these datasets, each licensed {STATS_LICENSE}:",
+        *(f"  {dataset.title}: {dataset.citation}. {dataset.url}" for dataset in DATASETS),
+        "Wingspans marked as predicted are the wingspan database's estimate from wing length. Habitat, migration, diet",
+        "and lifestyle are AVONET's categories; nest, clutch, flightlessness and the IUCN Red List category are BIRDBASE's.",
+        "",
+    ]
+
+
 def _one_of(licenses: set[str]) -> str:
     """The licenses in iNaturalist's order, as "CC0, CC BY or CC BY-SA"."""
     ordered = [license for license in INAT_CODES if license in licenses] or ["none"]
     return ordered[0] if len(ordered) == 1 else ", ".join(ordered[:-1]) + f" or {ordered[-1]}"
 
 
-def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> dict:
+def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: str, joined: dict[str, JoinedSpecies] | None = None) -> dict:
     return {
         "pack": definition.id,
         "version": definition.version,
@@ -389,5 +427,7 @@ def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: 
             "descriptions": [r.entry.id for r in results if r.description is None],
             # Only species whose sounds were looked for: a --no-sounds build has no sound gaps, it has no sounds.
             "sounds": [r.entry.id for r in results if r.sounds is not None and r.sounds.gap],
+            # Known gaps of the stats join (stats/fixes.json); a build without the join has none.
+            "stats": [r.entry.id for r in results if joined and joined[r.entry.scientific_name].stats is None],
         },
     }

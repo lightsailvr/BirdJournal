@@ -86,7 +86,7 @@ def test_pack_output(tmp_path):
     assert report["species"]["sayornis-nigricans"]["photos"] == 3
     assert report["species"]["sayornis-nigricans"]["description"] == "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
     assert report["species"]["calypte-anna"]["description"] is None
-    assert report["gaps"] == {"photos": ["calypte-anna"], "descriptions": ["calypte-anna"], "sounds": []}
+    assert report["gaps"] == {"photos": ["calypte-anna"], "descriptions": ["calypte-anna"], "sounds": [], "stats": []}
 
     with zipfile.ZipFile(written.archive) as archive:
         names = set(archive.namelist())
@@ -172,3 +172,48 @@ def test_a_pack_without_a_set_has_an_empty_set_table(tmp_path):
     db = sqlite3.connect(written.database)
     assert db.execute("SELECT COUNT(*) FROM set_definition").fetchone()[0] == 0
     assert "IOC World Bird List" not in (tmp_path / "out" / "LICENSE").read_text()
+
+
+def test_stats_threatened_flag_and_type_line_are_written_with_their_credits(tmp_path):
+    """Issue #55: a row of stats per joined species (none for a known gap, which the report lists), a threatened row
+    for every species, a type line, and the three datasets credited in the LICENSE."""
+    from packbuilder.stats import JoinedSpecies, SpeciesStats, Threat, TypeLine
+
+    pack = definition()
+    phoebe, hummingbird = pack.species
+    joined = {
+        phoebe.scientific_name: JoinedSpecies(
+            stats=SpeciesStats(
+                avibase_id="AVIBASE-BLPH", wingspan_cm=27.5, wingspan_predicted=True, mass_g=18.6, diet="invertivore", habitat="riverine",
+                migration="resident", nest=("half_cup", "cup"), clutch_min=3.0, clutch_max=6.0, lifestyle="insessorial", sources=("avonet", "birdbase", "wingspan"),
+            ),
+            type_line=TypeLine(order="Passeriformes", family="Tyrannidae", group_word="Songbird", family_word="Phoebe"),
+            threat=Threat(threatened=False, iucn_category="LC", source="BIRDBASE: IUCN Red List 2024"),
+        ),
+        hummingbird.scientific_name: JoinedSpecies(
+            stats=None,
+            type_line=TypeLine(order="Caprimulgiformes", family="Trochilidae", group_word="Landbird", family_word="Hummingbird"),
+            threat=Threat(threatened=True, iucn_category="LC", source="hand list: a test"),
+        ),
+    }
+    results = [result_for(phoebe, [1], tmp_path), result_for(hummingbird, [2], tmp_path)]
+    written = write_pack(pack, results, tmp_path / "out", built_at="2026-10-26T00:00:00Z", card_set=CARD_SET, joined=joined)
+
+    db = sqlite3.connect(written.database)
+    rows = db.execute(
+        "SELECT species_id, avibase_id, wingspan_cm, wingspan_predicted, mass_g, diet, habitat, migration, nest, clutch_min, clutch_max, lifestyle, sources FROM stats"
+    ).fetchall()
+    assert rows == [(phoebe.id, "AVIBASE-BLPH", 27.5, 1, 18.6, "invertivore", "riverine", "resident", "half_cup,cup", 3.0, 6.0, "insessorial", '["avonet","birdbase","wingspan"]')]
+    assert sorted(db.execute("SELECT species_id, threatened, iucn_category, source FROM threatened")) == sorted([
+        (phoebe.id, 0, "LC", "BIRDBASE: IUCN Red List 2024"), (hummingbird.id, 1, "LC", "hand list: a test"),
+    ])
+    assert sorted(db.execute("SELECT species_id, order_name, family, group_word, family_word FROM family")) == sorted([
+        (phoebe.id, "Passeriformes", "Tyrannidae", "Songbird", "Phoebe"), (hummingbird.id, "Caprimulgiformes", "Trochilidae", "Landbird", "Hummingbird"),
+    ])
+
+    report = json.loads((tmp_path / "out" / "report.json").read_text())
+    assert report["gaps"]["stats"] == [hummingbird.id]
+    license_text = (tmp_path / "out" / "LICENSE").read_text()
+    for credit in ("AVONET", "https://doi.org/10.6084/m9.figshare.16586228.v7", "BIRDBASE", "https://doi.org/10.6084/m9.figshare.27051040.v1",
+                   "Avian wingspan database", "https://doi.org/10.6084/m9.figshare.32089083.v1", "CC BY 4.0"):
+        assert credit in license_text, credit

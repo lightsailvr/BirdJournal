@@ -22,6 +22,7 @@ from packbuilder.licenses import PHOTO_LICENSES
 from packbuilder.scoring import score_crop
 from packbuilder.selection import Overrides, ScoredPhoto, select_photos
 from packbuilder.sounds import SoundPicker
+from packbuilder.stats import JoinedSpecies
 from packbuilder.writer import ChosenPhoto, SpeciesResult, WrittenPack, write_pack
 
 log = logging.getLogger("packbuilder")
@@ -76,8 +77,9 @@ class BuildOptions:
     """The licenses a photo may carry (canonical spellings); the API metadata source must be asked for the same set."""
 
 
-def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None, sounds: SoundPicker | None = None, card_set: dict | None = None) -> WrittenPack:
-    """`card_set` is the pinned set definition (`sets.py`) the pack carries; None writes an empty set table."""
+def build_pack(definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None, sounds: SoundPicker | None = None, card_set: dict | None = None, joined: dict[str, JoinedSpecies] | None = None) -> WrittenPack:
+    """`card_set` is the pinned set definition (`sets.py`) the pack carries; None writes an empty set table. `joined` is
+    the joined stats, threatened flags and type lines (`stats.join`); None leaves their tables empty."""
     raw_overrides = load_overrides(overrides_path)
     shared = shared_photo_ids(definition.species, metadata)
     if shared:
@@ -89,7 +91,7 @@ def build_pack(definition: PackDefinition, overrides_path: Path, metadata: Metad
     if sounds is not None:
         sounds.lock.write()
     built_at = options.built_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    written = write_pack(definition, results, options.out_dir, built_at=built_at, archive_path=options.archive_path, card_set=card_set)
+    written = write_pack(definition, results, options.out_dir, built_at=built_at, archive_path=options.archive_path, card_set=card_set, joined=joined)
     gaps = [r.entry.common_name for r in results if r.gap]
     undescribed = [r.entry.common_name for r in results if r.description is None]
     silent = [r.entry.common_name for r in results if r.sounds is not None and r.sounds.gap]

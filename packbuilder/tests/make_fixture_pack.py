@@ -9,7 +9,9 @@ hash the checked-in file rather than pin a digest).
 The second form writes the same two species under another pack id and version: the `PackLibrary` test's newer
 version of the bundled Los Angeles pack (issue #33). `test-pack-schema2.zip` beside them is the schema-2 pack from
 before #41 and `test-pack-schema3.zip` the schema-3 pack from before #54, kept as written then, which the reader must
-still open. Since #54 the test pack carries a set (`CARD_SET`): a box around Testland with its two species.
+still open. Since #54 the test pack carries a set (`CARD_SET`): a box around Testland with its two species. Since #55
+it carries `JOINED`: stats and a type line for the phoebe, and the hummingbird as a known gap with a type line and the
+threatened flag from the hand list.
 """
 
 from __future__ import annotations
@@ -26,6 +28,7 @@ from packbuilder.scoring import CropScore
 from packbuilder.selection import ScoredPhoto
 from packbuilder.audio import ClipMaker
 from packbuilder.sounds import ChosenSound, SoundCandidate, SoundResult
+from packbuilder.stats import JoinedSpecies, SpeciesStats, Threat, TypeLine
 from packbuilder.writer import ChosenPhoto, SpeciesResult, write_pack
 from tests.conftest import make_candidate, synthetic_photo
 
@@ -48,6 +51,23 @@ CARD_SET = {
     "id": "test-pack", "name": "Test Pack", "edition": {"name": "Test edition", "theme": "a test card's light"}, "taxonomy": "IOC World Bird List 15.1",
     "regions": [{"name": "Testland", "source": "hand-drawn polygon committed with the pack definition (regions/testland.geojson)", "polygons": [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]]]}],
     "species": [{"scientificName": "Calypte anna", "commonName": "Anna's Hummingbird"}, {"scientificName": "Sayornis nigricans", "commonName": "Black Phoebe"}],
+}
+
+
+JOINED = {
+    "Sayornis nigricans": JoinedSpecies(
+        stats=SpeciesStats(
+            avibase_id="AVIBASE-BLPH", wingspan_cm=27.5, wingspan_predicted=True, mass_g=18.6, diet="invertivore", habitat="riverine",
+            migration="resident", nest=("half_cup", "cup"), clutch_min=3.0, clutch_max=6.0, lifestyle="insessorial", sources=("avonet", "birdbase", "wingspan"),
+        ),
+        type_line=TypeLine(order="Passeriformes", family="Tyrannidae", group_word="Songbird", family_word="Phoebe"),
+        threat=Threat(threatened=False, iucn_category="LC", source="BIRDBASE: IUCN Red List 2024"),
+    ),
+    "Calypte anna": JoinedSpecies(
+        stats=None,
+        type_line=TypeLine(order="Caprimulgiformes", family="Trochilidae", group_word="Landbird", family_word="Hummingbird"),
+        threat=Threat(threatened=True, iucn_category="LC", source="hand list: a test"),
+    ),
 }
 
 
@@ -89,7 +109,8 @@ def main(target: Path, pack_id: str = "test-pack", version: int = 1) -> None:
         results[1].sounds = SoundResult()
         target.parent.mkdir(parents=True, exist_ok=True)
         card_set = CARD_SET if pack_id == "test-pack" else None
-        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set)
+        joined = JOINED if pack_id == "test-pack" else None
+        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set, joined=joined)
         print(f"wrote {target} ({target.stat().st_size} bytes)")
     finally:
         shutil.rmtree(work, ignore_errors=True)

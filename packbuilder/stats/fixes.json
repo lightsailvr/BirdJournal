@@ -1,0 +1,25 @@
+{
+  "_comment": "Manual fixes for the stats join (issue #55, packbuilder/stats.py). avonet, wingspan and birdbase map a BirdNET+ name (eBird/Clements) to the name the dataset uses, for renames, splits and lumps since the dataset's taxonomy; each says why. known_gaps lists species the build may leave without stats (none so far); threatened is the hand list of species protected where the packs are though the IUCN rates them lower.",
+  "avonet": {
+    "Anarhynchus nivosus": {"name": "Charadrius nivosus", "why": "Snowy Plover moved to Anarhynchus (Clements 2023); AVONET follows Clements 2021"},
+    "Ardea ibis": {"name": "Bubulcus ibis", "why": "Western Cattle Egret moved to Ardea (Clements 2023)"},
+    "Astur cooperii": {"name": "Accipiter cooperii", "why": "Cooper's Hawk moved to Astur (Clements 2024)"},
+    "Botaurus exilis": {"name": "Ixobrychus exilis", "why": "Least Bittern moved to Botaurus (Clements 2023)"},
+    "Larus smithsonianus": {"name": "Larus argentatus", "why": "American Herring Gull split from Herring Gull (Clements 2025); AVONET's row is the species before the split"},
+    "Numenius hudsonicus": {"name": "Numenius phaeopus", "why": "Hudsonian Whimbrel split from Whimbrel (Clements 2024); AVONET's row is the species before the split"},
+    "Setophaga aestiva": {"name": "Setophaga petechia", "why": "American Yellow Warbler split from Yellow Warbler (Clements 2025); AVONET's row is the species before the split"},
+    "Tyto furcata": {"name": "Tyto alba", "why": "American Barn Owl split from Western Barn Owl (Clements 2023); AVONET's row is the species before the split"}
+  },
+  "wingspan": {},
+  "birdbase": {},
+  "known_gaps": {},
+  "threatened": {
+    "Anarhynchus nivosus": "the Pacific coast population of the Western Snowy Plover is listed as Threatened under the US Endangered Species Act",
+    "Dryobates borealis": "the Red-cockaded Woodpecker is listed as Threatened under the US Endangered Species Act",
+    "Mycteria americana": "the Wood Stork is listed as Threatened under the US Endangered Species Act",
+    "Polioptila californica": "the coastal California Gnatcatcher is listed as Threatened under the US Endangered Species Act",
+    "Rallus obsoletus": "the Light-footed and California Ridgway's Rails are listed as Endangered under the US Endangered Species Act",
+    "Rostrhamus sociabilis": "the Everglade Snail Kite is listed as Endangered under the US Endangered Species Act",
+    "Vireo bellii": "Least Bell's Vireo, the subspecies of southern California, is listed as Endangered under the US Endangered Species Act"
+  }
+}
