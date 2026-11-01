@@ -16,7 +16,7 @@ struct BirdJournalApp: App {
     @State private var glassesListening: GlassesListeningSession
     @State private var listening: ListeningCoordinator
     @State private var sounds: ReferenceSounds
-    @State private var places = PlaceNames()
+    @State private var places: PlaceNames
     @State private var packs: PackLibrary
     @State private var journalEdits: JournalEdits
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
@@ -43,6 +43,9 @@ struct BirdJournalApp: App {
         recorder.sets = { packs.cardSets }
         Self.backfillRarity(recorder)
         let sightings = RunSightings(recorder: recorder)
+        let places = PlaceNames()
+        sightings.captioner = Self.makeCaptioner(packs: packs, places: places)
+        _places = State(initialValue: places)
         let phone = Self.makePhoneListeningSession(levels: levels, suppression: suppression)
         let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels, suppression: suppression)
         let listening = ListeningCoordinator(
@@ -85,6 +88,30 @@ struct BirdJournalApp: App {
         } catch {
             fatalError("album store unavailable: \(error)")
         }
+    }
+
+    /// The caption writer every add uses (issue #56): Apple's on-device model over the packs' fact sheets, with the
+    /// place named by the phone's reverse geocoding. In debug builds `-captionWriter fixed` writes a fixed line instead,
+    /// for simulators without Apple Intelligence, and `-captionWriter none` none.
+    private static func makeCaptioner(packs: PackLibrary, places: PlaceNames) -> Captioner? {
+        var writer: any CaptionWriter = FoundationModelsCaptionWriter()
+        #if DEBUG
+        switch UserDefaults.standard.string(forKey: "captionWriter") {
+        case "fixed": writer = FixedCaptionWriter()
+        case "none": return nil
+        default: break
+        }
+        #endif
+        return Captioner(
+            writer: writer,
+            species: { name in
+                packs.species(scientificName: name).map { Captioner.Species(commonName: $0.species.commonName, facts: $0.species.facts.map(\.text), isThreatened: $0.species.isThreatened) }
+            },
+            placeLabel: { coordinate in
+                await places.resolve(coordinate)
+                return places.name(for: coordinate)
+            }
+        )
     }
 
     /// Sightings saved before rarity existed get theirs once (issue #52), after launch and with the geomodel read off

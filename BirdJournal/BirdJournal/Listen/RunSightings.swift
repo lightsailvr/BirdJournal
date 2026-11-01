@@ -34,6 +34,8 @@ final class RunSightings {
     private(set) var entries: [Entry] = []
     @ObservationIgnored private var records: [PersistentIdentifier: Sighting] = [:]
     @ObservationIgnored let recorder: SightingRecorder
+    /// Writes each add's caption after the sighting is written, never blocking it (issue #56); nil writes none.
+    @ObservationIgnored var captioner: Captioner?
 
     init(recorder: SightingRecorder) {
         self.recorder = recorder
@@ -61,6 +63,7 @@ final class RunSightings {
         let sighting = recorded.sighting
         records[sighting.persistentModelID] = sighting
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
+        if let captioner { Task { await captioner.caption(sighting) } }
         return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: recorded.isLegendary, placement: recorded.placement)
     }
 

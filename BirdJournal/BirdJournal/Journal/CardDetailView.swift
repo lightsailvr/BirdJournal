@@ -291,8 +291,8 @@ private struct CardFrame: ViewModifier {
 }
 
 /// The collectible face: the Legendary label or the edition with the collector number, the art (a tap flips the card),
-/// the place and species, the type line and stats (issue #55), the rarity for that place and season, and the date and
-/// method.
+/// the place and species, the caption written for this sighting or else the lore's tagline (issue #56), the type line
+/// and stats (issue #55), the rarity for that place and season, and the date and method.
 private struct CardFront: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
@@ -330,6 +330,14 @@ private struct CardFront: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityElement(children: .combine)
+            if let caption = CaptionText.front(caption: sighting.caption, tagline: reference?.species.lore?.tagline) {
+                Text(caption)
+                    .font(JournalFont.supporting.italic())
+                    .foregroundStyle(Color.cardIvory)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel("Caption: \(caption)")
+                    .accessibilityIdentifier("card-caption")
+            }
             if let typeLine = reference?.species.typeLine {
                 Text(typeLine.text)
                     .font(JournalFont.supporting.weight(.semibold))
@@ -393,7 +401,7 @@ private struct FrontStats: View {
 }
 
 /// The encounter story: when and where, Heard or Seen (changed here), the note, the original photo, what the art is,
-/// where the rarity came from, and the species' natural history (issue #55). Its controls act on their own and never
+/// where the rarity came from, the species' lore with its credit (issue #56) and its natural history (issue #55). Its controls act on their own and never
 /// flip the card.
 private struct CardBack: View {
     @Environment(PackLibrary.self) private var library
@@ -448,6 +456,25 @@ private struct CardBack: View {
             BackSection(title: "Rarity") {
                 Text(CardText.rarityExplanation(sighting.rarity, commonName: library.commonName(for: sighting), hasLocation: sighting.location != nil))
                     .foregroundStyle(Color.ink)
+            }
+            BackSection(title: "Lore") {
+                if let lore = reference?.species.lore {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(lore.text)
+                            .foregroundStyle(Color.ink)
+                        Text(LoreText.credit(lore))
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                        if let revision = lore.wikipediaRevision {
+                            Link("Wikipedia article revision", destination: revision)
+                                .font(JournalFont.attribution)
+                        }
+                    }
+                    .accessibilityIdentifier("card-lore")
+                } else {
+                    Text("No lore for this bird in your packs yet.")
+                        .foregroundStyle(Color.inkSecondary)
+                }
             }
             BackSection(title: "Natural history") {
                 if let stats = reference?.species.stats {
