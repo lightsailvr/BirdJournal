@@ -82,7 +82,7 @@ struct AccountView: View {
     static let optionalNote = "An account is optional. Listening, your journal, cards and bird packs all work without one; signing in will let you join circles with friends."
 }
 
-/// Sign in with Apple and with Google, as list rows: Settings → Account, the Circle tab and the join screen.
+/// Sign in with Apple and with Google, as list rows: Settings → Account, the Circles tab and the join screen.
 struct SignInButtons: View {
     @Environment(AccountSession.self) private var account
 

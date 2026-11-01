@@ -528,7 +528,6 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
-				CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements;
 				INFOPLIST_KEY_CFBundleDisplayName = "My Bird Journal";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";

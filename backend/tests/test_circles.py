@@ -412,3 +412,43 @@ def test_the_cap_holds_when_friends_join_at_the_same_moment(client: TestClient, 
     assert sorted(statuses) == [200] * 5 + [409] * 5
     assert len(_member_ids(client, issuer, circle["id"])) == 20
     assert client.get("/v1/circles", headers=issuer.headers(sub="ada")).json()["circles"][0]["member_count"] == 20
+
+
+def test_the_creator_and_the_heir_leaving_at_once_leave_a_current_member_in_charge(
+    client: TestClient, issuer: TestIssuer, clock: Clock
+) -> None:
+    for _ in range(5):
+        circle = _create(client, issuer)
+        clock.now += timedelta(minutes=1)
+        _join(client, issuer, circle["id"], "bea")
+        clock.now += timedelta(minutes=1)
+        _join(client, issuer, circle["id"], "cy")
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            statuses = list(
+                pool.map(
+                    lambda sub: client.delete(
+                        f"/v1/circles/{circle['id']}/members/me", headers=issuer.headers(sub=sub)
+                    ).status_code,
+                    ["ada", "bea"],
+                )
+            )
+        assert statuses == [204, 204]
+        after = client.get(f"/v1/circles/{circle['id']}", headers=issuer.headers(sub="cy")).json()
+        assert after["created_by"] == "cy"
+        assert after["member_count"] == 1
+
+
+def test_leaving_twice_at_once_counts_the_member_out_once(client: TestClient, issuer: TestIssuer) -> None:
+    circle = _create(client, issuer)
+    _join(client, issuer, circle["id"], "bea")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        statuses = sorted(
+            pool.map(
+                lambda _: client.delete(
+                    f"/v1/circles/{circle['id']}/members/me", headers=issuer.headers(sub="bea")
+                ).status_code,
+                range(2),
+            )
+        )
+    assert statuses == [204, 404]
+    assert client.get(f"/v1/circles/{circle['id']}", headers=issuer.headers(sub="ada")).json()["member_count"] == 1

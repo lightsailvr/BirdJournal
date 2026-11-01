@@ -38,8 +38,6 @@ struct CirclesView: View {
                 // The account's ID marks the birder's own row on a circle's page.
                 if account.account == nil { await account.loadAccount() }
                 await circles.refresh()
-            } else {
-                circles.clear()
             }
         }
         #if DEBUG

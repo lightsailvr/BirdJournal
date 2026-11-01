@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import OSLog
 
-/// The birder's circles (issue #61) over a `CircleClient`, with the account's token. The Circle tab, a circle's page
+/// The birder's circles (issue #61) over a `CircleClient`, with the account's token. The Circles tab, a circle's page
 /// and the join screen read it. An invite link that arrives while the app runs (or launches it) waits in
 /// `pendingInvite` until the join screen takes it.
 @Observable
@@ -38,7 +38,7 @@ final class CircleStore {
         guard let client, account.isSignedIn else { return }
         if circles.isEmpty { listState = .loading }
         do {
-            circles = try await account.withAccessToken { try await client.circles(accessToken: $0) }
+            circles = try await account.withAccessToken(doing: "load your circles") { try await client.circles(accessToken: $0) }
             listState = .loaded
         } catch {
             log.error("couldn't load circles: \(String(describing: error))")
@@ -88,7 +88,7 @@ final class CircleStore {
         try? await loadDetail(id: circleID)
     }
 
-    /// Signed out: nothing of the circles stays on the phone.
+    /// Signed out: nothing of the circles stays on the phone (the root calls it whenever the account signs out).
     func clear() {
         circles = []
         details = [:]
@@ -96,8 +96,9 @@ final class CircleStore {
     }
 
     private func call<T>(_ body: (CircleClient, String) async throws -> T) async throws -> T {
+        // Only reachable if a screen calls without checking `isAvailable`.
         guard let client else { throw CircleError.server(0) }
-        return try await account.withAccessToken { try await body(client, $0) }
+        return try await account.withAccessToken(doing: "reach your circles") { try await body(client, $0) }
     }
 
     private func remember(_ detail: CircleDetail) {

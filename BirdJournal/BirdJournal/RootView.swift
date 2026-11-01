@@ -108,6 +108,7 @@ struct RootView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
     @Environment(CircleStore.self) private var circles
+    @Environment(AccountSession.self) private var account
     @State private var tab: Tab = .listen
     @State private var journalMode: JournalView.Mode = .cards
     @State private var listenPath = NavigationPath()
@@ -138,7 +139,9 @@ struct RootView: View {
                         .appDestinations()
                 }
             }
-            // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships.
+            // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
+            // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
+            // links' associated domain is Debug-only until then, so a release build leaves them to the browser.
             if AccountSession.isEnabledInThisBuild {
                 SwiftUI.Tab("Circles", systemImage: "person.3", value: Tab.circles) {
                     NavigationStack(path: $circlesPath) {
@@ -164,6 +167,13 @@ struct RootView: View {
             tab = .circles
             circlesPath = NavigationPath()
             circlesPath.append(Route.circle(id: circleID))
+        }
+        // Signed out (from Settings or a revoked token): nothing of the circles stays on the phone.
+        .onChange(of: account.isSignedIn) { _, signedIn in
+            if !signedIn {
+                circles.clear()
+                circlesPath = NavigationPath()
+            }
         }
         // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
         .onChange(of: circles.pendingInvite, initial: true) { _, token in

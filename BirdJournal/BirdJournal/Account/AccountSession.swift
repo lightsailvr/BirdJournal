@@ -124,11 +124,11 @@ final class AccountSession {
 
     /// Runs another part of the API (circles, issue #61) with the account's token, renewed the same way. A revoked
     /// refresh token signs out with the same message as the account's own calls.
-    func withAccessToken<T>(_ call: (String) async throws -> T) async throws -> T {
+    func withAccessToken<T>(doing action: String, _ call: (String) async throws -> T) async throws -> T {
         do {
             return try await authorized(call)
         } catch AuthError.sessionExpired {
-            report(AuthError.sessionExpired, doing: "reach your circles")
+            report(AuthError.sessionExpired, doing: action)
             throw AuthError.sessionExpired
         }
     }

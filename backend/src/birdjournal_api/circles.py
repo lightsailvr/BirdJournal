@@ -248,7 +248,7 @@ class CircleStore:
                 [
                     {
                         "Update": {
-                                "Key": _meta_key(circle_id),
+                            "Key": _meta_key(circle_id),
                             "UpdateExpression": "SET member_count = member_count + :one",
                             "ConditionExpression": "attribute_exists(pk) AND member_count < :cap",
                             "ExpressionAttributeValues": {":one": 1, ":cap": MAX_MEMBERS},
@@ -273,63 +273,97 @@ class CircleStore:
 
     def leave(self, subject: str, circle_id: str) -> None:
         """The account leaves. A creator who leaves hands the circle to its longest-standing remaining member."""
-        meta, members = self._circle_items(circle_id)
-        if meta is None or not any(_is_current(item) and _member_id(item) == subject for item in members):
-            raise NotFound()
-        successor = None
-        if meta["created_by"] == subject:
-            others = sorted(
-                (item for item in members if _is_current(item) and _member_id(item) != subject),
-                key=lambda item: item["joined_at"],
-            )
-            successor = _member_id(others[0]) if others else None
-        self._end_membership(circle_id, subject, removed=False, new_creator=successor)
+        for attempt in range(TRANSACTION_ATTEMPTS):
+            meta, members = self._circle_items(circle_id)
+            if meta is None or not any(_is_current(item) and _member_id(item) == subject for item in members):
+                raise NotFound()
+            successor = None
+            if meta["created_by"] == subject:
+                others = sorted(
+                    (item for item in members if _is_current(item) and _member_id(item) != subject),
+                    key=lambda item: item["joined_at"],
+                )
+                successor = _member_id(others[0]) if others else None
+            if self._end_membership(
+                circle_id, subject, removed=False, creator=meta["created_by"], successor=successor,
+                last_attempt=attempt + 1 == TRANSACTION_ATTEMPTS,
+            ):
+                return
 
     def remove(self, subject: str, circle_id: str, member_id: str) -> None:
         """The creator removes a member."""
-        meta, members = self._circle_items(circle_id)
-        current = {_member_id(item) for item in members if _is_current(item)}
-        if meta is None or subject not in current:
-            raise NotFound()
-        if meta["created_by"] != subject:
-            raise Forbidden()
-        if member_id == subject:
-            raise ValueError("The creator leaves rather than removing themselves")
-        if member_id not in current:
-            raise NotFound()
-        self._end_membership(circle_id, member_id, removed=True, new_creator=None)
+        for attempt in range(TRANSACTION_ATTEMPTS):
+            meta, members = self._circle_items(circle_id)
+            current = {_member_id(item) for item in members if _is_current(item)}
+            if meta is None or subject not in current:
+                raise NotFound()
+            if meta["created_by"] != subject:
+                raise Forbidden()
+            if member_id == subject:
+                raise ValueError("The creator leaves rather than removing themselves")
+            if member_id not in current:
+                raise NotFound()
+            if self._end_membership(
+                circle_id, member_id, removed=True, creator=subject, successor=None,
+                last_attempt=attempt + 1 == TRANSACTION_ATTEMPTS,
+            ):
+                return
 
     # Helpers.
 
-    def _end_membership(self, circle_id: str, member_id: str, *, removed: bool, new_creator: str | None) -> None:
+    def _end_membership(
+        self, circle_id: str, member_id: str, *, removed: bool, creator: str, successor: str | None, last_attempt: bool
+    ) -> bool:
+        """Ends one membership, on the conditions the caller read: the circle still has `creator` as its creator,
+        the member is still in it, and a successor (when the creator leaves) still is too. False when a concurrent
+        leave or handoff changed what was read, so the caller reads again and retries."""
         now = _timestamp(self._clock())
         meta_update = "SET member_count = member_count - :one"
-        values: dict[str, Any] = {":one": 1}
-        if new_creator is not None:
-            meta_update += ", created_by = :creator"
-            values[":creator"] = new_creator
+        values: dict[str, Any] = {":one": 1, ":creator": creator}
+        if successor is not None:
+            meta_update += ", created_by = :successor"
+            values[":successor"] = successor
         member_update = "SET left_at = :now" + (", removed_at = :now" if removed else "")
-        self._transact(
-            [
+        items: list[dict[str, Any]] = [
+            {
+                "Update": {
+                    "Key": _meta_key(circle_id),
+                    "UpdateExpression": meta_update,
+                    # The creator read is still the creator: two handoffs at once can't name someone who left.
+                    "ConditionExpression": "created_by = :creator",
+                    "ExpressionAttributeValues": values,
+                }
+            },
+            {
+                "Update": {
+                    "Key": _member_key(circle_id, member_id),
+                    "UpdateExpression": member_update,
+                    # Two leaves at once must not count the member out twice.
+                    "ConditionExpression": "attribute_exists(pk) AND attribute_not_exists(left_at)",
+                    "ExpressionAttributeValues": {":now": now},
+                }
+            },
+            {"Delete": {"Key": _membership_key(member_id, circle_id)}},
+        ]
+        if successor is not None:
+            items.append(
                 {
-                    "Update": {
-                        "Key": _meta_key(circle_id),
-                        "UpdateExpression": meta_update,
-                        "ExpressionAttributeValues": values,
-                    }
-                },
-                {
-                    "Update": {
-                        "Key": _member_key(circle_id, member_id),
-                        "UpdateExpression": member_update,
-                        # Two leaves at once must not count the member out twice.
+                    "ConditionCheck": {
+                        "Key": _member_key(circle_id, successor),
                         "ConditionExpression": "attribute_exists(pk) AND attribute_not_exists(left_at)",
-                        "ExpressionAttributeValues": {":now": now},
                     }
-                },
-                {"Delete": {"Key": _membership_key(member_id, circle_id)}},
-            ]
-        )
+                }
+            )
+        try:
+            self._transact(items)
+        except _TransactionCancelled as cancelled:
+            if cancelled.failed(1):
+                # Already gone: a concurrent leave or removal got there first.
+                raise NotFound() from None
+            if last_attempt:
+                raise
+            return False
+        return True
 
     def _live_invite(self, token: str) -> Invite:
         item = self._get(_invite_key(token)) if token else None
