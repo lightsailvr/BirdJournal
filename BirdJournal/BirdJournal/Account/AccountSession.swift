@@ -173,10 +173,26 @@ final class AccountSession {
 }
 
 extension AccountSession {
+    /// The build-time switch (issue #88): `ACCOUNTS_ENABLED`, a Swift compilation condition set in the project's Debug
+    /// configuration only. App Review 5.1.1(v) wants in-app account deletion wherever sign-in is offered, so Release
+    /// builds leave the account out until deletion ships (#71); then add `ACCOUNTS_ENABLED` to Release too.
+    static var isEnabledInThisBuild: Bool {
+        #if ACCOUNTS_ENABLED
+        true
+        #else
+        false
+        #endif
+    }
+
     /// The app's session: the bundled server with the system browser sheet and the Keychain, or `.unavailable` when
-    /// the build has no server yet. In debug builds `-fakeAccount signedOut|signedIn` swaps in a fake client and API
-    /// with tokens in memory, so the UI tests can tap through sign-in with no network.
-    static func forApp() -> AccountSession {
+    /// the build has no server yet or the account is switched off (`isEnabledInThisBuild`). In debug builds
+    /// `-fakeAccount signedOut|signedIn` swaps in a fake client and API with tokens in memory, so the UI tests can tap
+    /// through sign-in with no network.
+    static func forApp(accountsEnabled: Bool = isEnabledInThisBuild) -> AccountSession {
+        // Switched off, the session never starts: unavailable, tokens in memory, the Keychain untouched.
+        guard accountsEnabled else {
+            return AccountSession(auth: nil, api: nil, store: InMemoryTokenStore())
+        }
         #if DEBUG
         if let mode = UserDefaults.standard.string(forKey: "fakeAccount") {
             return FakeAccount.session(signedIn: mode == "signedIn")

@@ -27,6 +27,9 @@
 #   the test host into the logs, shuts the run's simulator down and fails the run.
 # Logs: build/test-logs/<time>-<run>.log.
 #
+# `--release` runs only `AccountSwitchUITests` in the Release configuration (the `BirdJournal-Release` scheme, issue
+# #88: the account is off in Release), with its own DerivedData so the Debug build is not thrown away.
+#
 # `--hang-probe await|spin|silent` runs only the deliberately hung tests in HangProbeTests.swift, to check the
 # timeouts: `await` and `spin` fail at their one-minute time limit, `silent` at xcodebuild's allowance, or at the
 # watchdog with the allowance raised (BIRDJOURNAL_TEST_ALLOWANCE=3000 BIRDJOURNAL_QUIET_MINUTES=2).
@@ -47,6 +50,7 @@ test_args=()
 while (($#)); do
     case "$1" in
         --package) target=package ;;
+        --release) target=release ;;
         --hang-probe) hang_probe="${2:?--hang-probe needs await, spin or silent}"; shift ;;
         *) test_args+=("$1") ;;
     esac
@@ -111,6 +115,12 @@ if [[ -n "$hang_probe" ]]; then
         run_step "hang-probe-$hang_probe" \
             "${app[@]}" "${timeouts[@]}" test-without-building -only-testing:BirdJournalTests/HangProbeTests
     fi
+elif [[ "$target" == release ]]; then
+    release_data="$repo_root/build/DerivedData-release"
+    rm -rf "$release_data/Build/Products/Release-iphonesimulator/BirdJournal.app" \
+        "$release_data/Build/Intermediates.noindex/XCBuildData"
+    run_step release xcodebuild -project "$repo_root/BirdJournal/BirdJournal.xcodeproj" -scheme BirdJournal-Release \
+        -destination "$destination" -derivedDataPath "$release_data" -skipMacroValidation "${timeouts[@]}" test
 elif [[ "$target" == package ]]; then
     cd "$repo_root/BirdJournal/BirdJournalKit"
     run_step package "${package[@]}" "${timeouts[@]}" test ${test_args[@]+"${test_args[@]}"}

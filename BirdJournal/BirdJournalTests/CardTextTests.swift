@@ -64,17 +64,49 @@ struct CardTextTests {
         #expect(CardText.originalPhotoPath(glasses) == "mine.jpg", "the birder's own photo comes first")
     }
 
-    @Test("the art says what it is: the glasses photo, a reference photo that is not the bird, or no art yet")
-    func provenance() {
-        #expect(CardText.Art(sighting: Self.sighting(frame: "frame.jpg"), referenceCredit: "© Ana, CC BY") == .glassesPhoto("frame.jpg"))
-        #expect(CardText.Art(sighting: Self.sighting(), referenceCredit: "© Ana, CC BY") == .referencePhoto(credit: "© Ana, CC BY"))
-        #expect(CardText.Art(sighting: Self.sighting(), referenceCredit: nil) == .none)
+    static let packArt = (url: URL(filePath: "/packs/us-ca-la/art/haemorhous-mexicanus.avif"), credit: "© Ana, CC BY" as String?)
+    static let reference = (url: URL(filePath: "/packs/us-ca-la/phone/1.jpg"), credit: "© Ana, CC BY")
 
-        #expect(CardText.Art.glassesPhoto("frame.jpg").label == "Your glasses photo")
-        #expect(CardText.Art.referencePhoto(credit: "x").label == "Reference photo")
-        #expect(CardText.Art.none.label == "No art yet")
-        #expect(CardText.Art.glassesPhoto("frame.jpg").provenance == "Your glasses photo from this sighting, at the journal's crop. A photo, not a painting.")
-        #expect(CardText.Art.referencePhoto(credit: "© Ana, CC BY").provenance == "A reference photo from your bird pack, not your bird. © Ana, CC BY.")
-        #expect(CardText.Art.none.provenance == "No art yet: no photo of this sighting, and no pack photo of this bird.")
+    @Test("the art order: approved photo art, ready scene art unless Use pack art is set, pack art, the reference photo, then none")
+    func artOrder() {
+        typealias Art = CardText.Art
+        var sighting = Self.sighting(frame: "frame.jpg")
+        // The glasses photo is evidence, never art (issue #57).
+        #expect(Art(sighting: sighting, packArt: Self.packArt, reference: Self.reference) == .packArt(Self.packArt.url, credit: "© Ana, CC BY"))
+        #expect(Art(sighting: sighting, packArt: nil, reference: Self.reference) == .referencePhoto(Self.reference.url, credit: "© Ana, CC BY"))
+        #expect(Art(sighting: sighting, packArt: nil, reference: nil) == .none)
+
+        sighting.art = CardArt(scene: ArtImage(path: "scene.jpg", state: .ready))
+        #expect(Art(sighting: sighting, packArt: Self.packArt, reference: Self.reference) == .sceneArt(path: "scene.jpg"))
+        sighting.art.prefersPackArt = true
+        #expect(Art(sighting: sighting, packArt: Self.packArt, reference: Self.reference) == .packArt(Self.packArt.url, credit: "© Ana, CC BY"), "Use pack art")
+        #expect(Art(sighting: sighting, packArt: nil, reference: Self.reference) == .referencePhoto(Self.reference.url, credit: "© Ana, CC BY"))
+
+        sighting.art = CardArt(scene: ArtImage(path: "scene.jpg", state: .failed))
+        #expect(Art(sighting: sighting, packArt: Self.packArt, reference: Self.reference) == .packArt(Self.packArt.url, credit: "© Ana, CC BY"), "failed scene art")
+
+        sighting.art = CardArt(scene: ArtImage(path: "scene.jpg", state: .ready), photo: ArtImage(path: "photo.jpg", state: .preview))
+        #expect(Art(sighting: sighting, packArt: Self.packArt, reference: Self.reference) == .sceneArt(path: "scene.jpg"), "photo art waiting for approval")
+        sighting.art = CardArt(prefersPackArt: true, scene: ArtImage(path: "scene.jpg", state: .ready), photo: ArtImage(path: "photo.jpg", state: .ready))
+        #expect(Art(sighting: sighting, packArt: Self.packArt, reference: Self.reference) == .photoArt(path: "photo.jpg"), "approved photo art wins")
+        sighting.art = CardArt(photo: ArtImage(path: nil, state: .ready))
+        #expect(Art(sighting: sighting, packArt: Self.packArt, reference: Self.reference) == .packArt(Self.packArt.url, credit: "© Ana, CC BY"), "no file, no photo art")
+    }
+
+    @Test("the art says what it is: AI illustrations and AI-embellished photos labelled so, a reference photo that is not the bird, or no art yet")
+    func provenance() {
+        typealias Art = CardText.Art
+        #expect(Art.photoArt(path: "p").label == "AI-embellished from your photo")
+        #expect(Art.sceneArt(path: "s").label == "AI illustration")
+        #expect(Art.packArt(Self.packArt.url, credit: nil).label == "AI illustration")
+        #expect(Art.referencePhoto(Self.reference.url, credit: "x").label == "Reference photo")
+        #expect(Art.none.label == "No art yet")
+
+        #expect(Art.photoArt(path: "p").provenance == "Your own photo, AI-embellished by FLUX.3 Image Klein and approved by you. The original is kept as evidence.")
+        #expect(Art.sceneArt(path: "s").provenance == "An AI illustration painted by FLUX.3 Image Klein into your glasses photo from this sighting. Not a photo.")
+        #expect(Art.packArt(Self.packArt.url, credit: "© Ana, CC BY").provenance == "An AI illustration from your bird pack, painted by FLUX.3 Image Klein from a reference photo (© Ana, CC BY). It shows the species, not your bird.")
+        #expect(Art.packArt(Self.packArt.url, credit: nil).provenance == "An AI illustration from your bird pack, painted by FLUX.3 Image Klein from a description of the species. It shows the species, not your bird.")
+        #expect(Art.referencePhoto(Self.reference.url, credit: "© Ana, CC BY").provenance == "A reference photo from your bird pack, not your bird. © Ana, CC BY.")
+        #expect(Art.none.provenance == "No art yet: no pack art and no pack photo of this bird.")
     }
 }
