@@ -43,18 +43,9 @@ enum MockDeviceKitTests {
         await tearDown(paired)
     }
 
-    /// Unpairs, then disables, each awaited (the DAT docs' deterministic teardown, issue #82), then waits for the
-    /// device to leave `Wearables.shared.devices` and gives the toolkit's link a beat to close: `disable()` returns
-    /// while the link's stream I/O may still be closing on the toolkit's thread.
     private static func tearDown(_ glasses: (any MockGlasses)?) async {
         if previewPort != nil { await MockDeviceKit.shared.stopTestServer() }
-        if let glasses { await MockDeviceKit.shared.unpairDevice(glasses) }
-        await MockDeviceKit.shared.disable()
-        let deadline = ContinuousClock.now + .seconds(5)
-        while !Wearables.shared.devices.isEmpty, ContinuousClock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(50))
-        }
-        try? await Task.sleep(for: .milliseconds(300))
+        await GlassesConnection.tearDownMockDeviceKit(glasses)
     }
 
     /// The mock camera needs a feed or the stream fails with `videoStreamingError`.

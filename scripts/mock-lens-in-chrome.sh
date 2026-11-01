@@ -28,6 +28,7 @@ while (($#)); do
         --port) port="${2:?--port needs a number}"; shift ;;
         --no-build) build=0 ;;
         --stop) stop=1 ;;
+        -*) echo "error: unknown option $1 (--port N, --no-build, --stop)" >&2; exit 2 ;;
         *) inputs="$1" ;;
     esac
     shift
@@ -51,8 +52,8 @@ if [[ -n "$holder" ]]; then
     holder_command="$(ps -o command= -p "$holder" 2>/dev/null || true)"
     if [[ "$holder_command" != *"CoreSimulator/Devices/$udid/"*"BirdJournal.app/BirdJournal"* ]]; then
         echo "error: port $port is held by pid $holder: ${holder_command:0:160}" >&2
-        echo "       Quit it (another simulator's app: scripts/mock-lens-in-chrome.sh --stop with its BIRDJOURNAL_SIMULATOR)," >&2
-        echo "       or pass --port <another port> and open that port in Chrome." >&2
+        echo "       Only one process can serve the lens on a port. Pass --port <another port> and open that port in" >&2
+        echo "       Chrome. Do not quit an app on a simulator that is not yours; ask whoever runs it." >&2
         exit 1
     fi
 fi

@@ -27,7 +27,7 @@ struct HangProbeTests {
     }
 
     @Test("blocks silently past every limit", .enabled(if: kind == "silent"))
-    func sleepsSilently() {
+    func blocksSilently() {
         Thread.sleep(forTimeInterval: 60 * 60)
     }
 }

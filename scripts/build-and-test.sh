@@ -53,6 +53,11 @@ while (($#)); do
     shift
 done
 
+if [[ -n "$hang_probe" ]] && { ((${#test_args[@]})) || [[ "$target" == package ]]; }; then
+    echo "error: --hang-probe takes no other arguments" >&2
+    exit 2
+fi
+
 destination="$(resolve_destination)"
 udid="$(destination_udid "$destination")"
 echo "==> Destination: $destination${udid:+ ($udid)}"
@@ -83,8 +88,8 @@ package=(
 )
 
 failures=()
-# step <name> <command…>: one watched run, recorded as a failure (and the rest carry on) when it fails.
-step() {
+# run_step <name> <command…>: one watched run, recorded as a failure (and the rest carry on) when it fails.
+run_step() {
     local name="$1" status=0
     shift
     echo "==> $name (log: $log_dir/$stamp-$name.log)"
@@ -100,27 +105,27 @@ rm -rf "$derived_data/Build/Products/Debug-iphonesimulator/BirdJournal.app" \
     "$derived_data/Build/Intermediates.noindex/XCBuildData"
 
 if [[ -n "$hang_probe" ]]; then
-    step build "${app[@]}" build-for-testing
+    run_step build "${app[@]}" build-for-testing
     if ((${#failures[@]} == 0)); then
         export TEST_RUNNER_BIRDJOURNAL_HANG_PROBE="$hang_probe"
-        step "hang-probe-$hang_probe" \
+        run_step "hang-probe-$hang_probe" \
             "${app[@]}" "${timeouts[@]}" test-without-building -only-testing:BirdJournalTests/HangProbeTests
     fi
 elif [[ "$target" == package ]]; then
     cd "$repo_root/BirdJournal/BirdJournalKit"
-    step package "${package[@]}" "${timeouts[@]}" test ${test_args[@]+"${test_args[@]}"}
+    run_step package "${package[@]}" "${timeouts[@]}" test ${test_args[@]+"${test_args[@]}"}
 else
-    step build "${app[@]}" build-for-testing
+    run_step build "${app[@]}" build-for-testing
     if ((${#failures[@]} == 0)); then
         if ((${#test_args[@]})); then
-            step app-tests "${app[@]}" "${timeouts[@]}" test-without-building "${test_args[@]}"
+            run_step app-tests "${app[@]}" "${timeouts[@]}" test-without-building "${test_args[@]}"
         else
-            step app-tests "${app[@]}" "${timeouts[@]}" test-without-building \
+            run_step app-tests "${app[@]}" "${timeouts[@]}" test-without-building \
                 -skip-testing:BirdJournalTests/MockDeviceKitTests -skip-testing:BirdJournalTests/HangProbeTests
-            step mock-device-kit "${app[@]}" "${timeouts[@]}" test-without-building \
+            run_step mock-device-kit "${app[@]}" "${timeouts[@]}" test-without-building \
                 -only-testing:BirdJournalTests/MockDeviceKitTests
             cd "$repo_root/BirdJournal/BirdJournalKit"
-            step package "${package[@]}" "${timeouts[@]}" test
+            run_step package "${package[@]}" "${timeouts[@]}" test
         fi
     fi
 fi

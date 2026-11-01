@@ -1,4 +1,5 @@
-# Sourced by scripts/build-and-test.sh and scripts/mock-lens-in-chrome.sh (issue #82): which simulator a run uses.
+# Sourced after scripts/lib/watchdog.sh by scripts/build-and-test.sh and scripts/mock-lens-in-chrome.sh (issue #82):
+# which simulator a run uses.
 # Agents run in parallel, one simulator each, so two xcodebuilds never share a simulator (or its Mock Device Kit
 # state). See CLAUDE.md, "Build and test".
 
@@ -6,7 +7,7 @@
 # there is none.
 ensure_simulator() {
     local name="$1" udid runtime
-    udid="$(xcrun simctl list devices available | sed -n "s/^ *$(printf '%s' "$name" | sed 's/[][\.*^$/]/\\&/g') (\([0-9A-F-]\{36\}\)).*/\1/p" | head -1)"
+    udid="$(simulator_udids "$name" | head -1)"
     if [[ -z "$udid" ]]; then
         runtime="$(xcrun simctl list runtimes available | sed -n 's/^iOS .* - \(com\.apple\.CoreSimulator\.SimRuntime\.iOS-[0-9-]*\)$/\1/p' | tail -1)"
         [[ -n "$runtime" ]] || { echo "error: no iOS simulator runtime installed" >&2; return 1; }

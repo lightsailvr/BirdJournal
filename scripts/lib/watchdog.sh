@@ -6,18 +6,25 @@
 # Only processes on this run's simulator are touched: other agents run their own simulators at the same time.
 
 watchdog_quiet_minutes="${BIRDJOURNAL_QUIET_MINUTES:-6}"
+[[ "$watchdog_quiet_minutes" =~ ^[1-9][0-9]*$ ]] || { echo "error: BIRDJOURNAL_QUIET_MINUTES must be a whole number of minutes" >&2; exit 1; }
 app_bundle_id="com.matthewcelia.mybirdjournal"
 
-# The UDID behind an xcodebuild destination: `id=…` as given, `name=…` looked up among the available simulators.
-# Empty when it cannot be resolved (then the watchdog can only kill xcodebuild itself).
+# The UDIDs of the available simulators named "$1", one per line (several when more than one runtime has one).
+simulator_udids() {
+    xcrun simctl list devices available | sed -n "s/^ *$(printf '%s' "$1" | sed 's/[][\.*^$/]/\\&/g') (\([0-9A-F-]\{36\}\)).*/\1/p"
+}
+
+# The UDID behind an xcodebuild destination: `id=…` as given, `name=…` when exactly one available simulator has that
+# name. Empty otherwise (then the watchdog can only kill xcodebuild itself, never a simulator it might have guessed).
 destination_udid() {
-    local destination="$1" name
+    local destination="$1" udids
     if [[ "$destination" =~ id=([0-9A-Fa-f-]{36}) ]]; then
         echo "${BASH_REMATCH[1]}"
     elif [[ "$destination" =~ name=([^,]+) ]]; then
-        name="${BASH_REMATCH[1]}"
-        xcrun simctl list devices available | sed -n "s/^ *$(printf '%s' "$name" | sed 's/[][\.*^$/]/\\&/g') (\([0-9A-F-]\{36\}\)).*/\1/p" | head -1
+        udids="$(simulator_udids "${BASH_REMATCH[1]}")"
+        [[ -n "$udids" && "$udids" != *$'\n'* ]] && echo "$udids"
     fi
+    return 0
 }
 
 # Ends a hung run on simulator `udid`: the app (the app-hosted test host) and the UI-test runner, matched by the

@@ -8,7 +8,9 @@ import UIKit
 
 // Issue #82's repro: cycles a mock Display through pair, a started session with a camera stream, and teardown, over
 // and over in one test host, until the toolkit's mock link stops answering. Skipped unless the test process gets
-// `BIRDJOURNAL_MDK_STRESS=<cycles>` (pass `TEST_RUNNER_BIRDJOURNAL_MDK_STRESS=40` to xcodebuild).
+// `BIRDJOURNAL_MDK_STRESS=<cycles>`. 40 cycles take about 5 minutes, past the script's default allowance:
+//   TEST_RUNNER_BIRDJOURNAL_MDK_STRESS=40 BIRDJOURNAL_TEST_ALLOWANCE=1800 BIRDJOURNAL_TEST_MAX_ALLOWANCE=1800 \
+//   BIRDJOURNAL_SIMULATOR=BJ-<n> scripts/build-and-test.sh -only-testing:BirdJournalTests/MockDeviceKitStressProbe
 // `BIRDJOURNAL_MDK_TEARDOWN` picks the teardown: `bare` (enable … disable, as the suites did before #82), `unpair`
 // (bare plus an awaited `unpairDevice` before `disable`), `settle` (bare plus a wait for the device list to empty and
 // a 300 ms beat after `disable`), or `settled` (`MockDeviceKitTests.withMockDisplay` as it is now: all of it).
@@ -48,13 +50,10 @@ struct MockDeviceKitStressProbe {
                 try await MockDeviceKitTests.waitUntil { connection.connectedDevice != nil }
                 let tearDown = {
                     if Self.teardown == "unpair" { await MockDeviceKit.shared.unpairDevice(glasses) }
-                    await MockDeviceKit.shared.disable()
                     if Self.teardown == "settle" {
-                        let deadline = ContinuousClock.now + .seconds(5)
-                        while !Wearables.shared.devices.isEmpty, ContinuousClock.now < deadline {
-                            try? await Task.sleep(for: .milliseconds(50))
-                        }
-                        try? await Task.sleep(for: .milliseconds(300))
+                        await GlassesConnection.settleMockDeviceKit()
+                    } else {
+                        await MockDeviceKit.shared.disable()
                     }
                 }
                 do { try await body(glasses) } catch { await tearDown(); throw error }
@@ -67,6 +66,6 @@ struct MockDeviceKitStressProbe {
     }
 }
 
-private final class Flag: @unchecked Sendable {
+private final class Flag {
     var value = false
 }

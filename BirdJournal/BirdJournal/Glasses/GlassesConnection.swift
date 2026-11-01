@@ -156,7 +156,8 @@ final class GlassesConnection {
     /// simulators share the Mac's loopback, so only one app can hold a port: `-mockPreviewPort 9001` picks another
     /// (`scripts/mock-lens-in-chrome.sh`, issue #82).
     static var mockPreviewPort: UInt16 {
-        UInt16(exactly: UserDefaults.standard.integer(forKey: "mockPreviewPort")).flatMap { $0 == 0 ? nil : $0 } ?? 9000
+        let port = UserDefaults.standard.integer(forKey: "mockPreviewPort")
+        return (1...Int(UInt16.max)).contains(port) ? UInt16(port) : 9000
     }
     @ObservationIgnored private var previewServer: Task<Void, Never>?
 
@@ -184,8 +185,6 @@ final class GlassesConnection {
         }
     }
 
-    /// Stops the preview server, then unpairs and disables, each awaited: the teardown order the DAT docs give, and
-    /// the one the mock suites use (issue #82).
     func unpairMockGlasses() async {
         let glasses = mockGlasses
         mockGlasses = nil
@@ -193,8 +192,27 @@ final class GlassesConnection {
         await previewServer?.value
         previewServer = nil
         await MockDeviceKit.shared.stopTestServer()
+        await Self.tearDownMockDeviceKit(glasses)
+    }
+
+    /// Unpairs `glasses`, then disables Mock Device Kit, each awaited (the DAT docs' order), then waits for the device
+    /// to leave `Wearables.devices` and gives the toolkit's link 300 ms more. `disable()` returns while the link's stream
+    /// I/O may still be closing, and pairing again then wedges the mock link for the rest of the process (issue #82,
+    /// DECISIONS.md). The mock suites tear down through this too.
+    static func tearDownMockDeviceKit(_ glasses: (any MockGlasses)?) async {
         if let glasses { await MockDeviceKit.shared.unpairDevice(glasses) }
+        await settleMockDeviceKit()
+    }
+
+    /// The part of the teardown that keeps the link alive: `disable()`, then the wait for the device list to empty and
+    /// the 300 ms beat.
+    static func settleMockDeviceKit() async {
         await MockDeviceKit.shared.disable()
+        let deadline = ContinuousClock.now + .seconds(5)
+        while !Wearables.shared.devices.isEmpty, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        try? await Task.sleep(for: .milliseconds(300))
     }
 
     func setMockWorn(_ worn: Bool) {
