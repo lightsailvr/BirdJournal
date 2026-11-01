@@ -78,7 +78,7 @@ xcrun simctl launch --terminate-running-process "$udid" "$app_bundle_id" \
     -autoMockLens YES -autoMockLensInputs "$inputs" -mockPreviewPort "$port" >/dev/null
 
 for _ in $(seq 1 60); do
-    if curl -fsS -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then
+    if curl -fs -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then
         echo "==> The preview server answers on http://127.0.0.1:$port/"
         echo "    In Chrome, open (or reload) that URL and select the Meta Ray-Ban Display Simulator extension."
         echo "    Phone screenshot: xcrun simctl io $udid screenshot lens.png"
