@@ -33,11 +33,13 @@ final class AccountUITests: XCTestCase {
         let name = app.textFields["Your name"]
         XCTAssertTrue(name.waitForExistence(timeout: 5), "not signed in; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(name.value as? String, "Pat Birder")
-        XCTAssertTrue(app.staticTexts["pat@example.com"].exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'pat@example.com'")).firstMatch.exists)
 
         app.buttons["Sign out"].tap()
-        let confirm = app.buttons.matching(NSPredicate(format: "label == 'Sign out'")).element(boundBy: 1)
-        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        // The confirmation's own Sign out, in the dialog over the list.
+        let dialog = app.sheets.firstMatch.exists ? app.sheets.firstMatch : app.alerts.firstMatch
+        let confirm = dialog.buttons["Sign out"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "no confirmation; screen: \(app.debugDescription.prefix(4000))")
         confirm.tap()
         XCTAssertTrue(app.buttons["Sign in with Apple"].waitForExistence(timeout: 5))
     }
