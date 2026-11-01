@@ -302,6 +302,7 @@ private struct CardFront: View {
     let flip: () -> Void
 
     var body: some View {
+        let reference = library.species(scientificName: sighting.scientificName)
         let art = CardArtView.art(for: sighting, library: library, setID: placement?.setID)
         let commonName = library.commonName(for: sighting)
         VStack(alignment: .leading, spacing: 12) {
@@ -404,6 +405,7 @@ private struct CardBack: View {
     let showOriginal: () -> Void
 
     var body: some View {
+        let reference = library.species(scientificName: sighting.scientificName)
         let method = Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })
         VStack(alignment: .leading, spacing: 0) {
             Text("Encounter story")

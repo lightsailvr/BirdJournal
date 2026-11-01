@@ -189,7 +189,8 @@ species once per pack with the committed `pack-art` workflow and prompts (`art/`
   (its rejected seeds and the reason stay in the lock); a gap gets none and is listed under `gaps.art` in
   `report.json`, and its cards show another pack's painting of the species, else the reference photo. `--approve-all`
   approves only faithful paintings from a photo: one from text, or one flagged NOT FAITHFUL, needs `--approve` by
-  name. Painting the Los Angeles pack takes about an hour and a half from the Mac.
+  name. Painting the Los Angeles pack from scratch takes about 3.3 hours from the Mac
+  (about 75 s a species); run it under `caffeinate -i`.
 
 ## Rarity calibration
 

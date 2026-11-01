@@ -35,7 +35,8 @@ SCHEMA_VERSION = 4
 """3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
 added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
 lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that
-fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family."""
+fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family, and
+#57 the pack art."""
 
 SCHEMA = """
 CREATE TABLE pack (

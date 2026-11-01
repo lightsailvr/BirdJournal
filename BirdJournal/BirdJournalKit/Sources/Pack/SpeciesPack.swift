@@ -10,7 +10,7 @@ public struct SpeciesPack: Sendable, Hashable {
     /// description columns' source; schema 3 (issue #41) the `sound` table and the `sounds/` folder; schema 4 (issue
     /// #54) the set definition and the tables for stats, the fact sheet, lore, pack art, the threatened flag and the
     /// family, which stay empty until the tickets that fill them (an empty table means "not available yet"); issue #55
-    /// fills the stats, the threatened flag and the family.
+    /// fills the stats, the threatened flag and the family, and issue #57 the pack art.
     public static let schemaVersion = 4
     /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds; a schema-3
     /// pack without its set.
@@ -194,7 +194,7 @@ public struct PackArt: Sendable, Hashable {
     /// The iNaturalist ids of the pack photos it was painted from (`PackPhoto.inatPhotoID`); empty for a painting
     /// from text, for a species with no open-license photo.
     public let sourcePhotoIDs: [Int]
-    /// The workflow, isolation and prompts versions, e.g. "pack-art@3 bird-isolate@1 prompts@8".
+    /// The workflow, isolation and prompts versions, e.g. "pack-art@3 bird-isolate@1 prompts@9".
     public let workflowVersion: String
 
     public init(speciesID: String, file: String, sourcePhotoIDs: [Int], workflowVersion: String) {
