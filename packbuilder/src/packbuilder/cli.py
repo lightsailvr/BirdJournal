@@ -204,7 +204,9 @@ def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
 
 def _artist(args: argparse.Namespace, definition: PackDefinition):
     """The pack-art step (issue #57): paints in the set's edition theme on comfybox what `art.lock.json` lacks, into
-    the art cache, with the reference photos `overrides.json` pins as `art.reference`."""
+    the art cache, with the reference photos `overrides.json` pins as `art.reference` and each species' setting
+    (`art.setting`, `art.length_cm`)."""
+    from packbuilder.art import ArtSetting
     from packbuilder.comfy import ComfyClient
     from packbuilder.definition import load_overrides
     from packbuilder.pack_art import LOCK_FILE, ArtLock, PackArtist
@@ -212,14 +214,21 @@ def _artist(args: argparse.Namespace, definition: PackDefinition):
     if definition.set is None:
         raise SystemExit(f"{definition.id}: pack art is painted in the set's edition theme, and pack.json has no set (or pass --no-art)")
     overrides = load_overrides(args.definition / "overrides.json")
-    references = {
-        entry.id: int(data["art"]["reference"])
+    art = {
+        entry.id: data["art"]
         for entry in definition.species
-        if isinstance(data := overrides.get(entry.scientific_name), dict) and isinstance(data.get("art"), dict) and data["art"].get("reference") is not None
+        if isinstance(data := overrides.get(entry.scientific_name), dict) and isinstance(data.get("art"), dict)
     }
+    references = {species_id: int(pins["reference"]) for species_id, pins in art.items() if pins.get("reference") is not None}
+    settings = {}
+    for species_id, pins in art.items():
+        try:
+            settings[species_id] = ArtSetting(pins.get("setting"), pins.get("length_cm"))
+        except ValueError as error:
+            raise SystemExit(f"{definition.id}: overrides.json, {species_id}: {error}")
     return PackArtist(
         ComfyClient(args.comfy), pack_id=definition.id, theme=definition.set.edition.theme, lock=ArtLock.load(args.definition / LOCK_FILE),
-        cache_dir=args.cache / "art", references=references,
+        cache_dir=args.cache / "art", references=references, settings=settings,
     )
 
 

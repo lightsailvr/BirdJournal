@@ -170,6 +170,10 @@ species once per pack with the committed `pack-art` workflow and prompts (`art/`
   first, which favours a dark background; the colour fit makes a dim reference a dim bird. `overrides.json` pins one
   with `{"art": {"reference": <photo id>}}`. A species with no photo is painted from text alone (`pack-art-text`,
   which names it) and must be looked at closely.
+- **The setting** (prompts v10) is what the reference shows the bird on, set per species in `overrides.json` as
+  `{"art": {"setting": ...}}`: `perch` (any perch off the ground, painted as a branch), `trunk`, `flight`, `ground`,
+  `rock`, `shore`, `wade` or `water`; without one the model chooses. The bird's length (its description's, or
+  `art.length_cm`) sizes the branch and the leaves beside it, so a finch sits on a twig and a hawk on a limb.
 - **The painting** isolates the reference bird on white, paints from it and keeps it only through the fidelity gate
   (`painting.py`, `fidelity.py`): an unfaithful painting is painted again with the next seed, three times at most,
   and the closest is kept and flagged NOT FAITHFUL.

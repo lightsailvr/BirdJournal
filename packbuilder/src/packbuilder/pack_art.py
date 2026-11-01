@@ -35,7 +35,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from packbuilder.art import ArtPrompts, Species, Workflow, reference_crop
+from packbuilder.art import ArtPrompts, ArtSetting, Species, Workflow, length_cm, reference_crop
 from packbuilder.comfy import ComfyClient, PaintingFailed
 from packbuilder.contact_sheets import grid
 from packbuilder.crops import upright
@@ -155,6 +155,9 @@ class PackArtist:
     lock: ArtLock
     cache_dir: Path
     references: dict[str, int] = field(default_factory=dict)
+    settings: dict[str, ArtSetting] = field(default_factory=dict)
+    """Each species' setting by species id (`art.setting` and `art.length_cm`); a species without one lets the model
+    choose, and takes its length from its description."""
     prompts: ArtPrompts = field(default_factory=ArtPrompts.load)
 
     def __post_init__(self):
@@ -184,9 +187,11 @@ class PackArtist:
         if entry is not None and entry["review"] == GAP:
             return Artwork(entry_id, GAP, None, tuple(entry["photos"]), self._version(entry))
         pinned = self.references.get(entry_id)
+        if pinned is not None and all(chosen.candidate.photo_id != pinned for chosen in result.photos):
+            log.warning("  %s: art.reference %d is not one of the pack's photos; painting from the best-lit one", result.entry.common_name, pinned)
         locked = entry["photos"][0] if entry and entry["photos"] else None
         reference = pick_reference(result.photos, pinned if pinned is not None else locked)
-        inputs = self._inputs(reference)
+        inputs = self._inputs(result, reference)
         same = entry is not None and all(entry.get(key) == value for key, value in inputs.items())
 
         if same and entry["review"] in (PENDING, APPROVED):
@@ -209,7 +214,7 @@ class PackArtist:
         fresh["review"] = PENDING
         return self._keep(result, fresh, entry)
 
-    def _inputs(self, reference: ChosenPhoto | None) -> dict:
+    def _inputs(self, result: SpeciesResult, reference: ChosenPhoto | None) -> dict:
         """What a painting depends on, beside its seeds: a locked painting with other inputs is painted again."""
         return {
             "photos": [reference.candidate.photo_id] if reference else [],
@@ -217,23 +222,30 @@ class PackArtist:
             "isolate": self.painter.isolate_workflow.tag if reference else None,
             "prompts": self.prompts.version,
             "theme": self.theme,
+            "setting": self._setting(result).kind,
         }
+
+    def _setting(self, result: SpeciesResult) -> ArtSetting:
+        pinned = self.settings.get(result.entry.id, ArtSetting())
+        described = length_cm(result.description.size) if result.description else None
+        return ArtSetting(pinned.kind, pinned.length_cm or described)
 
     def _render(self, result: SpeciesResult, reference: ChosenPhoto | None, seed: int, isolate_seed: int | None, attempts: int = ATTEMPTS) -> dict:
         """Paints one species' art and stores it in the cache; the lock entry for it, without the review."""
         entry = result.entry
         species = Species(entry.common_name, entry.scientific_name)
         if reference is None:
-            painting = self.client.paint(self.text_workflow, images=[], prompt=self.prompts.render_from_text(species, self.theme), seed=seed)
+            prompt = self.prompts.render_from_text(species, self.theme, self._setting(result))
+            painting = self.client.paint(self.text_workflow, images=[], prompt=prompt, seed=seed)
             raw = Image.open(io.BytesIO(painting.image)).convert("RGB")
             self.painted += 1
             log.info("  %s: painted from text (no photo), seed %d; review it by hand", entry.common_name, seed)
-            return {"common_name": entry.common_name, **self._inputs(None), "seed": seed, "isolate_seed": None, "sha256": self._store(raw, raw), "faithful": None, "attempts": 1, "fidelity": None}
+            return {"common_name": entry.common_name, **self._inputs(result, None), "seed": seed, "isolate_seed": None, "sha256": self._store(raw, raw), "faithful": None, "attempts": 1, "fidelity": None}
 
         crop = _reference_crop(reference)
         crop_mask = self.painter.mask(crop)
         isolation = self._isolated(reference.candidate.photo_id, crop, crop_mask, isolate_seed, attempts)
-        prompt = self.prompts.render("pack", species, self.pack_id, theme=self.theme)
+        prompt = self.prompts.render("pack", species, self.pack_id, theme=self.theme, setting=self._setting(result))
         images = [(f"bird-{reference.candidate.photo_id}.png", png(isolation.image))]
         best, tries = self.painter.best_of(self.workflow, images, prompt, seed, crop, crop_mask, f"pack-art/{entry.id}", attempts=attempts)
         self.painted += 1
@@ -241,7 +253,7 @@ class PackArtist:
         log.info("  %s: painted from photo %d, seed %d, dE %.1f -> %.1f, iou %.2f, %d attempt(s)%s", entry.common_name, reference.candidate.photo_id,
                  best.seed, best.before.dE_mean, best.after.dE_mean, best.after.iou, tries, flag)
         return {
-            "common_name": entry.common_name, **self._inputs(reference), "seed": best.seed, "isolate_seed": isolation.seed, "sha256": self._store(best.fitted, best.raw),
+            "common_name": entry.common_name, **self._inputs(result, reference), "seed": best.seed, "isolate_seed": isolation.seed, "sha256": self._store(best.fitted, best.raw),
             "faithful": best.after.faithful and isolation.fitted["faithful"], "attempts": tries,
             "fidelity": {"painted": best.before.as_dict(), "fitted": best.after.as_dict(), "isolated": isolation.fitted},
         }
@@ -313,7 +325,8 @@ class PackArtist:
             measured = f"dE {fitted['dE_mean']:.1f} iou {fitted['iou']:.2f}" if fitted else "not measured"
             flag = "" if entry.get("faithful", True) is not False else " · NOT FAITHFUL"
             state = artwork.review if artwork else UNPAINTED
-            cells.append((photo_cell, (painting, f"{state.upper()}{flag}\n{measured}")))
+            setting = entry.get("setting")
+            cells.append((photo_cell, (painting, f"{state.upper()}{flag}\n{measured}{f' · {setting}' if setting else ''}")))
         sheets = []
         for start in range(0, len(cells), per_sheet):
             chunk = cells[start:start + per_sheet]

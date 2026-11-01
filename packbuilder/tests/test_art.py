@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from PIL import Image, ImageDraw
 
-from packbuilder.art import CARD_SIZE, ArtPrompts, Species, Workflow, card_crop_box, telephoto_crop, telephoto_zoom
+from packbuilder.art import CARD_SIZE, SETTINGS, ArtPrompts, ArtSetting, Species, Workflow, card_crop_box, length_cm, telephoto_crop, telephoto_zoom
 from packbuilder.geometry import Box
 
 HOUSE_FINCH = Species(common_name="House Finch", scientific_name="Haemorhous mexicanus")
@@ -33,6 +33,29 @@ def test_pack_art_paints_the_reference_bird_in_its_sets_edition_theme(prompts):
     assert SAN_DIEGO in san_diego
     # The motifs, light and colours in prompts.json are scene and photo art's since version 8 (#57).
     assert "citrus leaves" not in los_angeles
+
+
+def test_pack_art_paints_the_bird_on_its_setting_at_its_own_scale(prompts):
+    """Prompts v10 (#57): v9 let the model choose and it stood a House Finch on a boulder; now the setting comes from the
+    reference, and the bird's length sizes the branch and the leaves beside it."""
+    finch = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting("perch", 14.0))
+    assert "a slender twig no thicker than a pencil" in finch and "each leaf about half as long as the bird" in finch
+    assert f"a branch of a tree or shrub from the {LOS_ANGELES}" in finch and "{" not in finch
+    hawk = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting("perch", 52.5))
+    assert "a sturdy limb about as thick as a wrist" in hawk and "each leaf about a sixth as long as the bird" in hawk
+    unknown = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting("perch"))
+    assert "a branch just thick enough for its toes to wrap around" in unknown and "each leaf" not in unknown
+    for kind in SETTINGS:
+        prompt = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting(kind, 20.0))
+        assert prompts.setting(ArtSetting(kind, 20.0), LOS_ANGELES) in prompt and "{" not in prompt
+    chosen = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES)
+    assert prompts.settings["default"].split(",")[0] in chosen
+    with pytest.raises(ValueError):
+        ArtSetting("treetop")
+
+
+def test_a_descriptions_length_is_the_middle_of_its_range():
+    assert (length_cm("16 cm"), length_cm("45–60 cm"), length_cm("8.5 cm"), length_cm(None), length_cm("")) == (16.0, 52.5, 8.5, None, None)
 
 
 def test_pack_art_from_text_names_the_species_because_there_is_no_photo(prompts):
