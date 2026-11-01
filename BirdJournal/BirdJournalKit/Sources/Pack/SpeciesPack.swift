@@ -2,14 +2,15 @@ import Foundation
 import SQLite3
 
 /// A species pack as `packbuilder` writes it (spec "Pack store"): `pack.sqlite` beside `lens/` and `phone/` JPEG
-/// folders, a `sounds/` folder of reference clips (schema 3), the set definition (schema 4) and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
+/// folders, a `sounds/` folder of reference clips (schema 3), the set definition and the `art/` folder of pack art (schema 4)
+/// and a `LICENSE` listing every credit. The whole database is read once into value types; nothing keeps
 /// the SQLite connection open.
 public struct SpeciesPack: Sendable, Hashable {
     /// The schema `packbuilder.writer.SCHEMA_VERSION` writes. Schema 2 (issue #12) added the Wikipedia-derived
     /// description columns' source; schema 3 (issue #41) the `sound` table and the `sounds/` folder; schema 4 (issue
     /// #54) the set definition and the tables for stats, the fact sheet, lore, pack art, the threatened flag and the
     /// family, which stay empty until the tickets that fill them (an empty table means "not available yet"); issue #55
-    /// fills the stats, the threatened flag and the family.
+    /// fills the stats, the threatened flag and the family, and issue #57 the pack art.
     public static let schemaVersion = 4
     /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds; a schema-3
     /// pack without its set.
@@ -63,6 +64,16 @@ public struct SpeciesPack: Sendable, Hashable {
     public func soundURL(for sound: PackSound) -> URL {
         directory.appending(path: sound.file)
     }
+
+    public func artURL(for art: PackArt) -> URL {
+        directory.appending(path: art.file)
+    }
+
+    /// The pack's photos a painting was painted from, for its credit; empty for a painting from text.
+    public func sourcePhotos(of art: PackArt) -> [PackPhoto] {
+        let species = species.first { $0.id == art.speciesID }
+        return art.sourcePhotoIDs.compactMap { id in species?.photos.first { $0.inatPhotoID == id } }
+    }
 }
 
 /// The `pack` row: identity, version and the license text.
@@ -101,6 +112,9 @@ public struct PackSpecies: Sendable, Hashable, Identifiable {
     public let photos: [PackPhoto]
     /// Song first, then call, or one untyped sound; empty for a schema-2 pack or a species with no usable recording.
     public let sounds: [PackSound]
+    /// The card art every card of the species shows until it has its own (issue #57); nil for a pack before it or a
+    /// species the maintainer listed as an art gap.
+    public let packArt: PackArt?
     /// The card stats (issue #55); nil for a pack before schema 4 or one built without them, and for a species the
     /// datasets lack (a known gap of the pack build, listed in its `report.json`).
     public var stats: PackStats? = nil
@@ -168,6 +182,26 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
         case "CC BY-NC": URL(string: "https://creativecommons.org/licenses/by-nc/4.0/")
         default: nil
         }
+    }
+}
+
+/// One `pack_art` row (issue #57): the species' painting, an AI illustration (ADR-0007) reviewed before the pack
+/// shipped, and what it was painted from.
+public struct PackArt: Sendable, Hashable {
+    public let speciesID: String
+    /// Path relative to the pack directory, e.g. `art/haemorhous-mexicanus.avif` (864 × 1152, 3:4).
+    public let file: String
+    /// The iNaturalist ids of the pack photos it was painted from (`PackPhoto.inatPhotoID`); empty for a painting
+    /// from text, for a species with no open-license photo.
+    public let sourcePhotoIDs: [Int]
+    /// The workflow, isolation and prompts versions, e.g. "pack-art@3 bird-isolate@1 prompts@9".
+    public let workflowVersion: String
+
+    public init(speciesID: String, file: String, sourcePhotoIDs: [Int], workflowVersion: String) {
+        self.speciesID = speciesID
+        self.file = file
+        self.sourcePhotoIDs = sourcePhotoIDs
+        self.workflowVersion = workflowVersion
     }
 }
 
@@ -253,7 +287,8 @@ extension SpeciesPack {
         guard supportedSchemaVersions.contains(info.schemaVersion) else { throw PackError.unsupportedSchema(info.schemaVersion) }
         let photosBySpecies = try readPhotos(database)
         let soundsBySpecies = info.schemaVersion >= 3 ? try readSounds(database) : [:]
-        var species = try readSpecies(database, photos: photosBySpecies, sounds: soundsBySpecies)
+        let artBySpecies = info.schemaVersion >= 4 ? try readPackArt(database) : [:]
+        var species = try readSpecies(database, photos: photosBySpecies, sounds: soundsBySpecies, art: artBySpecies)
         let set = info.schemaVersion >= 4 ? try readSet(database) : nil
         if info.schemaVersion >= 4 {
             let stats = try readStats(database)
@@ -327,6 +362,17 @@ extension SpeciesPack {
         return Dictionary(grouping: sounds, by: \.speciesID)
     }
 
+    /// Each species' `pack_art` row, by species id; empty for a pack built without art.
+    private static func readPackArt(_ database: SQLiteDatabase) throws -> [String: PackArt] {
+        let rows = try database.rows("SELECT species_id, file, source_photo_ids, workflow_version FROM pack_art") { row in
+            guard let speciesID = row.text(0), let file = row.text(1), let ids = row.text(2),
+                  let sourcePhotoIDs = try? JSONDecoder().decode([Int].self, from: Data(ids.utf8)), let workflow = row.text(3)
+            else { throw PackError.malformedRow(table: "pack_art") }
+            return PackArt(speciesID: speciesID, file: file, sourcePhotoIDs: sourcePhotoIDs, workflowVersion: workflow)
+        }
+        return Dictionary(rows.map { ($0.speciesID, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
     /// The one `set_definition` row's JSON; nil while the table is empty.
     private static func readSet(_ database: SQLiteDatabase) throws -> PackSet? {
         let rows = try database.rows("SELECT definition FROM set_definition") { row in
@@ -390,7 +436,9 @@ extension SpeciesPack {
         return Dictionary(rows, uniquingKeysWith: { first, _ in first })
     }
 
-    private static func readSpecies(_ database: SQLiteDatabase, photos: [String: [PackPhoto]], sounds: [String: [PackSound]]) throws -> [PackSpecies] {
+    private static func readSpecies(
+        _ database: SQLiteDatabase, photos: [String: [PackPhoto]], sounds: [String: [PackSound]], art: [String: PackArt]
+    ) throws -> [PackSpecies] {
         let sql = """
             SELECT id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat,
                    description_source
@@ -405,7 +453,7 @@ extension SpeciesPack {
                 inatTaxonID: row.int(4), wikipediaURL: row.text(5).flatMap(URL.init(string:)),
                 summary: row.text(6), fieldMarks: row.text(7), size: row.text(8), habitat: row.text(9),
                 descriptionSource: row.text(10).flatMap(URL.init(string:)),
-                photos: photos[id] ?? [], sounds: sounds[id] ?? []
+                photos: photos[id] ?? [], sounds: sounds[id] ?? [], packArt: art[id]
             )
         }
     }

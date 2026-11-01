@@ -125,24 +125,25 @@ final class CardFlipUITests: XCTestCase {
         assertShowing(back: true, app)
         XCTAssertTrue(app.staticTexts["No photo attached"].exists)
         XCTAssertFalse(app.buttons["View original photo"].exists, "no original, no entry")
-        XCTAssertTrue(app.staticTexts["No art yet: no photo of this sighting, and no pack photo of this bird."].exists)
+        XCTAssertTrue(app.staticTexts["No art yet: no pack art and no pack photo of this bird."].exists)
         XCTAssertTrue(app.staticTexts["Rarity unavailable for this place and season. No location was saved with this sighting, and rarity is never guessed."].exists)
     }
 
     @MainActor
-    func testAReferencePhotoIsLabelledAsOne() {
+    func testPackArtIsLabelledAnAIIllustration() {
         let app = launch("cards")
         XCTAssertTrue(newestCard(app).waitForExistence(timeout: 15), "no cards; screen: \(app.debugDescription.prefix(3000))")
-        // The Mourning Dove was added from the phone: no photo of its own, so its art is the pack's reference photo.
+        // The Mourning Dove was added from the phone: no art of its own, so it shows the pack's painting (issue #57).
         let dove = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch
         for _ in 0..<4 where !dove.isHittable { app.swipeUp() }
         XCTAssertTrue(dove.waitForExistence(timeout: 15))
         dove.tap()
         XCTAssertTrue(flip(app).waitForExistence(timeout: 10))
-        XCTAssertEqual(front(app).label, "Card art: Reference photo")
+        XCTAssertEqual(front(app).label, "Card art: AI illustration")
         flip(app).tap()
         assertShowing(back: true, app)
-        XCTAssertTrue(app.staticTexts["No photo attached"].exists, "a reference photo is not the birder's photo")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'A reference photo from your bird pack, not your bird.'")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["No photo attached"].exists, "pack art is not the birder's photo")
+        let provenance = NSPredicate(format: "label BEGINSWITH 'An AI illustration from your bird pack, painted by FLUX.3 Image Klein from a reference photo'")
+        XCTAssertTrue(app.staticTexts.matching(provenance).firstMatch.exists, "screen: \(app.debugDescription.prefix(4000))")
     }
 }

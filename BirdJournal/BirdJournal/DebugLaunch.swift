@@ -16,7 +16,8 @@ import UIKit
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Cards view), `sightings`,
 ///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab), `card` and `card-back` (the newest
-///   card, front or back up), `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
+///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
+///   `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
 ///   `-autoSet <id>`), `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
@@ -91,7 +92,8 @@ struct DebugLaunch: ViewModifier {
             case "card", "card-back":
                 tab = .journal
                 journalMode = .cards
-                if let newest = try? context.fetch(Sighting.newestFirst()).first {
+                let species = defaults.string(forKey: "autoCardSpecies")
+                if let newest = (try? context.fetch(Sighting.newestFirst()))?.first(where: { species == nil || $0.scientificName == species }) {
                     journalPath.append(Route.card(newest.persistentModelID))
                 }
                 if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }

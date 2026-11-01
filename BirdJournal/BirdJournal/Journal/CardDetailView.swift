@@ -90,7 +90,7 @@ struct CardDetailView: View {
                     CollectibleCard(showsBack: showsBack, rotates: !reduceMotion) {
                         CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, flip: flip)
                     } back: {
-                        CardBack(sighting: sighting, isLegendary: isLegendary, showOriginal: { showingOriginal = true })
+                        CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
                     if browse != nil {
                         Button {
@@ -303,6 +303,7 @@ private struct CardFront: View {
 
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
+        let art = CardArtView.art(for: sighting, library: library, setID: placement?.setID)
         let commonName = library.commonName(for: sighting)
         VStack(alignment: .leading, spacing: 12) {
             CardHeading(isLegendary: isLegendary, placement: placement)
@@ -310,10 +311,10 @@ private struct CardFront: View {
                 .accessibilityLabel(CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement).compactMap { $0 }.joined(separator: ", "))
                 .accessibilityIdentifier("card-heading")
             Button(action: flip) {
-                CardArtView(sighting: sighting, reference: reference, commonName: commonName)
+                CardArtView(art: art, commonName: commonName)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Card art: \(CardArtView.art(for: sighting, reference: reference).label)")
+            .accessibilityLabel("Card art: \(art.label)")
             .accessibilityHint("Flips the card to the encounter story.")
             .accessibilityIdentifier("card-art")
             VStack(alignment: .leading, spacing: 2) {
@@ -400,6 +401,7 @@ private struct CardBack: View {
     @Environment(JournalEdits.self) private var edits
     let sighting: Sighting
     let isLegendary: Bool
+    let placement: CardPlacement?
     let showOriginal: () -> Void
 
     var body: some View {
@@ -440,7 +442,7 @@ private struct CardBack: View {
                 }
             }
             BackSection(title: "Art") {
-                Text(CardArtView.art(for: sighting, reference: reference).provenance)
+                Text(CardArtView.art(for: sighting, library: library, setID: placement?.setID).provenance)
                     .foregroundStyle(Color.ink)
             }
             BackSection(title: "Rarity") {

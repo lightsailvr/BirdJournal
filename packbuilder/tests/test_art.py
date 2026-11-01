@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from PIL import Image, ImageDraw
 
-from packbuilder.art import CARD_SIZE, ArtPrompts, Species, Workflow, card_crop_box, telephoto_crop, telephoto_zoom
+from packbuilder.art import CARD_SIZE, SETTINGS, ArtPrompts, ArtSetting, Species, Workflow, card_crop_box, length_cm, telephoto_crop, telephoto_zoom
 from packbuilder.geometry import Box
 
 HOUSE_FINCH = Species(common_name="House Finch", scientific_name="Haemorhous mexicanus")
@@ -16,24 +16,60 @@ def prompts():
     return ArtPrompts.load()
 
 
-def test_pack_art_paints_the_reference_bird_in_its_editions_theme(prompts):
-    los_angeles = prompts.render("pack", HOUSE_FINCH, "us-ca-la")
-    san_diego = prompts.render("pack", HOUSE_FINCH, "us-ca-sd")
+LOS_ANGELES = "citrus groves, chaparral hills and warm golden valley light"
+SAN_DIEGO = "sandstone sea cliffs, kelp and soft marine-layer light over the Pacific"
+
+
+def test_pack_art_paints_the_reference_bird_in_its_sets_edition_theme(prompts):
+    los_angeles = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES)
+    san_diego = prompts.render("pack", HOUSE_FINCH, "us-ca-sd", theme=SAN_DIEGO)
 
     for prompt in (los_angeles, san_diego):
         assert "<ref_image_0>" in prompt and "<ref_image_1>" not in prompt
         assert "markings" in prompt and "nothing added and nothing taken away" in prompt
         assert "No text" in prompt and "border" in prompt
         assert "{" not in prompt and "}" not in prompt
-    assert "citrus leaves" in los_angeles and "citrus leaves" not in san_diego
-    assert "seafoam" in san_diego and "seafoam" not in los_angeles
+    assert LOS_ANGELES in los_angeles and SAN_DIEGO not in los_angeles
+    assert SAN_DIEGO in san_diego
+    # The motifs, light and colours in prompts.json are scene and photo art's since version 8 (#57).
+    assert "citrus leaves" not in los_angeles
+
+
+def test_pack_art_paints_the_bird_on_its_setting_at_its_own_scale(prompts):
+    """Prompts v10 (#57): v9 let the model choose and it stood a House Finch on a boulder; now the setting comes from the
+    reference, and the bird's length sizes the branch and the leaves beside it."""
+    finch = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting("perch", 14.0))
+    assert "a slender twig no thicker than a pencil" in finch and "each leaf about half as long as the bird" in finch
+    assert f"a branch of a tree or shrub from the {LOS_ANGELES}" in finch and "{" not in finch
+    hawk = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting("perch", 52.5))
+    assert "a sturdy limb about as thick as a wrist" in hawk and "each leaf about a sixth as long as the bird" in hawk
+    unknown = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting("perch"))
+    assert "a branch just thick enough for its toes to wrap around" in unknown and "each leaf" not in unknown
+    for kind in SETTINGS:
+        prompt = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES, setting=ArtSetting(kind, 20.0))
+        assert prompts.setting(ArtSetting(kind, 20.0), LOS_ANGELES) in prompt and "{" not in prompt
+    chosen = prompts.render("pack", HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES)
+    assert prompts.settings["default"].split(",")[0] in chosen
+    with pytest.raises(ValueError):
+        ArtSetting("treetop")
+
+
+def test_a_descriptions_length_is_the_middle_of_its_range():
+    assert (length_cm("16 cm"), length_cm("45–60 cm"), length_cm("8.5 cm"), length_cm(None), length_cm("")) == (16.0, 52.5, 8.5, None, None)
+
+
+def test_pack_art_from_text_names_the_species_because_there_is_no_photo(prompts):
+    prompt = prompts.render_from_text(HOUSE_FINCH, LOS_ANGELES)
+
+    assert "House Finch (Haemorhous mexicanus)" in prompt and LOS_ANGELES in prompt
+    assert "<ref_image" not in prompt and "{" not in prompt
 
 
 def test_no_template_names_the_species(prompts):
     # Named, a red finch came out a Northern Cardinal and a female bluebird a bright male (bake-off, #49); the
     # reference bird is the identity.
     for kind in ("pack", "scene", "photo"):
-        prompt = prompts.render(kind, HOUSE_FINCH, "us-ca-la")
+        prompt = prompts.render(kind, HOUSE_FINCH, "us-ca-la", theme=LOS_ANGELES)
         assert "House Finch" not in prompt and "Haemorhous" not in prompt, kind
 
 
@@ -66,11 +102,13 @@ def test_legendary_scene_and_photo_art_get_more_dramatic_light(prompts):
         assert "keeps its true colours" in legendary
 
 
-def test_pack_art_has_no_legendary_variant_and_an_unknown_edition_is_refused(prompts):
+def test_pack_art_has_no_legendary_variant_needs_a_theme_and_an_unknown_edition_is_refused(prompts):
     with pytest.raises(ValueError):
-        prompts.render("pack", HOUSE_FINCH, "us-ca-la", legendary=True)
+        prompts.render("pack", HOUSE_FINCH, "us-ca-la", legendary=True, theme=LOS_ANGELES)
+    with pytest.raises(ValueError):
+        prompts.render("pack", HOUSE_FINCH, "us-ca-la")
     with pytest.raises(KeyError):
-        prompts.render("pack", HOUSE_FINCH, "us-xx-nowhere")
+        prompts.render("scene", HOUSE_FINCH, "us-xx-nowhere")
 
 
 def test_the_isolation_keeps_the_photos_light_and_completes_what_the_perch_hid(prompts):
@@ -113,7 +151,7 @@ def test_both_references_reach_the_model_in_order():
 
 
 def test_every_art_kind_paints_a_card_with_flux3_klein_distilled():
-    for name, images in (("pack-art", 1), ("scene-art", 2), ("photo-art", 1), ("bird-isolate", 1)):
+    for name, images in (("pack-art", 1), ("pack-art-text", 0), ("scene-art", 2), ("photo-art", 1), ("bird-isolate", 1)):
         workflow = Workflow.load(name)
         graph = workflow.fill(images=["x"] * images, prompt="p", seed=1)
         assert workflow.image_count == images, name
@@ -212,3 +250,23 @@ def test_without_a_perch_the_telephoto_crop_frames_where_the_wearer_aimed():
 
     # The middle of the photo is the perch spot, a little below the crop's middle.
     assert x == pytest.approx(432, abs=4) and y == pytest.approx(0.72 * 1152, abs=4)
+
+
+def test_a_reference_crop_keeps_the_whole_bird_even_past_the_photos_edge():
+    # A wide bird in a landscape photo: a 3:4 box inside the photo would cut its head off (#57: a House Finch at a
+    # feeder lost its head, and FLUX.3 invented one), so the crop reaches past the photo's top and bottom.
+    from packbuilder.art import reference_crop
+
+    photo = Image.new("RGB", (1600, 900), (40, 90, 50))
+    ImageDraw.Draw(photo).rectangle((100, 300, 1500, 600), fill=(200, 60, 40))
+    crop = reference_crop(photo, Box(100 / 1600, 300 / 900, 1500 / 1600, 600 / 900))
+
+    assert crop.width % 16 == 0 and crop.height % 16 == 0
+    assert abs(crop.width / crop.height - 3 / 4) < 0.02
+    red = np.all(np.abs(np.asarray(crop, dtype=int) - (200, 60, 40)) < 30, axis=-1)
+    columns = np.flatnonzero(red.any(axis=0))
+    assert columns[0] > 0 and columns[-1] < crop.width - 1, "the bird's ends are inside the crop"
+
+    # A bird that fits is cropped inside the photo as before.
+    inside = reference_crop(photo, Box(0.45, 0.4, 0.55, 0.6))
+    assert inside.size[0] <= 1600 and inside.size[1] <= 900

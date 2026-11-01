@@ -11,7 +11,8 @@ version of the bundled Los Angeles pack (issue #33). `test-pack-schema2.zip` bes
 before #41 and `test-pack-schema3.zip` the schema-3 pack from before #54, kept as written then, which the reader must
 still open. Since #54 the test pack carries a set (`CARD_SET`): a box around Testland with its two species. Since #55
 it carries `JOINED`: stats and a type line for the phoebe, and the hummingbird as a known gap with a type line and the
-threatened flag from the hand list.
+threatened flag from the hand list. Since #57 the Black Phoebe has approved pack art painted from its photo 1 and the
+hummingbird is an art gap.
 """
 
 from __future__ import annotations
@@ -27,9 +28,12 @@ from packbuilder.geometry import Box
 from packbuilder.scoring import CropScore
 from packbuilder.selection import ScoredPhoto
 from packbuilder.audio import ClipMaker
+from packbuilder.pack_art import Artwork
 from packbuilder.sounds import ChosenSound, SoundCandidate, SoundResult
 from packbuilder.stats import JoinedSpecies, SpeciesStats, Threat, TypeLine
 from packbuilder.writer import ChosenPhoto, SpeciesResult, write_pack
+from PIL import Image
+from tests.comfy_stub import bird_on
 from tests.conftest import make_candidate, synthetic_photo
 
 def definition(pack_id: str = "test-pack", version: int = 1) -> PackDefinition:
@@ -110,7 +114,15 @@ def main(target: Path, pack_id: str = "test-pack", version: int = 1) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         card_set = CARD_SET if pack_id == "test-pack" else None
         joined = JOINED if pack_id == "test-pack" else None
-        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set, joined=joined)
+        art = None
+        if pack_id == "test-pack":
+            painting = work / "painting.png"
+            bird_on(Image.new("RGB", (864, 1152), (246, 240, 228))).save(painting)
+            art = {
+                "sayornis-nigricans": Artwork("sayornis-nigricans", "approved", painting, (1,), "pack-art@3 bird-isolate@1 prompts@8", True),
+                "calypte-anna": Artwork("calypte-anna", "gap", None, (3,), "pack-art@3 bird-isolate@1 prompts@8"),
+            }
+        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set, joined=joined, art=art)
         print(f"wrote {target} ({target.stat().st_size} bytes)")
     finally:
         shutil.rmtree(work, ignore_errors=True)

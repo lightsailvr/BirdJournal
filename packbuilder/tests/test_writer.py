@@ -217,3 +217,39 @@ def test_stats_threatened_flag_and_type_line_are_written_with_their_credits(tmp_
     for credit in ("AVONET", "https://doi.org/10.6084/m9.figshare.16586228.v7", "BIRDBASE", "https://doi.org/10.6084/m9.figshare.27051040.v1",
                    "Avian wingspan database", "https://doi.org/10.6084/m9.figshare.32089083.v1", "CC BY 4.0"):
         assert credit in license_text, credit
+
+
+def test_approved_pack_art_goes_in_the_pack_with_its_source_photo_and_the_rest_is_listed(tmp_path):
+    """Issue #57: only reviewed art ships; a gap is listed, and a painting not yet approved is listed as unreviewed."""
+    from packbuilder.pack_art import Artwork
+
+    pack = definition()
+    pack.species.append(SpeciesEntry(scientific_name="Psaltriparus minimus", common_name="Bushtit", birdnet_label="Psaltriparus minimus", inat_taxon_id=14303))
+    results = [result_for(pack.species[0], [1, 2], tmp_path), result_for(pack.species[1], [3], tmp_path), result_for(pack.species[2], [], tmp_path)]
+    painting = tmp_path / "painting.png"
+    Image.new("RGB", (864, 1152), (200, 180, 150)).save(painting)
+    version = "pack-art@3 bird-isolate@1 prompts@8"
+    art = {
+        "sayornis-nigricans": Artwork("sayornis-nigricans", "approved", painting, (2,), version, True),
+        "calypte-anna": Artwork("calypte-anna", "gap", None, (3,), version),
+        "psaltriparus-minimus": Artwork("psaltriparus-minimus", "pending", painting, (), "pack-art-text@1 prompts@8"),
+    }
+
+    written = write_pack(pack, results, tmp_path / "out", built_at="2026-10-20T00:00:00Z", art=art)
+
+    db = sqlite3.connect(written.database)
+    assert db.execute("SELECT * FROM pack_art").fetchall() == [("sayornis-nigricans", "art/sayornis-nigricans.avif", "[2]", version)]
+    with Image.open(tmp_path / "out" / "art" / "sayornis-nigricans.avif") as image:
+        assert (image.format, image.size) == ("AVIF", (864, 1152))
+    assert not (tmp_path / "out" / "art" / "psaltriparus-minimus.avif").exists()
+
+    license_text = (tmp_path / "out" / "LICENSE").read_text()
+    assert "AI illustration" in license_text and "FLUX.3 Image Klein" in license_text
+    # Photo 2 is CC BY-SA, so its painting is shared under CC BY-SA, with the photographer's credit.
+    assert "Black Phoebe: painted from photo 2, © Jane Birder, some rights reserved (CC BY-SA)" in license_text
+    assert "Paintings from CC BY-SA photos are shared under CC BY-SA" in license_text
+
+    report = json.loads((tmp_path / "out" / "report.json").read_text())
+    assert report["species"]["sayornis-nigricans"]["art"] == {"review": "approved", "photos": [2]}
+    assert report["gaps"]["art"] == ["calypte-anna"]
+    assert report["unreviewed"] == {"art": ["psaltriparus-minimus"]}

@@ -21,3 +21,9 @@ The same folder holds the evidence for issue #44 (a fresh location, the spot on 
 simulator with a simulated Griffith Park fix: the sighting detail with the map card under the Where row
 (`sighting-map-card-dark`), the full map sheet with the opened sighting's pin selected, two smaller pins and the callout
 (`sighting-map-dark`), and the Listen tab with the place line under the summary (`listening-place-dark`).
+
+`2026-11-01-pack-art/` is the evidence for issue #57 (pack art), half size from an iPhone 17 simulator with
+`-inMemoryAlbum YES -seedJournal YES -autoScreen card`: a Legendary card, the Black Phoebe, the seeded journal's only one
+(`legendary-card`), an edition card, the newer of the two House Finches, labelled "Citrus edition" (`edition-card`),
+and its back with the Art section naming FLUX.3 Image Klein and the reference photo's photographer (`edition-card-back`).
+Both fronts show the Los Angeles v7 pack art labelled "AI illustration".
