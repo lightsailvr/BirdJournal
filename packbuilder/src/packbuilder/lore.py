@@ -308,7 +308,7 @@ def prompt(common_name: str, scientific_name: str, facts: list[Fact] | tuple[Fac
     if datasets:
         lines += ["", "Fact sheet, from the datasets (coarse labels):"] + [f"{fact.id}: {fact.text}" for fact in datasets]
     if feedback:
-        lines += ["", "Your previous draft was sent back. Fix this:"] + [f"- {item}" for item in feedback]
+        lines += ["", "Notes on this draft:"] + [f"- {item}" for item in feedback]
     return "\n".join(lines)
 
 
@@ -388,7 +388,7 @@ class LoreWriter:
                 log.warning("  %s has no fact sheet; no lore", common_name)
                 continue
             feedback = [f"The maintainer rejected it: {entry['why']}"] if entry and entry["review"] == REJECTED and entry.get("why") else []
-            draft = self._draft(common_name, scientific_name, facts, feedback)
+            draft = self._draft(common_name, scientific_name, facts, feedback + self._crowded())
             if draft is None:
                 continue
             self._openings[opening(draft)] += 1
@@ -430,6 +430,13 @@ class LoreWriter:
             log.info("  %s: draft sent back: %s", common_name, "; ".join(problems))
         log.error("  %s: no lore after %d drafts (%s)", common_name, ATTEMPTS, "; ".join(problems))
         return None
+
+    def _crowded(self) -> list[str]:
+        """A note for the next request naming the openings the set already leans on, so a draft avoids them first time."""
+        crowded = [phrase for phrase, count in self._openings.most_common() if phrase and count * 2 >= self._cap]
+        if self._ask_why * 2 >= self._cap:
+            crowded.append("ask why")
+        return [f"Other cards of this set already begin often with: {', '.join(dict.fromkeys(crowded))}. Begin differently."] if crowded else []
 
     def _set_problems(self, draft: dict) -> list[str]:
         """What the draft would overdo across the set: an opening, or "ask why", past `OPENING_SHARE` of it."""
