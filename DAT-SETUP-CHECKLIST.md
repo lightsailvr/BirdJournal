@@ -71,7 +71,41 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
       `WearablesError.missingAppName/…Version/…BuildNumber` in a hostless test bundle. Mock-device tests must run in an
       app-hosted test target, not in `BirdJournalKit`. Loading `MWDATMockDevice` next to `MWDATCamera`/`MWDATDisplay` also
       logs many `objc[…]: Class … is implemented in both` duplicate-class warnings; they come from the SDK binaries.
-- [ ] Chrome "Meta Ray-Ban Display Simulator" extension previews the 600×600 additive display for layout checks.
+- [x] Chrome "Meta Ray-Ban Display Simulator" extension previews the 600×600 additive display for layout checks. Done in #82:
+      `BIRDJOURNAL_SIMULATOR=BJ-82 scripts/mock-lens-in-chrome.sh` builds, installs and launches the app with
+      `-autoMockLens YES` and waits until the preview server answers on `127.0.0.1:9000`; the open tab then shows the
+      lens. One simulator at a time (the simulators share the Mac's loopback); `--port` and `-mockPreviewPort` pick another.
+- [x] **What the DAT 1.0 docs prescribe, against what we did** (checked in #82 with the `mockdevice-testing` and `debugging`
+      skills and `search_dat_docs`: "Testing with Mock Device Kit (iOS)", "Display simulation", the
+      `MockDeviceKitInterface` reference):
+      - *Pair*: `enable()` (registered, permissions granted) then `pairGlasses(model:)`; the device shows in
+        `Wearables.devices` only once powered on and unfolded, so wait for it before `createSession`. **We** waited for
+        *any* connected device (`connection.connectedDevice != nil`), which a stale device from the previous test also
+        satisfies. **Now** `withMockDisplay` waits until the paired device itself (`glasses.deviceIdentifier`) is connected.
+      - *Teardown*: the docs' XCTest base class calls `await MockDeviceKit.shared.disable()`, and the reference prefers the
+        async `disable()` and `unpairDevice(_:)` overloads because the sync ones race "fire-and-forget cleanup, a common
+        source of flakiness when cycling enable/disable", adding that "the underlying stream I/O may still be closing on its
+        background thread when this returns". **We** awaited `disable()` and went straight to the next test's `enable()`;
+        four interruption tests also stopped their run from `defer { Task { await run.stop() } }`, so the stop ran after
+        `disable()`. **Now** the teardown awaits `unpairDevice`, then `disable()`, then waits for `Wearables.devices` to
+        empty and 300 ms more, and every run is stopped (awaited) before it.
+      - *Don and power*: as documented (`powerOn()`, `unfold()`, `don()`); the docs' Chrome sample skips `unfold()`, which
+        changes nothing for a Display.
+      - *Test server*: `startTestServer(port: 9000)` after pairing, then `stopTestServer()` and `disable()` at the end, for
+        Chrome; `startTestServer(portFilePath:)` on a system-assigned port plus `MWDATMockDeviceTestClient` for XCUITest
+        to drive the mock from the test process. **We** start it only from the DEBUG `pairMockGlasses()` (same order;
+        `unpairMockGlasses()` now also awaits `unpairDevice`). The unit suites start it only when asked
+        (`BIRDJOURNAL_MOCK_PREVIEW_PORT`); `BirdJournalUITests` does not use the mock.
+- [x] **Found in #82 (toolkit bug, worked around): the mock link wedges.** When a mock device is torn down and the next one
+      paired while the old link's stream I/O is still closing, a toolkit thread (`MWDATCore`, one run-loop thread for the
+      whole process) spins at 100% CPU in a single run-loop block calling `CFReadStreamRead` on a bound stream pair, and
+      nothing in that process gets an answer over the mock link again. Seen as: every following lens test failing with
+      "No connected display glasses." (the selector never sees the new device), permission checks that never return, and
+      a test host that does not exit after the run. The CoreBluetooth "XPC connection invalid" lines are noise: passing
+      runs log them on every `enable()`. Repro: `MockDeviceKitStressProbe` (40 cycles of pair, stream, teardown;
+      `TEST_RUNNER_BIRDJOURNAL_MDK_STRESS=40`). With the old teardown the link wedged at cycle 7; with the settle (wait for
+      the device list to empty, then 300 ms) 40 of 40 passed, with or without the unpair. Recovery once wedged: a new test
+      host process (kill the run, `simctl shutdown` the simulator); the script's watchdog does this.
 
 ## Local verification steps (in order)
 1. Build the untouched project for the simulator — baseline compiles.
