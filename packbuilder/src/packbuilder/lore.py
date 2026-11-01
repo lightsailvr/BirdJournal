@@ -43,8 +43,10 @@ API_KEY_VARIABLE = "BIRDJOURNAL_ANTHROPIC_API_KEY"
 KEYCHAIN_SERVICE = "birdjournal-anthropic-api-key"
 MODEL = "claude-opus-5-5"
 """DECISIONS.md, "Lore and captions": the current Opus, for the voice; a pack of 160 species costs a few dollars."""
-PROMPT_VERSION = 2
+PROMPT_VERSION = 3
 ATTEMPTS = 3
+PRICES = {"claude-opus-5-5": (4.0, 20.0), "claude-sonnet-5-5": (2.0, 10.0)}
+"""Dollars per million input and output tokens, for the run's spend and its budget."""
 DEFAULT_INTERVAL = 2.0
 """Seconds between API requests: the step is paced like the other network steps, one request at a time."""
 LORE_WORDS = (50, 80)
@@ -70,8 +72,9 @@ The only facts you may use are the numbered entries of the species' fact sheet. 
 datasets' entries are coarse category labels, so use one only where the article says nothing on that point. Use at \
 most one number in the whole lore, and none in the tagline. Every claim about the bird must be on the sheet: no \
 behaviour, food, colour, number, place, season or sound of your own. The legend lives in the telling (the framing, the \
-cadence, the epithets, the bird's purpose as a tale would give it), never in new facts. Do not name gods, peoples or \
-real people unless the sheet does.
+cadence, the epithets), never in new facts. A "why" may join two facts only when it is signposted as the tale's own \
+telling ("the tale answers", "they say", "so the story goes"); never state a cause the sheet does not give as fact. \
+Do not name gods, peoples or real people unless the sheet does.
 
 Every sentence of the lore, and the tagline, lists the ids of the fact-sheet entries it rests on; each sentence rests on \
 at least one. Use plain words a ten-year-old could read aloud; no archaic spellings."""
@@ -188,6 +191,10 @@ class LoreRefused(RuntimeError):
 
 class LoreTruncated(ValueError):
     """The reply ran out of tokens: the draft is sent back, as one that fails its checks."""
+
+
+class LoreBudgetExceeded(RuntimeError):
+    """The run spent its budget; what was written is locked, the rest waits for the next run."""
 
 
 class LoreAPIError(RuntimeError):
@@ -327,6 +334,9 @@ class LoreWriter:
     model: str = MODEL
     regenerate: frozenset[str] = frozenset()
     interval: float = DEFAULT_INTERVAL
+    budget: float | None = None
+    """Dollars this run may spend (by `PRICES`); no request starts once it is spent, so a run ends at most one
+    request past it."""
     sleep: Callable[[float], None] = time.sleep
     clock: Callable[[], float] = time.monotonic
     requests: int = field(default=0, init=False)
@@ -364,7 +374,7 @@ class LoreWriter:
             self.lock.write()
             written[species_id] = lore_from_entry(species_id, self.lock.species[species_id])
         if (usage := getattr(self._client, "input_tokens", None)) is not None:
-            log.info("lore: %d input and %d output tokens", usage, self._client.output_tokens)
+            log.info("lore: %d input and %d output tokens, $%.2f", usage, self._client.output_tokens, self.spent or 0)
         log.info("lore: %d requests, %d approved, %d to review", self.requests, sum(l.ships for l in written.values()), sum(l.review == PENDING for l in written.values()))
         return written
 
@@ -398,6 +408,9 @@ class LoreWriter:
     def _complete(self, request: str) -> str:
         if self._client is None:
             self._client = self.client_factory()
+        # Checked before a request rather than after, so a reply already paid for is never thrown away.
+        if self.budget is not None and (spent := self.spent) is not None and spent > self.budget:
+            raise LoreBudgetExceeded(f"spent ${spent:.2f}, past the ${self.budget:.2f} budget; what was written is locked")
         if self._last is not None and (wait := self.interval - (self.clock() - self._last)) > 0:
             self.sleep(wait)
         try:
@@ -405,6 +418,15 @@ class LoreWriter:
         finally:
             self._last = self.clock()
             self.requests += 1
+
+    @property
+    def spent(self) -> float | None:
+        """Dollars this run has spent, from the client's token counts; None for a client that keeps none."""
+        tokens = (getattr(self._client, "input_tokens", None), getattr(self._client, "output_tokens", None))
+        if None in tokens or self.model not in PRICES:
+            return None
+        prices = PRICES[self.model]
+        return (tokens[0] * prices[0] + tokens[1] * prices[1]) / 1_000_000
 
 
 def review(lock: LoreLock, approve: list[str] = (), reject: list[str] = (), approve_all: bool = False, why: str | None = None) -> None:

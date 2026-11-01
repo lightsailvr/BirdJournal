@@ -54,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--regenerate-lore", action="append", default=[], metavar="SPECIES", help="write a species' lore again (species id or common name; repeat; 'all' for every species)")
     build.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests for the lore (default lore.DEFAULT_INTERVAL)")
     build.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
+    build.add_argument("--lore-budget", type=float, default=None, help="dollars the lore may spend; the build stops once past them")
     build.add_argument("--lore-review", type=Path, help="the lore's review file (default build/lore/<pack id>/review.md)")
     lore_command = commands.add_parser("lore", help="write the lore lore.lock.json lacks, and its review file, without building the pack")
     lore_command.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and lore.lock.json")
@@ -62,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
     lore_command.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests (default lore.DEFAULT_INTERVAL)")
     lore_command.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
     lore_command.add_argument("--lore-review", type=Path, help="the review file (default build/lore/<pack id>/review.md)")
+    lore_command.add_argument("--lore-budget", type=float, default=None, help="dollars the run may spend; it stops once past them")
     lore_command.add_argument("--only", action="append", default=[], metavar="SPECIES", help="only these species (repeat), for a trial")
     lore_review = commands.add_parser("lore-review", help="record the review of the lore in lore.lock.json and rewrite its review file")
     lore_review.add_argument("definition", type=Path, help="folder holding pack.json and lore.lock.json")
@@ -144,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     sheets = args.art_sheets or Path(__file__).resolve().parents[3] / "build" / "pack-art" / definition.id
     lore = None if args.no_lore else _lore_writer(args, definition)
     lore_review = args.lore_review or _lore_review_path(definition.id)
-    from packbuilder.lore import InvalidLore, LoreAPIError, MissingAPIKey as MissingLoreKey
+    from packbuilder.lore import InvalidLore, LoreAPIError, LoreBudgetExceeded, MissingAPIKey as MissingLoreKey
     from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
 
     try:
@@ -155,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
         return 2
-    except (MissingLoreKey, LoreAPIError, InvalidLore) as error:
+    except (MissingLoreKey, LoreAPIError, LoreBudgetExceeded, InvalidLore) as error:
         logging.getLogger("packbuilder").error("lore stopped the build: %s", error)
         return 2
     if descriptions is not None:
@@ -241,6 +243,7 @@ def _lore_writer(args: argparse.Namespace, definition: PackDefinition):
     return LoreWriter(
         lock=lock, client_factory=lambda: AnthropicLoreClient(api_key_from_environment(), model), model=model,
         regenerate=frozenset(regenerate), interval=args.lore_interval if args.lore_interval is not None else DEFAULT_INTERVAL,
+        budget=args.lore_budget,
     )
 
 
@@ -248,7 +251,7 @@ def _lore(args: argparse.Namespace) -> int:
     """The fact sheets and lore alone: the descriptions and stats from the cache, then the lore step, as `build` runs
     them, so the lore can be written and reviewed before a pack build."""
     from packbuilder.definition import load_overrides
-    from packbuilder.lore import InvalidLore, LoreAPIError, MissingAPIKey, review_sheet
+    from packbuilder.lore import InvalidLore, LoreAPIError, LoreBudgetExceeded, MissingAPIKey, review_sheet
     from packbuilder.pipeline import describe, fact_sheets
     from packbuilder.selection import Overrides
     from packbuilder.stats import Datasets, StatsFixes, TypeLines, join
@@ -268,7 +271,7 @@ def _lore(args: argparse.Namespace) -> int:
     writer = _lore_writer(args, definition)
     try:
         written = writer.write([(r.entry.id, r.entry.common_name, r.entry.scientific_name) for r in results], sheets)
-    except (MissingAPIKey, LoreAPIError, InvalidLore) as error:
+    except (MissingAPIKey, LoreAPIError, LoreBudgetExceeded, InvalidLore) as error:
         logging.getLogger("packbuilder").error("lore stopped: %s", error)
         return 2
     sheet = review_sheet(writer.lock, args.lore_review or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])

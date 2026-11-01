@@ -106,7 +106,7 @@ def test_written_lore_is_locked_pending_with_its_facts(tmp_path):
     assert phoebe.tagline["text"] == "Keeper of the low perch, builder in mud."
     assert phoebe.sources == ["avonet", "birdbase", REVISION]
     entry = json.loads((tmp_path / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
-    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 2
+    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 3
     assert entry["sentences"][1] == {"text": GOOD["sentences"][1]["text"], "facts": ["f1", "f3"]}
 
 
@@ -135,6 +135,23 @@ def test_a_cut_off_reply_is_sent_back_and_a_refusal_costs_only_its_species(tmp_p
     written = writer(tmp_path, client).write(species, {id: FACTS for id, _, _ in species})
     assert set(written) == {"sayornis-nigricans", "zenaida-macroura"}
     assert "the reply was cut off" in client.prompts[1]
+
+
+def test_the_run_stops_once_past_its_budget_keeping_what_it_wrote(tmp_path):
+    from packbuilder.lore import LoreBudgetExceeded
+
+    class Counted(StubClient):
+        input_tokens = output_tokens = 0
+
+        def complete(self, system, prompt, schema):
+            self.input_tokens += 1000
+            self.output_tokens += 2000  # $0.044 a request at Opus 5.5's prices
+            return super().complete(system, prompt, schema)
+
+    species = PHOEBE + [("calypte-anna", "Anna's Hummingbird", "Calypte anna"), ("zenaida-macroura", "Mourning Dove", "Zenaida macroura")]
+    with pytest.raises(LoreBudgetExceeded, match="past the \\$0.05 budget"):
+        writer(tmp_path, Counted(GOOD, GOOD, GOOD), budget=0.05).write(species, {id: FACTS for id, _, _ in species})
+    assert list(LoreLock.load(tmp_path / "lore.lock.json").species) == ["calypte-anna", "sayornis-nigricans"], "the reply that crossed it is kept"
 
 
 def test_no_lore_after_three_failed_drafts(tmp_path):
