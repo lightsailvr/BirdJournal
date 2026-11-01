@@ -109,6 +109,9 @@ struct CognitoAuthClientTests {
         #expect(throws: AuthError.refused("unexpected callback")) {
             try CognitoAuthClient.code(from: URL(string: "birdjournal://other?code=c&state=mine")!, state: "mine")
         }
+        #expect(throws: AuthError.refused("unexpected callback")) {
+            try CognitoAuthClient.code(from: URL(string: "birdjournal://auth/callbackX?code=c&state=mine")!, state: "mine")
+        }
         #expect(try CognitoAuthClient.code(from: URL(string: "birdjournal://auth/callback?code=c&state=mine")!, state: "mine") == "c")
     }
 
@@ -332,7 +335,7 @@ struct AccountSessionTests {
         await session.loadAccount()
         await session.setDisplayName(String(repeating: "x", count: 41))
         #expect(session.account?.displayName == "Old")
-        #expect(session.errorMessage == "Names can be up to 40 characters.")
+        #expect(session.errorMessage == "Use a name of up to 40 characters, on one line.")
     }
 
     @Test("without an account server the build has no account, and nothing asks for one")

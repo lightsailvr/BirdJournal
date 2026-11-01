@@ -96,7 +96,7 @@ final class AccountSession {
             account = try await authorized { try await api.setDisplayName(trimmed, accessToken: $0) }
             errorMessage = nil
         } catch AccountAPIError.rejected {
-            errorMessage = "Names can be up to 40 characters."
+            errorMessage = "Use a name of up to 40 characters, on one line."
         } catch {
             report(error, doing: "save your name")
         }
@@ -138,8 +138,11 @@ final class AccountSession {
         refreshing = task
         defer { refreshing = nil }
         let renewed = try await task.value
-        // Signed out while the renewal was in flight: drop it.
-        guard tokens != nil else { throw AuthError.sessionExpired }
+        // Signed out, or out and in again, while the renewal was in flight: drop it and use what is current.
+        guard tokens == current else {
+            if let tokens { return tokens }
+            throw AuthError.sessionExpired
+        }
         try store.save(renewed)
         tokens = renewed
         return renewed
@@ -180,7 +183,7 @@ extension AccountSession {
 
     /// Keychain items outlive deleting the app; a reinstall starts signed out, as a birder would expect.
     private static func forgetTokensFromAPreviousInstall(_ store: TokenStore) {
-        let key = "accountKeychainOwned"
+        let key = "accountKeychainClearedAfterInstall"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
         store.clear()
         UserDefaults.standard.set(true, forKey: key)

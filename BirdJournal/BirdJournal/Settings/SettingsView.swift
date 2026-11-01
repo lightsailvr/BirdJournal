@@ -2,8 +2,9 @@ import MWDATCore
 import Pack
 import SwiftUI
 
-/// Settings (issue #28): the glasses in plain words, the optional account (issue #60), the appearance and app icon, the bird packs, sources and credits,
-/// and, in debug builds, the developer screens that used to be the app's front page.
+/// Settings (issue #28): the glasses in plain words, the optional account (issue #60), the appearance and app icon,
+/// the bird packs, sources and credits, and, in debug builds, the developer screens that used to be the app's front
+/// page.
 struct SettingsView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library

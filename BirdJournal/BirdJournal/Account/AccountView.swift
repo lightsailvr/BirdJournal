@@ -60,8 +60,8 @@ struct AccountView: View {
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .foregroundStyle(provider == .apple ? Color.white : Color.ink)
-                    .background(provider == .apple ? Color.black : Color.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.rule, lineWidth: provider == .apple ? 0 : 1))
+                    .background(provider == .apple ? Color.black : Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous).strokeBorder(Color.rule, lineWidth: provider == .apple ? 0 : 1))
                 }
                 .buttonStyle(.plain)
                 .disabled(account.status != .signedOut)
@@ -82,7 +82,8 @@ struct AccountView: View {
                 .textContentType(.name)
                 .submitLabel(.done)
                 .onSubmit { Task { await account.setDisplayName(name) } }
-            if name.trimmingCharacters(in: .whitespacesAndNewlines) != (account.account?.displayName ?? ""), !name.trimmingCharacters(in: .whitespaces).isEmpty {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty, trimmed != account.account?.displayName {
                 Button("Save name") { Task { await account.setDisplayName(name) } }
             }
             if let email = account.identity.email {

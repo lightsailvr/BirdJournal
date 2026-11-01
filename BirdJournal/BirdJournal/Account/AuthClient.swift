@@ -85,11 +85,7 @@ final class CognitoAuthClient: AuthClient {
     }
 
     func revoke(_ tokens: AuthTokens) async {
-        var request = URLRequest(url: server.revokeURL)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.httpBody = Self.form(["token": tokens.refreshToken, "client_id": server.clientID])
-        _ = try? await transport(request)
+        _ = try? await transport(Self.formPost(server.revokeURL, ["token": tokens.refreshToken, "client_id": server.clientID]))
     }
 
     func authorizeURL(provider: IdentityProvider, pkce: PKCE, state: String) -> URL {
@@ -109,9 +105,12 @@ final class CognitoAuthClient: AuthClient {
 
     /// The authorization code on our callback, after checking it answers this sign-in.
     static func code(from callback: URL, state: String) throws -> String {
-        let components = URLComponents(url: callback, resolvingAgainstBaseURL: false)
-        let items = Dictionary((components?.queryItems ?? []).map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })
-        guard callback.absoluteString.hasPrefix(AccountServer.redirectURI) else { throw AuthError.refused("unexpected callback") }
+        let expected = URLComponents(string: AccountServer.redirectURI)!
+        guard let components = URLComponents(url: callback, resolvingAgainstBaseURL: false),
+              components.scheme == expected.scheme, components.host == expected.host, components.path == expected.path else {
+            throw AuthError.refused("unexpected callback")
+        }
+        let items = Dictionary((components.queryItems ?? []).map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })
         if let error = items["error"] { throw AuthError.refused(items["error_description"] ?? error) }
         guard items["state"] == state else { throw AuthError.refused("state mismatch") }
         guard let code = items["code"], !code.isEmpty else { throw AuthError.refused("no code") }
@@ -126,11 +125,7 @@ final class CognitoAuthClient: AuthClient {
     }
 
     private func tokenRequest(_ fields: [String: String]) async throws -> TokenResponse {
-        var request = URLRequest(url: server.tokenURL)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.httpBody = Self.form(fields)
-        let (data, response) = try await transport(request)
+        let (data, response) = try await transport(Self.formPost(server.tokenURL, fields))
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 400, let error = try? JSONDecoder().decode([String: String].self, from: data), error["error"] == "invalid_grant" {
             throw AuthError.sessionExpired
@@ -139,6 +134,14 @@ final class CognitoAuthClient: AuthClient {
             throw AuthError.badResponse(status)
         }
         return tokens
+    }
+
+    static func formPost(_ url: URL, _ fields: [String: String]) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = form(fields)
+        return request
     }
 
     static func form(_ fields: [String: String]) -> Data {
@@ -154,8 +157,12 @@ final class CognitoAuthClient: AuthClient {
 /// ASWebAuthenticationSession over the key window, ephemeral so the hosted UI keeps no cookie: signing out and in
 /// again can pick another Apple ID or Google account.
 final class SystemWebSignIn: NSObject, WebSignIn, ASWebAuthenticationPresentationContextProviding {
+    /// Held while the sheet is up: a session nobody holds can be released and never call back.
+    private var session: ASWebAuthenticationSession?
+
     func callbackURL(for url: URL, scheme: String) async throws -> URL {
-        try await withCheckedThrowingContinuation { continuation in
+        defer { self.session = nil }
+        return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(url: url, callback: .customScheme(scheme)) { callback, error in
                 if let callback {
                     continuation.resume(returning: callback)
@@ -167,6 +174,7 @@ final class SystemWebSignIn: NSObject, WebSignIn, ASWebAuthenticationPresentatio
             }
             session.presentationContextProvider = self
             session.prefersEphemeralWebBrowserSession = true
+            self.session = session
             if !session.start() { continuation.resume(throwing: AuthError.refused("the sign-in sheet did not open")) }
         }
     }
@@ -174,6 +182,7 @@ final class SystemWebSignIn: NSObject, WebSignIn, ASWebAuthenticationPresentatio
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         if let window = scenes.flatMap(\.windows).first(where: \.isKeyWindow) { return window }
-        return ASPresentationAnchor(windowScene: scenes.first!)
+        if let scene = scenes.first { return ASPresentationAnchor(windowScene: scene) }
+        return ASPresentationAnchor()
     }
 }
