@@ -43,7 +43,8 @@ final class SettingsUITests: XCTestCase {
 }
 
 /// The account's build-time switch (issue #88): on in Debug, Settings has the Account row; off in Release, it has none.
-/// Run in both configurations (`-configuration Release` for the off case); the test target sees the same condition.
+/// The Release case runs in the `BirdJournal-Release` scheme (`scripts/build-and-test.sh --release`). The expectation
+/// keys on DEBUG, not on the switch, so turning the account on in Release fails here until #71 updates this test.
 final class AccountSwitchUITests: XCTestCase {
     @MainActor
     func testAccountRowFollowsTheBuildSwitch() {
@@ -55,10 +56,10 @@ final class AccountSwitchUITests: XCTestCase {
         // The Appearance section is always there, so the list has loaded before the Account row is looked for.
         XCTAssertTrue(app.buttons["Dark"].waitForExistence(timeout: 10), "Settings didn't open; screen: \(app.debugDescription.prefix(3000))")
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Account'")).firstMatch
-        #if ACCOUNTS_ENABLED
-        XCTAssertTrue(row.waitForExistence(timeout: 5), "no Account row in a build with accounts on")
+        #if DEBUG
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "no Account row in a Debug build")
         #else
-        XCTAssertFalse(row.exists, "an Account row in a build with accounts off: \(row.label)")
+        XCTAssertFalse(row.exists, "an Account row in a Release build: \(row.label)")
         XCTAssertFalse(app.staticTexts["ACCOUNT"].exists || app.staticTexts["Account"].exists, "an Account section header")
         #endif
     }

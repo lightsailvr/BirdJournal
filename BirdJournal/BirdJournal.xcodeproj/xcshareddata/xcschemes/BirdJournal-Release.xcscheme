@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Tests the app as it ships (issue #88): the Release configuration, only the UI test of the account's build-time
-     switch. The BirdJournal scheme's unit tests use DEBUG-only app code and cannot build in Release. -->
 <Scheme
    LastUpgradeVersion = "2700"
    version = "1.7">

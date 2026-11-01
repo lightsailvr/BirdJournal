@@ -345,4 +345,19 @@ struct AccountSessionTests {
         await session.signIn(with: .apple)
         #expect(session.status == .unavailable)
     }
+
+    @Test("switched off (Release until #71, issue #88) the app's session is unavailable")
+    func switchedOff() async {
+        let session = AccountSession.forApp(accountsEnabled: false)
+        #expect(session.status == .unavailable)
+        await session.signIn(with: .google)
+        #expect(session.status == .unavailable)
+    }
+
+    @Test("the switch is on in Debug builds (issue #88)")
+    func onInDebug() {
+        #if DEBUG
+        #expect(AccountSession.isEnabledInThisBuild)
+        #endif
+    }
 }

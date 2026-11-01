@@ -1,7 +1,7 @@
 import XCTest
 
 // Debug only: the account is switched off in Release (`ACCOUNTS_ENABLED`, issue #88), and `-fakeAccount` is DEBUG.
-#if ACCOUNTS_ENABLED
+#if ACCOUNTS_ENABLED && DEBUG
 
 /// Settings → Account (issue #60) with the debug fake auth client (`-fakeAccount`): signed out it offers Apple and
 /// Google and says the account is optional; signing in shows the name, and signing out comes back to the buttons.
