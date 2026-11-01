@@ -28,5 +28,7 @@ if [[ "${1:-}" == "--synth" ]]; then
     exit
 fi
 
+# The shared account's bootstrap must already be new enough; this never bootstraps it.
+"$infra/scripts/check-bootstrap.sh"
 npx cdk deploy BirdJournal --require-approval broadening
 "$infra/scripts/write-app-config.sh"

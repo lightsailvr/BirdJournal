@@ -14,7 +14,7 @@ One CDK (Python) stack, `BirdJournal`, in `us-west-2`, in the shared Lightsail V
 infra/scripts/accounts-wizard.sh
 ```
 
-It walks through every console-only step and stores what the stack needs: the budget address in `~/keys/birdjournal.env`, Sign in with Apple (App ID capability, Services ID, key) as the `birdjournal/apple-sign-in` secret, the Google OAuth client as `birdjournal/google-oauth`, the CDK bootstrap (skipped when `CDKToolkit` already exists in the account), the deploy, and activating `project` as a cost allocation tag. `WIZARD_FROM=<stage>` resumes at a stage: the tag only shows up for activation up to a day after the first tagged resource exists, so stage 11 may need a second run.
+It walks through every console-only step and stores what the stack needs: the budget address in `~/keys/birdjournal.env`, Sign in with Apple (App ID capability, Services ID, key) as the `birdjournal/apple-sign-in` secret, the Google OAuth client as `birdjournal/google-oauth`, the CDK bootstrap (`scripts/check-bootstrap.sh`: an existing `CDKToolkit` is only checked, never bootstrapped over, since ivan-parallax shares it; on 2026-11-01 it was at version 32 and this stack needs 6), the deploy, and activating `project` as a cost allocation tag. `WIZARD_FROM=<stage>` resumes at a stage: the tag only shows up for activation up to a day after the first tagged resource exists, so stage 11 may need a second run.
 
 ## Deploy (one command)
 
@@ -23,7 +23,7 @@ infra/scripts/deploy.sh            # template tests, cdk deploy, then the app's 
 infra/scripts/deploy.sh --synth    # template tests and cdk synth only: no AWS calls
 ```
 
-`deploy.sh` reads `BUDGET_ALERT_EMAIL` from `~/keys/birdjournal.env` and uses `AWS_PROFILE=lsvr-admin` unless set. After a deploy, `scripts/write-app-config.sh` writes the API URL, Cognito domain and client ID (all public) into `BirdJournal/BirdJournal/Account/AccountServer.json`; commit it, and the app's Settings → Account comes alive. Until then the app says accounts aren't available in this build.
+`deploy.sh` checks the bootstrap the same way first (and stops if it is too old), reads `BUDGET_ALERT_EMAIL` from `~/keys/birdjournal.env` and uses `AWS_PROFILE=lsvr-admin` unless set. After a deploy, `scripts/write-app-config.sh` writes the API URL, Cognito domain and client ID (all public) into `BirdJournal/BirdJournal/Account/AccountServer.json`; commit it, and the app's Settings → Account comes alive. Until then the app says accounts aren't available in this build.
 
 The Lambda package is built on this machine with `uv` (ARM64 manylinux wheels for the runtime's Python), with no Docker; without `uv` CDK falls back to the runtime's build image in Docker.
 

@@ -380,14 +380,23 @@ if begin "AWS Secrets Manager: store the Google client"; then
 fi
 
 if begin "CDK bootstrap (once per account and region)"; then
-  say "CDK deploys through a CDKToolkit stack in $AWS_ACCOUNT / $AWS_REGION."
-  if aws cloudformation describe-stacks --region "$AWS_REGION" --stack-name CDKToolkit >/dev/null 2>&1; then
-    note "CDKToolkit already exists here (ivan-parallax shares this account): nothing to do."
-  elif confirm "Bootstrap aws://$AWS_ACCOUNT/$AWS_REGION now?"; then
-    (cd "$INFRA_DIR" && npm ci --silent && npx cdk bootstrap "aws://$AWS_ACCOUNT/$AWS_REGION")
-  else
-    SKIPPED+=("cdk bootstrap: cd infra && npx cdk bootstrap aws://$AWS_ACCOUNT/$AWS_REGION")
-  fi
+  say "CDK deploys through a CDKToolkit stack in $AWS_ACCOUNT / $AWS_REGION. This account is shared with"
+  say "ivan-parallax, so an existing CDKToolkit is only checked, never bootstrapped over."
+  bootstrap_status=0
+  "$INFRA_DIR/scripts/check-bootstrap.sh" || bootstrap_status=$?
+  case "$bootstrap_status" in
+    0) note "Nothing to do." ;;
+    2)
+      if confirm "Bootstrap aws://$AWS_ACCOUNT/$AWS_REGION now?"; then
+        (cd "$INFRA_DIR" && npm ci --silent && npx cdk bootstrap "aws://$AWS_ACCOUNT/$AWS_REGION")
+      else
+        SKIPPED+=("cdk bootstrap: cd infra && npx cdk bootstrap aws://$AWS_ACCOUNT/$AWS_REGION")
+      fi ;;
+    *)
+      warn "Stopping: the shared bootstrap is too old. Ask the account's owner to upgrade it, then"
+      warn "resume with WIZARD_FROM=9 infra/scripts/accounts-wizard.sh"
+      exit 1 ;;
+  esac
   pause
 fi
 
