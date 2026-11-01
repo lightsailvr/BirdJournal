@@ -75,6 +75,10 @@ def main(argv: list[str] | None = None) -> int:
     # The pinned set first, so a stale one stops the build before any download (issue #54).
     card_set = load_set(args.definition / "set.json")
     check_set(card_set, definition)
+    # The stats join next (issue #55): an unmapped species fails here too, not after an hour of photos.
+    from packbuilder.stats import Datasets, StatsFixes, TypeLines, join
+
+    joined = join(definition.species, Datasets.load(args.cache), StatsFixes.load(), TypeLines.load())
 
     if args.source == "opendata":
         if not args.metadata_dir:
@@ -97,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
 
     try:
-        build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds, card_set=card_set)
+        build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds, card_set=card_set, joined=joined)
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
         return 2

@@ -291,7 +291,8 @@ private struct CardFrame: ViewModifier {
 }
 
 /// The collectible face: the Legendary label or the edition with the collector number, the art (a tap flips the card),
-/// the place and species, the rarity for that place and season, and the date and method.
+/// the place and species, the type line and stats (issue #55), the rarity for that place and season, and the date and
+/// method.
 private struct CardFront: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
@@ -328,6 +329,17 @@ private struct CardFront: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityElement(children: .combine)
+            if let typeLine = reference?.species.typeLine {
+                Text(typeLine.text)
+                    .font(JournalFont.supporting.weight(.semibold))
+                    .foregroundStyle(Color.cardIvory)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel("Type: \(typeLine.groupWord), \(typeLine.familyWord)")
+                    .accessibilityIdentifier("card-type-line")
+            }
+            if let stats = reference?.species.stats.map({ CardStatsText.front($0) }), !stats.isEmpty {
+                FrontStats(stats: stats)
+            }
             Rectangle().fill(Color.cardIvory.opacity(0.25)).frame(height: 1)
             Label(CardText.rarityLine(sighting.rarity), systemImage: "binoculars")
                 .font(JournalFont.supporting.weight(.semibold))
@@ -342,8 +354,46 @@ private struct CardFront: View {
     }
 }
 
-/// The encounter story: when and where, Heard or Seen (changed here), the note, the original photo, what the art is
-/// and where the rarity came from. Its controls act on their own and never flip the card.
+/// The front's wingspan, weight and diet, side by side, or stacked when they don't fit (accessibility text sizes). Each
+/// reads as one VoiceOver element: "Wingspan about 9 inches, estimated from wing length", "Diet: mostly seeds".
+private struct FrontStats: View {
+    let stats: [CardStatsText.Stat]
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 16) { cells }
+            VStack(alignment: .leading, spacing: 8) { cells }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card-stats")
+    }
+
+    private var cells: some View {
+        ForEach(stats, id: \.label) { stat in
+            VStack(alignment: .leading, spacing: 2) {
+                Text(stat.label)
+                    .font(JournalFont.attribution)
+                    .foregroundStyle(Color.cardIvory.opacity(0.85))
+                HStack(spacing: 4) {
+                    if let symbol = stat.symbol {
+                        Image(systemName: symbol)
+                    }
+                    Text(stat.value)
+                }
+                .font(JournalFont.supporting.weight(.semibold))
+                .foregroundStyle(Color.cardIvory)
+            }
+            .fixedSize()
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(stat.spoken)
+            .accessibilityIdentifier("card-stat-\(stat.label.lowercased())")
+        }
+    }
+}
+
+/// The encounter story: when and where, Heard or Seen (changed here), the note, the original photo, what the art is,
+/// where the rarity came from, and the species' natural history (issue #55). Its controls act on their own and never
+/// flip the card.
 private struct CardBack: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
@@ -396,6 +446,24 @@ private struct CardBack: View {
             BackSection(title: "Rarity") {
                 Text(CardText.rarityExplanation(sighting.rarity, commonName: library.commonName(for: sighting), hasLocation: sighting.location != nil))
                     .foregroundStyle(Color.ink)
+            }
+            BackSection(title: "Natural history") {
+                if let stats = reference?.species.stats {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(CardStatsText.back(stats).enumerated()), id: \.element.label) { index, stat in
+                            if index > 0 { RowRule() }
+                            FactRow(label: stat.label, value: stat.value)
+                        }
+                        Text(CardStatsText.sources(stats))
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 8)
+                    }
+                    .accessibilityIdentifier("card-natural-history")
+                } else {
+                    Text("No natural-history stats for this bird in your packs.")
+                        .foregroundStyle(Color.inkSecondary)
+                }
             }
         }
         .padding(16)

@@ -106,9 +106,9 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 9. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
    logged gap (`selection.py`).
 10. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
-   pinned `set.json` and the empty `stats`, `fact`, `lore`, `pack_art`, `threatened` and `family` that later tickets fill), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
+   pinned `set.json`, the joined `stats`, `threatened` and `family` (see "Stats and type lines"), and the empty `fact`, `lore` and `pack_art` that later tickets fill), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
    `phone/<photo>.jpg` (looser crop, 1200 px max), `sounds/<id>.m4a`, `LICENSE` with every photo, sound and text credit and link, `report.json`
-   with counts, chosen ids, description sources, chosen and rejected sounds and the photo, description and sound gaps, and optionally a zip (`writer.py`).
+   with counts, chosen ids, description sources, chosen and rejected sounds and the photo, description, sound and stats gaps, and optionally a zip (`writer.py`).
 
 The Swift `Pack` module (`SpeciesPack`) reads the output; `SCHEMA_VERSION` in `writer.py` and
 `SpeciesPack.schemaVersion` move together.
@@ -132,6 +132,29 @@ phone gives a sighting to the smallest containing part (Anza-Borrego beats San D
 `uv run packbuilder index --out <file>` writes the pack index from `packs/manifest.json` with each pack's `set.json`;
 `scripts/publish-pack-index.sh` runs it before uploading.
 
+## Stats and type lines
+
+Every card carries real natural-history numbers (issue #55), joined before any download so an unmapped species fails
+the build at once (`stats.py`). Three CC BY 4.0 workbooks, pinned by SHA-256 in `stats.py`, are fetched once into
+`cache/datasets/`: AVONET (mass, habitat, migration, trophic niche as the diet, primary lifestyle), BIRDBASE (nest
+type, clutch range, flightlessness, the IUCN category, the order and family) and the avian wingspan database (a
+measured wingspan, else the predicted midpoint, flagged so the card shows "≈"). AVONET's eBird/Clements sheet is the
+anchor: a BirdNET name gives the Avibase ID, which leads to the wingspan database directly or through AVONET's
+BirdLife–eBird crosswalk (several BirdLife species: the namesake). BIRDBASE has no Avibase ID and is matched by its
+eBird/Clements v2024b name. A flightless species has no wingspan, and nor does a species the wingspan database lacks
+(it has no Galliformes); a stat a dataset lacks is left off.
+
+Two committed files steer it, shared by every pack:
+
+- `stats/fixes.json`: BirdNET name → the dataset's name for renames, splits and lumps since a dataset's taxonomy
+  (`avonet`, `wingspan`, `birdbase`, each with its reason); `known_gaps`, the species a build may leave without stats
+  (listed in `report.json` as `gaps.stats`); and `threatened`, the hand list of species protected where the packs
+  are though the IUCN rates them lower (US Endangered Species Act listings). IUCN Vulnerable, Endangered and
+  Critically Endangered are threatened anyway.
+- `stats/type-lines.json`: a group word per order and a family word per family ("Songbird — Finch"), a family's own
+  group where it differs (gulls are Seabirds) and a genus's own word (an Eagle among the Hawks). A family it lacks
+  fails the build.
+
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
@@ -149,9 +172,10 @@ version: cards keep the version they were labelled under.
 | `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from and the recordings the sounds came from (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
+| `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, and the committed definitions against the BirdNET label file. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `cache/wikipedia/` | Fetched article pages (gitignored with the rest of `cache/`). |
-| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` and `taxonomy/` (the set's sources). |
+| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks). |
 
 Output goes to the repo's `packs/<id>/`, which is not committed: the built pack is published as a GitHub Release asset
 and fetched by `scripts/download-pack.sh` (see `packs/README.md`).
