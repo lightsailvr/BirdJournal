@@ -66,6 +66,15 @@ def no_xeno_canto_key(monkeypatch):
     monkeypatch.delenv("XENO_CANTO_API_KEY", raising=False)
 
 
+@pytest.fixture(autouse=True)
+def no_anthropic_key(monkeypatch):
+    """No test may reach the Anthropic API with the developer's key (issue #56): neither the variable nor the Keychain."""
+    from packbuilder import lore
+
+    monkeypatch.delenv("BIRDJOURNAL_ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setattr(lore, "_keychain_key", lambda: None)
+
+
 _exit_status = 0
 
 

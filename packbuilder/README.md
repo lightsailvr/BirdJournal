@@ -213,9 +213,12 @@ breeding, voice, people, names, range, status, appearance) so one long section n
 tagline of 12 words or fewer from the sheet alone, every sentence citing the fact ids it rests on. A draft that cites
 nothing, cites a fact the sheet lacks or misses the counts is sent back with what was wrong, three times at most.
 
-- **The key** is read from `BIRDJOURNAL_ANTHROPIC_API_KEY` in the shell profile (never the repository, and not
-  `ANTHROPIC_API_KEY`, which would switch Claude Code itself to API billing). It is needed only when lore is missing
-  from the lock; the build stops with a clear message without it. `--no-lore` skips the step.
+- **The key** is read from `BIRDJOURNAL_ANTHROPIC_API_KEY` in the shell profile, else the login Keychain item
+  `birdjournal-anthropic-api-key` (never the repository, and not `ANTHROPIC_API_KEY`, which would switch Claude Code
+  itself to API billing). It is needed only when lore is missing from the lock; the build stops with a clear message
+  without it, or at once when the API refuses it. `--no-lore` skips the step.
+- **Lore alone**: `uv run packbuilder lore packs/us-ca-la` writes the fact sheets and the missing lore from the cache
+  without building the pack (`--only "Black Phoebe"` for a trial).
 - **Pacing**: one request at a time, `--lore-interval` seconds apart (default 2).
 - **The lock**, `packs/<id>/lore.lock.json` (committed), pins each species' fact sheet as the lore used it, the
   sentences with their citations, the tagline, the model, the prompt version and the review. A warm lock makes no

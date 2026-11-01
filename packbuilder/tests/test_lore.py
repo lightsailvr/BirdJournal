@@ -153,13 +153,45 @@ def test_a_hand_edited_lock_that_cites_a_missing_fact_stops_the_build(tmp_path):
         writer(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
 
 
-def test_the_key_comes_only_from_its_own_variable(monkeypatch):
-    monkeypatch.delenv("BIRDJOURNAL_ANTHROPIC_API_KEY", raising=False)
+def test_the_key_comes_only_from_its_own_variable_or_the_keychain(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "not-this-one")
     with pytest.raises(MissingAPIKey, match="BIRDJOURNAL_ANTHROPIC_API_KEY"):
         api_key_from_environment()
+    assert api_key_from_environment(keychain=lambda: "sk-keychain\n") == "sk-keychain"
     monkeypatch.setenv("BIRDJOURNAL_ANTHROPIC_API_KEY", "sk-test")
-    assert api_key_from_environment() == "sk-test"
+    assert api_key_from_environment(keychain=lambda: "sk-keychain") == "sk-test", "the variable first"
+
+
+def anthropic_answering(status, body):
+    """A real SDK client whose every request gets this answer, with no retries."""
+    import anthropic
+    import httpx2 as httpx
+
+    transport = httpx.MockTransport(lambda request: httpx.Response(status, json=body))
+    return anthropic.Anthropic(api_key="sk-bad-key-1234", http_client=httpx.Client(transport=transport), max_retries=0)
+
+
+def test_a_refused_key_stops_the_run_at_once_writes_nothing_and_never_shows_the_key(tmp_path):
+    from packbuilder.lore import AnthropicLoreClient, LoreAPIError
+
+    client = AnthropicLoreClient("sk-bad-key-1234", client=anthropic_answering(401, {"type": "error", "error": {"type": "authentication_error", "message": "invalid x-api-key"}}))
+    lore_writer = writer(tmp_path, client)
+    with pytest.raises(LoreAPIError, match="refused the key \\(401\\)") as raised:
+        lore_writer.write(PHOEBE + [("calypte-anna", "Anna's Hummingbird", "Calypte anna")], {"sayornis-nigricans": FACTS, "calypte-anna": FACTS})
+    assert lore_writer.requests == 1, "no second species is tried"
+    assert "sk-bad" not in str(raised.value) and raised.value.__cause__ is None
+    assert not (tmp_path / "lore.lock.json").exists()
+
+
+def test_the_client_returns_the_structured_reply():
+    from packbuilder.lore import AnthropicLoreClient
+
+    reply = {
+        "id": "msg_1", "type": "message", "role": "assistant", "model": "claude-opus-5-5", "stop_reason": "end_turn", "stop_sequence": None,
+        "content": [{"type": "text", "text": json.dumps(GOOD)}], "usage": {"input_tokens": 10, "output_tokens": 10},
+    }
+    client = AnthropicLoreClient("sk-test", client=anthropic_answering(200, reply))
+    assert json.loads(client.complete(lore_module.SYSTEM, "Species: Black Phoebe", lore_module.SCHEMA)) == GOOD
 
 
 def test_the_review_file_lists_the_tagline_lore_and_cited_facts(tmp_path):

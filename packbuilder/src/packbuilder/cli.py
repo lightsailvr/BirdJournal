@@ -1,6 +1,7 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
 `packbuilder set <definition-dir>`: builds the pack's set definition into set.json beside pack.json (`sets.py`).
 `packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
+`packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
 `packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore in lore.lock.json (`lore.py`).
 `packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
@@ -54,6 +55,14 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests for the lore (default lore.DEFAULT_INTERVAL)")
     build.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
     build.add_argument("--lore-review", type=Path, help="the lore's review file (default build/lore/<pack id>/review.md)")
+    lore_command = commands.add_parser("lore", help="write the lore lore.lock.json lacks, and its review file, without building the pack")
+    lore_command.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and lore.lock.json")
+    lore_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
+    lore_command.add_argument("--regenerate-lore", action="append", default=[], metavar="SPECIES", help="write a species' lore again (repeat; 'all' for every species)")
+    lore_command.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests (default lore.DEFAULT_INTERVAL)")
+    lore_command.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
+    lore_command.add_argument("--lore-review", type=Path, help="the review file (default build/lore/<pack id>/review.md)")
+    lore_command.add_argument("--only", action="append", default=[], metavar="SPECIES", help="only these species (repeat), for a trial")
     lore_review = commands.add_parser("lore-review", help="record the review of the lore in lore.lock.json and rewrite its review file")
     lore_review.add_argument("definition", type=Path, help="folder holding pack.json and lore.lock.json")
     lore_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve a species' lore (species id or common name; repeat)")
@@ -100,6 +109,8 @@ def main(argv: list[str] | None = None) -> int:
         return _art_review(args)
     if args.command == "lore-review":
         return _lore_review(args)
+    if args.command == "lore":
+        return _lore(args)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     definition = PackDefinition.load(args.definition / "pack.json")
@@ -133,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     sheets = args.art_sheets or Path(__file__).resolve().parents[3] / "build" / "pack-art" / definition.id
     lore = None if args.no_lore else _lore_writer(args, definition)
     lore_review = args.lore_review or _lore_review_path(definition.id)
-    from packbuilder.lore import InvalidLore, LoreRefused, MissingAPIKey as MissingLoreKey
+    from packbuilder.lore import InvalidLore, LoreAPIError, LoreRefused, MissingAPIKey as MissingLoreKey
     from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
 
     try:
@@ -144,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
         return 2
-    except (MissingLoreKey, LoreRefused, InvalidLore) as error:
+    except (MissingLoreKey, LoreAPIError, LoreRefused, InvalidLore) as error:
         logging.getLogger("packbuilder").error("lore stopped the build: %s", error)
         return 2
     if descriptions is not None:
@@ -231,6 +242,38 @@ def _lore_writer(args: argparse.Namespace, definition: PackDefinition):
         lock=lock, client_factory=lambda: AnthropicLoreClient(api_key_from_environment(), model), model=model,
         regenerate=frozenset(regenerate), interval=args.lore_interval if args.lore_interval is not None else DEFAULT_INTERVAL,
     )
+
+
+def _lore(args: argparse.Namespace) -> int:
+    """The fact sheets and lore alone: the descriptions and stats from the cache, then the lore step, as `build` runs
+    them, so the lore can be written and reviewed before a pack build."""
+    from packbuilder.definition import load_overrides
+    from packbuilder.lore import InvalidLore, LoreAPIError, LoreRefused, MissingAPIKey, review_sheet
+    from packbuilder.pipeline import describe, fact_sheets
+    from packbuilder.selection import Overrides
+    from packbuilder.stats import Datasets, StatsFixes, TypeLines, join
+    from packbuilder.writer import SpeciesResult
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    definition = PackDefinition.load(args.definition / "pack.json")
+    species = [entry for entry in definition.species if not args.only or entry.id in args.only or entry.common_name.lower() in {name.lower() for name in args.only}]
+    joined = join(species, Datasets.load(args.cache), StatsFixes.load(), TypeLines.load())
+    descriptions = WikipediaDescriptions(args.cache, lock_path=args.definition / "wikipedia.lock.json")
+    overrides = load_overrides(args.definition / "overrides.json")
+    results = [
+        SpeciesResult(entry=entry, photos=[], gap=False, description=describe(entry, Overrides.from_mapping(overrides.get(entry.scientific_name, {})), descriptions))
+        for entry in species
+    ]
+    sheets = fact_sheets(results, overrides, joined, descriptions)
+    writer = _lore_writer(args, definition)
+    try:
+        written = writer.write([(r.entry.id, r.entry.common_name, r.entry.scientific_name) for r in results], sheets)
+    except (MissingAPIKey, LoreAPIError, LoreRefused, InvalidLore) as error:
+        logging.getLogger("packbuilder").error("lore stopped: %s", error)
+        return 2
+    sheet = review_sheet(writer.lock, args.lore_review or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])
+    print(f"{len(written)} of {len(species)} species have lore ({writer.requests} requests); review file {sheet}", file=sys.stderr)
+    return 0
 
 
 def _lore_review_path(pack_id: str) -> Path:

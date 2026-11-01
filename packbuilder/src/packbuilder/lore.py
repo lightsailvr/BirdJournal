@@ -18,7 +18,8 @@ A warm lock makes no API call and needs no key. Lore is written again only on re
 moved, a stats fix) is logged and keeps the locked facts and lore until the lore is regenerated.
 
 The key is read from `BIRDJOURNAL_ANTHROPIC_API_KEY` (never `ANTHROPIC_API_KEY`, which would switch Claude Code itself
-to API billing) and passed to the client; it is never logged or written anywhere.
+to API billing), else from the login Keychain item `birdjournal-anthropic-api-key`, and passed to the client; it is
+never logged or written anywhere. A key the API refuses stops the run at once, before anything is locked.
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ log = logging.getLogger("packbuilder.lore")
 LOCK_FILE = "lore.lock.json"
 PENDING, APPROVED, REJECTED = "pending", "approved", "rejected"
 API_KEY_VARIABLE = "BIRDJOURNAL_ANTHROPIC_API_KEY"
+KEYCHAIN_SERVICE = "birdjournal-anthropic-api-key"
 MODEL = "claude-opus-5-5"
 """DECISIONS.md, "Lore and captions": the current Opus, for the voice; 160 species cost about a dollar."""
 PROMPT_VERSION = 1
@@ -90,14 +92,28 @@ class MissingAPIKey(RuntimeError):
     pass
 
 
-def api_key_from_environment() -> str:
-    key = os.environ.get(API_KEY_VARIABLE, "").strip()
+def api_key_from_environment(keychain: Callable[[], str | None] | None = None) -> str:
+    """`BIRDJOURNAL_ANTHROPIC_API_KEY`, else the login Keychain's `birdjournal-anthropic-api-key` item (macOS)."""
+    key = os.environ.get(API_KEY_VARIABLE, "").strip() or ((keychain or _keychain_key)() or "").strip()
     if not key:
         raise MissingAPIKey(
-            f"lore needs an Anthropic API key in {API_KEY_VARIABLE} (shell profile, never the repository; not ANTHROPIC_API_KEY): "
-            "set it, or build with --no-lore, or keep the lore lock warm"
+            f"lore needs an Anthropic API key in {API_KEY_VARIABLE} or the Keychain item {KEYCHAIN_SERVICE} (never the repository; "
+            "not ANTHROPIC_API_KEY): set it, or build with --no-lore, or keep the lore lock warm"
         )
     return key
+
+
+def _keychain_key() -> str | None:
+    import subprocess
+
+    try:
+        found = subprocess.run(
+            ["security", "find-generic-password", "-a", os.environ.get("USER", ""), "-s", KEYCHAIN_SERVICE, "-w"],
+            capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return found.stdout if found.returncode == 0 else None
 
 
 class LoreClient(Protocol):
@@ -106,15 +122,30 @@ class LoreClient(Protocol):
 
 
 class AnthropicLoreClient:
-    """The Messages API with structured output, one request at a time."""
+    """The Messages API with structured output, one request at a time. The SDK retries rate limits, overloads and
+    connection errors itself; any other API error stops the run (`LoreAPIError`)."""
 
-    def __init__(self, api_key: str, model: str = MODEL):
+    def __init__(self, api_key: str, model: str = MODEL, client=None):
         import anthropic
 
         self.model = model
-        self.client = anthropic.Anthropic(api_key=api_key)
+        self.client = client or anthropic.Anthropic(api_key=api_key)
 
     def complete(self, system: str, prompt: str, schema: dict) -> str:
+        import anthropic
+
+        try:
+            return self._complete(system, prompt, schema)
+        except anthropic.AuthenticationError as error:
+            raise LoreAPIError(f"the Anthropic API refused the key ({error.status_code}): check {API_KEY_VARIABLE} or the Keychain item {KEYCHAIN_SERVICE}") from None
+        except anthropic.PermissionDeniedError as error:
+            raise LoreAPIError(f"the key may not use {self.model} ({error.status_code})") from None
+        except anthropic.APIStatusError as error:
+            raise LoreAPIError(f"the Anthropic API answered {error.status_code}: {_message(error)}") from None
+        except anthropic.APIConnectionError as error:
+            raise LoreAPIError(f"the Anthropic API could not be reached: {error.__class__.__name__}") from None
+
+    def _complete(self, system: str, prompt: str, schema: dict) -> str:
         # Fallbacks re-run a declined request on another model server-side; lore about birds is not expected to be
         # declined, so a refusal that survives them is an error.
         response = self.client.beta.messages.create(
@@ -136,6 +167,17 @@ class AnthropicLoreClient:
 
 class LoreRefused(RuntimeError):
     pass
+
+
+class LoreAPIError(RuntimeError):
+    """The API refused the key or the request; the message never holds the key."""
+
+
+def _message(error) -> str:
+    body = getattr(error, "body", None)
+    if isinstance(body, dict) and isinstance(body.get("error"), dict):
+        return str(body["error"].get("message", ""))[:200]
+    return error.__class__.__name__
 
 
 class InvalidLore(ValueError):
