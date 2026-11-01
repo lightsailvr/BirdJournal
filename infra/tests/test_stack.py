@@ -18,11 +18,27 @@ UNTAGGABLE_TYPES = {
     "AWS::Cognito::UserPoolIdentityProvider",
     "AWS::IAM::Policy",
     "AWS::Lambda::Permission",
+    # The invite site (issue #61): the bucket's policy, CloudFront's origin access control, and the site upload's
+    # AWS CLI layer and custom resource (the upload's Lambda function itself is tagged).
+    "AWS::S3::BucketPolicy",
+    "AWS::CloudFront::OriginAccessControl",
+    "AWS::Lambda::LayerVersion",
+    "Custom::CDKBucketDeployment",
 }
 
 
 def _resources(template: Template, type_: str) -> dict[str, Any]:
     return template.find_resources(type_)
+
+
+def _api_function(template: Template) -> tuple[str, dict[str, Any]]:
+    """The API's Lambda function (the invite site's upload has its own)."""
+    (entry,) = [
+        (name, resource)
+        for name, resource in _resources(template, "AWS::Lambda::Function").items()
+        if resource["Properties"].get("Handler") == "birdjournal_api.handler.handler"
+    ]
+    return entry
 
 
 def _tags(properties: dict[str, Any]) -> dict[str, str]:
@@ -232,7 +248,7 @@ def test_the_function_trusts_the_user_pool_and_its_app_client(template: Template
     (pool,) = _resources(template, "AWS::Cognito::UserPool")
     (client,) = _resources(template, "AWS::Cognito::UserPoolClient")
     (table,) = _resources(template, "AWS::DynamoDB::GlobalTable")
-    (function,) = _resources(template, "AWS::Lambda::Function").values()
+    _, function = _api_function(template)
     variables = function["Properties"]["Environment"]["Variables"]
     # ProviderURL already starts with https://, the same string as a token's iss claim.
     assert variables["COGNITO_ISSUER"] == {"Fn::GetAtt": [pool, "ProviderURL"]}
@@ -242,7 +258,13 @@ def test_the_function_trusts_the_user_pool_and_its_app_client(template: Template
 
 def test_the_function_may_read_and_write_the_table_only(template: Template) -> None:
     (table,) = _resources(template, "AWS::DynamoDB::GlobalTable")
-    (policy,) = _resources(template, "AWS::IAM::Policy").values()
+    _, function = _api_function(template)
+    role = function["Properties"]["Role"]["Fn::GetAtt"][0]
+    (policy,) = [
+        resource
+        for resource in _resources(template, "AWS::IAM::Policy").values()
+        if {"Ref": role} in resource["Properties"]["Roles"]
+    ]
     statements = policy["Properties"]["PolicyDocument"]["Statement"]
     resources = json.dumps([statement["Resource"] for statement in statements])
     assert table in resources

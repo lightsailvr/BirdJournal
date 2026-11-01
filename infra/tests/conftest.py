@@ -10,6 +10,7 @@ from birdjournal_infra.stack import BirdJournalStack
 
 CDK_JSON = Path(__file__).resolve().parents[1] / "cdk.json"
 BUDGET_EMAIL = "budget@example.com"
+INVITE_CERTIFICATE_ARN = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
 
 
 @pytest.fixture(scope="session")
@@ -20,6 +21,7 @@ def template() -> Template:
     context = {
         **json.loads(CDK_JSON.read_text())["context"],
         "budgetAlertEmail": BUDGET_EMAIL,
+        "inviteCertificateArn": INVITE_CERTIFICATE_ARN,
         "aws:cdk:bundling-stacks": [],
     }
     app = cdk.App(context=context)

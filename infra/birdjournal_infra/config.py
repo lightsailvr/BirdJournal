@@ -25,6 +25,14 @@ class BirdJournalConfig:
     # Who the budget alarm emails. Kept out of the public repo: `-c budgetAlertEmail=...` or the
     # BUDGET_ALERT_EMAIL environment variable (infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env).
     budget_alert_email: str
+    # The invite links' host (issue #61): https://<invite_domain>/i/<token>. Its DNS is at SiteGround.
+    invite_domain: str
+    # The app IDs (<team ID>.<bundle ID>) the domain's apple-app-site-association names for universal links.
+    ios_app_ids: tuple[str, ...]
+    # The invite domain's ACM certificate in us-east-1, requested by infra/scripts/circles-wizard.sh outside the
+    # stack. Not a secret, but it names the account: `-c inviteCertificateArn=...` or INVITE_CERTIFICATE_ARN
+    # (infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env).
+    invite_certificate_arn: str
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -34,6 +42,12 @@ class BirdJournalConfig:
                 "Set BUDGET_ALERT_EMAIL (or -c budgetAlertEmail=...): the budget alarm needs an address. "
                 "infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env."
             )
+        certificate = node.try_get_context("inviteCertificateArn") or os.environ.get("INVITE_CERTIFICATE_ARN")
+        if not certificate:
+            raise ValueError(
+                "Set INVITE_CERTIFICATE_ARN (or -c inviteCertificateArn=...): the invite domain's us-east-1 "
+                "certificate. infra/scripts/circles-wizard.sh requests it and saves it to ~/keys/birdjournal.env."
+            )
         return cls(
             cognito_domain_prefix=node.get_context("cognitoDomainPrefix"),
             google_oauth_secret_name=node.get_context("googleOAuthSecretName"),
@@ -42,4 +56,7 @@ class BirdJournalConfig:
             oauth_logout_urls=tuple(node.get_context("oauthLogoutUrls")),
             monthly_budget_usd=int(node.get_context("monthlyBudgetUsd")),
             budget_alert_email=email,
+            invite_domain=node.get_context("inviteDomain"),
+            ios_app_ids=tuple(node.get_context("iosAppIds")),
+            invite_certificate_arn=certificate,
         )
