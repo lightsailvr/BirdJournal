@@ -27,6 +27,8 @@ enum Route: Hashable {
     case account
     /// The tip jar (issue #59).
     case support
+    /// A circle's page (issue #61).
+    case circle(id: String)
 }
 
 extension View {
@@ -77,6 +79,8 @@ private struct RouteDestination: View {
             AccountView()
         case .support:
             SupportView()
+        case .circle(let id):
+            CirclePageView(id: id)
         }
     }
 }
@@ -88,20 +92,22 @@ extension EnvironmentValues {
     @Entry var openListen: @MainActor () -> Void = {}
 }
 
-/// The three destinations (issue #28): Listen, Journal and Field Guide, with the compact listening strip above the
+/// The destinations (issue #28): Listen, Journal and Field Guide, and Circles (issue #61) in builds with accounts, with the compact listening strip above the
 /// tab bar while a run is on and another tab is showing.
 struct RootView: View {
     enum Tab: String, Hashable {
-        case listen, journal, guide
+        case listen, journal, guide, circles
     }
 
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
+    @Environment(CircleStore.self) private var circles
     @State private var tab: Tab = .listen
     @State private var journalMode: JournalView.Mode = .cards
     @State private var listenPath = NavigationPath()
     @State private var journalPath = NavigationPath()
     @State private var guidePath = NavigationPath()
+    @State private var circlesPath = NavigationPath()
     #if DEBUG
     @State private var showingDeveloper = false
     #endif
@@ -126,6 +132,15 @@ struct RootView: View {
                         .appDestinations()
                 }
             }
+            // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships.
+            if AccountSession.isEnabledInThisBuild {
+                SwiftUI.Tab("Circles", systemImage: "person.3", value: Tab.circles) {
+                    NavigationStack(path: $circlesPath) {
+                        CirclesView()
+                            .appDestinations()
+                    }
+                }
+            }
         }
         .tabViewBottomAccessory(isEnabled: run.state.isActive && tab != .listen) {
             ListeningAccessory { tab = .listen }
@@ -139,12 +154,28 @@ struct RootView: View {
             tab = .journal
         }
         .environment(\.openListen) { tab = .listen }
+        .sheet(item: Binding(
+            get: { AccountSession.isEnabledInThisBuild ? circles.pendingInvite.map(PendingInvite.init) : nil },
+            set: { circles.pendingInvite = $0?.token }
+        )) { invite in
+            JoinCircleView(token: invite.token) { circleID in
+                tab = .circles
+                circlesPath = NavigationPath()
+                circlesPath.append(Route.circle(id: circleID))
+            }
+        }
         // The index carries every pack's set (issue #54), so it is fetched at launch, not only on the packs screen;
         // the last good copy stands in meanwhile and offline.
         .task { await library.refreshIndex() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
-        .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, showingDeveloper: $showingDeveloper))
+        .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }
+}
+
+/// An invite link waiting for the join screen, as a sheet item.
+private struct PendingInvite: Identifiable {
+    let token: String
+    var id: String { token }
 }

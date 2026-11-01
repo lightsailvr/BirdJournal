@@ -21,7 +21,11 @@ import UIKit
 ///   `-autoSet <id>`), `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
-///   thank-you), `source` (the audio source sheet).
+///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
+///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
+///   list), `circle` (the first circle's page), `circle-invite` (its invitation, QR code and link), `circle-new` (the
+///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
+///   show those refusals).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
@@ -36,11 +40,13 @@ struct DebugLaunch: ViewModifier {
     @Environment(\.frameStore) private var frameStore
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
+    @Environment(CircleStore.self) private var circles
     @Binding var tab: RootView.Tab
     @Binding var journalMode: JournalView.Mode
     @Binding var listenPath: NavigationPath
     @Binding var journalPath: NavigationPath
     @Binding var guidePath: NavigationPath
+    @Binding var circlesPath: NavigationPath
     @Binding var showingDeveloper: Bool
 
     func body(content: Content) -> some View {
@@ -144,6 +150,21 @@ struct DebugLaunch: ViewModifier {
             case "source":
                 tab = .listen
                 defaults.set(true, forKey: "autoSource")
+            case "circles":
+                tab = .circles
+            case "circle", "circle-invite":
+                tab = .circles
+                await circles.refresh()
+                if let first = circles.circles.first {
+                    if screen == "circle-invite" { defaults.set(true, forKey: "autoCircleInvite") }
+                    circlesPath.append(Route.circle(id: first.id))
+                }
+            case "circle-new":
+                tab = .circles
+                defaults.set(true, forKey: "autoNewCircle")
+            case "join":
+                tab = .circles
+                circles.pendingInvite = defaults.string(forKey: "autoInvite") ?? "fake-invite"
             default:
                 break
             }
