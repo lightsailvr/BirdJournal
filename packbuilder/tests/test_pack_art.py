@@ -206,6 +206,15 @@ def test_a_reference_override_wins_over_the_lighting(tmp_path, comfy):
     assert comfy.paintings[0].names == ["birdjournal/isolate-13.png"]
 
 
+def test_a_reference_override_the_pack_lacks_is_reported_and_the_best_lit_photo_painted(tmp_path, comfy, caplog):
+    results = [result(FINCH, [photo(tmp_path, 12, light=0.5), photo(tmp_path, 13, light=1.0, rank=1)])]
+    with caplog.at_level("WARNING", logger="packbuilder"):
+        artist(tmp_path, comfy, references={"haemorhous-mexicanus": 99}).paint(results)
+
+    assert "art.reference 99 is not one of the pack's photos" in caplog.text
+    assert json.loads((tmp_path / "art.lock.json").read_text())["species"]["haemorhous-mexicanus"]["photos"] == [13]
+
+
 def test_review_approves_rejects_and_lists_gaps_by_id_or_common_name(tmp_path, comfy):
     artist(tmp_path, comfy).paint([result(FINCH, [photo(tmp_path, 12)]), result(PHOEBE, [photo(tmp_path, 21)])])
     lock = ArtLock.load(tmp_path / "art.lock.json")

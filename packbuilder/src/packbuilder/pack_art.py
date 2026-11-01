@@ -187,6 +187,8 @@ class PackArtist:
         if entry is not None and entry["review"] == GAP:
             return Artwork(entry_id, GAP, None, tuple(entry["photos"]), self._version(entry))
         pinned = self.references.get(entry_id)
+        if pinned is not None and all(chosen.candidate.photo_id != pinned for chosen in result.photos):
+            log.warning("  %s: art.reference %d is not one of the pack's photos; painting from the best-lit one", result.entry.common_name, pinned)
         locked = entry["photos"][0] if entry and entry["photos"] else None
         reference = pick_reference(result.photos, pinned if pinned is not None else locked)
         inputs = self._inputs(result, reference)

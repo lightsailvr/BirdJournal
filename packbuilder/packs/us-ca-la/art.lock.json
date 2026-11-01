@@ -262,42 +262,42 @@
     "amazona-oratrix": {
       "common_name": "Yellow-headed Amazon",
       "photos": [
-        55179658
+        173413643
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 1266378715,
+      "seed": 1266378716,
       "isolate_seed": 49,
-      "sha256": "8f3dc1e9d4233e3988e2d54386a61b69dfad612b14617f6106ba132e4064edd7",
+      "sha256": "9efd81779bf14103859c41d2a379f89e990b34aff7c9eb86001771a1b2cb9e25",
       "faithful": false,
       "attempts": 3,
       "fidelity": {
         "painted": {
-          "iou": 0.769,
-          "dE_mean": 18.4,
-          "dE_p95": 37.4,
-          "dL": -8.9,
-          "dC": -10.8,
+          "iou": 0.68,
+          "dE_mean": 13.1,
+          "dE_p95": 28.2,
+          "dL": -1.2,
+          "dC": -3.9,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.769,
-          "dE_mean": 12.0,
-          "dE_p95": 31.7,
-          "dL": 1.7,
-          "dC": 1.9,
+          "iou": 0.68,
+          "dE_mean": 11.0,
+          "dE_p95": 27.6,
+          "dL": 3.2,
+          "dC": 1.4,
           "faithful": false
         },
         "isolated": {
-          "iou": 0.966,
-          "dE_mean": 8.7,
-          "dE_p95": 24.1,
-          "dL": -0.7,
-          "dC": -0.4,
-          "faithful": true
+          "iou": 0.69,
+          "dE_mean": 11.1,
+          "dE_p95": 30.3,
+          "dL": 3.2,
+          "dC": 1.4,
+          "faithful": false
         }
       },
       "review": "pending"
@@ -735,42 +735,42 @@
     "astur-cooperii": {
       "common_name": "Cooper's Hawk",
       "photos": [
-        641173951
+        604025942
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 2137638282,
-      "isolate_seed": 50,
-      "sha256": "7a2f40c4c51ea0c719a57d13c4446ab36748950d3026457937f067b73d64b3f4",
-      "faithful": false,
-      "attempts": 3,
+      "seed": 2137638281,
+      "isolate_seed": 49,
+      "sha256": "b6b18632c068396139cd6cf5087bb2e1f430258f680f6f9bf23c4fc296b78306",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.529,
-          "dE_mean": 20.2,
-          "dE_p95": 44.0,
-          "dL": 3.3,
-          "dC": 0.9,
+          "iou": 0.903,
+          "dE_mean": 10.3,
+          "dE_p95": 17.1,
+          "dL": -5.3,
+          "dC": 2.6,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.529,
-          "dE_mean": 19.3,
-          "dE_p95": 43.3,
-          "dL": -0.6,
-          "dC": -1.3,
-          "faithful": false
+          "iou": 0.903,
+          "dE_mean": 5.7,
+          "dE_p95": 14.1,
+          "dL": -0.5,
+          "dC": -0.1,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.518,
-          "dE_mean": 21.7,
-          "dE_p95": 48.8,
-          "dL": -1.8,
-          "dC": -1.1,
-          "faithful": false
+          "iou": 0.972,
+          "dE_mean": 3.4,
+          "dE_p95": 8.0,
+          "dL": -0.3,
+          "dC": -0.1,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -993,42 +993,42 @@
     "bubo-virginianus": {
       "common_name": "Great Horned Owl",
       "photos": [
-        524149099
+        488593366
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 3069541981,
-      "isolate_seed": 51,
-      "sha256": "222914988e12a0a6f74e5bb55b064da0d58a709049927edcfbc6f2abb2758477",
-      "faithful": false,
-      "attempts": 3,
+      "seed": 3069541979,
+      "isolate_seed": 49,
+      "sha256": "cb4d3980a513081e255924d54ab48b08979d39cad56ad797a88a1ac2591801a3",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.617,
-          "dE_mean": 13.3,
-          "dE_p95": 28.2,
-          "dL": -1.2,
-          "dC": 3.5,
+          "iou": 0.919,
+          "dE_mean": 12.0,
+          "dE_p95": 19.3,
+          "dL": -8.2,
+          "dC": 3.4,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.617,
-          "dE_mean": 11.8,
-          "dE_p95": 26.6,
-          "dL": 1.2,
+          "iou": 0.919,
+          "dE_mean": 7.3,
+          "dE_p95": 13.6,
+          "dL": -0.3,
           "dC": 0.3,
-          "faithful": false
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.62,
-          "dE_mean": 12.4,
-          "dE_p95": 28.4,
-          "dL": 1.2,
-          "dC": 0.2,
-          "faithful": false
+          "iou": 0.928,
+          "dE_mean": 2.8,
+          "dE_p95": 6.0,
+          "dL": -0.3,
+          "dC": 0.0,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -1853,42 +1853,42 @@
     "colaptes-auratus": {
       "common_name": "Northern Flicker",
       "photos": [
-        242825399
+        201114714
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 3588824806,
+      "seed": 3588824805,
       "isolate_seed": 50,
-      "sha256": "1a7f0350d437848138430c117fd993479f5160087b718e7add48b904f0542224",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "3bf7c819ad91d22bda0a96d24fecec9f8503b4ccecad64b82aef924a54f5e067",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.597,
-          "dE_mean": 15.9,
-          "dE_p95": 34.7,
-          "dL": -6.7,
-          "dC": 3.1,
+          "iou": 0.776,
+          "dE_mean": 11.2,
+          "dE_p95": 23.8,
+          "dL": 3.8,
+          "dC": 4.2,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.597,
-          "dE_mean": 13.1,
-          "dE_p95": 35.6,
-          "dL": 2.5,
-          "dC": -0.4,
-          "faithful": false
+          "iou": 0.776,
+          "dE_mean": 9.3,
+          "dE_p95": 23.6,
+          "dL": 2.3,
+          "dC": 0.4,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.588,
-          "dE_mean": 11.9,
-          "dE_p95": 32.8,
-          "dL": 3.4,
-          "dC": 0.5,
-          "faithful": false
+          "iou": 0.827,
+          "dE_mean": 7.8,
+          "dE_p95": 19.5,
+          "dL": 1.8,
+          "dC": 0.1,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -1896,42 +1896,42 @@
     "columba-livia": {
       "common_name": "Rock Dove",
       "photos": [
-        621490600
+        568859959
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "ground",
-      "seed": 3245441186,
-      "isolate_seed": 51,
-      "sha256": "b9e3b66a4eac39e67f27ca7d478e0bef88cf8571594a11ff4338ccac8928e0a9",
-      "faithful": false,
-      "attempts": 3,
+      "seed": 3245441185,
+      "isolate_seed": 49,
+      "sha256": "b9900825885ca9ee4bd906c57bd286963c444498fb8812f047f43ef4e8e5c700",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.591,
-          "dE_mean": 8.5,
-          "dE_p95": 18.5,
-          "dL": -0.7,
-          "dC": -1.4,
-          "faithful": false
+          "iou": 0.922,
+          "dE_mean": 6.2,
+          "dE_p95": 16.8,
+          "dL": 2.9,
+          "dC": -1.5,
+          "faithful": true
         },
         "fitted": {
-          "iou": 0.591,
-          "dE_mean": 7.4,
-          "dE_p95": 16.5,
-          "dL": 0.7,
-          "dC": 0.0,
-          "faithful": false
+          "iou": 0.922,
+          "dE_mean": 5.1,
+          "dE_p95": 13.1,
+          "dL": -0.7,
+          "dC": 0.3,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.605,
-          "dE_mean": 7.3,
-          "dE_p95": 17.0,
-          "dL": 0.7,
-          "dC": -0.3,
-          "faithful": false
+          "iou": 0.978,
+          "dE_mean": 2.5,
+          "dE_p95": 6.3,
+          "dL": -0.2,
+          "dC": 0.1,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -2154,41 +2154,41 @@
     "dryobates-nuttallii": {
       "common_name": "Nuttall's Woodpecker",
       "photos": [
-        459998856
+        570865806
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
-      "setting": "trunk",
+      "setting": "perch",
       "seed": 1705064052,
       "isolate_seed": 49,
-      "sha256": "3ab53dae8a7025abd6dbaecacc6fba1f12e5d2399ccf993c83fa49bed263e81b",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "5fa795b11a16f1a8be9ae6b7cf52a60b2f081dfc35df8fc6b939dcbd44fcb1b3",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.721,
-          "dE_mean": 16.2,
-          "dE_p95": 40.2,
-          "dL": 5.8,
-          "dC": 4.1,
+          "iou": 0.873,
+          "dE_mean": 12.4,
+          "dE_p95": 25.8,
+          "dL": 8.1,
+          "dC": 1.5,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.721,
-          "dE_mean": 14.9,
-          "dE_p95": 38.7,
-          "dL": 1.6,
-          "dC": 0.7,
-          "faithful": false
+          "iou": 0.873,
+          "dE_mean": 7.9,
+          "dE_p95": 19.8,
+          "dL": -0.3,
+          "dC": 0.2,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.892,
-          "dE_mean": 5.4,
-          "dE_p95": 13.3,
-          "dL": -0.3,
-          "dC": 0.1,
+          "iou": 0.94,
+          "dE_mean": 2.8,
+          "dE_p95": 6.4,
+          "dL": 0.3,
+          "dC": -0.0,
           "faithful": true
         }
       },
@@ -2541,7 +2541,7 @@
     "geothlypis-trichas": {
       "common_name": "Common Yellowthroat",
       "photos": [
-        262973245
+        293525410
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
@@ -2549,34 +2549,34 @@
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
       "seed": 1083498997,
-      "isolate_seed": 50,
-      "sha256": "9d9db45362f62fcbde9410981743e0934dc297eb1c3e1bb3a3eae005354f2ce8",
+      "isolate_seed": 49,
+      "sha256": "78ca8c5c9ab42bfdf38de67571c232f3ff259505b1fed75cbc803e2405802c83",
       "faithful": false,
-      "attempts": 1,
+      "attempts": 3,
       "fidelity": {
         "painted": {
-          "iou": 0.686,
-          "dE_mean": 9.7,
-          "dE_p95": 21.0,
-          "dL": -4.1,
-          "dC": 1.9,
-          "faithful": true
+          "iou": 0.789,
+          "dE_mean": 12.7,
+          "dE_p95": 26.2,
+          "dL": 6.3,
+          "dC": 1.6,
+          "faithful": false
         },
         "fitted": {
-          "iou": 0.686,
-          "dE_mean": 7.9,
-          "dE_p95": 22.5,
-          "dL": 1.4,
-          "dC": 1.1,
-          "faithful": true
+          "iou": 0.789,
+          "dE_mean": 11.1,
+          "dE_p95": 26.1,
+          "dL": -0.1,
+          "dC": 0.5,
+          "faithful": false
         },
         "isolated": {
-          "iou": 0.649,
-          "dE_mean": 6.3,
-          "dE_p95": 17.3,
-          "dL": 0.9,
-          "dC": 0.1,
-          "faithful": false
+          "iou": 0.807,
+          "dE_mean": 7.0,
+          "dE_p95": 20.1,
+          "dL": -0.0,
+          "dC": 0.3,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -2627,42 +2627,42 @@
     "haemorhous-mexicanus": {
       "common_name": "House Finch",
       "photos": [
-        696977106
+        696977499
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 1266896594,
+      "seed": 1266896593,
       "isolate_seed": 49,
-      "sha256": "66bf0569e7cdbddd47abb32eb858667b8a21175dcacc7583f21b34dc148e6b1c",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "56b8c4308a5a94a3ddc247015e4026163cdcfd4b093406c6dad42007395b1dd3",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.598,
-          "dE_mean": 8.8,
-          "dE_p95": 17.3,
-          "dL": 5.4,
-          "dC": 0.8,
+          "iou": 0.887,
+          "dE_mean": 15.7,
+          "dE_p95": 26.1,
+          "dL": 12.1,
+          "dC": 6.4,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.598,
-          "dE_mean": 5.6,
-          "dE_p95": 12.1,
+          "iou": 0.887,
+          "dE_mean": 5.2,
+          "dE_p95": 15.4,
           "dL": 0.3,
-          "dC": 0.3,
-          "faithful": false
+          "dC": -0.2,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.6,
-          "dE_mean": 6.0,
-          "dE_p95": 13.4,
-          "dL": 0.2,
-          "dC": -0.1,
-          "faithful": false
+          "iou": 0.816,
+          "dE_mean": 3.6,
+          "dE_p95": 12.3,
+          "dL": -0.0,
+          "dC": 0.2,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -2670,41 +2670,41 @@
     "haliaeetus-leucocephalus": {
       "common_name": "Bald Eagle",
       "photos": [
-        29411459
+        250483714
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 1398056773,
+      "seed": 1398056775,
       "isolate_seed": 49,
-      "sha256": "f1713dd3737c2722b2449f01eb55334fa025da21e417e181679da5115214ffe9",
+      "sha256": "243c1b17de0fc42c13962200bbeb6c4ba232e01d988c40f95efa319e0ddfcf70",
       "faithful": false,
       "attempts": 3,
       "fidelity": {
         "painted": {
-          "iou": 0.768,
-          "dE_mean": 21.8,
-          "dE_p95": 50.5,
-          "dL": -5.1,
-          "dC": -0.6,
+          "iou": 0.632,
+          "dE_mean": 12.6,
+          "dE_p95": 44.7,
+          "dL": -0.9,
+          "dC": 1.6,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.768,
-          "dE_mean": 21.2,
-          "dE_p95": 50.5,
-          "dL": -0.1,
-          "dC": -0.0,
+          "iou": 0.632,
+          "dE_mean": 12.7,
+          "dE_p95": 44.3,
+          "dL": -0.7,
+          "dC": -0.4,
           "faithful": false
         },
         "isolated": {
-          "iou": 0.779,
-          "dE_mean": 20.0,
-          "dE_p95": 49.2,
-          "dL": -0.4,
-          "dC": -0.2,
+          "iou": 0.633,
+          "dE_mean": 11.8,
+          "dE_p95": 41.9,
+          "dL": -0.7,
+          "dC": -0.5,
           "faithful": false
         }
       },
@@ -2756,42 +2756,42 @@
     "hirundo-rustica": {
       "common_name": "Barn Swallow",
       "photos": [
-        373640247
+        266115017
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 2182663861,
+      "seed": 2182663860,
       "isolate_seed": 49,
-      "sha256": "fd770050c52b63ae68e46613183b6bffaa0b106a561895c33a89f69f0d24b7d7",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "bfec360e68414a3e841be7c826161e7ce6a9505ce26612dc6f2010fef3d435f4",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.608,
-          "dE_mean": 23.3,
-          "dE_p95": 57.4,
-          "dL": 13.1,
-          "dC": 3.4,
+          "iou": 0.91,
+          "dE_mean": 11.7,
+          "dE_p95": 19.4,
+          "dL": -2.6,
+          "dC": 6.6,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.608,
-          "dE_mean": 14.8,
-          "dE_p95": 46.8,
-          "dL": -2.5,
-          "dC": -1.2,
-          "faithful": false
+          "iou": 0.91,
+          "dE_mean": 6.8,
+          "dE_p95": 16.4,
+          "dL": 0.5,
+          "dC": -0.2,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.606,
-          "dE_mean": 14.9,
-          "dE_p95": 49.7,
-          "dL": -4.2,
-          "dC": -2.8,
-          "faithful": false
+          "iou": 0.922,
+          "dE_mean": 6.3,
+          "dE_p95": 17.9,
+          "dL": 0.1,
+          "dC": -0.1,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -3537,38 +3537,38 @@
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 2376463231,
-      "isolate_seed": 50,
-      "sha256": "0621bff2405095ab93482e36db139055f6c6c8697d39f3d7da70fdd4bccbf94e",
+      "seed": 4204970985,
+      "isolate_seed": 59,
+      "sha256": "3a78d84e03f77934092c4f190d29ca0c68974a23042a0552f4d981509405bbc2",
       "faithful": false,
       "attempts": 3,
       "fidelity": {
         "painted": {
-          "iou": 0.69,
-          "dE_mean": 14.8,
-          "dE_p95": 36.2,
-          "dL": -2.5,
-          "dC": 3.8,
+          "iou": 0.741,
+          "dE_mean": 14.6,
+          "dE_p95": 33.3,
+          "dL": -0.5,
+          "dC": 4.0,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.69,
-          "dE_mean": 13.4,
-          "dE_p95": 35.0,
-          "dL": -0.7,
-          "dC": -0.0,
+          "iou": 0.741,
+          "dE_mean": 14.0,
+          "dE_p95": 34.2,
+          "dL": -0.2,
+          "dC": 0.3,
           "faithful": false
         },
         "isolated": {
-          "iou": 0.727,
-          "dE_mean": 7.8,
-          "dE_p95": 19.5,
-          "dL": -1.2,
-          "dC": -0.1,
+          "iou": 0.739,
+          "dE_mean": 8.6,
+          "dE_p95": 21.2,
+          "dL": -0.4,
+          "dC": 0.0,
           "faithful": true
         }
       },
-      "review": "rejected",
+      "review": "pending",
       "rejected_seeds": [
         2376463231
       ],
@@ -4351,7 +4351,7 @@
     "pavo-cristatus": {
       "common_name": "Indian Peafowl",
       "photos": [
-        459533707
+        437503733
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
@@ -4360,32 +4360,32 @@
       "setting": "ground",
       "seed": 282036826,
       "isolate_seed": 49,
-      "sha256": "bc4ff4a5ba3f4a3d9f7c0a9a9473c54383cf7201c36af1db431fa246eaa1ea48",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "91a18a91dbd55357cbb00abd50ef38f54d2eeed4579e9b564144ceaa371d8a78",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.583,
-          "dE_mean": 31.6,
-          "dE_p95": 49.2,
-          "dL": 19.1,
-          "dC": -1.1,
-          "faithful": false
+          "iou": 0.724,
+          "dE_mean": 8.6,
+          "dE_p95": 20.5,
+          "dL": 3.3,
+          "dC": 2.9,
+          "faithful": true
         },
         "fitted": {
-          "iou": 0.583,
-          "dE_mean": 20.6,
-          "dE_p95": 40.5,
-          "dL": 4.2,
-          "dC": 0.4,
-          "faithful": false
+          "iou": 0.724,
+          "dE_mean": 7.1,
+          "dE_p95": 18.6,
+          "dL": -1.0,
+          "dC": 1.3,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.895,
-          "dE_mean": 7.8,
-          "dE_p95": 19.2,
-          "dL": -0.2,
-          "dC": -0.1,
+          "iou": 0.953,
+          "dE_mean": 3.3,
+          "dE_p95": 7.8,
+          "dL": -0.3,
+          "dC": 0.5,
           "faithful": true
         }
       },
@@ -4444,38 +4444,38 @@
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "rock",
-      "seed": 3385963342,
-      "isolate_seed": 50,
-      "sha256": "9f24a546678027f765c10d0e0a95c033c02367ccdf1cca5de4314af6aabf896a",
+      "seed": 3201729499,
+      "isolate_seed": 60,
+      "sha256": "7db0f933d7f39254f1227987ece981c0202f300c830afeeac6c3bbed70f56511",
       "faithful": false,
       "attempts": 3,
       "fidelity": {
         "painted": {
-          "iou": 0.579,
-          "dE_mean": 9.5,
-          "dE_p95": 14.2,
-          "dL": 7.5,
-          "dC": 1.7,
+          "iou": 0.609,
+          "dE_mean": 6.6,
+          "dE_p95": 13.1,
+          "dL": 3.6,
+          "dC": 1.3,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.579,
-          "dE_mean": 3.6,
-          "dE_p95": 9.3,
-          "dL": -1.4,
-          "dC": -0.5,
+          "iou": 0.609,
+          "dE_mean": 3.7,
+          "dE_p95": 9.0,
+          "dL": -0.9,
+          "dC": -0.4,
           "faithful": false
         },
         "isolated": {
-          "iou": 0.459,
-          "dE_mean": 6.8,
+          "iou": 0.464,
+          "dE_mean": 7.2,
           "dE_p95": 18.1,
-          "dL": -5.3,
+          "dL": -5.6,
           "dC": -0.7,
           "faithful": false
         }
       },
-      "review": "rejected",
+      "review": "pending",
       "rejected_seeds": [
         3385963342
       ],
@@ -4914,7 +4914,7 @@
     "poecile-gambeli": {
       "common_name": "Mountain Chickadee",
       "photos": [
-        162993740
+        440762475
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
@@ -4923,33 +4923,33 @@
       "setting": "perch",
       "seed": 2801388929,
       "isolate_seed": 49,
-      "sha256": "68aa6254a05122a2b03902f3facd7ec5f2188a7e5826bb5455fcfe949a407a20",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "cc91bdf35770f80d50ff64d18d5ba008bdd4280d99eedf07f75d149c4c8c9ff2",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.649,
-          "dE_mean": 16.8,
-          "dE_p95": 41.9,
-          "dL": 2.2,
-          "dC": 4.9,
-          "faithful": false
+          "iou": 0.893,
+          "dE_mean": 6.0,
+          "dE_p95": 11.4,
+          "dL": 1.6,
+          "dC": -0.8,
+          "faithful": true
         },
         "fitted": {
-          "iou": 0.649,
-          "dE_mean": 15.4,
-          "dE_p95": 39.7,
-          "dL": 0.5,
-          "dC": 2.9,
-          "faithful": false
+          "iou": 0.893,
+          "dE_mean": 4.7,
+          "dE_p95": 10.1,
+          "dL": 1.3,
+          "dC": 0.6,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.651,
-          "dE_mean": 16.3,
-          "dE_p95": 41.3,
-          "dL": -0.1,
-          "dC": 3.0,
-          "faithful": false
+          "iou": 0.898,
+          "dE_mean": 3.3,
+          "dE_p95": 8.0,
+          "dL": 1.7,
+          "dC": 0.4,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -5000,7 +5000,7 @@
     "polioptila-californica": {
       "common_name": "California Gnatcatcher",
       "photos": [
-        162994586
+        356679042
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
@@ -5008,34 +5008,34 @@
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
       "seed": 240167842,
-      "isolate_seed": 50,
-      "sha256": "91742b4e29eead17b4e67b1058c920d6e3326cd10764413acf63433bc7bc2dfe",
-      "faithful": false,
-      "attempts": 3,
+      "isolate_seed": 49,
+      "sha256": "baf80a43651ff17d9d752f216bb589680a4fdadce735aacd451f071e5c8b371f",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.722,
-          "dE_mean": 12.1,
-          "dE_p95": 30.2,
-          "dL": 1.3,
-          "dC": 2.2,
-          "faithful": false
+          "iou": 0.942,
+          "dE_mean": 5.3,
+          "dE_p95": 11.4,
+          "dL": 1.1,
+          "dC": -0.2,
+          "faithful": true
         },
         "fitted": {
-          "iou": 0.722,
-          "dE_mean": 11.4,
-          "dE_p95": 30.2,
-          "dL": 0.0,
-          "dC": -0.0,
-          "faithful": false
+          "iou": 0.942,
+          "dE_mean": 4.2,
+          "dE_p95": 8.7,
+          "dL": -0.5,
+          "dC": 0.3,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.738,
-          "dE_mean": 10.9,
-          "dE_p95": 27.3,
-          "dL": -0.0,
-          "dC": -0.2,
-          "faithful": false
+          "iou": 0.964,
+          "dE_mean": 3.0,
+          "dE_p95": 7.6,
+          "dL": 0.1,
+          "dC": 0.0,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -5086,41 +5086,41 @@
     "psittacara-mitratus": {
       "common_name": "Mitred Parakeet",
       "photos": [
-        185005450
+        363157243
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 1362593163,
+      "seed": 1362593162,
       "isolate_seed": 49,
-      "sha256": "dc69612b78101f8ba4b73ee016202b9615c93ba94de47bb943b325e98d8da95d",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "ddea0c3c00a07de087a8c5c670a8692e8f2275bf48bbfbd8572f8f52e3501d9b",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.859,
-          "dE_mean": 21.7,
-          "dE_p95": 36.3,
-          "dL": -2.5,
-          "dC": -14.5,
+          "iou": 0.918,
+          "dE_mean": 17.9,
+          "dE_p95": 29.3,
+          "dL": 13.6,
+          "dC": 2.2,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.859,
-          "dE_mean": 12.6,
-          "dE_p95": 33.9,
-          "dL": -0.2,
+          "iou": 0.918,
+          "dE_mean": 8.2,
+          "dE_p95": 17.9,
+          "dL": 0.3,
           "dC": -0.8,
-          "faithful": false
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.863,
-          "dE_mean": 6.5,
-          "dE_p95": 18.3,
-          "dL": 0.3,
-          "dC": -0.3,
+          "iou": 0.944,
+          "dE_mean": 3.1,
+          "dE_p95": 9.0,
+          "dL": 0.7,
+          "dC": 0.3,
           "faithful": true
         }
       },
@@ -5387,7 +5387,7 @@
     "setophaga-aestiva": {
       "common_name": "American Yellow Warbler",
       "photos": [
-        316616677
+        367396945
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
@@ -5396,33 +5396,33 @@
       "setting": "perch",
       "seed": 2211153456,
       "isolate_seed": 49,
-      "sha256": "a88778bdd5496dfde4ac58c4ceb47cbd8397fed76f146e15eecc96664ddcf6e3",
-      "faithful": false,
-      "attempts": 3,
+      "sha256": "658b196ef41d5f81a61844ea2f86b2ecf0de5481792dce66eb38c45dbfdcf008",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.775,
-          "dE_mean": 16.0,
-          "dE_p95": 35.7,
-          "dL": -4.0,
-          "dC": -4.4,
+          "iou": 0.855,
+          "dE_mean": 12.7,
+          "dE_p95": 24.1,
+          "dL": -6.7,
+          "dC": -5.2,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.775,
-          "dE_mean": 14.8,
-          "dE_p95": 33.3,
-          "dL": -1.1,
-          "dC": -0.5,
-          "faithful": false
+          "iou": 0.855,
+          "dE_mean": 8.2,
+          "dE_p95": 18.9,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.774,
-          "dE_mean": 14.3,
-          "dE_p95": 33.4,
-          "dL": -1.2,
-          "dC": -0.7,
-          "faithful": false
+          "iou": 0.906,
+          "dE_mean": 6.3,
+          "dE_p95": 15.2,
+          "dL": -0.9,
+          "dC": -0.8,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -6118,7 +6118,7 @@
     "thalasseus-maximus": {
       "common_name": "Royal Tern",
       "photos": [
-        603780707
+        450168467
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
@@ -6127,33 +6127,33 @@
       "setting": "shore",
       "seed": 3276777602,
       "isolate_seed": 49,
-      "sha256": "3558cb716d968e0aaee928b553e7766e87b9cf1ba00defc3bf159d43ba631d76",
-      "faithful": false,
+      "sha256": "303eb1c21044f4d8407448233db5c54690ee98df125de7be8dde95afa4e88aec",
+      "faithful": true,
       "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.68,
-          "dE_mean": 5.4,
-          "dE_p95": 10.2,
-          "dL": -1.8,
-          "dC": 2.9,
+          "iou": 0.942,
+          "dE_mean": 6.3,
+          "dE_p95": 11.0,
+          "dL": 2.0,
+          "dC": -1.2,
           "faithful": true
         },
         "fitted": {
-          "iou": 0.68,
-          "dE_mean": 3.6,
-          "dE_p95": 9.7,
-          "dL": 0.0,
-          "dC": 0.1,
+          "iou": 0.942,
+          "dE_mean": 4.1,
+          "dE_p95": 8.8,
+          "dL": 0.6,
+          "dC": -0.1,
           "faithful": true
         },
         "isolated": {
-          "iou": 0.638,
-          "dE_mean": 3.9,
-          "dE_p95": 11.7,
-          "dL": -0.9,
-          "dC": -0.4,
-          "faithful": false
+          "iou": 0.955,
+          "dE_mean": 2.8,
+          "dE_p95": 7.4,
+          "dL": 0.2,
+          "dC": -0.3,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -6462,42 +6462,42 @@
     "tyrannus-vociferans": {
       "common_name": "Cassin's Kingbird",
       "photos": [
-        605543868
+        605537774
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
       "setting": "perch",
-      "seed": 682308224,
-      "isolate_seed": 50,
-      "sha256": "2473523ede6d18a37f63ec7cc2e90019a65ea18802dc4ec4204e885d56bff987",
-      "faithful": false,
-      "attempts": 3,
+      "seed": 682308222,
+      "isolate_seed": 49,
+      "sha256": "5f7d0af2849c711d2ca7900bed21e02e700f96529a4ff442d75324f953dcbb63",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.573,
-          "dE_mean": 18.7,
-          "dE_p95": 35.5,
-          "dL": -5.9,
-          "dC": 0.8,
+          "iou": 0.864,
+          "dE_mean": 10.2,
+          "dE_p95": 24.1,
+          "dL": -6.4,
+          "dC": 1.2,
           "faithful": false
         },
         "fitted": {
-          "iou": 0.573,
-          "dE_mean": 18.4,
-          "dE_p95": 35.1,
-          "dL": 2.1,
-          "dC": 0.1,
-          "faithful": false
+          "iou": 0.864,
+          "dE_mean": 8.5,
+          "dE_p95": 22.1,
+          "dL": -1.7,
+          "dC": -1.1,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.574,
-          "dE_mean": 16.5,
-          "dE_p95": 33.5,
-          "dL": 3.8,
-          "dC": 1.3,
-          "faithful": false
+          "iou": 0.925,
+          "dE_mean": 5.9,
+          "dE_p95": 14.2,
+          "dL": -0.2,
+          "dC": -1.7,
+          "faithful": true
         }
       },
       "review": "pending"
@@ -6763,42 +6763,42 @@
     "zenaida-macroura": {
       "common_name": "Mourning Dove",
       "photos": [
-        677926671
+        658085144
       ],
       "workflow": "pack-art@3",
       "isolate": "bird-isolate@1",
       "prompts": 10,
       "theme": "citrus groves, chaparral hills and warm golden valley light",
-      "setting": "perch",
-      "seed": 2346565908,
-      "isolate_seed": 51,
-      "sha256": "6f68e31cec347d6e463e1daa6b527caf91eb198bbb188bf110d90c3fd7ed36b8",
-      "faithful": false,
-      "attempts": 3,
+      "setting": "ground",
+      "seed": 2346565906,
+      "isolate_seed": 49,
+      "sha256": "594e95940fcde23303c3af17e39d0cd93d57f4b1f95b2171293c5c9284a6215a",
+      "faithful": true,
+      "attempts": 1,
       "fidelity": {
         "painted": {
-          "iou": 0.627,
-          "dE_mean": 15.4,
-          "dE_p95": 40.7,
-          "dL": -1.8,
-          "dC": 4.5,
-          "faithful": false
+          "iou": 0.964,
+          "dE_mean": 6.3,
+          "dE_p95": 11.5,
+          "dL": 3.5,
+          "dC": 3.9,
+          "faithful": true
         },
         "fitted": {
-          "iou": 0.627,
-          "dE_mean": 14.1,
-          "dE_p95": 40.3,
-          "dL": -0.7,
-          "dC": 0.6,
-          "faithful": false
+          "iou": 0.964,
+          "dE_mean": 3.3,
+          "dE_p95": 8.1,
+          "dL": -0.6,
+          "dC": -0.1,
+          "faithful": true
         },
         "isolated": {
-          "iou": 0.626,
-          "dE_mean": 13.6,
-          "dE_p95": 38.0,
-          "dL": 0.6,
-          "dC": 0.8,
-          "faithful": false
+          "iou": 0.98,
+          "dE_mean": 2.8,
+          "dE_p95": 6.7,
+          "dL": -0.5,
+          "dC": -0.0,
+          "faithful": true
         }
       },
       "review": "pending"
