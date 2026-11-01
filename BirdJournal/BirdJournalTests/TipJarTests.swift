@@ -9,11 +9,16 @@ import Testing
 @MainActor
 @Suite("Tip jar", .serialized)
 struct TipJarTests {
-    let session: SKTestSession
+    /// One session for the whole suite: a session torn down per test leaves later purchases going to the sandbox,
+    /// which asks for an Apple Account.
+    static let shared: SKTestSession = {
+        let url = Bundle.allBundles.lazy.compactMap { $0.url(forResource: "BirdJournal", withExtension: "storekit") }.first
+        return try! SKTestSession(contentsOf: url!)
+    }()
+
+    var session: SKTestSession { Self.shared }
 
     init() throws {
-        let url = try #require(Bundle.allBundles.lazy.compactMap { $0.url(forResource: "BirdJournal", withExtension: "storekit") }.first)
-        session = try SKTestSession(contentsOf: url)
         session.resetToDefaultState()
         session.disableDialogs = true
         session.clearTransactions()
@@ -24,19 +29,21 @@ struct TipJarTests {
         let jar = TipJar()
         await jar.load()
         #expect(jar.state == .ready)
-        #expect(jar.products.map(\.id) == TipJar.productIDs)
-        #expect(jar.products.allSatisfy { $0.type == .consumable })
+        #expect(jar.tips.map(\.id) == TipJar.productIDs)
+        let products = try await Product.products(for: TipJar.productIDs)
+        #expect(products.count == 3)
+        #expect(products.allSatisfy { $0.type == .consumable })
     }
 
     @Test("A tip finishes its transaction, shows the thank-you and unlocks nothing")
     func purchaseFinishesAndThanks() async throws {
         let jar = TipJar()
         await jar.load()
-        let tip = try #require(jar.products.first)
+        let tip = try #require(jar.tips.first)
 
         await jar.purchase(tip)
 
-        #expect(jar.state == .thanked(tipName: tip.displayName))
+        #expect(jar.state == .thanked(tipName: tip.name))
         let transactions = session.allTransactions()
         #expect(transactions.count == 1)
         #expect(transactions.first?.productIdentifier == tip.id)
@@ -54,12 +61,12 @@ struct TipJarTests {
     func tipsAreRepeatable() async throws {
         let jar = TipJar()
         await jar.load()
-        let tip = try #require(jar.products.last)
+        let tip = try #require(jar.tips.last)
         await jar.purchase(tip)
         jar.reset()
         #expect(jar.state == .ready)
         await jar.purchase(tip)
-        #expect(jar.state == .thanked(tipName: tip.displayName))
+        #expect(jar.state == .thanked(tipName: tip.name))
         #expect(session.allTransactions().count == 2)
     }
 
@@ -67,10 +74,11 @@ struct TipJarTests {
     func failedPurchase() async throws {
         let jar = TipJar()
         await jar.load()
-        let tip = try #require(jar.products.first)
+        let tip = try #require(jar.tips.first)
         try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))), forAPI: .purchase)
 
         await jar.purchase(tip)
+        try await session.clearSimulatedError(forAPI: .purchase)
 
         guard case .failed = jar.state else {
             Issue.record("expected a failure, got \(jar.state)")
@@ -82,9 +90,10 @@ struct TipJarTests {
     @Test("Ask to Buy waits, then thanks once approved")
     func askToBuy() async throws {
         session.askToBuyEnabled = true
+        defer { session.askToBuyEnabled = false }
         let jar = TipJar()
         await jar.load()
-        let tip = try #require(jar.products.first)
+        let tip = try #require(jar.tips.first)
 
         await jar.purchase(tip)
         #expect(jar.state == .pending)
@@ -94,6 +103,6 @@ struct TipJarTests {
         for _ in 0..<50 where jar.state == .pending {
             try await Task.sleep(for: .milliseconds(100))
         }
-        #expect(jar.state == .thanked(tipName: tip.displayName))
+        #expect(jar.state == .thanked(tipName: tip.name))
     }
 }

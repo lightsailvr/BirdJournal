@@ -15,6 +15,14 @@ final class TipJar {
         "com.matthewcelia.mybirdjournal.tip.feeder",
     ]
 
+    /// One tip as the screen shows it, with App Store Connect's name, line and local price.
+    struct Tip: Identifiable, Equatable {
+        let id: String
+        let name: String
+        let detail: String
+        let price: String
+    }
+
     enum State: Equatable {
         case loading
         case ready
@@ -28,7 +36,8 @@ final class TipJar {
         case failed(String)
     }
 
-    private(set) var products: [Product] = []
+    private(set) var tips: [Tip] = []
+    private var products: [Product] = []
     private(set) var state = State.loading
     private var updates: Task<Void, Never>?
 
@@ -51,13 +60,15 @@ final class TipJar {
         do {
             let found = try await Product.products(for: Self.productIDs)
             products = found.sorted { $0.price < $1.price }
+            tips = products.map { Tip(id: $0.id, name: $0.displayName, detail: $0.description, price: $0.displayPrice) }
             state = products.isEmpty ? .unavailable("The tips aren't available right now. Try again later.") : .ready
         } catch {
             state = .unavailable("The App Store couldn't be reached. Try again when you're online.")
         }
     }
 
-    func purchase(_ product: Product) async {
+    func purchase(_ tip: Tip) async {
+        guard let product = products.first(where: { $0.id == tip.id }) else { return }
         state = .purchasing(productID: product.id)
         do {
             switch try await product.purchase() {
@@ -83,7 +94,7 @@ final class TipJar {
     #if DEBUG
     /// The thank-you as after the cheapest tip (`-autoTipThanks YES`), for screenshots.
     func showThanksForScreenshot() {
-        state = .thanked(tipName: products.first?.displayName ?? "Scoop of seed")
+        state = .thanked(tipName: tips.first?.name ?? "Scoop of seed")
     }
     #endif
 
@@ -92,7 +103,7 @@ final class TipJar {
         case .verified(let transaction):
             await transaction.finish()
             guard Self.productIDs.contains(transaction.productID), transaction.revocationDate == nil else { return }
-            let name = products.first { $0.id == transaction.productID }?.displayName ?? "tip"
+            let name = tips.first { $0.id == transaction.productID }?.name ?? "tip"
             state = .thanked(tipName: name)
         case .unverified(let transaction, _):
             // Finished all the same so StoreKit stops offering it; there is nothing to grant either way.

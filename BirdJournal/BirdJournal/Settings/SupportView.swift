@@ -66,9 +66,9 @@ struct SupportView: View {
             }
             .listRowInsets(EdgeInsets())
         case .ready, .purchasing, .pending, .failed, .thanked:
-            ForEach(tipJar.products, id: \.id) { product in
-                TipRow(name: product.displayName, detail: product.description, price: product.displayPrice, isPurchasing: tipJar.state == .purchasing(productID: product.id)) {
-                    Task { await tipJar.purchase(product) }
+            ForEach(tipJar.tips) { tip in
+                TipRow(tip: tip, isPurchasing: tipJar.state == .purchasing(productID: tip.id)) {
+                    Task { await tipJar.purchase(tip) }
                 }
                 .disabled(tipJar.state.isBusy)
             }
@@ -95,20 +95,18 @@ private extension TipJar.State {
 
 /// One tip: its name and line from App Store Connect, and the price as the button.
 private struct TipRow: View {
-    let name: String
-    let detail: String
-    let price: String
+    let tip: TipJar.Tip
     let isPurchasing: Bool
     let action: () -> Void
 
     var body: some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(name)
+                Text(tip.name)
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
-                if !detail.isEmpty {
-                    Text(detail)
+                if !tip.detail.isEmpty {
+                    Text(tip.detail)
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                 }
@@ -118,11 +116,11 @@ private struct TipRow: View {
                 if isPurchasing {
                     ProgressView()
                 } else {
-                    Text(price)
+                    Text(tip.price)
                 }
             }
             .buttonStyle(.journalOutlined)
-            .accessibilityLabel("Tip \(price), \(name)")
+            .accessibilityLabel("Tip \(tip.price), \(tip.name)")
         }
         .padding(.vertical, 4)
     }
