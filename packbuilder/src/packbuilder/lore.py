@@ -130,6 +130,8 @@ class AnthropicLoreClient:
 
         self.model = model
         self.client = client or anthropic.Anthropic(api_key=api_key)
+        self.input_tokens = self.output_tokens = 0
+        """Tokens billed so far, for the run's report (thinking counts as output)."""
 
     def complete(self, system: str, prompt: str, schema: dict) -> str:
         import anthropic
@@ -158,6 +160,9 @@ class AnthropicLoreClient:
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",
         )
+        self.input_tokens += response.usage.input_tokens
+        self.output_tokens += response.usage.output_tokens
+        log.info("  %d input and %d output tokens", response.usage.input_tokens, response.usage.output_tokens)
         if response.stop_reason == "refusal":
             raise LoreRefused(getattr(response.stop_details, "category", None) or "no category")
         if response.stop_reason == "max_tokens":
@@ -331,6 +336,8 @@ class LoreWriter:
             }
             self.lock.write()
             written[species_id] = lore_from_entry(species_id, self.lock.species[species_id])
+        if (usage := getattr(self._client, "input_tokens", None)) is not None:
+            log.info("lore: %d input and %d output tokens", usage, self._client.output_tokens)
         log.info("lore: %d requests, %d approved, %d to review", self.requests, sum(l.ships for l in written.values()), sum(l.review == PENDING for l in written.values()))
         return written
 
