@@ -74,6 +74,7 @@ struct SettingsView: View {
             }
 
             Section("About") {
+                NavigationLink("Support Bird Journal", value: Route.support)
                 NavigationLink("Sources & credits", value: Route.credits)
                 LabeledContent("Version", value: Self.versionText)
                 Text("Powered by BirdNET. Birds are identified on this iPhone; no audio is saved or sent anywhere.")

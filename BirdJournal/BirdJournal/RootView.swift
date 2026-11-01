@@ -25,6 +25,8 @@ enum Route: Hashable {
     case settings
     case appIcon
     case account
+    /// The tip jar (issue #59).
+    case support
 }
 
 extension View {
@@ -73,6 +75,8 @@ private struct RouteDestination: View {
             AppIconView()
         case .account:
             AccountView()
+        case .support:
+            SupportView()
         }
     }
 }

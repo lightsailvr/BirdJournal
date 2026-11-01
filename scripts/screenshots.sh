@@ -49,6 +49,8 @@ for appearance in light dark; do
     shot "packs-$appearance"     9  "${common[@]}" -autoScreen packs
     shot "pack-$appearance"      9  "${common[@]}" -autoScreen pack
     shot "credits-$appearance"   7  "${common[@]}" -autoScreen credits
+    shot "support-$appearance"   8  "${common[@]}" -autoScreen support
+    shot "tip-thanks-$appearance" 8 "${common[@]}" -autoScreen support -autoTipThanks YES
     shot "source-$appearance"    8  "${common[@]}" -autoScreen source
 done
 xcrun simctl ui "$udid" appearance light
@@ -70,6 +72,7 @@ shot "card-ax5"        8 -inMemoryAlbum YES -seedJournal YES -autoScreen card -c
 shot "card-back-ax5"   8 -inMemoryAlbum YES -seedJournal YES -autoScreen card-back -collectionIntroShown YES
 shot "gallery-ax5"     9 -inMemoryAlbum YES -seedGallery YES -autoScreen gallery -collectionIntroShown YES
 shot "packs-ax5"       9 -inMemoryAlbum YES -autoScreen packs
+shot "support-ax5"     8 -inMemoryAlbum YES -autoScreen support
 xcrun simctl ui "$udid" content_size medium
 xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
 echo "wrote $(ls "$out" | wc -l | tr -d ' ') screenshots to $out"
