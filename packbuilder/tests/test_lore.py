@@ -106,6 +106,24 @@ def test_a_draft_that_fails_its_checks_goes_back_with_what_was_wrong(tmp_path):
     assert "sentence 1 cites facts the sheet lacks: f9" in client.prompts[2]
 
 
+def test_a_cut_off_reply_is_sent_back_and_a_refusal_costs_only_its_species(tmp_path):
+    from packbuilder.lore import LoreRefused, LoreTruncated
+
+    class Scripted(StubClient):
+        def complete(self, system, prompt, schema):
+            self.prompts.append(prompt)
+            reply = self.replies.pop(0)
+            if isinstance(reply, Exception):
+                raise reply
+            return json.dumps(reply)
+
+    client = Scripted(LoreTruncated("max_tokens"), GOOD, LoreRefused("bio"), GOOD)
+    species = PHOEBE + [("calypte-anna", "Anna's Hummingbird", "Calypte anna"), ("zenaida-macroura", "Mourning Dove", "Zenaida macroura")]
+    written = writer(tmp_path, client).write(species, {id: FACTS for id, _, _ in species})
+    assert set(written) == {"sayornis-nigricans", "zenaida-macroura"}
+    assert "the reply was cut off" in client.prompts[1]
+
+
 def test_no_lore_after_three_failed_drafts(tmp_path):
     client = StubClient(*[{**GOOD, "tagline": {"text": "x", "facts": []}}] * 3)
     assert writer(tmp_path, client).write(PHOEBE, {"sayornis-nigricans": FACTS}) == {}

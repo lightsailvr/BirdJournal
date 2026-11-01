@@ -335,7 +335,7 @@ private struct CardFront: View {
                     .font(JournalFont.supporting.italic())
                     .foregroundStyle(Color.cardIvory)
                     .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel("Caption: \(caption)")
+                    .accessibilityLabel(sighting.caption == nil ? "Tagline: \(caption)" : "Caption: \(caption)")
                     .accessibilityIdentifier("card-caption")
             }
             if let typeLine = reference?.species.typeLine {

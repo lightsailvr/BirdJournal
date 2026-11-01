@@ -111,24 +111,24 @@ def build_pack(
         if art_sheets is not None:
             sheets = artist.sheets(results, art, art_sheets)
             log.info("pack art contact sheets: %s", ", ".join(str(sheet) for sheet in sheets))
-    sheets = fact_sheets(results, raw_overrides, joined, descriptions)
+    facts = fact_sheets(results, raw_overrides, joined, descriptions)
     written_lore = None
     if lore is not None:
-        written_lore = lore.write([(r.entry.id, r.entry.common_name, r.entry.scientific_name) for r in results], sheets)
+        written_lore = lore.write([(r.entry.id, r.entry.common_name, r.entry.scientific_name) for r in results], facts)
         # The pack ships the facts the lore was written from, so the two never disagree.
-        sheets.update({species_id: list(entry.facts) for species_id, entry in written_lore.items()})
+        facts.update({species_id: list(entry.facts) for species_id, entry in written_lore.items()})
         if lore_review is not None:
             from packbuilder.lore import review_sheet
 
             log.info("lore review: %s", review_sheet(lore.lock, lore_review, definition.name, [r.entry.id for r in results]))
     built_at = options.built_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     written = write_pack(definition, results, options.out_dir, built_at=built_at, archive_path=options.archive_path, card_set=card_set, joined=joined, art=art,
-                         facts=sheets, lore=written_lore)
+                         facts=facts, lore=written_lore)
     gaps = [r.entry.common_name for r in results if r.gap]
     undescribed = [r.entry.common_name for r in results if r.description is None]
     silent = [r.entry.common_name for r in results if r.sounds is not None and r.sounds.gap]
     unreviewed = [r.entry.common_name for r in results if art is not None and not (r.entry.id in art and art[r.entry.id].settled)]
-    unread = [r.entry.common_name for r in results if written_lore is not None and not (r.entry.id in written_lore and written_lore[r.entry.id].ships)]
+    unapproved_lore = [r.entry.common_name for r in results if written_lore is not None and not (r.entry.id in written_lore and written_lore[r.entry.id].ships)]
     log.info(
         "wrote %s (%d species, %d photos, %d sounds%s%s%s%s%s%s)",
         written.directory, len(results), sum(len(r.photos) for r in results), sum(len(r.sounds.sounds) for r in results if r.sounds),
@@ -137,7 +137,7 @@ def build_pack(
         f"; no description: {', '.join(undescribed)}" if undescribed else "",
         f"; no sound: {', '.join(silent)}" if silent else "",
         f"; art not approved yet: {len(unreviewed)} species" if unreviewed else "",
-        f"; lore not approved yet: {len(unread)} species" if unread else "",
+        f"; lore not approved yet: {len(unapproved_lore)} species" if unapproved_lore else "",
     )
     return written
 

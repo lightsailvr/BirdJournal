@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     sheets = args.art_sheets or Path(__file__).resolve().parents[3] / "build" / "pack-art" / definition.id
     lore = None if args.no_lore else _lore_writer(args, definition)
     lore_review = args.lore_review or _lore_review_path(definition.id)
-    from packbuilder.lore import InvalidLore, LoreAPIError, LoreRefused, MissingAPIKey as MissingLoreKey
+    from packbuilder.lore import InvalidLore, LoreAPIError, MissingAPIKey as MissingLoreKey
     from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
 
     try:
@@ -155,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
         return 2
-    except (MissingLoreKey, LoreAPIError, LoreRefused, InvalidLore) as error:
+    except (MissingLoreKey, LoreAPIError, InvalidLore) as error:
         logging.getLogger("packbuilder").error("lore stopped the build: %s", error)
         return 2
     if descriptions is not None:
@@ -248,7 +248,7 @@ def _lore(args: argparse.Namespace) -> int:
     """The fact sheets and lore alone: the descriptions and stats from the cache, then the lore step, as `build` runs
     them, so the lore can be written and reviewed before a pack build."""
     from packbuilder.definition import load_overrides
-    from packbuilder.lore import InvalidLore, LoreAPIError, LoreRefused, MissingAPIKey, review_sheet
+    from packbuilder.lore import InvalidLore, LoreAPIError, MissingAPIKey, review_sheet
     from packbuilder.pipeline import describe, fact_sheets
     from packbuilder.selection import Overrides
     from packbuilder.stats import Datasets, StatsFixes, TypeLines, join
@@ -268,7 +268,7 @@ def _lore(args: argparse.Namespace) -> int:
     writer = _lore_writer(args, definition)
     try:
         written = writer.write([(r.entry.id, r.entry.common_name, r.entry.scientific_name) for r in results], sheets)
-    except (MissingAPIKey, LoreAPIError, LoreRefused, InvalidLore) as error:
+    except (MissingAPIKey, LoreAPIError, InvalidLore) as error:
         logging.getLogger("packbuilder").error("lore stopped: %s", error)
         return 2
     sheet = review_sheet(writer.lock, args.lore_review or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])

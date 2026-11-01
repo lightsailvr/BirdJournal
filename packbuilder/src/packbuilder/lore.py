@@ -42,7 +42,7 @@ PENDING, APPROVED, REJECTED = "pending", "approved", "rejected"
 API_KEY_VARIABLE = "BIRDJOURNAL_ANTHROPIC_API_KEY"
 KEYCHAIN_SERVICE = "birdjournal-anthropic-api-key"
 MODEL = "claude-opus-5-5"
-"""DECISIONS.md, "Lore and captions": the current Opus, for the voice; 160 species cost about a dollar."""
+"""DECISIONS.md, "Lore and captions": the current Opus, for the voice; a pack of 160 species costs a few dollars."""
 PROMPT_VERSION = 1
 ATTEMPTS = 3
 DEFAULT_INTERVAL = 2.0
@@ -161,12 +161,16 @@ class AnthropicLoreClient:
         if response.stop_reason == "refusal":
             raise LoreRefused(getattr(response.stop_details, "category", None) or "no category")
         if response.stop_reason == "max_tokens":
-            raise ValueError("the reply hit max_tokens")
+            raise LoreTruncated("the reply hit max_tokens")
         return next(block.text for block in response.content if block.type == "text")
 
 
 class LoreRefused(RuntimeError):
     pass
+
+
+class LoreTruncated(ValueError):
+    """The reply ran out of tokens: the draft is sent back, as one that fails its checks."""
 
 
 class LoreAPIError(RuntimeError):
@@ -245,7 +249,7 @@ def validate(draft: dict, facts: list[Fact] | tuple[Fact, ...]) -> list[str]:
     return problems
 
 
-def prompt(common_name: str, scientific_name: str, facts: list[Fact] | tuple[Fact, ...], feedback: list[str] = ()) -> str:
+def prompt(common_name: str, scientific_name: str, facts: list[Fact] | tuple[Fact, ...], feedback: list[str] | tuple[str, ...] = ()) -> str:
     """The request for one species: its names and its fact sheet, then what the maintainer or the checks sent back."""
     lines = [f"Species: {common_name} ({scientific_name})", "", "Fact sheet:"]
     lines += [f"{fact.id}: {fact.text}" for fact in facts]
@@ -333,7 +337,14 @@ class LoreWriter:
     def _draft(self, common_name: str, scientific_name: str, facts: list[Fact], feedback: list[str]) -> dict | None:
         problems: list[str] = []
         for _ in range(ATTEMPTS):
-            reply = self._complete(prompt(common_name, scientific_name, facts, feedback + problems))
+            try:
+                reply = self._complete(prompt(common_name, scientific_name, facts, feedback + problems))
+            except LoreTruncated:
+                problems = ["the reply was cut off; keep the lore and your thinking short"]
+                continue
+            except LoreRefused as refusal:
+                log.error("  %s: the model declined to write lore (%s); no lore", common_name, refusal)
+                return None
             try:
                 draft = json.loads(reply)
             except json.JSONDecodeError:
@@ -381,6 +392,7 @@ def review(lock: LoreLock, approve: list[str] = (), reject: list[str] = (), appr
 
 
 def _species_id(lock: LoreLock, name: str) -> str:
+    name = name.strip()
     if name in lock.species:
         return name
     for species_id, entry in lock.species.items():
