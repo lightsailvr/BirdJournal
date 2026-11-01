@@ -43,6 +43,12 @@ sample_test_host() {
     done
 }
 
+stop_tail() {
+    pkill -P "$1" >/dev/null 2>&1 || true
+    kill "$1" 2>/dev/null || true
+    wait "$1" 2>/dev/null || true
+}
+
 # run_watched <label> <log> <udid> <command…>: runs the command with stdout and stderr in <log>, shown live, and
 # kills it when the log goes quiet for watchdog_quiet_minutes. Returns the command's status, or 124 when killed.
 run_watched() {
@@ -52,7 +58,14 @@ run_watched() {
     : >"$log"
     "$@" >"$log" 2>&1 &
     pid=$!
-    tail -n +1 -f "$log" &
+    # The terminal gets the lines worth reading (errors, test results, the watchdog's own); the log keeps everything.
+    # BIRDJOURNAL_VERBOSE=1 shows every line.
+    if [[ "${BIRDJOURNAL_VERBOSE:-0}" == 1 ]]; then
+        (tail -n +1 -f "$log") &
+    else
+        (tail -n +1 -f "$log" | grep --line-buffered -E \
+            'error:|^\*\*|^==>|^✘|^✔|^↳|^Test Suite|Test Case .*(passed|failed)|Executed [0-9]+ test|Testing failed|Testing started|exceeded|timed out|hung') &
+    fi
     tail_pid=$!
     while kill -0 "$pid" 2>/dev/null; do
         sleep 10
@@ -72,8 +85,7 @@ run_watched() {
             kill -KILL "$pid" 2>/dev/null || true
             wait "$pid" 2>/dev/null || true
             sleep 1
-            kill "$tail_pid" 2>/dev/null || true
-            wait "$tail_pid" 2>/dev/null || true
+            stop_tail "$tail_pid"
             echo "error: $label hung (no output for $watchdog_quiet_minutes minutes) and was killed by the watchdog. Log: $log" >&2
             return 124
         fi
@@ -81,7 +93,6 @@ run_watched() {
     rc=0
     wait "$pid" || rc=$?
     sleep 1
-    kill "$tail_pid" 2>/dev/null || true
-    wait "$tail_pid" 2>/dev/null || true
+    stop_tail "$tail_pid"
     return "$rc"
 }
