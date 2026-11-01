@@ -43,32 +43,34 @@ sample_test_host() {
     done
 }
 
-stop_tail() {
-    pkill -P "$1" >/dev/null 2>&1 || true
-    kill "$1" 2>/dev/null || true
-    wait "$1" 2>/dev/null || true
+# Prints the lines of <log> from byte <offset> on: all of them with BIRDJOURNAL_VERBOSE=1, else the ones worth reading
+# (errors, test results, the watchdog's own), on stderr. Prints the new offset on stdout, for the caller.
+show_new_lines() {
+    local log="$1" offset="$2" size
+    size=$(stat -f %z "$log")
+    ((size > offset)) || { echo "$offset"; return; }
+    if [[ "${BIRDJOURNAL_VERBOSE:-0}" == 1 ]]; then
+        tail -c +"$((offset + 1))" "$log" | head -c "$((size - offset))" >&2
+    else
+        tail -c +"$((offset + 1))" "$log" | head -c "$((size - offset))" | grep -E \
+            'error:|^\*\*|^==>|^✘|^✔|^↳ |^Test Suite|Test Case .*(passed|failed)|Executed [0-9]+ test|Testing failed|exceeded|timed out|hung|Restarting' >&2 || true
+    fi
+    echo "$size"
 }
 
-# run_watched <label> <log> <udid> <command…>: runs the command with stdout and stderr in <log>, shown live, and
-# kills it when the log goes quiet for watchdog_quiet_minutes. Returns the command's status, or 124 when killed.
+# run_watched <label> <log> <udid> <command…>: runs the command with stdout and stderr in <log>, shows its lines on
+# the terminal as they come (every few seconds), and kills it when the log goes quiet for watchdog_quiet_minutes.
+# Returns the command's status, or 124 when killed.
 run_watched() {
     local label="$1" log="$2" udid="$3"
     shift 3
-    local quiet=$((watchdog_quiet_minutes * 60)) pid tail_pid now modified rc
+    local quiet=$((watchdog_quiet_minutes * 60)) pid now modified rc offset=0
     : >"$log"
     "$@" >"$log" 2>&1 &
     pid=$!
-    # The terminal gets the lines worth reading (errors, test results, the watchdog's own); the log keeps everything.
-    # BIRDJOURNAL_VERBOSE=1 shows every line.
-    if [[ "${BIRDJOURNAL_VERBOSE:-0}" == 1 ]]; then
-        (tail -n +1 -f "$log") &
-    else
-        (tail -n +1 -f "$log" | grep --line-buffered -E \
-            'error:|^\*\*|^==>|^✘|^✔|^↳|^Test Suite|Test Case .*(passed|failed)|Executed [0-9]+ test|Testing failed|Testing started|exceeded|timed out|hung') &
-    fi
-    tail_pid=$!
     while kill -0 "$pid" 2>/dev/null; do
-        sleep 10
+        sleep 5
+        offset=$(show_new_lines "$log" "$offset")
         now=$(date +%s)
         modified=$(stat -f %m "$log")
         if ((now - modified > quiet)); then
@@ -77,6 +79,8 @@ run_watched() {
                 echo "==> Watchdog: $label wrote nothing for $watchdog_quiet_minutes minutes; killing it (issue #82)."
             } >>"$log"
             sample_test_host "$udid" "$log" >>"$log" 2>&1
+            # The shell's "Terminated" notice for the killed job is noise here; the message below says what happened.
+            exec 3>&2 2>/dev/null
             pkill -TERM -P "$pid" >/dev/null 2>&1 || true
             kill -TERM "$pid" 2>/dev/null || true
             kill_simulator_processes "$udid"
@@ -84,15 +88,14 @@ run_watched() {
             pkill -KILL -P "$pid" >/dev/null 2>&1 || true
             kill -KILL "$pid" 2>/dev/null || true
             wait "$pid" 2>/dev/null || true
-            sleep 1
-            stop_tail "$tail_pid"
+            exec 2>&3 3>&-
+            show_new_lines "$log" "$offset" >/dev/null
             echo "error: $label hung (no output for $watchdog_quiet_minutes minutes) and was killed by the watchdog. Log: $log" >&2
             return 124
         fi
     done
     rc=0
     wait "$pid" || rc=$?
-    sleep 1
-    stop_tail "$tail_pid"
+    show_new_lines "$log" "$offset" >/dev/null
     return "$rc"
 }
