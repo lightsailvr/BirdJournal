@@ -12,6 +12,8 @@ class Settings:
     region: str = "us-west-2"
     # Set only for DynamoDB Local (tests, local runs); Lambda talks to the regional endpoint.
     dynamodb_endpoint: str | None = None
+    # Where invite links point (issue #61): `<invite_base_url>/i/<token>`, served by the invite site's CloudFront.
+    invite_base_url: str = "https://birdquest.matthewcelia.com"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -23,6 +25,7 @@ class Settings:
             ),
             region=env.get("AWS_REGION", "us-west-2"),
             dynamodb_endpoint=env.get("DYNAMODB_ENDPOINT") or None,
+            invite_base_url=(env.get("INVITE_BASE_URL") or cls.invite_base_url).rstrip("/"),
         )
 
 

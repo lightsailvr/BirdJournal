@@ -1,4 +1,4 @@
-"""The API: account get and update (issue #60). Later tickets add their routers here."""
+"""The API: account get and update (issue #60) and circles (issue #61). Later tickets add their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -11,6 +11,8 @@ from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from birdjournal_api.accounts import Account, AccountStore, clean_display_name
 from birdjournal_api.auth import SigningKeyResolver, Subject, TokenVerifier, cognito_signing_keys
+from birdjournal_api.circles import CircleStore
+from birdjournal_api.circles_api import router as circles_router
 from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
@@ -56,6 +58,9 @@ def create_app(
         signing_key=signing_key or cognito_signing_keys(settings.cognito_issuer),
     )
     app.state.accounts = AccountStore(dynamodb.Table(settings.table_name), clock)
+    app.state.circles = CircleStore(dynamodb, settings.table_name, app.state.accounts, clock)
+    app.state.invite_base_url = settings.invite_base_url
+    app.include_router(circles_router)
 
     @app.get("/health")
     def health() -> dict[str, str]:
