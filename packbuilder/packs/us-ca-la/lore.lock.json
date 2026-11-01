@@ -130,7 +130,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aechmophorus-occidentalis": {
       "common_name": "Western Grebe",
@@ -263,7 +263,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aeronautes-saxatalis": {
       "common_name": "White-throated Swift",
@@ -397,7 +397,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "agelaius-phoeniceus": {
       "common_name": "Red-winged Blackbird",
@@ -530,7 +530,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aimophila-ruficeps": {
       "common_name": "Rufous-crowned Sparrow",
@@ -666,7 +666,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "alopochen-aegyptiaca": {
       "common_name": "Egyptian Goose",
@@ -800,7 +800,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "amazona-oratrix": {
       "common_name": "Yellow-headed Amazon",
@@ -935,7 +935,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "amazona-viridigenalis": {
       "common_name": "Red-crowned Amazon",
@@ -1063,7 +1063,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anarhynchus-nivosus": {
       "common_name": "Snowy Plover",
@@ -1204,7 +1204,7 @@
           "f12"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anas-crecca": {
       "common_name": "Eurasian Teal",
@@ -1339,7 +1339,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anas-platyrhynchos": {
       "common_name": "Mallard",
@@ -1467,7 +1467,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anthus-rubescens": {
       "common_name": "American Pipit",
@@ -1609,7 +1609,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aphelocoma-californica": {
       "common_name": "California Scrub Jay",
@@ -1743,7 +1743,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aratinga-nenday": {
       "common_name": "Nanday Parakeet",
@@ -1880,7 +1880,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "archilochus-alexandri": {
       "common_name": "Black-chinned Hummingbird",
@@ -2015,7 +2015,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "ardea-alba": {
       "common_name": "Great Egret",
@@ -2144,7 +2144,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "ardea-herodias": {
       "common_name": "Great Blue Heron",
@@ -2271,7 +2271,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "astur-cooperii": {
       "common_name": "Cooper's Hawk",
@@ -2410,7 +2410,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aythya-collaris": {
       "common_name": "Ring-necked Duck",
@@ -2544,7 +2544,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "baeolophus-inornatus": {
       "common_name": "Oak Titmouse",
@@ -2670,7 +2670,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bombycilla-cedrorum": {
       "common_name": "Cedar Waxwing",
@@ -2802,7 +2802,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "branta-canadensis": {
       "common_name": "Canada Goose",
@@ -2936,7 +2936,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "brotogeris-chiriri": {
       "common_name": "Yellow-chevroned Parakeet",
@@ -3071,7 +3071,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bubo-virginianus": {
       "common_name": "Great Horned Owl",
@@ -3204,7 +3204,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bucephala-albeola": {
       "common_name": "Bufflehead",
@@ -3338,7 +3338,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "buteo-jamaicensis": {
       "common_name": "Red-tailed Hawk",
@@ -3465,7 +3465,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "buteo-lineatus": {
       "common_name": "Red-shouldered Hawk",
@@ -3595,7 +3595,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "butorides-virescens": {
       "common_name": "Green Heron",
@@ -3723,7 +3723,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cairina-moschata": {
       "common_name": "Muscovy Duck",
@@ -3857,7 +3857,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calidris-alba": {
       "common_name": "Sanderling",
@@ -3992,7 +3992,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calidris-mauri": {
       "common_name": "Western Sandpiper",
@@ -4120,7 +4120,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calidris-minutilla": {
       "common_name": "Least Sandpiper",
@@ -4254,7 +4254,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "callipepla-californica": {
       "common_name": "California Quail",
@@ -4384,7 +4384,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calypte-anna": {
       "common_name": "Anna's Hummingbird",
@@ -4513,7 +4513,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "campylorhynchus-brunneicapillus": {
       "common_name": "Cactus Wren",
@@ -4648,7 +4648,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cardellina-pusilla": {
       "common_name": "Wilson's Warbler",
@@ -4778,7 +4778,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cathartes-aura": {
       "common_name": "Turkey Vulture",
@@ -4912,7 +4912,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catharus-guttatus": {
       "common_name": "Hermit Thrush",
@@ -5042,7 +5042,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catharus-ustulatus": {
       "common_name": "Swainson's Thrush",
@@ -5176,7 +5176,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catherpes-mexicanus": {
       "common_name": "Canyon Wren",
@@ -5310,7 +5310,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "chamaea-fasciata": {
       "common_name": "Wrentit",
@@ -5447,7 +5447,7 @@
           "f1"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "charadrius-vociferus": {
       "common_name": "Killdeer",
@@ -5584,7 +5584,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "chondestes-grammacus": {
       "common_name": "Lark Sparrow",
@@ -5718,7 +5718,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "colaptes-auratus": {
       "common_name": "Northern Flicker",
@@ -5848,7 +5848,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "columba-livia": {
       "common_name": "Rock Dove",
@@ -5983,7 +5983,7 @@
           "f12"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "contopus-sordidulus": {
       "common_name": "Western Wood Pewee",
@@ -6102,7 +6102,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corthylio-calendula": {
       "common_name": "Ruby-crowned Kinglet",
@@ -6233,7 +6233,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corvus-brachyrhynchos": {
       "common_name": "American Crow",
@@ -6373,7 +6373,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corvus-corax": {
       "common_name": "Northern Raven",
@@ -6504,7 +6504,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cyanocitta-stelleri": {
       "common_name": "Steller's Jay",
@@ -6643,7 +6643,7 @@
           "f12"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "dryobates-nuttallii": {
       "common_name": "Nuttall's Woodpecker",
@@ -6781,7 +6781,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "dryobates-pubescens": {
       "common_name": "Downy Woodpecker",
@@ -6919,7 +6919,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "egretta-thula": {
       "common_name": "Snowy Egret",
@@ -7055,7 +7055,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "empidonax-difficilis": {
       "common_name": "Western Flycatcher",
@@ -7180,7 +7180,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "euphagus-cyanocephalus": {
       "common_name": "Brewer's Blackbird",
@@ -7312,7 +7312,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "falco-peregrinus": {
       "common_name": "Peregrine Falcon",
@@ -7441,7 +7441,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "falco-sparverius": {
       "common_name": "American Kestrel",
@@ -7574,7 +7574,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "fulica-americana": {
       "common_name": "American Coot",
@@ -7708,7 +7708,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "geococcyx-californianus": {
       "common_name": "Greater Roadrunner",
@@ -7848,7 +7848,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "geothlypis-trichas": {
       "common_name": "Common Yellowthroat",
@@ -7983,7 +7983,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haematopus-bachmani": {
       "common_name": "Black Oystercatcher",
@@ -8113,7 +8113,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haemorhous-mexicanus": {
       "common_name": "House Finch",
@@ -8238,7 +8238,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haliaeetus-leucocephalus": {
       "common_name": "Bald Eagle",
@@ -8371,7 +8371,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "himantopus-mexicanus": {
       "common_name": "Black-necked Stilt",
@@ -8493,7 +8493,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "hirundo-rustica": {
       "common_name": "Barn Swallow",
@@ -8624,7 +8624,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "hydroprogne-caspia": {
       "common_name": "Caspian Tern",
@@ -8758,7 +8758,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "icterus-bullockii": {
       "common_name": "Bullock's Oriole",
@@ -8893,7 +8893,7 @@
           "f15"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "icterus-cucullatus": {
       "common_name": "Hooded Oriole",
@@ -9016,7 +9016,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "junco-hyemalis": {
       "common_name": "Dark-eyed Junco",
@@ -9145,7 +9145,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "lanius-ludovicianus": {
       "common_name": "Loggerhead Shrike",
@@ -9279,7 +9279,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-californicus": {
       "common_name": "California Gull",
@@ -9402,7 +9402,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-delawarensis": {
       "common_name": "Ring-billed Gull",
@@ -9524,7 +9524,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-heermanni": {
       "common_name": "Heermann's Gull",
@@ -9645,7 +9645,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-occidentalis": {
       "common_name": "Western Gull",
@@ -9776,7 +9776,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-smithsonianus": {
       "common_name": "American Herring Gull",
@@ -9902,7 +9902,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "leiothlypis-celata": {
       "common_name": "Orange-crowned Warbler",
@@ -10026,7 +10026,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "limosa-fedoa": {
       "common_name": "Marbled Godwit",
@@ -10160,7 +10160,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "lonchura-punctulata": {
       "common_name": "Scaly-breasted Munia",
@@ -10293,7 +10293,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "lophodytes-cucullatus": {
       "common_name": "Hooded Merganser",
@@ -10426,7 +10426,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "mareca-americana": {
       "common_name": "American Wigeon",
@@ -10556,7 +10556,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "mareca-strepera": {
       "common_name": "Gadwall",
@@ -10696,7 +10696,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "megaceryle-alcyon": {
       "common_name": "Belted Kingfisher",
@@ -10829,7 +10829,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "megascops-kennicottii": {
       "common_name": "Western Screech Owl",
@@ -10966,7 +10966,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melanerpes-formicivorus": {
       "common_name": "Acorn Woodpecker",
@@ -11099,7 +11099,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melanitta-perspicillata": {
       "common_name": "Surf Scoter",
@@ -11233,7 +11233,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melospiza-lincolnii": {
       "common_name": "Lincoln's Sparrow",
@@ -11365,7 +11365,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melospiza-melodia": {
       "common_name": "Song Sparrow",
@@ -11492,7 +11492,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melozone-crissalis": {
       "common_name": "California Towhee",
@@ -11621,7 +11621,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "mimus-polyglottos": {
       "common_name": "Northern Mockingbird",
@@ -11758,7 +11758,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "molothrus-ater": {
       "common_name": "Brown-headed Cowbird",
@@ -11893,7 +11893,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "myiarchus-cinerascens": {
       "common_name": "Ash-throated Flycatcher",
@@ -12026,7 +12026,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "nannopterum-auritum": {
       "common_name": "Double-crested Cormorant",
@@ -12148,7 +12148,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "numenius-hudsonicus": {
       "common_name": "Hudsonian Whimbrel",
@@ -12268,7 +12268,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "nyctanassa-violacea": {
       "common_name": "Yellow-crowned Night Heron",
@@ -12394,7 +12394,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "nycticorax-nycticorax": {
       "common_name": "Black-crowned Night Heron",
@@ -12528,7 +12528,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "oxyura-jamaicensis": {
       "common_name": "Ruddy Duck",
@@ -12662,7 +12662,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pandion-haliaetus": {
       "common_name": "Osprey",
@@ -12786,7 +12786,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "passer-domesticus": {
       "common_name": "House Sparrow",
@@ -12914,7 +12914,7 @@
           "f1"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "passerculus-sandwichensis": {
       "common_name": "Savannah Sparrow",
@@ -13051,7 +13051,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "passerina-amoena": {
       "common_name": "Lazuli Bunting",
@@ -13181,7 +13181,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "patagioenas-fasciata": {
       "common_name": "Band-tailed Pigeon",
@@ -13318,7 +13318,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pavo-cristatus": {
       "common_name": "Indian Peafowl",
@@ -13448,7 +13448,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pelecanus-erythrorhynchos": {
       "common_name": "American White Pelican",
@@ -13581,7 +13581,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pelecanus-occidentalis": {
       "common_name": "Brown Pelican",
@@ -13713,7 +13713,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "petrochelidon-pyrrhonota": {
       "common_name": "American Cliff Swallow",
@@ -13848,7 +13848,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "phainopepla-nitens": {
       "common_name": "Phainopepla",
@@ -13980,7 +13980,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "phalaenoptilus-nuttallii": {
       "common_name": "Common Poorwill",
@@ -14114,7 +14114,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pheucticus-melanocephalus": {
       "common_name": "Black-headed Grosbeak",
@@ -14247,7 +14247,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pipilo-maculatus": {
       "common_name": "Spotted Towhee",
@@ -14384,7 +14384,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "piranga-ludoviciana": {
       "common_name": "Western Tanager",
@@ -14511,7 +14511,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "plegadis-chihi": {
       "common_name": "White-faced Ibis",
@@ -14647,7 +14647,7 @@
           "f11"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pluvialis-squatarola": {
       "common_name": "Grey Plover",
@@ -14787,7 +14787,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "podiceps-nigricollis": {
       "common_name": "Black-necked Grebe",
@@ -14917,7 +14917,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "podilymbus-podiceps": {
       "common_name": "Pied-billed Grebe",
@@ -15050,7 +15050,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "poecile-gambeli": {
       "common_name": "Mountain Chickadee",
@@ -15179,7 +15179,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "polioptila-caerulea": {
       "common_name": "Blue-grey Gnatcatcher",
@@ -15310,7 +15310,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "polioptila-californica": {
       "common_name": "California Gnatcatcher",
@@ -15445,7 +15445,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "psaltriparus-minimus": {
       "common_name": "American Bushtit",
@@ -15585,7 +15585,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "psittacara-mitratus": {
       "common_name": "Mitred Parakeet",
@@ -15713,7 +15713,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pycnonotus-jocosus": {
       "common_name": "Red-whiskered Bulbul",
@@ -15842,7 +15842,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pyrocephalus-rubinus": {
       "common_name": "Scarlet Flycatcher",
@@ -15974,7 +15974,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "quiscalus-mexicanus": {
       "common_name": "Great-tailed Grackle",
@@ -16101,7 +16101,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sayornis-nigricans": {
       "common_name": "Black Phoebe",
@@ -16242,7 +16242,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sayornis-saya": {
       "common_name": "Say's Phoebe",
@@ -16383,7 +16383,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "selasphorus-sasin": {
       "common_name": "Allen's Hummingbird",
@@ -16512,7 +16512,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-aestiva": {
       "common_name": "American Yellow Warbler",
@@ -16638,7 +16638,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-coronata": {
       "common_name": "Myrtle Warbler",
@@ -16775,7 +16775,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-nigrescens": {
       "common_name": "Black-throated Grey Warbler",
@@ -16908,7 +16908,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-townsendi": {
       "common_name": "Townsend's Warbler",
@@ -17023,7 +17023,7 @@
           "f1"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sialia-mexicana": {
       "common_name": "Western Bluebird",
@@ -17152,7 +17152,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sitta-carolinensis": {
       "common_name": "White-breasted Nuthatch",
@@ -17287,7 +17287,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spatula-clypeata": {
       "common_name": "Northern Shoveler",
@@ -17420,7 +17420,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spatula-cyanoptera": {
       "common_name": "Cinnamon Teal",
@@ -17556,7 +17556,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spatula-discors": {
       "common_name": "Blue-winged Teal",
@@ -17688,7 +17688,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spinus-psaltria": {
       "common_name": "Lesser Goldfinch",
@@ -17822,7 +17822,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spinus-tristis": {
       "common_name": "American Goldfinch",
@@ -17965,7 +17965,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spizella-passerina": {
       "common_name": "Chipping Sparrow",
@@ -18100,7 +18100,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "stelgidopteryx-serripennis": {
       "common_name": "Northern Rough-winged Swallow",
@@ -18228,7 +18228,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "streptopelia-decaocto": {
       "common_name": "Eurasian Collared Dove",
@@ -18361,7 +18361,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sturnella-neglecta": {
       "common_name": "Western Meadowlark",
@@ -18495,7 +18495,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sturnus-vulgaris": {
       "common_name": "Common Starling",
@@ -18622,7 +18622,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "thalasseus-elegans": {
       "common_name": "Elegant Tern",
@@ -18753,7 +18753,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "thalasseus-maximus": {
       "common_name": "Royal Tern",
@@ -18890,7 +18890,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "thryomanes-bewickii": {
       "common_name": "Bewick's Wren",
@@ -19023,7 +19023,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "toxostoma-redivivum": {
       "common_name": "California Thrasher",
@@ -19154,7 +19154,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tringa-melanoleuca": {
       "common_name": "Greater Yellowlegs",
@@ -19279,7 +19279,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tringa-semipalmata": {
       "common_name": "Willet",
@@ -19410,7 +19410,7 @@
           "f8"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "troglodytes-aedon": {
       "common_name": "Northern House Wren",
@@ -19496,7 +19496,7 @@
           "f6"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "turdus-migratorius": {
       "common_name": "American Robin",
@@ -19623,7 +19623,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyrannus-verticalis": {
       "common_name": "Western Kingbird",
@@ -19757,7 +19757,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyrannus-vociferans": {
       "common_name": "Cassin's Kingbird",
@@ -19900,7 +19900,7 @@
           "f1"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyto-furcata": {
       "common_name": "American Barn Owl",
@@ -20018,7 +20018,7 @@
           "f2"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "urile-penicillatus": {
       "common_name": "Brandt's Cormorant",
@@ -20147,7 +20147,7 @@
           "f1"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vidua-macroura": {
       "common_name": "Pin-tailed Whydah",
@@ -20285,7 +20285,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-bellii": {
       "common_name": "Bell's Vireo",
@@ -20426,7 +20426,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-gilvus": {
       "common_name": "Warbling Vireo",
@@ -20551,7 +20551,7 @@
           "f5"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-huttoni": {
       "common_name": "Hutton's Vireo",
@@ -20686,7 +20686,7 @@
           "f7"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "zenaida-macroura": {
       "common_name": "Mourning Dove",
@@ -20814,7 +20814,7 @@
           "f4"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "zonotrichia-atricapilla": {
       "common_name": "Golden-crowned Sparrow",
@@ -20948,7 +20948,7 @@
           "f1"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "zonotrichia-leucophrys": {
       "common_name": "White-crowned Sparrow",
@@ -21083,7 +21083,7 @@
           "f3"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     }
   }
 }
