@@ -28,7 +28,8 @@
 # Logs: build/test-logs/<time>-<run>.log.
 #
 # `--hang-probe await|spin|silent` runs only the deliberately hung tests in HangProbeTests.swift, to check the
-# timeouts: `await` and `spin` must fail at their time limit, `silent` only the watchdog ends.
+# timeouts: `await` and `spin` fail at their one-minute time limit, `silent` at xcodebuild's allowance, or at the
+# watchdog with the allowance raised (BIRDJOURNAL_TEST_ALLOWANCE=3000 BIRDJOURNAL_QUIET_MINUTES=2).
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
