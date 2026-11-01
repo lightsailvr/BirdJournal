@@ -1,5 +1,8 @@
 import XCTest
 
+// Debug only: circles need the account, switched off in Release (`ACCOUNTS_ENABLED`, issue #88), and the fakes are DEBUG.
+#if ACCOUNTS_ENABLED && DEBUG
+
 /// The Circle tab (issue #61) over the debug fake circle server (`-fakeCircles`) and fake account (`-fakeAccount`):
 /// signed out it invites the birder to sign in; signed in, a new circle is listed; an invite link opens the join
 /// screen, and joining opens the circle.
@@ -66,3 +69,4 @@ final class CirclesUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Members · 3 of 20"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 }
+#endif

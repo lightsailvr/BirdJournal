@@ -133,6 +133,8 @@ struct InviteLinkTests {
     }
 }
 
+// The store tests run over the DEBUG fakes.
+#if DEBUG
 @MainActor
 private func signedInStore(seeded: Bool = false) -> CircleStore {
     let account = FakeAccount.session(signedIn: true)
@@ -232,3 +234,4 @@ struct CircleStoreTests {
         #expect(!CircleStore(account: account, client: FakeCircleClient(seeded: false)).isAvailable)
     }
 }
+#endif
