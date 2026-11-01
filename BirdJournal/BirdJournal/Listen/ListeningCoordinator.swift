@@ -306,7 +306,7 @@ final class ListeningCoordinator {
     /// The reveal for a seeded sighting, for `-autoScreen reveal`; there is no add to undo.
     func showRevealForScreenshot(of sighting: Sighting) {
         let species = Species(index: 0, scientificName: sighting.scientificName, commonName: sighting.commonName, taxonomicClass: "Aves")
-        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: true), commonName: sighting.commonName)
+        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: true, placement: .uncharted), commonName: sighting.commonName)
     }
     #endif
 

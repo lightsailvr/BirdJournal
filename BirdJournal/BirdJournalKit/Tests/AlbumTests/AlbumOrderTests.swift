@@ -42,5 +42,9 @@ struct AlbumOrderTests {
         #expect(Coordinate(latitude: 34.0522, longitude: -118.2437, accuracy: 10).formatted(locale: english) == "34.05° N, 118.24° W")
         #expect(Coordinate(latitude: -33.8688, longitude: 151.2093, accuracy: 10).formatted(locale: english) == "33.87° S, 151.21° E")
         #expect(Coordinate(latitude: 34.0522, longitude: -118.2437, accuracy: 10).formatted(locale: Locale(identifier: "de_DE")) == "34,05° N, 118,24° W")
+        // The species gallery's place while no name has arrived (issue #53): to a tenth of a degree, about 11 km, so
+        // the jitter of a few fixes at one spot stays one place.
+        #expect(Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 10).formatted(fractionDigits: 1, locale: english) == "34.1° N, 118.3° W")
+        #expect(Coordinate(latitude: 34.1402, longitude: -118.2898, accuracy: 10).formatted(fractionDigits: 1, locale: english) == "34.1° N, 118.3° W")
     }
 }

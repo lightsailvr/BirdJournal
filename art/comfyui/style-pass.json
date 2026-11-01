@@ -1,0 +1,1530 @@
+{
+  "id": "5be50b91-55ba-4987-bfa9-c40439a984a7",
+  "revision": 0,
+  "last_node_id": 28,
+  "last_link_id": 36,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -1000,
+        -420
+      ],
+      "size": [
+        680,
+        1240
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# BirdJournal · style pass\n\nRepaints a finished telephoto painting in an art style.\n\n**1 · Picture.** `birdjournal-telephoto-<spot>` holds the nine House Finch telephoto paintings (Klein 4B distilled; the bird is already in the scene at the right size). Any other picture works too.\n\n**Image 2** is the reference bird cut out onto white (`birdjournal-bird-<species>`; for the House Finch, `-bright`). It holds the bird's identity: without it a restyle drifted to the model's stereotype (one finch became a Northern Cardinal in five styles of six, another a robin). Switch it with the species when you change the picture.\n\n**2 · Prompt.** The first paragraph is the style; the other two keep the bird and keep the painting clean. It starts on **mythic-renaissance**. To try another style, replace the first paragraph with one of these, or write your own:\n\n- **line-art**: Repaint the entire picture in image 1 as a fantasy book illustration in ink, using the existing moment as the complete composition. Draw it with confident, tapering contour lines, fine cross-hatching and stippling for form and shadow, and a few transparent washes of muted watercolour. Suggest the background with a few loose lines and pale washes.\n- **pastoral**: Repaint the entire picture in image 1 as an illustrative pastoral painting, like a plate from a classic storybook, using the existing moment as the complete composition. Use soft, opaque gouache with simplified shapes, gentle golden afternoon light, warm meadow greens, creams and soft sky blues, and a calm, idyllic countryside mood.\n- **renaissance**: Repaint the entire picture in image 1 as an Italian High Renaissance oil painting, an old master's study from life, using the existing moment as the complete composition. Build it on a warm umber underpainting with thin glazed layers, soft sfumato transitions, rich chiaroscuro, fine visible brushwork and the gentle glow of old varnish.\n- **greek-myth**: Repaint the entire picture in image 1 as a grand classical painting of a Greek myth, in the manner of Titian, Rubens and Poussin, with the bird as its hero, using the existing moment as the complete composition. Give it a dramatic sky of luminous, billowing clouds with divine golden light breaking through, deep warm shadows, sweeping movement and rich oil glazes.\n- **magic**: Repaint the entire picture in image 1 as an old-master oil painting imbued with magic and mystery, using the existing moment as the complete composition. Set it at twilight: a soft golden halo of light around the bird, luminous motes drifting through the air, veils of mist in the background, deep blue-green shadows and an enchanted, sacred hush.\n- **mythic-renaissance**: Repaint the entire picture in image 1 as a Renaissance oil painting with the epic grandeur of the classical paintings of Greek myths, imbued with magic and mystery, using the existing moment as the complete composition. Use thin glazed oil layers, sfumato and dramatic chiaroscuro. A heavenly golden light falls on the bird as if it were a messenger of the gods; luminous clouds and drifting motes of light fill the softened background, with rich, jewel-like colour and the hush of a sacred moment.\n\n**3 · Quality.** **Fast preview** on: Qwen's 4-step Lightning, about 15 s with two images. The style sheets were painted this way. Off: full quality, 40 steps at cfg 4, about 3.5 min: a richer, truer old-master look, but in the audition it lost the finch's streaks and turned two yellow, so check the bird. The seed on **sampler** is fixed so runs compare.\n\n**4 · Model.** Leave as is: Qwen-Image-Edit-2511 (Apache 2.0).\n\nOld-master styles tempt the model to sign the painting. The prompt says \"unsigned\", and the negative bans signatures, but the negative only works with Fast preview **off**.\n\nPaintings land in ComfyUI's `output/birdjournal-styles/`. When you like a style, save (Ctrl+S) and tell Claude."
+      ],
+      "title": "Read me first",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -260,
+        -340
+      ],
+      "size": [
+        380,
+        560
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "birdjournal-telephoto-garden-hedge.png",
+        "image"
+      ],
+      "title": "image 1",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "ImageScale",
+      "pos": [
+        -260,
+        280
+      ],
+      "size": [
+        380,
+        160
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            16,
+            20,
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "lanczos",
+        864,
+        1152,
+        "center"
+      ],
+      "title": "card size"
+    },
+    {
+      "id": 4,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        220,
+        -340
+      ],
+      "size": [
+        720,
+        760
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Repaint the entire picture in image 1 as a Renaissance oil painting with the epic grandeur of the classical paintings of Greek myths, imbued with magic and mystery, using the existing moment as the complete composition. Use thin glazed oil layers, sfumato and dramatic chiaroscuro. A heavenly golden light falls on the bird as if it were a messenger of the gods; luminous clouds and drifting motes of light fill the softened background, with rich, jewel-like colour and the hush of a sacred moment. The result must clearly look hand-made, not like a photograph with a filter.\n\nPreserve the bird exactly: its pose, anatomy, proportions, silhouette and field marks, and the local colour of every body region: head, throat, breast, flanks, back and wings. Do not brighten its feathers, add iridescence or replace it with an idealised bird. Image 2 is a photograph of the same bird: match its head pattern, bill shape and the colour of every body region to image 2, not to any other species. Keep its perch, and its place and size in the frame. The background keeps its colours and broad shapes, repainted in the style.\n\nThe bird is the only creature in the picture. The painting is unsigned, with no text, letters, borders or frames."
+      ],
+      "title": "prompt template",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 5,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        220,
+        470
+      ],
+      "size": [
+        720,
+        230
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "a photograph, photorealistic rendering, a photo with a texture filter, blurry, low resolution, text, letters, watermark, logo, border, frame, paper edge, a second bird, extra birds, deformed anatomy, extra legs, extra wings, armour, clothing, jewellery, glowing eyes, signature, initials, people, figures, gods, angels, other creatures, buildings"
+      ],
+      "title": "negative prompt",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 6,
+      "type": "CLIPLoader",
+      "pos": [
+        220,
+        1260
+      ],
+      "size": [
+        420,
+        130
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            14,
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "qwen_image",
+        "default"
+      ],
+      "title": "text encoder"
+    },
+    {
+      "id": 7,
+      "type": "VAELoader",
+      "pos": [
+        220,
+        1420
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            15,
+            19,
+            25,
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "qwen_image_vae.safetensors"
+      ],
+      "title": "vae"
+    },
+    {
+      "id": 8,
+      "type": "UNETLoader",
+      "pos": [
+        220,
+        1530
+      ],
+      "size": [
+        420,
+        110
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "qwen_image_edit_2511_fp8mixed.safetensors",
+        "default"
+      ],
+      "title": "model"
+    },
+    {
+      "id": 9,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [
+        680,
+        1530
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingAuraFlow"
+      },
+      "widgets_values": [
+        3.1
+      ],
+      "title": "shift"
+    },
+    {
+      "id": 10,
+      "type": "CFGNorm",
+      "pos": [
+        1010,
+        1530
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "patched_model",
+          "type": "MODEL",
+          "links": [
+            4,
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CFGNorm"
+      },
+      "widgets_values": [
+        1.0,
+        false
+      ],
+      "title": "cfg norm"
+    },
+    {
+      "id": 11,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        1010,
+        1680
+      ],
+      "size": [
+        420,
+        110
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+        1.0
+      ],
+      "title": "lightning 4 steps"
+    },
+    {
+      "id": 12,
+      "type": "PrimitiveBoolean",
+      "pos": [
+        220,
+        820
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "BOOLEAN",
+          "type": "BOOLEAN",
+          "links": [
+            7,
+            10,
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveBoolean"
+      },
+      "widgets_values": [
+        true
+      ],
+      "title": "Fast preview (4-step Lightning)",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 13,
+      "type": "PrimitiveInt",
+      "pos": [
+        220,
+        930
+      ],
+      "size": [
+        300,
+        100
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        40,
+        "fixed"
+      ],
+      "title": "steps, full quality",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 14,
+      "type": "PrimitiveInt",
+      "pos": [
+        220,
+        1060
+      ],
+      "size": [
+        300,
+        100
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        4,
+        "fixed"
+      ],
+      "title": "steps, fast preview",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 15,
+      "type": "PrimitiveFloat",
+      "pos": [
+        560,
+        930
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        4.0
+      ],
+      "title": "cfg, full quality",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 16,
+      "type": "PrimitiveFloat",
+      "pos": [
+        560,
+        1060
+      ],
+      "size": [
+        300,
+        80
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        1.0
+      ],
+      "title": "cfg, fast preview",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 17,
+      "type": "ComfySwitchNode",
+      "pos": [
+        900,
+        820
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "MODEL",
+          "link": 5
+        },
+        {
+          "name": "on_true",
+          "type": "MODEL",
+          "link": 6
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "link": 7,
+          "widget": {
+            "name": "switch"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "MODEL",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "title": "switch model"
+    },
+    {
+      "id": 18,
+      "type": "ComfySwitchNode",
+      "pos": [
+        900,
+        950
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "INT",
+          "link": 8
+        },
+        {
+          "name": "on_true",
+          "type": "INT",
+          "link": 9
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "link": 10,
+          "widget": {
+            "name": "switch"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "INT",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "title": "switch steps"
+    },
+    {
+      "id": 19,
+      "type": "ComfySwitchNode",
+      "pos": [
+        900,
+        1080
+      ],
+      "size": [
+        300,
+        110
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "FLOAT",
+          "link": 11
+        },
+        {
+          "name": "on_true",
+          "type": "FLOAT",
+          "link": 12
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "link": 13,
+          "widget": {
+            "name": "switch"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "FLOAT",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "title": "switch cfg"
+    },
+    {
+      "id": 20,
+      "type": "TextEncodeQwenImageEditPlus",
+      "pos": [
+        1800,
+        -340
+      ],
+      "size": [
+        420,
+        200
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 14
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 15
+        },
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 16
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 17,
+          "widget": {
+            "name": "prompt"
+          }
+        },
+        {
+          "name": "image2",
+          "type": "IMAGE",
+          "link": 35
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEncodeQwenImageEditPlus"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "prompt"
+    },
+    {
+      "id": 21,
+      "type": "TextEncodeQwenImageEditPlus",
+      "pos": [
+        1800,
+        -100
+      ],
+      "size": [
+        420,
+        200
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 18
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 19
+        },
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 20
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 21,
+          "widget": {
+            "name": "prompt"
+          }
+        },
+        {
+          "name": "image2",
+          "type": "IMAGE",
+          "link": 36
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextEncodeQwenImageEditPlus"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "negative"
+    },
+    {
+      "id": 22,
+      "type": "FluxKontextMultiReferenceLatentMethod",
+      "pos": [
+        1800,
+        140
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxKontextMultiReferenceLatentMethod"
+      },
+      "widgets_values": [
+        "index_timestep_zero"
+      ],
+      "title": "positive references"
+    },
+    {
+      "id": 23,
+      "type": "FluxKontextMultiReferenceLatentMethod",
+      "pos": [
+        1800,
+        250
+      ],
+      "size": [
+        420,
+        80
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxKontextMultiReferenceLatentMethod"
+      },
+      "widgets_values": [
+        "index_timestep_zero"
+      ],
+      "title": "negative references"
+    },
+    {
+      "id": 24,
+      "type": "VAEEncode",
+      "pos": [
+        1800,
+        380
+      ],
+      "size": [
+        420,
+        60
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 24
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": [],
+      "title": "canvas"
+    },
+    {
+      "id": 25,
+      "type": "KSampler",
+      "pos": [
+        2260,
+        -340
+      ],
+      "size": [
+        320,
+        300
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 26
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 27
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 28
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 29
+        },
+        {
+          "name": "steps",
+          "type": "INT",
+          "link": 30,
+          "widget": {
+            "name": "steps"
+          }
+        },
+        {
+          "name": "cfg",
+          "type": "FLOAT",
+          "link": 31,
+          "widget": {
+            "name": "cfg"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        49,
+        "fixed",
+        40,
+        4.0,
+        "euler",
+        "simple",
+        1.0
+      ],
+      "title": "sampler",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 26,
+      "type": "VAEDecode",
+      "pos": [
+        2260,
+        0
+      ],
+      "size": [
+        320,
+        60
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 32
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "title": "decode"
+    },
+    {
+      "id": 27,
+      "type": "SaveImage",
+      "pos": [
+        2620,
+        -340
+      ],
+      "size": [
+        640,
+        900
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 34
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "birdjournal-styles/style-pass"
+      ],
+      "title": "output",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 28,
+      "type": "LoadImage",
+      "pos": [
+        -260,
+        480
+      ],
+      "size": [
+        380,
+        560
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            35,
+            36
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "birdjournal-bird-house-finch-bright.png",
+        "image"
+      ],
+      "title": "image 2: the bird",
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      8,
+      0,
+      9,
+      0,
+      "MODEL"
+    ],
+    [
+      3,
+      9,
+      0,
+      10,
+      0,
+      "MODEL"
+    ],
+    [
+      4,
+      10,
+      0,
+      11,
+      0,
+      "MODEL"
+    ],
+    [
+      5,
+      10,
+      0,
+      17,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      11,
+      0,
+      17,
+      1,
+      "MODEL"
+    ],
+    [
+      7,
+      12,
+      0,
+      17,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      8,
+      13,
+      0,
+      18,
+      0,
+      "INT"
+    ],
+    [
+      9,
+      14,
+      0,
+      18,
+      1,
+      "INT"
+    ],
+    [
+      10,
+      12,
+      0,
+      18,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      11,
+      15,
+      0,
+      19,
+      0,
+      "FLOAT"
+    ],
+    [
+      12,
+      16,
+      0,
+      19,
+      1,
+      "FLOAT"
+    ],
+    [
+      13,
+      12,
+      0,
+      19,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      14,
+      6,
+      0,
+      20,
+      0,
+      "CLIP"
+    ],
+    [
+      15,
+      7,
+      0,
+      20,
+      1,
+      "VAE"
+    ],
+    [
+      16,
+      3,
+      0,
+      20,
+      2,
+      "IMAGE"
+    ],
+    [
+      17,
+      4,
+      0,
+      20,
+      3,
+      "STRING"
+    ],
+    [
+      18,
+      6,
+      0,
+      21,
+      0,
+      "CLIP"
+    ],
+    [
+      19,
+      7,
+      0,
+      21,
+      1,
+      "VAE"
+    ],
+    [
+      20,
+      3,
+      0,
+      21,
+      2,
+      "IMAGE"
+    ],
+    [
+      21,
+      5,
+      0,
+      21,
+      3,
+      "STRING"
+    ],
+    [
+      22,
+      20,
+      0,
+      22,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      23,
+      21,
+      0,
+      23,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      24,
+      3,
+      0,
+      24,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      7,
+      0,
+      24,
+      1,
+      "VAE"
+    ],
+    [
+      26,
+      17,
+      0,
+      25,
+      0,
+      "MODEL"
+    ],
+    [
+      27,
+      22,
+      0,
+      25,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      28,
+      23,
+      0,
+      25,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      29,
+      24,
+      0,
+      25,
+      3,
+      "LATENT"
+    ],
+    [
+      30,
+      18,
+      0,
+      25,
+      4,
+      "INT"
+    ],
+    [
+      31,
+      19,
+      0,
+      25,
+      5,
+      "FLOAT"
+    ],
+    [
+      32,
+      25,
+      0,
+      26,
+      0,
+      "LATENT"
+    ],
+    [
+      33,
+      7,
+      0,
+      26,
+      1,
+      "VAE"
+    ],
+    [
+      34,
+      26,
+      0,
+      27,
+      0,
+      "IMAGE"
+    ],
+    [
+      35,
+      28,
+      0,
+      20,
+      4,
+      "IMAGE"
+    ],
+    [
+      36,
+      28,
+      0,
+      21,
+      4,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "1 · Picture",
+      "bounding": [
+        -290,
+        -420,
+        440,
+        1790
+      ],
+      "color": "#b58b2a",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "2 · Prompt",
+      "bounding": [
+        190,
+        -420,
+        780,
+        1150
+      ],
+      "color": "#3f789e",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "3 · Quality",
+      "bounding": [
+        190,
+        740,
+        1040,
+        480
+      ],
+      "color": "#8A8",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "4 · Model (leave as is)",
+      "bounding": [
+        190,
+        1180,
+        1270,
+        640
+      ],
+      "color": "#444",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Painting",
+      "bounding": [
+        1770,
+        -420,
+        1520,
+        1010
+      ],
+      "color": "#a1309b",
+      "font_size": 28,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        1100,
+        520
+      ]
+    }
+  },
+  "version": 0.4
+}

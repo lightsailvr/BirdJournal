@@ -66,10 +66,39 @@ extension PackLibrary {
         species(scientificName: sighting.scientificName)?.species.commonName ?? sighting.commonName
     }
 
+    /// Every set the phone knows (issue #54), as the collection places cards among them.
+    var cardSets: [CardSet] {
+        sets.map(CardSet.init)
+    }
+
+    /// The birder's collection over every set the phone knows: what each screen reads Legendary, sets and progress from.
+    func collection(of sightings: [Sighting]) -> CardCollection {
+        CardCollection(sightings: sightings, sets: cardSets)
+    }
+
+    /// The lens crop of the first photo any pack has of the species, the thumbnail the lists show.
+    func thumbnailURL(scientificName: String) -> URL? {
+        species(scientificName: scientificName).flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) }
+    }
+
     /// The lens crop for a photo a pack names (552 × 368 pixels, laid out at pixel size across the card, issue #24).
     func image(for image: LensImage) -> UIImage? {
         guard let found = photo(id: image.id) else { return nil }
         return UIImage(contentsOfFile: found.pack.lensImageURL(for: found.photo).path(percentEncoded: false))
+    }
+}
+
+extension CardSet {
+    /// The collection's copy of a pack's set definition.
+    init(_ set: PackSet) {
+        self.init(
+            id: set.id, name: set.name, edition: set.edition.name, species: set.species.map(\.scientificName),
+            regions: set.regions.map { region in
+                CardSet.Region(name: region.name, polygons: region.polygons.map { polygon in
+                    polygon.map { ring in ring.compactMap { $0.count >= 2 ? CardSet.Point(longitude: $0[0], latitude: $0[1]) : nil } }
+                })
+            }
+        )
     }
 }
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Publishes the pack index the phone reads (issue #13): every pack in packs/manifest.json as `PackIndex` in the Swift
 # Pack module decodes it (id, name, version, url, sha256, byteCount, since #28 speciesCount, photoCount and region,
-# and since #41 soundCount and schemaVersion, when the manifest has them), uploaded as index.json to the rolling `packs`
-# release of this repository (created on first use, replaced on every run). The pack zips stay on their own
+# since #41 soundCount and schemaVersion, when the manifest has them, and since #54 the set), uploaded as index.json
+# to the rolling `packs` release of this repository (created on first use, replaced on every run). The pack zips stay on their own
 # per-version releases; the index points at them by URL. Run after `gh release create pack-<id>-v<n> ...` so every
 # listed zip exists.
 #
@@ -18,28 +18,9 @@ index="$out_dir/index.json"
 tag="packs"
 mkdir -p "$out_dir"
 
-python3 - "$manifest" "$index" "$repo" <<'PY'
-import json, sys
-manifest, index, repo = sys.argv[1:]
-packs = []
-for p in json.load(open(manifest))["packs"]:
-    entry = {
-        "id": p["id"], "name": p["name"], "version": p["version"],
-        "url": f"https://github.com/{repo}/releases/download/{p['release']}/{p['asset']}",
-        "sha256": p["sha256"], "byteCount": p["bytes"],
-    }
-    # Counts and the region, when the manifest has them (issue #28): what the packs screen shows before a download.
-    if "species" in p: entry["speciesCount"] = p["species"]
-    if "photos" in p: entry["photoCount"] = p["photos"]
-    if "region" in p: entry["region"] = p["region"]
-    # Issue #41: the sound count, and the database schema so a build that cannot open a newer pack does not offer it.
-    if "sounds" in p: entry["soundCount"] = p["sounds"]
-    if "schema_version" in p: entry["schemaVersion"] = p["schema_version"]
-    packs.append(entry)
-json.dump({"packs": packs}, open(index, "w"), indent=2)
-open(index, "a").write("\n")
-print(f"wrote {index} with {len(packs)} packs")
-PY
+# Since #54 each entry also carries its pack's set definition (packbuilder/packs/<id>/set.json), which
+# `packbuilder index` checks against the definition first.
+(cd "$repo_root/packbuilder" && uv run --quiet packbuilder index --out "$index" --repo "$repo")
 
 if [ "${1:-}" = "--dry-run" ]; then
     exit 0

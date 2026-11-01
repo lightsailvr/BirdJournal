@@ -18,12 +18,16 @@ from packbuilder.candidates import PhotoCandidate, attribution_name
 from packbuilder.crops import JPEG_QUALITY, render_lens, render_phone, upright
 from packbuilder.definition import PackDefinition, SpeciesEntry
 from packbuilder.descriptions import Description
-from packbuilder.licenses import credit_line, short_credit
+from packbuilder.licenses import CC_BY_SA, INAT_CODES, credit_line, short_credit
 from packbuilder.selection import ScoredPhoto
 from packbuilder.sounds import SoundResult
+from packbuilder.stats import DATASETS, LICENSE as STATS_LICENSE, JoinedSpecies
 
-SCHEMA_VERSION = 3
-"""3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack."""
+SCHEMA_VERSION = 4
+"""3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
+added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
+lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that
+fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family."""
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -85,9 +89,62 @@ CREATE TABLE sound (
     source_url TEXT NOT NULL,
     quality TEXT
 );
+CREATE TABLE set_definition (
+    definition TEXT NOT NULL
+);
+CREATE TABLE stats (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    avibase_id TEXT,
+    wingspan_cm REAL,
+    wingspan_predicted INTEGER NOT NULL DEFAULT 0,
+    mass_g REAL,
+    diet TEXT,
+    habitat TEXT,
+    migration TEXT,
+    nest TEXT,
+    clutch_min REAL,
+    clutch_max REAL,
+    lifestyle TEXT,
+    sources TEXT NOT NULL
+);
+CREATE TABLE fact (
+    species_id TEXT NOT NULL REFERENCES species(id),
+    rank INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    source TEXT NOT NULL
+);
+CREATE TABLE lore (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    text TEXT NOT NULL,
+    tagline TEXT NOT NULL,
+    sources TEXT NOT NULL
+);
+CREATE TABLE pack_art (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    file TEXT NOT NULL,
+    source_photo_ids TEXT NOT NULL,
+    workflow_version TEXT NOT NULL
+);
+CREATE TABLE threatened (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    threatened INTEGER NOT NULL,
+    iucn_category TEXT,
+    source TEXT NOT NULL
+);
+CREATE TABLE family (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    order_name TEXT NOT NULL,
+    family TEXT NOT NULL,
+    group_word TEXT NOT NULL,
+    family_word TEXT NOT NULL
+);
 CREATE INDEX photo_species ON photo(species_id, rank);
 CREATE INDEX sound_species ON sound(species_id, rank);
+CREATE INDEX fact_species ON fact(species_id, rank);
 """
+"""`set_definition` holds one row, the pack's set (`sets.py`) as the same JSON the index carries, so the two never
+disagree. Every other schema-4 table has one row per species once its ticket fills it (several per species for
+`fact`); `threatened` then has a row for every species, threatened or not, so an empty table still means "unknown"."""
 
 
 @dataclass(frozen=True)
@@ -148,7 +205,12 @@ class WrittenPack:
     archive: Path | None
 
 
-def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None) -> WrittenPack:
+def write_pack(
+    definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None, card_set: dict | None = None,
+    joined: dict[str, JoinedSpecies] | None = None,
+) -> WrittenPack:
+    """`joined` is the joined stats, threatened flags and type lines by scientific name (`stats.join`); None leaves
+    their tables empty."""
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -200,7 +262,7 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
                 )
             )
 
-    license_text = _license_text(definition, results, built_at)
+    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined))
     (out_dir / "LICENSE").write_text(license_text)
 
     database = out_dir / "pack.sqlite"
@@ -220,10 +282,14 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
         )
         db.executemany("INSERT INTO photo VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", photo_rows)
         db.executemany("INSERT INTO sound VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sound_rows)
+        if card_set is not None:
+            db.execute("INSERT INTO set_definition VALUES (?)", (json.dumps(card_set, ensure_ascii=False, separators=(",", ":")),))
+        if joined:
+            _insert_joined(db, results, joined)
         db.commit()
         db.execute("VACUUM")
 
-    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at), indent=2) + "\n")
+    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined), indent=2) + "\n")
 
     archive = None
     if archive_path is not None:
@@ -236,6 +302,25 @@ def write_pack(definition: PackDefinition, results: list[SpeciesResult], out_dir
     return WrittenPack(directory=out_dir, database=database, archive=archive)
 
 
+def _insert_joined(db: sqlite3.Connection, results: list[SpeciesResult], joined: dict[str, JoinedSpecies]) -> None:
+    """A stats row per species with stats (a known gap has none), a threatened row for every species, and the type line."""
+    for result in results:
+        species = joined[result.entry.scientific_name]
+        if (stats := species.stats) is not None:
+            db.execute(
+                "INSERT INTO stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    result.entry.id, stats.avibase_id, stats.wingspan_cm, int(stats.wingspan_predicted), stats.mass_g, stats.diet, stats.habitat,
+                    stats.migration, ",".join(stats.nest) or None, stats.clutch_min, stats.clutch_max, stats.lifestyle,
+                    json.dumps(list(stats.sources), separators=(",", ":")),
+                ),
+            )
+        threat = species.threat
+        db.execute("INSERT INTO threatened VALUES (?, ?, ?, ?)", (result.entry.id, int(threat.threatened), threat.iucn_category, threat.source))
+        if (line := species.type_line) is not None:
+            db.execute("INSERT INTO family VALUES (?, ?, ?, ?, ?)", (result.entry.id, line.order, line.family, line.group_word, line.family_word))
+
+
 def _description_columns(description: Description | None) -> tuple[str | None, str | None, str | None, str | None, str | None]:
     """summary, field_marks, size, habitat, description_source; NULL rather than empty text for what is missing."""
     if description is None:
@@ -243,15 +328,17 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
     return tuple(value or None for value in (description.summary, description.field_marks, description.size, description.habitat, description.source))
 
 
-def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> str:
+def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None, stats: bool = False) -> str:
+    carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
     lines = [
         f"{definition.name} species pack for BirdJournal (pack id {definition.id}, version {definition.version}, built {built_at})",
         "",
         "Photos come from iNaturalist Open Data (https://github.com/inaturalist/inaturalist-open-data). Each photo is",
-        "redistributed under the Creative Commons license its photographer chose on iNaturalist: CC0, CC BY or",
-        "CC BY-NC (https://creativecommons.org/licenses/; the observation page below states the exact terms).",
+        f"redistributed under the Creative Commons license its photographer chose on iNaturalist: {_one_of(carried)}",
+        "(https://creativecommons.org/licenses/; the observation page below states the exact terms).",
         "Photographers retain copyright unless the photo is CC0. The crops in this pack are derived from the",
         "originals linked below.",
+        *(["Crops of CC BY-SA photos are shared under CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0/)."] if CC_BY_SA in carried else []),
         "",
         "Species names and the BirdNET labels are from the BirdNET+ label file (CC BY-SA 4.0, https://birdnet.cornell.edu).",
         "",
@@ -265,6 +352,8 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         "chose, as named on its line (https://creativecommons.org/licenses/). Clips under a ShareAlike license are",
         "shared under that same license. Recordists retain copyright unless the recording is CC0.",
         "",
+        *(_set_credits(card_set) if card_set else []),
+        *(_stats_credits() if stats else []),
         "Photo credits",
         "=============",
     ]
@@ -285,7 +374,36 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
     return "\n".join(lines) + "\n"
 
 
-def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: str) -> dict:
+def _set_credits(card_set: dict) -> list[str]:
+    """Where the set's order and boundary come from (issue #54)."""
+    return [
+        f"The set's taxonomic order (the collector numbers) follows the {card_set['taxonomy']} by Gill, Donsker and",
+        "Rasmussen (https://www.worldbirdnames.org, CC BY 3.0, https://creativecommons.org/licenses/by/3.0/). The region",
+        "boundary is simplified from:",
+        *(f"  {region['name']}: {region['source']}" for region in card_set["regions"]),
+        "",
+    ]
+
+
+def _stats_credits() -> list[str]:
+    """Where the card stats come from (issue #55)."""
+    return [
+        "The card stats (wingspan, weight, diet, habitat, migration, nest, clutch and lifestyle), the threatened flag and",
+        f"the type line's family come from these datasets, each licensed {STATS_LICENSE}:",
+        *(f"  {dataset.title}: {dataset.citation}. {dataset.url}" for dataset in DATASETS),
+        "Wingspans marked as predicted are the wingspan database's estimate from wing length. Habitat, migration, diet",
+        "and lifestyle are AVONET's categories; nest, clutch, flightlessness and the IUCN Red List category are BIRDBASE's.",
+        "",
+    ]
+
+
+def _one_of(licenses: set[str]) -> str:
+    """The licenses in iNaturalist's order, as "CC0, CC BY or CC BY-SA"."""
+    ordered = [license for license in INAT_CODES if license in licenses] or ["none"]
+    return ordered[0] if len(ordered) == 1 else ", ".join(ordered[:-1]) + f" or {ordered[-1]}"
+
+
+def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: str, joined: dict[str, JoinedSpecies] | None = None) -> dict:
     return {
         "pack": definition.id,
         "version": definition.version,
@@ -309,5 +427,7 @@ def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: 
             "descriptions": [r.entry.id for r in results if r.description is None],
             # Only species whose sounds were looked for: a --no-sounds build has no sound gaps, it has no sounds.
             "sounds": [r.entry.id for r in results if r.sounds is not None and r.sounds.gap],
+            # Known gaps of the stats join (stats/fixes.json); a build without the join has none.
+            "stats": [r.entry.id for r in results if joined and joined[r.entry.scientific_name].stats is None],
         },
     }

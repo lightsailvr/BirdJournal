@@ -23,7 +23,7 @@ struct DisplayCardBuilderTests {
 
     @Test("every page builds one root FlexBox, saved or not, with the card each add earned", arguments: pages, [Set<Int>(), [0, 4]])
     func oneRoot(page: LensPage, saved: Set<Int>) {
-        let earned: [Int: LensEarnedCard] = saved.isEmpty ? [:] : [0: .legendary, 4: .newCard]
+        let earned: [Int: LensEarnedCard] = saved.isEmpty ? [:] : [0: .legendary, 4: .newCard(collectorNumber: "021/160")]
         let card = LensCardRenderer.render(page, stack: Self.stack, order: Self.order, selection: 4, saved: saved, earned: earned, profile: FakeLensStack.profile(for:))
         if case .list(let rows) = card.elements[2] { #expect(rows.map(\.isCalling) == [true, true, false, false, false]) }
         let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: FakeLensStack.image(for:)) { _ in }

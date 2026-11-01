@@ -38,6 +38,9 @@ import UIKit
 /// swipe adds the bird without one; both go to `onEffect` for the run to write. Hardware may deliver the Add press
 /// twice, as a click and a select (DECISIONS.md, "Lens UI"), so a tap landing on the viewfinder within `echoWindow`
 /// of its opening is that echo and is ignored rather than taking a photo of nothing in particular.
+///
+/// Opening the viewfinder and landing back on the species list tell `onStreamNeeded`, so the run can put a camera
+/// stream back that stopped or stalled (#46): the wearer is about to frame a bird, or is back to listening.
 @Observable
 final class GlassesLensSession {
     enum Phase: Equatable {
@@ -110,8 +113,11 @@ final class GlassesLensSession {
     @ObservationIgnored private var viewfinderOpenedAt: ContinuousClock.Instant?
     /// The camera's latest frame for the viewfinder; nil without a camera (a lens-only session), which the page says.
     @ObservationIgnored var viewfinderFrame: (() -> CameraFrame?)?
-    /// Told when the viewfinder opens on the lens (true) and when it closes (false), so the camera can stream for it.
-    @ObservationIgnored var onViewfinderChange: ((Bool) -> Void)?
+    /// Told when the viewfinder opens ("viewfinder") and when the wearer lands on the species list ("species list"),
+    /// so the run can make sure the camera is streaming.
+    @ObservationIgnored var onStreamNeeded: ((String) -> Void)?
+    /// The page the last change landed on, so arriving on the list is told once.
+    @ObservationIgnored private var landedPage: LensPage = .list
     /// The least time between two viewfinder sends.
     @ObservationIgnored private let viewfinderInterval: Duration
     /// Re-sends the viewfinder page with each new frame while it is the page.
@@ -180,6 +186,7 @@ final class GlassesLensSession {
         stopSound()
         runs += 1
         machine = LensStateMachine()
+        landedPage = machine.page
         sessionOrigin = nil
         lapseTask?.cancel()
         lapseTask = nil
@@ -487,6 +494,8 @@ final class GlassesLensSession {
         }
         refreshCard()
         syncViewfinder()
+        if machine.page == .list, landedPage != .list { onStreamNeeded?("species list") }
+        landedPage = machine.page
     }
 
     // MARK: - Reference clips
@@ -553,7 +562,7 @@ final class GlassesLensSession {
         }
         guard viewfinderTask == nil else { return }
         viewfinderTask = Task { [weak self] in await self?.pumpViewfinder() }
-        onViewfinderChange?(true)
+        onStreamNeeded?("viewfinder")
     }
 
     private func stopViewfinder() {
@@ -561,7 +570,6 @@ final class GlassesLensSession {
         guard let viewfinderTask else { return }
         viewfinderTask.cancel()
         self.viewfinderTask = nil
-        onViewfinderChange?(false)
     }
 
     /// Sends the newest frame, waits for the Display to take it, and again: the Bluetooth link sets the pace, and

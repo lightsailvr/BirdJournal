@@ -1,7 +1,7 @@
 import pytest
 
 from packbuilder.licenses import (
-    ALLOWED_LICENSES, audio_license_tier, audio_license_url, credit_line, normalize_audio_license, normalize_license, short_credit,
+    PHOTO_LICENSES, SOUND_LICENSE_TIERS, audio_license_tier, audio_license_url, credit_line, inat_codes, normalize_audio_license, normalize_license, short_credit,
     sound_credit_line, sound_short_credit,
 )
 
@@ -14,23 +14,36 @@ from packbuilder.licenses import (
         ("cc-by", "CC BY"),
         ("CC-BY", "CC BY"),
         ("CC BY", "CC BY"),
+        ("cc-by-sa", "CC BY-SA"),
+        ("CC-BY-SA", "CC BY-SA"),
         ("cc-by-nc", "CC BY-NC"),
         ("CC-BY-NC", "CC BY-NC"),
+        ("cc-by-nc-nd", "CC BY-NC-ND"),
     ],
 )
-def test_allowed_spellings_normalize(raw, expected):
+def test_inaturalist_spellings_normalize(raw, expected):
     assert normalize_license(raw) == expected
-    assert expected in ALLOWED_LICENSES
 
 
-@pytest.mark.parametrize("raw", ["cc-by-sa", "CC-BY-SA", "cc-by-nd", "cc-by-nc-sa", "cc-by-nc-nd", "", None, "all rights reserved", "pd"])
-def test_disallowed_licenses_normalize_to_none(raw):
+@pytest.mark.parametrize("raw", ["", None, "all rights reserved", "pd"])
+def test_unknown_licenses_normalize_to_none(raw):
     assert normalize_license(raw) is None
+
+
+def test_photos_are_open_licenses_only():
+    assert PHOTO_LICENSES == {"CC0", "CC BY", "CC BY-SA"}
+
+
+def test_inaturalist_codes_of_a_set_spell_one_way():
+    assert inat_codes(PHOTO_LICENSES) == ["cc0", "cc-by", "cc-by-sa"]
+    assert inat_codes(frozenset({"CC BY-NC", "CC0"})) == ["cc0", "cc-by-nc"]
+    with pytest.raises(ValueError):
+        inat_codes(frozenset({"All rights reserved"}))
 
 
 def test_credit_lines_follow_inaturalist_format():
     assert credit_line("Jane Birder", "CC0") == "Jane Birder, no rights reserved (CC0)"
-    assert credit_line("Jane Birder", "CC BY-NC") == "© Jane Birder, some rights reserved (CC BY-NC)"
+    assert credit_line("Jane Birder", "CC BY-SA") == "© Jane Birder, some rights reserved (CC BY-SA)"
 
 
 def test_short_credit_fits_one_lens_line():
@@ -64,6 +77,11 @@ def test_audio_licenses_normalize_with_their_version(raw, expected):
 )
 def test_no_derivatives_and_unknown_audio_licenses_are_refused(raw):
     assert normalize_audio_license(raw) is None
+
+
+def test_sound_licenses_are_their_own_configuration():
+    # Issue #50: sounds keep open ahead of NonCommercial and refuse no-derivatives, beside the photos' open-only set.
+    assert SOUND_LICENSE_TIERS == {"CC0": 0, "CC BY": 0, "CC BY-SA": 0, "CC BY-NC": 1, "CC BY-NC-SA": 1}
 
 
 def test_open_audio_licenses_rank_ahead_of_noncommercial():

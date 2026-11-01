@@ -151,7 +151,13 @@ final class GlassesConnection {
     @ObservationIgnored private var mockGlasses: (any MockGlasses)?
     private(set) var isMockPaired = false
 
-    /// Pairs a registered, permission-granted mock Meta Ray-Ban Display that is powered on, unfolded and worn.
+    /// The port of Mock Device Kit's preview server: open `http://127.0.0.1:9000/` in Chrome with the Meta Ray-Ban
+    /// Display Simulator extension to see and drive the mock lens (simulator only, not on a physical iPhone).
+    static let mockPreviewPort: UInt16 = 9000
+    @ObservationIgnored private var previewServer: Task<Void, Never>?
+
+    /// Pairs a registered, permission-granted mock Meta Ray-Ban Display that is powered on, unfolded and worn, and
+    /// starts the preview server for the Chrome extension.
     func pairMockGlasses() {
         do {
             MockDeviceKit.shared.enable()
@@ -161,6 +167,13 @@ final class GlassesConnection {
             glasses.don()
             mockGlasses = glasses
             isMockPaired = true
+            previewServer = Task { [weak self] in
+                do {
+                    _ = try await MockDeviceKit.shared.startTestServer(port: Self.mockPreviewPort)
+                } catch {
+                    self?.errorMessage = "Display preview server: \(error.localizedDescription)"
+                }
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -169,6 +182,9 @@ final class GlassesConnection {
     func unpairMockGlasses() async {
         mockGlasses = nil
         isMockPaired = false
+        await previewServer?.value
+        previewServer = nil
+        await MockDeviceKit.shared.stopTestServer()
         await MockDeviceKit.shared.disable()
     }
 

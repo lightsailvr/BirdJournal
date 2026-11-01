@@ -79,15 +79,22 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 4. **Metadata.** Research-grade observations of each species in the region, with their photos, observers and
    licenses. Two sources describe the same iNaturalist data:
    - `--source api` (default): `api.inaturalist.org/v1/observations`, newest first up to `inat_created_before`
-     (the most-faved observations are the oddities), cached under `cache/api/` so a rebuild is offline. Photos
+     (the most-faved observations are the oddities), asking only for observations with a photo under the photo
+     license set, so the shortlist reaches as far back in time as those licenses need; cached under `cache/api/`
+     (the file names carry the license set, so another set is another query) so a rebuild is offline. Photos
      deleted from iNaturalist since the pin drop out of the candidate set; `overrides.json` pins the rest.
    - `--source opendata --metadata-dir DIR`: the [iNaturalist Open Data](https://github.com/inaturalist/inaturalist-open-data)
      metadata dump (`observations.csv`, `photos.csv`, `observers.csv`, tens of gigabytes), scanned with DuckDB inside
      the pack's bounding box, in one scan for every species of the pack.
-5. **Filter.** Keeps CC0, CC BY and CC BY-NC photos of research-grade observations that have an observer and an
-   observation URL; everything else is counted in `report.json` (`candidates.py`, `licenses.py`).
-6. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates from the Open Data bucket
-   into `cache/photos/`, `--workers` (default 8) at a time, and the `original` of the chosen ones.
+5. **Filter.** Keeps photos under the photo license set of research-grade observations that have an observer and an
+   observation URL; everything else is counted in `report.json` (`candidates.py`, `licenses.py`). The set is
+   configuration per asset kind in `licenses.py`: photos take `PHOTO_LICENSES`, CC0, CC BY and CC BY-SA (ADR-0001:
+   no NonCommercial photo since the app takes tips; `--photo-licenses cc0,cc-by,cc-by-sa` overrides it for one
+   build), and a crop of a CC BY-SA photo is shared under CC BY-SA. Sounds take `SOUND_LICENSE_TIERS`, the rules of step 3.
+6. **Download.** The `large` (1024 px) rendition of the first `--limit` cleared candidates, at most two per observation
+   (only one photo of an observation is chosen, and a burst of frames from one prolific observer would otherwise fill
+   the shortlist), from the Open Data bucket into `cache/photos/`, `--workers` (default 8) at a time, and the
+   `original` of the chosen ones.
 7. **Detect.** A COCO SSD MobileNet v1 from the ONNX model zoo (Apache-2.0, pinned by SHA-256 in `detector.py`)
    finds the bird; originals smaller than the 552 × 368 lens crop, photos without a bird, with a bird under 2 % of the
    frame, or with a bird that, padded, cannot fill the lens crop's 368-pixel height in the original (about 263 pixels
@@ -98,22 +105,77 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
    is what `overrides.json` is for (see the Los Angeles file for examples).
 9. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
    logged gap (`selection.py`).
-10. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
+10. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
+   pinned `set.json`, the joined `stats`, `threatened` and `family` (see "Stats and type lines"), and the empty `fact`, `lore` and `pack_art` that later tickets fill), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
    `phone/<photo>.jpg` (looser crop, 1200 px max), `sounds/<id>.m4a`, `LICENSE` with every photo, sound and text credit and link, `report.json`
-   with counts, chosen ids, description sources, chosen and rejected sounds and the photo, description and sound gaps, and optionally a zip (`writer.py`).
+   with counts, chosen ids, description sources, chosen and rejected sounds and the photo, description, sound and stats gaps, and optionally a zip (`writer.py`).
 
 The Swift `Pack` module (`SpeciesPack`) reads the output; `SCHEMA_VERSION` in `writer.py` and
 `SpeciesPack.schemaVersion` move together.
+
+## Sets
+
+A pack's species make a set the birder collects toward (issue #54). The `set` section of `pack.json` names the edition
+(`name`, shown on cards that are not Legendary, and `theme`, what pack art is painted in) and the region boundary as
+named parts, each one of `census_county` (the five-digit FIPS code; US Census Bureau TIGERweb, public domain),
+`nps_park` (the NPS unit code; NPS Land Resources Division boundaries, public domain) or `polygon` (a hand-drawn
+GeoJSON file beside `pack.json`, for a region that is neither, such as the Coachella Valley in `us-ca-desert/regions/`).
+
+`uv run packbuilder set packs/<id>` fetches the boundaries into `cache/boundaries/`, simplifies each part with
+Douglas–Peucker (0.5 km by default, `--tolerance-km`), drops islets and holes under 1 km², orders the species by the
+IOC World Bird List (CC BY 3.0; the pinned version and its SHA-256 in `sets.py`, fetched into `cache/taxonomy/`, with
+`TAXONOMY_FIXES` for the BirdNET names IOC spells differently; an unmapped species fails), and writes `set.json`
+beside the definition (committed). Rerun it after changing a pack's species, names, edition or boundary: `build` and
+`index` refuse a `set.json` that no longer matches its definition. The parts stay apart in `set.json` because the
+phone gives a sighting to the smallest containing part (Anza-Borrego beats San Diego County).
+
+`uv run packbuilder index --out <file>` writes the pack index from `packs/manifest.json` with each pack's `set.json`;
+`scripts/publish-pack-index.sh` runs it before uploading.
+
+## Stats and type lines
+
+Every card carries real natural-history numbers (issue #55), joined before any download so an unmapped species fails
+the build at once (`stats.py`). Three CC BY 4.0 workbooks, pinned by SHA-256 in `stats.py`, are fetched once into
+`cache/datasets/`: AVONET (mass, habitat, migration, trophic niche as the diet, primary lifestyle), BIRDBASE (nest
+type, clutch range, flightlessness, the IUCN category, the order and family) and the avian wingspan database (a
+measured wingspan, else the predicted midpoint, flagged so the card shows "≈"). AVONET's eBird/Clements sheet is the
+anchor: a BirdNET name gives the Avibase ID, which leads to the wingspan database directly or through AVONET's
+BirdLife–eBird crosswalk (several BirdLife species: the namesake). BIRDBASE has no Avibase ID and is matched by its
+eBird/Clements v2024b name. A flightless species has no wingspan, and nor does a species the wingspan database lacks
+(it has no Galliformes); a stat a dataset lacks is left off.
+
+Two committed files steer it, shared by every pack:
+
+- `stats/fixes.json`: BirdNET name → the dataset's name for renames, splits and lumps since a dataset's taxonomy
+  (`avonet`, `wingspan`, `birdbase`, each with its reason); `known_gaps`, the species a build may leave without stats
+  (listed in `report.json` as `gaps.stats`); and `threatened`, the hand list of species protected where the packs
+  are though the IUCN rates them lower (US Endangered Species Act listings). IUCN Vulnerable, Endangered and
+  Critically Endangered are threatened anyway.
+- `stats/type-lines.json`: a group word per order and a family word per family ("Songbird — Finch"), a family's own
+  group where it differs (gulls are Seabirds) and a genus's own word (an Eagle among the Hawks). A family it lacks
+  fails the build.
+
+## Rarity calibration
+
+`uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
+species of every definition under `packs/`, over a 6 × 6 grid across each pack's bounding box and all 48 weeks, and
+writes the label thresholds the app ships to `BirdJournal/BirdJournalKit/Sources/Identification/RarityCalibration.json`
+(`rarity.py`; ADR-0006, issue #52). It takes a few seconds. Run it again only for a new calibration, with the next
+version: cards keep the version they were labelled under.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
 | `src/packbuilder/` | The package; `cli.py` is the `packbuilder` command, `pipeline.py` the build order. |
+| `src/packbuilder/art.py`, `comfy.py`, `fidelity.py`, `bakeoff.py` | Card art (#49): prompts and workflows from the repo's `art/`, the 3:4 card crop and the telephoto crop of a glasses photo, a ComfyUI client for comfybox, the painted bird's fidelity to its photo and the colour fit, and the art model bake-off (`python -m packbuilder.bakeoff`; see `art/README.md`). |
 | `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from and the recordings the sounds came from (committed). |
+| `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
+| `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
+| `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, and the committed definitions against the BirdNET label file. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `cache/wikipedia/` | Fetched article pages (gitignored with the rest of `cache/`). |
-| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips). |
+| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks). |
 
 Output goes to the repo's `packs/<id>/`, which is not committed: the built pack is published as a GitHub Release asset
 and fetched by `scripts/download-pack.sh` (see `packs/README.md`).

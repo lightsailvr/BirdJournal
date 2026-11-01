@@ -1,0 +1,954 @@
+{
+  "id": "15c200d8-6135-457a-bb98-81f1d71ff6b1",
+  "revision": 0,
+  "last_node_id": 19,
+  "last_link_id": 20,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -1420,
+        -420
+      ],
+      "size": [
+        640,
+        1180
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# BirdJournal · Klein 4B distilled · style pass\n\nRepaints a finished telephoto painting in an art style, in about 5 s. In the audition (#49) Klein kept the House Finch's red head and breast and its streaked flanks across the styles better than Qwen did. The exception was pastoral, which turned it robin-like, with an orange breast and a white belly. Its paintings look more like digital painting than Qwen's old-master texture.\n\n**Picture**: `birdjournal-telephoto-<spot>`, the nine House Finch telephoto paintings, or any picture.\n\n**Prompt**: the first paragraph is the style, and it starts on **mythic-renaissance**. To try another style, replace that paragraph with one of these, or write your own:\n\n- **line-art**: Repaint the entire picture as a fantasy book illustration in ink, using the existing moment as the complete composition. Draw it with confident, tapering contour lines, fine cross-hatching and stippling for form and shadow, and a few transparent washes of muted watercolour. Suggest the background with a few loose lines and pale washes.\n- **pastoral**: Repaint the entire picture as an illustrative pastoral painting, like a plate from a classic storybook, using the existing moment as the complete composition. Use soft, opaque gouache with simplified shapes, gentle golden afternoon light, warm meadow greens, creams and soft sky blues, and a calm, idyllic countryside mood.\n- **renaissance**: Repaint the entire picture as an Italian High Renaissance oil painting, an old master's study from life, using the existing moment as the complete composition. Build it on a warm umber underpainting with thin glazed layers, soft sfumato transitions, rich chiaroscuro, fine visible brushwork and the gentle glow of old varnish.\n- **greek-myth**: Repaint the entire picture as a grand classical painting of a Greek myth, in the manner of Titian, Rubens and Poussin, with the bird as its hero, using the existing moment as the complete composition. Give it a dramatic sky of luminous, billowing clouds with divine golden light breaking through, deep warm shadows, sweeping movement and rich oil glazes.\n- **magic**: Repaint the entire picture as an old-master oil painting imbued with magic and mystery, using the existing moment as the complete composition. Set it at twilight: a soft golden halo of light around the bird, luminous motes drifting through the air, veils of mist in the background, deep blue-green shadows and an enchanted, sacred hush.\n- **mythic-renaissance**: Repaint the entire picture as a Renaissance oil painting with the epic grandeur of the classical paintings of Greek myths, imbued with magic and mystery, using the existing moment as the complete composition. Use thin glazed oil layers, sfumato and dramatic chiaroscuro. A heavenly golden light falls on the bird as if it were a messenger of the gods; luminous clouds and drifting motes of light fill the softened background, with rich, jewel-like colour and the hush of a sacred moment.\n\n**Seed**: fixed so a tweak compares with the last picture.\n\n**Model**: FLUX.2 [klein] 4B distilled (fp8), 4 steps at cfg 1, so there is no negative prompt. The VAE is BFL's small decoder. All are Apache 2.0. Don't let the missing-model dialog fetch `flux2-vae.safetensors` (FLUX non-commercial). A second image with the reference bird made no difference to Klein, so this one leaves it out.\n\nPaintings land in ComfyUI's `output/birdjournal-styles/`."
+      ],
+      "title": "BirdJournal: read me",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -720,
+        -420
+      ],
+      "size": [
+        380,
+        560
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "birdjournal-telephoto-garden-hedge.png",
+        "image"
+      ],
+      "title": "image 1",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "UNETLoader",
+      "pos": [
+        -300,
+        460
+      ],
+      "size": [
+        380,
+        90
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux-2-klein-4b-fp8.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "CLIPLoader",
+      "pos": [
+        -300,
+        590
+      ],
+      "size": [
+        380,
+        110
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            1,
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen_3_4b.safetensors",
+        "flux2",
+        "default"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "VAELoader",
+      "pos": [
+        -300,
+        740
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            5,
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "full_encoder_small_decoder.safetensors"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -300,
+        -420
+      ],
+      "size": [
+        520,
+        520
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "Repaint the entire picture as a Renaissance oil painting with the epic grandeur of the classical paintings of Greek myths, imbued with magic and mystery, using the existing moment as the complete composition. Use thin glazed oil layers, sfumato and dramatic chiaroscuro. A heavenly golden light falls on the bird as if it were a messenger of the gods; luminous clouds and drifting motes of light fill the softened background, with rich, jewel-like colour and the hush of a sacred moment. The result must clearly look hand-made, not like a photograph with a filter.\n\nPreserve the bird exactly: its pose, anatomy, proportions, silhouette and field marks, and the local colour of every body region: head, throat, breast, flanks, back and wings. Do not brighten its feathers, add iridescence or replace it with an idealised bird. Keep its perch, and its place and size in the frame. The background keeps its colours and broad shapes, repainted in the style.\n\nThe bird is the only creature in the picture. The painting is unsigned, with no text, letters, borders or frames."
+      ],
+      "title": "prompt",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -300,
+        140
+      ],
+      "size": [
+        520,
+        90
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "negative (unused at cfg 1)"
+    },
+    {
+      "id": 8,
+      "type": "RandomNoise",
+      "pos": [
+        -300,
+        280
+      ],
+      "size": [
+        300,
+        90
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise"
+      },
+      "widgets_values": [
+        49,
+        "fixed"
+      ],
+      "title": "seed",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 9,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        260,
+        -420
+      ],
+      "size": [
+        300,
+        130
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScaleToTotalPixels"
+      },
+      "widgets_values": [
+        "lanczos",
+        1.0,
+        1
+      ],
+      "title": "image 1: a megapixel"
+    },
+    {
+      "id": 10,
+      "type": "VAEEncode",
+      "pos": [
+        260,
+        -260
+      ],
+      "size": [
+        300,
+        50
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            8,
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEEncode"
+      },
+      "widgets_values": [],
+      "title": "image 1: encode"
+    },
+    {
+      "id": 11,
+      "type": "ReferenceLatent",
+      "pos": [
+        600,
+        -420
+      ],
+      "size": [
+        260,
+        50
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 6
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ReferenceLatent"
+      },
+      "widgets_values": [],
+      "title": "prompt reference"
+    },
+    {
+      "id": 12,
+      "type": "ReferenceLatent",
+      "pos": [
+        600,
+        -330
+      ],
+      "size": [
+        260,
+        50
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 7
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ReferenceLatent"
+      },
+      "widgets_values": [],
+      "title": "negative reference"
+    },
+    {
+      "id": 13,
+      "type": "CFGGuider",
+      "pos": [
+        600,
+        -200
+      ],
+      "size": [
+        260,
+        100
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 10
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 11
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CFGGuider"
+      },
+      "widgets_values": [
+        1.0
+      ]
+    },
+    {
+      "id": 14,
+      "type": "Flux2Scheduler",
+      "pos": [
+        260,
+        -150
+      ],
+      "size": [
+        300,
+        130
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Flux2Scheduler"
+      },
+      "widgets_values": [
+        4,
+        864,
+        1152
+      ],
+      "title": "4 steps"
+    },
+    {
+      "id": 15,
+      "type": "EmptyFlux2LatentImage",
+      "pos": [
+        260,
+        20
+      ],
+      "size": [
+        300,
+        130
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyFlux2LatentImage"
+      },
+      "widgets_values": [
+        864,
+        1152,
+        1
+      ],
+      "title": "canvas 864 × 1152"
+    },
+    {
+      "id": 16,
+      "type": "KSamplerSelect",
+      "pos": [
+        600,
+        -60
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "euler"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        600,
+        40
+      ],
+      "size": [
+        260,
+        110
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 13
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 14
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 15
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 16
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            18
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 18,
+      "type": "VAEDecode",
+      "pos": [
+        600,
+        190
+      ],
+      "size": [
+        260,
+        50
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 18
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 19,
+      "type": "SaveImage",
+      "pos": [
+        900,
+        -420
+      ],
+      "size": [
+        640,
+        900
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 20
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "birdjournal-styles/klein-style-pass"
+      ],
+      "title": "output",
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      4,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      2,
+      4,
+      0,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      2,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      9,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      5,
+      0,
+      10,
+      1,
+      "VAE"
+    ],
+    [
+      6,
+      6,
+      0,
+      11,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      7,
+      7,
+      0,
+      12,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      8,
+      10,
+      0,
+      11,
+      1,
+      "LATENT"
+    ],
+    [
+      9,
+      10,
+      0,
+      12,
+      1,
+      "LATENT"
+    ],
+    [
+      10,
+      3,
+      0,
+      13,
+      0,
+      "MODEL"
+    ],
+    [
+      11,
+      11,
+      0,
+      13,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      12,
+      12,
+      0,
+      13,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      13,
+      8,
+      0,
+      17,
+      0,
+      "NOISE"
+    ],
+    [
+      14,
+      13,
+      0,
+      17,
+      1,
+      "GUIDER"
+    ],
+    [
+      15,
+      16,
+      0,
+      17,
+      2,
+      "SAMPLER"
+    ],
+    [
+      16,
+      14,
+      0,
+      17,
+      3,
+      "SIGMAS"
+    ],
+    [
+      17,
+      15,
+      0,
+      17,
+      4,
+      "LATENT"
+    ],
+    [
+      18,
+      17,
+      0,
+      18,
+      0,
+      "LATENT"
+    ],
+    [
+      19,
+      5,
+      0,
+      18,
+      1,
+      "VAE"
+    ],
+    [
+      20,
+      18,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Picture",
+      "bounding": [
+        -750,
+        -500,
+        440,
+        670
+      ],
+      "color": "#b58b2a",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Prompt and seed",
+      "bounding": [
+        -330,
+        -500,
+        580,
+        900
+      ],
+      "color": "#3f789e",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Model (leave as is)",
+      "bounding": [
+        -330,
+        380,
+        440,
+        450
+      ],
+      "color": "#444",
+      "font_size": 28,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Painting",
+      "bounding": [
+        230,
+        -500,
+        1340,
+        1010
+      ],
+      "color": "#a1309b",
+      "font_size": 28,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        1100,
+        520
+      ]
+    }
+  },
+  "version": 0.4
+}

@@ -5,6 +5,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from packbuilder.sets import SetSection
 
 
 @dataclass(frozen=True)
@@ -41,12 +45,17 @@ class PackDefinition:
     species: list[SpeciesEntry]
     created_before: str | None = None
     """Observations created after this date (YYYY-MM-DD) are ignored, so rebuilds see the same candidates."""
+    set: SetSection | None = None
+    """The set the pack's species make (issue #54): its edition and region boundary; `sets.py` builds it."""
 
     @classmethod
     def load(cls, path: Path) -> "PackDefinition":
+        from packbuilder.sets import SetSection
+
         data = json.loads(path.read_text())
         box = data["bounding_box"]
         return cls(
+            set=SetSection.from_mapping(data["set"]) if "set" in data else None,
             id=data["id"],
             name=data["name"],
             region=data["region"],

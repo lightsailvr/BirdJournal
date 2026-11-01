@@ -1,0 +1,26 @@
+{
+  "comment": "Rarity label thresholds (ADR-0006, issue #52), written by `packbuilder calibrate-rarity`; never edit by hand. An occurrence at or above `common` is Common, at or above `uncommon` Uncommon, at or above `rare` Rare, and anything lower Exceptional. The thresholds are the 50th, 20th and 5th percentiles of the geomodel's readings at or above `floor` for every species of the listed packs, over a grid of points across each pack's bounding box and all 48 weeks. Saved cards keep the version they were labelled under.",
+  "version": 1,
+  "geomodel": "BirdNET+_Geomodel_V3.0.4_Global_14K_FP16.onnx",
+  "floor": 0.03,
+  "thresholds": {
+    "rare": 0.101,
+    "uncommon": 0.386,
+    "common": 0.763
+  },
+  "packs": [
+    "us-ca-bay",
+    "us-ca-desert",
+    "us-ca-la",
+    "us-ca-sd",
+    "us-fl-orlando"
+  ],
+  "grid": 6,
+  "weeks": 48,
+  "readings": 1290329,
+  "unknown_species": [
+    "Dryobates borealis",
+    "Dryobates villosus",
+    "Tyto furcata"
+  ]
+}

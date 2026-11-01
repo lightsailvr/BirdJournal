@@ -34,6 +34,11 @@ final class PlaceNames {
         return name(for: coordinate) ?? coordinate.formatted
     }
 
+    /// A card's place (issue #52): the name when known, the coordinate until then, "Place not recorded" without a fix.
+    func cardPlace(for coordinate: Coordinate?) -> String {
+        CardText.place(location: coordinate, name: coordinate.flatMap(name(for:)))
+    }
+
     /// Looks the name up once per coordinate and run; a failure (offline, no result) leaves the coordinate showing.
     func resolve(_ coordinate: Coordinate) async {
         let key = Key(coordinate)

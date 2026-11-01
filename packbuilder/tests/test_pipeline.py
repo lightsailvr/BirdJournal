@@ -64,17 +64,28 @@ def chosen_ids(result):
 
 def test_species_build_filters_detects_scores_and_selects(tmp_path, photos):
     candidates = [make_candidate(photo_id=i, observation_id=i * 10) for i in range(1, 7)]
-    candidates.append(make_candidate(photo_id=7, observation_id=70, license="cc-by-sa"))
+    candidates.append(make_candidate(photo_id=7, observation_id=70, license="cc-by-nc"))
     for i in range(1, 7):
         photos.specs[i] = {"background": 30}
     photos.specs[3] = {"background": 30, "blur": 8}  # too blurred to keep
 
     result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(blind=[5]), options(tmp_path, photos))
 
-    assert set(chosen_ids(result)) == {1, 2, 4, 6}, "3 is blurred, 5 has no bird, 7 is share-alike"
+    assert set(chosen_ids(result)) == {1, 2, 4, 6}, "3 is blurred, 5 has no bird, 7 is NonCommercial"
     assert result.candidates == 7 and result.rejected == {"license": 1}
     assert result.detected == 5
     assert not result.gap
+
+
+def test_the_build_takes_its_photo_license_set_from_the_options(tmp_path, photos):
+    candidates = [make_candidate(photo_id=1, observation_id=10, license="cc-by-sa"), make_candidate(photo_id=2, observation_id=20, license="cc-by-nc")]
+    photos.specs[1] = photos.specs[2] = {"background": 30}
+
+    default = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos))
+    noncommercial = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(candidates), FakeDetector(), options(tmp_path, photos, photo_licenses=frozenset({"CC BY-NC"})))
+
+    assert chosen_ids(default) == [1]
+    assert chosen_ids(noncommercial) == [2]
 
 
 def test_override_include_forces_a_photo_without_a_detection(tmp_path, photos):
@@ -97,6 +108,21 @@ def test_candidate_limit_caps_the_shortlist_but_not_overrides(tmp_path, photos):
 
     assert chosen_ids(result)[0] == 8
     assert set(chosen_ids(result)) == {8, 1, 2, 3}, "only the first three cleared candidates were considered"
+
+
+def test_one_observation_with_many_photos_does_not_fill_the_shortlist(tmp_path, photos):
+    """Issue #50: a prolific observer's five frames of one hawk took most of the open-license shortlist, yet only one
+    photo per observation can be chosen. The shortlist takes the first two photos of an observation, so it reaches
+    further back."""
+    burst = [make_candidate(photo_id=i, observation_id=10, position=i - 1) for i in range(1, 6)]
+    older = [make_candidate(photo_id=i, observation_id=i * 10, position=0) for i in range(6, 9)]
+    for i in range(1, 9):
+        photos.specs[i] = {"background": 30}
+
+    result = pipeline.build_species(ENTRY, Overrides(), FakeMetadata(burst + older), FakeDetector(), options(tmp_path, photos, candidate_limit=4))
+
+    assert len(chosen_ids(result)) == 3, "the burst's first two frames, then two older observations"
+    assert set(chosen_ids(result)) - {1, 2} == {6, 7}
 
 
 def test_override_limit_widens_the_shortlist_for_one_species(tmp_path, photos):

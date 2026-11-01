@@ -4,8 +4,9 @@ import SwiftData
 import SwiftUI
 
 /// The Journal tab (issue #28): the collection's cards (issue #51), every sighting by day, or the distinct species,
-/// with search; each card or row opens the sighting. Removals can be undone for a few seconds. The first time the
-/// collection has a card, a one-time "your collection so far" moment introduces it.
+/// with search; a card opens the card, a sighting the sighting and a species its gallery (issue #53). Removals can be
+/// undone for a few seconds. The first time the collection has a card, a one-time "your collection so far" moment
+/// introduces it.
 struct JournalView: View {
     enum Mode: String, CaseIterable, Identifiable {
         case cards = "Cards"
@@ -31,7 +32,7 @@ struct JournalView: View {
             if sightings.isEmpty {
                 EmptyJournal()
             } else {
-                let collection = CardCollection(sightings: sightings)
+                let collection = library.collection(of: sightings)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         Picker("Show", selection: $mode) {
@@ -56,7 +57,11 @@ struct JournalView: View {
                             switch mode {
                             case .cards: CardsGrid(sightings: shown, collection: collection)
                             case .sightings: SightingsByDay(sightings: shown)
-                            case .species: SpeciesRows(entries: Journal.species(shown))
+                            case .species:
+                                if query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
+                                    SetProgressList(collection: collection)
+                                }
+                                SpeciesRows(entries: Journal.species(shown))
                             }
                             Text(mode == .cards ? "Every add is a card. Your first of each species is Legendary." : "Your notes, one bird at a time.")
                                 .multilineTextAlignment(.center)
@@ -117,7 +122,7 @@ private struct EmptyJournal: View {
 }
 
 /// The Cards view (issue #51): every card newest first, two columns, one at accessibility text sizes, each opening
-/// its sighting. Legendary comes from the whole collection, so a search never changes which card is the first.
+/// its card (issue #52). Legendary comes from the whole collection, so a search never changes which card is the first.
 private struct CardsGrid: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let sightings: [Sighting]
@@ -128,8 +133,8 @@ private struct CardsGrid: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: JournalLayout.rowGap, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2)
         LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
             ForEach(collection.cards.compactMap { byIdentifier[$0.identifier] }) { sighting in
-                NavigationLink(value: Route.sighting(sighting.persistentModelID)) {
-                    CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier))
+                NavigationLink(value: Route.card(sighting.persistentModelID)) {
+                    CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier), placement: collection.placement(of: sighting.identifier))
                 }
                 .buttonStyle(.plain)
             }
@@ -259,7 +264,69 @@ struct SightingRow: View {
     }
 }
 
-/// The Species list: one row per bird added, with how often and when last.
+/// Set progress above the Species list (issue #54): each set the birder has a card in, "Los Angeles · 87 of 160" with
+/// a bar, opening the set's page; then how many species are Uncharted.
+private struct SetProgressList: View {
+    let collection: CardCollection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Sets")
+                .font(JournalFont.section)
+                .foregroundStyle(Color.ink)
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, JournalLayout.sectionGap)
+            ForEach(collection.progress) { progress in
+                NavigationLink(value: Route.set(id: progress.setID)) {
+                    SetProgressRow(progress: progress)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("set-progress-\(progress.setID)")
+                RowRule()
+            }
+            if collection.unchartedSpeciesCount > 0 {
+                Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedSpeciesCount) species outside every set")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .padding(.vertical, 12)
+                RowRule()
+            }
+        }
+    }
+}
+
+/// One set's progress: "Los Angeles · 87 of 160" over a bar.
+struct SetProgressRow: View {
+    let progress: SetProgress
+    var detail: String?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(progress.text)
+                    .font(JournalFont.rowTitle)
+                    .foregroundStyle(Color.ink)
+                if let detail {
+                    Text(detail)
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+                ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
+                    .tint(Color.moss)
+                    .accessibilityHidden(true)
+            }
+            Image(systemName: "chevron.right")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkSecondary)
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel([progress.name, "\(progress.collected) of \(progress.total) species collected", detail].compactMap { $0 }.joined(separator: ", "))
+    }
+}
+
+/// The Species list: one row per bird added, with how many cards and when last, each opening its gallery (issue #53).
 private struct SpeciesRows: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -269,7 +336,7 @@ private struct SpeciesRows: View {
         VStack(spacing: 0) {
             ForEach(entries) { entry in
                 let reference = library.species(scientificName: entry.scientificName)
-                NavigationLink(value: Route.journalSpecies(speciesID: entry.speciesID)) {
+                NavigationLink(value: Route.gallery(scientificName: entry.scientificName, commonName: reference?.species.commonName ?? entry.commonName)) {
                     AdaptiveRow(stacked: typeSize.stacksRows) {
                         PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
                             .frame(width: 64, height: 64)
@@ -282,7 +349,7 @@ private struct SpeciesRows: View {
                             Text(entry.scientificName)
                                 .font(JournalFont.scientific)
                                 .foregroundStyle(Color.inkSecondary)
-                            Text("\(entry.count) \(entry.count == 1 ? "sighting" : "sightings") · last \(Journal.title(for: entry.latest.confirmedAt).lowercased())")
+                            Text("\(entry.count) \(entry.count == 1 ? "card" : "cards") · last \(Journal.title(for: entry.latest.confirmedAt).lowercased())")
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }
@@ -300,67 +367,5 @@ private struct SpeciesRows: View {
             }
         }
         .padding(.top, 16)
-    }
-}
-
-/// One species in the journal: a short profile up top, then its sightings.
-struct SpeciesJournalView: View {
-    @Environment(PackLibrary.self) private var library
-    let speciesID: String
-    @Query private var sightings: [Sighting]
-
-    init(speciesID: String) {
-        self.speciesID = speciesID
-        _sightings = Query(filter: #Predicate<Sighting> { $0.speciesID == speciesID }, sort: \.confirmedAt, order: .reverse)
-    }
-
-    private var scientificName: String { String(speciesID.prefix { $0 != "_" }) }
-    private var labelCommonName: String {
-        guard let underscore = speciesID.firstIndex(of: "_") else { return speciesID }
-        return String(speciesID[speciesID.index(after: underscore)...])
-    }
-
-    var body: some View {
-        let reference = library.species(scientificName: scientificName)
-        PaperPage {
-            VStack(alignment: .leading, spacing: 0) {
-                if let reference, let photo = reference.species.photos.first {
-                    AttributedImage(pack: reference.pack, photo: photo)
-                        .padding(.top, 4)
-                }
-                Text(reference?.species.commonName ?? labelCommonName)
-                    .font(JournalFont.title)
-                    .foregroundStyle(Color.ink)
-                    .padding(.top, 14)
-                Text(scientificName)
-                    .font(JournalFont.scientific)
-                    .foregroundStyle(Color.inkSecondary)
-                if let summary = reference?.species.summary, !summary.isEmpty {
-                    Text(summary)
-                        .font(JournalFont.body)
-                        .foregroundStyle(Color.ink)
-                        .padding(.top, 12)
-                }
-                NavigationLink(value: Route.species(scientificName: scientificName, commonName: reference?.species.commonName ?? labelCommonName)) {
-                    Label("Open in Field Guide", systemImage: "book")
-                }
-                .buttonStyle(.journalOutlined)
-                .padding(.top, 12)
-
-                SectionTitle(text: "\(sightings.count) \(sightings.count == 1 ? "sighting" : "sightings")")
-                VStack(spacing: 0) {
-                    ForEach(sightings) { sighting in
-                        NavigationLink(value: Route.sighting(sighting.persistentModelID)) {
-                            SightingRow(sighting: sighting, showsDate: true)
-                        }
-                        .buttonStyle(.plain)
-                        RowRule()
-                    }
-                }
-                .padding(.top, 8)
-            }
-        }
-        .navigationTitle(reference?.species.commonName ?? labelCommonName)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

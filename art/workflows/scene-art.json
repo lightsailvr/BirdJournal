@@ -1,0 +1,178 @@
+{
+  "version": 4,
+  "comment": "ComfyUI's image_flux3_klein_distilled_image_edit template (ComfyUI 0.41) in API format: FLUX.3 Image Klein distilled, int8, 16 steps, no guidance (cfg 1, the negative zeroed), euler and simple. The references keep their own resolution (packbuilder.art sizes them, at most 1536 px a side); the canvas is 864 x 1152 (3:4) unless the caller sets it. Scene art: image 1 is the reference bird isolated on white (bird-isolate), image 2 the telephoto crop of the glasses photo (packbuilder.art.telephoto_crop). Version 4: FLUX.3 with two references (prompts v7); versions 1-3 painted a composite with Qwen-Image-Edit-2511.",
+  "graph": {
+    "1": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "flux3_image_klein_sd_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "model"
+      }
+    },
+    "2": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "qwen3vl_4b_int8_convrot.safetensors",
+        "type": "flux3",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "text encoder"
+      }
+    },
+    "3": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "flux2-vae.safetensors"
+      },
+      "_meta": {
+        "title": "vae"
+      }
+    },
+    "10": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": ""
+      },
+      "_meta": {
+        "title": "image 1"
+      }
+    },
+    "11": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": ""
+      },
+      "_meta": {
+        "title": "image 2"
+      }
+    },
+    "20": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "",
+        "clip": [
+          "2",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "prompt"
+      }
+    },
+    "21": {
+      "class_type": "ConditioningZeroOut",
+      "inputs": {
+        "conditioning": [
+          "20",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "no negative"
+      }
+    },
+    "22": {
+      "class_type": "ReferenceMultiLatent",
+      "inputs": {
+        "positive": [
+          "20",
+          0
+        ],
+        "negative": [
+          "21",
+          0
+        ],
+        "vae": [
+          "3",
+          0
+        ],
+        "resolution": "keep resolution",
+        "images.image0": [
+          "10",
+          0
+        ],
+        "images.image1": [
+          "11",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "references"
+      }
+    },
+    "30": {
+      "class_type": "EmptyFlux2LatentImage",
+      "inputs": {
+        "width": 864,
+        "height": 1152,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "canvas"
+      }
+    },
+    "40": {
+      "class_type": "KSampler",
+      "inputs": {
+        "model": [
+          "1",
+          0
+        ],
+        "positive": [
+          "22",
+          0
+        ],
+        "negative": [
+          "22",
+          1
+        ],
+        "latent_image": [
+          "30",
+          0
+        ],
+        "seed": 0,
+        "steps": 16,
+        "cfg": 1.0,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1.0
+      },
+      "_meta": {
+        "title": "sampler"
+      }
+    },
+    "50": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "40",
+          0
+        ],
+        "vae": [
+          "3",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "decode"
+      }
+    },
+    "60": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "50",
+          0
+        ],
+        "filename_prefix": "birdjournal/scene-art"
+      },
+      "_meta": {
+        "title": "output"
+      }
+    }
+  }
+}

@@ -4,7 +4,8 @@ import SwiftUI
 
 /// Sources & credits (issues #11 and #28, spec user story 36): "Powered by BirdNET" with both models' licenses, then,
 /// for every pack on the phone (#13), the text credit, each photo with its observer, exact license and observation
-/// link, each reference sound with its recordist, license and recording page (#41), and the pack's LICENSE text.
+/// link, each reference sound with its recordist, license and recording page (#41), and the pack's LICENSE text. The
+/// datasets behind the card stats (#55) follow the models when a pack carries stats.
 struct CreditsView: View {
     @Environment(PackLibrary.self) private var library
 
@@ -23,6 +24,19 @@ struct CreditsView: View {
             Section("Models") {
                 ForEach(ModelCredits.models) { model in
                     ModelCreditRow(model: model)
+                }
+            }
+
+            if library.packs.contains(where: { $0.species.contains { $0.stats != nil } }) {
+                Section {
+                    Text("Wingspan, weight, diet, habitat, migration, nest, clutch, lifestyle and the type line's family come from these datasets.")
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.inkSecondary)
+                    ForEach(StatsDataset.all) { dataset in
+                        StatsDatasetRow(dataset: dataset)
+                    }
+                } header: {
+                    Text("Card stats")
                 }
             }
 
@@ -57,6 +71,22 @@ private struct ModelCreditRow: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+/// One stats dataset: its name, the citation, its DOI and its license.
+private struct StatsDatasetRow: View {
+    let dataset: StatsDataset
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(dataset.name).font(.headline)
+            Text(dataset.citation).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
+            Link("License: \(StatsDataset.license)", destination: StatsDataset.licenseURL).font(JournalFont.attribution)
+            Link("Source", destination: dataset.url).font(JournalFont.attribution)
+        }
+        .padding(.vertical, 2)
+        .accessibilityIdentifier("credits-stats-\(dataset.source.rawValue)")
     }
 }
 

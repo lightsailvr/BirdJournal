@@ -64,3 +64,26 @@ def candidate():
 def no_xeno_canto_key(monkeypatch):
     """No test may reach xeno-canto with the developer's key (issue #41): a test that needs a key passes its own."""
     monkeypatch.delenv("XENO_CANTO_API_KEY", raising=False)
+
+
+_exit_status = 0
+
+
+def pytest_sessionfinish(session, exitstatus):
+    global _exit_status
+    _exit_status = int(exitstatus)
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_unconfigure(config):
+    """With ONNX Runtime loaded (the detector and audio tests), end the process with pytest's own exit status once
+    everything is reported, skipping the interpreter's native teardown. With the fidelity tests in the same run, that
+    teardown sometimes aborted ("libc++abi: recursive_mutex lock failed", exit 134) after every test had passed: about
+    one run in five, never without ONNX Runtime or without those tests (issue #49, 2026-10-19). A failure still fails."""
+    import os
+    import sys
+
+    if "onnxruntime" in sys.modules:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(_exit_status)

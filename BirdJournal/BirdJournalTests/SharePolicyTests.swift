@@ -74,6 +74,22 @@ struct SharePolicyTests {
         #expect(SharePolicy.mayShare(Self.photo(license: "CC0")))
     }
 
+    // ADR-0001 (issue #50): pack photos are CC0, CC BY or CC BY-SA. A share-alike photo goes on the card with its
+    // credit, and its credit links the CC BY-SA deed.
+    @Test("a CC BY-SA reference photo is shared with its credit and links the CC BY-SA deed")
+    func shareAlikeReference() {
+        var choices = SharePolicy.Choices()
+        choices.useSnapshot = false
+        let photo = Self.photo(license: "CC BY-SA")
+        let shared = SharePolicy.content(for: Self.sighting, commonName: "Black Phoebe", reference: photo, area: nil, choices: choices, locale: Self.english)
+
+        #expect(SharePolicy.mayShare(photo))
+        #expect(shared.picture == .reference(photo))
+        #expect(shared.pictureCaption == "Reference photo · Photo: A. Birder, CC BY-SA")
+        #expect(shared.attribution == "Photo: © A. Birder, some rights reserved (CC BY-SA), via iNaturalist https://www.inaturalist.org/observations/1")
+        #expect(photo.licenseURL == URL(string: "https://creativecommons.org/licenses/by-sa/4.0/"))
+    }
+
     @Test("the rendered card is a PNG with no location, camera or other metadata")
     @MainActor
     func exportHasNoMetadata() throws {

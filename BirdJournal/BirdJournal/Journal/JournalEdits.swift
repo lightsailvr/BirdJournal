@@ -4,9 +4,10 @@ import Observation
 import OSLog
 import SwiftData
 
-/// Edits to the journal from the phone (issue #28): a note on a sighting, and a removal that can be taken back for a
-/// few seconds. A removed sighting's record is kept here with its files on disk until the window closes; Undo puts
-/// it back as a new record with the same fields, its identifier included, so the same card returns (issue #51).
+/// Edits to the journal from the phone (issue #28): a note on a sighting, Heard or Seen (issue #52), and a removal
+/// that can be taken back for a few seconds. A removed sighting's record is kept here with its files on disk until the
+/// window closes; Undo puts it back as a new record with the same fields, its identifier included, so the same card
+/// returns (issue #51).
 @MainActor
 @Observable
 final class JournalEdits {
@@ -52,6 +53,13 @@ final class JournalEdits {
         let note = trimmed.isEmpty ? nil : trimmed
         guard sighting.note != note else { return }
         sighting.note = note
+        save()
+    }
+
+    /// Saves how the birder met the bird, from the card's back.
+    func setMethod(_ method: SightingMethod, on sighting: Sighting) {
+        guard sighting.method != method else { return }
+        sighting.method = method
         save()
     }
 

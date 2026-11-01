@@ -19,6 +19,38 @@
     "east": -80.39
   },
   "comment": "About 160 Central Florida species: the 150 bird species with the most research-grade iNaturalist observations created up to 2026-09-27 across Orange (934), Seminole (392), Osceola (938), Lake (534), Polk (948: Circle B Bar Reserve) and Brevard (839: Merritt Island, Viera Wetlands) Counties, then the October and November top 120 (the wintering ducks and the fall migrants a yearly ranking buries), then birds heard more than seen (Carolina Chickadee, Eastern Screech Owl, Clapper, King and Virginia Rails, Bachman's Sparrow, Brown-headed Nuthatch and the rest already in). Feral Muscovy Ducks, Egyptian Geese and Indian Peafowl stay in: they are what one meets in Orlando. `packbuilder draft --place 934 --place 392 --place 938 --place 534 --place 948 --place 839 --before 2026-09-27 --top 150 --season 10,11 --season-top 120 --add ...`. scientific_name and common_name follow the BirdNET+ label file as in us-ca-la (species the committed packs already list reuse their entries); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the observation ranking, then the species added by hand. Drafted with `packbuilder draft` (the command is below) and read over by a person; tests/test_definition.py checks the labels.",
+  "set": {
+    "edition": {
+      "name": "Wetland edition",
+      "theme": "cypress swamps, saw palmetto and lagoons in humid pearl morning light"
+    },
+    "boundary": [
+      {
+        "name": "Orange County",
+        "census_county": "12095"
+      },
+      {
+        "name": "Seminole County",
+        "census_county": "12117"
+      },
+      {
+        "name": "Osceola County",
+        "census_county": "12097"
+      },
+      {
+        "name": "Lake County",
+        "census_county": "12069"
+      },
+      {
+        "name": "Polk County",
+        "census_county": "12105"
+      },
+      {
+        "name": "Brevard County",
+        "census_county": "12009"
+      }
+    ]
+  },
   "species": [
     {
       "scientific_name": "Eudocimus albus",

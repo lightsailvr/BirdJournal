@@ -325,14 +325,41 @@ struct LensStateMachineTests {
         _ = machine.apply(.tap)
         _ = machine.apply(.swipeDown)
         #expect(machine.earnedCards.isEmpty, "Add another: no card named until its own sighting is written")
-        machine.earned(.newCard, for: Fakes.finch)
-        #expect(machine.earnedCards == [1: .newCard])
-        let offStack = machine.earned(.newCard, for: Species(index: 9, scientificName: "Avis ignota", commonName: "Unknown", taxonomicClass: "Aves"))
+        machine.earned(.newCard(collectorNumber: "021/160"), for: Fakes.finch)
+        #expect(machine.earnedCards == [1: .newCard(collectorNumber: "021/160")])
+        let offStack = machine.earned(.newCard(collectorNumber: "Uncharted"), for: Species(index: 9, scientificName: "Avis ignota", commonName: "Unknown", taxonomicClass: "Aves"))
         #expect(!offStack, "a species not on the stack")
-        #expect(machine.earnedCards == [1: .newCard])
+        #expect(machine.earnedCards == [1: .newCard(collectorNumber: "021/160")])
 
         machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]), at: Fakes.quiet)
         #expect(machine.earnedCards.isEmpty)
+    }
+
+    @Test("after an add the details page's saved line names the card's collector number, or Uncharted (issue #54)")
+    func numberedSavedLine() {
+        var machine = Self.machine(on: .viewfinder(index: 1))
+        #expect(machine.apply(.tap) == .takePhoto(Fakes.candidate(Fakes.finch)))
+        func savedLine() -> [LensElement] {
+            LensCardRenderer.render(
+                machine.page, stack: machine.stack, order: machine.order, selection: machine.selection, saved: machine.savedIndices,
+                earned: machine.earnedCards, profile: { _ in Fakes.phoebeProfile }
+            ).elements.filter { if case .saved = $0 { true } else { false } }
+        }
+        #expect(savedLine() == [.saved("Added to my list", legendary: false)], "until the sighting is written")
+
+        machine.earned(.newCard(collectorNumber: "021/160"), for: Fakes.finch)
+        #expect(machine.page == .details(index: 1))
+        #expect(savedLine() == [.saved("New card · 021/160", legendary: false)])
+
+        _ = machine.apply(.tap)
+        _ = machine.apply(.swipeDown)
+        machine.earned(.newCard(collectorNumber: "Uncharted"), for: Fakes.finch)
+        #expect(savedLine() == [.saved("New card · Uncharted", legendary: false)], "a sighting outside every set")
+
+        _ = machine.apply(.tap)
+        _ = machine.apply(.swipeDown)
+        machine.earned(.legendary, for: Fakes.finch)
+        #expect(savedLine() == [.saved("Your first House Finch", legendary: true)], "a Legendary card names the bird, not the number")
     }
 
     @Test("the Add to my list button opens the viewfinder like a tap, and only on a details page")

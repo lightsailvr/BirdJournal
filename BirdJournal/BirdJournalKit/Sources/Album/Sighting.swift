@@ -8,7 +8,7 @@ public enum SightingSource: String, Codable, Sendable {
 }
 
 /// A location fix with its horizontal accuracy in metres.
-public struct Coordinate: Codable, Sendable, Equatable {
+public struct Coordinate: Codable, Sendable, Hashable {
     public var latitude: Double
     public var longitude: Double
     public var accuracy: Double
@@ -176,8 +176,10 @@ public enum RarityLabel: String, Codable, Sendable, CaseIterable {
     case exceptional
 }
 
-/// The rarity taken at the add: the geomodel's occurrence probability (nil when the species fell below what the
-/// geomodel reports), the label it mapped to under `calibrationVersion`, and the week of the year it was read for.
+/// The rarity taken at the add (issue #52, ADR-0006): the geomodel's occurrence probability, the label it mapped to
+/// under `calibrationVersion`, and the week of BirdNET's 48-week year it was read for. A sighting without a location
+/// or of a species the geomodel doesn't know has no snapshot at all. `occurrence` is optional only in the schema;
+/// every reading saves it.
 public struct RaritySnapshot: Codable, Sendable, Equatable {
     public var occurrence: Double?
     public var label: RarityLabel
@@ -309,7 +311,10 @@ extension Sighting {
     }
 
     /// The scientific name half of the BirdNET label; the whole label when it has no underscore.
-    public var scientificName: String { String(speciesID.prefix { $0 != "_" }) }
+    public var scientificName: String { Self.scientificName(ofLabel: speciesID) }
+
+    /// The scientific name half of a BirdNET label, e.g. "Haemorhous mexicanus" of "Haemorhous mexicanus_House Finch".
+    public static func scientificName(ofLabel label: String) -> String { String(label.prefix { $0 != "_" }) }
 
     /// Every file on disk the sighting refers to, relative to the `FrameStore`: the glasses photo, the attached
     /// originals and the painted art. What goes when the sighting does.
@@ -329,8 +334,9 @@ extension Coordinate {
     /// place name.
     public var formatted: String { formatted(locale: .current) }
 
-    public func formatted(locale: Locale) -> String {
-        let degrees = FloatingPointFormatStyle<Double>.number.locale(locale).precision(.fractionLength(2))
+    /// `fractionDigits` 1 is about 11 km: the species gallery's place while no name has arrived (issue #53).
+    public func formatted(fractionDigits: Int = 2, locale: Locale) -> String {
+        let degrees = FloatingPointFormatStyle<Double>.number.locale(locale).precision(.fractionLength(fractionDigits))
         let lat = "\(abs(latitude).formatted(degrees))° \(latitude < 0 ? "S" : "N")"
         let lon = "\(abs(longitude).formatted(degrees))° \(longitude < 0 ? "W" : "E")"
         return "\(lat), \(lon)"

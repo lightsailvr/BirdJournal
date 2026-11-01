@@ -79,10 +79,11 @@ public struct LensPlayback: Sendable, Hashable {
 }
 
 /// The card an add earned, known once its sighting is written (issue #51): the birder's first of the species, which
-/// is Legendary, or another card of a species already in the collection.
+/// is Legendary, or another card of a species already in the collection, with its collector number ("021/160", or
+/// "Uncharted" outside every set, issue #54).
 public enum LensEarnedCard: Sendable, Hashable {
     case legendary
-    case newCard
+    case newCard(collectorNumber: String)
 }
 
 /// What the adapter must do after an event, besides rendering the new page.

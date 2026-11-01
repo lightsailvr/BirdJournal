@@ -17,6 +17,30 @@
     "east": -114.46
   },
   "comment": "About 150 species of the southern California deserts: the 150 bird species with the most research-grade iNaturalist observations created up to 2026-09-27 across Imperial County (1528: the Salton Sea and the Imperial Valley), the Coachella Valley (51088: Palm Springs), Joshua Tree National Park (3680) and Anza-Borrego Desert State Park (118765), minus the domestic Muscovy Duck, plus desert birds heard more than seen (Common Poorwill, Lesser Nighthawk, Crissal and LeConte's Thrashers, Ridgway's and Virginia Rails; the rest of the hand list was already in; Western Screech Owl was dropped again: seven observations in the region gave one photo, and the bundled Los Angeles pack has its card). `packbuilder draft --place 1528 --place 51088 --place 3680 --place 118765 --before 2026-09-27 --top 150 --exclude 'Cairina moschata' --add ...`. scientific_name and common_name follow the BirdNET+ label file as in us-ca-la (species the committed packs already list reuse their entries); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the observation ranking, then the species added by hand. Drafted with `packbuilder draft` (the command is below) and read over by a person; tests/test_definition.py checks the labels.",
+  "set": {
+    "edition": {
+      "name": "Desert edition",
+      "theme": "Joshua trees, fan palms and the Salton Sea under rose-gold dusk light"
+    },
+    "boundary": [
+      {
+        "name": "Imperial County",
+        "census_county": "06025"
+      },
+      {
+        "name": "Joshua Tree National Park",
+        "nps_park": "JOTR"
+      },
+      {
+        "name": "Coachella Valley",
+        "polygon": "regions/coachella-valley.geojson"
+      },
+      {
+        "name": "Anza-Borrego Desert State Park",
+        "polygon": "regions/anza-borrego.geojson"
+      }
+    ]
+  },
   "species": [
     {
       "scientific_name": "Calypte costae",

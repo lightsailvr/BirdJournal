@@ -55,6 +55,8 @@ public final class PackLibrary {
         self.downloader = PackDownloader(session: session)
         self.availableCapacity = availableCapacity ?? { storage.availableCapacity() }
         self.installed = storage.installed()
+        // The last good index until a fetch replaces it, so its sets work offline from launch (issue #54).
+        self.index = storage.cachedIndex()
     }
 
     // MARK: - Reading
@@ -106,6 +108,19 @@ public final class PackLibrary {
         return nil
     }
 
+    /// Every set the phone knows (issue #54): each readable pack's own, then the index's for packs not on the phone, one
+    /// per pack id. A set therefore works before its pack is downloaded, and an installed pack's set is the one its
+    /// cards and Field Guide read.
+    public var sets: [PackSet] {
+        var sets = packs.compactMap(\.set)
+        var known = Set(sets.map(\.id))
+        for descriptor in index?.packs ?? [] {
+            guard let set = descriptor.set, known.insert(set.id).inserted else { continue }
+            sets.append(set)
+        }
+        return sets
+    }
+
     // MARK: - The index
 
     /// The index's packs that are neither bundled nor installed: what the packs screen offers to download. A build
@@ -133,13 +148,19 @@ public final class PackLibrary {
         return .notInstalled
     }
 
-    /// Fetches the index again; a failure keeps the last good index and records why.
+    /// Fetches the index again and keeps it on disk; a failure keeps the last good index and records why.
     public func refreshIndex() async {
         isRefreshingIndex = true
         defer { isRefreshingIndex = false }
         do {
-            index = try await PackIndex.fetch(from: indexURL, session: session)
+            let fetched = try await PackIndex.fetch(from: indexURL, session: session)
+            index = fetched
             indexError = nil
+            do {
+                try storage.cacheIndex(fetched)
+            } catch {
+                Self.log.error("could not keep the pack index: \(error.localizedDescription)")
+            }
         } catch {
             indexError = error.localizedDescription
         }

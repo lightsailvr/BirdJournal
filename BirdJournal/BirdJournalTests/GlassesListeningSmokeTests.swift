@@ -56,11 +56,11 @@ extension MockDeviceKitTests {
                 // "Add to my list" opens the viewfinder; a swipe there adds the bird without a photo.
                 input.select()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.page == .viewfinder(index: 0) }
-                try await waitUntil(timeout: .seconds(1)) { source.viewfinderChanges == [true] }
+                // Opening it makes sure the stream is up (#46).
+                try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder"] }
                 input.navRight()
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
                 #expect(run.lens.page == .details(index: 0))
-                try await waitUntil(timeout: .seconds(1)) { source.viewfinderChanges == [true, false] }
                 // The birder's first House Finch: the saved line is the Legendary reveal (issue #51).
                 try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("Your first House Finch", legendary: true)) }
                 #expect(run.lens.card.wordCount <= LensCardRenderer.detailsWordBudget)
@@ -91,13 +91,16 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
                 try await waitUntil(timeout: .seconds(5)) { run.saved.count == 2 }
                 #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 2)
-                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New card", legendary: false)) }
+                // A New York sighting with no set known: the card is Uncharted (issue #54).
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New card · Uncharted", legendary: false)) }
                 #expect(Set(try album.mainContext.fetch(FetchDescriptor<Sighting>()).map(\.identifier)).count == 2)
 
                 // Back (the middle-finger tap) returns to the list; Back on the root ends the whole run: lens, engine,
                 // source and session.
                 input.back()
                 try await waitUntil(timeout: .seconds(1)) { run.lens.page == .list }
+                // Landing on the list makes sure the stream is up too (#46).
+                try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder", "viewfinder", "species list"] }
                 input.back()
                 try await waitUntil(timeout: .seconds(5)) { run.phase == .stopped(.back) }
                 #expect(run.lens.phase == .stopped(.back))

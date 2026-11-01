@@ -163,7 +163,7 @@ public enum LensCardRenderer {
     static func savedLine(_ candidate: Candidate, earned: LensEarnedCard?) -> LensElement {
         switch earned {
         case .legendary: .saved("Your first \(candidate.species.commonName)", legendary: true)
-        case .newCard: .saved("New card", legendary: false)
+        case .newCard(let number): .saved("New card · \(number)", legendary: false)
         case nil: .saved("Added to my list", legendary: false)
         }
     }
@@ -179,7 +179,8 @@ public enum LensCardRenderer {
     }
 
     /// A saved species shows what its latest add earned ("Your first House Finch" for a Legendary card, else "New
-    /// card"; "Added to my list" until the sighting is written) and "Add another", which adds a new one.
+    /// card · 021/160" or "New card · Uncharted"; "Added to my list" until the sighting is written) and "Add another",
+    /// which adds a new one.
     static func details(_ candidate: Candidate, isSaved: Bool, earned: LensEarnedCard? = nil, calling: String?, profile: SpeciesProfile?) -> LensCard {
         // The fixed lines first, then the field marks take what is left of the budget.
         var fixed: [LensElement] = []

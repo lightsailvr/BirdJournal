@@ -20,6 +20,9 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
     public let soundCount: Int?
     /// The pack database's schema (issue #41); nil in an index written before it was listed, which means schema 2.
     public let schemaVersion: Int?
+    /// The pack's set (issue #54), so a set works before its pack is downloaded; nil in an index written before sets,
+    /// or when the entry's set cannot be read (the rest of the entry still is).
+    public let set: PackSet?
 
     /// Whether this build can open the pack. A pack of a newer schema is listed but not offered for download.
     public var isSupported: Bool {
@@ -28,7 +31,7 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
 
     public init(
         id: String, name: String, version: Int, url: URL, sha256: String, byteCount: Int, speciesCount: Int? = nil, photoCount: Int? = nil,
-        region: String? = nil, soundCount: Int? = nil, schemaVersion: Int? = nil
+        region: String? = nil, soundCount: Int? = nil, schemaVersion: Int? = nil, set: PackSet? = nil
     ) {
         self.id = id
         self.name = name
@@ -41,6 +44,28 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
         self.region = region
         self.soundCount = soundCount
         self.schemaVersion = schemaVersion
+        self.set = set
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, version, url, sha256, byteCount, speciesCount, photoCount, region, soundCount, schemaVersion, set
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        version = try container.decode(Int.self, forKey: .version)
+        url = try container.decode(URL.self, forKey: .url)
+        sha256 = try container.decode(String.self, forKey: .sha256)
+        byteCount = try container.decode(Int.self, forKey: .byteCount)
+        speciesCount = try container.decodeIfPresent(Int.self, forKey: .speciesCount)
+        photoCount = try container.decodeIfPresent(Int.self, forKey: .photoCount)
+        region = try container.decodeIfPresent(String.self, forKey: .region)
+        soundCount = try container.decodeIfPresent(Int.self, forKey: .soundCount)
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion)
+        // A set this build can't read must not cost the phone the whole index.
+        set = try? container.decodeIfPresent(PackSet.self, forKey: .set)
     }
 }
 

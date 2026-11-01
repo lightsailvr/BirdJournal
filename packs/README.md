@@ -5,7 +5,7 @@ Built species packs, as `scripts/build-pack.sh` writes them from `packbuilder/pa
 
 | File | What |
 | --- | --- |
-| `pack.sqlite` | `pack` (id, name, region, version, schema_version, built_at, license_text), `species` (id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat, description_source, sort_order), `photo` (id, species_id, rank, file_lens, file_phone, observer, observer_login, license, credit_line, short_credit, source_url, photo_url, inat_photo_id, tags, score), `lookalike` (species_id, other_species_id, one_line_difference; empty in v1, nothing on the lens shows it), and since schema 3 `sound` (id, species_id, rank, kind, file, duration_ms, recordist, license, credit_line, short_credit, source_url, quality). |
+| `pack.sqlite` | `pack` (id, name, region, version, schema_version, built_at, license_text), `species` (id, scientific_name, common_name, birdnet_label, inat_taxon_id, wikipedia_url, summary, field_marks, size, habitat, description_source, sort_order), `photo` (id, species_id, rank, file_lens, file_phone, observer, observer_login, license, credit_line, short_credit, source_url, photo_url, inat_photo_id, tags, score), `lookalike` (species_id, other_species_id, one_line_difference; empty in v1, nothing on the lens shows it), since schema 3 `sound` (id, species_id, rank, kind, file, duration_ms, recordist, license, credit_line, short_credit, source_url, quality), and since schema 4 (issue #54) `set_definition` (one row: the pack's `set.json`, the same JSON the index carries) and `stats`, `fact`, `lore`, `pack_art`, `threatened`, `family`, empty until the tickets that fill them (an empty table means "not available yet"). |
 | `sounds/<xc-nr or inat-id>.m4a` | Schema 3 (issue #41): an 8 s reference clip of the species' song, call, or (iNaturalist, untyped) sound; AAC-LC, mono, 48 kHz, 64 kbps, about 65 KB. |
 | `lens/<inat photo id>.jpg` | 552 × 368 px crop around the bird, the full width of the species card (DECISIONS.md: a bundled image lays out at pixel size on the 600 px canvas). |
 | `phone/<inat photo id>.jpg` | Looser crop, at most 1200 px on the long side, for the phone. |
@@ -15,9 +15,11 @@ Built species packs, as `scripts/build-pack.sh` writes them from `packbuilder/pa
 Descriptions (`summary`, `field_marks`, `size`, `habitat`) are cut from each species' English Wikipedia article by
 rule (`packbuilder/src/packbuilder/descriptions.py`) or written by hand in the pack's `overrides.json`;
 `description_source` is the permanent link to the article revision the text came from, NULL for hand-written text.
-Schema version 3 (`SpeciesPack.schemaVersion` in the Swift `Pack` module, which still opens schema 2 without sounds).
-`manifest.json` and the published `index.json` carry each pack's `schema_version` / `schemaVersion`, so a build that
-cannot open a newer schema lists the pack as needing a newer app instead of downloading it.
+Schema version 4 (`SpeciesPack.schemaVersion` in the Swift `Pack` module, which still opens schema 2 without sounds and
+schema 3 without a set). `manifest.json` and the published `index.json` carry each pack's `schema_version` /
+`schemaVersion`, so a build that cannot open a newer schema lists the pack as needing a newer app instead of
+downloading it. Since #54 each index entry also carries the pack's `set` (from `packbuilder/packs/<id>/set.json`), so
+the phone knows every set before downloading its pack.
 
 ## Where the built packs come from
 
@@ -37,8 +39,8 @@ this directory and is declared as a package resource, so the pack ships in the p
 ## Publishing a new build
 
 1. `scripts/build-pack.sh <id>` writes the pack (`packs/<id>/` for the bundled pack, `build/packs/<id>/` for a
-   downloadable one) and `build/packs/<id>.zip` (reproducible from the committed `pack.json`, `overrides.json` and
-   `wikipedia.lock.json` and `sounds.lock.json` plus the builder's cache: iNaturalist metadata pinned to
+   downloadable one) and `build/packs/<id>.zip` (reproducible from the committed `pack.json`, `overrides.json`,
+   `set.json`, `wikipedia.lock.json` and `sounds.lock.json` plus the builder's cache: iNaturalist metadata pinned to
    `inat_created_before`, Wikipedia pages cached by title and their revisions pinned in the lock, the chosen
    recordings pinned in the sounds lock). The sounds stage needs `XENO_CANTO_API_KEY` and ffmpeg; see
    `packbuilder/README.md` for how it keeps to xeno-canto's request limits.

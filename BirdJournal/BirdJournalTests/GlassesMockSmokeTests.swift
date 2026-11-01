@@ -97,6 +97,7 @@ extension MockDeviceKitTests {
                 let photoURL = try makeFeedImage()
                 glasses.services.cameraCapture.setCapturedPhoto(fileURL: photoURL)
                 let streamed = { log.streamStates.filter { $0 == .streaming }.count }
+                source.fullResolutionPhotos = true
 
                 let photo = await source.capturePhoto()
                 let data = try #require(photo, "the mock's photo")
@@ -106,20 +107,25 @@ extension MockDeviceKitTests {
             }
         }
 
-        @Test("the viewfinder restarts the stream sharper and faster, and closing it goes back to the listening stream")
-        func audioSourceViewfinderStream() async throws {
+        // The mock's stream stops on its own soon after `.streaming` for lack of audio frames, so the in-stream photo
+        // (the default since #46) is checked on hardware, and every stream here goes quiet.
+        @Test("a stream gone quiet comes back when the lens needs it, unless a clip holds it (#46)")
+        func audioSourceEnsureStreaming() async throws {
             try await withStartedSource { source, _, log in
                 try await waitUntil { log.streamStates.contains(.streaming) }
+                try await waitUntil { source.sessionState == .started }
                 let streamed = { log.streamStates.filter { $0 == .streaming }.count }
-                #expect(source.configuration.resolution == .low)
+                #expect(!source.fullResolutionPhotos)
 
-                await source.setViewfinder(open: true)
-                #expect(source.configuration.resolution == .medium)
-                #expect(source.configuration.frameRate == 7)
+                await source.holdForPlayback()
+                await source.ensureStreaming("species list")
+                try await Task.sleep(for: .milliseconds(500))
+                #expect(streamed() == 1, "a clip still holds the stream")
+                source.releaseAfterPlayback()
                 try await waitUntil(timeout: .seconds(15)) { streamed() == 2 }
 
-                await source.setViewfinder(open: false)
-                #expect(source.configuration.resolution == .low)
+                try await Task.sleep(for: GlassesAudioSource.audioStall + .milliseconds(500))
+                await source.ensureStreaming("species list")
                 try await waitUntil(timeout: .seconds(15)) { streamed() == 3 }
                 #expect(source.sessionState == .started)
             }

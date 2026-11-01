@@ -1,11 +1,14 @@
 import Album
 import Pack
+import SwiftData
 import SwiftUI
 
 /// The Field Guide tab (issue #28): every bird the installed packs describe, searchable by common or scientific name,
-/// with the way to the bird packs.
+/// with the way to the bird packs. Above the birds, the sets the phone knows (issue #54), each with the birder's
+/// progress and a page showing the species not yet collected there as silhouettes.
 struct FieldGuideView: View {
     @Environment(PackLibrary.self) private var library
+    @Query private var sightings: [Sighting]
     @State private var query = ""
 
     /// Every species across the packs, bundled first, each once.
@@ -35,6 +38,7 @@ struct FieldGuideView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 4)
+                    SetsSection(sets: library.sets, collection: library.collection(of: sightings))
                     Text("Available offline")
                         .font(JournalFont.section)
                         .foregroundStyle(Color.ink)
@@ -74,6 +78,36 @@ struct FieldGuideView: View {
         .background(Color.paper)
         .navigationTitle("Field Guide")
         .searchable(text: $query, prompt: "Common or scientific name")
+    }
+}
+
+/// The sets the phone knows, from its packs and the pack index, each opening its page of species.
+private struct SetsSection: View {
+    let sets: [PackSet]
+    let collection: CardCollection
+
+    var body: some View {
+        if !sets.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Sets")
+                    .font(JournalFont.section)
+                    .foregroundStyle(Color.ink)
+                    .padding(.top, JournalLayout.sectionGap)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Each pack's region is a set to collect. Birds you haven't added there yet show as silhouettes.")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .padding(.top, 4)
+                ForEach(sets) { set in
+                    NavigationLink(value: Route.set(id: set.id)) {
+                        SetProgressRow(progress: collection.progress(of: set.id), detail: set.edition.name)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("guide-set-\(set.id)")
+                    RowRule()
+                }
+            }
+        }
     }
 }
 

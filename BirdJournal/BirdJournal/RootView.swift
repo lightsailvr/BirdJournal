@@ -10,7 +10,13 @@ enum Route: Hashable {
     case species(scientificName: String, commonName: String)
     case speciesCredits(scientificName: String)
     case sighting(PersistentIdentifier)
-    case journalSpecies(speciesID: String)
+    /// One card, front first (issue #52); opened from a species gallery, it browses that gallery's filtered order
+    /// (issue #53).
+    case card(PersistentIdentifier, browse: GalleryBrowse? = nil)
+    /// One species' cards (issue #53), marking `selected` when a card's All encounters opened it.
+    case gallery(scientificName: String, commonName: String, selected: UUID? = nil)
+    /// One set's species in collector order, silhouettes for the uncollected (issue #54).
+    case set(id: String)
     case packs
     case pack(id: String)
     case credits
@@ -41,8 +47,12 @@ private struct RouteDestination: View {
             SpeciesCreditsView(scientificName: scientificName)
         case .sighting(let id):
             SightingDetailView(id: id)
-        case .journalSpecies(let speciesID):
-            SpeciesJournalView(speciesID: speciesID)
+        case .card(let id, let browse):
+            CardDetailView(id: id, browse: browse)
+        case .gallery(let scientificName, let commonName, let selected):
+            SpeciesGalleryView(scientificName: scientificName, commonName: commonName, selected: selected)
+        case .set(let id):
+            SetView(id: id)
         case .packs:
             BirdPacksView()
         case .pack(let id):
@@ -67,6 +77,8 @@ private struct RouteDestination: View {
 extension EnvironmentValues {
     /// Opens the Journal tab on the Cards view: the Legendary reveal's "Back to my collection" (issue #51).
     @Entry var openCollection: @MainActor () -> Void = {}
+    /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
+    @Entry var openListen: @MainActor () -> Void = {}
 }
 
 /// The three destinations (issue #28): Listen, Journal and Field Guide, with the compact listening strip above the
@@ -77,6 +89,7 @@ struct RootView: View {
     }
 
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(PackLibrary.self) private var library
     @State private var tab: Tab = .listen
     @State private var journalMode: JournalView.Mode = .cards
     @State private var listenPath = NavigationPath()
@@ -118,6 +131,10 @@ struct RootView: View {
             journalPath = NavigationPath()
             tab = .journal
         }
+        .environment(\.openListen) { tab = .listen }
+        // The index carries every pack's set (issue #54), so it is fetched at launch, not only on the packs screen;
+        // the last good copy stands in meanwhile and offline.
+        .task { await library.refreshIndex() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
         .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, showingDeveloper: $showingDeveloper))
