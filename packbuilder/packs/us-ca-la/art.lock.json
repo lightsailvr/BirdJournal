@@ -2665,7 +2665,7 @@
           "faithful": true
         }
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haliaeetus-leucocephalus": {
       "common_name": "Bald Eagle",
@@ -5124,7 +5124,7 @@
           "faithful": false
         }
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pycnonotus-jocosus": {
       "common_name": "Red-whiskered Bulbul",
