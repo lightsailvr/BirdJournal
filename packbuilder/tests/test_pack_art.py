@@ -8,8 +8,10 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from packbuilder.art import ArtSetting
 from packbuilder.comfy import ComfyClient
 from packbuilder.definition import SpeciesEntry
+from packbuilder.descriptions import Description
 from packbuilder.geometry import Box
 from packbuilder.pack_art import ArtLock, PackArtist, lighting, pick_reference, review
 from packbuilder.scoring import CropScore
@@ -47,10 +49,10 @@ def result(entry, photos):
     return SpeciesResult(entry=entry, photos=photos, gap=len(photos) < 3)
 
 
-def artist(tmp_path, comfy, theme=THEME, references=None):
+def artist(tmp_path, comfy, theme=THEME, references=None, settings=None):
     return PackArtist(
         ComfyClient(comfy.url, poll_seconds=0.01), pack_id="us-ca-la", theme=theme, lock=ArtLock.load(tmp_path / "art.lock.json"),
-        cache_dir=tmp_path / "cache", references=references or {},
+        cache_dir=tmp_path / "cache", references=references or {}, settings=settings or {},
     )
 
 
@@ -100,6 +102,28 @@ def test_the_locked_reference_is_kept_while_the_pack_still_has_it(tmp_path, comf
     artist(tmp_path, comfy).paint([result(FINCH, [photo(tmp_path, 13, light=1.0), photo(tmp_path, 12, light=0.6, rank=1)])])
 
     assert len(comfy.jobs) == jobs
+
+
+def test_each_species_is_painted_on_its_setting_sized_from_its_length_and_a_changed_setting_repaints_only_it(tmp_path, comfy):
+    """Prompts v10 (the review of the Los Angeles sheets): a perched finch on a pencil-thin twig with leaves at its own
+    scale, its length from its description; a phoebe whose length is pinned; the setting in the lock."""
+    finch = SpeciesResult(entry=FINCH, photos=[photo(tmp_path, 12)], gap=True, description=Description("", "", "13–15 cm", "", ""))
+    results = [finch, result(PHOEBE, [photo(tmp_path, 21)])]
+    settings = {"haemorhous-mexicanus": ArtSetting("perch"), "sayornis-nigricans": ArtSetting("ground", length_cm=16)}
+    artist(tmp_path, comfy, settings=settings).paint(results)
+
+    finch_prompt, phoebe_prompt = (job.prompt for job in comfy.paintings if job.filename_prefix == "birdjournal/pack-art")
+    assert "a slender twig no thicker than a pencil" in finch_prompt and "each leaf about half as long as the bird" in finch_prompt
+    assert "does not float" in finch_prompt and "rock" not in finch_prompt
+    assert "It stands on the ground" in phoebe_prompt and "twig" not in phoebe_prompt
+    lock = json.loads((tmp_path / "art.lock.json").read_text())["species"]
+    assert (lock["haemorhous-mexicanus"]["setting"], lock["sayornis-nigricans"]["setting"]) == ("perch", "ground")
+    jobs = len(comfy.paintings)
+
+    artist(tmp_path, comfy, settings={**settings, "sayornis-nigricans": ArtSetting("perch", length_cm=16)}).paint(results)
+
+    repainted = [job for job in comfy.paintings[jobs:] if job.filename_prefix == "birdjournal/pack-art"]
+    assert len(repainted) == 1 and "a slender twig" in repainted[0].prompt, "only the phoebe, now on a branch"
 
 
 def test_a_changed_theme_repaints_and_the_painting_goes_back_to_review(tmp_path, comfy):
@@ -246,7 +270,7 @@ def test_the_build_paints_then_ships_only_what_the_review_approved_and_a_rebuild
 
     assert len(comfy.jobs) == jobs
     [(species_id, file, photos, version)] = sqlite3.connect(written.database).execute("SELECT * FROM pack_art").fetchall()
-    assert (species_id, file, version) == ("haemorhous-mexicanus", "art/haemorhous-mexicanus.avif", "pack-art@3 bird-isolate@1 prompts@9")
+    assert (species_id, file, version) == ("haemorhous-mexicanus", "art/haemorhous-mexicanus.avif", "pack-art@3 bird-isolate@1 prompts@10")
     assert json.loads(photos)[0] in (12, 13) and (tmp_path / "pack" / file).exists()
     report = json.loads((tmp_path / "pack" / "report.json").read_text())
     assert report["gaps"]["art"] == [] and report["unreviewed"] == {"art": []}

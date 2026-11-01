@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -47,6 +48,31 @@ class Species:
     scientific_name: str
 
 
+SETTINGS = ("perch", "trunk", "flight", "ground", "rock", "shore", "wade", "water")
+"""Where pack art puts the bird (prompts v10, #57), from what its reference shows: any perch off the ground (branch,
+wire, fence, post) is painted as a branch, a woodpecker on a trunk, a flight shot in flight above a branch, and the rest
+on the ground, a low rock, the shore, wading or swimming."""
+
+
+@dataclass(frozen=True)
+class ArtSetting:
+    """What pack art paints the bird on and how big it is (`art.setting` and `art.length_cm` in overrides.json); a
+    setting of None lets the model choose, at the bird's own scale."""
+
+    kind: str | None = None
+    length_cm: float | None = None
+
+    def __post_init__(self):
+        if self.kind is not None and self.kind not in SETTINGS:
+            raise ValueError(f"unknown art setting {self.kind!r}: one of {', '.join(SETTINGS)}")
+
+
+def length_cm(size: str | None) -> float | None:
+    """A description's body length ("16 cm", "45–60 cm") in centimetres, the middle of a range; None without one."""
+    numbers = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", size.split("cm")[0])] if size and "cm" in size else []
+    return sum(numbers[:2]) / len(numbers[:2]) if numbers else None
+
+
 @dataclass(frozen=True)
 class ArtPrompts:
     version: int
@@ -55,29 +81,50 @@ class ArtPrompts:
     templates: dict[str, str]
     isolate: str
     """The prompt that isolates a reference bird on white (workflow `bird-isolate`)."""
+    settings: dict[str, str]
+    """Pack art's `{setting}` sentences by `SETTINGS` kind, and `default`."""
+    scale: dict
+    """How a bird's length sizes its setting: the branch's thickness and a leaf's length beside it."""
 
     @classmethod
     def load(cls, path: Path = ART_DIR / "prompts.json") -> "ArtPrompts":
         data = json.loads(Path(path).read_text())
-        return cls(version=data["version"], editions=data["editions"], light=data["light"], templates=data["templates"], isolate=data["isolate"])
+        return cls(
+            version=data["version"], editions=data["editions"], light=data["light"], templates=data["templates"], isolate=data["isolate"],
+            settings=data["settings"], scale=data["scale"],
+        )
 
-    def render(self, kind: ArtKind, species: Species, edition: str, legendary: bool = False, theme: str | None = None) -> str:
+    def setting(self, setting: ArtSetting, theme: str) -> str:
+        """The `{setting}` sentence: the bird on its perch, ground or water, sized from its length where it is known."""
+        scale = self.scale
+        if setting.length_cm:
+            branch = next(b["text"] for b in scale["branches"] if "under_cm" not in b or setting.length_cm < b["under_cm"])
+            ratio = scale["leaf_cm"] / setting.length_cm
+            leaf = scale["leaf_clause"].format(leaves=next(l["text"] for l in scale["leaves"] if ratio >= l["at_least"]))
+        else:
+            branch, leaf = scale["unknown_branch"], ""
+        return self.settings[setting.kind or "default"].format(branch=branch, leaf=leaf, edition_theme=theme)
+
+    def render(
+        self, kind: ArtKind, species: Species, edition: str, legendary: bool = False, theme: str | None = None, setting: ArtSetting = ArtSetting(),
+    ) -> str:
         """The prompt for one painting of `species` in the theme of `edition` (a pack id). Pack art is painted in the
-        set's edition `theme` (`sets.Edition`, #57); scene and photo art take the edition's light and colours from
-        `editions`. Pack art is the same for every birder, so it has no Legendary variant."""
+        set's edition `theme` (`sets.Edition`, #57) on the species' `setting`; scene and photo art take the edition's
+        light and colours from `editions`. Pack art is the same for every birder, so it has no Legendary variant."""
         if legendary and kind == "pack":
             raise ValueError("pack art has no Legendary variant")
         if kind == "pack" and not theme:
             raise ValueError("pack art is painted in its set's edition theme")
-        return self._fill(self.templates[kind], species, {} if kind == "pack" else self.editions[edition], theme, legendary)
+        return self._fill(self.templates[kind], species, {} if kind == "pack" else self.editions[edition], theme, legendary, setting)
 
-    def render_from_text(self, species: Species, theme: str) -> str:
+    def render_from_text(self, species: Species, theme: str, setting: ArtSetting = ArtSetting()) -> str:
         """Pack art for a species with no open-license photo (#57): with no reference to take its identity from, the
         prompt names it, and the painting is always reviewed by hand."""
-        return self._fill(self.templates["pack_text"], species, {}, theme, legendary=False)
+        return self._fill(self.templates["pack_text"], species, {}, theme, legendary=False, setting=setting)
 
-    def _fill(self, template: str, species: Species, edition: dict[str, str], theme: str | None, legendary: bool) -> str:
+    def _fill(self, template: str, species: Species, edition: dict[str, str], theme: str | None, legendary: bool, setting: ArtSetting = ArtSetting()) -> str:
         return template.format(
+            setting=self.setting(setting, theme or "") if "{setting}" in template else "",
             common_name=species.common_name,
             scientific_name=species.scientific_name,
             place=edition.get("place", ""),
