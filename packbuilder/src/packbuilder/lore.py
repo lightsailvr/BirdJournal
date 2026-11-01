@@ -43,26 +43,38 @@ API_KEY_VARIABLE = "BIRDJOURNAL_ANTHROPIC_API_KEY"
 KEYCHAIN_SERVICE = "birdjournal-anthropic-api-key"
 MODEL = "claude-opus-5-5"
 """DECISIONS.md, "Lore and captions": the current Opus, for the voice; a pack of 160 species costs a few dollars."""
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 ATTEMPTS = 3
 DEFAULT_INTERVAL = 2.0
 """Seconds between API requests: the step is paced like the other network steps, one request at a time."""
 LORE_WORDS = (50, 80)
 TAGLINE_WORDS = 12
+MAX_NUMBERS = 1
+NUMBER = re.compile(
+    r"\b(\d[\d,.]*|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|"
+    r"eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundreds?|thousands?|millions?|dozens?)\b",
+    re.IGNORECASE,
+)
+"""Numbers in figures or words; "one" is left out, as prose uses it for other things. "twenty-six" counts once."""
 ALL = "all"
 
-SYSTEM = """You write the lore on the back of collectible bird cards: true natural history told like a legend.
+SYSTEM = """You write the lore on the back of collectible bird cards: true natural history told as a small legend.
 
-Write 50 to 80 words of lore about one species in a mythic, legend-like voice, as a teller of old tales would, and a \
-tagline of 12 words or fewer for the card's front.
+Write 50 to 80 words of lore about one species and a tagline of 12 words or fewer for the card's front.
 
-The only facts you may use are the numbered entries of the species' fact sheet. Say nothing about the bird that is not \
-on it: no behaviour, food, colour, number, place, season or sound of your own. The mythic voice is in the telling (the \
-cadence, the epithets, the framing of a legend), never in new claims about the bird. Do not invent people, peoples, \
-gods or named legends, and do not present the facts as anyone's belief.
+Tell it as a small myth: a "why it does this" tale, or the way a legend speaks of a creature ("So it is that...", \
+"Ask why the..."). Choose one or two things the bird does and build the tale around them. Lead with how it lives: where \
+it keeps, how it hunts, what it builds, how it sounds.
 
-Every sentence of the lore, and the tagline, lists the ids of the fact-sheet entries it rests on. Each sentence must \
-rest on at least one entry. Use plain words a ten-year-old could read aloud; no archaic spellings."""
+The only facts you may use are the numbered entries of the species' fact sheet. Prefer the article's facts; the \
+datasets' entries are coarse category labels, so use one only where the article says nothing on that point. Use at \
+most one number in the whole lore, and none in the tagline. Every claim about the bird must be on the sheet: no \
+behaviour, food, colour, number, place, season or sound of your own. The legend lives in the telling (the framing, the \
+cadence, the epithets, the bird's purpose as a tale would give it), never in new facts. Do not name gods, peoples or \
+real people unless the sheet does.
+
+Every sentence of the lore, and the tagline, lists the ids of the fact-sheet entries it rests on; each sentence rests on \
+at least one. Use plain words a ten-year-old could read aloud; no archaic spellings."""
 
 SCHEMA = {
     "type": "object",
@@ -243,7 +255,12 @@ def validate(draft: dict, facts: list[Fact] | tuple[Fact, ...]) -> list[str]:
     count = sum(len(sentence.get("text", "").split()) for sentence in sentences)
     if not LORE_WORDS[0] <= count <= LORE_WORDS[1]:
         problems.append(f"the lore is {count} words; it must be {LORE_WORDS[0]} to {LORE_WORDS[1]}")
+    numbers = sum(len(_numbers(sentence.get("text", ""))) for sentence in sentences)
+    if numbers > MAX_NUMBERS:
+        problems.append(f"the lore holds {numbers} numbers; use at most {MAX_NUMBERS}")
     tagline = draft.get("tagline") or {}
+    if _numbers(tagline.get("text", "")):
+        problems.append("the tagline holds a number; use none")
     tagline_words = len(tagline.get("text", "").split())
     if not 1 <= tagline_words <= TAGLINE_WORDS:
         problems.append(f"the tagline is {tagline_words} words; it must be 1 to {TAGLINE_WORDS}")
@@ -254,10 +271,20 @@ def validate(draft: dict, facts: list[Fact] | tuple[Fact, ...]) -> list[str]:
     return problems
 
 
+def _numbers(text: str) -> list[str]:
+    """Each number in the text once: "twenty-six" and "four hundred" are one number each."""
+    return re.findall(r"(?:%s)(?:[\s-]+(?:%s))*" % (NUMBER.pattern, NUMBER.pattern), text, flags=re.IGNORECASE)
+
+
 def prompt(common_name: str, scientific_name: str, facts: list[Fact] | tuple[Fact, ...], feedback: list[str] | tuple[str, ...] = ()) -> str:
     """The request for one species: its names and its fact sheet, then what the maintainer or the checks sent back."""
-    lines = [f"Species: {common_name} ({scientific_name})", "", "Fact sheet:"]
-    lines += [f"{fact.id}: {fact.text}" for fact in facts]
+    lines = [f"Species: {common_name} ({scientific_name})"]
+    article = [fact for fact in facts if fact.source.startswith("http")]
+    datasets = [fact for fact in facts if not fact.source.startswith("http")]
+    if article:
+        lines += ["", "Fact sheet, from its Wikipedia article:"] + [f"{fact.id}: {fact.text}" for fact in article]
+    if datasets:
+        lines += ["", "Fact sheet, from the datasets (coarse labels):"] + [f"{fact.id}: {fact.text}" for fact in datasets]
     if feedback:
         lines += ["", "Your previous draft was sent back. Fix this:"] + [f"- {item}" for item in feedback]
     return "\n".join(lines)

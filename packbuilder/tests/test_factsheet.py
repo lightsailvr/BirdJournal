@@ -63,28 +63,55 @@ def test_a_known_gap_keeps_only_what_the_datasets_have():
     ]
 
 
-def test_article_facts_stand_alone_and_come_from_every_kind_of_section_first():
+def test_article_facts_name_the_bird_then_tell_how_it_lives_before_where_and_what_it_looks_like():
     facts = wikipedia_facts(EXTRACT)
     assert facts == [
         "The black phoebe is a passerine bird in the tyrant flycatcher family.",
         "The black phoebe hunts from a low perch, flying out to catch insects in the air.",
         "The nest is a cup of mud and grass fibres stuck to a wall, a bridge or a cliff.",
         "Its song is a thin, rising and falling tee-hee, tee-hoo, given by the male.",
-        "It has predominantly black plumage, with white on its belly and undertail coverts.",
         "Pairs defend a territory along streams and ponds through the year.",
-    ], "the measurement, the 'However' sentence and the references are left out; behaviour's second sentence comes after one of each kind"
+        "It has predominantly black plumage, with white on its belly and undertail coverts.",
+    ], "the measurement, the 'However' sentence and the references are left out; behaviour before appearance"
+
+
+def test_classification_comes_last_and_a_repeat_or_a_third_of_one_kind_is_left_out():
+    extract = "\n".join([
+        "The test bird is a small songbird of the west.",
+        "== Taxonomy ==",
+        "The test bird was formally described in 1850 and placed in its own genus.",
+        "== Behaviour ==",
+        "It forages for insects among the leaves of oak trees.",
+        "It forages for insects among the leaves of oak trees in winter.",
+        "It sings a rising whistle from a high perch at dawn.",
+        "It roosts in tight flocks on cold nights.",
+        "== Distribution ==",
+        "It lives near streams and ponds in the foothills.",
+    ])
+    assert wikipedia_facts(extract) == [
+        "The test bird is a small songbird of the west.",
+        "It forages for insects among the leaves of oak trees.",
+        "It sings a rising whistle from a high perch at dawn.",
+        "It lives near streams and ponds in the foothills.",
+        "The test bird was formally described in 1850 and placed in its own genus.",
+    ]
 
 
 def test_the_article_gives_at_most_eight_facts():
-    long = "The lead says the bird is a small grey songbird of the west.\n\n== Behaviour ==\n" + "\n".join(
-        f"The bird does thing number {word} on most days of the year." for word in "one two three four five six seven eight nine ten".split()
-    )
-    assert len(wikipedia_facts(long)) == WIKIPEDIA_FACTS
+    sections = {
+        "Behaviour": ["It forages for beetles under loose bark.", "Pairs roost together in hollow trunks."],
+        "Breeding": ["The nest is woven from grass and spider silk.", "Both parents feed the young for three weeks."],
+        "Vocalizations": ["Its song is a rolling trill at dawn.", "Alarm calls are sharp dry ticks."],
+        "Distribution": ["It keeps to oak woodland and canyon streams.", "Some winter in desert towns far south."],
+        "Conservation": ["Feeders in gardens have helped it spread north."],
+    }
+    extract = "The lead says the bird is a small grey songbird of the west.\n" + "\n".join(f"== {name} ==\n" + "\n".join(text) for name, text in sections.items())
+    assert len(wikipedia_facts(extract)) == WIKIPEDIA_FACTS
 
 
-def test_the_sheet_numbers_the_stats_then_the_article():
+def test_the_sheet_numbers_the_article_then_the_stats():
     sheet = fact_sheet(JOINED, (EXTRACT, REVISION))
     assert [fact.id for fact in sheet] == [f"f{n}" for n in range(1, 16)]
-    assert sheet[0].source == "wingspan" and sheet[9].source == REVISION
-    assert sheet[9].text == "The black phoebe is a passerine bird in the tyrant flycatcher family."
+    assert sheet[0].source == REVISION and sheet[6].source == "wingspan", "the article first, then the stats"
+    assert sheet[0].text == "The black phoebe is a passerine bird in the tyrant flycatcher family."
     assert fact_sheet(None, None) == []

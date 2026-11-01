@@ -1,13 +1,15 @@
 """The fact sheet (issue #56, CONTEXT.md "Fact sheet"): the sourced facts a pack holds for a species. Lore and captions
 may state nothing that is not on it.
 
-A species' sheet is its stats told as short sentences (from the datasets of `stats.py`, each credited to the dataset
-that gave it) and then up to `WIKIPEDIA_FACTS` sentences of its English Wikipedia article at the pinned revision (the
-description's source, CC BY-SA 4.0). Both are picked by rule, so a rebuild from the cached page gives the same sheet:
+A species' sheet is up to `WIKIPEDIA_FACTS` sentences of its English Wikipedia article at the pinned revision (the
+description's source, CC BY-SA 4.0) and then its stats told as short sentences (from the datasets of `stats.py`, each
+credited to the dataset that gave it). Both are picked by rule, so a rebuild from the cached page gives the same sheet:
 
-- the article's sentences are taken from its sections in a fixed order of kinds (the lead, behaviour and diet,
-  breeding, voice, people, names, range, status, then appearance), the first fitting sentence of each kind, then the
-  second, until the sheet is full, so one long section never fills it;
+- the article's first sentence names the bird; then sentences about how it lives (feeding, nesting, voice, movement)
+  come first, then where it lives, then neutral ones (a range, a date), and naming and classification last; within each tier the sentences are
+  taken from the sections in a fixed order of kinds (the lead, behaviour and diet, breeding, voice, people, names,
+  range, status, then appearance), the first of each kind, then the second, so one long section never fills the sheet,
+  at most two from one kind besides the lead, and a sentence that repeats one already taken is left out;
 - a sentence fits when it stands alone: whole, 6 to 32 words, no measurements (the stats carry the numbers) and not
   opening on a word that leans on the sentence before ("This", "However", "Both").
 
@@ -24,6 +26,8 @@ from packbuilder.stats import JoinedSpecies, SpeciesStats, Threat
 
 WIKIPEDIA_FACTS = 8
 """The spec's "up to about eight short facts" from the article, on top of the stats."""
+PER_KIND = 2
+"""Sentences one kind of section may give besides the lead's (three songs crowd out where the bird lives)."""
 FACT_WORDS = (6, 32)
 
 SECTION_KINDS: tuple[tuple[str, ...], ...] = (
@@ -64,27 +68,76 @@ class Fact:
 
 
 def fact_sheet(joined: JoinedSpecies | None, article: tuple[str, str] | None) -> list[Fact]:
-    """The species' facts: its stats, then its article's (`article` is the extract and its revision link)."""
-    drafted = stats_facts(joined) if joined else []
-    if article is not None:
-        drafted += [(text, article[1]) for text in wikipedia_facts(article[0])]
+    """The species' facts: its article's first (`article` is the extract and its revision link), then its stats. The
+    article's come first because they are the richer: a dataset's category ("rock", "cup") is coarse beside "always
+    near water" and "cemented in its place with mud"."""
+    drafted = [(text, article[1]) for text in wikipedia_facts(article[0])] if article is not None else []
+    drafted += stats_facts(joined) if joined else []
     return [Fact(id=f"f{number}", text=text, source=source) for number, (text, source) in enumerate(drafted, start=1)]
 
 
+BEHAVIOUR = re.compile(
+    r"\b(nest\w*|mud|eggs?|court\w*|display\w*|feed\w*|eats?|eating|diet|forag\w*|hunt\w*|prey|insect\w*|seeds?|fruit\w*|"
+    r"nectar|fish\w*|catch\w*|caught|dives?|diving|swim\w*|wade\w*|perch\w*|sally\w*|hover\w*|flock\w*|roost\w*|tail-\w+|"
+    r"wag\w*|bob\w*|pump\w*|songs?|sings?|calls?|voice|territor\w*|mates?|young|chicks?|fledg\w*|cache\w*|mimic\w*)\b",
+    re.IGNORECASE,
+)
+"""Words of how the bird lives: how it feeds, builds, raises young, moves and sounds."""
+HABITAT_WORDS = re.compile(
+    r"\b(water|streams?|ponds?|rivers?|lakes?|marsh\w*|shores?|coasts?|cliffs?|bridges?|forests?|woodlands?|deserts?|"
+    r"grasslands?|scrub\w*|cities|towns?|gardens?|parks?|fountains?|feeders?)\b",
+    re.IGNORECASE,
+)
+"""Words of the places the bird lives in."""
+TAXONOMY = re.compile(
+    r"\b(genus|genera|subspecies|subfamily|taxon\w*|phylogen\w*|clade|described|classified|binomial|specific (name|epithet)|"
+    r"order|families|species of birds|sister|lineage|synonym\w*|mitochondrial|genetic\w*|DNA)\b",
+    re.IGNORECASE,
+)
+"""Words of naming and classification, which tell a reader little about the bird itself."""
+
+
+def _richness(sentence: str) -> int:
+    """2 for a sentence about how the bird lives, 1 about where, -1 about its classification, else 0 (a range, a date)."""
+    if TAXONOMY.search(sentence):
+        return -1
+    if BEHAVIOUR.search(sentence):
+        return 2
+    return 1 if HABITAT_WORDS.search(sentence) else 0
+
+
+def _content_words(sentence: str) -> set[str]:
+    return {word for word in re.findall(r"[a-z]+", sentence.lower()) if len(word) > 3}
+
+
+def _repeats(sentence: str, taken: list[str]) -> bool:
+    """Whether the sentence says much the same as one already taken: most of its longer words are in it."""
+    words = _content_words(sentence)
+    return any(len(words & _content_words(other)) * 2 > min(len(words), len(_content_words(other))) for other in taken)
+
+
 def wikipedia_facts(extract: str, limit: int = WIKIPEDIA_FACTS) -> list[str]:
-    """Up to `limit` sentences of the article that stand alone, taken across its kinds of section (see the module)."""
+    """Up to `limit` sentences of the article that stand alone (see the module): the lead's first, which names the
+    bird, then sentences about how it lives, where, neutral ones and classification last, each tier taken across the kinds
+    of section in turn so one long section never fills the sheet, leaving out a sentence that repeats one taken."""
     parts = headed_parts(extract)
     pools = []
     for kind in SECTION_KINDS:
         names = [name for name in parts if (name == "" if kind == ("",) else any(word in name.lower() for word in kind if word))]
         pools.append([s for name in names for s in sentences(parts[name]) if _stands_alone(s)])
-    taken: list[str] = []
-    depth = 0
-    while len(taken) < limit and any(depth < len(pool) for pool in pools):
-        for pool in pools:
-            if depth < len(pool) and pool[depth] not in taken and len(taken) < limit:
-                taken.append(pool[depth])
-        depth += 1
+    taken: list[str] = pools[0][:1]
+    given = [0] * len(pools)
+    for tier in (2, 1, 0, -1):
+        tiered = [[s for s in pool if _richness(s) == tier] for pool in pools]
+        depth = 0
+        while len(taken) < limit and any(depth < len(pool) for pool in tiered):
+            for kind, pool in enumerate(tiered):
+                if depth >= len(pool) or len(taken) >= limit or (kind > 0 and given[kind] >= PER_KIND):
+                    continue
+                if pool[depth] not in taken and not _repeats(pool[depth], taken):
+                    taken.append(pool[depth])
+                    given[kind] += 1
+            depth += 1
     return taken
 
 

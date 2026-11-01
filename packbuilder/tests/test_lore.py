@@ -70,6 +70,19 @@ def test_a_good_draft_passes_and_every_sentence_must_cite_facts_on_the_sheet():
     assert any("more than one sentence" in problem for problem in validate(joined, FACTS))
 
 
+def test_at_most_one_number_in_the_lore_and_none_in_the_tagline():
+    one = {**GOOD, "sentences": [{**GOOD["sentences"][0], "text": "It weighs about nineteen grams, and waits by the water."}, *GOOD["sentences"][1:]]}
+    assert not any("numbers" in problem for problem in validate(one, FACTS)), "twenty-six or nineteen is one number"
+    two = {**one, "sentences": [*one["sentences"][:-1], {**GOOD["sentences"][-1], "text": "Its wings spread about twenty-six centimeters."}]}
+    assert any("holds 2 numbers" in problem for problem in validate(two, FACTS))
+    assert any("tagline holds a number" in problem for problem in validate({**GOOD, "tagline": {"text": "Keeper of 400 kin.", "facts": ["f3"]}}, FACTS))
+
+
+def test_the_prompt_groups_the_article_before_the_coarse_dataset_labels():
+    text = lore_module.prompt("Black Phoebe", "Sayornis nigricans", FACTS)
+    assert text.index("from its Wikipedia article:") < text.index("f3: The black phoebe hunts") < text.index("from the datasets (coarse labels):") < text.index("f1: It feeds")
+
+
 def test_word_counts_for_the_lore_and_the_tagline():
     short = {**GOOD, "sentences": GOOD["sentences"][:1]}
     assert any("it must be 50 to 80" in problem for problem in validate(short, FACTS))
@@ -93,7 +106,7 @@ def test_written_lore_is_locked_pending_with_its_facts(tmp_path):
     assert phoebe.tagline["text"] == "Keeper of the low perch, builder in mud."
     assert phoebe.sources == ["avonet", "birdbase", REVISION]
     entry = json.loads((tmp_path / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
-    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 1
+    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 2
     assert entry["sentences"][1] == {"text": GOOD["sentences"][1]["text"], "facts": ["f1", "f3"]}
 
 
@@ -249,10 +262,10 @@ def test_a_rebuild_with_a_warm_lock_ships_the_same_fact_sheet_and_lore(tmp_path)
         db = sqlite3.connect(tmp_path / out / "pack.sqlite")
         return db.execute("SELECT rank, text, source FROM fact ORDER BY rank").fetchall(), db.execute("SELECT * FROM lore").fetchall()
 
-    # The stub cites the sheet as the builder numbers it: f1 to f9 the stats, f10 on the article.
-    drafted = {**GOOD, "sentences": [{**s, "facts": ["f10"]} for s in GOOD["sentences"]], "tagline": {**GOOD["tagline"], "facts": ["f3"]}}
+    # The stub cites the sheet as the builder numbers it: f1 to f6 the article, f7 to f15 the stats.
+    drafted = {**GOOD, "sentences": [{**s, "facts": ["f2"]} for s in GOOD["sentences"]], "tagline": {**GOOD["tagline"], "facts": ["f9"]}}
     facts, lore_rows = build(StubClient(drafted), "first")
-    assert len(facts) == 15 and facts[0] == (0, "Its wingspan is estimated at about 28 cm from its wing length.", "wingspan")
+    assert len(facts) == 15 and facts[6] == (6, "Its wingspan is estimated at about 28 cm from its wing length.", "wingspan")
     assert lore_rows == [], "pending lore does not ship"
     assert (tmp_path / "review.md").exists()
     report = json.loads((tmp_path / "first" / "report.json").read_text())
@@ -262,7 +275,7 @@ def test_a_rebuild_with_a_warm_lock_ships_the_same_fact_sheet_and_lore(tmp_path)
     locked = (tmp_path / "lore.lock.json").read_bytes()
     facts_again, lore_rows = build(NoRequests(), "second")
     assert facts_again == facts and (tmp_path / "lore.lock.json").read_bytes() == locked
-    assert lore_rows == [("sayornis-nigricans", " ".join(s["text"] for s in GOOD["sentences"]), GOOD["tagline"]["text"], json.dumps(["avonet", REVISION], separators=(",", ":")))]
+    assert lore_rows == [("sayornis-nigricans", " ".join(s["text"] for s in GOOD["sentences"]), GOOD["tagline"]["text"], json.dumps([REVISION, "avonet"], separators=(",", ":")))]
     license_text = (tmp_path / "second" / "LICENSE").read_text()
     assert "written from the fact sheet alone by Claude (claude-opus-5-5, Anthropic)" in license_text
     assert "the lore is\nshared under CC BY-SA 4.0" in license_text
