@@ -50,7 +50,10 @@ struct CirclePageView: View {
         }
         #if DEBUG
         .task {
-            if UserDefaults.standard.bool(forKey: "autoCircleInvite") { inviting = true }
+            if UserDefaults.standard.bool(forKey: "autoCircleInvite") {
+                UserDefaults.standard.removeObject(forKey: "autoCircleInvite")
+                inviting = true
+            }
         }
         #endif
     }
@@ -160,7 +163,7 @@ private struct MemberRow: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.mossText)
                 .frame(width: 36, height: 36)
-                .background(Color.moss.opacity(0.18), in: .circle)
+                .background(Color.moss, in: .circle)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(isMe ? "\(member.name) (you)" : member.name).font(JournalFont.rowTitle)

@@ -22,10 +22,10 @@ final class FakeCircleClient: CircleClient {
             add(name: "Family", creator: ("dad", "Robin Birder"), others: [(Self.me, Self.myName), ("lee", "Lee Birder")], at: base.addingTimeInterval(86_400))
         }
         let canyon = add(name: "Canyon Walkers", creator: ("maya", "Maya Ortiz"), others: [("ari", "Ari Chen")], at: base)
-        invites["fake-invite"] = (canyon, .distantFuture)
+        invites["fake-invite"] = (canyon, now().addingTimeInterval(6 * 86_400))
         invites["expired"] = (canyon, .distantPast)
         let full = add(name: "Big Year Crew", creator: ("maya", "Maya Ortiz"), others: (2...20).map { ("m\($0)", "Member \($0)") }, at: base)
-        invites["full"] = (full, .distantFuture)
+        invites["full"] = (full, now().addingTimeInterval(6 * 86_400))
     }
 
     func circles(accessToken: String) async throws -> [CircleSummary] {

@@ -1,47 +1,41 @@
 import SwiftUI
 
 /// The join screen (issue #61), opened by an invite link: sign in if needed, see the circle's name, its size and who
-/// invited, then join. A link to a circle the birder is already in just opens it.
+/// invited, then join. A link to a circle the birder is already in just opens it. Pushed on the Circles tab, so the
+/// back button is the way out.
 struct JoinCircleView: View {
     @Environment(AccountSession.self) private var account
     @Environment(CircleStore.self) private var circles
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openCircle) private var openCircle
     let token: String
-    /// Called with the circle's ID once joined (or already a member), to open its page.
-    let onJoined: (String) -> Void
     @State private var preview: InvitePreview?
     @State private var error: String?
     @State private var joining = false
 
     var body: some View {
-        NavigationStack {
-            List {
-                if !circles.isAvailable {
-                    Section { Text("Circles aren't available in this build yet.").foregroundStyle(Color.inkSecondary) }
-                } else if !account.isSignedIn {
-                    Section {
-                        intro(title: "You're invited to a circle", text: "Sign in with Apple or Google to see the invitation and join. Your journal and cards stay on this iPhone either way.")
-                    }
-                    Section { SignInButtons() }
-                } else if let preview {
-                    invitation(preview)
-                } else if let error {
-                    Section { intro(title: "Can't open this invitation", text: error) }
-                } else {
-                    Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+        List {
+            if !circles.isAvailable {
+                Section { Text("Circles aren't available in this build yet.").foregroundStyle(Color.inkSecondary) }
+            } else if !account.isSignedIn {
+                Section {
+                    intro(title: "You're invited to a circle", text: "Sign in with Apple or Google to see the invitation and join. Your journal and cards stay on this iPhone either way.")
                 }
-                if let message = account.errorMessage, !account.isSignedIn {
-                    Section { Text(message).foregroundStyle(.red).font(JournalFont.supporting) }
-                }
+                Section { SignInButtons() }
+            } else if let preview {
+                invitation(preview)
+            } else if let error {
+                Section { intro(title: "Can't open this invitation", text: error) }
+            } else {
+                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
             }
-            .paperList()
-            .navigationTitle("Join a circle")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(preview == nil && error != nil ? "Close" : "Not now") { dismiss() } }
+            if let message = account.errorMessage, !account.isSignedIn {
+                Section { Text(message).foregroundStyle(.red).font(JournalFont.supporting) }
             }
-            .task(id: account.status) { await load() }
         }
+        .paperList()
+        .navigationTitle("Join a circle")
+        .navigationBarTitleDisplayMode(.inline)
+        .task(id: account.status) { await load() }
     }
 
     private func intro(title: String, text: String) -> some View {
@@ -121,8 +115,8 @@ struct JoinCircleView: View {
         }
     }
 
+    /// Replaces the join screen with the circle's page.
     private func finish(_ circleID: String) {
-        dismiss()
-        onJoined(circleID)
+        openCircle(circleID)
     }
 }

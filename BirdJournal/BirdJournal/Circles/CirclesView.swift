@@ -43,7 +43,12 @@ struct CirclesView: View {
             }
         }
         #if DEBUG
-        .task { if UserDefaults.standard.bool(forKey: "autoNewCircle") { creating = true } }
+        .task {
+            if UserDefaults.standard.bool(forKey: "autoNewCircle") {
+                UserDefaults.standard.removeObject(forKey: "autoNewCircle")
+                creating = true
+            }
+        }
         #endif
         .refreshable { await circles.refresh() }
     }

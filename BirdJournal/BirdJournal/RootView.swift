@@ -29,6 +29,8 @@ enum Route: Hashable {
     case support
     /// A circle's page (issue #61).
     case circle(id: String)
+    /// The join screen an invite link opens (issue #61).
+    case joinCircle(token: String)
 }
 
 extension View {
@@ -81,6 +83,8 @@ private struct RouteDestination: View {
             SupportView()
         case .circle(let id):
             CirclePageView(id: id)
+        case .joinCircle(let token):
+            JoinCircleView(token: token)
         }
     }
 }
@@ -90,6 +94,8 @@ extension EnvironmentValues {
     @Entry var openCollection: @MainActor () -> Void = {}
     /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
+    /// Opens a circle's page on the Circles tab: the join screen once joined (issue #61).
+    @Entry var openCircle: @MainActor (String) -> Void = { _ in }
 }
 
 /// The destinations (issue #28): Listen, Journal and Field Guide, and Circles (issue #61) in builds with accounts, with the compact listening strip above the
@@ -154,15 +160,18 @@ struct RootView: View {
             tab = .journal
         }
         .environment(\.openListen) { tab = .listen }
-        .sheet(item: Binding(
-            get: { AccountSession.isEnabledInThisBuild ? circles.pendingInvite.map(PendingInvite.init) : nil },
-            set: { circles.pendingInvite = $0?.token }
-        )) { invite in
-            JoinCircleView(token: invite.token) { circleID in
-                tab = .circles
-                circlesPath = NavigationPath()
-                circlesPath.append(Route.circle(id: circleID))
-            }
+        .environment(\.openCircle) { circleID in
+            tab = .circles
+            circlesPath = NavigationPath()
+            circlesPath.append(Route.circle(id: circleID))
+        }
+        // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
+        .onChange(of: circles.pendingInvite, initial: true) { _, token in
+            guard let token, AccountSession.isEnabledInThisBuild else { return }
+            circles.pendingInvite = nil
+            tab = .circles
+            circlesPath = NavigationPath()
+            circlesPath.append(Route.joinCircle(token: token))
         }
         // The index carries every pack's set (issue #54), so it is fetched at launch, not only on the packs screen;
         // the last good copy stands in meanwhile and offline.
@@ -174,8 +183,3 @@ struct RootView: View {
     }
 }
 
-/// An invite link waiting for the join screen, as a sheet item.
-private struct PendingInvite: Identifiable {
-    let token: String
-    var id: String { token }
-}
