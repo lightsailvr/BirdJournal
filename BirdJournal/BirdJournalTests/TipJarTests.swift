@@ -11,14 +11,14 @@ import Testing
 struct TipJarTests {
     /// One session for the whole suite: a session torn down per test leaves later purchases going to the sandbox,
     /// which asks for an Apple Account.
-    static let shared: SKTestSession = {
-        let url = Bundle.allBundles.lazy.compactMap { $0.url(forResource: "BirdJournal", withExtension: "storekit") }.first
-        return try! SKTestSession(contentsOf: url!)
-    }()
+    static let shared: SKTestSession? = Bundle.allBundles.lazy
+        .compactMap { $0.url(forResource: "BirdJournal", withExtension: "storekit") }.first
+        .flatMap { try? SKTestSession(contentsOf: $0) }
 
-    var session: SKTestSession { Self.shared }
+    let session: SKTestSession
 
     init() throws {
+        session = try #require(Self.shared, "BirdJournal.storekit is missing from the test bundle")
         session.resetToDefaultState()
         session.disableDialogs = true
         session.clearTransactions()
@@ -43,7 +43,8 @@ struct TipJarTests {
 
         await jar.purchase(tip)
 
-        #expect(jar.state == .thanked(tipName: tip.name))
+        #expect(jar.outcome == .thanked(tipName: tip.name))
+        #expect(jar.state == .ready)
         let transactions = session.allTransactions()
         #expect(transactions.count == 1)
         #expect(transactions.first?.productIdentifier == tip.id)
@@ -63,10 +64,11 @@ struct TipJarTests {
         await jar.load()
         let tip = try #require(jar.tips.last)
         await jar.purchase(tip)
-        jar.reset()
-        #expect(jar.state == .ready)
+        jar.dismissOutcome()
+        #expect(jar.outcome == nil)
         await jar.purchase(tip)
-        #expect(jar.state == .thanked(tipName: tip.name))
+        #expect(jar.outcome == .thanked(tipName: tip.name))
+        #expect(jar.state == .ready)
         #expect(session.allTransactions().count == 2)
     }
 
@@ -80,8 +82,8 @@ struct TipJarTests {
         await jar.purchase(tip)
         try await session.setSimulatedError(nil, forAPI: .purchase)
 
-        guard case .failed = jar.state else {
-            Issue.record("expected a failure, got \(jar.state)")
+        guard case .failed = jar.outcome else {
+            Issue.record("expected a failure, got \(String(describing: jar.outcome))")
             return
         }
         #expect(session.allTransactions().isEmpty)
@@ -100,9 +102,10 @@ struct TipJarTests {
 
         let pending = try #require(session.allTransactions().first)
         try session.approveAskToBuyTransaction(identifier: pending.identifier)
-        for _ in 0..<50 where jar.state == .pending {
+        for _ in 0..<50 where jar.outcome == nil {
             try await Task.sleep(for: .milliseconds(100))
         }
-        #expect(jar.state == .thanked(tipName: tip.name))
+        #expect(jar.outcome == .thanked(tipName: tip.name))
+        #expect(jar.state == .ready)
     }
 }

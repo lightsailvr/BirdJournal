@@ -29,12 +29,12 @@ final class SupportUITests: XCTestCase {
         tip.tap()
 
         // StoreKit testing confirms the purchase in a system sheet.
-        let confirm = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons.matching(NSPredicate(format: "label IN {'Subscribe', 'Purchase', 'Buy', 'OK', 'Confirm'}")).firstMatch
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let confirm = springboard.buttons.matching(NSPredicate(format: "label IN {'Subscribe', 'Purchase', 'Buy', 'OK', 'Confirm'}")).firstMatch
         if confirm.waitForExistence(timeout: 8) { confirm.tap() }
-        let done = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["OK"]
+        let done = springboard.buttons["OK"]
         if done.waitForExistence(timeout: 5) { done.tap() }
 
-        XCTAssertTrue(app.otherElements["tip-thanks"].waitForExistence(timeout: 20) || app.staticTexts["Thank you!"].exists,
-                      "no thank-you; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.otherElements["tip-thanks"].waitForExistence(timeout: 20), "no thank-you; screen: \(app.debugDescription.prefix(3000))")
     }
 }

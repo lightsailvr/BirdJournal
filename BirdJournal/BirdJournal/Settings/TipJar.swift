@@ -23,6 +23,8 @@ final class TipJar {
         let price: String
     }
 
+    /// Where the tips are. A thank-you or a failure is an `Outcome` beside it, so a tip finished while the tips load
+    /// (one left from an earlier launch, an Ask to Buy approval) neither hides them nor is lost.
     enum State: Equatable {
         case loading
         case ready
@@ -31,6 +33,9 @@ final class TipJar {
         case purchasing(productID: String)
         /// Waiting on Ask to Buy or a payment check; the tip is finished when it arrives.
         case pending
+    }
+
+    enum Outcome: Equatable {
         /// A tip went through and was finished.
         case thanked(tipName: String)
         case failed(String)
@@ -39,6 +44,7 @@ final class TipJar {
     private(set) var tips: [Tip] = []
     private var products: [Product] = []
     private(set) var state = State.loading
+    private(set) var outcome: Outcome?
     private var updates: Task<Void, Never>?
 
     init() {
@@ -55,7 +61,6 @@ final class TipJar {
     }
 
     func load() async {
-        if case .thanked = state { return }
         state = .loading
         do {
             let found = try await Product.products(for: Self.productIDs)
@@ -69,6 +74,7 @@ final class TipJar {
 
     func purchase(_ tip: Tip) async {
         guard let product = products.first(where: { $0.id == tip.id }) else { return }
+        outcome = nil
         state = .purchasing(productID: product.id)
         do {
             switch try await product.purchase() {
@@ -82,19 +88,20 @@ final class TipJar {
                 state = .ready
             }
         } catch {
-            state = .failed("The tip didn't go through: \(error.localizedDescription)")
+            state = .ready
+            outcome = .failed("The tip didn't go through: \(error.localizedDescription)")
         }
     }
 
     /// Back to the tips after a thank-you or a failure.
-    func reset() {
-        state = products.isEmpty ? .loading : .ready
+    func dismissOutcome() {
+        outcome = nil
     }
 
     #if DEBUG
     /// The thank-you as after the cheapest tip (`-autoTipThanks YES`), for screenshots.
     func showThanksForScreenshot() {
-        state = .thanked(tipName: tips.first?.name ?? "Scoop of seed")
+        outcome = .thanked(tipName: tips.first?.name ?? "Scoop of seed")
     }
     #endif
 
@@ -103,12 +110,13 @@ final class TipJar {
         case .verified(let transaction):
             await transaction.finish()
             guard Self.productIDs.contains(transaction.productID), transaction.revocationDate == nil else { return }
-            let name = tips.first { $0.id == transaction.productID }?.name ?? "tip"
-            state = .thanked(tipName: name)
+            outcome = .thanked(tipName: tips.first { $0.id == transaction.productID }?.name ?? "tip")
         case .unverified(let transaction, _):
             // Finished all the same so StoreKit stops offering it; there is nothing to grant either way.
             await transaction.finish()
-            state = .failed("The App Store couldn't confirm the tip.")
+            outcome = .failed("The App Store couldn't confirm the tip.")
         }
+        if case .purchasing = state { state = .ready }
+        if state == .pending { state = .ready }
     }
 }

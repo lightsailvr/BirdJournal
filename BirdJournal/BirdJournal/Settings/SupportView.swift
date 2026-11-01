@@ -5,7 +5,7 @@ import SwiftUI
 struct SupportView: View {
     /// The promise the screen makes; `NoPurchaseGateTests` holds the copy to it.
     static let unlocksNothing = "Tips are one-time and unlock nothing. Every feature of Bird Journal stays free for everyone, whether you tip or not."
-    static let pitch = "Bird Journal is free and has no ads. If you'd like to help, a tip goes toward the server that keeps the bird packs and circles running, and the machine at home that paints the cards."
+    static let pitch = "Bird Journal is free and has no ads. If you'd like to help, a tip goes toward the server and the machine at home that paints the cards."
     static let privacy = "No account needed. Apple handles the payment; Bird Journal keeps no record of it and sends nothing to its server."
 
     @State private var tipJar = TipJar()
@@ -28,9 +28,9 @@ struct SupportView: View {
                 .padding(.vertical, 4)
             }
 
-            if case .thanked(let tipName) = tipJar.state {
+            if case .thanked(let tipName) = tipJar.outcome {
                 Section {
-                    ThankYouNote(tipName: tipName) { tipJar.reset() }
+                    ThankYouNote(tipName: tipName) { tipJar.dismissOutcome() }
                 }
             } else {
                 Section {
@@ -65,7 +65,7 @@ struct SupportView: View {
                 Button("Try again") { Task { await tipJar.load() } }
             }
             .listRowInsets(EdgeInsets())
-        case .ready, .purchasing, .pending, .failed, .thanked:
+        case .ready, .purchasing, .pending:
             ForEach(tipJar.tips) { tip in
                 TipRow(tip: tip, isPurchasing: tipJar.state == .purchasing(productID: tip.id)) {
                     Task { await tipJar.purchase(tip) }
@@ -77,7 +77,7 @@ struct SupportView: View {
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
             }
-            if case .failed(let message) = tipJar.state {
+            if case .failed(let message) = tipJar.outcome {
                 Text(message)
                     .font(JournalFont.supporting)
                     .foregroundStyle(.red)
