@@ -11,21 +11,40 @@ import UIKit
 // never share `MockDeviceKit.shared` at the same time.
 @Suite("Mock Device Kit", .serialized)
 enum MockDeviceKitTests {
-    /// Pairs a mock Display (registered, permissions granted, powered on, unfolded, worn) and always disables
-    /// Mock Device Kit afterwards, so a failing test does not leave the next one with a stale device.
+    /// Pairs a mock Display (registered, permissions granted, powered on, unfolded, worn), waits until that device
+    /// (not any device) is connected, and always tears it down afterwards, so a failing test does not leave the next
+    /// one with a stale device.
     static func withMockDisplay(_ body: (any MockGlasses) async throws -> Void) async throws {
         MockDeviceKit.shared.enable()
+        var paired: (any MockGlasses)?
         do {
             let glasses = try MockDeviceKit.shared.pairGlasses(model: .metaRayBanDisplay)
+            paired = glasses
             glasses.powerOn()
             glasses.unfold()
             glasses.don()
+            try await waitUntil {
+                Wearables.shared.deviceForIdentifier(glasses.deviceIdentifier)?.linkState == .connected
+            }
             try await body(glasses)
         } catch {
-            await MockDeviceKit.shared.disable()
+            await tearDown(paired)
             throw error
         }
+        await tearDown(paired)
+    }
+
+    /// Unpairs, then disables, each awaited (the DAT docs' deterministic teardown, issue #82), then waits for the
+    /// device to leave `Wearables.shared.devices` and gives the toolkit's link a beat to close: `disable()` returns
+    /// while the link's stream I/O may still be closing on the toolkit's thread.
+    private static func tearDown(_ glasses: (any MockGlasses)?) async {
+        if let glasses { await MockDeviceKit.shared.unpairDevice(glasses) }
         await MockDeviceKit.shared.disable()
+        let deadline = ContinuousClock.now + .seconds(5)
+        while !Wearables.shared.devices.isEmpty, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        try? await Task.sleep(for: .milliseconds(300))
     }
 
     /// The mock camera needs a feed or the stream fails with `videoStreamingError`.
