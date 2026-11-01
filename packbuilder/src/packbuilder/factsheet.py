@@ -207,13 +207,16 @@ def stats_facts(joined: JoinedSpecies) -> list[tuple[str, str]]:
     """The species' stats as (sentence, dataset) pairs, leaving out what the datasets lack."""
     facts: list[tuple[str, str]] = []
     if (stats := joined.stats) is not None:
-        facts += _stats_sentences(stats)
+        facts += _stats_sentences(stats, borrowed=joined.borrowed)
     if (threat := _threat_sentence(joined.threat)) is not None:
         facts.append((threat, "birdbase"))
     return facts
 
 
-def _stats_sentences(stats: SpeciesStats) -> list[tuple[str, str]]:
+def _stats_sentences(stats: SpeciesStats, borrowed: bool = False) -> list[tuple[str, str]]:
+    """A borrowed AVONET row (a wider species before a split) tells no habitat or migration: those vary across the
+    wider species' range (AVONET rates the House Wren complex resident; the Northern House Wren migrates). Mass, diet
+    and lifestyle are kept, as near enough for birds that were one species."""
     facts = []
     if stats.wingspan_cm is not None:
         span = f"about {_number(stats.wingspan_cm)} cm"
@@ -222,9 +225,9 @@ def _stats_sentences(stats: SpeciesStats) -> list[tuple[str, str]]:
         facts.append((f"It weighs about {_weight(stats.mass_g)}.", "avonet"))
     if stats.diet in DIET:
         facts.append((DIET[stats.diet], "avonet"))
-    if stats.habitat in HABITAT:
+    if stats.habitat in HABITAT and not borrowed:
         facts.append((f"It lives mostly in {HABITAT[stats.habitat]}.", "avonet"))
-    if stats.migration in MIGRATION:
+    if stats.migration in MIGRATION and not borrowed:
         facts.append((MIGRATION[stats.migration], "avonet"))
     if stats.lifestyle in LIFESTYLE:
         facts.append((LIFESTYLE[stats.lifestyle], "avonet"))

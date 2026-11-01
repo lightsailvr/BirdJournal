@@ -63,6 +63,26 @@ def test_a_known_gap_keeps_only_what_the_datasets_have():
     ]
 
 
+def test_a_borrowed_avonet_row_tells_no_habitat_or_migration():
+    import dataclasses
+
+    borrowed = dataclasses.replace(JOINED, borrowed=True)
+    texts = [text for text, _ in stats_facts(borrowed)]
+    assert "It lives mostly in rivers and streams." not in texts and "It stays in its range all year." not in texts
+    assert "It weighs about 19 g." in texts and "It feeds mostly on insects and other invertebrates." in texts
+
+
+def test_the_committed_borrowed_rows_are_split_species_with_their_reasons():
+    from packbuilder.stats import StatsFixes
+
+    fixes = StatsFixes.load()
+    assert "Troglodytes aedon" in fixes.borrowed, "AVONET rates the House Wren complex resident"
+    for name, why in fixes.borrowed.items():
+        assert "split" in why, name
+    splits = {name for name, fix in __import__("json").loads((__import__("packbuilder.stats", fromlist=["STATS_DIR"]).STATS_DIR / "fixes.json").read_text())["avonet"].items() if "split" in fix["why"]}
+    assert splits <= set(fixes.borrowed), "every AVONET fix to the species before a split is a borrowed row"
+
+
 def test_article_facts_name_the_bird_then_tell_how_it_lives_before_where_and_what_it_looks_like():
     facts = wikipedia_facts(EXTRACT)
     assert facts == [

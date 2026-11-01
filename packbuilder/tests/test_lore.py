@@ -106,7 +106,7 @@ def test_written_lore_is_locked_pending_with_its_facts(tmp_path):
     assert phoebe.tagline["text"] == "Keeper of the low perch, builder in mud."
     assert phoebe.sources == ["avonet", "birdbase", REVISION]
     entry = json.loads((tmp_path / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
-    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 3
+    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 4
     assert entry["sentences"][1] == {"text": GOOD["sentences"][1]["text"], "facts": ["f1", "f3"]}
 
 
@@ -152,6 +152,24 @@ def test_the_run_stops_once_past_its_budget_keeping_what_it_wrote(tmp_path):
     with pytest.raises(LoreBudgetExceeded, match="past the \\$0.05 budget"):
         writer(tmp_path, Counted(GOOD, GOOD, GOOD), budget=0.05).write(species, {id: FACTS for id, _, _ in species})
     assert list(LoreLock.load(tmp_path / "lore.lock.json").species) == ["calypte-anna", "sayornis-nigricans"], "the reply that crossed it is kept"
+
+
+def test_a_set_may_not_lean_on_one_opening_or_on_ask_why(tmp_path):
+    def opened(text):
+        return {**GOOD, "sentences": [{"text": text, "facts": ["f3"]}, *GOOD["sentences"][1:]]}
+
+    asked = opened("Ask why the dark sentinel keeps its low perch by running water.")
+    places = "Beside Under Over Along Near Past Within Below Above Across Around".split()
+    others = [opened(f"{place} the stream the dark sentinel keeps its low perch.") for place in places]
+    species = [(f"bird-{n}", f"Bird {n}", f"Avis {n}") for n in range(12)]
+    client = StubClient(*([asked] * 3 + others))
+    writer(tmp_path, client).write(species, {id: FACTS for id, _, _ in species})
+
+    lock = LoreLock.load(tmp_path / "lore.lock.json").species
+    openings = [lore_module.opening(entry) for entry in lock.values()]
+    assert openings.count("ask why") == 2, "15 % of twelve rounds up to two"
+    assert any('already begin "ask why"' in prompt for prompt in client.prompts)
+    assert "Do not fall back" not in client.prompts[0] and "do not fall back on" in lore_module.SYSTEM
 
 
 def test_no_lore_after_three_failed_drafts(tmp_path):

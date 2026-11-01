@@ -227,13 +227,17 @@ class StatsFixes:
     birdbase: dict[str, str]
     known_gaps: dict[str, str]
     threatened: dict[str, str]
+    borrowed: dict[str, str] = field(default_factory=dict)
+    """Species whose AVONET row is a wider species before a split, with the reason (issue #56)."""
 
     @classmethod
     def load(cls, path: Path = STATS_DIR / "fixes.json") -> "StatsFixes":
         """Each fix is {"name": ..., "why": ...}; the gaps and the hand list map a name to the reason."""
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         names = {kind: {species: fix["name"] for species, fix in data.get(kind, {}).items()} for kind in ("avonet", "wingspan", "birdbase")}
-        return cls(**names, known_gaps=dict(data.get("known_gaps", {})), threatened=dict(data.get("threatened", {})))
+        return cls(
+            **names, known_gaps=dict(data.get("known_gaps", {})), threatened=dict(data.get("threatened", {})), borrowed=dict(data.get("borrowed", {})),
+        )
 
 
 @dataclass(frozen=True)
@@ -296,6 +300,9 @@ class JoinedSpecies:
     """None for a known gap."""
     type_line: TypeLine | None
     threat: Threat
+    borrowed: bool = False
+    """AVONET's row is a wider species before a split (`fixes.json` "borrowed"): its habitat and migration are not
+    this species' to tell on the fact sheet."""
 
 
 def join(species: list[SpeciesEntry], datasets: Datasets, fixes: StatsFixes, type_lines: TypeLines) -> dict[str, JoinedSpecies]:
@@ -320,7 +327,7 @@ def join(species: list[SpeciesEntry], datasets: Datasets, fixes: StatsFixes, typ
             unmapped.append(f"{name} (no type line for the order {birdbase.order} or the family {birdbase.family} in stats/type-lines.json)")
             continue
         stats = _stats(avonet, birdbase, wingspan) if avonet is not None else None
-        joined[name] = JoinedSpecies(stats=stats, type_line=type_line, threat=_threat(name, birdbase, fixes))
+        joined[name] = JoinedSpecies(stats=stats, type_line=type_line, threat=_threat(name, birdbase, fixes), borrowed=name in fixes.borrowed)
     if unmapped:
         raise UnmappedSpecies(f"not in the stats datasets (add a fix or a known gap to stats/fixes.json): {', '.join(unmapped)}")
     return joined

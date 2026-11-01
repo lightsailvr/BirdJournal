@@ -26,9 +26,11 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import re
 import time
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Protocol
@@ -43,7 +45,7 @@ API_KEY_VARIABLE = "BIRDJOURNAL_ANTHROPIC_API_KEY"
 KEYCHAIN_SERVICE = "birdjournal-anthropic-api-key"
 MODEL = "claude-opus-5-5"
 """DECISIONS.md, "Lore and captions": the current Opus, for the voice; a pack of 160 species costs a few dollars."""
-PROMPT_VERSION = 3
+PROMPT_VERSION = 4
 ATTEMPTS = 3
 PRICES = {"claude-opus-5-5": (4.0, 20.0), "claude-sonnet-5-5": (2.0, 10.0)}
 """Dollars per million input and output tokens, for the run's spend and its budget."""
@@ -59,22 +61,29 @@ NUMBER = re.compile(
 )
 """Numbers in figures or words; "one" is left out, as prose uses it for other things. "twenty-six" counts once."""
 ALL = "all"
+OPENING_SHARE = 0.15
+"""At most this share of a set's lore may begin with the same two words, or use "ask why" anywhere (prompts v4): the
+first full run opened 72 of 160 with "Ask why"."""
+ASK_WHY = re.compile(r"\bask why\b", re.IGNORECASE)
 
 SYSTEM = """You write the lore on the back of collectible bird cards: true natural history told as a small legend.
 
 Write 50 to 80 words of lore about one species and a tagline of 12 words or fewer for the card's front.
 
-Tell it as a small myth: a "why it does this" tale, or the way a legend speaks of a creature ("So it is that...", \
-"Ask why the..."). Choose one or two things the bird does and build the tale around them. Lead with how it lives: where \
-it keeps, how it hunts, what it builds, how it sounds.
+Tell it as a small legend about one or two things the bird does. Lead with how it lives: where it keeps, how it hunts, \
+what it builds, how it sounds. A set holds many cards, so vary how you begin and how you frame the tale: open on the \
+bird at its work, a place, a sound, a season of its life, a name, a contrast or a question, and do not fall back on \
+one habit such as "Ask why" or "Hear now".
 
 The only facts you may use are the numbered entries of the species' fact sheet. Prefer the article's facts; the \
 datasets' entries are coarse category labels, so use one only where the article says nothing on that point. Use at \
-most one number in the whole lore, and none in the tagline. Every claim about the bird must be on the sheet: no \
-behaviour, food, colour, number, place, season or sound of your own. The legend lives in the telling (the framing, the \
-cadence, the epithets), never in new facts. A "why" may join two facts only when it is signposted as the tale's own \
-telling ("the tale answers", "they say", "so the story goes"); never state a cause the sheet does not give as fact. \
-Do not name gods, peoples or real people unless the sheet does.
+most one number in the whole lore, and none in the tagline.
+
+Each sentence must say only what the facts it cites say. The legend lives in the telling (the cadence, the epithets, \
+the order of things), never in new facts: no behaviour, food, colour, number, place, season, sound or purpose of your \
+own. A "why" may join two facts only when it is signposted as the tale's own telling ("the tale answers", "they say", \
+"so the story goes"); never state a cause the sheet does not give as fact. Do not name gods, peoples or real people \
+unless the sheet does.
 
 Every sentence of the lore, and the tagline, lists the ids of the fact-sheet entries it rests on; each sentence rests on \
 at least one. Use plain words a ten-year-old could read aloud; no archaic spellings."""
@@ -278,6 +287,12 @@ def validate(draft: dict, facts: list[Fact] | tuple[Fact, ...]) -> list[str]:
     return problems
 
 
+def opening(draft: dict) -> str:
+    """The lore's first two words, lowercased: "ask why", "where water"."""
+    text = (draft.get("sentences") or [{}])[0].get("text", "")
+    return " ".join(re.findall(r"[a-z']+", text.lower())[:2])
+
+
 def _numbers(text: str) -> list[str]:
     """Each number in the text once: "twenty-six" and "four hundred" are one number each."""
     return re.findall(r"(?:%s)(?:[\s-]+(?:%s))*" % (NUMBER.pattern, NUMBER.pattern), text, flags=re.IGNORECASE)
@@ -320,6 +335,10 @@ class LoreLock:
         self.path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
 
 
+def _lore_text(entry: dict) -> str:
+    return " ".join(sentence.get("text", "") for sentence in entry.get("sentences") or [])
+
+
 def lore_from_entry(species_id: str, entry: dict) -> Lore:
     return Lore(species_id, entry["review"], tuple(entry["sentences"]), entry["tagline"], tuple(Fact.from_dict(f) for f in entry["facts"]), entry.get("model", MODEL))
 
@@ -349,6 +368,11 @@ class LoreWriter:
         """Each species' lore, by id, for (id, common name, scientific name) in pack order; a species whose lore could
         not be written is left out (and logged). The lock is written after each species, so an interrupted run resumes."""
         written: dict[str, Lore] = {}
+        regenerating = {species_id for species_id, _, _ in species if ALL in self.regenerate or species_id in self.regenerate}
+        kept = [entry for species_id, entry in self.lock.species.items() if species_id not in regenerating]
+        self._openings = Counter(opening(entry) for entry in kept)
+        self._ask_why = sum(bool(ASK_WHY.search(_lore_text(entry))) for entry in kept)
+        self._cap = max(2, math.ceil(OPENING_SHARE * max(len(species), len(self.lock.species))))
         for species_id, common_name, scientific_name in species:
             facts = sheets.get(species_id) or []
             entry = self.lock.species.get(species_id)
@@ -367,6 +391,8 @@ class LoreWriter:
             draft = self._draft(common_name, scientific_name, facts, feedback)
             if draft is None:
                 continue
+            self._openings[opening(draft)] += 1
+            self._ask_why += bool(ASK_WHY.search(_lore_text(draft)))
             self.lock.species[species_id] = {
                 "common_name": common_name, "model": self.model, "prompt_version": PROMPT_VERSION,
                 "facts": [fact.as_dict() for fact in facts], "sentences": draft["sentences"], "tagline": draft["tagline"], "review": PENDING,
@@ -398,12 +424,22 @@ class LoreWriter:
                 "sentences": [{"text": s.get("text", "").strip(), "facts": list(s.get("facts") or [])} for s in draft.get("sentences") or []],
                 "tagline": {"text": (draft.get("tagline") or {}).get("text", "").strip(), "facts": list((draft.get("tagline") or {}).get("facts") or [])},
             }
-            problems = validate(draft, facts)
+            problems = validate(draft, facts) + self._set_problems(draft)
             if not problems:
                 return draft
             log.info("  %s: draft sent back: %s", common_name, "; ".join(problems))
         log.error("  %s: no lore after %d drafts (%s)", common_name, ATTEMPTS, "; ".join(problems))
         return None
+
+    def _set_problems(self, draft: dict) -> list[str]:
+        """What the draft would overdo across the set: an opening, or "ask why", past `OPENING_SHARE` of it."""
+        problems = []
+        if self._openings[start := opening(draft)] >= self._cap:
+            common = ", ".join(f'"{phrase}"' for phrase, count in self._openings.most_common(5) if count >= self._cap // 2)
+            problems.append(f'{self._openings[start]} lore entries of this set already begin "{start}"; begin another way (much used: {common})')
+        if ASK_WHY.search(_lore_text(draft)) and self._ask_why >= self._cap:
+            problems.append('the set already has its share of "ask why"; frame the tale another way')
+        return problems
 
     def _complete(self, request: str) -> str:
         if self._client is None:
