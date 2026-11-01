@@ -1,1222 +1,1252 @@
 {
-  "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}, \"art\": {\"reference\": inat photo id: the pack photo pack art is painted from, instead of the best-lit one (#57); \"setting\": what pack art paints the bird on, one of perch, trunk, flight, ground, rock, shore, wade or water, from what its reference shows (any perch off the ground is a branch; prompts v10); \"length_cm\": the bird's length, which sizes the setting, where the description gives none}}. Photo ids are in the pack's report.json and LICENSE.",
-  "Melozone crissalis": {
-    "exclude": [
-      740654177,
-      735952133
-    ],
-    "_why": "leucistic (white) birds; not how a California Towhee looks",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Haemorhous mexicanus": {
-    "exclude": [
-      739958128,
-      739958088,
-      739958089
-    ],
-    "_why": "birds held in a hand, and a dead bird on pavement",
-    "art": {
-      "reference": 696977106,
-      "_why": "the best-lit photo is a dull female; a red male with streaked flanks, the bird birders picture",
-      "setting": "perch"
-    }
-  },
-  "Zenaida macroura": {
-    "exclude": [
-      731073363,
-      731073307,
-      717379684
-    ],
-    "_why": "macros of feathers in a hand, not a bird; open-license review (#50): out 717379684: a splayed wing with no head, possibly dead",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Pyrocephalus rubinus": {
-    "trust_article": true,
-    "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird for Los Angeles",
-    "art": {
-      "reference": 462069577,
-      "_why": "the best-lit photo is a drab female; the red male, the bird birders picture",
-      "setting": "perch"
-    }
-  },
-  "Haliaeetus leucocephalus": {
-    "limit": 200,
-    "exclude": [
-      677370682,
-      683434701
-    ],
-    "_why": "most Los Angeles photos are of a distant bird over a reservoir (the first 60 candidates gave two usable crops); the adults with the white head go first (open-license review, #50), since the automatic first was a dark bird in flight",
-    "include": [
-      250483714,
-      29411459
-    ],
-    "art": {
-      "reference": 29411459,
-      "_why": "a dark juvenile in flight was the best-lit photo; the white-headed adult the #50 review forced in",
-      "setting": "perch"
-    }
-  },
-  "Numenius hudsonicus": {
-    "sounds": {
-      "accept": [
-        "Numenius phaeopus"
-      ]
-    },
-    "_why": "BirdNET+ carries both halves of the whimbrel split and hears American recordings as Numenius phaeopus (#41: six xeno-canto and two iNaturalist clips refused that way)",
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Setophaga aestiva": {
-    "sounds": {
-      "accept": [
-        "Setophaga petechia"
-      ]
-    },
-    "_why": "BirdNET+ carries both halves of the yellow warbler split and hears American recordings as Setophaga petechia (#41)",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Anas platyrhynchos": {
-    "exclude": [
-      649074599,
-      689499641,
-      617097864,
-      674477146,
-      679992718,
-      689501607
-    ],
-    "include": [
-      613917690,
-      686362677
-    ],
-    "_why": "open-license review (#50): out 649074599: domestic white Pekin duck; out 689499641: domestic-type brown duck; out 617097864: buff domestic-type duck; out 674477146: pied domestic hybrid; out 679992718: black domestic duck with a white bib; out 689501607: black domestic duck with a white bib; in 613917690: wild drake, ahead of the domestic ducks the scorer favours; in 686362677: wild hen, ahead of the domestic ducks the scorer favours",
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Sayornis nigricans": {
-    "exclude": [
-      640224688,
-      632063781
-    ],
-    "_why": "open-license review (#50): out 640224688: brown colour cast hides the black and white; out 632063781: brown colour cast hides the black and white",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Euphagus cyanocephalus": {
-    "exclude": [
-      270314180,
-      301683541
-    ],
-    "_why": "open-license review (#50): out 270314180: held in a hand, on a blanket; out 301683541: slumped and fluffed with drooped wings, possibly sick",
-    "art": {
-      "setting": "ground",
-      "length_cm": 21,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Baeolophus inornatus": {
-    "exclude": [
-      453138341
-    ],
-    "_why": "open-license review (#50): out 453138341: overexposed, half hidden by foliage",
-    "art": {
-      "setting": "perch",
-      "length_cm": 14.5,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Corthylio calendula": {
-    "exclude": [
-      455833681,
-      455833651,
-      458289112,
-      458495950
-    ],
-    "_why": "open-license review (#50): out 455833681: head macro in hand at a banding station; out 455833651: head macro in hand at a banding station; out 458289112: dark and unreadable; out 458495950: brown bird that does not read as a kinglet",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Larus californicus": {
-    "exclude": [
-      474052484,
-      612003526,
-      613283022
-    ],
-    "_why": "open-license review (#50): out 474052484: feeding frenzy of mixed species, subject unclear; out 612003526: an arrow drawn on the photo; out 613283022: distant mixed flock, each bird tiny",
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Actitis macularius": {
-    "exclude": [
-      462063825
-    ],
-    "_why": "open-license review (#50): out 462063825: bird tiny on a rock",
-    "art": {
-      "setting": "rock"
-    }
-  },
-  "Setophaga townsendi": {
-    "exclude": [
-      597361261
-    ],
-    "_why": "open-license review (#50): out 597361261: dark, backlit, hidden behind leaves",
-    "art": {
-      "setting": "perch",
-      "length_cm": 12.5,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Colaptes auratus": {
-    "exclude": [
-      356826902,
-      327562970,
-      346910001
-    ],
-    "_why": "open-license review (#50): out 356826902: blurry, backlit from below; out 327562970: dark silhouette, date stamp; out 346910001: silhouette, date stamp",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Cairina moschata": {
-    "exclude": [
-      183220671,
-      178089912,
-      462971121,
-      107102096
-    ],
-    "_why": "open-license review (#50): out 183220671: domestic form, grey and white patches; out 178089912: domestic form, mostly white; out 462971121: domestic form, white and black patches; out 107102096: head close-up",
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Pheucticus melanocephalus": {
-    "exclude": [
-      282219540
-    ],
-    "_why": "open-license review (#50): out 282219540: lying on the ground with wings splayed",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Bombycilla cedrorum": {
-    "exclude": [
-      349770577
-    ],
-    "_why": "open-license review (#50): out 349770577: black silhouette, date stamp",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Sitta carolinensis": {
-    "exclude": [
-      229068158
-    ],
-    "_why": "open-license review (#50): out 229068158: dark, half hidden on a feeder",
-    "art": {
-      "reference": 201115486,
-      "_why": "a bird upside down at a feeder came out a strange shape; one perched on a branch",
-      "setting": "perch"
-    }
-  },
-  "Phainopepla nitens": {
-    "exclude": [
-      515011173
-    ],
-    "_why": "open-license review (#50): out 515011173: black silhouette against the sky",
-    "art": {
-      "reference": 265185077,
-      "_why": "a flight shot; a sunlit male with its crest and red eye",
-      "setting": "perch"
-    }
-  },
-  "Stelgidopteryx serripennis": {
-    "exclude": [
-      130554665
-    ],
-    "_why": "open-license review (#50): out 130554665: blurry and overexposed, date stamp",
-    "art": {
-      "reference": 294156439,
-      "_why": "a bird with drooping wings against the sky; one perched side-on",
-      "setting": "perch"
-    }
-  },
-  "Catharus guttatus": {
-    "exclude": [
-      465399052
-    ],
-    "_why": "open-license review (#50): out 465399052: head close-up in hand at a banding station",
-    "art": {
-      "reference": 262701129,
-      "_why": "a dim bird among needles lost its spots; one side-on with its spotted breast",
-      "setting": "ground"
-    }
-  },
-  "Falco peregrinus": {
-    "exclude": [
-      160326266
-    ],
-    "_why": "open-license review (#50): out 160326266: small and motion-blurred",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Molothrus ater": {
-    "exclude": [
-      279261852
-    ],
-    "_why": "open-license review (#50): out 279261852: badly underexposed",
-    "art": {
-      "reference": 129501932,
-      "_why": "a dull female against the sky; a male on grass, brown head showing",
-      "setting": "ground"
-    }
-  },
-  "Spatula cyanoptera": {
-    "exclude": [
-      100320920
-    ],
-    "_why": "open-license review (#50): out 100320920: hazy, cut off at the edge, date stamp",
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Mareca strepera": {
-    "exclude": [
-      354689141,
-      608682821
-    ],
-    "_why": "open-license review (#50): out 354689141: head tucked, back view only; out 608682821: mixed group of ducks, subject unclear",
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Empidonax difficilis": {
-    "exclude": [
-      309529942
-    ],
-    "_why": "open-license review (#50): out 309529942: downy fledgling on the ground",
-    "art": {
-      "setting": "perch",
-      "length_cm": 15,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Cardellina pusilla": {
-    "exclude": [
-      488583617
-    ],
-    "_why": "open-license review (#50): out 488583617: out of focus",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Tyrannus verticalis": {
-    "exclude": [
-      294538029
-    ],
-    "_why": "open-license review (#50): out 294538029: mostly hidden behind a trunk",
-    "art": {
-      "setting": "perch",
-      "length_cm": 22,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Podiceps nigricollis": {
-    "exclude": [
-      353234067
-    ],
-    "_why": "open-license review (#50): out 353234067: motion-blurred",
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Melanitta perspicillata": {
-    "exclude": [
-      483312246,
-      180129885,
-      176333618
-    ],
-    "_why": "open-license review (#50): out 483312246: hunched on rocks with ragged feathers, looks stranded; out 180129885: distant flock, birds too small; out 176333618: resting ashore, likely stranded",
-    "art": {
-      "reference": 593312066,
-      "_why": "a distant bird came out a black blob; a male close on the water",
-      "setting": "water"
-    }
-  },
-  "Dryobates pubescens": {
-    "exclude": [
-      99703960
-    ],
-    "_why": "open-license review (#50): out 99703960: dark, half hidden",
-    "art": {
-      "setting": "trunk"
-    }
-  },
-  "Melospiza lincolnii": {
-    "exclude": [
-      110234771
-    ],
-    "_why": "open-license review (#50): out 110234771: heavily obscured by leaves",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Aratinga nenday": {
-    "exclude": [
-      271488622
-    ],
-    "_why": "open-license review (#50): out 271488622: half hidden at a nest hole and a blur",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Plegadis chihi": {
-    "exclude": [
-      189348305
-    ],
-    "_why": "open-license review (#50): out 189348305: distant flock of silhouettes",
-    "art": {
-      "setting": "wade"
-    }
-  },
-  "Aimophila ruficeps": {
-    "exclude": [
-      203423898
-    ],
-    "_why": "open-license review (#50): out 203423898: backlit behind twigs",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Nyctanassa violacea": {
-    "exclude": [
-      204573102
-    ],
-    "_why": "open-license review (#50): out 204573102: nestling behind sticks",
-    "art": {
-      "setting": "rock"
-    }
-  },
-  "Brotogeris chiriri": {
-    "exclude": [
-      554763880
-    ],
-    "_why": "open-license review (#50): out 554763880: blurry and grainy",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Archilochus alexandri": {
-    "exclude": [
-      273751528
-    ],
-    "_why": "open-license review (#50): out 273751528: underexposed, gorget not visible",
-    "art": {
-      "reference": 282787652,
-      "_why": "a hunched bird among leaves, its bill hanging; one on an open twig",
-      "setting": "perch"
-    }
-  },
-  "Cyanocitta stelleri": {
-    "exclude": [
-      86704500
-    ],
-    "_why": "open-license review (#50): out 86704500: dark silhouette in foliage",
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Poecile gambeli": {
-    "exclude": [
-      696977117,
-      115008499
-    ],
-    "_why": "open-license review (#50): out 696977117: strong blue cast, colours wrong; out 115008499: backlit silhouette, blurred",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Vireo huttoni": {
-    "exclude": [
-      618844261
-    ],
-    "_why": "open-license review (#50): out 618844261: blurred, face hidden",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Geococcyx californianus": {
-    "exclude": [
-      325132678
-    ],
-    "_why": "open-license review (#50): out 325132678: blurry video frame",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Spinus psaltria": {
-    "exclude": [
-      708246522
-    ],
-    "_why": "open-license review (#50): out 708246522: blurred and dark, no field marks",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Aphelocoma californica": {
-    "exclude": [
-      664263588
-    ],
-    "_why": "open-license review (#50): out 664263588: very dark, head hidden",
-    "art": {
-      "reference": 674449029,
-      "_why": "the first pick is shaded and its head came out dark; a bird with its blue head in light",
-      "setting": "perch"
-    }
-  },
-  "Astur cooperii": {
-    "exclude": [
-      709876746
-    ],
-    "_why": "open-license review (#50): out 709876746: dark and soft through branches",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Calypte anna": {
-    "exclude": [
-      599164180,
-      604260846
-    ],
-    "_why": "open-license review (#50): out 599164180: tiny and half hidden, a dead leaf dominates; out 604260846: head hidden in leaves",
-    "art": {
-      "reference": 593312089,
-      "_why": "the hovering reference became a bird standing on a rock with its wings raised; a perched male in good light",
-      "setting": "perch"
-    }
-  },
-  "Melanerpes formicivorus": {
-    "exclude": [
-      658119400,
-      654338693
-    ],
-    "_why": "open-license review (#50): out 658119400: backlit, hidden by the branch; out 654338693: dark behind blurred foliage",
-    "art": {
-      "setting": "trunk"
-    }
-  },
-  "Sialia mexicana": {
-    "exclude": [
-      677562203
-    ],
-    "_why": "open-license review (#50): out 677562203: backlit silhouette, no colour",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Columba livia": {
-    "exclude": [
-      689907948
-    ],
-    "_why": "open-license review (#50): out 689907948: all-white domestic dove",
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Bubo virginianus": {
-    "exclude": [
-      587672724
-    ],
-    "_why": "open-license review (#50): out 587672724: noisy night flash, back view",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Buteo lineatus": {
-    "exclude": [
-      603537832
-    ],
-    "_why": "open-license review (#50): out 603537832: hazy back view through twigs",
-    "art": {
-      "reference": 475706597,
-      "_why": "a flight shot became a hawk flapping over a rock; a perched adult with the rufous barring",
-      "setting": "perch"
-    }
-  },
-  "Cathartes aura": {
-    "exclude": [
-      603540047
-    ],
-    "_why": "open-license review (#50): out 603540047: backlit behind branches",
-    "art": {
-      "reference": 698218415,
-      "_why": "a flight shot against the sky; a bird perched on a post with its red head showing",
-      "setting": "perch"
-    }
-  },
-  "Leiothlypis celata": {
-    "exclude": [
-      484960115,
-      604025812
-    ],
-    "_why": "open-license review (#50): out 484960115: held in a hand; out 604025812: obscured in leaves",
-    "art": {
-      "setting": "perch",
-      "length_cm": 12.5,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Dryobates nuttallii": {
-    "exclude": [
-      608914991,
-      517883799
-    ],
-    "_why": "open-license review (#50): out 608914991: dark backlit silhouette; out 517883799: silhouetted from below",
-    "art": {
-      "setting": "trunk"
-    }
-  },
-  "Sturnus vulgaris": {
-    "exclude": [
-      395880279
-    ],
-    "_why": "open-license review (#50): out 395880279: silhouette buried in foliage",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Falco sparverius": {
-    "exclude": [
-      452547834
-    ],
-    "_why": "open-license review (#50): out 452547834: close-up of a handled or captive bird",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Sayornis saya": {
-    "exclude": [
-      470805339,
-      602611385
-    ],
-    "_why": "open-license review (#50): out 470805339: blurred, a branch across the bird; out 602611385: backlit silhouette",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Quiscalus mexicanus": {
-    "exclude": [
-      739638372
-    ],
-    "_why": "open-license review (#50): out 739638372: underexposed, in shadow",
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Thryomanes bewickii": {
-    "exclude": [
-      465399045,
-      604350365
-    ],
-    "_why": "open-license review (#50): out 465399045: fluffed with drooped wings, looks handled; out 604350365: indoors on a towel, rescued or captive",
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Patagioenas fasciata": {
-    "exclude": [
-      339279706
-    ],
-    "_why": "open-license review (#50): out 339279706: a phone screenshot with a Crop button",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Tyto furcata": {
-    "include": [
-      125029450,
-      148143364,
-      674475351,
-      325110853
-    ],
-    "_why": "open-license review (#50): in 125029450: missed by the detector; perched, dark background; in 148143364: missed by the detector; perched in a pine; in 674475351: missed by the detector; perched in a palm; in 325110853: missed by the detector; perched in a pine",
-    "art": {
-      "reference": 148143364,
-      "_why": "a dim bird inside a palm came out odd (dE 17); one face-on in a pine",
-      "setting": "perch",
-      "length_cm": 37,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Phalaenoptilus nuttallii": {
-    "include": [
-      27578347,
-      27035889,
-      360352886
-    ],
-    "_why": "open-license review (#50): in 27578347: missed by the detector; roosting on mulch; in 27035889: missed by the detector; roosting on gravel; in 360352886: missed by the detector; on a trail at night",
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Megascops kennicottii": {
-    "include": [
-      283508436
-    ],
-    "_why": "open-license review (#50): in 283508436: the only usable open photo; perched at night",
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Aeronautes saxatalis": {
-    "include": [
-      148948986,
-      121061463,
-      79276700
-    ],
-    "_why": "open-license review (#50): in 148948986: in flight, under the size floor but sharp; in 121061463: in flight, under the size floor but sharp; in 79276700: in flight, under the size floor but sharp",
-    "art": {
-      "setting": "flight"
-    }
-  },
-  "Vireo bellii": {
-    "include": [
-      712450451
-    ],
-    "_why": "open-license review (#50): in 712450451: missed by the shortlist; perched in branches",
-    "art": {
-      "reference": 356387267,
-      "_why": "a singing bird, open-mouthed against the sky, came out with a pink throat; one perched quietly",
-      "setting": "perch"
-    }
-  },
-  "Buteo jamaicensis": {
-    "art": {
-      "reference": 685715513,
-      "_why": "the pack's first photo is a blurred flight shot; the painting made a malformed bird; a front-lit adult on a fence instead",
-      "setting": "perch"
-    }
-  },
-  "Setophaga coronata": {
-    "art": {
-      "reference": 616227519,
-      "_why": "a distant bird against the sky gave a wrong head (dE 24); a close full-body bird",
-      "setting": "ground"
-    }
-  },
-  "Corvus corax": {
-    "art": {
-      "reference": 604259110,
-      "_why": "a branch across the tail became a long blade; a bird standing in the open",
-      "setting": "ground"
-    }
-  },
-  "Branta canadensis": {
-    "art": {
-      "reference": 634048653,
-      "_why": "the reference stands among coots (dE 23); a goose alone",
-      "setting": "shore"
-    }
-  },
-  "Ardea herodias": {
-    "art": {
-      "reference": 613538389,
-      "_why": "the reference is dim and painted near-black; a well-lit bird on grass",
-      "setting": "ground"
-    }
-  },
-  "Nannopterum auritum": {
-    "art": {
-      "reference": 615582387,
-      "_why": "the reference is a group drying their wings, painted as several birds; one bird standing on sand",
-      "setting": "ground"
-    }
-  },
-  "Pelecanus occidentalis": {
-    "art": {
-      "reference": 593312023,
-      "_why": "several birds in flight became a muddle; one bird standing on a rock",
-      "setting": "rock"
-    }
-  },
-  "Psaltriparus minimus": {
-    "art": {
-      "reference": 595472606,
-      "_why": "a dim, partly hidden bird came out chunky and short-tailed; a sharp, well-lit bird",
-      "setting": "perch"
-    }
-  },
-  "Pipilo maculatus": {
-    "art": {
-      "reference": 489597210,
-      "_why": "a backlit bird against the sky came out near-black; a front-lit adult on a post",
-      "setting": "perch"
-    }
-  },
-  "Alopochen aegyptiaca": {
-    "art": {
-      "reference": 578296243,
-      "_why": "a head-only close-up became a head among leaves; the whole bird in good light",
-      "setting": "ground"
-    }
-  },
-  "Toxostoma redivivum": {
-    "art": {
-      "reference": 489597169,
-      "_why": "a head-only close-up left FLUX.3 to invent the body; the whole bird in profile",
-      "setting": "ground"
-    }
-  },
-  "Larus delawarensis": {
-    "art": {
-      "reference": 355357677,
-      "_why": "a distant bird on dark sand came out a chunky dove-like bird; a standing adult with the ring on its bill",
-      "setting": "shore"
-    }
-  },
-  "Oxyura jamaicensis": {
-    "art": {
-      "reference": 196036954,
-      "_why": "a drab bird half in the water was painted stuck on a rock; a breeding male, the bird birders picture",
-      "setting": "water",
-      "length_cm": 38,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Polioptila caerulea": {
-    "art": {
-      "reference": 265549857,
-      "_why": "a bird half behind twigs came out chunky; a slim bird in the open",
-      "setting": "perch"
-    }
-  },
-  "Piranga ludoviciana": {
-    "art": {
-      "reference": 378816896,
-      "_why": "a dull bird against the sky became a generic green bird; a male in breeding plumage",
-      "setting": "perch"
-    }
-  },
-  "Bucephala albeola": {
-    "art": {
-      "reference": 603992548,
-      "_why": "a female half on rocks was painted on a branch; a male on the water",
-      "setting": "water"
-    }
-  },
-  "Psittacara mitratus": {
-    "art": {
-      "reference": 185005450,
-      "_why": "a half-hidden bird painted blotchy (dE 26); the whole bird on a branch",
-      "setting": "perch"
-    }
-  },
-  "Petrochelidon pyrrhonota": {
-    "art": {
-      "reference": 311645778,
-      "_why": "a flight shot; a bird perched on a ledge with its face showing",
-      "setting": "perch"
-    }
-  },
-  "Setophaga nigrescens": {
-    "art": {
-      "reference": 165872786,
-      "_why": "a bird behind leaves was painted with yellow underparts it doesn't have (dE 20); one in the open",
-      "setting": "perch"
-    }
-  },
-  "Haematopus bachmani": {
-    "art": {
-      "reference": 127561861,
-      "_why": "two birds in the reference, two in the painting; one bird, well lit",
-      "setting": "rock",
-      "length_cm": 44,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Campylorhynchus brunneicapillus": {
-    "art": {
-      "reference": 28298063,
-      "_why": "a cactus pad merged into the bird as a black fan; one in the open on a branch",
-      "setting": "perch"
-    }
-  },
-  "Junco hyemalis": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Mimus polyglottos": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Larus occidentalis": {
-    "art": {
-      "setting": "rock"
-    }
-  },
-  "Zonotrichia leucophrys": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Passer domesticus": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Selasphorus sasin": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Egretta thula": {
-    "art": {
-      "setting": "wade"
-    }
-  },
-  "Fulica americana": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Corvus brachyrhynchos": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Nycticorax nycticorax": {
-    "art": {
-      "setting": "shore",
-      "length_cm": 61,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Melospiza melodia": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Ardea alba": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Amazona viridigenalis": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Tyrannus vociferans": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Icterus cucullatus": {
-    "art": {
-      "setting": "perch",
-      "length_cm": 19,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Agelaius phoeniceus": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Turdus migratorius": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Mareca americana": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Callipepla californica": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Pandion haliaetus": {
-    "art": {
-      "setting": "flight"
-    }
-  },
-  "Tringa semipalmata": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Pavo cristatus": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Larus heermanni": {
-    "art": {
-      "setting": "shore",
-      "length_cm": 48,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Butorides virescens": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Himantopus mexicanus": {
-    "art": {
-      "setting": "wade"
-    }
-  },
-  "Podilymbus podiceps": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Charadrius vociferus": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Pycnonotus jocosus": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Pelecanus erythrorhynchos": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Streptopelia decaocto": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Lonchura punctulata": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Hirundo rustica": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Geothlypis trichas": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Troglodytes aedon": {
-    "art": {
-      "setting": "perch",
-      "length_cm": 12,
-      "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-    }
-  },
-  "Aechmophorus occidentalis": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Calidris alba": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Vidua macroura": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Calidris minutilla": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Myiarchus cinerascens": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Megaceryle alcyon": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Limosa fedoa": {
-    "art": {
-      "setting": "wade"
-    }
-  },
-  "Pluvialis squatarola": {
-    "art": {
-      "setting": "wade"
-    }
-  },
-  "Passerculus sandwichensis": {
-    "art": {
-      "setting": "rock"
-    }
-  },
-  "Icterus bullockii": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Thalasseus maximus": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Amazona oratrix": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Aythya collaris": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Spizella passerina": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Chondestes grammacus": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Zonotrichia atricapilla": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Spatula clypeata": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Urile penicillatus": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Lophodytes cucullatus": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Passerina amoena": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Sturnella neglecta": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Spinus tristis": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Chamaea fasciata": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Tringa melanoleuca": {
-    "art": {
-      "setting": "wade"
-    }
-  },
-  "Anarhynchus nivosus": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Contopus sordidulus": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Hydroprogne caspia": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Anthus rubescens": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Anas crecca": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Thalasseus elegans": {
-    "art": {
-      "setting": "wade"
-    }
-  },
-  "Spatula discors": {
-    "art": {
-      "setting": "water"
-    }
-  },
-  "Larus smithsonianus": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Lanius ludovicianus": {
-    "art": {
-      "setting": "ground"
-    }
-  },
-  "Vireo gilvus": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Calidris mauri": {
-    "art": {
-      "setting": "shore"
-    }
-  },
-  "Polioptila californica": {
-    "art": {
-      "setting": "perch"
-    }
-  },
-  "Catherpes mexicanus": {
-    "art": {
-      "setting": "rock"
-    }
-  },
-  "Catharus ustulatus": {
-    "art": {
-      "setting": "perch"
-    }
+ "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}, \"art\": {\"reference\": inat photo id: the pack photo pack art is painted from, instead of the best-lit one (#57); \"setting\": what pack art paints the bird on, one of perch, trunk, flight, ground, rock, shore, wade or water, from what its reference shows (any perch off the ground is a branch; prompts v10); \"length_cm\": the bird's length, which sizes the setting, where the description gives none}}. Photo ids are in the pack's report.json and LICENSE.",
+ "Melozone crissalis": {
+  "exclude": [
+   740654177,
+   735952133
+  ],
+  "_why": "leucistic (white) birds; not how a California Towhee looks",
+  "art": {
+   "setting": "perch"
   }
+ },
+ "Haemorhous mexicanus": {
+  "exclude": [
+   739958128,
+   739958088,
+   739958089
+  ],
+  "_why": "birds held in a hand, and a dead bird on pavement",
+  "art": {
+   "reference": 691091191,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing (was 696977106: the best-lit photo is a dull female; a red male with streaked flanks, the bird birders picture)",
+   "setting": "perch"
+  }
+ },
+ "Zenaida macroura": {
+  "exclude": [
+   731073363,
+   731073307,
+   717379684
+  ],
+  "_why": "macros of feathers in a hand, not a bird; open-license review (#50): out 717379684: a splayed wing with no head, possibly dead",
+  "art": {
+   "reference": 658085144,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "ground"
+  }
+ },
+ "Pyrocephalus rubinus": {
+  "trust_article": true,
+  "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird for Los Angeles",
+  "art": {
+   "reference": 462069577,
+   "_why": "the best-lit photo is a drab female; the red male, the bird birders picture",
+   "setting": "perch"
+  }
+ },
+ "Haliaeetus leucocephalus": {
+  "limit": 200,
+  "exclude": [
+   677370682,
+   683434701
+  ],
+  "_why": "most Los Angeles photos are of a distant bird over a reservoir (the first 60 candidates gave two usable crops); the adults with the white head go first (open-license review, #50), since the automatic first was a dark bird in flight",
+  "include": [
+   250483714,
+   29411459
+  ],
+  "art": {
+   "reference": 250483714,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing (was 29411459: a dark juvenile in flight was the best-lit photo; the white-headed adult the #50 review forced in)",
+   "setting": "perch"
+  }
+ },
+ "Numenius hudsonicus": {
+  "sounds": {
+   "accept": [
+    "Numenius phaeopus"
+   ]
+  },
+  "_why": "BirdNET+ carries both halves of the whimbrel split and hears American recordings as Numenius phaeopus (#41: six xeno-canto and two iNaturalist clips refused that way)",
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Setophaga aestiva": {
+  "sounds": {
+   "accept": [
+    "Setophaga petechia"
+   ]
+  },
+  "_why": "BirdNET+ carries both halves of the yellow warbler split and hears American recordings as Setophaga petechia (#41)",
+  "art": {
+   "reference": 367396945,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Anas platyrhynchos": {
+  "exclude": [
+   649074599,
+   689499641,
+   617097864,
+   674477146,
+   679992718,
+   689501607
+  ],
+  "include": [
+   613917690,
+   686362677
+  ],
+  "_why": "open-license review (#50): out 649074599: domestic white Pekin duck; out 689499641: domestic-type brown duck; out 617097864: buff domestic-type duck; out 674477146: pied domestic hybrid; out 679992718: black domestic duck with a white bib; out 689501607: black domestic duck with a white bib; in 613917690: wild drake, ahead of the domestic ducks the scorer favours; in 686362677: wild hen, ahead of the domestic ducks the scorer favours",
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Sayornis nigricans": {
+  "exclude": [
+   640224688,
+   632063781
+  ],
+  "_why": "open-license review (#50): out 640224688: brown colour cast hides the black and white; out 632063781: brown colour cast hides the black and white",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Euphagus cyanocephalus": {
+  "exclude": [
+   270314180,
+   301683541
+  ],
+  "_why": "open-license review (#50): out 270314180: held in a hand, on a blanket; out 301683541: slumped and fluffed with drooped wings, possibly sick",
+  "art": {
+   "setting": "ground",
+   "length_cm": 21,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Baeolophus inornatus": {
+  "exclude": [
+   453138341
+  ],
+  "_why": "open-license review (#50): out 453138341: overexposed, half hidden by foliage",
+  "art": {
+   "setting": "perch",
+   "length_cm": 14.5,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Corthylio calendula": {
+  "exclude": [
+   455833681,
+   455833651,
+   458289112,
+   458495950
+  ],
+  "_why": "open-license review (#50): out 455833681: head macro in hand at a banding station; out 455833651: head macro in hand at a banding station; out 458289112: dark and unreadable; out 458495950: brown bird that does not read as a kinglet",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Larus californicus": {
+  "exclude": [
+   474052484,
+   612003526,
+   613283022
+  ],
+  "_why": "open-license review (#50): out 474052484: feeding frenzy of mixed species, subject unclear; out 612003526: an arrow drawn on the photo; out 613283022: distant mixed flock, each bird tiny",
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Actitis macularius": {
+  "exclude": [
+   462063825
+  ],
+  "_why": "open-license review (#50): out 462063825: bird tiny on a rock",
+  "art": {
+   "setting": "rock"
+  }
+ },
+ "Setophaga townsendi": {
+  "exclude": [
+   597361261
+  ],
+  "_why": "open-license review (#50): out 597361261: dark, backlit, hidden behind leaves",
+  "art": {
+   "setting": "perch",
+   "length_cm": 12.5,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Colaptes auratus": {
+  "exclude": [
+   356826902,
+   327562970,
+   346910001
+  ],
+  "_why": "open-license review (#50): out 356826902: blurry, backlit from below; out 327562970: dark silhouette, date stamp; out 346910001: silhouette, date stamp",
+  "art": {
+   "reference": 201114714,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Cairina moschata": {
+  "exclude": [
+   183220671,
+   178089912,
+   462971121,
+   107102096
+  ],
+  "_why": "open-license review (#50): out 183220671: domestic form, grey and white patches; out 178089912: domestic form, mostly white; out 462971121: domestic form, white and black patches; out 107102096: head close-up",
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Pheucticus melanocephalus": {
+  "exclude": [
+   282219540
+  ],
+  "_why": "open-license review (#50): out 282219540: lying on the ground with wings splayed",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Bombycilla cedrorum": {
+  "exclude": [
+   349770577
+  ],
+  "_why": "open-license review (#50): out 349770577: black silhouette, date stamp",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Sitta carolinensis": {
+  "exclude": [
+   229068158
+  ],
+  "_why": "open-license review (#50): out 229068158: dark, half hidden on a feeder",
+  "art": {
+   "reference": 201115486,
+   "_why": "a bird upside down at a feeder came out a strange shape; one perched on a branch",
+   "setting": "perch"
+  }
+ },
+ "Phainopepla nitens": {
+  "exclude": [
+   515011173
+  ],
+  "_why": "open-license review (#50): out 515011173: black silhouette against the sky",
+  "art": {
+   "reference": 265185077,
+   "_why": "a flight shot; a sunlit male with its crest and red eye",
+   "setting": "perch"
+  }
+ },
+ "Stelgidopteryx serripennis": {
+  "exclude": [
+   130554665
+  ],
+  "_why": "open-license review (#50): out 130554665: blurry and overexposed, date stamp",
+  "art": {
+   "reference": 294156439,
+   "_why": "a bird with drooping wings against the sky; one perched side-on",
+   "setting": "perch"
+  }
+ },
+ "Catharus guttatus": {
+  "exclude": [
+   465399052
+  ],
+  "_why": "open-license review (#50): out 465399052: head close-up in hand at a banding station",
+  "art": {
+   "reference": 262701129,
+   "_why": "a dim bird among needles lost its spots; one side-on with its spotted breast",
+   "setting": "ground"
+  }
+ },
+ "Falco peregrinus": {
+  "exclude": [
+   160326266
+  ],
+  "_why": "open-license review (#50): out 160326266: small and motion-blurred",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Molothrus ater": {
+  "exclude": [
+   279261852
+  ],
+  "_why": "open-license review (#50): out 279261852: badly underexposed",
+  "art": {
+   "reference": 129501932,
+   "_why": "a dull female against the sky; a male on grass, brown head showing",
+   "setting": "ground"
+  }
+ },
+ "Spatula cyanoptera": {
+  "exclude": [
+   100320920
+  ],
+  "_why": "open-license review (#50): out 100320920: hazy, cut off at the edge, date stamp",
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Mareca strepera": {
+  "exclude": [
+   354689141,
+   608682821
+  ],
+  "_why": "open-license review (#50): out 354689141: head tucked, back view only; out 608682821: mixed group of ducks, subject unclear",
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Empidonax difficilis": {
+  "exclude": [
+   309529942
+  ],
+  "_why": "open-license review (#50): out 309529942: downy fledgling on the ground",
+  "art": {
+   "setting": "perch",
+   "length_cm": 15,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Cardellina pusilla": {
+  "exclude": [
+   488583617
+  ],
+  "_why": "open-license review (#50): out 488583617: out of focus",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Tyrannus verticalis": {
+  "exclude": [
+   294538029
+  ],
+  "_why": "open-license review (#50): out 294538029: mostly hidden behind a trunk",
+  "art": {
+   "setting": "perch",
+   "length_cm": 22,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Podiceps nigricollis": {
+  "exclude": [
+   353234067
+  ],
+  "_why": "open-license review (#50): out 353234067: motion-blurred",
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Melanitta perspicillata": {
+  "exclude": [
+   483312246,
+   180129885,
+   176333618
+  ],
+  "_why": "open-license review (#50): out 483312246: hunched on rocks with ragged feathers, looks stranded; out 180129885: distant flock, birds too small; out 176333618: resting ashore, likely stranded",
+  "art": {
+   "reference": 593312066,
+   "_why": "a distant bird came out a black blob; a male close on the water",
+   "setting": "water"
+  }
+ },
+ "Dryobates pubescens": {
+  "exclude": [
+   99703960
+  ],
+  "_why": "open-license review (#50): out 99703960: dark, half hidden",
+  "art": {
+   "setting": "trunk"
+  }
+ },
+ "Melospiza lincolnii": {
+  "exclude": [
+   110234771
+  ],
+  "_why": "open-license review (#50): out 110234771: heavily obscured by leaves",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Aratinga nenday": {
+  "exclude": [
+   271488622
+  ],
+  "_why": "open-license review (#50): out 271488622: half hidden at a nest hole and a blur",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Plegadis chihi": {
+  "exclude": [
+   189348305
+  ],
+  "_why": "open-license review (#50): out 189348305: distant flock of silhouettes",
+  "art": {
+   "setting": "wade"
+  }
+ },
+ "Aimophila ruficeps": {
+  "exclude": [
+   203423898
+  ],
+  "_why": "open-license review (#50): out 203423898: backlit behind twigs",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Nyctanassa violacea": {
+  "exclude": [
+   204573102
+  ],
+  "_why": "open-license review (#50): out 204573102: nestling behind sticks",
+  "art": {
+   "setting": "rock"
+  }
+ },
+ "Brotogeris chiriri": {
+  "exclude": [
+   554763880
+  ],
+  "_why": "open-license review (#50): out 554763880: blurry and grainy",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Archilochus alexandri": {
+  "exclude": [
+   273751528
+  ],
+  "_why": "open-license review (#50): out 273751528: underexposed, gorget not visible",
+  "art": {
+   "reference": 282787652,
+   "_why": "a hunched bird among leaves, its bill hanging; one on an open twig",
+   "setting": "perch"
+  }
+ },
+ "Cyanocitta stelleri": {
+  "exclude": [
+   86704500
+  ],
+  "_why": "open-license review (#50): out 86704500: dark silhouette in foliage",
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Poecile gambeli": {
+  "exclude": [
+   696977117,
+   115008499
+  ],
+  "_why": "open-license review (#50): out 696977117: strong blue cast, colours wrong; out 115008499: backlit silhouette, blurred",
+  "art": {
+   "reference": 440762475,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Vireo huttoni": {
+  "exclude": [
+   618844261
+  ],
+  "_why": "open-license review (#50): out 618844261: blurred, face hidden",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Geococcyx californianus": {
+  "exclude": [
+   325132678
+  ],
+  "_why": "open-license review (#50): out 325132678: blurry video frame",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Spinus psaltria": {
+  "exclude": [
+   708246522
+  ],
+  "_why": "open-license review (#50): out 708246522: blurred and dark, no field marks",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Aphelocoma californica": {
+  "exclude": [
+   664263588
+  ],
+  "_why": "open-license review (#50): out 664263588: very dark, head hidden",
+  "art": {
+   "reference": 674449029,
+   "_why": "the first pick is shaded and its head came out dark; a bird with its blue head in light",
+   "setting": "perch"
+  }
+ },
+ "Astur cooperii": {
+  "exclude": [
+   709876746
+  ],
+  "_why": "open-license review (#50): out 709876746: dark and soft through branches",
+  "art": {
+   "reference": 604025942,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Calypte anna": {
+  "exclude": [
+   599164180,
+   604260846
+  ],
+  "_why": "open-license review (#50): out 599164180: tiny and half hidden, a dead leaf dominates; out 604260846: head hidden in leaves",
+  "art": {
+   "reference": 593312089,
+   "_why": "the hovering reference became a bird standing on a rock with its wings raised; a perched male in good light",
+   "setting": "perch"
+  }
+ },
+ "Melanerpes formicivorus": {
+  "exclude": [
+   658119400,
+   654338693
+  ],
+  "_why": "open-license review (#50): out 658119400: backlit, hidden by the branch; out 654338693: dark behind blurred foliage",
+  "art": {
+   "setting": "trunk"
+  }
+ },
+ "Sialia mexicana": {
+  "exclude": [
+   677562203
+  ],
+  "_why": "open-license review (#50): out 677562203: backlit silhouette, no colour",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Columba livia": {
+  "exclude": [
+   689907948
+  ],
+  "_why": "open-license review (#50): out 689907948: all-white domestic dove",
+  "art": {
+   "reference": 568858959,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "ground"
+  }
+ },
+ "Bubo virginianus": {
+  "exclude": [
+   587672724
+  ],
+  "_why": "open-license review (#50): out 587672724: noisy night flash, back view",
+  "art": {
+   "reference": 488593366,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Buteo lineatus": {
+  "exclude": [
+   603537832
+  ],
+  "_why": "open-license review (#50): out 603537832: hazy back view through twigs",
+  "art": {
+   "reference": 475706597,
+   "_why": "a flight shot became a hawk flapping over a rock; a perched adult with the rufous barring",
+   "setting": "perch"
+  }
+ },
+ "Cathartes aura": {
+  "exclude": [
+   603540047
+  ],
+  "_why": "open-license review (#50): out 603540047: backlit behind branches",
+  "art": {
+   "reference": 698218415,
+   "_why": "a flight shot against the sky; a bird perched on a post with its red head showing",
+   "setting": "perch"
+  }
+ },
+ "Leiothlypis celata": {
+  "exclude": [
+   484960115,
+   604025812
+  ],
+  "_why": "open-license review (#50): out 484960115: held in a hand; out 604025812: obscured in leaves",
+  "art": {
+   "setting": "perch",
+   "length_cm": 12.5,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Dryobates nuttallii": {
+  "exclude": [
+   608914991,
+   517883799
+  ],
+  "_why": "open-license review (#50): out 608914991: dark backlit silhouette; out 517883799: silhouetted from below",
+  "art": {
+   "reference": 570865806,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Sturnus vulgaris": {
+  "exclude": [
+   395880279
+  ],
+  "_why": "open-license review (#50): out 395880279: silhouette buried in foliage",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Falco sparverius": {
+  "exclude": [
+   452547834
+  ],
+  "_why": "open-license review (#50): out 452547834: close-up of a handled or captive bird",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Sayornis saya": {
+  "exclude": [
+   470805339,
+   602611385
+  ],
+  "_why": "open-license review (#50): out 470805339: blurred, a branch across the bird; out 602611385: backlit silhouette",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Quiscalus mexicanus": {
+  "exclude": [
+   739638372
+  ],
+  "_why": "open-license review (#50): out 739638372: underexposed, in shadow",
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Thryomanes bewickii": {
+  "exclude": [
+   465399045,
+   604350365
+  ],
+  "_why": "open-license review (#50): out 465399045: fluffed with drooped wings, looks handled; out 604350365: indoors on a towel, rescued or captive",
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Patagioenas fasciata": {
+  "exclude": [
+   339279706
+  ],
+  "_why": "open-license review (#50): out 339279706: a phone screenshot with a Crop button",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Tyto furcata": {
+  "include": [
+   125029450,
+   148143364,
+   674475351,
+   325110853
+  ],
+  "_why": "open-license review (#50): in 125029450: missed by the detector; perched, dark background; in 148143364: missed by the detector; perched in a pine; in 674475351: missed by the detector; perched in a palm; in 325110853: missed by the detector; perched in a pine",
+  "art": {
+   "reference": 148143364,
+   "_why": "a dim bird inside a palm came out odd (dE 17); one face-on in a pine",
+   "setting": "perch",
+   "length_cm": 37,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Phalaenoptilus nuttallii": {
+  "include": [
+   27578347,
+   27035889,
+   360352886
+  ],
+  "_why": "open-license review (#50): in 27578347: missed by the detector; roosting on mulch; in 27035889: missed by the detector; roosting on gravel; in 360352886: missed by the detector; on a trail at night",
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Megascops kennicottii": {
+  "include": [
+   283508436
+  ],
+  "_why": "open-license review (#50): in 283508436: the only usable open photo; perched at night",
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Aeronautes saxatalis": {
+  "include": [
+   148948986,
+   121061463,
+   79276700
+  ],
+  "_why": "open-license review (#50): in 148948986: in flight, under the size floor but sharp; in 121061463: in flight, under the size floor but sharp; in 79276700: in flight, under the size floor but sharp",
+  "art": {
+   "setting": "flight"
+  }
+ },
+ "Vireo bellii": {
+  "include": [
+   712450451
+  ],
+  "_why": "open-license review (#50): in 712450451: missed by the shortlist; perched in branches",
+  "art": {
+   "reference": 356387267,
+   "_why": "a singing bird, open-mouthed against the sky, came out with a pink throat; one perched quietly",
+   "setting": "perch"
+  }
+ },
+ "Buteo jamaicensis": {
+  "art": {
+   "reference": 685715513,
+   "_why": "the pack's first photo is a blurred flight shot; the painting made a malformed bird; a front-lit adult on a fence instead",
+   "setting": "perch"
+  }
+ },
+ "Setophaga coronata": {
+  "art": {
+   "reference": 616227519,
+   "_why": "a distant bird against the sky gave a wrong head (dE 24); a close full-body bird",
+   "setting": "ground"
+  }
+ },
+ "Corvus corax": {
+  "art": {
+   "reference": 604259110,
+   "_why": "a branch across the tail became a long blade; a bird standing in the open",
+   "setting": "ground"
+  }
+ },
+ "Branta canadensis": {
+  "art": {
+   "reference": 634048653,
+   "_why": "the reference stands among coots (dE 23); a goose alone",
+   "setting": "shore"
+  }
+ },
+ "Ardea herodias": {
+  "art": {
+   "reference": 613538389,
+   "_why": "the reference is dim and painted near-black; a well-lit bird on grass",
+   "setting": "ground"
+  }
+ },
+ "Nannopterum auritum": {
+  "art": {
+   "reference": 615582387,
+   "_why": "the reference is a group drying their wings, painted as several birds; one bird standing on sand",
+   "setting": "ground"
+  }
+ },
+ "Pelecanus occidentalis": {
+  "art": {
+   "reference": 593312023,
+   "_why": "several birds in flight became a muddle; one bird standing on a rock",
+   "setting": "rock"
+  }
+ },
+ "Psaltriparus minimus": {
+  "art": {
+   "reference": 595472606,
+   "_why": "a dim, partly hidden bird came out chunky and short-tailed; a sharp, well-lit bird",
+   "setting": "perch"
+  }
+ },
+ "Pipilo maculatus": {
+  "art": {
+   "reference": 489597210,
+   "_why": "a backlit bird against the sky came out near-black; a front-lit adult on a post",
+   "setting": "perch"
+  }
+ },
+ "Alopochen aegyptiaca": {
+  "art": {
+   "reference": 578296243,
+   "_why": "a head-only close-up became a head among leaves; the whole bird in good light",
+   "setting": "ground"
+  }
+ },
+ "Toxostoma redivivum": {
+  "art": {
+   "reference": 489597169,
+   "_why": "a head-only close-up left FLUX.3 to invent the body; the whole bird in profile",
+   "setting": "ground"
+  }
+ },
+ "Larus delawarensis": {
+  "art": {
+   "reference": 355357677,
+   "_why": "a distant bird on dark sand came out a chunky dove-like bird; a standing adult with the ring on its bill",
+   "setting": "shore"
+  }
+ },
+ "Oxyura jamaicensis": {
+  "art": {
+   "reference": 196036954,
+   "_why": "a drab bird half in the water was painted stuck on a rock; a breeding male, the bird birders picture",
+   "setting": "water",
+   "length_cm": 38,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Polioptila caerulea": {
+  "art": {
+   "reference": 265549857,
+   "_why": "a bird half behind twigs came out chunky; a slim bird in the open",
+   "setting": "perch"
+  }
+ },
+ "Piranga ludoviciana": {
+  "art": {
+   "reference": 378816896,
+   "_why": "a dull bird against the sky became a generic green bird; a male in breeding plumage",
+   "setting": "perch"
+  }
+ },
+ "Bucephala albeola": {
+  "art": {
+   "reference": 603992548,
+   "_why": "a female half on rocks was painted on a branch; a male on the water",
+   "setting": "water"
+  }
+ },
+ "Psittacara mitratus": {
+  "art": {
+   "reference": 363157243,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing (was 185005450: a half-hidden bird painted blotchy (dE 26); the whole bird on a branch)",
+   "setting": "perch"
+  }
+ },
+ "Petrochelidon pyrrhonota": {
+  "art": {
+   "reference": 311645778,
+   "_why": "a flight shot; a bird perched on a ledge with its face showing",
+   "setting": "perch"
+  }
+ },
+ "Setophaga nigrescens": {
+  "art": {
+   "reference": 165872786,
+   "_why": "a bird behind leaves was painted with yellow underparts it doesn't have (dE 20); one in the open",
+   "setting": "perch"
+  }
+ },
+ "Haematopus bachmani": {
+  "art": {
+   "reference": 127561861,
+   "_why": "two birds in the reference, two in the painting; one bird, well lit",
+   "setting": "rock",
+   "length_cm": 44,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Campylorhynchus brunneicapillus": {
+  "art": {
+   "reference": 28298063,
+   "_why": "a cactus pad merged into the bird as a black fan; one in the open on a branch",
+   "setting": "perch"
+  }
+ },
+ "Junco hyemalis": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Mimus polyglottos": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Larus occidentalis": {
+  "art": {
+   "setting": "rock"
+  }
+ },
+ "Zonotrichia leucophrys": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Passer domesticus": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Selasphorus sasin": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Egretta thula": {
+  "art": {
+   "setting": "wade"
+  }
+ },
+ "Fulica americana": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Corvus brachyrhynchos": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Nycticorax nycticorax": {
+  "art": {
+   "setting": "shore",
+   "length_cm": 61,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Melospiza melodia": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Ardea alba": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Amazona viridigenalis": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Tyrannus vociferans": {
+  "art": {
+   "reference": 605537774,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Icterus cucullatus": {
+  "art": {
+   "setting": "perch",
+   "length_cm": 19,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Agelaius phoeniceus": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Turdus migratorius": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Mareca americana": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Callipepla californica": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Pandion haliaetus": {
+  "art": {
+   "setting": "flight"
+  }
+ },
+ "Tringa semipalmata": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Pavo cristatus": {
+  "art": {
+   "reference": 437503733,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "ground"
+  }
+ },
+ "Larus heermanni": {
+  "art": {
+   "setting": "shore",
+   "length_cm": 48,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Butorides virescens": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Himantopus mexicanus": {
+  "art": {
+   "setting": "wade"
+  }
+ },
+ "Podilymbus podiceps": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Charadrius vociferus": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Pycnonotus jocosus": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Pelecanus erythrorhynchos": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Streptopelia decaocto": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Lonchura punctulata": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Hirundo rustica": {
+  "art": {
+   "reference": 266115017,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Geothlypis trichas": {
+  "art": {
+   "reference": 293525410,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Troglodytes aedon": {
+  "art": {
+   "setting": "perch",
+   "length_cm": 12,
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  }
+ },
+ "Aechmophorus occidentalis": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Calidris alba": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Vidua macroura": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Calidris minutilla": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Myiarchus cinerascens": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Megaceryle alcyon": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Limosa fedoa": {
+  "art": {
+   "setting": "wade"
+  }
+ },
+ "Pluvialis squatarola": {
+  "art": {
+   "setting": "wade"
+  }
+ },
+ "Passerculus sandwichensis": {
+  "art": {
+   "setting": "rock"
+  }
+ },
+ "Icterus bullockii": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Thalasseus maximus": {
+  "art": {
+   "reference": 450168467,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "shore"
+  }
+ },
+ "Amazona oratrix": {
+  "art": {
+   "reference": 173413643,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Aythya collaris": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Spizella passerina": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Chondestes grammacus": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Zonotrichia atricapilla": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Spatula clypeata": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Urile penicillatus": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Lophodytes cucullatus": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Passerina amoena": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Sturnella neglecta": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Spinus tristis": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Chamaea fasciata": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Tringa melanoleuca": {
+  "art": {
+   "setting": "wade"
+  }
+ },
+ "Anarhynchus nivosus": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Contopus sordidulus": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Hydroprogne caspia": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Anthus rubescens": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Anas crecca": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Thalasseus elegans": {
+  "art": {
+   "setting": "wade"
+  }
+ },
+ "Spatula discors": {
+  "art": {
+   "setting": "water"
+  }
+ },
+ "Larus smithsonianus": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Lanius ludovicianus": {
+  "art": {
+   "setting": "ground"
+  }
+ },
+ "Vireo gilvus": {
+  "art": {
+   "setting": "perch"
+  }
+ },
+ "Calidris mauri": {
+  "art": {
+   "setting": "shore"
+  }
+ },
+ "Polioptila californica": {
+  "art": {
+   "reference": 356679042,
+   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
+   "setting": "perch"
+  }
+ },
+ "Catherpes mexicanus": {
+  "art": {
+   "setting": "rock"
+  }
+ },
+ "Catharus ustulatus": {
+  "art": {
+   "setting": "perch"
+  }
+ }
 }

@@ -3568,7 +3568,11 @@
           "faithful": true
         }
       },
-      "review": "pending"
+      "review": "rejected",
+      "rejected_seeds": [
+        2376463231
+      ],
+      "why": "the v10 review (2026-11-01): failed the fidelity gate and floats; repaint with new seeds"
     },
     "melanerpes-formicivorus": {
       "common_name": "Acorn Woodpecker",
@@ -4471,7 +4475,11 @@
           "faithful": false
         }
       },
-      "review": "pending"
+      "review": "rejected",
+      "rejected_seeds": [
+        3385963342
+      ],
+      "why": "the v10 review (2026-11-01): failed the fidelity gate and floats; repaint with new seeds"
     },
     "petrochelidon-pyrrhonota": {
       "common_name": "American Cliff Swallow",
