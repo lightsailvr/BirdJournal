@@ -1,0 +1,78 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "6A2DC365-0567-4452-A47E-3CED7F944459",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "99FE5F7B-121E-46B7-8384-D31BE8FA3B2E",
+      "localizations" : [
+        {
+          "description" : "A small tip toward the server.",
+          "displayName" : "Scoop of seed",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.matthewcelia.mybirdjournal.tip.seed",
+      "referenceName" : "Tip: Scoop of seed",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "0D05A69D-FECB-4E15-9518-5B68D581AA47",
+      "localizations" : [
+        {
+          "description" : "A tip toward the server and the painting machine.",
+          "displayName" : "Suet cake",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.matthewcelia.mybirdjournal.tip.suet",
+      "referenceName" : "Tip: Suet cake",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "7549F9DD-C8BA-4699-83A0-B6F4976C6813",
+      "localizations" : [
+        {
+          "description" : "A generous tip that keeps the cards painted.",
+          "displayName" : "Bird feeder",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.matthewcelia.mybirdjournal.tip.feeder",
+      "referenceName" : "Tip: Bird feeder",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

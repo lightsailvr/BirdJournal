@@ -1,0 +1,122 @@
+import Foundation
+import Observation
+import StoreKit
+
+/// The tip jar (issue #59, ADR-0001): three StoreKit 2 consumables that unlock nothing. A tip is finished as soon as
+/// it is verified and is never looked up again, so no feature can check for one; nothing is sent to a server and no
+/// account is needed. This is the only file in the app that imports StoreKit (`NoPurchaseGateTests` holds it there).
+@MainActor
+@Observable
+final class TipJar {
+    /// The product IDs, cheapest first, as configured in App Store Connect and in `BirdJournal.storekit`.
+    static let productIDs = [
+        "com.matthewcelia.mybirdjournal.tip.seed",
+        "com.matthewcelia.mybirdjournal.tip.suet",
+        "com.matthewcelia.mybirdjournal.tip.feeder",
+    ]
+
+    /// One tip as the screen shows it, with App Store Connect's name, line and local price.
+    struct Tip: Identifiable, Equatable {
+        let id: String
+        let name: String
+        let detail: String
+        let price: String
+    }
+
+    /// Where the tips are. A thank-you or a failure is an `Outcome` beside it, so a tip finished while the tips load
+    /// (one left from an earlier launch, an Ask to Buy approval) neither hides them nor is lost.
+    enum State: Equatable {
+        case loading
+        case ready
+        /// The App Store could not be reached, or it returned no tips.
+        case unavailable(String)
+        case purchasing(productID: String)
+        /// Waiting on Ask to Buy or a payment check; the tip is finished when it arrives.
+        case pending
+    }
+
+    enum Outcome: Equatable {
+        /// A tip went through and was finished.
+        case thanked(tipName: String)
+        case failed(String)
+    }
+
+    private(set) var tips: [Tip] = []
+    private var products: [Product] = []
+    private(set) var state = State.loading
+    private(set) var outcome: Outcome?
+    private var updates: Task<Void, Never>?
+
+    init() {
+        // Ask to Buy approvals and interrupted purchases arrive here, including ones left from an earlier launch.
+        updates = Task { [weak self] in
+            for await result in Transaction.updates {
+                await self?.finish(result)
+            }
+        }
+    }
+
+    isolated deinit {
+        updates?.cancel()
+    }
+
+    func load() async {
+        state = .loading
+        do {
+            let found = try await Product.products(for: Self.productIDs)
+            products = found.sorted { $0.price < $1.price }
+            tips = products.map { Tip(id: $0.id, name: $0.displayName, detail: $0.description, price: $0.displayPrice) }
+            state = products.isEmpty ? .unavailable("The tips aren't available right now. Try again later.") : .ready
+        } catch {
+            state = .unavailable("The App Store couldn't be reached. Try again when you're online.")
+        }
+    }
+
+    func purchase(_ tip: Tip) async {
+        guard let product = products.first(where: { $0.id == tip.id }) else { return }
+        outcome = nil
+        state = .purchasing(productID: product.id)
+        do {
+            switch try await product.purchase() {
+            case .success(let result):
+                await finish(result)
+            case .pending:
+                state = .pending
+            case .userCancelled:
+                state = .ready
+            @unknown default:
+                state = .ready
+            }
+        } catch {
+            state = .ready
+            outcome = .failed("The tip didn't go through: \(error.localizedDescription)")
+        }
+    }
+
+    /// Back to the tips after a thank-you or a failure.
+    func dismissOutcome() {
+        outcome = nil
+    }
+
+    #if DEBUG
+    /// The thank-you as after the cheapest tip (`-autoTipThanks YES`), for screenshots.
+    func showThanksForScreenshot() {
+        outcome = .thanked(tipName: tips.first?.name ?? "Scoop of seed")
+    }
+    #endif
+
+    private func finish(_ result: VerificationResult<Transaction>) async {
+        switch result {
+        case .verified(let transaction):
+            await transaction.finish()
+            guard Self.productIDs.contains(transaction.productID), transaction.revocationDate == nil else { return }
+            outcome = .thanked(tipName: tips.first { $0.id == transaction.productID }?.name ?? "tip")
+        case .unverified(let transaction, _):
+            // Finished all the same so StoreKit stops offering it; there is nothing to grant either way.
+            await transaction.finish()
+            outcome = .failed("The App Store couldn't confirm the tip.")
+        }
+        if case .purchasing = state { state = .ready }
+        if state == .pending { state = .ready }
+    }
+}

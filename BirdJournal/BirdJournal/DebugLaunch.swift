@@ -19,7 +19,8 @@ import UIKit
 ///   card, front or back up), `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
 ///   `-autoSet <id>`), `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
-///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `source` (the audio source sheet).
+///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `support` (the tip jar; `-autoTipThanks YES` shows its
+///   thank-you), `source` (the audio source sheet).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
@@ -131,6 +132,10 @@ struct DebugLaunch: ViewModifier {
             case "settings":
                 tab = .listen
                 listenPath.append(Route.settings)
+            case "support":
+                tab = .listen
+                listenPath.append(Route.settings)
+                listenPath.append(Route.support)
             case "source":
                 tab = .listen
                 defaults.set(true, forKey: "autoSource")
