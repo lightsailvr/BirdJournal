@@ -2,8 +2,9 @@ import MWDATCore
 import Pack
 import SwiftUI
 
-/// Settings (issue #28): the glasses in plain words, the appearance and app icon, the bird packs, sources and credits,
-/// and, in debug builds, the developer screens that used to be the app's front page.
+/// Settings (issue #28): the glasses in plain words, the optional account (issue #60), the appearance and app icon,
+/// the bird packs, sources and credits, and, in debug builds, the developer screens that used to be the app's front
+/// page.
 struct SettingsView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
@@ -52,6 +53,10 @@ struct SettingsView: View {
                 Text("BirdJournal registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             }
 
+            Section("Account") {
+                AccountRow()
+            }
+
             Section("Appearance") {
                 Picker("Appearance", selection: $appearance) {
                     ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
@@ -69,6 +74,7 @@ struct SettingsView: View {
             }
 
             Section("About") {
+                NavigationLink("Support Bird Journal", value: Route.support)
                 NavigationLink("Sources & credits", value: Route.credits)
                 LabeledContent("Version", value: Self.versionText)
                 Text("Powered by BirdNET. Birds are identified on this iPhone; no audio is saved or sent anywhere.")

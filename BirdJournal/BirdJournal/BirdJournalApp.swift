@@ -19,6 +19,7 @@ struct BirdJournalApp: App {
     @State private var places: PlaceNames
     @State private var packs: PackLibrary
     @State private var journalEdits: JournalEdits
+    @State private var account = AccountSession.forApp()
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @State private var showingSplash = true
     private let album: ModelContainer
@@ -206,6 +207,7 @@ struct BirdJournalApp: App {
             .environment(listening)
             .environment(sounds)
             .environment(journalEdits)
+            .environment(account)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)
