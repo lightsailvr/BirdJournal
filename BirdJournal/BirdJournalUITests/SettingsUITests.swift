@@ -42,6 +42,28 @@ final class SettingsUITests: XCTestCase {
     }
 }
 
+/// The account's build-time switch (issue #88): on in Debug, Settings has the Account row; off in Release, it has none.
+/// Run in both configurations (`-configuration Release` for the off case); the test target sees the same condition.
+final class AccountSwitchUITests: XCTestCase {
+    @MainActor
+    func testAccountRowFollowsTheBuildSwitch() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        app.buttons["Settings"].tap()
+
+        // The Appearance section is always there, so the list has loaded before the Account row is looked for.
+        XCTAssertTrue(app.buttons["Dark"].waitForExistence(timeout: 10), "Settings didn't open; screen: \(app.debugDescription.prefix(3000))")
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Account'")).firstMatch
+        #if ACCOUNTS_ENABLED
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "no Account row in a build with accounts on")
+        #else
+        XCTAssertFalse(row.exists, "an Account row in a build with accounts off: \(row.label)")
+        XCTAssertFalse(app.staticTexts["ACCOUNT"].exists || app.staticTexts["Account"].exists, "an Account section header")
+        #endif
+    }
+}
+
 private extension XCUIElement {
     func waitForSelected(timeout: TimeInterval = 5) -> Bool {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: self)
