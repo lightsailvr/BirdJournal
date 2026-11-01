@@ -8,7 +8,7 @@ import Testing
 // watchdog without a word, on its own suite with no time limit, so only the watchdog can end it.
 @Suite("Hang probe", .serialized)
 struct HangProbeTests {
-    private static let kind = ProcessInfo.processInfo.environment["BIRDJOURNAL_HANG_PROBE"]
+    nonisolated private static let kind = ProcessInfo.processInfo.environment["BIRDJOURNAL_HANG_PROBE"]
 
     @Test("awaits forever", .enabled(if: kind == "await"), .timeLimit(.minutes(1)))
     func awaitsForever() async {

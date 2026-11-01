@@ -48,7 +48,7 @@ sample_test_host() {
 run_watched() {
     local label="$1" log="$2" udid="$3"
     shift 3
-    local quiet=$((watchdog_quiet_minutes * 60)) pid tail_pid now modified status
+    local quiet=$((watchdog_quiet_minutes * 60)) pid tail_pid now modified rc
     : >"$log"
     "$@" >"$log" 2>&1 &
     pid=$!
@@ -78,10 +78,10 @@ run_watched() {
             return 124
         fi
     done
-    status=0
-    wait "$pid" || status=$?
+    rc=0
+    wait "$pid" || rc=$?
     sleep 1
     kill "$tail_pid" 2>/dev/null || true
     wait "$tail_pid" 2>/dev/null || true
-    return "$status"
+    return "$rc"
 }

@@ -57,7 +57,10 @@ udid="$(destination_udid "$destination")"
 echo "==> Destination: $destination${udid:+ ($udid)}"
 uptime
 
+# `-collect-test-diagnostics never`: on a failure xcodebuild otherwise runs `simctl diagnose`, which gathers every
+# crash report on the Mac and sat silent for over 3 minutes in #82, long enough to look like a hang.
 timeouts=(
+    -collect-test-diagnostics never
     -test-timeouts-enabled YES
     -default-test-execution-time-allowance "${BIRDJOURNAL_TEST_ALLOWANCE:-180}"
     -maximum-test-execution-time-allowance "${BIRDJOURNAL_TEST_MAX_ALLOWANCE:-300}"

@@ -1,4 +1,5 @@
 import Foundation
+import MWDATCamera
 import MWDATCore
 import MWDATMockDevice
 import Testing
@@ -8,12 +9,13 @@ import UIKit
 // Issue #82's repro: cycles a mock Display through pair, a started session with a camera stream, and teardown, over
 // and over in one test host, until the toolkit's mock link stops answering. Skipped unless the test process gets
 // `BIRDJOURNAL_MDK_STRESS=<cycles>` (pass `TEST_RUNNER_BIRDJOURNAL_MDK_STRESS=40` to xcodebuild).
-// `BIRDJOURNAL_MDK_TEARDOWN` picks the teardown: `bare` (enable … disable, as the suites did before #82) or `settled`
-// (`MockDeviceKitTests.withMockDisplay` as it is now).
+// `BIRDJOURNAL_MDK_TEARDOWN` picks the teardown: `bare` (enable … disable, as the suites did before #82), `unpair`
+// (bare plus an awaited `unpairDevice` before `disable`), `settle` (bare plus a wait for the device list to empty and
+// a 300 ms beat after `disable`), or `settled` (`MockDeviceKitTests.withMockDisplay` as it is now: all of it).
 @Suite("Mock Device Kit stress probe", .serialized)
 struct MockDeviceKitStressProbe {
-    private static let cycles = ProcessInfo.processInfo.environment["BIRDJOURNAL_MDK_STRESS"].flatMap(Int.init)
-    private static let teardown = ProcessInfo.processInfo.environment["BIRDJOURNAL_MDK_TEARDOWN"] ?? "settled"
+    nonisolated private static let cycles = ProcessInfo.processInfo.environment["BIRDJOURNAL_MDK_STRESS"].flatMap(Int.init)
+    nonisolated private static let teardown = ProcessInfo.processInfo.environment["BIRDJOURNAL_MDK_TEARDOWN"] ?? "settled"
 
     @Test("the mock link keeps answering through repeated pair, stream and teardown cycles", .enabled(if: cycles != nil), .timeLimit(.minutes(30)))
     func cyclesUntilWedged() async throws {
@@ -36,7 +38,7 @@ struct MockDeviceKitStressProbe {
                 try await MockDeviceKitTests.waitUntil(timeout: .seconds(20)) { streaming.value }
                 await source.stop()
             }
-            if Self.teardown == "bare" {
+            if Self.teardown != "settled" {
                 MockDeviceKit.shared.enable()
                 let glasses = try MockDeviceKit.shared.pairGlasses(model: .metaRayBanDisplay)
                 glasses.powerOn()
@@ -44,8 +46,19 @@ struct MockDeviceKitStressProbe {
                 glasses.don()
                 let connection = GlassesConnection()
                 try await MockDeviceKitTests.waitUntil { connection.connectedDevice != nil }
-                do { try await body(glasses) } catch { await MockDeviceKit.shared.disable(); throw error }
-                await MockDeviceKit.shared.disable()
+                let tearDown = {
+                    if Self.teardown == "unpair" { await MockDeviceKit.shared.unpairDevice(glasses) }
+                    await MockDeviceKit.shared.disable()
+                    if Self.teardown == "settle" {
+                        let deadline = ContinuousClock.now + .seconds(5)
+                        while !Wearables.shared.devices.isEmpty, ContinuousClock.now < deadline {
+                            try? await Task.sleep(for: .milliseconds(50))
+                        }
+                        try? await Task.sleep(for: .milliseconds(300))
+                    }
+                }
+                do { try await body(glasses) } catch { await tearDown(); throw error }
+                await tearDown()
             } else {
                 try await MockDeviceKitTests.withMockDisplay(body)
             }

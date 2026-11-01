@@ -8,9 +8,15 @@ import UIKit
 
 // Root of every Mock Device Kit suite (spec "Testing"). They run app-hosted because `Wearables.configure()`
 // needs the host app's bundle; the app calls it at launch. `.serialized` is recursive, so the nested suites
-// never share `MockDeviceKit.shared` at the same time.
-@Suite("Mock Device Kit", .serialized)
+// never share `MockDeviceKit.shared` at the same time. The time limit applies to every test in every nested suite: the
+// longest takes about 25 s, and a test the toolkit wedges (issue #82) fails at the limit instead of stalling the run.
+@Suite("Mock Device Kit", .serialized, .timeLimit(.minutes(2)))
 enum MockDeviceKitTests {
+    /// Off by default. With `BIRDJOURNAL_MOCK_PREVIEW_PORT=9000` in the test process (`TEST_RUNNER_BIRDJOURNAL_MOCK_PREVIEW_PORT`
+    /// to xcodebuild) every test also starts Mock Device Kit's preview server on that port, so a run can be watched
+    /// in the Chrome Display Simulator. One simulator at a time: the port is the Mac's (DECISIONS.md, issue #82).
+    nonisolated static let previewPort = ProcessInfo.processInfo.environment["BIRDJOURNAL_MOCK_PREVIEW_PORT"].flatMap(UInt16.init)
+
     /// Pairs a mock Display (registered, permissions granted, powered on, unfolded, worn), waits until that device
     /// (not any device) is connected, and always tears it down afterwards, so a failing test does not leave the next
     /// one with a stale device.
@@ -26,6 +32,9 @@ enum MockDeviceKitTests {
             try await waitUntil {
                 Wearables.shared.deviceForIdentifier(glasses.deviceIdentifier)?.linkState == .connected
             }
+            if let previewPort {
+                _ = try await MockDeviceKit.shared.startTestServer(port: previewPort)
+            }
             try await body(glasses)
         } catch {
             await tearDown(paired)
@@ -38,6 +47,7 @@ enum MockDeviceKitTests {
     /// device to leave `Wearables.shared.devices` and gives the toolkit's link a beat to close: `disable()` returns
     /// while the link's stream I/O may still be closing on the toolkit's thread.
     private static func tearDown(_ glasses: (any MockGlasses)?) async {
+        if previewPort != nil { await MockDeviceKit.shared.stopTestServer() }
         if let glasses { await MockDeviceKit.shared.unpairDevice(glasses) }
         await MockDeviceKit.shared.disable()
         let deadline = ContinuousClock.now + .seconds(5)

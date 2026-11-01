@@ -152,8 +152,12 @@ final class GlassesConnection {
     private(set) var isMockPaired = false
 
     /// The port of Mock Device Kit's preview server: open `http://127.0.0.1:9000/` in Chrome with the Meta Ray-Ban
-    /// Display Simulator extension to see and drive the mock lens (simulator only, not on a physical iPhone).
-    static let mockPreviewPort: UInt16 = 9000
+    /// Display Simulator extension to see and drive the mock lens (simulator only, not on a physical iPhone). The
+    /// simulators share the Mac's loopback, so only one app can hold a port: `-mockPreviewPort 9001` picks another
+    /// (`scripts/mock-lens-in-chrome.sh`, issue #82).
+    static var mockPreviewPort: UInt16 {
+        UInt16(exactly: UserDefaults.standard.integer(forKey: "mockPreviewPort")).flatMap { $0 == 0 ? nil : $0 } ?? 9000
+    }
     @ObservationIgnored private var previewServer: Task<Void, Never>?
 
     /// Pairs a registered, permission-granted mock Meta Ray-Ban Display that is powered on, unfolded and worn, and
@@ -169,7 +173,8 @@ final class GlassesConnection {
             isMockPaired = true
             previewServer = Task { [weak self] in
                 do {
-                    _ = try await MockDeviceKit.shared.startTestServer(port: Self.mockPreviewPort)
+                    let port = try await MockDeviceKit.shared.startTestServer(port: Self.mockPreviewPort)
+                    GlassesLog.shared.note("Display preview server on http://127.0.0.1:\(port)/")
                 } catch {
                     self?.errorMessage = "Display preview server: \(error.localizedDescription)"
                 }
@@ -179,12 +184,16 @@ final class GlassesConnection {
         }
     }
 
+    /// Stops the preview server, then unpairs and disables, each awaited: the teardown order the DAT docs give, and
+    /// the one the mock suites use (issue #82).
     func unpairMockGlasses() async {
+        let glasses = mockGlasses
         mockGlasses = nil
         isMockPaired = false
         await previewServer?.value
         previewServer = nil
         await MockDeviceKit.shared.stopTestServer()
+        if let glasses { await MockDeviceKit.shared.unpairDevice(glasses) }
         await MockDeviceKit.shared.disable()
     }
 
