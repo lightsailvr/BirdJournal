@@ -11,15 +11,18 @@
   }
  },
  "Haemorhous mexicanus": {
+  "include": [
+   677925555
+  ],
   "exclude": [
    739958128,
    739958088,
    739958089
   ],
-  "_why": "birds held in a hand, and a dead bird on pavement",
+  "_why": "birds held in a hand, and a dead bird on pavement; in 677925555: the House Finch art reference, a red male in full sun (#57)",
   "art": {
-   "reference": 696977499,
-   "_why": "the v10 review (2026-11-01): 696977106's isolated bird floated and 691091191 at a feeder is a head-and-shoulders close-up; a whole red male on a twig, though dim (was 696977106: the best-lit photo is a dull female; a red male with streaked flanks, the bird birders picture)",
+   "reference": 677925555,
+   "_why": "the v10 review (2026-11-01): none of the pack's photos was a whole, well-lit red male (696977106 and 696977499 dim, 691091191 a close-up at a feeder); one in full sun on a rail, forced in",
    "setting": "perch"
   }
  },
@@ -831,11 +834,15 @@
   }
  },
  "Psittacara mitratus": {
+  "include": [
+   339582922
+  ],
   "art": {
-   "reference": 363157243,
-   "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing (was 185005450: a half-hidden bird painted blotchy (dE 26); the whole bird on a branch)",
+   "reference": 339582922,
+   "_why": "the v10 review (2026-11-01): 185005450's tail was cut off and the painting from 363157243 on a wire didn't pass the maintainer's look; a whole bird on a branch in good light, forced in",
    "setting": "perch"
-  }
+  },
+  "_why": "in 339582922: the Mitred Parakeet art reference, a whole bird side-on in good light (#57)"
  },
  "Petrochelidon pyrrhonota": {
   "art": {
