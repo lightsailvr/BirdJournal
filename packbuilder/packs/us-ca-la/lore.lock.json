@@ -4,133 +4,135 @@
     "sayornis-nigricans": {
       "common_name": "Black Phoebe",
       "model": "claude-opus-5-5",
-      "prompt_version": 1,
+      "prompt_version": 2,
       "facts": [
         {
           "id": "f1",
-          "text": "Its wingspan is estimated at about 26 cm from its wing length.",
-          "source": "wingspan"
-        },
-        {
-          "id": "f2",
-          "text": "It weighs about 19 g.",
-          "source": "avonet"
-        },
-        {
-          "id": "f3",
-          "text": "It feeds mostly on insects and other invertebrates.",
-          "source": "avonet"
-        },
-        {
-          "id": "f4",
-          "text": "It lives mostly in rocky places.",
-          "source": "avonet"
-        },
-        {
-          "id": "f5",
-          "text": "It stays in its range all year.",
-          "source": "avonet"
-        },
-        {
-          "id": "f6",
-          "text": "It spends most of its time perched in trees and shrubs.",
-          "source": "avonet"
-        },
-        {
-          "id": "f7",
-          "text": "It nests in a cup.",
-          "source": "birdbase"
-        },
-        {
-          "id": "f8",
-          "text": "It lays 1 to 6 eggs in a clutch.",
-          "source": "birdbase"
-        },
-        {
-          "id": "f9",
-          "text": "The IUCN Red List rates it Least Concern.",
-          "source": "birdbase"
-        },
-        {
-          "id": "f10",
           "text": "The black phoebe is a passerine bird in the tyrant-flycatcher family.",
           "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
         },
         {
-          "id": "f11",
-          "text": "The phoebes are a genus, Sayornis, of birds in the tyrant flycatcher family.",
+          "id": "f2",
+          "text": "Its song is a repeated tee-hee, tee ho.",
           "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+        },
+        {
+          "id": "f3",
+          "text": "Habitats must also include a supply of mud for nest building, and the birds' specialized nesting requirements probably cause their somewhat irregular range.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+        },
+        {
+          "id": "f4",
+          "text": "The phoebe can be recognized by a characteristic \"tail-wagging\" motion, in which the tail is lowered and the tail's feathers fanned out.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+        },
+        {
+          "id": "f5",
+          "text": "It is mainly insectivorous and waits on a perch before sallying out and catching its prey in the air.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+        },
+        {
+          "id": "f6",
+          "text": "Its song consists of two alternating phrases.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+        },
+        {
+          "id": "f7",
+          "text": "It makes an open cup nest which is placed under a cliff or a bridge and cemented in its place with mud.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+        },
+        {
+          "id": "f8",
+          "text": "It lives in a variety of habitats but is always near water.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is estimated at about 26 cm from its wing length.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 19 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on insects and other invertebrates.",
+          "source": "avonet"
         },
         {
           "id": "f12",
-          "text": "The black phoebe breeds in the west and southwest United States, Mexico and Central America, and parts of South America.",
-          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+          "text": "It lives mostly in rocky places.",
+          "source": "avonet"
         },
         {
           "id": "f13",
-          "text": "It has predominantly black plumage, with white on its belly and undertail coverts.",
-          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+          "text": "It stays in its range all year.",
+          "source": "avonet"
         },
         {
           "id": "f14",
-          "text": "It breeds from southwest Oregon and California south through Central and South America.",
-          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+          "text": "It spends most of its time perched in trees and shrubs.",
+          "source": "avonet"
         },
         {
           "id": "f15",
-          "text": "The flycatchers are the largest family of birds on earth, with over 400 known species.",
-          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+          "text": "It nests in a cup.",
+          "source": "birdbase"
         },
         {
           "id": "f16",
-          "text": "In Oregon it is found in river valleys on the Pacific coast, and in California on the western side of Coast Ranges.",
-          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+          "text": "It lays 1 to 6 eggs in a clutch.",
+          "source": "birdbase"
         },
         {
           "id": "f17",
-          "text": "The white forms an inverted \"V\" in the lower breast.",
-          "source": "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
         }
       ],
       "sentences": [
         {
-          "text": "Hear now of the Black Phoebe, of the tyrant-flycatchers, the largest bird family on earth, over four hundred kinds strong.",
+          "text": "Ask why the black phoebe never strays from water, and the tale answers: it needs the mud.",
           "facts": [
-            "f10",
-            "f15"
+            "f8",
+            "f3"
           ]
         },
         {
-          "text": "Clad in black, it bears white upon its belly, where a pale V stands upside down on its lower breast.",
+          "text": "Under a cliff or a bridge it builds an open cup and cements it in place with mud.",
           "facts": [
-            "f13",
-            "f17"
+            "f7"
           ]
         },
         {
-          "text": "It weighs about nineteen grams, yet its wings spread about twenty-six centimeters.",
+          "text": "Then it waits on a perch, and when an insect passes, it sallies out and snatches it from the air.",
+          "facts": [
+            "f5"
+          ]
+        },
+        {
+          "text": "Back on its perch, it lowers its tail and fans the feathers wide.",
+          "facts": [
+            "f4"
+          ]
+        },
+        {
+          "text": "So its song rings by the water: tee-hee, tee ho.",
           "facts": [
             "f2",
-            "f1"
-          ]
-        },
-        {
-          "text": "From tree and shrub it keeps watch over rocky places all year, feeding on insects and nesting in a cup.",
-          "facts": [
             "f6",
-            "f4",
-            "f5",
-            "f3",
-            "f7"
+            "f8"
           ]
         }
       ],
       "tagline": {
-        "text": "The black-clad tyrant-flycatcher of the rocky places",
+        "text": "The mud builder of the water's edge, waiting on its perch.",
         "facts": [
-          "f13",
-          "f10",
-          "f4"
+          "f7",
+          "f8",
+          "f5"
         ]
       },
       "review": "pending"
