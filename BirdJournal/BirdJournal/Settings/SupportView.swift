@@ -93,14 +93,17 @@ private extension TipJar.State {
     }
 }
 
-/// One tip: its name and line from App Store Connect, and the price as the button.
+/// One tip: its name and line from App Store Connect, and the price as the button (under the name at accessibility
+/// sizes).
 private struct TipRow: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let tip: TipJar.Tip
     let isPurchasing: Bool
     let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(spacing: 14))
+        layout {
             VStack(alignment: .leading, spacing: 2) {
                 Text(tip.name)
                     .font(JournalFont.rowTitle)
@@ -111,7 +114,7 @@ private struct TipRow: View {
                         .foregroundStyle(Color.inkSecondary)
                 }
             }
-            Spacer(minLength: 8)
+            if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
             Button(action: action) {
                 if isPurchasing {
                     ProgressView()

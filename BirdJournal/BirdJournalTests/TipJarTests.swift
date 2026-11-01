@@ -78,7 +78,7 @@ struct TipJarTests {
         try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))), forAPI: .purchase)
 
         await jar.purchase(tip)
-        try await session.clearSimulatedError(forAPI: .purchase)
+        try await session.setSimulatedError(nil, forAPI: .purchase)
 
         guard case .failed = jar.state else {
             Issue.record("expected a failure, got \(jar.state)")
