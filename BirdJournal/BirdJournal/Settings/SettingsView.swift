@@ -53,8 +53,10 @@ struct SettingsView: View {
                 Text("BirdJournal registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             }
 
-            Section("Account") {
-                AccountRow()
+            if AccountSession.isEnabledInThisBuild {
+                Section("Account") {
+                    AccountRow()
+                }
             }
 
             Section("Appearance") {
