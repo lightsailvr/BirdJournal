@@ -3,6 +3,7 @@
 `packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
 `packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
 `packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore in lore.lock.json (`lore.py`).
+`packbuilder thumbnails <pack-dir> --out <dir>`: writes the pack-art thumbnails for the art CDN (`thumbnails.py`).
 `packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
 `packbuilder calibrate-rarity --version <n>`: writes the rarity label thresholds the app ships (`rarity.py`)."""
@@ -86,6 +87,9 @@ def main(argv: list[str] | None = None) -> int:
     index_command = commands.add_parser("index", help="write the pack index from packs/manifest.json and every pack's set.json")
     index_command.add_argument("--out", type=Path, required=True, help="index file to write")
     index_command.add_argument("--repo", default="lightsailvr/BirdJournal", help="GitHub repository the pack zips are released on")
+    thumbnails = commands.add_parser("thumbnails", help="write a built pack's pack-art thumbnails for the art CDN")
+    thumbnails.add_argument("pack", type=Path, help="built pack folder (with pack.sqlite)")
+    thumbnails.add_argument("--out", type=Path, required=True, help="folder to write <species id>.jpg into")
     draft = commands.add_parser("draft", help="print a species list for a new pack from iNaturalist observation counts")
     draft.add_argument("--place", type=int, action="append", required=True, help="iNaturalist place id (repeat for several)")
     draft.add_argument("--before", required=True, help="count observations created up to this date (YYYY-MM-DD); goes in the pack as inat_created_before")
@@ -105,6 +109,8 @@ def main(argv: list[str] | None = None) -> int:
         return _set(args)
     if args.command == "index":
         return _index(args)
+    if args.command == "thumbnails":
+        return _thumbnails(args)
     if args.command == "calibrate-rarity":
         return _calibrate_rarity(args)
     if args.command == "art-review":
@@ -332,6 +338,14 @@ def _art_review(args: argparse.Namespace) -> int:
     unchecked = [entry["common_name"] for entry in lock.species.values() if entry["review"] == PENDING]
     if unchecked:
         print(f"still pending (from text or not faithful, approve by name): {', '.join(unchecked)}", file=sys.stderr)
+    return 0
+
+
+def _thumbnails(args: argparse.Namespace) -> int:
+    from packbuilder.thumbnails import write_thumbnails
+
+    written = write_thumbnails(args.pack, args.out)
+    print(f"{len(written)} thumbnails in {args.out}")
     return 0
 
 
