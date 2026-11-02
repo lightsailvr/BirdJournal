@@ -5,7 +5,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
-from pydantic import BaseModel, ConfigDict, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, ValidationInfo, field_serializer, field_validator, model_validator
 
 from birdjournal_api.auth import Subject
 from birdjournal_api.circles import NotFound
@@ -58,8 +58,8 @@ class FindBody(BaseModel):
 
     @field_validator("species_id", "scientific_name", "common_name")
     @classmethod
-    def _names(cls, value: str) -> str:
-        return clean_name(value, field="name")
+    def _names(cls, value: str, info: ValidationInfo) -> str:
+        return clean_name(value, field=info.field_name or "name")
 
     @field_validator("found_at")
     @classmethod

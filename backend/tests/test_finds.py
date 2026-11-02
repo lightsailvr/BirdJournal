@@ -444,3 +444,24 @@ def test_a_member_reading_after_joining_sees_only_later_finds(client: TestClient
     assert _accept(client, issuer, token, "ben").status_code == 200
     sighting = _put_ok(client, issuer, "ada", _find())
     assert _feed_ids(client, issuer, circle, "ben") == [sighting]
+
+
+def test_a_put_cut_short_is_finished_into_the_circles_it_first_named(
+    client: TestClient, issuer: TestIssuer, table: Any
+) -> None:
+    """The find is written before its feed items, so a retry after a failure part way uses the circles it named then,
+    even if the owner left one since, and a later delete still reaches that circle."""
+    circle = _two_friends(client, issuer)
+    sighting = str(uuid4())
+    # What a put that failed right after writing the find leaves: the find, no feed items.
+    table.put_item(Item={
+        "pk": "ACCOUNT#ben", "sk": f"FIND#{sighting}", "species_id": PHOEBE["species_id"],
+        "scientific_name": PHOEBE["scientific_name"], "common_name": PHOEBE["common_name"], "method": "heard",
+        "found_at": "2026-11-01T08:15Z", "legendary": False, "threatened": False, "circle_ids": [circle],
+        "created_at": "2026-11-01T09:30:00+00:00", "updated_at": "2026-11-01T09:30:00+00:00",
+    })
+    client.delete(f"/v1/circles/{circle}/members/me", headers=issuer.headers(sub="ben"))
+    _put_ok(client, issuer, "ben", _find(), sighting_id=sighting)
+    assert _feed_ids(client, issuer, circle, "ada") == [sighting]
+    client.delete(f"/v1/finds/{sighting}", headers=issuer.headers(sub="ben"))
+    assert _feed_ids(client, issuer, circle, "ada") == []

@@ -59,7 +59,7 @@ struct FindPolicyTests {
     @Test("a find never carries a coordinate, even when the place label is one")
     func neverACoordinate() throws {
         // Before a name is known the album shows the coordinate as the place; that is no city.
-        for label in ["34.1365, -118.2942", "34.13650° N, 118.29420° W", "  "] {
+        for label in ["34.1365, -118.2942", "34.13650° N, 118.29420° W", "34 8' N", "  "] {
             let find = try #require(FindPolicy.find(for: Self.input(placeName: label), sharing: .automatic))
             #expect(find.place == nil, "\(label)")
         }
@@ -91,5 +91,6 @@ struct FindPolicyTests {
     func packArtKey() {
         #expect(FindPolicy.packArtKey(packID: "us-ca-la", file: "art/sayornis-nigricans.avif") == "packs/us-ca-la/sayornis-nigricans.jpg")
         #expect(FindPolicy.packArtKey(packID: "us-ca-sd", file: "art/calypte-anna.png") == "packs/us-ca-sd/calypte-anna.jpg")
+        #expect(FindPolicy.packArtKey(packID: "us-ca-la", file: "art/x.v2.avif") == "packs/us-ca-la/x.v2.jpg", "the last extension only")
     }
 }

@@ -148,6 +148,8 @@ final class FindOutbox {
         guard let client, let owner = signedInOwner, isOnline() else { return }
         for entry in entries where entry.owner == owner && (entry.retryAfter ?? .distantPast) <= now() {
             guard signedInOwner == owner else { return }
+            // Replaced by a newer change while an earlier send was out: the newer one goes in the next pass.
+            guard entries.contains(where: { $0.id == entry.id }) else { continue }
             do {
                 switch entry.operation {
                 case .put:
@@ -161,12 +163,9 @@ final class FindOutbox {
                         try await client.putFind(find, sightingID: entry.identifier, accessToken: $0)
                     }
                 case .delete:
+                    // The published record stays: an Undo after the delete went puts the find back.
                     try await account.withAccessToken(doing: "remove your find") {
                         try await client.deleteFind(sightingID: entry.identifier, accessToken: $0)
-                    }
-                    // Unless it was restored meanwhile: then the put still needs the record.
-                    if !entries.contains(where: { $0.id != entry.id && $0.owner == owner && $0.identifier == entry.identifier }) {
-                        published.removeAll { $0.owner == owner && $0.identifier == entry.identifier }
                     }
                 }
                 finish(entry)

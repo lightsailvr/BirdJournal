@@ -124,10 +124,12 @@ struct FindOutboxTests {
         await harness.outbox.flush()
         #expect(harness.client.calls == ["put \(sighting)", "delete \(sighting)"])
         #expect(harness.client.puts[sighting] == nil)
-        #expect(harness.outbox.published.isEmpty, "a deleted find is forgotten")
-        harness.outbox.changed(sighting)
+        #expect(harness.outbox.entries.isEmpty)
+
+        // Undo after the delete went: the find comes back.
+        harness.outbox.restored(sighting)
         await harness.outbox.flush()
-        #expect(harness.client.calls.count == 2, "nothing more for a removed sighting")
+        #expect(harness.client.calls == ["put \(sighting)", "delete \(sighting)", "put \(sighting)"])
     }
 
     @Test("signing out stops publishing; signing back in sends what waited")

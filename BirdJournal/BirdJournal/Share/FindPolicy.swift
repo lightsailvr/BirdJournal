@@ -109,7 +109,8 @@ enum FindPolicy {
     /// The pack-art thumbnail's key on the art CDN, as the pack publish step uploads it (`packbuilder thumbnails`):
     /// `art/sayornis-nigricans.avif` in pack `us-ca-la` is `packs/us-ca-la/sayornis-nigricans.jpg`.
     static func packArtKey(packID: String, file: String) -> String {
-        let stem = (file as NSString).lastPathComponent.split(separator: ".", maxSplits: 1).first.map(String.init) ?? file
+        // The last extension only, as the builder's `PurePosixPath.stem` does.
+        let stem = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
         return "packs/\(packID)/\(stem).jpg"
     }
 
@@ -120,10 +121,11 @@ enum FindPolicy {
     }
 
     /// A city name and nothing finer; a label that looks like a coordinate (the album's fallback before a name is
-    /// known) is no place at all.
+    /// known) is no place at all. The same rule the server refuses places by (`backend/.../finds.py`, `_COORDINATE`):
+    /// a number with two or more decimals, a degree sign, or minutes or seconds after a number.
     static func cityLabel(_ name: String?) -> String? {
         guard let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else { return nil }
-        if name.contains("°") || name.range(of: #"\d+[.,]\d{2,}"#, options: .regularExpression) != nil { return nil }
+        if name.contains("°") || name.range(of: #"\d+[.,]\d{2,}|\d\s*['′″"]"#, options: .regularExpression) != nil { return nil }
         return String(name.prefix(80))
     }
 }

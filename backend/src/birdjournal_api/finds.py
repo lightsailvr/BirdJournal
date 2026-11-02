@@ -20,8 +20,9 @@ Items, beside the account's and the circles' (tables.py, circles.py):
 - `FIND#<sub>#<sighting id>` / `REACTION#...`: reactions by find, written by the reactions ticket (#63); a delete
   removes the whole partition.
 
-Not transactional: a find can go to more circles than one transaction holds. The feed items are written before the
-find and removed before it, so a put or delete that fails half way is finished by the phone's retry (the outbox).
+Not transactional: a find can go to more circles than one transaction holds. A put writes the find (with the circles it
+goes to) before its feed items, and a delete removes the items before the find, so the find always lists every circle
+that may hold an item of it, and a put or delete that fails half way is finished by the phone's retry (the outbox).
 """
 
 import base64
@@ -197,6 +198,16 @@ class FindStore:
             created_at=created_at, updated_at=now,
         )
         posted_at = _timestamp(created_at)
+        # The find first: a retry after a failure part way reads the circles from it, not from today's memberships.
+        self._table.put_item(
+            Item={
+                **_find_key(owner, sighting_id),
+                **_content_attributes(content),
+                "circle_ids": circle_ids,
+                "created_at": posted_at,
+                "updated_at": _timestamp(now),
+            }
+        )
         with self._table.batch_writer() as batch:
             for circle_id in circle_ids:
                 batch.put_item(
@@ -211,15 +222,6 @@ class FindStore:
                 batch.put_item(
                     Item={**_species_key(circle_id, owner, sighting_id, content), "owner": owner, "sighting_id": sighting_id}
                 )
-        self._table.put_item(
-            Item={
-                **_find_key(owner, sighting_id),
-                **_content_attributes(content),
-                "circle_ids": circle_ids,
-                "created_at": posted_at,
-                "updated_at": _timestamp(now),
-            }
-        )
         return find, existing is None
 
     def delete(self, owner: str, sighting_id: str) -> None:
