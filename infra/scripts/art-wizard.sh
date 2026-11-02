@@ -249,17 +249,29 @@ banner "BirdJournal: scene art on comfybox"
 if begin "Export the reference birds from the pack builds"; then
   say "Scene art paints each species' isolated reference bird, the one its pack art was painted from."
   say "They come from the pack builds' cache (packbuilder/cache/art/isolated) and the built packs in packs/."
+  ART_CACHE="${PACKBUILDER_CACHE:-$REPO_DIR/packbuilder/cache}"
+  note "Cache: $ART_CACHE"
   for pack_dir in "$REPO_DIR"/packs/*/; do
     id=$(basename "$pack_dir")
     [[ -f "$pack_dir/pack.sqlite" && -f "$REPO_DIR/packbuilder/packs/$id/art.lock.json" ]] || continue
     step "$id"
     (cd "$REPO_DIR/packbuilder" && uv run --quiet packbuilder art-references "packs/$id" --pack "$pack_dir" \
-      --out "$REPO_DIR/build/art-references/$id") || warn "$id: export failed"
+      --cache "$ART_CACHE" --out "$REPO_DIR/build/art-references/$id") || warn "$id: export failed"
   done
   ls "$REPO_DIR"/build/art-references/*/references.json >/dev/null 2>&1 || {
     warn "No reference birds exported. Fetch or build a pack with art first (scripts/download-pack.sh), then resume."
     exit 1
   }
+  # An export from a checkout without the pack builds' cache writes an empty list, and the worker then paints no scene
+  # art at all: stop here rather than ship that.
+  exported=$(jq -s 'map(.species // . | length) | add' "$REPO_DIR"/build/art-references/*/references.json)
+  if [[ "$exported" -eq 0 ]]; then
+    warn "0 reference birds exported: $ART_CACHE/art has no isolated birds."
+    say "Point PACKBUILDER_CACHE at the checkout that built the packs, e.g."
+    say "  PACKBUILDER_CACHE=~/Documents/repos/BirdJournal/packbuilder/cache WIZARD_FROM=$(( _STAGE_INDEX )) infra/scripts/art-wizard.sh"
+    exit 1
+  fi
+  printf '  %s✓%s %s reference birds\n' "$GREEN" "$RESET" "$exported"
   note "A species missing from the cache gets no scene art (its card keeps pack art); rebuild its pack art to add it."
   pause
 fi
