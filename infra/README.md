@@ -25,6 +25,14 @@ infra/scripts/circles-wizard.sh
 
 Run after the accounts wizard. It requests the invite domain's certificate in us-east-1 (tagged `project=birdjournal`, ARN saved as `INVITE_CERTIFICATE_ARN` in `~/keys/birdjournal.env`), shows the validation CNAME to add in SiteGround's DNS Zone Editor (the zone `matthewcelia.com` is hosted there), waits for the certificate, deploys, shows the `birdquest` CNAME to CloudFront (the `InviteDistributionDomain` output), checks the association file and the fallback page, and has you tick Associated Domains on the App ID. The certificate lives outside the stack so CloudFormation never waits on a manual DNS change and us-east-1 needs no CDK bootstrap: CloudFront takes it by ARN from this us-west-2 stack. Keep the validation record: ACM renews the certificate with it.
 
+## Pushes: the third wizard
+
+```sh
+infra/scripts/push-wizard.sh
+```
+
+Run after the other two (issue #63). It walks you through making the APNs auth key in the Apple Developer portal (Sandbox & Production, team scoped), saves its Key ID and Team ID in `~/keys/birdjournal.env`, stores the `.p8` with them in Secrets Manager as `birdjournal/apns` (tagged; the key goes nowhere else), has you tick Push Notifications on the App ID, deploys, and sends a test push to a phone's token (Settings → Developer in a Debug build). Deployed before the key is stored, the API sends no pushes and looks for the secret again every five minutes, so no redeploy is needed after storing it.
+
 ## Deploy (one command)
 
 ```sh
