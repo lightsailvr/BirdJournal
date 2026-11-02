@@ -120,6 +120,22 @@ enum CardText {
         }
     }
 
+    /// What the card says about photo art under way (issue #69); nil otherwise.
+    static func photoArtLine(_ status: CardArt.PhotoStatus) -> String? {
+        switch status {
+        case .pending: "Your photo is being painted. Your encounter is saved."
+        case .failed: "Your photo couldn't be painted this time."
+        case .preview: "Your photo art is ready to review."
+        case .none, .approved: nil
+        }
+    }
+
+    /// "N left today": the public launch's daily paintings on request (issue #69); nil without a limit.
+    static func allowanceLine(_ allowance: ArtAllowance?) -> String? {
+        guard let allowance, allowance.daily != nil, let left = allowance.left else { return nil }
+        return "\(left) left today"
+    }
+
     private static func article(for name: String) -> String {
         name.first.map { "AEIOU".contains($0) } == true ? "an" : "a"
     }
