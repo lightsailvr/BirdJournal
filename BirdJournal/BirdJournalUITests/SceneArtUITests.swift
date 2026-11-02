@@ -19,7 +19,7 @@ final class SceneArtUITests: XCTestCase {
     }
 
     @MainActor
-    private func status(_ app: XCUIApplication) -> XCUIElement { app.descendants(matching: .any)["card-art-status"] }
+    private func status(_ app: XCUIApplication) -> XCUIElement { app.descendants(matching: .any).matching(identifier: "card-art-status").firstMatch }
 
     @MainActor
     private func tap(_ button: XCUIElement, _ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {

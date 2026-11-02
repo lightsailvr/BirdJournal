@@ -28,7 +28,8 @@ struct CardArtJobsTests {
         let result = art.sceneJobReady(id: Self.first, path: "art-1.jpg")
         #expect(result.applied && result.replaced == nil)
         #expect(art.scene == ArtImage(path: "art-1.jpg", state: .ready))
-        #expect(art.job == nil)
+        #expect(art.job == ArtJob(id: Self.first, kind: .scene, state: .ready, attempts: 1))
+        #expect(art.pendingSceneJob == nil)
         #expect(art.sceneStatus == .ready(showsPackArt: false))
     }
 
@@ -43,7 +44,7 @@ struct CardArtJobsTests {
         #expect(art.scene?.path == "art-2.jpg")
     }
 
-    @Test("Retries count as attempts on the same card")
+    @Test("Retries and Try again count as attempts on the same card")
     func attempts() {
         var art = CardArt()
         art.startSceneJob(id: Self.first)
@@ -51,6 +52,9 @@ struct CardArtJobsTests {
         art.startSceneJob(id: Self.second)
         #expect(art.job?.attempts == 2)
         #expect(art.job?.id == Self.second)
+        art.sceneJobReady(id: Self.second, path: "art.jpg")
+        art.startSceneJob(id: UUID())
+        #expect(art.job?.attempts == 3)
     }
 
     @Test("A failed job offers Retry art; Keep current art dismisses it and the card stays as it was")

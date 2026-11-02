@@ -162,7 +162,7 @@ struct ArtJobsTests {
         client.behaviour = .paints
         await art.paintAgain(sighting)
         #expect(sighting.art.sceneStatus == .ready(showsPackArt: false))
-        #expect(sighting.art.job == nil)
+        #expect(sighting.art.job?.state == .ready)
         #expect(client.requests.count == 2 && client.requests.last?.requested == true)
         #expect(try sightingCount() == 1)
         #expect(client.requests.allSatisfy { $0.sightingID == sighting.identifier })

@@ -52,10 +52,13 @@ final class ArtJobs {
     /// After an add (`RunSightings`): scene art for a sighting with a glasses photo, once its undo window has passed.
     func requestAfterAdd(_ sighting: Sighting) {
         guard isAvailable, sighting.frameImagePath != nil else { return }
+        let identifier = sighting.identifier
         Task {
             try? await Task.sleep(for: undoGrace)
-            guard !sighting.isDeleted, sighting.art.job == nil, sighting.art.scene == nil else { return }
-            await start(sighting, requested: false)
+            // Fetched again, not the object from the add: an undone add's object is detached from the album, and
+            // reading it would fault.
+            guard let current = self.sighting(identifier), current.art.job == nil, current.art.scene == nil else { return }
+            await start(current, requested: false)
         }
     }
 
@@ -107,7 +110,7 @@ final class ArtJobs {
     // Internals.
 
     private func start(_ sighting: Sighting, requested: Bool) async {
-        guard isAvailable, sighting.frameImagePath != nil, sighting.art.pendingSceneJob == nil, !sighting.isDeleted else { return }
+        guard isAvailable, sighting.frameImagePath != nil, sighting.art.pendingSceneJob == nil, isAlive(sighting) else { return }
         sighting.art.startSceneJob(id: UUID())
         save(sighting)
         guard let job = sighting.art.pendingSceneJob else { return }
@@ -139,7 +142,7 @@ final class ArtJobs {
                     guard let fresh = try await create(sighting, job: job, requested: requested ?? (job.attempts > 1)).upload else { return }
                     upload = fresh
                 }
-                guard let path = sighting.frameImagePath, !sighting.isDeleted else { return }
+                guard isAlive(sighting), let path = sighting.frameImagePath else { return }
                 let original = try Data(contentsOf: frames.url(for: path))
                 let photo = try await Task.detached(priority: .utility) { [preparePhoto] in try preparePhoto(original) }.value
                 try await client.upload(photo, to: upload)
@@ -167,7 +170,7 @@ final class ArtJobs {
     }
 
     private func land(_ remote: RemoteArtJob, on sighting: Sighting, job: ArtJob) async throws {
-        guard let client, !sighting.isDeleted else { return }
+        guard let client, isAlive(sighting) else { return }
         switch remote.state {
         case .awaitingUpload, .queued:
             return
@@ -193,6 +196,18 @@ final class ArtJobs {
 
     private func call<T>(_ body: (String) async throws -> T) async throws -> T {
         try await account.withAccessToken(doing: "send your artwork", body)
+    }
+
+    private func sighting(_ identifier: UUID) -> Sighting? {
+        var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })
+        descriptor.fetchLimit = 1
+        return try? container.mainContext.fetch(descriptor).first
+    }
+
+    /// Still in the album: a card deleted while its job was on the network is left alone (its server job is
+    /// acknowledged by the next refresh as an orphan).
+    private func isAlive(_ sighting: Sighting) -> Bool {
+        sighting.modelContext != nil && !sighting.isDeleted
     }
 
     private func pendingSightings() -> [Sighting] {

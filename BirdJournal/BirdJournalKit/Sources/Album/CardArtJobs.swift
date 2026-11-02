@@ -47,22 +47,23 @@ extension CardArt {
     }
 
     /// The painting arrived and is stored at `path`: it replaces the card's scene art and shows at once (a painting the
-    /// birder asked for again is one they want to see). Returns the replaced painting's path, for the caller to delete;
-    /// nil when there was none or the job is not this card's current one (a stale result changes nothing).
+    /// birder asked for again is one they want to see). The finished job stays on the card as ready, so the next job
+    /// counts on from its attempts. Returns whether it applied (a result for a job that is not this card's current one
+    /// changes nothing) and the replaced painting's path, for the caller to delete.
     @discardableResult
     public mutating func sceneJobReady(id: UUID, path: String) -> (applied: Bool, replaced: String?) {
         guard job?.id == id else { return (false, nil) }
         let replaced = scene?.path
         scene = ArtImage(path: path, state: .ready)
         prefersPackArt = false
-        job = nil
+        job?.state = .ready
         return (true, replaced == path ? nil : replaced)
     }
 
     /// The job failed (the painting machine's 7 days ran out, the filter, no faithful painting). The card keeps what it
     /// shows and offers Retry art.
     public mutating func sceneJobFailed(id: UUID) {
-        guard job?.id == id else { return }
+        guard job?.id == id, job?.state != .ready else { return }
         job?.state = .failed
     }
 

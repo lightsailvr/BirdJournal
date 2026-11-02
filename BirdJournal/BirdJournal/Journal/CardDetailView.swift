@@ -384,6 +384,8 @@ private struct CardFront: View {
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.cardIvory)
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(line)
                     .accessibilityIdentifier("card-art-status")
             }
             VStack(alignment: .leading, spacing: 2) {

@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 
 // Issue #68: the art-job photo leaves the phone with every face blurred and no metadata. The fixture is NASA's public
 // domain portrait of Sally K. Ride (S84-37256; fixtures/README.md, "The face-blur fixture").
-@Suite("Art photo: faces blurred, metadata stripped")
+@Suite("Art photo: faces blurred, metadata stripped", .serialized)
 struct ArtPhotoTests {
     static func fixture() throws -> Data {
         let url = try #require(

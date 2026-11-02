@@ -9,7 +9,7 @@ import Vision
 /// blurred past recognition, the picture is turned upright, and it is written as a fresh JPEG with no metadata at all
 /// (no place, time, device or orientation tags), so strangers are never painted into a card and nothing about the
 /// birder rides along. The original on the phone is untouched.
-enum ArtPhoto {
+nonisolated enum ArtPhoto {
     enum Failure: Error, Equatable {
         case unreadable
         case unwritable
@@ -38,6 +38,12 @@ enum ArtPhoto {
     /// Every face in the picture, in its pixel coordinates (Core Image's, origin bottom left).
     static func faceBoxes(in picture: CIImage) throws -> [CGRect] {
         let request = VNDetectFaceRectanglesRequest()
+        #if targetEnvironment(simulator)
+        // The simulator has no Neural Engine or GPU inference context for Vision; the CPU gives the same faces.
+        if let cpu = try? request.supportedComputeStageDevices[.main]?.first(where: { if case .cpu = $0 { true } else { false } }) {
+            request.setComputeDevice(cpu, for: .main)
+        }
+        #endif
         try VNImageRequestHandler(ciImage: picture, options: [:]).perform([request])
         let size = picture.extent.size
         return (request.results ?? []).map { VNImageRectForNormalizedRect($0.boundingBox, Int(size.width), Int(size.height)) }
