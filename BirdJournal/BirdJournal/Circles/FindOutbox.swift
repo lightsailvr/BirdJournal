@@ -222,7 +222,8 @@ final class FindOutbox {
         entries.removeAll { $0.owner == owner && $0.identifier == identifier }
         entries.append(Entry(owner: owner, identifier: identifier, operation: operation))
         save()
-        Task { await flush() }
+        // Offline or signed out as another account, it waits for the network or the sign-in to send it.
+        if signedInOwner == owner, isOnline() { Task { await flush() } }
     }
 
     private func finish(_ entry: Entry) {
@@ -302,7 +303,7 @@ extension FindOutbox {
 }
 
 /// Whether the phone has a usable network path, from `NWPathMonitor`, and a call when it comes back.
-final class NetworkStatus: @unchecked Sendable {
+nonisolated final class NetworkStatus: @unchecked Sendable {
     private let monitor = NWPathMonitor()
     private let lock = NSLock()
     private var online = true
