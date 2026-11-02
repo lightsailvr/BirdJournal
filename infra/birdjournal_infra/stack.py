@@ -7,6 +7,7 @@ from constructs import Construct
 from birdjournal_infra.api import Api
 from birdjournal_infra.art import ArtCdn
 from birdjournal_infra.art_jobs import ArtJobs
+from birdjournal_infra.shared_photos import SharedPhotos
 from birdjournal_infra.auth import Auth
 from birdjournal_infra.budget import Budget
 from birdjournal_infra.config import TAG_KEY, TAG_VALUE, BirdJournalConfig
@@ -36,6 +37,8 @@ class BirdJournalStack(Stack):
         # The one art CDN (#68): painted art now, pack-art thumbnails for finds (#62) later.
         self.art = ArtCdn(self, "ArtCdn")
         art_jobs = ArtJobs(self, "ArtJobs", cdn=self.art)
+        # Shared cards' original photos (#66), under photos/ in the same bucket.
+        shared_photos = SharedPhotos(self, "SharedPhotos", cdn=self.art)
         api = Api(
             self,
             "Api",
@@ -55,6 +58,7 @@ class BirdJournalStack(Stack):
         )
         data.table.grant_read_write_data(api.function)
         art_jobs.grant_api(api.function)
+        shared_photos.grant_api(api.function)
         Budget(self, "Budget", monthly_usd=config.monthly_budget_usd, email=config.budget_alert_email)
 
         domain = f"{config.cognito_domain_prefix}.auth.{self.region}.amazoncognito.com"
