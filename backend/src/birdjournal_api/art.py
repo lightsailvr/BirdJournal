@@ -7,7 +7,8 @@ The lifecycle:
    The job starts `awaiting_upload`, with a presigned PUT for `uploads/<sub>/<job id>.jpg` in the private upload
    bucket (objects expire after a day).
 2. The phone uploads the photo (faces blurred, metadata stripped) and submits: the job is `queued` and goes on SQS.
-3. The art worker claims it (`painting`; a redelivered message claims it again), paints, uploads to the art bucket at
+3. The art worker claims it (`painting`; a redelivered message claims it again; a photo the upload bucket's one-day
+   lifecycle already removed sends the job back to `awaiting_upload` for the phone to upload again), paints, uploads to the art bucket at
    the key the job was given (`art/<sub>/<unguessable>.jpg`) and reports `ready`, or `failed` with a reason. Either way
    the upload is deleted.
 4. The phone learns of it by polling its open jobs (a silent push joins with #63's device tokens), downloads the art
@@ -61,6 +62,11 @@ class UploadMissing(ArtError):
 
 class WrongState(ArtError):
     """The job isn't in a state that allows this (a claim of a finished job, a report on one never claimed)."""
+
+
+class UploadExpired(ArtError):
+    """The photo outlived the upload bucket's one day before the box claimed it: the job waits for it again, and the
+    phone, which keeps the original, uploads it anew on its next refresh."""
 
 
 class Expired(ArtError):
@@ -229,7 +235,8 @@ class ArtJobStore:
         try:
             item = self._table.update_item(
                 Key=_key(owner, job_id),
-                UpdateExpression="SET #state = :queued, queued_at = :now",
+                # A job sent back for its photo keeps its first queueing time, so its 7 days don't start over.
+                UpdateExpression="SET #state = :queued, queued_at = if_not_exists(queued_at, :now)",
                 ConditionExpression="#state = :awaiting",
                 ExpressionAttributeNames={"#state": "state"},
                 ExpressionAttributeValues={":queued": "queued", ":awaiting": "awaiting_upload", ":now": now.isoformat()},
@@ -298,6 +305,19 @@ class ArtJobStore:
             raise Expired()
         if job.state not in ("queued", "painting"):
             raise WrongState()
+        if self._storage is not None and not self._storage.has_upload(job.input_key):
+            try:
+                self._table.update_item(
+                    Key=_key(owner, job_id),
+                    UpdateExpression="SET #state = :awaiting",
+                    ConditionExpression="#state = :was",
+                    ExpressionAttributeNames={"#state": "state"},
+                    ExpressionAttributeValues={":awaiting": "awaiting_upload", ":was": job.state},
+                )
+            except ClientError as error:
+                if not _conditional(error):
+                    raise
+            raise UploadExpired()
         try:
             item = self._table.update_item(
                 Key=_key(owner, job_id),
@@ -323,8 +343,13 @@ class ArtJobStore:
             raise WrongOutput()
         if job.state == "ready":
             return job
-        updated = self._finish(job, "ready", {"provenance": provenance} if provenance else {})
-        return updated
+        try:
+            return self._finish(job, "ready", {"provenance": provenance} if provenance else {})
+        except WrongState:
+            # Expired (or failed) while it was being painted: nobody will fetch the painting, so it goes now.
+            if self._storage is not None:
+                self._storage.delete_art(output_key)
+            raise
 
     def failed(self, owner: str, job_id: str, *, reason: str) -> ArtJob:
         job = self._read(owner, job_id)

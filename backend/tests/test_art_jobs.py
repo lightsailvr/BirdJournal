@@ -247,6 +247,45 @@ def test_worker_routes_need_the_worker_token(
     assert _get(client, issuer, job["id"])["state"] == "queued"
 
 
+def test_a_photo_gone_before_the_claim_sends_the_job_back_for_it(
+    client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, art_queue: FakeArtQueue, clock: Clock
+) -> None:
+    """The box was off longer than the upload bucket's one day: the phone uploads the photo again, the job keeps its
+    first queueing time, and it is queued again."""
+    job = _queued(client, issuer, art_storage)
+    art_storage.uploads.clear()
+    clock.now += timedelta(days=2)
+    response = _claim(client, job["id"])
+    assert response.status_code == 409
+    assert response.json()["detail"] == "upload_expired"
+    again = _create(client, issuer, job_id=job["id"]).json()
+    assert again["state"] == "awaiting_upload"
+    assert again["upload"]["url"].startswith(f"https://uploads.example/uploads/ada/{job['id']}.jpg")
+    art_storage.uploads[f"uploads/ada/{job['id']}.jpg"] = b"jpeg"
+    resubmitted = client.post(f"/v1/art/jobs/{job['id']}/submit", headers=issuer.headers(sub="ada")).json()
+    assert resubmitted["state"] == "queued"
+    assert resubmitted["expires_at"] == job["expires_at"]
+    assert art_queue.messages == [("ada", job["id"]), ("ada", job["id"])]
+    assert _claim(client, job["id"]).status_code == 200
+
+
+def test_a_painting_reported_after_its_job_expired_is_deleted(
+    client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, clock: Clock
+) -> None:
+    job = _queued(client, issuer, art_storage)
+    claim = _claim(client, job["id"]).json()
+    clock.now += timedelta(days=7)
+    assert _get(client, issuer, job["id"])["failure"] == "expired"
+    response = _ready(client, claim, art_storage)
+    assert response.status_code == 409
+    assert claim["output_key"] not in art_storage.art
+
+
+def test_an_unknown_rule_in_the_environment_is_refused() -> None:
+    with pytest.raises(ValueError, match="ART_AUTO_PAINT"):
+        Settings.from_env({"TABLE_NAME": "t", "COGNITO_ISSUER": "i", "COGNITO_CLIENT_IDS": "c", "ART_AUTO_PAINT": "always"})
+
+
 # Expiry.
 
 

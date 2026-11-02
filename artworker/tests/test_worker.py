@@ -151,6 +151,22 @@ def test_with_comfyui_down_the_job_waits_in_the_queue(aws, api, make_worker) -> 
     assert aws.messages() == {"visible": 0, "in_flight": 1}
 
 
+def test_with_comfyui_down_no_message_is_taken_off_the_queue(aws, api, comfy, make_worker) -> None:
+    """A crashed or restarting ComfyUI must not spend a job's five receives (the dead-letter queue)."""
+    _job(aws, api)
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        closed_port = probe.getsockname()[1]
+    down = make_worker(f"http://127.0.0.1:{closed_port}")
+    down.painter.painter.client.http = requests.Session()
+    assert down.poll_when_ready(wait_seconds=0) is None
+    assert api.calls == []
+    assert aws.messages() == {"visible": 1, "in_flight": 0}
+    # Back up: the job is painted.
+    (outcome,) = make_worker(comfy.url).poll_when_ready(wait_seconds=0)
+    assert outcome.result == "painted"
+
+
 def test_a_job_the_api_says_is_gone_is_dropped_unpainted(aws, api, comfy, make_worker) -> None:
     aws.send({"owner": "ada", "job_id": "finished-long-ago"})
     (outcome,) = make_worker(comfy.url).poll_once(wait_seconds=0)
@@ -165,6 +181,16 @@ def test_with_the_api_down_the_message_is_kept(aws, api, comfy, make_worker) -> 
     (outcome,) = make_worker(comfy.url).poll_once(wait_seconds=0)
     assert outcome.result == "later"
     assert comfy.paintings == []
+    assert aws.messages()["in_flight"] == 1
+
+
+def test_an_art_bucket_that_refuses_the_painting_leaves_the_job_for_later(aws, api, comfy, make_worker) -> None:
+    _job(aws, api)
+    worker = make_worker(comfy.url)
+    worker.art_bucket = "no-such-bucket"
+    (outcome,) = worker.poll_once(wait_seconds=0)
+    assert outcome.result == "later"
+    assert api.paths() == ["/internal/art/jobs/ada/job-1/claim"]
     assert aws.messages()["in_flight"] == 1
 
 

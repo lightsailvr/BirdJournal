@@ -15,6 +15,7 @@ from birdjournal_api.art import (
     NewJob,
     NotEligible,
     NotFound,
+    UploadExpired,
     UploadMissing,
     WorkerToken,
     WrongOutput,
@@ -161,6 +162,8 @@ def _refused(error: Exception) -> HTTPException:
             return HTTPException(status.HTTP_404_NOT_FOUND, "not_found")
         case NotEligible():
             return HTTPException(status.HTTP_409_CONFLICT, "not_eligible")
+        case UploadExpired():
+            return HTTPException(status.HTTP_409_CONFLICT, "upload_expired")
         case UploadMissing():
             return HTTPException(status.HTTP_409_CONFLICT, "upload_missing")
         case WrongOutput():

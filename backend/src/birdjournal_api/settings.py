@@ -42,8 +42,14 @@ class Settings:
             art_queue_url=env.get("ART_QUEUE_URL") or None,
             art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/"),
             art_worker_token_secret=env.get("ART_WORKER_TOKEN_SECRET") or None,
-            art_auto_paint=env.get("ART_AUTO_PAINT") or cls.art_auto_paint,
+            art_auto_paint=_rule(env.get("ART_AUTO_PAINT") or cls.art_auto_paint),
         )
+
+
+def _rule(value: str) -> str:
+    if value not in ("every_glasses_add", "legendary_or_rare"):
+        raise ValueError(f"ART_AUTO_PAINT must be every_glasses_add or legendary_or_rare, not {value!r}")
+    return value
 
 
 def _require(env: Mapping[str, str], name: str) -> str:

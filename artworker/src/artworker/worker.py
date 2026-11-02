@@ -8,7 +8,8 @@ What happens to a message:
 - **Refused** (no reference bird, the content filter, no faithful painting, an unreadable photo): the API hears
   `failed` with the reason, the message is deleted, and the card offers Retry art.
 - **Gone** (the job finished, expired or never existed): the message is deleted.
-- **Not now** (ComfyUI down, the API or S3 not answering): the message is left. It comes back after the queue's
+- **Not now** (ComfyUI down, the API or S3 not answering): the message is left. ComfyUI is checked before each poll,
+  so while it is down no message is taken at all; one that fails mid-painting is left. It comes back after the queue's
   visibility timeout (or the shorter `retry_after` set here), and after five receives goes to the dead-letter queue;
   the job still fails as expired after 7 days, so the phone never waits forever.
 """
@@ -37,6 +38,8 @@ log = logging.getLogger("artworker")
 RETRY_AFTER_SECONDS = 300
 """A job that couldn't be painted now (ComfyUI down) comes back after five minutes, not the queue's fifteen."""
 CACHE_CONTROL = "public, max-age=31536000, immutable"
+COMFY_DOWN_WAIT_SECONDS = 60
+"""How often a worker whose ComfyUI is down looks again, without touching the queue."""
 
 
 @dataclass(frozen=True)
@@ -64,15 +67,38 @@ class Worker:
         self.queue_url, self.upload_bucket, self.art_bucket = queue_url, upload_bucket, art_bucket
         self.api, self.painter, self.content_filter = api, painter, content_filter
         self.stopping = threading.Event()
+        self._comfy_down = False
 
     def run(self) -> None:
         log.info("art worker polling %s", self.queue_url)
         while not self.stopping.is_set():
             try:
-                self.poll_once()
+                if self.poll_when_ready() is None:
+                    self.stopping.wait(COMFY_DOWN_WAIT_SECONDS)
             except (BotoCoreError, ClientError) as error:
                 log.warning("couldn't reach the queue: %s; trying again in a minute", error)
                 self.stopping.wait(60)
+
+    def comfy_is_up(self) -> bool:
+        """Whether the FLUX.3 ComfyUI answers at all. Checked before taking a message, so a ComfyUI that is restarting
+        or crashed while this service runs never burns a job's five receives into the dead-letter queue."""
+        try:
+            self.painter.painter.client.http.get(f"{self.painter.painter.client.base_url}/system_stats", timeout=5)
+        except requests.RequestException:
+            return False
+        return True
+
+    def poll_when_ready(self, wait_seconds: int = 20) -> list[Outcome] | None:
+        """One long poll if ComfyUI is up; None (no message taken) if it isn't."""
+        if not self.comfy_is_up():
+            if not self._comfy_down:
+                log.warning("ComfyUI isn't answering; leaving the queue alone until it does")
+            self._comfy_down = True
+            return None
+        if self._comfy_down:
+            log.info("ComfyUI is back; polling again")
+        self._comfy_down = False
+        return self.poll_once(wait_seconds)
 
     def poll_once(self, wait_seconds: int = 20) -> list[Outcome]:
         messages = self.sqs.receive_message(
@@ -115,7 +141,11 @@ class Worker:
         except ClientError as error:
             if error.response["Error"]["Code"] in ("NoSuchKey", "404", "AccessDenied", "403"):
                 return self._refuse(owner, job_id, "bad_input", f"no photo at {claim.input_key}")
-            raise
+            log.warning("job %s: couldn't read the photo (%s); later", job_id, error)
+            return Outcome("later", delete=False)
+        except BotoCoreError as error:
+            log.warning("job %s: couldn't reach S3 (%s); later", job_id, error)
+            return Outcome("later", delete=False)
         try:
             art = self.painter.paint(claim.id, scene, claim.scientific_name, claim.edition, claim.legendary)
         except NoReference:
@@ -131,9 +161,13 @@ class Worker:
             return self._refuse(owner, job_id, "painting_failed", str(error))
         if not self.content_filter.allows(Image.open(io.BytesIO(art.jpeg))):
             return self._refuse(owner, job_id, "filtered", "the content filter refused the painting")
-        self.s3.put_object(
-            Bucket=self.art_bucket, Key=claim.output_key, Body=art.jpeg, ContentType="image/jpeg", CacheControl=CACHE_CONTROL
-        )
+        try:
+            self.s3.put_object(
+                Bucket=self.art_bucket, Key=claim.output_key, Body=art.jpeg, ContentType="image/jpeg", CacheControl=CACHE_CONTROL
+            )
+        except (BotoCoreError, ClientError) as error:
+            log.warning("job %s: couldn't upload the painting (%s); later", job_id, error)
+            return Outcome("later", delete=False)
         self.api.ready(claim, art.provenance)
         log.info("job %s painted in %.0f s: %s", job_id, time.monotonic() - started, art.provenance)
         return Outcome("painted", delete=True)

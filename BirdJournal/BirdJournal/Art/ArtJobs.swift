@@ -121,6 +121,8 @@ final class ArtJobs {
     /// waits for its photo, and land or fail it if it's done. Any network failure leaves it pending for the next try.
     private func drive(_ sighting: Sighting, job: ArtJob, known: RemoteArtJob?, requested: Bool? = nil) async {
         guard let client, !driving.contains(job.id) else { return }
+        // Resumed after a relaunch, a job after the first is one the birder asked for.
+        let requested = requested ?? (job.attempts > 1)
         driving.insert(job.id)
         defer { driving.remove(job.id) }
         do {
@@ -131,7 +133,7 @@ final class ArtJobs {
                 do {
                     remote = try await call { try await client.job(id: job.id, accessToken: $0) }
                 } catch ArtClientError.notFound {
-                    remote = try await create(sighting, job: job, requested: requested ?? (job.attempts > 1))
+                    remote = try await create(sighting, job: job, requested: requested)
                 }
             }
             if remote.state == .awaitingUpload {
@@ -139,7 +141,7 @@ final class ArtJobs {
                 if let given = remote.upload {
                     upload = given
                 } else {
-                    guard let fresh = try await create(sighting, job: job, requested: requested ?? (job.attempts > 1)).upload else { return }
+                    guard let fresh = try await create(sighting, job: job, requested: requested).upload else { return }
                     upload = fresh
                 }
                 guard isAlive(sighting), let path = sighting.frameImagePath else { return }
