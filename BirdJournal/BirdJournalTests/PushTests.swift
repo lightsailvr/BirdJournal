@@ -179,7 +179,7 @@ struct PushCenterTests {
         #expect(harness.authorizer.requests == 0)
     }
 
-    @Test("an explanation raised but never answered is offered once more on the next circle page or tab, once (#107)")
+    @Test("an explanation raised but never answered is offered once more on the next circle page or tab, once")
     func droppedExplanation() async throws {
         let harness = Harness()
         try await harness.store.create(named: "Sunday Group")
@@ -212,11 +212,11 @@ struct PushCenterTests {
 
     @Test("a page appearing while the first explanation waits out its delay doesn't offer a second")
     func pageDuringDelay() async throws {
-        let harness = Harness(delay: .milliseconds(50))
+        let harness = Harness(delay: .milliseconds(600))
         try await harness.store.create(named: "Sunday Group")
         await harness.pushes.circlesAppeared()
         #expect(!harness.pushes.isExplaining)
-        for _ in 0..<50 where !harness.pushes.isExplaining { try await Task.sleep(for: .milliseconds(10)) }
+        for _ in 0..<150 where !harness.pushes.isExplaining { try await Task.sleep(for: .milliseconds(10)) }
         #expect(harness.pushes.isExplaining)
         harness.pushes.notNow()
         await harness.pushes.circlesAppeared()
@@ -239,6 +239,29 @@ struct PushCenterTests {
         await harness.pushes.turnOn()
         #expect(harness.authorizer.requests == 1)
         #expect(harness.pushes.permission == .authorized)
+    }
+
+    @Test("the circle page's button during the delay answers it: the explanation doesn't follow")
+    func answeredDuringDelay() async throws {
+        let harness = Harness(delay: .milliseconds(100))
+        try await harness.store.create(named: "Sunday Group")
+        await harness.pushes.turnOn()
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(!harness.pushes.isExplaining)
+        #expect(harness.authorizer.requests == 1)
+    }
+
+    @Test("signed out, opening the Circles tab keeps the retry for after sign-in")
+    func retryWaitsForSignIn() async throws {
+        let harness = Harness()
+        try await harness.store.create(named: "Sunday Group")
+        harness.pushes.isExplaining = false
+        harness.account.signOut()
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
+        await harness.account.signIn(with: .apple)
+        await harness.pushes.circlesAppeared()
+        #expect(harness.pushes.isExplaining)
     }
 
     @Test("opening circles with nothing pending asks nothing")

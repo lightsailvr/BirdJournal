@@ -147,7 +147,7 @@ final class PushCenter {
     static let explanation = "Bird Journal can tell you when someone in your circles finds a Legendary, a first for the circle or a rare bird, and bundles their other finds into one notification every couple of hours. You can mute a circle or a friend at any time."
 
     private(set) var permission: PushPermission?
-    /// The explanation before the system prompt is showing.
+    /// The explanation before the system prompt is raised. A dropped alert can leave it up with nothing on screen.
     var isExplaining = false
     /// The phone's APNs token, hex, once iOS has given one.
     private(set) var deviceToken: String?
@@ -217,7 +217,7 @@ final class PushCenter {
     /// went away, or the app was closed over it) is offered once more. One retry only; after that it waits for the
     /// next create or join.
     func circlesAppeared() async {
-        guard isAvailable, !explanationScheduled, defaults.bool(forKey: Self.pendingKey),
+        guard isAvailable, account.isSignedIn, !explanationScheduled, defaults.bool(forKey: Self.pendingKey),
               !defaults.bool(forKey: Self.askedKey) else { return }
         defaults.set(false, forKey: Self.pendingKey)
         permission = await authorizer.permission()
@@ -240,7 +240,8 @@ final class PushCenter {
         Task {
             try? await Task.sleep(for: delay)
             explanationScheduled = false
-            isExplaining = true
+            // Answered meanwhile (the circle page's button): nothing to explain.
+            if !defaults.bool(forKey: Self.askedKey) { isExplaining = true }
         }
     }
 
