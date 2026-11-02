@@ -139,12 +139,15 @@ final class SystemNotificationAuthorizer: NotificationAuthorizing {
 @MainActor
 @Observable
 final class PushCenter {
+    /// Set when the birder answered the explanation ("Turn on notifications" or "Not now"), not when it was raised.
     static let askedKey = "pushPermissionExplained"
+    /// Raised but not answered yet (issue #107): the next Circles tab or circle page offers it once more.
+    static let pendingKey = "pushPermissionExplanationPending"
     /// Why, before the system's prompt.
     static let explanation = "Bird Journal can tell you when someone in your circles finds a Legendary, a first for the circle or a rare bird, and bundles their other finds into one notification every couple of hours. You can mute a circle or a friend at any time."
 
     private(set) var permission: PushPermission?
-    /// The explanation before the system prompt is showing.
+    /// The explanation before the system prompt is raised. A dropped alert can leave it up with nothing on screen.
     var isExplaining = false
     /// The phone's APNs token, hex, once iOS has given one.
     private(set) var deviceToken: String?
@@ -160,6 +163,8 @@ final class PushCenter {
     private let registerForRemoteNotifications: () -> Void
     private let defaults: UserDefaults
     private let explanationDelay: Duration
+    /// The explanation waits out its delay.
+    @ObservationIgnored private var explanationScheduled = false
     /// Reads the circles and their feeds again after a push.
     @ObservationIgnored var refresh: (([String]) async -> Void)?
     @ObservationIgnored private var subscribers: [UUID: AsyncStream<FriendFind>.Continuation] = [:]
@@ -197,27 +202,59 @@ final class PushCenter {
         if permission == .authorized, account.isSignedIn { registerForRemoteNotifications() }
     }
 
-    /// The birder created or joined a circle: the first time, explain pushes before the system asks.
+    /// The birder created or joined a circle: the first time, explain pushes before the system asks. It counts as
+    /// asked only once the birder answers (issue #107): until then it is pending, and `circlesAppeared()` offers it
+    /// once more if it never got on screen.
     func joinedCircle() async {
         guard isAvailable, !defaults.bool(forKey: Self.askedKey) else { return }
-        defaults.set(true, forKey: Self.askedKey)
         permission = await authorizer.permission()
         guard permission == .notDetermined else { return }
+        defaults.set(true, forKey: Self.pendingKey)
+        explain()
+    }
+
+    /// The Circles tab or a circle's page appeared: an explanation offered but never answered (dropped while a sheet
+    /// went away, or the app was closed over it) is offered once more. One retry only; after that it waits for the
+    /// next create or join.
+    func circlesAppeared() async {
+        guard isAvailable, account.isSignedIn, !explanationScheduled, defaults.bool(forKey: Self.pendingKey),
+              !defaults.bool(forKey: Self.askedKey) else { return }
+        defaults.set(false, forKey: Self.pendingKey)
+        permission = await authorizer.permission()
+        guard permission == .notDetermined else { return }
+        explain()
+    }
+
+    /// Raises the explanation, after the delay. It is lowered first, so a dropped alert whose binding was left up
+    /// shows again.
+    private func explain() {
+        guard !explanationScheduled else { return }
+        isExplaining = false
         guard explanationDelay > .zero else {
             isExplaining = true
             return
         }
         // The circle's sheet or the join screen is still going away; an alert raised during that is dropped.
+        explanationScheduled = true
         let delay = explanationDelay
         Task {
             try? await Task.sleep(for: delay)
-            isExplaining = true
+            explanationScheduled = false
+            // Answered meanwhile (the circle page's button): nothing to explain.
+            if !defaults.bool(forKey: Self.askedKey) { isExplaining = true }
         }
+    }
+
+    /// The birder answered the explanation, or the circle page's button, so nothing asks again by itself.
+    private func answered() {
+        defaults.set(true, forKey: Self.askedKey)
+        defaults.set(false, forKey: Self.pendingKey)
+        isExplaining = false
     }
 
     /// "Turn on notifications", from the explanation or the circle page: the system prompt, or Settings once denied.
     func turnOn() async {
-        isExplaining = false
+        answered()
         permission = await authorizer.permission()
         guard permission == .notDetermined else { return }
         permission = await authorizer.request() ? .authorized : .denied
@@ -225,7 +262,7 @@ final class PushCenter {
     }
 
     func notNow() {
-        isExplaining = false
+        answered()
     }
 
     /// iOS gave the phone its token.
