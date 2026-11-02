@@ -1,3 +1,4 @@
+import Foundation
 import Identification
 import LensSession
 import MWDATCore
