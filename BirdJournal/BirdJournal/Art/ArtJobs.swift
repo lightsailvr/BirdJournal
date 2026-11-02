@@ -25,7 +25,8 @@ import SwiftData
 /// deletes it when the phone says it has it (`received`). So the order matters: when the art a published card shows
 /// changes (a painting lands, Approve, Use pack art or back), the find is put again first (`artChanged`), and the
 /// phone says it has the painting only once that put has gone (`holdsReceipt` false); while it waits, the next refresh
-/// says so instead. A photo painting waiting for Approve or Keep original isn't acknowledged until the birder decides.
+/// says so instead. A photo painting waiting for Approve or Keep original on a card with a find isn't acknowledged
+/// until the birder decides.
 @MainActor
 @Observable
 final class ArtJobs {
@@ -48,6 +49,9 @@ final class ArtJobs {
     /// Whether the sighting's find still waits to be put (offline, backing off): the phone doesn't say it has a
     /// painting until then, or the server would delete one its find is about to show.
     @ObservationIgnored var holdsReceipt: @MainActor (UUID) -> Bool = { _ in false }
+    /// Whether the sighting has a find on the server (published automatically or shared by hand). Only then does a
+    /// photo painting waiting for the birder stay on the server for the find; otherwise nothing could ever show it.
+    @ObservationIgnored var hasFind: @MainActor (UUID) -> Bool = { _ in false }
     /// An add is left alone this long first, so an add undone in its six-second window never sends a photo.
     @ObservationIgnored var undoGrace: Duration = .seconds(7)
     /// The photo as it leaves the phone; tests swap in a stub. A library photo is scaled down too (`maxSide`).
@@ -194,7 +198,7 @@ final class ArtJobs {
             }
             let waitedOn = Set(pending.flatMap { [$0.art.job?.id, $0.art.photoJob?.id].compactMap { $0 } })
             // Paintings waiting for Approve or Keep original stay on the server for the find until the birder decides.
-            let undecided = Set(allSightings().compactMap(\.art.photoJobAwaitingDecision))
+            let undecided = Set(allSightings().filter { hasFind($0.identifier) }.compactMap(\.art.photoJobAwaitingDecision))
             for orphan in open where !waitedOn.contains(orphan.id) && !undecided.contains(orphan.id)
                 && (orphan.state == .ready || orphan.state == .failed) && !holdsReceipt(orphan.sightingID) {
                 try? await account.withAccessToken(doing: "check your artwork") { try await client.received(jobID: orphan.id, accessToken: $0) }
@@ -328,8 +332,11 @@ final class ArtJobs {
                     try await call { try await client.received(jobID: job.id, accessToken: $0) }
                 }
             case .photo:
-                // Waits for Approve or Keep original; a result for a job the card no longer waits on is let go now.
-                if !result.applied { try await call { try await client.received(jobID: job.id, accessToken: $0) } }
+                // Waits for Approve or Keep original when a find could show it; otherwise (a private card, or a result
+                // for a job the card no longer waits on) it is let go now.
+                if !result.applied || !hasFind(sighting.identifier) {
+                    try await call { try await client.received(jobID: job.id, accessToken: $0) }
+                }
             }
         case .failed:
             log.info("art job \(job.id, privacy: .public) failed: \(remote.failure ?? "unknown", privacy: .public)")

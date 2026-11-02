@@ -118,6 +118,8 @@ def test_a_private_birders_painting_goes_once_the_phone_has_it(
     assert job["art_key"] in art_storage.art, "kept until the phone has it"
     _received(client, issuer, job)
     assert job["art_key"] not in art_storage.art
+    # The job no longer offers the key: the painting is gone.
+    assert client.get(f"/v1/art/jobs/{job['id']}", headers=issuer.headers(sub="ada")).json()["art_key"] is None
 
 
 def test_a_painting_the_find_never_showed_goes_once_the_phone_has_it(

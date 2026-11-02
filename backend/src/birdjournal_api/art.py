@@ -564,8 +564,6 @@ class PaintedArt:
         """The key is a painting of this owner's job for this sighting, ready, and still in the art bucket. Anything
         else (another account's key, another sighting's painting, one already deleted, one never painted) is not, so
         no find ever points at nothing or at someone else's painting."""
-        if self._storage is None or not key.startswith(f"art/{owner}/"):
-            return False
         item = self._job_of(owner, key)
         return (
             item is not None
@@ -596,6 +594,9 @@ class PaintedArt:
                     raise
 
     def _job_of(self, owner: str, key: str) -> dict[str, Any] | None:
+        """The owner's job that painted `key`; None for a key outside the owner's paintings, or with no art bucket."""
+        if self._storage is None or not key.startswith(f"art/{owner}/"):
+            return None
         query: dict[str, Any] = {
             "KeyConditionExpression": "pk = :pk AND begins_with(sk, :prefix)",
             "FilterExpression": "output_key = :key",

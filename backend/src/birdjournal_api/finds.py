@@ -245,7 +245,7 @@ class FindStore:
         self._accounts.get_or_create(owner)
         now = self._clock()
         existing = self._get(_find_key(owner, sighting_id))
-        content = self._held(owner, sighting_id, content, art_fallback, existing)
+        content = self._with_held_art(owner, sighting_id, content, art_fallback, existing)
         if existing is None:
             circle_ids = self._circles.circle_ids_of(owner)
             created_at = now
@@ -294,7 +294,7 @@ class FindStore:
                 raise ValueError("photo_too_large")
         now = self._clock()
         existing = self._get(_find_key(owner, sighting_id))
-        content = self._held(owner, sighting_id, content, art_fallback, existing)
+        content = self._with_held_art(owner, sighting_id, content, art_fallback, existing)
         shares = self._shares(owner, sighting_id) if existing is not None else {}
         if existing is None:
             all_circles = chosen
@@ -349,8 +349,7 @@ class FindStore:
             content = _content(existing)
             self._delete_items(_item_keys(owner, sighting_id, content, list(existing.get("circle_ids", []))))
             # Its painting goes with it (#70), before the find: a delete cut short is retried while the find names it.
-            if content.art is not None and content.art.kind is ArtKind.PAINTED and self._painted is not None:
-                self._painted.release(owner, content.art.key)
+            self._let_go(owner, existing, None)
         reactions = self._query_keys(Key("pk").eq(_reactions_pk(owner, sighting_id)))
         # Each reaction's copy under its reactor (issue #64), the find's reaction push time and any waiting push.
         by_reactor = [
@@ -380,7 +379,7 @@ class FindStore:
         item = self._get(_find_key(owner, sighting_id))
         return str(item["art_key"]) if item is not None and "art_key" in item else None
 
-    def _held(
+    def _with_held_art(
         self, owner: str, sighting_id: str, content: FindContent, fallback: ArtReference | None,
         existing: dict[str, Any] | None,
     ) -> FindContent:
@@ -395,12 +394,12 @@ class FindStore:
             return content
         return replace(content, art=fallback or previous)
 
-    def _let_go(self, owner: str, existing: dict[str, Any] | None, content: FindContent) -> None:
-        """The painting the find showed before, once it shows something else."""
+    def _let_go(self, owner: str, existing: dict[str, Any] | None, content: FindContent | None) -> None:
+        """The painting the find showed before, once it shows something else (or, with no content, is deleted)."""
         if existing is None or self._painted is None:
             return
         previous = _content(existing).art
-        if previous is not None and previous.kind is ArtKind.PAINTED and previous != content.art:
+        if previous is not None and previous.kind is ArtKind.PAINTED and (content is None or previous != content.art):
             self._painted.release(owner, previous.key)
 
     def feed(self, subject: str, circle_id: str, *, limit: int, cursor: str | None) -> FeedPage:

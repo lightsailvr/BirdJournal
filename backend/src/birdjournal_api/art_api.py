@@ -81,7 +81,7 @@ class JobResponse(BaseModel):
             finished_at=job.finished_at,
             expires_at=job.deadline,
             art_url=f"{cdn}/{job.output_key}" if job.state == "ready" and job.received_at is None else None,
-            art_key=job.output_key if job.state == "ready" else None,
+            art_key=job.output_key if job.state == "ready" and job.art_deleted_at is None else None,
             failure=job.failure,
             provenance=job.provenance,
             received=job.received_at is not None,

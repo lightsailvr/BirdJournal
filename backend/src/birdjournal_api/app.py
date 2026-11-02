@@ -110,11 +110,11 @@ def create_app(
             boto3.client("s3", region_name=settings.region, config=S3_CONFIG), upload_bucket=settings.upload_bucket, art_bucket=settings.art_bucket
         )
     # Painted art on finds (#70): a find shows a painting only while the server holds it, and lets it go after.
-    painted = PaintedArt(dynamodb.Table(settings.table_name), art_storage, clock)
+    table = dynamodb.Table(settings.table_name)
+    painted = PaintedArt(table, art_storage, clock)
     app.state.finds = FindStore(
         dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, painted
     )
-    table = dynamodb.Table(settings.table_name)
     app.state.devices = DeviceStore(table, clock)
     app.state.mutes = MuteStore(table, clock)
     app.state.goals = GoalStore(table, app.state.circles, app.state.finds, clock)

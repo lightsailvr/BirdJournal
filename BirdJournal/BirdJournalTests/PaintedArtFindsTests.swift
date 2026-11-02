@@ -56,6 +56,7 @@ struct PaintedArtFindsTests {
             log.entries.append(artClient.received)
         }
         art.holdsReceipt = { outbox.isWaitingToPublish($0) }
+        art.hasFind = { outbox.publishedLegendary($0) != nil }
     }
 
     func publishedSighting() async throws -> Sighting {
@@ -153,6 +154,11 @@ struct PaintedArtFindsTests {
         await art.paintAgain(sighting)
         #expect(circles.calls.isEmpty)
         #expect(artClient.received == [try #require(sighting.art.job?.id)])
+        // A photo painting waiting for the birder isn't held either: no find could show it.
+        let frame = try #require(sighting.frameImagePath)
+        await art.paintPhoto(sighting, from: frame)
+        #expect(artClient.received.last == sighting.art.photoJob?.id)
+        #expect(sighting.art.photoJobAwaitingDecision != nil)
     }
 }
 #endif

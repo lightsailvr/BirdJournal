@@ -65,8 +65,8 @@ struct PhotoArtTests {
         #expect(exists(path))
         // Not the card's art until approved.
         #expect(sighting.art.photo == nil)
-        // The server keeps it for the find until the birder approves it or keeps the original (#70).
-        #expect(client.received.isEmpty)
+        // No find could show it (this card has none), so the server may let it go at once (#70).
+        #expect(client.received == [request.id])
     }
 
     @Test("An attached library photo keeps its own format, named for it")
