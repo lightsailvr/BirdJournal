@@ -201,7 +201,7 @@ def test_a_repeated_put_swaps_pack_art_for_the_painting_without_a_push(
     assert apns.sent == []
 
 
-def test_a_card_shared_again_with_its_painting_pushes_nothing(
+def test_a_put_after_a_card_shared_by_hand_pushes_nothing(
     client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, apns: FakeApns
 ) -> None:
     circle = _circle(client, issuer)
