@@ -42,8 +42,20 @@ final class ArtJobs {
     @ObservationIgnored var preparePhoto: @Sendable (Data, CGFloat?) throws -> Data = { try ArtPhoto.prepare(jpeg: $0, maxSide: $1).jpeg }
     /// Today's paintings on request as the server last said; nil until asked.
     private(set) var allowance: ArtAllowance?
-    /// Why the last request for a painting was refused, for the card to say; nil once it has.
-    var refusal: String?
+    /// Why the last request for a painting was refused, for that card's scene or photo controls to say.
+    struct Refusal: Equatable {
+        var sighting: UUID
+        var kind: ArtJob.Kind
+        var message: String
+    }
+
+    var refusal: Refusal?
+
+    /// The refusal for this card's `kind` of art, if the last request was its.
+    func refusal(for sighting: Sighting, kind: ArtJob.Kind) -> String? {
+        guard let refusal, refusal.sighting == sighting.identifier, refusal.kind == kind else { return nil }
+        return refusal.message
+    }
     @ObservationIgnored private var driving: Set<UUID> = []
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "art")
 
@@ -96,7 +108,7 @@ final class ArtJobs {
     /// A photo from the library attached to the card as an original (spec v2 story 55): written as a file of its own,
     /// byte for byte as the library gave it, and never written over. Returns its path.
     func attachPhoto(_ data: Data, to sighting: Sighting) throws -> String {
-        let path = try frames.write(jpeg: data)
+        let path = try frames.write(data, pathExtension: ArtPhoto.pathExtension(of: data))
         sighting.attachedPhotoPaths.append(path)
         save(sighting)
         return path
@@ -152,7 +164,7 @@ final class ArtJobs {
         do {
             let open = try await account.withAccessToken(doing: "check your artwork") { try await client.openJobs(accessToken: $0) }
             for sighting in pending {
-                for job in [sighting.art.pendingSceneJob, sighting.art.pendingPhotoJob].compactMap({ $0 }) {
+                for job in sighting.art.pendingJobs {
                     await drive(sighting, job: job, known: open.first { $0.id == job.id })
                 }
             }
@@ -168,7 +180,7 @@ final class ArtJobs {
     /// One card's pending jobs (an open card polls its own).
     func refresh(_ sighting: Sighting) async {
         guard isAvailable else { return }
-        for job in [sighting.art.pendingSceneJob, sighting.art.pendingPhotoJob].compactMap({ $0 }) {
+        for job in sighting.art.pendingJobs {
             await drive(sighting, job: job, known: nil)
         }
     }
@@ -225,7 +237,7 @@ final class ArtJobs {
             drop(job, on: sighting)
         } catch ArtClientError.allowanceSpent {
             drop(job, on: sighting)
-            refusal = Self.allowanceSpentMessage(allowance)
+            refusal = Refusal(sighting: sighting.identifier, kind: job.kind, message: Self.allowanceSpentMessage(allowance))
             await refreshAllowance()
         } catch {
             log.info("art job \(job.id, privacy: .public) stays pending: \(String(describing: error), privacy: .public)")
@@ -236,12 +248,10 @@ final class ArtJobs {
         guard let client else { throw ArtClientError.server(0) }
         let facts = cardFacts(sighting)
         let request = ArtJobRequest(
-            id: job.id, sightingID: sighting.identifier, scientificName: sighting.scientificName, edition: facts.edition,
+            id: job.id, sightingID: sighting.identifier, kind: job.kind, scientificName: sighting.scientificName, edition: facts.edition,
             legendary: facts.legendary, rarity: sighting.rarity?.label.rawValue, requested: requested
         )
-        var kinded = request
-        kinded.kind = job.kind.rawValue
-        let remote = try await call { try await client.createJob(kinded, accessToken: $0) }
+        let remote = try await call { try await client.createJob(request, accessToken: $0) }
         if requested { await refreshAllowance() }
         return remote
     }
@@ -312,7 +322,7 @@ final class ArtJobs {
     }
 
     private func pendingSightings() -> [Sighting] {
-        ((try? container.mainContext.fetch(FetchDescriptor<Sighting>())) ?? []).filter { $0.art.pendingSceneJob != nil || $0.art.pendingPhotoJob != nil }
+        ((try? container.mainContext.fetch(FetchDescriptor<Sighting>())) ?? []).filter { !$0.art.pendingJobs.isEmpty }
     }
 
     private func save(_ sighting: Sighting) {

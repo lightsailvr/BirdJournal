@@ -13,6 +13,7 @@ from birdjournal_api.app import create_app
 from birdjournal_api.art import paint_policy
 from birdjournal_api.settings import Settings
 from tests.conftest import Clock, FakeArtQueue, FakeArtStorage
+from tests.test_art_jobs import _queued
 from tests.tokens import TestIssuer
 
 
@@ -162,10 +163,8 @@ def test_the_allowance_starts_again_at_midnight_utc(launch: TestClient, issuer: 
     assert _photo(launch, issuer).status_code == 201
 
 
-def test_a_failed_painting_still_counts(launch: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, clock: Clock) -> None:
-    job = _photo(launch, issuer).json()
-    art_storage.uploads[f"uploads/ada/{job['id']}.jpg"] = b"jpeg"
-    launch.post(f"/v1/art/jobs/{job['id']}/submit", headers=issuer.headers(sub="ada"))
+def test_a_failed_painting_still_counts(launch: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage) -> None:
+    job = _queued(launch, issuer, art_storage, kind="photo", requested=True)
     launch.post(f"/internal/art/jobs/ada/{job['id']}/claim", headers={"Authorization": "Bearer test-worker-token"})
     launch.post(f"/internal/art/jobs/ada/{job['id']}/failed", headers={"Authorization": "Bearer test-worker-token"}, json={"reason": "painting_failed"})
     assert _allowance(launch, issuer)["left"] == 4

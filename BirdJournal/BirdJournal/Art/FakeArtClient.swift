@@ -1,4 +1,5 @@
 #if DEBUG
+import Album
 import CoreImage
 import Foundation
 
@@ -38,7 +39,7 @@ final class FakeArtClient: ArtClient {
             existing.upload = existing.state == .awaitingUpload ? Self.upload(for: request.id) : nil
             return existing
         }
-        if let daily, request.kind == "photo" || request.requested {
+        if let daily, request.kind == .photo || request.requested {
             guard used < daily else { throw ArtClientError.allowanceSpent }
             used += 1
         }

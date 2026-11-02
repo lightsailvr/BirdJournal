@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from birdjournal_api.app import create_app
-from birdjournal_api.art import may_auto_paint
+from birdjournal_api.art import paint_policy
 from birdjournal_api.settings import Settings
 from tests.conftest import (
     ART_CDN,
@@ -438,8 +438,8 @@ def test_a_received_job_is_cleaned_up_by_time_to_live(
 
 
 def test_the_friends_phase_paints_every_glasses_add() -> None:
-    assert may_auto_paint("every_glasses_add", legendary=False, rarity="common", requested=False)
-    assert may_auto_paint("every_glasses_add", legendary=False, rarity=None, requested=False)
+    assert paint_policy("every_glasses_add", kind="scene", legendary=False, rarity="common", requested=False) == "free"
+    assert paint_policy("every_glasses_add", kind="scene", legendary=False, rarity=None, requested=False) == "free"
 
 
 @pytest.mark.parametrize(
@@ -456,7 +456,7 @@ def test_the_friends_phase_paints_every_glasses_add() -> None:
 def test_the_public_launch_paints_legendary_and_rare_adds_and_requests(
     legendary: bool, rarity: str | None, requested: bool, painted: bool
 ) -> None:
-    assert may_auto_paint("legendary_or_rare", legendary=legendary, rarity=rarity, requested=requested) is painted
+    assert (paint_policy("legendary_or_rare", kind="scene", legendary=legendary, rarity=rarity, requested=requested) is not None) is painted
 
 
 def test_the_rule_is_server_configuration(

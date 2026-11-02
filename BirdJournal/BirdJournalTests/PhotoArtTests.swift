@@ -3,6 +3,7 @@ import CryptoKit
 import Foundation
 import SwiftData
 import Testing
+import UIKit
 @testable import BirdJournal
 
 // Issue #69: photo art from the phone. A glasses photo or a library photo (attached as an original) goes up prepared;
@@ -54,7 +55,7 @@ struct PhotoArtTests {
         await art.paintPhoto(sighting, from: original)
 
         let request = try #require(client.requests.first)
-        #expect(request.kind == "photo")
+        #expect(request.kind == .photo)
         #expect(request.requested)
         #expect(request.sightingID == sighting.identifier)
         #expect(client.uploads[request.id] == prepared)
@@ -65,6 +66,17 @@ struct PhotoArtTests {
         // Not the card's art until approved.
         #expect(sighting.art.photo == nil)
         #expect(client.received == [request.id])
+    }
+
+    @Test("An attached library photo keeps its own format, named for it")
+    func attachedFormat() throws {
+        let sighting = try sighting()
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8))
+        let png = renderer.pngData { $0.cgContext.fill(CGRect(x: 0, y: 0, width: 8, height: 8)) }
+        let path = try art.attachPhoto(png, to: sighting)
+        #expect(path.hasSuffix(".png"))
+        #expect(try Data(contentsOf: frames.url(for: path)) == png)
+        #expect(try art.attachPhoto(library, to: sighting).hasSuffix(".jpg"))
     }
 
     @Test("The glasses photo can be the source too")
@@ -133,7 +145,7 @@ struct PhotoArtTests {
         await art.paintPhoto(sighting, from: original)
         let first = try #require(sighting.art.photoPreview?.path)
         await art.paintPhotoAgain(sighting)
-        #expect(client.requests.map(\.kind) == ["photo", "photo"])
+        #expect(client.requests.map(\.kind) == [.photo, .photo])
         #expect(Set(client.requests.map(\.id)).count == 2)
         let second = try #require(sighting.art.photoPreview?.path)
         #expect(second != first)
@@ -189,7 +201,7 @@ struct PhotoArtTests {
         await art.paintPhotoAgain(sighting)
         #expect(sighting.art.pendingPhotoJob == nil)
         #expect(sighting.art.photoPreview == preview)
-        #expect(art.refusal == "You've used all 2 of today's paintings. Try again tomorrow.")
+        #expect(art.refusal == ArtJobs.Refusal(sighting: sighting.identifier, kind: .photo, message: "You've used all 2 of today's paintings. Try again tomorrow."))
     }
 
     @Test("In the friends phase there is no allowance to show")

@@ -46,6 +46,13 @@ nonisolated enum ArtPhoto {
         return (try encode(blurred), faces.count)
     }
 
+    /// The file extension for a picture's bytes as ImageIO reads them ("jpeg", "heic", "png"); "jpg" when unknown.
+    static func pathExtension(of data: Data) -> String {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil), let type = CGImageSourceGetType(source),
+              let ext = UTType(type as String)?.preferredFilenameExtension else { return "jpg" }
+        return ext
+    }
+
     /// Every face in the picture, in its pixel coordinates (Core Image's, origin bottom left).
     static func faceBoxes(in picture: CIImage) throws -> [CGRect] {
         let request = VNDetectFaceRectanglesRequest()

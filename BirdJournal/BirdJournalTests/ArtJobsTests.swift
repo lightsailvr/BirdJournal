@@ -347,7 +347,7 @@ struct ArtClientTests {
         let recorder = Recorder()
         recorder.replies = [(201, Self.jobJSON)]
         var request = ArtJobRequest(id: UUID(), sightingID: UUID(), scientificName: "Haemorhous mexicanus", legendary: false, requested: true)
-        request.kind = "photo"
+        request.kind = .photo
         _ = try await Self.client(recorder).createJob(request, accessToken: "t")
         let body = try #require(try JSONSerialization.jsonObject(with: recorder.requests.first?.httpBody ?? Data()) as? [String: Any])
         #expect(body["kind"] as? String == "photo")

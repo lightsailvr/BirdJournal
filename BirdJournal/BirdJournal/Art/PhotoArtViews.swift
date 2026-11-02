@@ -314,7 +314,7 @@ struct PhotoArtActions: View {
                     .accessibilityLabel(line)
                     .accessibilityIdentifier("card-photo-art-status")
             }
-            if let refusal = art.refusal {
+            if let refusal = art.refusal(for: sighting, kind: .photo) {
                 Text(refusal)
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)

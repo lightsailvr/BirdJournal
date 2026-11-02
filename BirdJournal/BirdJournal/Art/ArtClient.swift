@@ -1,3 +1,4 @@
+import Album
 import Foundation
 
 /// One art job as the server has it (backend `art_api.py`, issue #68).
@@ -36,8 +37,7 @@ struct RemoteArtJob: Equatable, Decodable, Sendable {
 struct ArtJobRequest: Equatable, Encodable, Sendable {
     var id: UUID
     var sightingID: UUID
-    /// "scene" or "photo".
-    var kind = "scene"
+    var kind = ArtJob.Kind.scene
     var scientificName: String
     /// The pack id of the card's set, whose edition lights the painting; nil outside every set.
     var edition: String?

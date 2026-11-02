@@ -38,6 +38,9 @@ extension CardArt {
         return photoJob
     }
 
+    /// The scene and photo jobs under way, scene first.
+    public var pendingJobs: [ArtJob] { [pendingSceneJob, pendingPhotoJob].compactMap { $0 } }
+
     /// A new photo-art job painting `source` (the glasses photo or an attached original): the first, or Try again and
     /// Retry art (each a new job, counted in `attempts`). Approved art and any waiting painting stay until it's done.
     public mutating func startPhotoJob(id: UUID, source: String) {

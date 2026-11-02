@@ -131,12 +131,6 @@ class NothingShared:
         return False
 
 
-def may_auto_paint(rule: AutoPaintRule, *, legendary: bool, rarity: str | None, requested: bool) -> bool:
-    """Whether scene art is painted for this add at all. Friends phase: every add with a glasses photo. Public launch:
-    Legendary and Rare-or-rarer adds, and any the birder asks for (Try again, Retry art), within the allowance."""
-    return paint_policy(rule, kind="scene", legendary=legendary, rarity=rarity, requested=requested) is not None
-
-
 def paint_policy(rule: AutoPaintRule, *, kind: Kind, legendary: bool, rarity: str | None, requested: bool) -> Cost | None:
     """What a job costs under the rule: `free`, `allowance` (one of the day's paintings on request), or None (not
     painted: an ordinary add at the public launch, which keeps its pack art).
@@ -181,8 +175,6 @@ class ArtJob:
     input_key: str
     output_key: str
     attempts: int = 0
-    # Whether it came out of the day's allowance.
-    counted: bool = False
     queued_at: datetime | None = None
     finished_at: datetime | None = None
     received_at: datetime | None = None
@@ -198,7 +190,7 @@ class ArtJob:
 class NewJob:
     id: str
     sighting_id: str
-    kind: str
+    kind: Kind
     scientific_name: str
     edition: str | None
     legendary: bool
@@ -241,7 +233,7 @@ class ArtJobStore:
         it was created. A job on the allowance takes one of the day's paintings in the same write."""
         if existing := self._read(owner, new.id):
             return self._expire_if_due(existing), False
-        cost = paint_policy(self.rule, kind=new.kind, legendary=new.legendary, rarity=new.rarity, requested=new.requested)  # type: ignore[arg-type]
+        cost = paint_policy(self.rule, kind=new.kind, legendary=new.legendary, rarity=new.rarity, requested=new.requested)
         if cost is None:
             raise NotEligible()
         now = self._clock()
@@ -256,7 +248,6 @@ class ArtJobStore:
             "input_key": f"uploads/{owner}/{new.id}.jpg",
             "output_key": f"art/{owner}/{secrets.token_urlsafe(24)}.jpg",
             "attempts": 0,
-            "counted": cost == "allowance",
         }
         if new.edition:
             item["edition"] = new.edition
@@ -534,7 +525,6 @@ class ArtJobStore:
             input_key=item["input_key"],
             output_key=item["output_key"],
             attempts=int(item.get("attempts", 0)),
-            counted=bool(item.get("counted", False)),
             queued_at=moment("queued_at"),
             finished_at=moment("finished_at"),
             received_at=moment("received_at"),

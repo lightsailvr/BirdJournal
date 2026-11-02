@@ -143,7 +143,7 @@ class Worker:
         claim = self.api.claim(owner, job_id)
         started = time.monotonic()
         try:
-            scene = self.s3.get_object(Bucket=self.upload_bucket, Key=claim.input_key)["Body"].read()
+            photo = self.s3.get_object(Bucket=self.upload_bucket, Key=claim.input_key)["Body"].read()
         except ClientError as error:
             if error.response["Error"]["Code"] in ("NoSuchKey", "404", "AccessDenied", "403"):
                 return self._refuse(owner, job_id, "bad_input", f"no photo at {claim.input_key}")
@@ -154,9 +154,9 @@ class Worker:
             return Outcome("later", delete=False)
         try:
             if claim.kind == "photo":
-                art = self.photo_painter.paint(claim.id, scene, claim.scientific_name, claim.edition, claim.legendary)
+                art = self.photo_painter.paint(claim.id, photo, claim.scientific_name, claim.edition, claim.legendary)
             else:
-                art = self.painter.paint(claim.id, scene, claim.scientific_name, claim.edition, claim.legendary)
+                art = self.painter.paint(claim.id, photo, claim.scientific_name, claim.edition, claim.legendary)
         except NoBird:
             return self._refuse(owner, job_id, "no_bird", "no bird to paint in the birder's photo")
         except NoReference:
