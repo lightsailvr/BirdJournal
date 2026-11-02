@@ -25,7 +25,12 @@ from birdjournal_api.art import (
     WorkerToken,
 )
 from birdjournal_api.art_api import router as art_router
-from birdjournal_api.auth import SigningKeyResolver, Subject, TokenVerifier, cognito_signing_keys
+from birdjournal_api.auth import (
+    SigningKeyResolver,
+    Subject,
+    TokenVerifier,
+    cognito_signing_keys,
+)
 from birdjournal_api.circles import CircleStore
 from birdjournal_api.circles_api import router as circles_router
 from birdjournal_api.settings import Settings

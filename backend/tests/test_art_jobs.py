@@ -11,7 +11,15 @@ from fastapi.testclient import TestClient
 from birdjournal_api.app import create_app
 from birdjournal_api.art import may_auto_paint
 from birdjournal_api.settings import Settings
-from tests.conftest import ART_CDN, WORKER_TOKEN, Clock, FakeArtQueue, FakeArtStorage, FakeNotifier, FakeRetention
+from tests.conftest import (
+    ART_CDN,
+    WORKER_TOKEN,
+    Clock,
+    FakeArtQueue,
+    FakeArtStorage,
+    FakeNotifier,
+    FakeRetention,
+)
 from tests.tokens import TestIssuer
 
 WORKER = {"Authorization": f"Bearer {WORKER_TOKEN}"}
@@ -454,7 +462,8 @@ def test_the_queue_message_names_the_owner_and_the_job() -> None:
     from birdjournal_api.art import SqsArtQueue
 
     class Sqs:
-        sent: list[dict[str, str]] = []
+        def __init__(self) -> None:
+            self.sent: list[dict[str, str]] = []
 
         def send_message(self, **kwargs: str) -> None:
             self.sent.append(kwargs)
