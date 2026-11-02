@@ -88,7 +88,7 @@ struct CardDetailView: View {
                     .accessibilityIdentifier("card-flip")
                     .accessibilityFocused($flipControlFocused)
                     CollectibleCard(showsBack: showsBack, rotates: !reduceMotion) {
-                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, flip: flip)
+                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, place: places.cardPlace(for: sighting.location), flip: flip)
                     } back: {
                         CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
@@ -134,7 +134,7 @@ struct CardDetailView: View {
                 }
             }
             .sheet(isPresented: $isSharing) {
-                SharePostcardView(sighting: sighting)
+                ShareCardView(sighting: sighting)
             }
             .task(id: id) {
                 browse?.selected = sighting.identifier
@@ -354,18 +354,25 @@ private struct CardFrame: ViewModifier {
 
 /// The collectible face: the Legendary label or the edition with the collector number, the art (a tap flips the card),
 /// the place and species, the caption written for this sighting or else the lore's tagline (issue #56), the type line
-/// and stats (issue #55), the rarity for that place and season, and the date and method.
-private struct CardFront: View {
+/// and stats (issue #55), the rarity for that place and season, and the date and method. The share sheet (issue #66)
+/// draws the same face with the place it may share (a city, a secret spot or none) and the art already loaded, so the
+/// renderer has the pixels when it draws.
+struct CardFront: View {
     @Environment(PackLibrary.self) private var library
-    @Environment(PlaceNames.self) private var places
     let sighting: Sighting
     let isLegendary: Bool
     let placement: CardPlacement?
-    let flip: () -> Void
+    /// The place line: the card's place on the phone; on a shared face, only what the share may carry.
+    let place: String?
+    /// The art to draw, in place of what `CardArtView.art` gives; nil draws that.
+    var art: CardText.Art? = nil
+    /// The art's picture, loaded already (the share's renderer can't wait for it).
+    var artImage: UIImage? = nil
+    var flip: () -> Void = {}
 
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
-        let art = CardArtView.art(for: sighting, library: library, setID: placement?.setID)
+        let art = art ?? CardArtView.art(for: sighting, library: library, setID: placement?.setID)
         let commonName = library.commonName(for: sighting)
         VStack(alignment: .leading, spacing: 12) {
             CardHeading(isLegendary: isLegendary, placement: placement)
@@ -373,7 +380,7 @@ private struct CardFront: View {
                 .accessibilityLabel(CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement).compactMap { $0 }.joined(separator: ", "))
                 .accessibilityIdentifier("card-heading")
             Button(action: flip) {
-                CardArtView(art: art, commonName: commonName)
+                CardArtView(art: art, commonName: commonName, image: artImage)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Card art: \(art.label)")
@@ -389,9 +396,11 @@ private struct CardFront: View {
                     .accessibilityIdentifier("card-art-status")
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(places.cardPlace(for: sighting.location))
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(Color.cardIvory.opacity(0.85))
+                if let place {
+                    Text(place)
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.cardIvory.opacity(0.85))
+                }
                 Text(commonName)
                     .font(JournalFont.title)
                     .foregroundStyle(Color.cardIvory)

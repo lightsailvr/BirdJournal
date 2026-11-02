@@ -1,5 +1,5 @@
-"""The API: account get and update (issue #60), circles (issue #61), finds (issue #62), art jobs (issue #68), pushes (issue #63), and reactions and compare (issue #64). Later
-tickets add their routers here."""
+"""The API: account get and update (issue #60), circles (issue #61), finds (issue #62) with shared cards (issue #66),
+art jobs (issue #68), pushes (issue #63), and reactions and compare (issue #64). Later tickets add their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -37,6 +37,7 @@ from birdjournal_api.circles_api import router as circles_router
 from birdjournal_api.finds import FindStore
 from birdjournal_api.devices import DeviceStore, MuteStore
 from birdjournal_api.finds_api import router as finds_router
+from birdjournal_api.photos import PhotoStore, S3PhotoStore
 from birdjournal_api.pushes import PushSender, PushService
 from birdjournal_api.pushes_api import router as pushes_router
 from birdjournal_api.reactions import ReactionStore
@@ -83,10 +84,12 @@ def create_app(
     art_queue: ArtQueue | None = None,
     art_notifier: ArtNotifier | None = None,
     art_retention: ArtRetention | None = None,
+    photos: PhotoStore | None = None,
     push_sender: PushSender | None = None,
 ) -> FastAPI:
     """The API over the settings' table. Tests pass a signing key from their own issuer, a clock, and fakes for the art
-    buckets, queue and notifier and for APNs."""
+    buckets, queue and notifier, the shared photos and APNs; otherwise shared cards' photos go to the art bucket, when
+    the stack has one."""
     dynamodb = boto3.resource("dynamodb", region_name=settings.region, endpoint_url=settings.dynamodb_endpoint)
     app = FastAPI(title="BirdJournal API")
     app.state.verifier = TokenVerifier(
@@ -96,7 +99,11 @@ def create_app(
     )
     app.state.accounts = AccountStore(dynamodb.Table(settings.table_name), clock)
     app.state.circles = CircleStore(dynamodb, settings.table_name, app.state.accounts, clock)
-    app.state.finds = FindStore(dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock)
+    if photos is None and settings.art_bucket is not None:
+        photos = S3PhotoStore(boto3.client("s3", region_name=settings.region), settings.art_bucket)
+    app.state.photos = photos
+    app.state.clock = clock
+    app.state.finds = FindStore(dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos)
     table = dynamodb.Table(settings.table_name)
     app.state.devices = DeviceStore(table, clock)
     app.state.mutes = MuteStore(table, clock)

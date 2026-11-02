@@ -1,4 +1,5 @@
-"""The find routes (issue #62): put and delete a find, keyed by the sighting's id, and a circle's feed, paged."""
+"""The find routes (issue #62): put and delete a find, keyed by the sighting's id, and a circle's feed, paged. A card
+shared by hand (issue #66): an upload URL for its original photo, and the share."""
 
 import logging
 from datetime import UTC, datetime
@@ -11,22 +12,28 @@ from pydantic import BaseModel, ConfigDict, ValidationInfo, field_serializer, fi
 from birdjournal_api.auth import Subject
 from birdjournal_api.circles import NotFound
 from birdjournal_api.finds import (
+    CAPTION_MAX,
     FEED_PAGE_DEFAULT,
     FEED_PAGE_MAX,
     ArtKind,
     ArtReference,
     BadCursor,
+    CardExtras,
     FeedItem,
     Find,
     FindContent,
     FindStore,
     Method,
+    NOTE_MAX,
+    PhotoUnavailable,
     Rarity,
     clean_art,
     clean_found_at,
     clean_name,
     clean_place,
+    clean_text,
 )
+from birdjournal_api.photos import PhotoStore, new_photo_key
 from birdjournal_api.pushes import PushService
 from birdjournal_api.reactions import ReactionCount, ReactionKind, ReactionStore
 
@@ -145,6 +152,83 @@ class FindResponse(FindFields):
         return cls(**FindFields.fields(find.sighting_id, find.content, base_url), circle_ids=find.circle_ids)
 
 
+class PhotoBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # The key the upload URL gave: photos/<sub>/<unguessable>.jpg.
+    key: str
+
+
+class CardBody(BaseModel):
+    """A card shared by hand (issue #66): the find policy's payload for it, the circles chosen and the extras chosen.
+    `include_place` false means the city was turned off: the card shows no place in those circles."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    find: FindBody
+    circle_ids: list[str]
+    include_place: bool = True
+    note: str | None = None
+    caption: str | None = None
+    photo: PhotoBody | None = None
+
+    @field_validator("note")
+    @classmethod
+    def _note(cls, value: str | None) -> str | None:
+        return clean_text(value, field="note", limit=NOTE_MAX)
+
+    @field_validator("caption")
+    @classmethod
+    def _caption(cls, value: str | None) -> str | None:
+        return clean_text(value, field="caption", limit=CAPTION_MAX)
+
+    @model_validator(mode="after")
+    def _no_place(self) -> "CardBody":
+        if not self.include_place:
+            self.find.place = None
+        return self
+
+    def extras(self) -> CardExtras:
+        return CardExtras(note=self.note, caption=self.caption, photo_key=self.photo.key if self.photo else None)
+
+
+class PhotoUploadResponse(BaseModel):
+    key: str
+    upload_url: str
+    # POST these form fields to the URL, then the JPEG as the `file` field: the signed policy covers them and caps
+    # the size.
+    fields: dict[str, str]
+    expires_at: datetime
+
+    @field_serializer("expires_at")
+    def _expires(self, value: datetime) -> str:
+        return _utc(value)
+
+
+class PhotoResponse(BaseModel):
+    key: str
+    url: str | None
+
+
+class CardResponse(BaseModel):
+    """What a card shared by hand to this circle adds to the find."""
+
+    note: str | None
+    caption: str | None
+    photo: PhotoResponse | None
+
+    @classmethod
+    def of(cls, card: CardExtras | None, base_url: str | None) -> "CardResponse | None":
+        if card is None:
+            return None
+        photo = (
+            PhotoResponse(key=card.photo_key, url=f"{base_url}/{card.photo_key}" if base_url else None)
+            if card.photo_key
+            else None
+        )
+        return cls(note=card.note, caption=card.caption, photo=photo)
+
+
 class Owner(BaseModel):
     id: str
     display_name: str | None
@@ -168,6 +252,8 @@ class FeedItemResponse(FindFields):
     is_mine: bool
     # Every reaction kind with its count and whether the reader gave it (issue #64).
     reactions: list[ReactionResponse]
+    # The note, caption and photo of a card shared by hand to this circle; null for an automatic find.
+    card: CardResponse | None
 
     @classmethod
     def of(
@@ -179,6 +265,7 @@ class FeedItemResponse(FindFields):
             circle_first=item.circle_first,
             is_mine=item.owner == subject,
             reactions=ReactionResponse.all(reactions),
+            card=CardResponse.of(item.card, base_url),
         )
 
 
@@ -203,12 +290,18 @@ def _art_base_url(request: Request) -> str | None:
     return base
 
 
+def _photos(request: Request) -> PhotoStore | None:
+    photos: PhotoStore | None = request.app.state.photos
+    return photos
+
+
 def _pushes(request: Request) -> PushService:
     service: PushService = request.app.state.pushes
     return service
 
 
 Finds = Annotated[FindStore, Depends(_finds)]
+Photos = Annotated[PhotoStore | None, Depends(_photos)]
 Pushes = Annotated[PushService, Depends(_pushes)]
 Reactions = Annotated[ReactionStore, Depends(_reactions)]
 ArtBaseUrl = Annotated[str | None, Depends(_art_base_url)]
@@ -241,6 +334,36 @@ def put_find(
             pushes.find_added(find)
         except Exception:
             log.exception("pushes for a new find failed")
+    response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+    return FindResponse.of(find, base)
+
+
+@router.post("/finds/{sighting_id}/photo", status_code=status.HTTP_201_CREATED)
+def create_photo_upload(subject: Subject, sighting_id: str, photos: Photos, request: Request) -> PhotoUploadResponse:
+    """A presigned POST for a shared card's original photo, at most 5 MB. The photo waits, tagged pending, until a share names it,
+    and expires after a day if none does."""
+    sighting = _sighting_id(sighting_id)
+    if photos is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "photos_unavailable")
+    upload = photos.upload(new_photo_key(subject, sighting), now=request.app.state.clock())
+    return PhotoUploadResponse(key=upload.key, upload_url=upload.url, fields=upload.fields, expires_at=upload.expires_at)
+
+
+@router.put("/finds/{sighting_id}/card")
+def share_card(
+    subject: Subject, sighting_id: str, body: CardBody, finds: Finds, base: ArtBaseUrl, response: Response
+) -> FindResponse:
+    try:
+        find, created = finds.share(
+            subject, _sighting_id(sighting_id), body.find.content(), body.circle_ids, body.extras(),
+            include_place=body.include_place,
+        )
+    except NotFound:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "not_found") from None
+    except PhotoUnavailable:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "photos_unavailable") from None
+    except ValueError as error:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from None
     response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
     return FindResponse.of(find, base)
 
