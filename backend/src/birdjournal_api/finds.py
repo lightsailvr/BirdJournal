@@ -33,6 +33,7 @@ import base64
 import binascii
 import re
 import unicodedata
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -446,6 +447,25 @@ class FindStore:
         """Whether the find is the circle's earliest surviving item of its species: the push decision at write time
         (issue #63), the same query the feed's mark reads."""
         return self._first_of(circle_id, scientific_name) == (owner, sighting_id)
+
+    def species_between(self, circle_id: str, starts_at: datetime, ends_at: datetime) -> Counter[str]:
+        """How many of the circle's feed items found from `starts_at` up to, not including, `ends_at` are of each
+        species (scientific name): a goal's progress is the number of keys (issue #65). The feed's sort key starts with
+        the found minute, so this is one key range; an item at exactly `ends_at` sorts after the bare minute and is
+        left out."""
+        species: Counter[str] = Counter()
+        kwargs: dict[str, Any] = {
+            "KeyConditionExpression": Key("pk").eq(_feed_pk(circle_id))
+            & Key("sk").between(_minute(starts_at), _minute(ends_at)),
+            "ProjectionExpression": "scientific_name",
+            "ConsistentRead": True,
+        }
+        while True:
+            response = self._table.query(**kwargs)
+            species.update(str(item["scientific_name"]) for item in response["Items"])
+            if "LastEvaluatedKey" not in response:
+                return species
+            kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
 
     def existing(self, keys: list[tuple[str, str]]) -> dict[tuple[str, str], FindContent]:
         """The finds of these (owner, sighting id) pairs that are still there, for a digest (issue #63)."""

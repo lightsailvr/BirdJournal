@@ -1,5 +1,6 @@
 """The API: account get and update (issue #60), circles (issue #61), finds (issue #62) with shared cards (issue #66),
-art jobs (issue #68), pushes (issue #63), and reactions and compare (issue #64). Later tickets add their routers here."""
+art jobs (issue #68), pushes (issue #63), reactions and compare (issue #64) and goals (issue #65). Later tickets add
+their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -37,6 +38,8 @@ from birdjournal_api.circles_api import router as circles_router
 from birdjournal_api.finds import FindStore
 from birdjournal_api.devices import DeviceStore, MuteStore
 from birdjournal_api.finds_api import router as finds_router
+from birdjournal_api.goals import GoalStore
+from birdjournal_api.goals_api import router as goals_router
 from birdjournal_api.photos import PhotoStore, S3PhotoStore
 from birdjournal_api.pushes import PushSender, PushService
 from birdjournal_api.pushes_api import router as pushes_router
@@ -107,8 +110,9 @@ def create_app(
     table = dynamodb.Table(settings.table_name)
     app.state.devices = DeviceStore(table, clock)
     app.state.mutes = MuteStore(table, clock)
+    app.state.goals = GoalStore(table, app.state.circles, app.state.finds, clock)
     app.state.pushes = PushService(
-        table, app.state.circles, app.state.finds, app.state.devices, app.state.mutes,
+        table, app.state.circles, app.state.finds, app.state.devices, app.state.mutes, app.state.goals,
         push_sender or _apns(settings), clock,
     )
     app.state.reactions = ReactionStore(
@@ -120,6 +124,7 @@ def create_app(
     app.include_router(circles_router)
     app.include_router(finds_router)
     app.include_router(pushes_router)
+    app.include_router(goals_router)
     app.include_router(reactions_router)
 
     if art_storage is None and settings.upload_bucket and settings.art_bucket:

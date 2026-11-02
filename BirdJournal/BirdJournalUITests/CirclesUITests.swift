@@ -45,23 +45,28 @@ final class CirclesUITests: XCTestCase {
         row.tap()
         XCTAssertTrue(app.staticTexts["Members · 1 of 20"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.buttons["Invite friends"].exists)
-        XCTAssertTrue(app.buttons["Leave circle"].exists)
+        XCTAssertTrue(scrolledTo(app.buttons["Leave circle"], in: app))
     }
 
     @MainActor
     func testTheInviteShowsAQRCodeOfTheLink() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         let invite = app.buttons["Invite friends"]
-        XCTAssertTrue(app.staticTexts["Recent finds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        // Below the seeded feed: the list builds it only once scrolled to.
-        for _ in 0..<6 where !invite.exists || !invite.isHittable { app.swipeUp() }
-        XCTAssertTrue(invite.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["newGoal"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(scrolledTo(invite, in: app), "screen: \(app.debugDescription.prefix(3000))")
         invite.tap()
         let code = app.images["inviteQRCode"]
         XCTAssertTrue(code.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         let link = code.value as? String ?? ""
         XCTAssertTrue(link.hasPrefix("https://birdquest.matthewcelia.com/i/fake-"), link)
         XCTAssertTrue(app.staticTexts[link].exists, "the link under the code isn't the code's URL")
+    }
+
+    /// The goal card (issue #65) heads a circle's page and the list draws only what's on screen: scroll down to the
+    /// element.
+    private func scrolledTo(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+        for _ in 0..<6 where !element.isHittable { app.swipeUp() }
+        return element.isHittable
     }
 
     @MainActor

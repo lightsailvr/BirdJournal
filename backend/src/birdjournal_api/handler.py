@@ -2,7 +2,8 @@
 
 The digest flush (issue #63) is an EventBridge schedule invoking this function directly with
 `{"birdjournal_job": "flush_digests"}`, not an HTTP route: only EventBridge may invoke the function that way (its
-resource policy), so there is no shared secret to keep and nothing internal on the public API.
+resource policy), so there is no shared secret to keep and nothing internal on the public API. The goals' monthly
+rollover (issue #65) is a second schedule the same way, `{"birdjournal_job": "roll_over_goals"}`.
 """
 
 import json
@@ -33,6 +34,10 @@ def make_handler(app: FastAPI) -> Callable[[dict[str, Any], Any], Any]:
             report = {**asdict(app.state.pushes.flush_digests()), "reactions": asdict(app.state.reactions.flush())}
             log.info("digest flush: %s", json.dumps(report))
             return report
+        if job == "roll_over_goals":
+            rollover = app.state.goals.roll_over()
+            log.info("goal rollover: %s", json.dumps(asdict(rollover)))
+            return asdict(rollover)
         if job is not None:
             raise ValueError(f"unknown job {job!r}")
         return http(event, context)

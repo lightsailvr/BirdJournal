@@ -6,6 +6,10 @@ import Foundation
 /// the backend's rules (20 members, seven-day invites, the creator removes). The fake account is "Pat Birder"
 /// (`fake-sub`). Invite tokens it knows besides its own: `fake-invite` (Canyon Walkers, from Maya), `expired` and
 /// `full`. Finds (issue #62) fan out to the circles Pat is in when first put, as on the server; seeded, Sunday Group's
+/// feed has friends' finds. Goals (issue #65) follow the server's rules: a monthly goal per circle in its time zone
+/// (10 in the first month, else the larger of 5 and 115 % of last month's species), progress as distinct species among
+/// the feed's finds in the period, custom goals deleted by their creator or the circle's. Seeded, Sunday Group chases
+/// its monthly goal, a running and an upcoming custom goal, and one reached last week.
 /// feed has friends' finds. Reactions (issue #64) are counted per find, with a few friends' already on the seeded
 /// ones, and Compare birds reads a friend's finds in the circles Pat shares with them. Nothing leaves the phone.
 final class FakeCircleClient: CircleClient {
@@ -32,6 +36,9 @@ final class FakeCircleClient: CircleClient {
     /// Every device registration and removal, for the tests: `register <token> <environment>` or `unregister <token>`.
     private(set) var deviceLog: [String] = []
     private var muted = Mutes()
+    /// Every circle's goals without their progress, which is counted from the feed when read. `head start` stands in
+    /// for seeded finds older than the feed shows, so the seeded goals aren't all at zero.
+    private var storedGoals: [String: [(goal: CircleGoal, headStart: Int)]] = [:]
     /// Who gave each reaction, by feed item id.
     private var reactions: [String: [ReactionKind: Set<String>]] = [:]
     /// Every reaction given or taken back, for the tests: `put lovely maya/<id>` or `delete …`.
@@ -46,6 +53,7 @@ final class FakeCircleClient: CircleClient {
         }
         if seeded, let sunday = order.first {
             seedFeed(circleID: sunday)
+            seedGoals(circleID: sunday)
         }
         let canyon = add(name: "Canyon Walkers", creator: ("maya", "Maya Ortiz"), others: [("ari", "Ari Chen")], at: base)
         invites["fake-invite"] = (canyon, now().addingTimeInterval(6 * 86_400))
@@ -242,6 +250,121 @@ final class FakeCircleClient: CircleClient {
         }
     }
 
+    func goals(circleID: String, accessToken: String) async throws -> [CircleGoal] {
+        let detail = try await circle(id: circleID, accessToken: accessToken)
+        let zone = TimeZone(identifier: detail.circle.timeZone) ?? .gmt
+        ensureMonthly(detail.circle, zone: zone)
+        let now = now()
+        let goals = (storedGoals[circleID] ?? []).map { progressed($0.goal, headStart: $0.headStart, circle: detail.circle, now: now) }
+        let thisMonth = Self.calendar(zone).dateInterval(of: .month, for: now)?.start
+        let monthly = goals.filter { $0.kind == .monthly && $0.startsAt == thisMonth }
+        let order: [CircleGoal.Status: Int] = [.active: 0, .upcoming: 1, .ended: 2]
+        let custom = goals
+            .filter { $0.kind == .custom && now.timeIntervalSince($0.endsAt) < 7 * 86_400 }
+            .sorted { (order[$0.status]!, $0.endDate) < (order[$1.status]!, $1.endDate) }
+        return monthly + custom
+    }
+
+    func createGoal(_ draft: GoalDraft, circleID: String, accessToken: String) async throws -> CircleGoal {
+        let detail = try await circle(id: circleID, accessToken: accessToken)
+        let zone = TimeZone(identifier: detail.circle.timeZone) ?? .gmt
+        let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (1...40).contains(title.count), (1...999).contains(draft.target),
+              let start = Self.day(draft.startDate, zone), let end = Self.day(draft.endDate, zone), start <= end,
+              let ends = Self.calendar(zone).date(byAdding: .day, value: 1, to: end), ends > now()
+        else { throw CircleError.rejected }
+        let goal = CircleGoal(
+            id: "fake-goal-\(nextID)", kind: .custom, title: title, target: draft.target, startDate: draft.startDate,
+            endDate: draft.endDate, startsAt: start, endsAt: ends, progress: 0, status: .active, completedAt: nil,
+            createdBy: FeedItem.Owner(id: Self.me, displayName: Self.myName), canDelete: true
+        )
+        nextID += 1
+        storedGoals[circleID, default: []].append((goal, 0))
+        return progressed(goal, headStart: 0, circle: detail.circle, now: now())
+    }
+
+    func deleteGoal(id: String, circleID: String, accessToken: String) async throws {
+        let detail = try await circle(id: circleID, accessToken: accessToken)
+        guard let stored = storedGoals[circleID]?.first(where: { $0.goal.id == id }) else { throw CircleError.notFound }
+        guard stored.goal.kind == .custom, [stored.goal.createdBy?.id, detail.circle.createdBy].contains(Self.me) else {
+            throw CircleError.goalNotYours
+        }
+        storedGoals[circleID]?.removeAll { $0.goal.id == id }
+    }
+
+    private func ensureMonthly(_ circle: CircleSummary, zone: TimeZone) {
+        let calendar = Self.calendar(zone)
+        guard let month = calendar.dateInterval(of: .month, for: now()),
+              !(storedGoals[circle.id] ?? []).contains(where: { $0.goal.kind == .monthly && $0.goal.startsAt == month.start })
+        else { return }
+        let target: Int
+        if let created = calendar.dateInterval(of: .month, for: circle.createdAt), created.start >= month.start {
+            target = 10
+        } else {
+            let previous = calendar.date(byAdding: .month, value: -1, to: month.start)!
+            target = max(5, (species(in: circle.id, from: previous, to: month.start) * 115 + 50) / 100)
+        }
+        let days = GoalDraft.dayFormatter(zone)
+        let goal = CircleGoal(
+            id: "monthly-\(days.string(from: month.start).prefix(7))", kind: .monthly,
+            title: "\(month.start.formatted(Date.FormatStyle(timeZone: zone).month(.wide))) goal", target: target,
+            startDate: days.string(from: month.start), endDate: days.string(from: month.end.addingTimeInterval(-1)),
+            startsAt: month.start, endsAt: month.end, progress: 0, status: .active, completedAt: nil, createdBy: nil,
+            canDelete: false
+        )
+        storedGoals[circle.id, default: []].append((goal, 0))
+    }
+
+    private func progressed(_ goal: CircleGoal, headStart: Int, circle: CircleSummary, now: Date) -> CircleGoal {
+        var goal = goal
+        goal.progress = headStart + species(in: circle.id, from: goal.startsAt, to: goal.endsAt)
+        goal.status = now < goal.startsAt ? .upcoming : now < goal.endsAt ? .active : .ended
+        goal.canDelete = goal.kind == .custom && [goal.createdBy?.id, circle.createdBy].contains(Self.me)
+        if goal.isReached, goal.completedAt == nil { goal.completedAt = now }
+        return goal
+    }
+
+    private func species(in circleID: String, from start: Date, to end: Date) -> Int {
+        Set((feedItems[circleID] ?? []).filter { $0.foundAt >= start && $0.foundAt < end }.map(\.scientificName)).count
+    }
+
+    private static func calendar(_ zone: TimeZone) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        return calendar
+    }
+
+    private static func day(_ text: String, _ zone: TimeZone) -> Date? { GoalDraft.dayFormatter(zone).date(from: text) }
+
+    /// Sunday Group's goals: the month's, a running custom goal, an upcoming Big Day, and one reached last week.
+    private func seedGoals(circleID: String) {
+        guard let circle = circlesByID[circleID]?.circle, let zone = TimeZone(identifier: circle.timeZone) else { return }
+        let calendar = Self.calendar(zone)
+        let days = GoalDraft.dayFormatter(zone)
+        let today = calendar.startOfDay(for: now())
+        func custom(_ title: String, _ target: Int, from start: Int, to end: Int, by owner: (String, String), headStart: Int) {
+            let first = calendar.date(byAdding: .day, value: start, to: today)!
+            let last = calendar.date(byAdding: .day, value: end, to: today)!
+            let goal = CircleGoal(
+                id: "fake-goal-\(nextID)", kind: .custom, title: title, target: target, startDate: days.string(from: first),
+                endDate: days.string(from: last), startsAt: first, endsAt: calendar.date(byAdding: .day, value: 1, to: last)!,
+                progress: 0, status: .active, completedAt: nil, createdBy: FeedItem.Owner(id: owner.0, displayName: owner.1),
+                canDelete: false
+            )
+            nextID += 1
+            storedGoals[circleID, default: []].append((goal, headStart))
+        }
+        ensureMonthly(circle, zone: zone)
+        if var monthly = storedGoals[circleID]?.first {
+            monthly.goal.target = 14
+            monthly.headStart = 9
+            storedGoals[circleID] = [monthly]
+        }
+        custom("Fall migration", 30, from: -20, to: 9, by: ("maya", "Maya Ortiz"), headStart: 19)
+        custom("Big Day in Ojai", 40, from: 5, to: 5, by: (Self.me, Self.myName), headStart: 0)
+        custom("Owls before Halloween", 3, from: -12, to: -3, by: ("jo", "Jo Park"), headStart: 3)
+    }
+
     func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] {
         let id = "\(owner)/\(sightingID)"
         let mine = Set(order.filter { circlesByID[$0]?.members.contains { $0.id == Self.me } == true })
@@ -332,3 +455,4 @@ final class FakeCircleClient: CircleClient {
     }
 }
 #endif
+

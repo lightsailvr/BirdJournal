@@ -28,6 +28,8 @@ final class CircleStore {
     private(set) var details: [String: CircleDetail] = [:]
     /// Each circle's Recent finds (issue #62), by circle id: the pages read so far, newest first.
     private(set) var feeds: [String: Feed] = [:]
+    /// Each circle's goals (issue #65), by circle id: this month's goal first, then the custom goals.
+    private(set) var goals: [String: [CircleGoal]] = [:]
     private(set) var listState: ListState = .idle
     /// The token of an invite link opened from outside the app, for the join screen.
     var pendingInvite: String?
@@ -159,13 +161,42 @@ final class CircleStore {
         feeds[circleID] = feed
     }
 
+    /// Reads the circle's goals and their progress again. A failure keeps what was read; the card has nothing to say
+    /// about it beyond the feed's own error.
+    func loadGoals(circleID: String) async {
+        do {
+            goals[circleID] = try await call { try await $0.goals(circleID: circleID, accessToken: $1) }
+        } catch {
+            log.error("couldn't load the goals: \(String(describing: error))")
+        }
+    }
+
+    /// A custom goal for the circle; the list is read again so it lands in the server's order.
+    @discardableResult
+    func createGoal(_ draft: GoalDraft, circleID: String) async throws -> CircleGoal {
+        var draft = draft
+        draft.title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let goal = try await call { try await $0.createGoal(draft, circleID: circleID, accessToken: $1) }
+        await loadGoals(circleID: circleID)
+        return goal
+    }
+
+    func deleteGoal(id: String, circleID: String) async throws {
+        try await call { try await $0.deleteGoal(id: id, circleID: circleID, accessToken: $1) }
+        goals[circleID]?.removeAll { $0.id == id }
+    }
+
     /// A push came (issue #63): the list again, and the feeds of the circles it names (every feed the phone has read
     /// when it names none).
     func refreshAfterPush(circleIDs: [String]) async {
         guard account.isSignedIn else { return }
         await refresh()
         let open = circleIDs.isEmpty ? Array(feeds.keys) : circleIDs.filter { feeds[$0] != nil }
-        for id in open { await loadFeed(circleID: id) }
+        for id in open {
+            await loadFeed(circleID: id)
+            // A find moves its circle's goals (issue #65).
+            if goals[id] != nil { await loadGoals(circleID: id) }
+        }
     }
 
     func setCircleMuted(_ muted: Bool, circleID: String) async throws {
@@ -221,6 +252,7 @@ final class CircleStore {
         circles = []
         details = [:]
         feeds = [:]
+        goals = [:]
         mutes = Mutes()
         listState = .idle
     }
@@ -245,6 +277,7 @@ final class CircleStore {
         circles.removeAll { $0.id == id }
         details[id] = nil
         feeds[id] = nil
+        goals[id] = nil
     }
 
     /// The words for a failure, on the screen where it happened.
@@ -256,6 +289,7 @@ final class CircleStore {
         case CircleError.notFound: "This circle or invitation isn't there any more."
         case CircleError.creatorOnly: "Only the circle's creator can remove members."
         case CircleError.rejected: "Use a name of up to 40 characters, on one line."
+        case CircleError.goalNotYours: "Only a goal's creator or the circle's creator can delete it, and the monthly goal stays."
         case AuthError.sessionExpired: "You've been signed out. Sign in again to use your circles."
         default: "Couldn't \(action). Check your connection and try again."
         }

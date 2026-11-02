@@ -313,6 +313,69 @@ struct FeedPage: Equatable, Decodable, Sendable {
     }
 }
 
+/// A circle's goal (backend `GET /v1/circles/<id>/goals`, issue #65): the automatic monthly goal or a custom one, with
+/// its progress, the distinct species among the circle's finds in the period.
+struct CircleGoal: Equatable, Identifiable, Decodable, Sendable {
+    enum Kind: String, Decodable, Sendable { case monthly, custom }
+    enum Status: String, Decodable, Sendable { case upcoming, active, ended }
+
+    var id: String
+    var kind: Kind
+    var title: String
+    var target: Int
+    /// The first and last days, in the circle's time zone, both included ("2026-11-01").
+    var startDate: String
+    var endDate: String
+    /// The same period as instants: midnight starting the first day to midnight ending the last.
+    var startsAt: Date
+    var endsAt: Date
+    var progress: Int
+    var status: Status
+    /// When progress first reached the target; it stays if a delete takes progress back down.
+    var completedAt: Date?
+    /// Who made a custom goal; nil for the monthly goal.
+    var createdBy: FeedItem.Owner?
+    /// The goal's creator or the circle's creator may delete a custom goal.
+    var canDelete: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id, kind, title, target, progress, status
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case startsAt = "starts_at"
+        case endsAt = "ends_at"
+        case completedAt = "completed_at"
+        case createdBy = "created_by"
+        case canDelete = "can_delete"
+    }
+
+    var isReached: Bool { progress >= target }
+}
+
+/// What the new-goal sheet sends: a title, a target, and the first and last days in the circle's time zone.
+struct GoalDraft: Equatable, Encodable, Sendable {
+    var title: String
+    var target: Int
+    var startDate: String
+    var endDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case title, target
+        case startDate = "start_date"
+        case endDate = "end_date"
+    }
+
+    /// A goal's day as the API writes it, "2026-11-01", in the circle's zone.
+    static func dayFormatter(_ zone: TimeZone) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = zone
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }
+}
+
 /// What the birder muted (backend `GET /v1/mutes`, issue #63): circles and friends whose finds send no pushes.
 struct Mutes: Equatable, Decodable, Sendable {
     var circles: Set<String> = []
@@ -333,6 +396,8 @@ enum CircleError: Error, Equatable {
     case inviteRevoked
     /// The server turned the name down.
     case rejected
+    /// Only a custom goal's creator or the circle's creator deletes it, and the monthly goal stays (issue #65).
+    case goalNotYours
     case server(Int)
 }
 
@@ -365,6 +430,10 @@ protocol CircleClient: AnyObject {
     func mutes(accessToken: String) async throws -> Mutes
     func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws
     func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws
+    /// Goals (issue #65): this month's goal first, then custom goals running, coming and recently ended.
+    func goals(circleID: String, accessToken: String) async throws -> [CircleGoal]
+    func createGoal(_ draft: GoalDraft, circleID: String, accessToken: String) async throws -> CircleGoal
+    func deleteGoal(id: String, circleID: String, accessToken: String) async throws
     /// Gives or takes back a reaction on a friend's find (issue #64); the find's counts as the server has them.
     func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount]
     /// A friend's species from their finds in the circles the two share, best method each.
@@ -468,6 +537,20 @@ final class HTTPCircleClient: CircleClient {
         _ = try await data(muted ? "PUT" : "DELETE", "v1/friends/\(friendID)/mute", body: nil, accessToken: accessToken)
     }
 
+    func goals(circleID: String, accessToken: String) async throws -> [CircleGoal] {
+        struct List: Decodable { var goals: [CircleGoal] }
+        return try await send("GET", "v1/circles/\(circleID)/goals", accessToken: accessToken, as: List.self).goals
+    }
+
+    func createGoal(_ draft: GoalDraft, circleID: String, accessToken: String) async throws -> CircleGoal {
+        let data = try await data("POST", "v1/circles/\(circleID)/goals", body: try JSONEncoder().encode(draft), accessToken: accessToken)
+        return try Self.decode(CircleGoal.self, from: data)
+    }
+
+    func deleteGoal(id: String, circleID: String, accessToken: String) async throws {
+        _ = try await data("DELETE", "v1/circles/\(circleID)/goals/\(id)", body: nil, accessToken: accessToken)
+    }
+
     func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] {
         struct Counts: Decodable { var reactions: [ReactionCount.Sent] }
         let counts = try await send(given ? "PUT" : "DELETE", "v1/finds/\(owner)/\(sightingID)/reactions/\(kind.rawValue)", accessToken: accessToken, as: Counts.self)
@@ -479,7 +562,10 @@ final class HTTPCircleClient: CircleClient {
     }
 
     private func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, query: [URLQueryItem] = [], accessToken: String, as type: T.Type) async throws -> T {
-        let data = try await data(method, path, query: query, body: try body.map { try JSONEncoder().encode($0) }, accessToken: accessToken)
+        try Self.decode(T.self, from: try await data(method, path, query: query, body: try body.map { try JSONEncoder().encode($0) }, accessToken: accessToken))
+    }
+
+    private static func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(T.self, from: data)
@@ -508,6 +594,7 @@ final class HTTPCircleClient: CircleClient {
         switch (status, detail) {
         case (401, _): return .unauthorized
         case (403, "invite_revoked"): return .inviteRevoked
+        case (403, "not_allowed"), (403, "automatic_goal"): return .goalNotYours
         case (403, _): return .creatorOnly
         case (404, _): return .notFound
         case (409, _): return .full

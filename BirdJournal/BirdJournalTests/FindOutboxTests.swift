@@ -50,6 +50,9 @@ private final class FindRecorder: CircleClient {
     func mutes(accessToken: String) async throws -> Mutes { try await inner.mutes(accessToken: accessToken) }
     func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws { try await inner.setCircleMuted(muted, circleID: circleID, accessToken: accessToken) }
     func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws { try await inner.setFriendMuted(muted, friendID: friendID, accessToken: accessToken) }
+    func goals(circleID: String, accessToken: String) async throws -> [CircleGoal] { try await inner.goals(circleID: circleID, accessToken: accessToken) }
+    func createGoal(_ draft: GoalDraft, circleID: String, accessToken: String) async throws -> CircleGoal { try await inner.createGoal(draft, circleID: circleID, accessToken: accessToken) }
+    func deleteGoal(id: String, circleID: String, accessToken: String) async throws { try await inner.deleteGoal(id: id, circleID: circleID, accessToken: accessToken) }
     func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] { return try await inner.setReaction(kind, given: given, owner: owner, sightingID: sightingID, accessToken: accessToken) }
     func compare(friendID: String, accessToken: String) async throws -> FriendBirds { return try await inner.compare(friendID: friendID, accessToken: accessToken) }
 }

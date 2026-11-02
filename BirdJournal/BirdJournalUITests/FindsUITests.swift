@@ -19,8 +19,11 @@ final class FindsUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Recent finds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
 
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-'"))
+        // The goal card (issue #65) and the Recent finds | Compare birds picker (#64) sit above the finds, and reactions
+        // made the rows taller: the list builds only the rows on screen, so scroll until it has drawn four of the six.
+        for _ in 0..<6 where !rows.firstMatch.exists { app.swipeUp() }
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5), "no finds; screen: \(app.debugDescription.prefix(3000))")
-        // Six seeded; the list builds only the rows on screen, and reactions (#64) made them taller.
+        for _ in 0..<6 where rows.count < 4 { app.swipeUp() }
         XCTAssertGreaterThanOrEqual(rows.count, 4)
         let newest = rows.element(boundBy: 0).label
         XCTAssertTrue(newest.contains("California Gnatcatcher"), newest)
