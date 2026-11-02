@@ -229,6 +229,7 @@ private final class RefusingArtClient: ArtClient {
     func openJobs(accessToken: String) async throws -> [RemoteArtJob] { [] }
     func received(jobID: UUID, accessToken: String) async throws {}
     func download(_ url: URL) async throws -> Data { Data() }
+    func allowance(accessToken: String) async throws -> ArtAllowance { .unlimited }
 }
 
 @Suite("Art client")
@@ -304,6 +305,7 @@ struct ArtClientTests {
         #expect(HTTPArtClient.error(status: 404, data: Data()) == .notFound)
         #expect(HTTPArtClient.error(status: 409, data: Data(#"{"detail": "not_eligible"}"#.utf8)) == .notEligible)
         #expect(HTTPArtClient.error(status: 409, data: Data(#"{"detail": "upload_missing"}"#.utf8)) == .uploadMissing)
+        #expect(HTTPArtClient.error(status: 409, data: Data(#"{"detail": "allowance_spent"}"#.utf8)) == .allowanceSpent)
         #expect(HTTPArtClient.error(status: 503, data: Data()) == .server(503))
     }
 
@@ -320,5 +322,34 @@ struct ArtClientTests {
         #expect(jobs.map(\.state) == [.ready, .failed])
         #expect(jobs[0].artURL?.absoluteString == "https://d1.cloudfront.net/art/a/x.jpg")
         #expect(jobs[1].failure == "expired")
+    }
+
+    @Test("The allowance decodes \"N left today\" and the friends phase's no limit (issue #69)")
+    func allowance() async throws {
+        let recorder = Recorder()
+        recorder.replies = [
+            (200, #"{"daily": 5, "used": 2, "left": 3, "resets_at": "2026-11-02T00:00:00Z"}"#),
+            (200, #"{"daily": null, "used": 0, "left": null, "resets_at": "2026-11-02T00:00:00Z"}"#),
+        ]
+        let client = Self.client(recorder)
+        let launch = try await client.allowance(accessToken: "t")
+        #expect(recorder.requests.last?.url?.absoluteString == "https://api.example/v1/art/allowance")
+        #expect(launch.daily == 5 && launch.left == 3)
+        #expect(launch.resetsAt == Date(timeIntervalSince1970: 1_793_577_600))
+        #expect(CardText.allowanceLine(launch) == "3 left today")
+        let friends = try await client.allowance(accessToken: "t")
+        #expect(friends.daily == nil && friends.hasPaintingsLeft)
+        #expect(CardText.allowanceLine(friends) == nil)
+    }
+
+    @Test("A photo-art request says so")
+    func photoKind() async throws {
+        let recorder = Recorder()
+        recorder.replies = [(201, Self.jobJSON)]
+        var request = ArtJobRequest(id: UUID(), sightingID: UUID(), scientificName: "Haemorhous mexicanus", legendary: false, requested: true)
+        request.kind = "photo"
+        _ = try await Self.client(recorder).createJob(request, accessToken: "t")
+        let body = try #require(try JSONSerialization.jsonObject(with: recorder.requests.first?.httpBody ?? Data()) as? [String: Any])
+        #expect(body["kind"] as? String == "photo")
     }
 }
