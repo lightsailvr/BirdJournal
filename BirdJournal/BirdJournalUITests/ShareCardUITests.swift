@@ -62,6 +62,10 @@ final class ShareCardUITests: XCTestCase {
         app.tabBars.buttons["Circles"].tap()
         app.staticTexts["Sunday Group"].firstMatch.tap()
         let mine = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-' AND label CONTAINS 'by you'")).firstMatch
+        // The goal card (issue #65) and the Recent finds | Compare birds picker (#64) sit above the feed, which the list
+        // builds only once scrolled to.
+        XCTAssertTrue(app.staticTexts["Recent finds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<6 where !mine.exists { app.swipeUp() }
         XCTAssertTrue(mine.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(mine.label.contains("Black Phoebe") && mine.label.contains("Tail dipping over the pond"), mine.label)
 
@@ -69,6 +73,9 @@ final class ShareCardUITests: XCTestCase {
         app.staticTexts["Family"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["Recent finds"].waitForExistence(timeout: 10))
         let elsewhere = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-' AND label CONTAINS 'by you'")).firstMatch
+        // Scroll through Family's feed (the seeds leave it empty) first, so the absence below means the card isn't there,
+        // not that the list hadn't built its row yet.
+        for _ in 0..<3 where !elsewhere.exists { app.swipeUp() }
         XCTAssertFalse(elsewhere.waitForExistence(timeout: 3), "a card shared to Sunday Group alone isn't in Family")
     }
     #endif
