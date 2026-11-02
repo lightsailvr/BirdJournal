@@ -152,10 +152,13 @@ struct DebugLaunch: ViewModifier {
             case "settings":
                 tab = .listen
                 listenPath.append(Route.settings)
-            case "account":
+            case "account", "account-delete", "blocked":
                 tab = .listen
                 listenPath.append(Route.settings)
                 listenPath.append(Route.account)
+                // Issue #71: the deletion alert, and the blocked accounts.
+                if screen == "account-delete" { defaults.set(true, forKey: "autoAccountDelete") }
+                if screen == "blocked" { listenPath.append(Route.blockedAccounts) }
             case "support":
                 tab = .listen
                 listenPath.append(Route.settings)
@@ -165,11 +168,12 @@ struct DebugLaunch: ViewModifier {
                 defaults.set(true, forKey: "autoSource")
             case "circles":
                 tab = .circles
-            case "circle", "circle-invite", "circle-goal":
+            case "circle", "circle-invite", "circle-goal", "circle-report":
                 tab = .circles
                 await circles.refresh()
                 if let first = circles.circles.first {
                     if screen == "circle-invite" { defaults.set(true, forKey: "autoCircleInvite") }
+                    if screen == "circle-report" { defaults.set(true, forKey: "autoCircleReport") }
                     if screen == "circle-goal" { defaults.set(true, forKey: "autoNewGoal") }
                     circlesPath.append(Route.circle(id: first.id))
                 }

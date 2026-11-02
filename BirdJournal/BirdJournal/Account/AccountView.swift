@@ -49,6 +49,15 @@ struct AccountView: View {
         } message: {
             Text("Your journal and cards stay on this iPhone.")
         }
+        #if DEBUG
+        .task {
+            if UserDefaults.standard.bool(forKey: "autoAccountDelete") {
+                UserDefaults.standard.removeObject(forKey: "autoAccountDelete")
+                try? await Task.sleep(for: .milliseconds(600))
+                confirmingDeletion = true
+            }
+        }
+        #endif
         .alert("Delete your account?", isPresented: $confirmingDeletion) {
             Button("Delete account", role: .destructive) { Task { await account.deleteAccount() } }
             Button("Cancel", role: .cancel) {}

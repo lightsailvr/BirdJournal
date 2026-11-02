@@ -33,6 +33,14 @@ infra/scripts/push-wizard.sh
 
 Run after the other two (issue #63). It walks you through making the APNs auth key in the Apple Developer portal (Sandbox & Production, team scoped), saves its Key ID and Team ID in `~/keys/birdjournal.env`, stores the `.p8` with them in Secrets Manager as `birdjournal/apns` (tagged; the key goes nowhere else), has you tick Push Notifications on the App ID, deploys, and sends a test push to a phone's token (Settings → Developer in a Debug build). Deployed before the key is stored, the API sends no pushes and looks for the secret again every five minutes, so no redeploy is needed after storing it.
 
+## Reports, moderation and account deletion: the fourth wizard
+
+```sh
+infra/scripts/safety-wizard.sh
+```
+
+Run after the others (issue #71). It saves the report address as `REPORT_EMAIL` in `~/keys/birdjournal.env` (the budget's address if you keep that), deploys (the SES email identity, the API's grants to send as it, Rekognition, `AdminDeleteUser` on the user pool and the Apple key's secret), waits while you click SES's verification link, sends a test report mail, and covers the optional SES production-access request (not needed while reports go only to the verified address) and, for the public launch, `"moderation": "on"` in `cdk.json` and the AWS Organizations AI services opt-out.
+
 ## Deploy (one command)
 
 ```sh

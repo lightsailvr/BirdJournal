@@ -93,6 +93,14 @@ struct CirclePageView: View {
             Text(Self.blockMessage(account.name))
         }
         #if DEBUG
+        .task(id: detail?.members.count) {
+            // Issue #71's screenshot: the report sheet for the first friend.
+            if UserDefaults.standard.bool(forKey: "autoCircleReport"), let detail,
+               let friend = detail.members.first(where: { $0.id != myID(in: detail) }) {
+                UserDefaults.standard.removeObject(forKey: "autoCircleReport")
+                reporting = .account(friend, circleID: detail.circle.id)
+            }
+        }
         .task {
             if UserDefaults.standard.bool(forKey: "autoCircleInvite") {
                 UserDefaults.standard.removeObject(forKey: "autoCircleInvite")
