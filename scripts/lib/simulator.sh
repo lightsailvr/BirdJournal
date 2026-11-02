@@ -28,3 +28,16 @@ resolve_destination() {
         echo "platform=iOS Simulator,name=iPhone 17"
     fi
 }
+
+# Whether StoreKit on simulator "$1" already holds the app's StoreKit test configuration (issue #93). `SKTestSession`
+# registers `BirdJournal.storekit` in the simulator's StoreKit container the first time a test host creates one, but
+# purchases only use it in processes launched after that: the first tip a new simulator's first test host buys goes
+# to the sandbox instead and waits for an Apple Account sign-in until the test times out. The path is StoreKit's own
+# and may move; if it does, this says no every time and each run primes again (one more test host launch, about
+# 15 s). The bundle ID is the app target's PRODUCT_BUNDLE_IDENTIFIER (project.pbxproj).
+storekit_bundle_id=com.matthewcelia.mybirdjournal
+storekit_config_registered() {
+    local udid="$1"
+    [[ -n "$(find "$HOME/Library/Developer/CoreSimulator/Devices/$udid/data/Containers/Shared/AppGroup" \
+        -path "*/Octane/$storekit_bundle_id/Configuration.storekit" -print -quit 2>/dev/null)" ]]
+}
