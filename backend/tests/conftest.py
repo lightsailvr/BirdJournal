@@ -7,7 +7,7 @@ its own freshly created table, so tests never see each other's items.
 
 import os
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -70,6 +70,10 @@ def issuer() -> TestIssuer:
     return TestIssuer()
 
 
+WORKER_TOKEN = "test-worker-token"
+ART_CDN = "https://art.example.cloudfront.net"
+
+
 @pytest.fixture
 def settings(table_name: str, dynamodb_endpoint: str) -> Settings:
     return Settings(
@@ -78,7 +82,77 @@ def settings(table_name: str, dynamodb_endpoint: str) -> Settings:
         cognito_client_ids=frozenset({CLIENT_ID}),
         region=REGION,
         dynamodb_endpoint=dynamodb_endpoint,
+        art_cdn_base_url=ART_CDN,
+        art_worker_token=WORKER_TOKEN,
     )
+
+
+class FakeArtStorage:
+    """The upload and art buckets in memory: tests put what the phone and the worker would upload."""
+
+    def __init__(self) -> None:
+        self.uploads: dict[str, bytes] = {}
+        self.art: dict[str, bytes] = {}
+        self.signed: list[str] = []
+
+    def upload_url(self, key: str, expires_in: timedelta) -> str:
+        self.signed.append(key)
+        return f"https://uploads.example/{key}?expires={int(expires_in.total_seconds())}"
+
+    def has_upload(self, key: str) -> bool:
+        return key in self.uploads
+
+    def delete_upload(self, key: str) -> None:
+        self.uploads.pop(key, None)
+
+    def delete_art(self, key: str) -> None:
+        self.art.pop(key, None)
+
+
+class FakeArtQueue:
+    def __init__(self) -> None:
+        self.messages: list[tuple[str, str]] = []
+
+    def send(self, owner: str, job_id: str) -> None:
+        self.messages.append((owner, job_id))
+
+
+class FakeNotifier:
+    def __init__(self) -> None:
+        self.finished: list[tuple[str, str]] = []
+
+    def job_finished(self, job: Any) -> None:
+        self.finished.append((job.id, job.state))
+
+
+class FakeRetention:
+    """Keys a find shows (#70 will look this up)."""
+
+    def __init__(self) -> None:
+        self.shown: set[str] = set()
+
+    def is_shown(self, owner: str, key: str) -> bool:
+        return key in self.shown
+
+
+@pytest.fixture
+def art_storage() -> FakeArtStorage:
+    return FakeArtStorage()
+
+
+@pytest.fixture
+def art_queue() -> FakeArtQueue:
+    return FakeArtQueue()
+
+
+@pytest.fixture
+def art_notifier() -> FakeNotifier:
+    return FakeNotifier()
+
+
+@pytest.fixture
+def art_retention() -> FakeRetention:
+    return FakeRetention()
 
 
 class Clock:
@@ -122,7 +196,25 @@ def apns() -> FakeApns:
 
 
 @pytest.fixture
-def client(settings: Settings, issuer: TestIssuer, clock: Clock, apns: FakeApns) -> Iterator[TestClient]:
-    app = create_app(settings, signing_key=issuer.signing_key, clock=clock, push_sender=apns)
+def client(
+    settings: Settings,
+    issuer: TestIssuer,
+    clock: Clock,
+    art_storage: FakeArtStorage,
+    art_queue: FakeArtQueue,
+    art_notifier: FakeNotifier,
+    art_retention: FakeRetention,
+    apns: FakeApns,
+) -> Iterator[TestClient]:
+    app = create_app(
+        settings,
+        signing_key=issuer.signing_key,
+        clock=clock,
+        art_storage=art_storage,
+        art_queue=art_queue,
+        art_notifier=art_notifier,
+        art_retention=art_retention,
+        push_sender=apns,
+    )
     with TestClient(app) as client:
         yield client

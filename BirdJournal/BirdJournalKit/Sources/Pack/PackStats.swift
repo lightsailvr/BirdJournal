@@ -40,14 +40,18 @@ public struct PackStats: Sendable, Hashable {
         case aerial, terrestrial, insessorial, aquatic, generalist
     }
 
-    /// BIRDBASE's nest types.
+    /// BIRDBASE's nest types, or a brood parasite's mark in their place (issue #86).
     public enum Nest: String, Sendable, Hashable, CaseIterable {
         case burrow, cup, crevice, cavity, dome, platform, pendant, saucer, scrape, sphere, mound
         case halfCup = "half_cup"
         /// Lays without a nest.
         case noNest = "no_nest"
-        /// In another bird's nest: a brood parasite.
+        /// An old nest another bird built, reused (BIRDBASE's "other bird's nest"): owls, falcons, the House Wren.
+        /// Not brood parasitism.
         case otherNest = "other_nest"
+        /// A brood parasite, from BIRDBASE's parasitism columns: lays in other birds' nests and leaves them to raise
+        /// its young (cowbirds, cuckoos, whydahs). It is the only value when present. Packs before v9 never carry it.
+        case broodParasite = "brood_parasite"
     }
 
     /// The datasets that gave this species a value.

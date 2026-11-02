@@ -22,6 +22,8 @@ struct BirdJournalApp: App {
     @State private var journalEdits: JournalEdits
     @State private var account: AccountSession
     @State private var circles: CircleStore
+    @State private var art: ArtJobs
+    @Environment(\.scenePhase) private var scenePhase
     @State private var findOutbox: FindOutbox
     @State private var pushes: PushCenter
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
@@ -63,6 +65,9 @@ struct BirdJournalApp: App {
         _account = State(initialValue: account)
         let circles = CircleStore.forApp(account: account)
         _circles = State(initialValue: circles)
+        let art = Self.makeArtJobs(account: account, frames: frames, album: album, packs: packs)
+        sightings.artJobs = art
+        _art = State(initialValue: art)
         // Finds (issue #62): adds made while signed in and sharing reach the birder's circles.
         let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
         sightings.findOutbox = findOutbox
@@ -135,6 +140,17 @@ struct BirdJournalApp: App {
                 return places.name(for: coordinate)
             }
         )
+    }
+
+    /// Scene art (issue #68): each add's job carries whether its card is Legendary and its set's edition, read from the
+    /// collection at the moment the job is created.
+    private static func makeArtJobs(account: AccountSession, frames: FrameStore, album: ModelContainer, packs: PackLibrary) -> ArtJobs {
+        let art = ArtJobs.forApp(account: account, frames: frames, container: album)
+        art.cardFacts = { sighting in
+            let collection = packs.collection(of: (try? album.mainContext.fetch(FetchDescriptor<Sighting>())) ?? [])
+            return ArtJobs.CardFacts(legendary: collection.isLegendary(sighting.identifier), edition: collection.placement(of: sighting.identifier)?.setID)
+        }
+        return art
     }
 
     /// Sightings saved before rarity existed get theirs once (issue #52), after launch and with the geomodel read off
@@ -231,11 +247,17 @@ struct BirdJournalApp: App {
             .environment(journalEdits)
             .environment(account)
             .environment(circles)
+            .environment(art)
             .environment(findOutbox)
             .environment(pushes)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)
+            // Art jobs are polled on launch and whenever the app comes back (issue #68).
+            .task { await art.refresh() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await art.refresh() } }
+            }
             .onOpenURL { url in
                 // An invite link (issue #61) arrives here as a universal link; everything else is the toolkit's.
                 if let token = InviteLink.token(from: url) {

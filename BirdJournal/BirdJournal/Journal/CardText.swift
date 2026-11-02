@@ -110,6 +110,16 @@ enum CardText {
         }
     }
 
+    /// What the card's front says about scene art under way (issue #68): the encounter is safe while the painting
+    /// waits, even for days with the painting machine off; a failure says so plainly. Nil otherwise.
+    static func sceneArtLine(_ status: CardArt.SceneStatus) -> String? {
+        switch status {
+        case .pending: "Your encounter is saved. Artwork is on its way."
+        case .failed: "The artwork couldn't be painted this time."
+        case .none, .ready: nil
+        }
+    }
+
     private static func article(for name: String) -> String {
         name.first.map { "AEIOU".contains($0) } == true ? "an" : "a"
     }
