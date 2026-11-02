@@ -34,6 +34,9 @@ private final class FindRecorder: CircleClient {
     }
 
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage { FeedPage(items: [], nextCursor: nil) }
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws {}
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload { throw CircleError.server(503) }
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {}
     func circles(accessToken: String) async throws -> [CircleSummary] { try await inner.circles(accessToken: accessToken) }
     func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail { try await inner.createCircle(named: name, timeZone: timeZone, accessToken: accessToken) }
     func circle(id: String, accessToken: String) async throws -> CircleDetail { try await inner.circle(id: id, accessToken: accessToken) }

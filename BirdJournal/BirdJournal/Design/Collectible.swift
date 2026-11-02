@@ -230,6 +230,8 @@ struct GalleryTile: View {
 struct CardArtView: View {
     let art: CardText.Art
     let commonName: String
+    /// The picture already loaded (the share sheet's renderer, issue #66); nil loads it from `art`.
+    var image: UIImage? = nil
 
     /// What the card's art is: its own, else the pack art of its set's pack (`PackLibrary.packArt`), else the first
     /// pack photo of the species.
@@ -248,13 +250,17 @@ struct CardArtView: View {
             Color.clear
                 .aspectRatio(CollectibleLayout.artAspectRatio, contentMode: .fit)
                 .overlay {
-                    switch art {
-                    case .photoArt(let path), .sceneArt(let path):
-                        FrameImage(frameImagePath: path, zoom: 1)
-                    case .packArt(let url, _), .referencePhoto(let url, _):
-                        PackImage(url: url)
-                    case .none:
-                        TypographicArt(commonName: commonName)
+                    if let image, art != .none {
+                        Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)
+                    } else {
+                        switch art {
+                        case .photoArt(let path), .sceneArt(let path):
+                            FrameImage(frameImagePath: path, zoom: 1)
+                        case .packArt(let url, _), .referencePhoto(let url, _):
+                            PackImage(url: url)
+                        case .none:
+                            TypographicArt(commonName: commonName)
+                        }
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))

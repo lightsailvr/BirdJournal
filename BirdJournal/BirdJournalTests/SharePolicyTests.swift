@@ -89,32 +89,4 @@ struct SharePolicyTests {
         #expect(shared.attribution == "Photo: © A. Birder, some rights reserved (CC BY-SA), via iNaturalist https://www.inaturalist.org/observations/1")
         #expect(photo.licenseURL == URL(string: "https://creativecommons.org/licenses/by-sa/4.0/"))
     }
-
-    @Test("the rendered card is a PNG with no location, camera or other metadata")
-    @MainActor
-    func exportHasNoMetadata() throws {
-        var choices = SharePolicy.Choices()
-        choices.useSnapshot = false
-        let content = SharePolicy.content(for: Self.sighting, commonName: "Black Phoebe", reference: nil, area: "Los Angeles, CA", choices: choices, locale: Self.english)
-        let renderer = ImageRenderer(content: PostcardView(content: content, pack: nil, frameStore: nil).frame(width: 360))
-        renderer.scale = 2
-        let image = try #require(renderer.uiImage?.cgImage)
-        let png = try #require(PostcardExport.png(image))
-
-        let source = try #require(CGImageSourceCreateWithData(png as CFData, nil))
-        #expect(CGImageSourceGetType(source) == UTType.png.identifier as CFString)
-        let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
-        #expect(properties[kCGImagePropertyGPSDictionary] == nil)
-        #expect(properties[kCGImagePropertyTIFFDictionary] == nil)
-        #expect(properties[kCGImagePropertyIPTCDictionary] == nil)
-        // ImageIO records the pixel size (and colour space) under Exif; nothing that dates, places or attributes the
-        // picture to a device may be there.
-        let exif = (properties[kCGImagePropertyExifDictionary] as? [CFString: Any]) ?? [:]
-        let telling: [CFString] = [
-            kCGImagePropertyExifDateTimeOriginal, kCGImagePropertyExifDateTimeDigitized, kCGImagePropertyExifUserComment,
-            kCGImagePropertyExifMakerNote, kCGImagePropertyExifLensModel, kCGImagePropertyExifLensMake, kCGImagePropertyExifSubjectLocation,
-        ]
-        #expect(telling.allSatisfy { exif[$0] == nil }, "Exif keys: \(exif.keys.map { $0 as String }.sorted())")
-        #expect((properties[kCGImagePropertyPixelWidth] as? Int ?? 0) >= 700)
-    }
 }

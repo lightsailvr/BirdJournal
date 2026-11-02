@@ -126,6 +126,20 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
     var owner: Owner
     var circleFirst: Bool
     var isMine: Bool
+    /// What a card shared by hand to this circle adds (issue #66); nil for an automatic find.
+    var card: SharedCard? = nil
+
+    /// A card shared by hand: the note, the caption and the original photo the owner chose for this circle.
+    struct SharedCard: Equatable, Decodable, Sendable {
+        struct Photo: Equatable, Decodable, Sendable {
+            var key: String
+            var url: URL?
+        }
+
+        var note: String?
+        var caption: String?
+        var photo: Photo?
+    }
 
     var id: String { "\(owner.id)/\(sightingID)" }
 
@@ -139,6 +153,23 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
         case legendary, rarity, art, owner
         case circleFirst = "circle_first"
         case isMine = "is_mine"
+        case card
+    }
+}
+
+/// Where the phone PUTs a shared card's original photo (backend `POST /v1/finds/<id>/photo`, issue #66): a presigned
+/// URL to the art bucket, the headers its signature covers, and the key the card then names.
+struct PhotoUpload: Equatable, Decodable, Sendable {
+    var key: String
+    var uploadURL: URL
+    var headers: [String: String]
+    var expiresAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case key
+        case uploadURL = "upload_url"
+        case headers
+        case expiresAt = "expires_at"
     }
 }
 
@@ -187,6 +218,12 @@ protocol CircleClient: AnyObject {
     /// Removes the find with its feed items and reactions; one that isn't there is no error.
     func deleteFind(sightingID: UUID, accessToken: String) async throws
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage
+    /// Shares a card by hand (issue #66): the find with the extras chosen, in the circles chosen.
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws
+    /// An upload URL for a shared card's original photo.
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload
+    /// PUTs the photo (faces blurred, metadata stripped) to the URL: no access token, the URL is signed.
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws
 }
 
 final class HTTPCircleClient: CircleClient {
@@ -243,6 +280,24 @@ final class HTTPCircleClient: CircleClient {
         var query = [URLQueryItem(name: "limit", value: String(Self.feedPageSize))]
         if let cursor { query.append(URLQueryItem(name: "cursor", value: cursor)) }
         return try await send("GET", "v1/circles/\(circleID)/feed", query: query, accessToken: accessToken, as: FeedPage.self)
+    }
+
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws {
+        _ = try await data("PUT", "v1/finds/\(sightingID.uuidString.lowercased())/card", body: try JSONEncoder().encode(card), accessToken: accessToken)
+    }
+
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload {
+        try await send("POST", "v1/finds/\(sightingID.uuidString.lowercased())/photo", accessToken: accessToken, as: PhotoUpload.self)
+    }
+
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {
+        var request = URLRequest(url: upload.uploadURL)
+        request.httpMethod = "PUT"
+        for (name, value) in upload.headers { request.setValue(value, forHTTPHeaderField: name) }
+        request.httpBody = jpeg
+        let (_, response) = try await transport(request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else { throw CircleError.server(status) }
     }
 
     static let feedPageSize = 20

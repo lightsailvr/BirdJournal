@@ -103,6 +103,19 @@ final class FindOutbox {
         enqueue(.put, identifier, owner: owner)
     }
 
+    /// A card was shared by hand (issue #66): the sighting is now on the server, so a later Heard-to-Seen puts it again
+    /// and a removal deletes it, as for an automatic find, whatever the sharing setting.
+    func sharedByHand(_ identifier: UUID, isLegendary: Bool) {
+        guard let owner = signedInOwner, !published.contains(where: { $0.owner == owner && $0.identifier == identifier }) else { return }
+        published.append(Published(owner: owner, identifier: identifier, isLegendary: isLegendary))
+        save()
+    }
+
+    /// The Legendary flag a sighting was published with, frozen at the add; nil when it never was.
+    func publishedLegendary(_ identifier: UUID) -> Bool? {
+        published.last { $0.identifier == identifier && $0.owner == signedInOwner }?.isLegendary
+    }
+
     /// A published sighting changed (Heard or Seen): its find is put again. Others change nothing.
     func changed(_ identifier: UUID) {
         guard let owner = owner(of: identifier) else { return }
@@ -283,21 +296,30 @@ extension FindOutbox {
         var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })
         descriptor.fetchLimit = 1
         guard let sighting = try? album.mainContext.fetch(descriptor).first else { return nil }
-        let found = packs.species(scientificName: sighting.scientificName)
-        let isThreatened = found?.species.isThreatened
-        var placeName: String?
-        if isThreatened == false, let location = sighting.location {
+        if packs.species(scientificName: sighting.scientificName)?.species.isThreatened == false, let location = sighting.location {
             await places.resolve(location)
-            placeName = places.name(for: location)
         }
+        let input = input(of: sighting, isLegendary: isLegendary, packs: packs, places: places)
+        return FindPolicy.find(for: input, sharing: .automatic)
+    }
+}
+
+extension FindOutbox {
+    /// What the find policy reads about a sighting: its species and card facts from the packs, the city the phone has
+    /// named for its place (only for a species known not to be threatened), and its pack art's thumbnail. The note and
+    /// the caption ride along for a card shared by hand; an automatic find leaves them out.
+    @MainActor
+    static func input(of sighting: Sighting, isLegendary: Bool, packs: PackLibrary, places: PlaceNames) -> FindPolicy.Input {
+        let isThreatened = packs.species(scientificName: sighting.scientificName)?.species.isThreatened
+        let placeName = isThreatened == false ? sighting.location.flatMap(places.name(for:)) : nil
         let setID = CardSet.placement(speciesID: sighting.speciesID, at: sighting.location, in: packs.cardSets).setID
         let art = packs.packArt(scientificName: sighting.scientificName, setID: setID)
-        let input = FindPolicy.Input(
+        return FindPolicy.Input(
             identifier: sighting.identifier, speciesID: sighting.speciesID, commonName: packs.commonName(for: sighting),
             method: sighting.method, confirmedAt: sighting.confirmedAt, rarity: sighting.rarity?.label, isLegendary: isLegendary,
-            isThreatened: isThreatened, placeName: placeName, packArt: art.map { ($0.pack.info.id, $0.art.file) }
+            isThreatened: isThreatened, placeName: placeName, packArt: art.map { ($0.pack.info.id, $0.art.file) },
+            note: sighting.note, caption: sighting.caption?.text
         )
-        return FindPolicy.find(for: input, sharing: .automatic)
     }
 }
 

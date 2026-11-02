@@ -109,7 +109,7 @@ private struct LegendaryRevealView: View {
         .background(Color.goldWash.ignoresSafeArea())
         .accessibilityAddTraits(.isModal)
         .sheet(item: $sharing) { sighting in
-            SharePostcardView(sighting: sighting)
+            ShareCardView(sighting: sighting)
         }
     }
 }
