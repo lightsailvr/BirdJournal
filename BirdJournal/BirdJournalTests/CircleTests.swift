@@ -163,6 +163,11 @@ private final class RefusingClient: CircleClient {
     func putFind(_ find: FindPolicy.Find, sightingID: UUID, accessToken: String) async throws { try check(accessToken); try await inner.putFind(find, sightingID: sightingID, accessToken: accessToken) }
     func deleteFind(sightingID: UUID, accessToken: String) async throws { try check(accessToken); try await inner.deleteFind(sightingID: sightingID, accessToken: accessToken) }
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage { try check(accessToken); return try await inner.feed(circleID: circleID, cursor: cursor, accessToken: accessToken) }
+    func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws { try check(accessToken); try await inner.registerDevice(token: token, environment: environment, accessToken: accessToken) }
+    func unregisterDevice(token: String, accessToken: String) async throws { try check(accessToken); try await inner.unregisterDevice(token: token, accessToken: accessToken) }
+    func mutes(accessToken: String) async throws -> Mutes { try check(accessToken); return try await inner.mutes(accessToken: accessToken) }
+    func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws { try check(accessToken); try await inner.setCircleMuted(muted, circleID: circleID, accessToken: accessToken) }
+    func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws { try check(accessToken); try await inner.setFriendMuted(muted, friendID: friendID, accessToken: accessToken) }
 }
 
 @Suite("The circle store")
