@@ -133,8 +133,28 @@ def test_submitting_queues_the_job_once(
     assert _create(client, issuer, job_id=job["id"]).json()["upload"] is None
 
 
-def test_photo_art_is_not_yet_a_kind(client: TestClient, issuer: TestIssuer) -> None:
-    assert _create(client, issuer, kind="photo").status_code == 422
+def test_photo_art_is_a_job_kind_on_the_same_pipeline(
+    client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, art_queue: FakeArtQueue
+) -> None:
+    job = _queued(client, issuer, art_storage, kind="photo", requested=True)
+    assert job["kind"] == "photo"
+    assert art_queue.messages == [("ada", job["id"])]
+    claim = _claim(client, job["id"]).json()
+    assert claim["kind"] == "photo"
+    assert _ready(client, claim, art_storage).status_code == 200
+    assert _get(client, issuer, job["id"])["art_url"] == f"{ART_CDN}/{claim['output_key']}"
+
+
+def test_an_unknown_kind_is_refused(client: TestClient, issuer: TestIssuer) -> None:
+    assert _create(client, issuer, kind="pack").status_code == 422
+
+
+def test_photo_art_with_no_bird_fails_as_no_bird(client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage) -> None:
+    job = _queued(client, issuer, art_storage, kind="photo", requested=True)
+    _claim(client, job["id"])
+    response = client.post(f"/internal/art/jobs/ada/{job['id']}/failed", headers=WORKER, json={"reason": "no_bird"})
+    assert response.status_code == 200
+    assert _get(client, issuer, job["id"])["failure"] == "no_bird"
 
 
 def test_jobs_need_the_account_and_stay_their_owners(client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage) -> None:

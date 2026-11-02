@@ -158,6 +158,8 @@ def test_the_api_knows_the_buckets_the_queue_the_cdn_the_token_and_the_rule(temp
     assert variables["ART_CDN_BASE_URL"] == {"Fn::Join": ["", ["https://", {"Fn::GetAtt": [distribution, "DomainName"]}]]}
     # The friends phase: every add with a glasses photo (server configuration, infra/cdk.json).
     assert variables["ART_AUTO_PAINT"] == "every_glasses_add"
+    # The public launch's allowance, unused until the switch is thrown (#69).
+    assert variables["ART_DAILY_ALLOWANCE"] == "5"
 
 
 def test_the_api_may_presign_uploads_delete_painted_art_queue_jobs_and_read_the_token(template: Template) -> None:
@@ -183,3 +185,26 @@ def test_the_api_may_presign_uploads_delete_painted_art_queue_jobs_and_read_the_
 def test_an_unknown_auto_paint_rule_is_refused() -> None:
     with pytest.raises(ValueError, match="artAutoPaint"):
         _synth(budgetAlertEmail="b@example.com", inviteCertificateArn="arn:aws:acm:us-east-1:1:certificate/x", artAutoPaint="always")
+
+
+def test_the_public_launch_is_a_context_switch() -> None:
+    import aws_cdk as cdk
+
+    from birdjournal_infra.config import BirdJournalConfig
+    from birdjournal_infra.stack import BirdJournalStack
+    from tests.test_invite_site import CDK_JSON
+
+    context = {
+        **json.loads(CDK_JSON.read_text())["context"], "aws:cdk:bundling-stacks": [],
+        "budgetAlertEmail": "b@example.com", "inviteCertificateArn": "arn:aws:acm:us-east-1:1:certificate/x",
+        "artAutoPaint": "legendary_or_rare", "artDailyAllowance": "3",
+    }
+    app = cdk.App(context=context)
+    stack = BirdJournalStack(app, "BirdJournal", config=BirdJournalConfig.from_context(app.node), env=cdk.Environment(region="us-west-2"))
+    variables = _api_function(Template.from_stack(stack))["Properties"]["Environment"]["Variables"]
+    assert (variables["ART_AUTO_PAINT"], variables["ART_DAILY_ALLOWANCE"]) == ("legendary_or_rare", "3")
+
+
+def test_a_bad_allowance_is_refused() -> None:
+    with pytest.raises(ValueError, match="artDailyAllowance"):
+        _synth(budgetAlertEmail="b@example.com", inviteCertificateArn="arn:aws:acm:us-east-1:1:certificate/x", artDailyAllowance="lots")

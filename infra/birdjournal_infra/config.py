@@ -34,9 +34,12 @@ class BirdJournalConfig:
     # stack. Not a secret, but it names the account: `-c inviteCertificateArn=...` or INVITE_CERTIFICATE_ARN
     # (infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env).
     invite_certificate_arn: str
-    # Which adds get scene art without asking (issue #68): `every_glasses_add` in the friends phase, every add with a
-    # glasses photo by a signed-in birder; `legendary_or_rare` at the public launch (#69). The API reads it.
+    # The switch between the friends phase and the public launch (issues #68 and #69): `every_glasses_add` in the
+    # friends phase paints every add with a glasses photo by a signed-in birder and every painting asked for;
+    # `legendary_or_rare` at the public launch paints Legendary and Rare-or-rarer adds automatically, and other scene art
+    # and all photo art on request within `art_daily_allowance` a day per account. The API reads both.
     art_auto_paint: str = "every_glasses_add"
+    art_daily_allowance: int = 5
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -55,6 +58,7 @@ class BirdJournalConfig:
         art_auto_paint = node.try_get_context("artAutoPaint") or "every_glasses_add"
         if art_auto_paint not in ART_AUTO_PAINT_RULES:
             raise ValueError(f"artAutoPaint must be one of {', '.join(ART_AUTO_PAINT_RULES)}, not {art_auto_paint!r}")
+        art_daily_allowance = _whole_number(node.try_get_context("artDailyAllowance"), default=5, name="artDailyAllowance")
         return cls(
             cognito_domain_prefix=node.get_context("cognitoDomainPrefix"),
             google_oauth_secret_name=node.get_context("googleOAuthSecretName"),
@@ -67,4 +71,15 @@ class BirdJournalConfig:
             ios_app_ids=tuple(node.get_context("iosAppIds")),
             invite_certificate_arn=certificate,
             art_auto_paint=art_auto_paint,
+            art_daily_allowance=art_daily_allowance,
         )
+
+
+def _whole_number(value: object, *, default: int, name: str) -> int:
+    if value is None:
+        return default
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    raise ValueError(f"{name} must be a whole number of paintings, not {value!r}")

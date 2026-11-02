@@ -51,6 +51,7 @@ class BirdJournalStack(Stack):
                 "ART_QUEUE_URL": art_jobs.queue.queue_url,
                 "ART_WORKER_TOKEN_SECRET": art_jobs.worker_token.secret_arn,
                 "ART_AUTO_PAINT": config.art_auto_paint,
+                "ART_DAILY_ALLOWANCE": str(config.art_daily_allowance),
             },
         )
         data.table.grant_read_write_data(api.function)

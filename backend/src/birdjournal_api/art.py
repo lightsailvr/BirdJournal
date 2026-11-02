@@ -1,4 +1,5 @@
-"""Art jobs (issue #68, ADR-0003): scene art painted on comfybox from a glasses photo.
+"""Art jobs (issues #68 and #69, ADR-0003): scene art painted on comfybox from a glasses photo, and photo art, the
+birder's own photo of the bird embellished.
 
 The lifecycle:
 
@@ -13,6 +14,12 @@ The lifecycle:
    the upload is deleted.
 4. The phone learns of it by polling its open jobs (a silent push joins with #63's device tokens), downloads the art
    and says it has it (`received`). Painted art is then deleted from the art bucket unless a find shows it (#70).
+
+Which jobs are painted is server configuration (`ART_AUTO_PAINT`, `ART_DAILY_ALLOWANCE`; `paint_policy`). In the
+friends phase every job is painted. At the public launch Legendary and Rare-or-rarer adds are painted automatically, and
+everything else (scene art asked for again, all photo art) only on request, within a daily allowance per account. The
+allowance is one counter item per account and UTC day, `ACCOUNT#<sub>` / `ARTDAY#<yyyy-mm-dd>`, taken in the same
+transaction that writes the job, so a refused job never spends one and a spent allowance never writes a job.
 
 A job not finished within 7 days of being queued (or created, if it never was) fails with `expired`; the phone offers
 Retry art. A retry is a new job for the same sighting: the server never touches the sighting, which lives on the phone
@@ -29,7 +36,7 @@ import secrets
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, Protocol
 
 from botocore.exceptions import ClientError
@@ -41,7 +48,12 @@ UPLOAD_URL_LIFETIME = timedelta(hours=1)
 State = Literal["awaiting_upload", "queued", "painting", "ready", "failed"]
 OPEN_STATES = ("awaiting_upload", "queued", "painting")
 AutoPaintRule = Literal["every_glasses_add", "legendary_or_rare"]
+Kind = Literal["scene", "photo"]
+Cost = Literal["free", "allowance"]
 RARE_LABELS = ("rare", "exceptional")
+DAILY_ALLOWANCE = 5
+ALLOWANCE_KEPT = timedelta(days=2)
+"""A day's counter outlives its day by this much, then `ttl` removes it."""
 
 
 class ArtError(Exception):
@@ -54,6 +66,10 @@ class NotFound(ArtError):
 
 class NotEligible(ArtError):
     """The auto-paint rule doesn't paint this add."""
+
+
+class AllowanceSpent(ArtError):
+    """Today's paintings on request are used up (the public launch's daily allowance)."""
 
 
 class UploadMissing(ArtError):
@@ -116,12 +132,39 @@ class NothingShared:
 
 
 def may_auto_paint(rule: AutoPaintRule, *, legendary: bool, rarity: str | None, requested: bool) -> bool:
-    """The auto-paint rule (server configuration, `ART_AUTO_PAINT`). Friends phase: every add with a glasses photo.
-    Public launch: Legendary and Rare-or-rarer adds; others only on request (Try again, Retry art), whose daily
-    allowance comes with #69."""
-    if rule == "every_glasses_add" or requested:
-        return True
-    return legendary or rarity in RARE_LABELS
+    """Whether scene art is painted for this add at all. Friends phase: every add with a glasses photo. Public launch:
+    Legendary and Rare-or-rarer adds, and any the birder asks for (Try again, Retry art), within the allowance."""
+    return paint_policy(rule, kind="scene", legendary=legendary, rarity=rarity, requested=requested) is not None
+
+
+def paint_policy(rule: AutoPaintRule, *, kind: Kind, legendary: bool, rarity: str | None, requested: bool) -> Cost | None:
+    """What a job costs under the rule: `free`, `allowance` (one of the day's paintings on request), or None (not
+    painted: an ordinary add at the public launch, which keeps its pack art).
+
+    - Friends phase (`every_glasses_add`): everything is free, as #68 left it.
+    - Public launch (`legendary_or_rare`): a Legendary or Rare-or-rarer add's scene art is free; scene art the birder
+      asks for and all photo art come out of the allowance; any other add isn't painted.
+    """
+    if rule == "every_glasses_add":
+        return "free"
+    if kind == "photo":
+        return "allowance"
+    if not requested and (legendary or rarity in RARE_LABELS):
+        return "free"
+    return "allowance" if requested else None
+
+
+@dataclass(frozen=True)
+class Allowance:
+    """The day's paintings on request: None for `daily` when there is no limit (the friends phase)."""
+
+    daily: int | None
+    used: int
+    resets_at: datetime
+
+    @property
+    def left(self) -> int | None:
+        return None if self.daily is None else max(self.daily - self.used, 0)
 
 
 @dataclass(frozen=True)
@@ -138,6 +181,8 @@ class ArtJob:
     input_key: str
     output_key: str
     attempts: int = 0
+    # Whether it came out of the day's allowance.
+    counted: bool = False
     queued_at: datetime | None = None
     finished_at: datetime | None = None
     received_at: datetime | None = None
@@ -168,6 +213,7 @@ class ArtJobStore:
         clock: Callable[[], datetime],
         *,
         rule: AutoPaintRule,
+        daily_allowance: int = DAILY_ALLOWANCE,
         storage: ArtStorage | None,
         queue: ArtQueue | None,
         notifier: ArtNotifier,
@@ -176,6 +222,7 @@ class ArtJobStore:
         self._table = table
         self._clock = clock
         self.rule = rule
+        self.daily_allowance = daily_allowance
         self._storage = storage
         self._queue = queue
         self._notifier = notifier
@@ -190,10 +237,12 @@ class ArtJobStore:
     # The phone.
 
     def create(self, owner: str, new: NewJob) -> tuple[ArtJob, bool]:
-        """The job, created unless one with this id exists (then returned as it is); and whether it was created."""
+        """The job, created unless one with this id exists (then returned as it is, costing nothing again); and whether
+        it was created. A job on the allowance takes one of the day's paintings in the same write."""
         if existing := self._read(owner, new.id):
             return self._expire_if_due(existing), False
-        if not may_auto_paint(self.rule, legendary=new.legendary, rarity=new.rarity, requested=new.requested):
+        cost = paint_policy(self.rule, kind=new.kind, legendary=new.legendary, rarity=new.rarity, requested=new.requested)  # type: ignore[arg-type]
+        if cost is None:
             raise NotEligible()
         now = self._clock()
         item = {
@@ -207,19 +256,67 @@ class ArtJobStore:
             "input_key": f"uploads/{owner}/{new.id}.jpg",
             "output_key": f"art/{owner}/{secrets.token_urlsafe(24)}.jpg",
             "attempts": 0,
+            "counted": cost == "allowance",
         }
         if new.edition:
             item["edition"] = new.edition
         if new.rarity:
             item["rarity"] = new.rarity
         try:
-            self._table.put_item(Item=item, ConditionExpression="attribute_not_exists(pk)")
+            if cost == "allowance":
+                self._create_on_allowance(owner, item, now)
+            else:
+                self._table.put_item(Item=item, ConditionExpression="attribute_not_exists(pk)")
+        except _JobExists:
+            # The same create, racing itself (a retried request).
+            return self._job(self._table.get_item(Key=_key(owner, new.id), ConsistentRead=True)["Item"]), False
         except ClientError as error:
             if not _conditional(error):
                 raise
-            # The same create, racing itself (a retried request).
             return self._job(self._table.get_item(Key=_key(owner, new.id), ConsistentRead=True)["Item"]), False
         return self._job(item), True
+
+    def allowance(self, owner: str) -> Allowance:
+        """Today's paintings on request: how many are used and when the count starts again (midnight UTC)."""
+        now = self._clock()
+        resets_at = _day_start(now) + timedelta(days=1)
+        if self.rule == "every_glasses_add":
+            return Allowance(daily=None, used=0, resets_at=resets_at)
+        item = self._table.get_item(Key=_day_key(owner, now), ConsistentRead=True).get("Item") or {}
+        return Allowance(daily=self.daily_allowance, used=int(item.get("used", 0)), resets_at=resets_at)
+
+    def _create_on_allowance(self, owner: str, item: dict[str, Any], now: datetime) -> None:
+        """The job and one of today's paintings, together or not at all."""
+        client = self._table.meta.client
+        try:
+            client.transact_write_items(
+                TransactItems=[
+                    {"Put": {"TableName": self._table.name, "Item": item, "ConditionExpression": "attribute_not_exists(pk)"}},
+                    {
+                        "Update": {
+                            "TableName": self._table.name,
+                            "Key": _day_key(owner, now),
+                            "UpdateExpression": "ADD used :one SET #ttl = if_not_exists(#ttl, :ttl)",
+                            "ConditionExpression": "attribute_not_exists(used) OR used < :daily",
+                            "ExpressionAttributeNames": {"#ttl": "ttl"},
+                            "ExpressionAttributeValues": {
+                                ":one": 1,
+                                ":daily": self.daily_allowance,
+                                ":ttl": int((_day_start(now) + timedelta(days=1) + ALLOWANCE_KEPT).timestamp()),
+                            },
+                        }
+                    },
+                ]
+            )
+        except ClientError as error:
+            if error.response["Error"]["Code"] != "TransactionCanceledException":
+                raise
+            codes = [reason.get("Code") for reason in error.response.get("CancellationReasons", [])]
+            if codes and codes[0] == "ConditionalCheckFailed":
+                raise _JobExists() from error
+            if len(codes) > 1 and codes[1] == "ConditionalCheckFailed":
+                raise AllowanceSpent() from error
+            raise
 
     def upload_url(self, job: ArtJob) -> tuple[str, datetime]:
         return self.storage.upload_url(job.input_key, UPLOAD_URL_LIFETIME), self._clock() + UPLOAD_URL_LIFETIME
@@ -437,6 +534,7 @@ class ArtJobStore:
             input_key=item["input_key"],
             output_key=item["output_key"],
             attempts=int(item.get("attempts", 0)),
+            counted=bool(item.get("counted", False)),
             queued_at=moment("queued_at"),
             finished_at=moment("finished_at"),
             received_at=moment("received_at"),
@@ -447,6 +545,19 @@ class ArtJobStore:
 
 def _key(owner: str, job_id: str) -> dict[str, str]:
     return {"pk": f"ACCOUNT#{owner}", "sk": f"ARTJOB#{job_id}"}
+
+
+def _day_start(moment: datetime) -> datetime:
+    return moment.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def _day_key(owner: str, moment: datetime) -> dict[str, str]:
+    """Today's allowance counter: the UTC day, the same for every birder, so changing the phone's zone gains none."""
+    return {"pk": f"ACCOUNT#{owner}", "sk": f"ARTDAY#{_day_start(moment).date().isoformat()}"}
+
+
+class _JobExists(Exception):
+    pass
 
 
 def _conditional(error: ClientError) -> bool:
