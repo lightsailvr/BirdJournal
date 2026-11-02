@@ -28,6 +28,7 @@ from birdjournal_api.finds import (
     clean_place,
 )
 from birdjournal_api.pushes import PushService
+from birdjournal_api.reactions import ReactionCount, ReactionKind, ReactionStore
 
 log = logging.getLogger(__name__)
 
@@ -149,19 +150,35 @@ class Owner(BaseModel):
     display_name: str | None
 
 
+class ReactionResponse(BaseModel):
+    kind: ReactionKind
+    count: int
+    # Whether the reader gave it.
+    mine: bool
+
+    @classmethod
+    def all(cls, counts: list[ReactionCount]) -> list["ReactionResponse"]:
+        return [cls(kind=count.kind, count=count.count, mine=count.mine) for count in counts]
+
+
 class FeedItemResponse(FindFields):
     owner: Owner
     # The earliest surviving find of this species in the circle, apart from anyone's Legendary.
     circle_first: bool
     is_mine: bool
+    # Every reaction kind with its count and whether the reader gave it (issue #64).
+    reactions: list[ReactionResponse]
 
     @classmethod
-    def of(cls, item: FeedItem, subject: str, base_url: str | None) -> "FeedItemResponse":
+    def of(
+        cls, item: FeedItem, subject: str, base_url: str | None, reactions: list[ReactionCount]
+    ) -> "FeedItemResponse":
         return cls(
             **FindFields.fields(item.sighting_id, item.content, base_url),
             owner=Owner(id=item.owner, display_name=item.owner_name),
             circle_first=item.circle_first,
             is_mine=item.owner == subject,
+            reactions=ReactionResponse.all(reactions),
         )
 
 
@@ -173,6 +190,11 @@ class FeedResponse(BaseModel):
 
 def _finds(request: Request) -> FindStore:
     store: FindStore = request.app.state.finds
+    return store
+
+
+def _reactions(request: Request) -> ReactionStore:
+    store: ReactionStore = request.app.state.reactions
     return store
 
 
@@ -188,6 +210,7 @@ def _pushes(request: Request) -> PushService:
 
 Finds = Annotated[FindStore, Depends(_finds)]
 Pushes = Annotated[PushService, Depends(_pushes)]
+Reactions = Annotated[ReactionStore, Depends(_reactions)]
 ArtBaseUrl = Annotated[str | None, Depends(_art_base_url)]
 
 
@@ -233,6 +256,7 @@ def read_feed(
     subject: Subject,
     circle_id: str,
     finds: Finds,
+    reactions: Reactions,
     base: ArtBaseUrl,
     limit: Annotated[int, Query(ge=1, le=FEED_PAGE_MAX)] = FEED_PAGE_DEFAULT,
     cursor: str | None = None,
@@ -243,6 +267,10 @@ def read_feed(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "not_found") from None
     except BadCursor:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "bad_cursor") from None
+    counts = reactions.counts_for(subject, [(item.owner, item.sighting_id) for item in page.items])
     return FeedResponse(
-        items=[FeedItemResponse.of(item, subject, base) for item in page.items], next_cursor=page.next_cursor
+        items=[
+            FeedItemResponse.of(item, subject, base, counts[(item.owner, item.sighting_id)]) for item in page.items
+        ],
+        next_cursor=page.next_cursor,
     )

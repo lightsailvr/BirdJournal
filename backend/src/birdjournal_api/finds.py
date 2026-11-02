@@ -17,8 +17,8 @@ Items, beside the account's and the circles' (tables.py, circles.py):
 - `CIRCLE#<id>#SPECIES` / `<scientific name>#<found at>#<sub>#<sighting id>`: the same items ordered by species and
   then time, so "First for the circle" is one query per species: the earliest surviving item. Computed when the feed
   is read, so a deleted first passes the mark on with nothing to recompute.
-- `FIND#<sub>#<sighting id>` / `REACTION#...`: reactions by find, written by the reactions ticket (#63); a delete
-  removes the whole partition.
+- `FIND#<sub>#<sighting id>` / `REACTION#<reactor>#<kind>`: reactions by find (reactions.py, issue #64); a delete
+  removes the whole partition, each reaction's copy under its reactor, and the find's reaction-push items.
 
 Not transactional: a find can go to more circles than one transaction holds. A put writes the find (with the circles it
 goes to) before its feed items, and a delete removes the items before the find, so the find always lists every circle
@@ -233,6 +233,20 @@ class FindStore:
             content = _content(existing)
             self._delete_items(_item_keys(owner, sighting_id, content, list(existing.get("circle_ids", []))))
         reactions = self._query_keys(Key("pk").eq(_reactions_pk(owner, sighting_id)))
+        # Each reaction's copy under its reactor (issue #64), the find's reaction push time and any waiting push.
+        by_reactor = [
+            {"pk": f"ACCOUNT#{reactor}", "sk": f"REACTION#{owner}#{sighting_id}#{kind}"}
+            for reactor, _, kind in (str(key["sk"]).removeprefix("REACTION#").rpartition("#") for key in reactions)
+            if reactor
+        ]
+        self._delete_items(
+            [
+                *by_reactor,
+                {"pk": f"ACCOUNT#{owner}", "sk": f"REACTIONPUSH#{sighting_id}"},
+                {"pk": "REACTIONS", "sk": f"{owner}#{sighting_id}"},
+            ]
+        )
+        # The reactions last: a delete cut short is finished by the retry, which finds them again.
         self._delete_items(reactions)
         if existing is not None:
             self._table.delete_item(Key=_find_key(owner, sighting_id))
