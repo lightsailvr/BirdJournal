@@ -158,6 +158,37 @@ final class CircleStore {
         if muted { mutes.friends.insert(friendID) } else { mutes.friends.remove(friendID) }
     }
 
+    /// Gives or takes back the birder's reaction on a friend's find (issue #64). Every open feed holding the find
+    /// shows it at once; the server's counts replace the guess when they come, and a failure puts the find back as
+    /// it was and rethrows.
+    func react(_ kind: ReactionKind, given: Bool, to item: FeedItem) async throws {
+        guard !item.isMine else { return }
+        let before = item.reactions
+        update(item.id) { $0.reacting(kind, given: given) }
+        do {
+            let counts = try await call {
+                try await $0.setReaction(kind, given: given, owner: item.owner.id, sightingID: item.sightingID, accessToken: $1)
+            }
+            update(item.id) { var item = $0; item.reactions = counts; return item }
+        } catch {
+            log.error("couldn't react: \(String(describing: error))")
+            update(item.id) { var item = $0; item.reactions = before; return item }
+            throw error
+        }
+    }
+
+    /// A friend's side of Compare birds (issue #64).
+    func compare(friendID: String) async throws -> FriendBirds {
+        try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
+    }
+
+    private func update(_ itemID: String, _ change: (FeedItem) -> FeedItem) {
+        for (circleID, feed) in feeds {
+            guard let index = feed.items.firstIndex(where: { $0.id == itemID }) else { continue }
+            feeds[circleID]?.items[index] = change(feed.items[index])
+        }
+    }
+
     /// Signed out: nothing of the circles stays on the phone (the root calls it whenever the account signs out).
     func clear() {
         circles = []

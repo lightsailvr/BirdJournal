@@ -126,6 +126,8 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
     var owner: Owner
     var circleFirst: Bool
     var isMine: Bool
+    /// Every reaction kind with its count and whether the birder gave it (issue #64).
+    var reactions: [ReactionCount] = ReactionCount.none
 
     var id: String { "\(owner.id)/\(sightingID)" }
 
@@ -139,7 +141,118 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
         case legendary, rarity, art, owner
         case circleFirst = "circle_first"
         case isMine = "is_mine"
+        case reactions
     }
+
+    /// The count of one kind.
+    func reaction(_ kind: ReactionKind) -> ReactionCount {
+        reactions.first { $0.kind == kind } ?? ReactionCount(kind: kind, count: 0, mine: false)
+    }
+
+    /// The item with the birder's reaction of this kind given or taken back, as the server will count it.
+    func reacting(_ kind: ReactionKind, given: Bool) -> FeedItem {
+        var item = self
+        item.reactions = ReactionKind.allCases.map { each in
+            var count = reaction(each)
+            if each == kind, count.mine != given {
+                count.count = max(0, count.count + (given ? 1 : -1))
+                count.mine = given
+            }
+            return count
+        }
+        return item
+    }
+}
+
+extension FeedItem {
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        sightingID = try values.decode(String.self, forKey: .sightingID)
+        speciesID = try values.decode(String.self, forKey: .speciesID)
+        scientificName = try values.decode(String.self, forKey: .scientificName)
+        commonName = try values.decode(String.self, forKey: .commonName)
+        method = try values.decode(SightingMethod.self, forKey: .method)
+        place = try values.decodeIfPresent(String.self, forKey: .place)
+        foundAt = try values.decode(Date.self, forKey: .foundAt)
+        legendary = try values.decode(Bool.self, forKey: .legendary)
+        rarity = try values.decodeIfPresent(RarityLabel.self, forKey: .rarity)
+        art = try values.decodeIfPresent(Art.self, forKey: .art)
+        owner = try values.decode(Owner.self, forKey: .owner)
+        circleFirst = try values.decode(Bool.self, forKey: .circleFirst)
+        isMine = try values.decode(Bool.self, forKey: .isMine)
+        // A server from before reactions sends none.
+        reactions = ReactionCount.complete(try values.decodeIfPresent([ReactionCount.Sent].self, forKey: .reactions) ?? [])
+    }
+}
+
+/// The fixed reactions on a find (issue #64): no comments.
+enum ReactionKind: String, CaseIterable, Codable, Sendable, Identifiable {
+    case lovely
+    case jealous
+    case together
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .lovely: "Lovely find"
+        case .jealous: "Jealous!"
+        case .together: "Let's go together"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .lovely: "heart"
+        case .jealous: "eyes"
+        case .together: "binoculars"
+        }
+    }
+}
+
+struct ReactionCount: Equatable, Sendable {
+    var kind: ReactionKind
+    var count: Int
+    /// Whether the signed-in birder gave it.
+    var mine: Bool
+
+    static let none = ReactionKind.allCases.map { ReactionCount(kind: $0, count: 0, mine: false) }
+
+    /// As the API sends one: a kind added after this build is left out rather than failing the item.
+    struct Sent: Decodable {
+        var kind: String
+        var count: Int
+        var mine: Bool
+    }
+
+    /// Every kind this build knows, in order, from what the API sent; a kind it didn't send counts nothing.
+    static func complete(_ sent: [Sent]) -> [ReactionCount] {
+        ReactionKind.allCases.map { kind in
+            sent.first { $0.kind == kind.rawValue }.map { ReactionCount(kind: kind, count: $0.count, mine: $0.mine) }
+                ?? ReactionCount(kind: kind, count: 0, mine: false)
+        }
+    }
+}
+
+/// A friend's side of Compare birds (backend `GET /v1/friends/<id>/compare`, issue #64): each species they found in
+/// the circles the two share, with their best method (Seen beats Heard).
+struct FriendBirds: Equatable, Decodable, Sendable {
+    struct Species: Equatable, Decodable, Sendable {
+        var speciesID: String
+        var scientificName: String
+        var commonName: String
+        var method: SightingMethod
+
+        enum CodingKeys: String, CodingKey {
+            case speciesID = "species_id"
+            case scientificName = "scientific_name"
+            case commonName = "common_name"
+            case method
+        }
+    }
+
+    var friend: FeedItem.Owner
+    var species: [Species]
 }
 
 /// A page of the feed, newest first; `nextCursor` asks for the next.
@@ -199,6 +312,10 @@ protocol CircleClient: AnyObject {
     func mutes(accessToken: String) async throws -> Mutes
     func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws
     func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws
+    /// Gives or takes back a reaction on a friend's find (issue #64); the find's counts as the server has them.
+    func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount]
+    /// A friend's species from their finds in the circles the two share, best method each.
+    func compare(friendID: String, accessToken: String) async throws -> FriendBirds
 }
 
 final class HTTPCircleClient: CircleClient {
@@ -277,6 +394,16 @@ final class HTTPCircleClient: CircleClient {
 
     func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws {
         _ = try await data(muted ? "PUT" : "DELETE", "v1/friends/\(friendID)/mute", body: nil, accessToken: accessToken)
+    }
+
+    func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] {
+        struct Counts: Decodable { var reactions: [ReactionCount.Sent] }
+        let counts = try await send(given ? "PUT" : "DELETE", "v1/finds/\(owner)/\(sightingID)/reactions/\(kind.rawValue)", accessToken: accessToken, as: Counts.self)
+        return ReactionCount.complete(counts.reactions)
+    }
+
+    func compare(friendID: String, accessToken: String) async throws -> FriendBirds {
+        try await send("GET", "v1/friends/\(friendID)/compare", accessToken: accessToken, as: FriendBirds.self)
     }
 
     private func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, query: [URLQueryItem] = [], accessToken: String, as type: T.Type) async throws -> T {

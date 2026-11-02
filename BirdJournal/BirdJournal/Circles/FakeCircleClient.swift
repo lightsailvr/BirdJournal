@@ -6,7 +6,8 @@ import Foundation
 /// the backend's rules (20 members, seven-day invites, the creator removes). The fake account is "Pat Birder"
 /// (`fake-sub`). Invite tokens it knows besides its own: `fake-invite` (Canyon Walkers, from Maya), `expired` and
 /// `full`. Finds (issue #62) fan out to the circles Pat is in when first put, as on the server; seeded, Sunday Group's
-/// feed has friends' finds. Nothing leaves the phone.
+/// feed has friends' finds. Reactions (issue #64) are counted per find, with a few friends' already on the seeded
+/// ones, and Compare birds reads a friend's finds in the circles Pat shares with them. Nothing leaves the phone.
 final class FakeCircleClient: CircleClient {
     static let me = "fake-sub"
     static let myName = "Pat Birder"
@@ -26,6 +27,10 @@ final class FakeCircleClient: CircleClient {
     /// Every device registration and removal, for the tests: `register <token> <environment>` or `unregister <token>`.
     private(set) var deviceLog: [String] = []
     private var muted = Mutes()
+    /// Who gave each reaction, by feed item id.
+    private var reactions: [String: [ReactionKind: Set<String>]] = [:]
+    /// Every reaction given or taken back, for the tests: `put lovely maya/<id>` or `delete …`.
+    private(set) var reactionLog: [String] = []
 
     init(seeded: Bool, now: @escaping () -> Date = Date.init) {
         self.now = now
@@ -143,7 +148,12 @@ final class FakeCircleClient: CircleClient {
         let items = feedItems[circleID] ?? []
         let firsts = Dictionary(grouping: items, by: \.scientificName).compactMapValues { $0.min { ($0.foundAt, $0.id) < ($1.foundAt, $1.id) }?.id }
         let sorted = items
-            .map { item in var item = item; item.circleFirst = firsts[item.scientificName] == item.id; return item }
+            .map { item in
+                var item = item
+                item.circleFirst = firsts[item.scientificName] == item.id
+                item.reactions = counts(of: item.id)
+                return item
+            }
             .sorted { ($0.foundAt, $0.id) > ($1.foundAt, $1.id) }
         let start = cursor.flatMap(Int.init) ?? 0
         let page = Array(sorted.dropFirst(start).prefix(HTTPCircleClient.feedPageSize))
@@ -183,14 +193,55 @@ final class FakeCircleClient: CircleClient {
         }
     }
 
-    /// Friends' finds in a seeded circle: a circle first, a Legendary, a rare bird and one at a secret spot.
+    func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] {
+        let id = "\(owner)/\(sightingID)"
+        let mine = Set(order.filter { circlesByID[$0]?.members.contains { $0.id == Self.me } == true })
+        guard owner != Self.me else { throw CircleError.rejected }
+        guard feedItems.contains(where: { mine.contains($0.key) && $0.value.contains { $0.id == id } }) else { throw CircleError.notFound }
+        reactionLog.append("\(given ? "put" : "delete") \(kind.rawValue) \(id)")
+        if given {
+            reactions[id, default: [:]][kind, default: []].insert(Self.me)
+        } else {
+            reactions[id]?[kind]?.remove(Self.me)
+        }
+        return counts(of: id)
+    }
+
+    func compare(friendID: String, accessToken: String) async throws -> FriendBirds {
+        let shared = order.filter { id in
+            let members = circlesByID[id]?.members ?? []
+            return members.contains { $0.id == Self.me } && members.contains { $0.id == friendID }
+        }
+        guard friendID != Self.me, !shared.isEmpty else { throw CircleError.notFound }
+        var best: [String: FriendBirds.Species] = [:]
+        for item in shared.flatMap({ feedItems[$0] ?? [] }) where item.owner.id == friendID {
+            if best[item.scientificName]?.method != .seen {
+                best[item.scientificName] = .init(speciesID: item.speciesID, scientificName: item.scientificName, commonName: item.commonName, method: item.method)
+            }
+        }
+        let name = shared.lazy.compactMap { self.circlesByID[$0]?.members.first { $0.id == friendID }?.displayName }.first
+        return FriendBirds(friend: .init(id: friendID, displayName: name), species: best.values.sorted { $0.commonName < $1.commonName })
+    }
+
+    private func counts(of itemID: String) -> [ReactionCount] {
+        let given = reactions[itemID] ?? [:]
+        return ReactionKind.allCases.map { ReactionCount(kind: $0, count: given[$0]?.count ?? 0, mine: given[$0]?.contains(Self.me) ?? false) }
+    }
+
+    /// Friends' finds in a seeded circle: a circle first, a Legendary, a rare bird and one at a secret spot, and two
+    /// older ones of Maya's for Compare birds. Jo and Sam already find Maya's Black Phoebe lovely, and Maya is
+    /// jealous of Sam's Gnatcatcher.
     private func seedFeed(circleID: String) {
         let finds: [(String, String, String, SightingMethod, String?, RarityLabel?, Bool, String, Double)] = [
             ("maya", "Maya Ortiz", "Sayornis nigricans_Black Phoebe", .seen, "Pasadena", .common, true, "sayornis-nigricans", 3),
             ("jo", "Jo Park", "Calypte anna_Anna's Hummingbird", .heard, "Altadena", .common, false, "calypte-anna", 2),
             ("jo", "Jo Park", "Sayornis nigricans_Black Phoebe", .heard, "Pasadena", .common, false, "sayornis-nigricans", 1.5),
             ("sam", "Sam Okafor", "Polioptila californica_California Gnatcatcher", .heard, FindPolicy.secretSpot, .rare, false, "polioptila-californica", 1),
+            ("maya", "Maya Ortiz", "Melanerpes formicivorus_Acorn Woodpecker", .heard, "Altadena", .common, true, "melanerpes-formicivorus", 5),
+            ("maya", "Maya Ortiz", "Haemorhous mexicanus_House Finch", .seen, "Pasadena", .common, true, "haemorhous-mexicanus", 6),
         ]
+        reactions["maya/00000000-0000-4000-8000-000000000000"] = [.lovely: ["jo", "sam"], .together: ["jo"]]
+        reactions["sam/00000000-0000-4000-8000-000000000003"] = [.jealous: ["maya"]]
         for (index, (owner, name, label, method, place, rarity, legendary, art, daysAgo)) in finds.enumerated() {
             let common = String(label.split(separator: "_", maxSplits: 1).last ?? "")
             feedItems[circleID, default: []].append(FeedItem(

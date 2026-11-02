@@ -4,10 +4,12 @@ import SwiftUI
 
 /// A circle's Recent finds (issue #62): friends' sightings, newest first, a page at a time, each with its art, who
 /// found it, Heard or Seen, the city or "a secret spot", and when. "First for the circle" marks the earliest surviving
-/// find of a species, apart from anyone's Legendary, which is the finder's own first.
+/// find of a species, apart from anyone's Legendary, which is the finder's own first. Under each find, its reactions
+/// (issue #64): a friend's find takes a tap on each, the birder's own shows what friends gave.
 struct CircleFeedSection: View {
     @Environment(CircleStore.self) private var circles
     let circleID: String
+    @State private var reactionError: String?
 
     private var feed: CircleStore.Feed { circles.feeds[circleID] ?? .init() }
 
@@ -26,7 +28,13 @@ struct CircleFeedSection: View {
                 }
             }
             ForEach(feed.items) { item in
-                FindRow(item: item)
+                VStack(alignment: .leading, spacing: 8) {
+                    FindRow(item: item)
+                    ReactionBar(item: item) { kind, given in react(kind, given: given, to: item) }
+                }
+            }
+            if let reactionError {
+                Text(reactionError).font(JournalFont.supporting).foregroundStyle(.red)
             }
             if feed.nextCursor != nil {
                 Button {
@@ -42,6 +50,75 @@ struct CircleFeedSection: View {
             }
         } header: {
             Text("Recent finds")
+        }
+    }
+
+    private func react(_ kind: ReactionKind, given: Bool, to item: FeedItem) {
+        Task {
+            do {
+                try await circles.react(kind, given: given, to: item)
+                reactionError = nil
+            } catch {
+                reactionError = CircleStore.message(for: error, doing: "send your reaction")
+            }
+        }
+    }
+}
+
+/// A find's reactions: on a friend's find, the three fixed ones to tap (again to take back), each with its count; on
+/// the birder's own, only what friends gave, not tappable. No comments.
+struct ReactionBar: View {
+    let item: FeedItem
+    let react: (ReactionKind, Bool) -> Void
+
+    var body: some View {
+        if item.isMine {
+            let given = item.reactions.filter { $0.count > 0 }
+            if !given.isEmpty {
+                Text(Self.summary(given))
+                    .font(.caption)
+                    .foregroundStyle(Color.inkSecondary)
+                    .accessibilityIdentifier("reactions-\(item.sightingID)")
+            }
+        } else {
+            ViewThatFits(in: .horizontal) {
+                buttons(titled: true)
+                buttons(titled: false)
+            }
+        }
+    }
+
+    /// "Lovely find 2 · Let's go together 1".
+    static func summary(_ counts: [ReactionCount]) -> String {
+        counts.map { "\($0.kind.title) \($0.count)" }.joined(separator: " · ")
+    }
+
+    private func buttons(titled: Bool) -> some View {
+        HStack(spacing: 6) {
+            ForEach(ReactionKind.allCases) { kind in
+                let count = item.reaction(kind)
+                Button {
+                    react(kind, !count.mine)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: kind.symbol)
+                        if titled { Text(kind.title) }
+                        if count.count > 0 { Text("\(count.count)").monospacedDigit() }
+                    }
+                    .font(.caption.weight(count.mine ? .semibold : .regular))
+                    .foregroundStyle(count.mine ? Color.mossText : Color.moss)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(count.mine ? Color.moss : Color.moss.opacity(0.1), in: .capsule)
+                    .fixedSize()
+                }
+                // In a list row every button would otherwise take the row's tap.
+                .buttonStyle(.borderless)
+                .accessibilityLabel(kind.title)
+                .accessibilityValue(count.count == 1 ? "1 reaction" : "\(count.count) reactions")
+                .accessibilityAddTraits(count.mine ? .isSelected : [])
+                .accessibilityIdentifier("react-\(kind.rawValue)-\(item.sightingID)")
+            }
         }
     }
 }

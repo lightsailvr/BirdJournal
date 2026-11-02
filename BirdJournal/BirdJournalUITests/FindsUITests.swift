@@ -20,7 +20,7 @@ final class FindsUITests: XCTestCase {
 
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-'"))
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5), "no finds; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(rows.count, 4)
+        XCTAssertEqual(rows.count, 6)
         let newest = rows.element(boundBy: 0).label
         XCTAssertTrue(newest.contains("California Gnatcatcher"), newest)
         XCTAssertTrue(newest.contains("At a secret spot"), newest)
