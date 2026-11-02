@@ -165,6 +165,18 @@ class CircleStore:
             ),
         )
 
+    def circle_ids_of(self, subject: str) -> list[str]:
+        """The ids of the account's current circles, for a find's fan-out (issue #62)."""
+        return [item["sk"].removeprefix("CIRCLE#") for item in self._query(pk=_account_pk(subject), sk_prefix="CIRCLE#")]
+
+    def is_member(self, subject: str, circle_id: str) -> bool:
+        """Whether the account is in the circle now."""
+        return self._is_member(subject, circle_id)
+
+    def display_names(self, subjects: list[str]) -> dict[str, str]:
+        """The names of the accounts that set one."""
+        return self._display_names(subjects)
+
     # Writes.
 
     def create(self, subject: str, name: str, time_zone: str) -> CircleDetail:
