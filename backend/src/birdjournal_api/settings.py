@@ -14,6 +14,9 @@ class Settings:
     dynamodb_endpoint: str | None = None
     # Where invite links point (issue #61): `<invite_base_url>/i/<token>`, served by the invite site's CloudFront.
     invite_base_url: str = "https://birdquest.matthewcelia.com"
+    # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
+    # the stack has one; the feed then gives keys without URLs.
+    art_cdn_base_url: str | None = None
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -26,6 +29,7 @@ class Settings:
             region=env.get("AWS_REGION", "us-west-2"),
             dynamodb_endpoint=env.get("DYNAMODB_ENDPOINT") or None,
             invite_base_url=(env.get("INVITE_BASE_URL") or cls.invite_base_url).rstrip("/"),
+            art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
         )
 
 

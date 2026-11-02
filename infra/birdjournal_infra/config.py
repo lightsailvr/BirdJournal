@@ -5,6 +5,7 @@ from constructs import Node
 
 TAG_KEY = "project"
 TAG_VALUE = "birdjournal"
+ART_AUTO_PAINT_RULES = ("every_glasses_add", "legendary_or_rare")
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,9 @@ class BirdJournalConfig:
     # stack. Not a secret, but it names the account: `-c inviteCertificateArn=...` or INVITE_CERTIFICATE_ARN
     # (infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env).
     invite_certificate_arn: str
+    # Which adds get scene art without asking (issue #68): `every_glasses_add` in the friends phase, every add with a
+    # glasses photo by a signed-in birder; `legendary_or_rare` at the public launch (#69). The API reads it.
+    art_auto_paint: str = "every_glasses_add"
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -48,6 +52,9 @@ class BirdJournalConfig:
                 "Set INVITE_CERTIFICATE_ARN (or -c inviteCertificateArn=...): the invite domain's us-east-1 "
                 "certificate. infra/scripts/circles-wizard.sh requests it and saves it to ~/keys/birdjournal.env."
             )
+        art_auto_paint = node.try_get_context("artAutoPaint") or "every_glasses_add"
+        if art_auto_paint not in ART_AUTO_PAINT_RULES:
+            raise ValueError(f"artAutoPaint must be one of {', '.join(ART_AUTO_PAINT_RULES)}, not {art_auto_paint!r}")
         return cls(
             cognito_domain_prefix=node.get_context("cognitoDomainPrefix"),
             google_oauth_secret_name=node.get_context("googleOAuthSecretName"),
@@ -59,4 +66,5 @@ class BirdJournalConfig:
             invite_domain=node.get_context("inviteDomain"),
             ios_app_ids=tuple(node.get_context("iosAppIds")),
             invite_certificate_arn=certificate,
+            art_auto_paint=art_auto_paint,
         )

@@ -160,6 +160,9 @@ private final class RefusingClient: CircleClient {
     func acceptInvite(token: String, accessToken: String) async throws -> CircleDetail { try check(accessToken); return try await inner.acceptInvite(token: token, accessToken: accessToken) }
     func leave(circleID: String, accessToken: String) async throws { try check(accessToken); try await inner.leave(circleID: circleID, accessToken: accessToken) }
     func removeMember(_ memberID: String, circleID: String, accessToken: String) async throws { try check(accessToken); try await inner.removeMember(memberID, circleID: circleID, accessToken: accessToken) }
+    func putFind(_ find: FindPolicy.Find, sightingID: UUID, accessToken: String) async throws { try check(accessToken); try await inner.putFind(find, sightingID: sightingID, accessToken: accessToken) }
+    func deleteFind(sightingID: UUID, accessToken: String) async throws { try check(accessToken); try await inner.deleteFind(sightingID: sightingID, accessToken: accessToken) }
+    func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage { try check(accessToken); return try await inner.feed(circleID: circleID, cursor: cursor, accessToken: accessToken) }
 }
 
 @Suite("The circle store")
