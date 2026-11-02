@@ -42,6 +42,7 @@ public enum LensProblem: Sendable, Hashable {
 
 /// A friend's notable find as the lens shows it (issue #67): "Maya heard a Black Phoebe · Pasadena".
 public struct LensFriendBanner: Sendable, Hashable {
+    /// How the friend found the bird, as the line says it.
     public enum Method: Sendable, Hashable {
         case heard
         case saw
@@ -52,6 +53,7 @@ public struct LensFriendBanner: Sendable, Hashable {
     /// The friend's first name, or "A friend".
     public var friendName: String
     public var method: Method
+    /// The species' common name, e.g. "Black Phoebe".
     public var speciesName: String
     /// The city, "a secret spot", or nil when the find has no place.
     public var place: String?
@@ -194,8 +196,11 @@ public struct LensStateMachine: Sendable, Equatable {
     private var playbacks = 0
     /// The friend banner waiting for the list or a photo page, nil when none is.
     public private(set) var heldBanner: LensFriendBanner?
-    /// When the current banner (held or showing) arrived, on the clock `friendFound(_:at:)` was given.
+    /// When the current banner (held or showing) arrived, on the clock `friendFound(_:at:)` was given; infinity for a
+    /// banner the wearer has already had on the lens, which a problem or a new session pushed back (it never expires).
     private var bannerArrivedAt: Double = 0
+    /// Every find a banner was made for, so the same find delivered again (even after a dismissal) shows nothing.
+    private var bannerIDs: Set<String> = []
 
     /// How long a held friend banner waits for the list or a photo page before it is dropped: five minutes.
     public static let bannerHoldLimit: Double = 300
@@ -229,7 +234,7 @@ public struct LensStateMachine: Sendable, Equatable {
         self.stack = stack
         if !continues {
             // A banner showing survives the new session: it waits a moment as held and is shown on the list.
-            if case .friend(let banner) = page { heldBanner = banner }
+            if case .friend(let banner) = page { holdAgain(banner) }
             page = .list
             coveredPage = .list
             pinnedSpecies = nil
@@ -253,7 +258,7 @@ public struct LensStateMachine: Sendable, Equatable {
     public mutating func report(_ problem: LensProblem) -> LensEffect? {
         // A banner showing gives way to the problem and is held again, so it comes back after it.
         if case .friend(let banner) = page {
-            heldBanner = banner
+            holdAgain(banner)
             page = coveredPage
         }
         if case .problem = page {} else { coveredPage = page }
@@ -346,15 +351,14 @@ public struct LensStateMachine: Sendable, Equatable {
 
     /// A friend's notable find arrived at `time` (seconds on any steady clock; `expireBanner(at:)` takes the same
     /// one). Shown at once over the species list or a photo page, else held. It replaces the banner showing or the
-    /// one held; the same find again changes nothing.
+    /// one held; a find already bannered this session changes nothing, even after the wearer dismissed it.
     public mutating func friendFound(_ banner: LensFriendBanner, at time: Double) {
-        if case .friend(let showing) = page {
-            guard showing.id != banner.id else { return }
+        guard bannerIDs.insert(banner.id).inserted else { return }
+        if case .friend = page {
             page = .friend(banner)
             bannerArrivedAt = time
             return
         }
-        guard heldBanner?.id != banner.id else { return }
         heldBanner = banner
         bannerArrivedAt = time
         presentHeldBanner()
@@ -376,7 +380,15 @@ public struct LensStateMachine: Sendable, Equatable {
 
     /// When the held banner is dropped, nil when none is held: the adapter wakes then to call `expireBanner(at:)`.
     public var heldBannerExpiry: Double? {
-        heldBanner.map { _ in bannerArrivedAt + Self.bannerHoldLimit }
+        guard heldBanner != nil, bannerArrivedAt.isFinite else { return nil }
+        return bannerArrivedAt + Self.bannerHoldLimit
+    }
+
+    /// A banner the wearer already had on the lens goes back to held (a problem over it, a new session): it is shown
+    /// again on the list or a photo page, however long that takes.
+    private mutating func holdAgain(_ banner: LensFriendBanner) {
+        heldBanner = banner
+        bannerArrivedAt = .infinity
     }
 
     /// Shows the held banner if the wearer is on the list or a photo page.

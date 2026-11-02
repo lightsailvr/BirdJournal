@@ -350,13 +350,13 @@ if begin "Check: the stack, and a test push to your phone"; then
     confirm "Is it a TestFlight or App Store build (production)?" && push_environment="production"
     result=$(uv run --quiet --project "$REPO_DIR/backend" python - "$PUSH_TEST_TOKEN" "$push_environment" "$SECRET_NAME" "$BUNDLE_ID" "$AWS_REGION" <<'PY'
 import sys
+import uuid
+from datetime import datetime, timezone
 from birdjournal_api.apns import ApnsSender, secrets_manager_credentials
 from birdjournal_api.devices import Device, Environment
 from birdjournal_api.pushes import Push, PushKind
 token, environment, secret, topic, region = sys.argv[1:6]
 sender = ApnsSender(secrets_manager_credentials(secret, region), topic)
-import uuid
-from datetime import datetime, timezone
 # A notable push's find summary too, so a glasses run on that phone shows the lens's friend banner (#67).
 find = {
     "owner": "push-wizard", "owner_name": "Maya Ortiz", "sighting_id": str(uuid.uuid4()),

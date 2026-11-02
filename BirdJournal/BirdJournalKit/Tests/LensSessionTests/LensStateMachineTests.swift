@@ -591,7 +591,7 @@ struct LensStateMachineTests {
         #expect(machine.heldBanner == nil)
     }
 
-    @Test("the same find delivered twice is one banner: dismissed, it does not come back, and a repeat while held keeps the first arrival")
+    @Test("the same find delivered twice is one banner: a repeat while held keeps the first arrival, and once dismissed it does not come back, even after another find")
     func bannerDuplicate() {
         var machine = Self.machine(on: .details(index: 1))
         machine.friendFound(Fakes.mayasPhoebe, at: 10)
@@ -603,6 +603,13 @@ struct LensStateMachineTests {
         #expect(showing.page == .friend(Fakes.mayasPhoebe))
         _ = showing.apply(.tap)
         #expect(showing.page == .list)
+        showing.friendFound(Fakes.mayasPhoebe, at: 12)
+        #expect(showing.page == .list)
+        showing.friendFound(Fakes.samsOriole, at: 13)
+        _ = showing.apply(.tap)
+        showing.friendFound(Fakes.mayasPhoebe, at: 14)
+        #expect(showing.page == .list)
+        #expect(showing.heldBanner == nil)
     }
 
     @Test("a banner held for more than five minutes is dropped, and the wearer returns to the page itself")
@@ -639,6 +646,17 @@ struct LensStateMachineTests {
         #expect(machine.page == .friend(Fakes.mayasPhoebe))
         _ = machine.apply(.swipeRight)
         #expect(machine.page == .species(index: 1))
+    }
+
+    @Test("a banner the wearer already had on the lens, pushed back by a problem, never expires: it is there when the problem goes, however late")
+    func bannerPushedBackDoesNotExpire() {
+        var machine = Self.machine(on: .list)
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        machine.report(.noLocation)
+        #expect(machine.heldBannerExpiry == nil)
+        #expect(machine.expireBanner(at: 10_000) == false)
+        _ = machine.apply(.tap)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
     }
 
     @Test("a find arriving while a problem shows is held until the problem is dismissed")

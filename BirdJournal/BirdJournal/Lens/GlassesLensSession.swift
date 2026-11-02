@@ -316,8 +316,7 @@ final class GlassesLensSession {
     /// Seconds into the session on the adapter's own clock, from the latest update's origin.
     private var sessionTime: Double {
         guard let sessionOrigin else { return 0 }
-        let elapsed = (ContinuousClock.now - sessionOrigin).components
-        return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
+        return Self.seconds(since: sessionOrigin)
     }
 
     /// Re-evaluates the list order at the current session time with the stack unchanged (a calling marker
@@ -525,8 +524,11 @@ final class GlassesLensSession {
     }
 
     /// Seconds on the adapter's own steady clock, which the machine's banner times are on.
-    private var bannerTime: Double {
-        let elapsed = (ContinuousClock.now - bannerClockOrigin).components
+    private var bannerTime: Double { Self.seconds(since: bannerClockOrigin) }
+
+    /// Seconds from `instant` to now, as the machine's clocks take them.
+    private static func seconds(since instant: ContinuousClock.Instant) -> Double {
+        let elapsed = (ContinuousClock.now - instant).components
         return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
     }
 
