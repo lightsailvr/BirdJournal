@@ -265,16 +265,17 @@ class FindStore:
         for circle_id in chosen:
             if not self._circles.is_member(owner, circle_id):
                 raise NotFound()
+        photos = self._photos
         if extras.photo_key is not None:
-            if self._photos is None:
+            if photos is None:
                 raise PhotoUnavailable()
-            if not is_photo_key_of(extras.photo_key, owner):
+            if not is_photo_key_of(extras.photo_key, owner, sighting_id):
                 raise ValueError("photo_key")
-            size = self._photos.size(extras.photo_key)
+            size = photos.size(extras.photo_key)
             if size is None:
                 raise ValueError("photo_missing")
             if size > PHOTO_MAX_BYTES:
-                self._photos.delete(extras.photo_key)
+                photos.delete(extras.photo_key)
                 raise ValueError("photo_too_large")
         now = self._clock()
         existing = self._get(_find_key(owner, sighting_id))
@@ -292,8 +293,6 @@ class FindStore:
                 content = replace(content, place=previous.place)
             if (previous.found_at, previous.scientific_name) != (content.found_at, content.scientific_name):
                 self._delete_items(_item_keys(owner, sighting_id, previous, previous_circles))
-        if extras.photo_key is not None and self._photos is not None:
-            self._photos.keep(extras.photo_key)
         replaced = [shares[circle_id].extras.photo_key for circle_id in chosen if circle_id in shares]
         new_share = Share(extras=extras, place_hidden=not include_place)
         for circle_id in chosen:
@@ -309,10 +308,14 @@ class FindStore:
             for circle_id in chosen:
                 batch.put_item(Item={**_share_key(owner, sighting_id, circle_id), **_share_attributes(new_share, now)})
         self._write_items(find, shares)
-        still_shown = {share.extras.photo_key for share in shares.values()}
-        for key in replaced:
-            if key is not None and key not in still_shown and self._photos is not None:
-                self._photos.delete(key)
+        if photos is not None:
+            # Kept only once a share names it: a share that fails before here leaves it pending, so it expires.
+            if extras.photo_key is not None:
+                photos.keep(extras.photo_key)
+            still_shown = {share.extras.photo_key for share in shares.values()}
+            for key in replaced:
+                if key is not None and key not in still_shown:
+                    photos.delete(key)
         return find, existing is None
 
     def delete(self, owner: str, sighting_id: str) -> None:
@@ -320,10 +323,11 @@ class FindStore:
         retried delete) changes nothing. The photos its shared cards showed go first, so a delete cut short is
         retried while the shares still name them."""
         existing = self._get(_find_key(owner, sighting_id))
-        if self._photos is not None:
+        photos = self._photos
+        if photos is not None:
             for share in self._shares(owner, sighting_id).values():
                 if share.extras.photo_key is not None:
-                    self._photos.delete(share.extras.photo_key)
+                    photos.delete(share.extras.photo_key)
         if existing is not None:
             content = _content(existing)
             self._delete_items(_item_keys(owner, sighting_id, content, list(existing.get("circle_ids", []))))
@@ -422,8 +426,7 @@ class FindStore:
             response = self._table.query(**kwargs)
             for item in response["Items"]:
                 shares[str(item["sk"]).removeprefix("SHARE#")] = Share(
-                    extras=CardExtras(note=item.get("note"), caption=item.get("caption"), photo_key=item.get("photo_key")),
-                    place_hidden=bool(item.get("place_hidden", False)),
+                    extras=_extras(item), place_hidden=bool(item.get("place_hidden", False))
                 )
             if "LastEvaluatedKey" not in response:
                 return shares
@@ -497,29 +500,26 @@ def _shown(content: FindContent, share: Share | None) -> FindContent:
     return content
 
 
+def _extras_attributes(extras: CardExtras) -> dict[str, Any]:
+    fields = {"note": extras.note, "caption": extras.caption, "photo_key": extras.photo_key}
+    return {name: value for name, value in fields.items() if value is not None}
+
+
+def _extras(item: dict[str, Any]) -> CardExtras:
+    return CardExtras(note=item.get("note"), caption=item.get("caption"), photo_key=item.get("photo_key"))
+
+
 def _card_attributes(share: Share | None) -> dict[str, Any]:
-    if share is None:
-        return {}
-    attributes: dict[str, Any] = {"shared_card": True}
-    if share.extras.note is not None:
-        attributes["note"] = share.extras.note
-    if share.extras.caption is not None:
-        attributes["caption"] = share.extras.caption
-    if share.extras.photo_key is not None:
-        attributes["photo_key"] = share.extras.photo_key
-    return attributes
+    """A feed item's extras: marked as a shared card, so one with none chosen still reads as one."""
+    return {} if share is None else {"shared_card": True, **_extras_attributes(share.extras)}
 
 
 def _share_attributes(share: Share, now: datetime) -> dict[str, Any]:
-    attributes = _card_attributes(share)
-    attributes.pop("shared_card")
-    return {**attributes, "place_hidden": share.place_hidden, "shared_at": _timestamp(now)}
+    return {**_extras_attributes(share.extras), "place_hidden": share.place_hidden, "shared_at": _timestamp(now)}
 
 
 def _card(item: dict[str, Any]) -> CardExtras | None:
-    if not item.get("shared_card"):
-        return None
-    return CardExtras(note=item.get("note"), caption=item.get("caption"), photo_key=item.get("photo_key"))
+    return _extras(item) if item.get("shared_card") else None
 
 
 def _content(item: dict[str, Any]) -> FindContent:

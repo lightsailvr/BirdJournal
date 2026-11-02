@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from birdjournal_api.photos import CONTENT_TYPE, PENDING_TAG, UPLOAD_LIFETIME, PhotoUpload
+from birdjournal_api.photos import CONTENT_TYPE, PENDING_TAGGING, UPLOAD_LIFETIME, PhotoUpload
 
 
 class MemoryPhotoStore:
@@ -15,7 +15,7 @@ class MemoryPhotoStore:
 
     def upload(self, key: str, *, now: datetime) -> PhotoUpload:
         return PhotoUpload(
-            key=key, url=f"https://bucket.test/{key}?signed", headers={"Content-Type": CONTENT_TYPE, "x-amz-tagging": PENDING_TAG},
+            key=key, url="https://bucket.test/", fields={"key": key, "Content-Type": CONTENT_TYPE, "tagging": PENDING_TAGGING},
             expires_at=now + UPLOAD_LIFETIME,
         )
 

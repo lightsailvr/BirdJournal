@@ -152,8 +152,8 @@ final class FakeCircleClient: CircleClient {
     }
 
     func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload {
-        let key = "photos/\(Self.me)/\(UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()).jpg"
-        return PhotoUpload(key: key, uploadURL: URL(string: "https://bucket.invalid/\(key)")!, headers: ["Content-Type": "image/jpeg", "x-amz-tagging": "pending=true"], expiresAt: now().addingTimeInterval(900))
+        let key = "photos/\(Self.me)/\(sightingID.uuidString.lowercased())/\(UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()).jpg"
+        return PhotoUpload(key: key, uploadURL: URL(string: "https://bucket.invalid/")!, fields: ["key": key, "Content-Type": "image/jpeg"], expiresAt: now().addingTimeInterval(900))
     }
 
     func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {

@@ -157,19 +157,32 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
     }
 }
 
-/// Where the phone PUTs a shared card's original photo (backend `POST /v1/finds/<id>/photo`, issue #66): a presigned
-/// URL to the art bucket, the headers its signature covers, and the key the card then names.
+/// Where the phone sends a shared card's original photo (backend `POST /v1/finds/<id>/photo`, issue #66): a presigned
+/// POST to the art bucket, the form fields its signed policy covers (it caps the size at 5 MB), and the key the card
+/// then names.
 struct PhotoUpload: Equatable, Decodable, Sendable {
     var key: String
     var uploadURL: URL
-    var headers: [String: String]
+    var fields: [String: String]
     var expiresAt: Date
 
     enum CodingKeys: String, CodingKey {
         case key
         case uploadURL = "upload_url"
-        case headers
+        case fields
         case expiresAt = "expires_at"
+    }
+
+    /// The multipart form S3 takes: every policy field, then the JPEG as `file`, last as S3 requires.
+    func form(_ jpeg: Data, boundary: String) -> Data {
+        var body = Data()
+        for (name, value) in fields.sorted(by: { $0.key < $1.key }) {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".utf8))
+        }
+        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n".utf8))
+        body.append(jpeg)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        return body
     }
 }
 
@@ -222,7 +235,7 @@ protocol CircleClient: AnyObject {
     func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws
     /// An upload URL for a shared card's original photo.
     func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload
-    /// PUTs the photo (faces blurred, metadata stripped) to the URL: no access token, the URL is signed.
+    /// POSTs the photo (faces blurred, metadata stripped) to the URL: no access token, the form is signed.
     func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws
 }
 
@@ -291,10 +304,11 @@ final class HTTPCircleClient: CircleClient {
     }
 
     func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {
+        let boundary = "BirdJournal-\(UUID().uuidString)"
         var request = URLRequest(url: upload.uploadURL)
-        request.httpMethod = "PUT"
-        for (name, value) in upload.headers { request.setValue(value, forHTTPHeaderField: name) }
-        request.httpBody = jpeg
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.httpBody = upload.form(jpeg, boundary: boundary)
         let (_, response) = try await transport(request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else { throw CircleError.server(status) }

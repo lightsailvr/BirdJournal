@@ -5,7 +5,8 @@ the key in the card it shares. The photo is then shown in the circles the card w
 Keys are `photos/<sub>/<unguessable>.jpg` in the art CDN's bucket (#68's ArtCdn, no bucket of its own): nothing lists
 the bucket, so the URL is the only way to the picture, as for painted art.
 
-An upload arrives tagged `pending=true` (the presigned URL requires the header). The bucket's lifecycle rule expires
+The upload is a presigned POST whose policy caps the size (`content-length-range`, at most 5 MB), fixes the content
+type and the key, and tags the object `pending=true`. The bucket's lifecycle rule expires
 pending photos after a day, so a photo uploaded for a card the birder never sent doesn't stay; sharing the card
 removes the tag. The server deletes a shared photo when its card stops showing it: the find deleted, or a later share
 to the same circle with another photo or none.
@@ -18,20 +19,21 @@ from datetime import datetime, timedelta
 from typing import Any, Protocol
 
 PHOTOS_PREFIX = "photos/"
-PENDING_TAG = "pending=true"
 UPLOAD_LIFETIME = timedelta(minutes=15)
 # A face-blurred photo the phone re-encodes at 2048 px on the long side is well under this.
 PHOTO_MAX_BYTES = 5 * 1024 * 1024
 CONTENT_TYPE = "image/jpeg"
-_PHOTO_KEY = re.compile(r"^photos/[A-Za-z0-9-]+/[A-Za-z0-9_-]{20,}\.jpg$")
+_PHOTO_KEY = re.compile(r"^photos/[A-Za-z0-9-]+/[0-9a-f-]{36}/[A-Za-z0-9_-]{20,}\.jpg$")
+PENDING_TAGGING = "<Tagging><TagSet><Tag><Key>pending</Key><Value>true</Value></Tag></TagSet></Tagging>"
 
 
 @dataclass(frozen=True)
 class PhotoUpload:
     key: str
     url: str
-    # The headers the PUT must carry: the signature covers them.
-    headers: dict[str, str]
+    # The form fields the POST must carry before the file: the key, the content type, the tagging, the policy and its
+    # signature.
+    fields: dict[str, str]
     expires_at: datetime
 
 
@@ -51,13 +53,14 @@ class PhotoStore(Protocol):
         ...
 
 
-def new_photo_key(owner: str) -> str:
-    return f"{PHOTOS_PREFIX}{owner}/{secrets.token_urlsafe(24)}.jpg"
+def new_photo_key(owner: str, sighting_id: str) -> str:
+    return f"{PHOTOS_PREFIX}{owner}/{sighting_id}/{secrets.token_urlsafe(24)}.jpg"
 
 
-def is_photo_key_of(key: str, owner: str) -> bool:
-    """A key this account's upload URL could have made: its own prefix, the shape `new_photo_key` gives."""
-    return ".." not in key and bool(_PHOTO_KEY.match(key)) and key.startswith(f"{PHOTOS_PREFIX}{owner}/")
+def is_photo_key_of(key: str, owner: str, sighting_id: str) -> bool:
+    """A key this account's upload URL could have made for this sighting, so one photo never ends up on two finds
+    (deleting one would take the other's picture)."""
+    return ".." not in key and bool(_PHOTO_KEY.match(key)) and key.startswith(f"{PHOTOS_PREFIX}{owner}/{sighting_id}/")
 
 
 class S3PhotoStore:
@@ -68,16 +71,18 @@ class S3PhotoStore:
         self._bucket = bucket
 
     def upload(self, key: str, *, now: datetime) -> PhotoUpload:
-        url = self._s3.generate_presigned_url(
-            "put_object",
-            Params={"Bucket": self._bucket, "Key": key, "ContentType": CONTENT_TYPE, "Tagging": PENDING_TAG},
+        post = self._s3.generate_presigned_post(
+            Bucket=self._bucket,
+            Key=key,
+            Fields={"Content-Type": CONTENT_TYPE, "tagging": PENDING_TAGGING},
+            Conditions=[
+                {"Content-Type": CONTENT_TYPE},
+                {"tagging": PENDING_TAGGING},
+                ["content-length-range", 1, PHOTO_MAX_BYTES],
+            ],
             ExpiresIn=int(UPLOAD_LIFETIME.total_seconds()),
-            HttpMethod="PUT",
         )
-        return PhotoUpload(
-            key=key, url=url, headers={"Content-Type": CONTENT_TYPE, "x-amz-tagging": PENDING_TAG},
-            expires_at=now + UPLOAD_LIFETIME,
-        )
+        return PhotoUpload(key=key, url=post["url"], fields=dict(post["fields"]), expires_at=now + UPLOAD_LIFETIME)
 
     def size(self, key: str) -> int | None:
         try:

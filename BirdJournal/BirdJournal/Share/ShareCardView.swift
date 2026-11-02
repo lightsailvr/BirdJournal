@@ -71,9 +71,9 @@ struct ShareCardView: View {
     }
 
     static func faceArt(_ art: CardText.Art, content: SharePolicy.Content) -> CardText.Art {
-        if case .referencePhoto = art, case .reference = content.picture { return art }
-        if case .referencePhoto = art { return .none }
-        return art
+        guard case .referencePhoto = art else { return art }
+        if case .reference = content.picture { return art }
+        return .none
     }
 
     private var face: some View {
@@ -181,7 +181,7 @@ struct ShareCardView: View {
                 .background(.bar)
             }
             .task(id: faceArt) { loadArt() }
-            .task(id: ExportKey(choices: choices, hasArt: artImage != nil)) { render() }
+            .task(id: ExportKey(choices: choices, place: place, hasArt: artImage != nil)) { render() }
             .task {
                 if let location = sighting.location { await places.resolve(location) }
                 if showsCircles { await circles.refresh() }
@@ -285,8 +285,13 @@ struct ShareCardView: View {
         let input = input
         let choices = choices
         do {
+            // An automatic find still waiting to go would otherwise reach only the circles chosen here: the server
+            // keeps a find's first circles.
+            await outbox.flush()
+            if outbox.isWaitingToPublish(sighting.identifier) { throw ShareFailure.findWaiting }
             var photo: Data?
-            if choices.includeOriginalPhoto, let path = originalPhotoPath, let url = frameStore?.url(for: path) {
+            if choices.includeOriginalPhoto {
+                guard let path = originalPhotoPath, let url = frameStore?.url(for: path) else { throw ShareFailure.photoUnavailable }
                 photo = try await Task.detached(priority: .userInitiated) { try ArtPhoto.prepare(jpeg: Data(contentsOf: url)).jpeg }.value
             }
             try await circles.shareCard(sightingID: sighting.identifier, photo: photo) { key in
@@ -296,7 +301,21 @@ struct ShareCardView: View {
             sending = .sent("Sent to \(names.formatted(.list(type: .and))).")
         } catch {
             log.error("couldn't share the card: \(String(describing: error))")
-            sending = .failed(CircleStore.message(for: error, doing: "share your card"))
+            sending = .failed(Self.message(for: error))
+        }
+    }
+
+    enum ShareFailure: Error {
+        case findWaiting
+        case photoUnavailable
+    }
+
+    static func message(for error: Error) -> String {
+        switch error {
+        case ShareFailure.findWaiting: "This bird is still on its way to your circles. Try again once you're online."
+        case ShareFailure.photoUnavailable, is ArtPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
+        case CircleError.rejected: "The server turned this card down. Try again without the photo."
+        default: CircleStore.message(for: error, doing: "share your card")
         }
     }
 
@@ -327,8 +346,10 @@ struct ShareCardView: View {
         }
     }
 
+    /// What the face and its text depend on; the city can arrive after the sheet opens.
     private struct ExportKey: Equatable {
         var choices: FindPolicy.Choices
+        var place: String?
         var hasArt: Bool
     }
 
@@ -376,8 +397,4 @@ struct CardExport: Transferable {
         guard CGImageDestinationFinalize(destination) else { return nil }
         return data as Data
     }
-}
-
-extension String {
-    var nilIfEmpty: String? { isEmpty ? nil : self }
 }

@@ -24,12 +24,12 @@ private final class Recorder {
 
 @Suite("Shared cards over HTTP")
 struct SharedCardClientTests {
-    @Test("the photo's upload URL, the signed PUT with its headers and no token, then the card")
+    @Test("the photo's upload URL, the signed multipart POST with its fields and no token, then the card")
     func shareWithPhoto() async throws {
         let recorder = Recorder()
         recorder.responses = [
-            http(201, #"{"key":"photos/ada/abcdefghijklmnopqrstuvwx.jpg","upload_url":"https://bucket.s3.amazonaws.com/photos/ada/abcdefghijklmnopqrstuvwx.jpg?X-Amz-Signature=1","headers":{"Content-Type":"image/jpeg","x-amz-tagging":"pending=true"},"expires_at":"2026-11-01T09:45:00Z"}"#),
-            http(200, ""),
+            http(201, #"{"key":"photos/ada/abcdefghijklmnopqrstuvwx.jpg","upload_url":"https://bucket.s3.amazonaws.com/","fields":{"key":"photos/ada/abcdefghijklmnopqrstuvwx.jpg","Content-Type":"image/jpeg","policy":"cG9saWN5","x-amz-signature":"sig"},"expires_at":"2026-11-01T09:45:00Z"}"#),
+            http(204, ""),
             http(201, "{}"),
         ]
         let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
@@ -40,14 +40,20 @@ struct SharedCardClientTests {
 
         #expect(recorder.requests.map { "\($0.httpMethod!) \($0.url!.host()!)\($0.url!.path())" } == [
             "POST api.example.com/v1/finds/6f9619ff-8b86-d011-b42d-00c04fc964ff/photo",
-            "PUT bucket.s3.amazonaws.com/photos/ada/abcdefghijklmnopqrstuvwx.jpg",
+            "POST bucket.s3.amazonaws.com/",
             "PUT api.example.com/v1/finds/6f9619ff-8b86-d011-b42d-00c04fc964ff/card",
         ])
-        let put = recorder.requests[1]
-        #expect(put.value(forHTTPHeaderField: "Authorization") == nil, "the bucket gets no access token")
-        #expect(put.value(forHTTPHeaderField: "Content-Type") == "image/jpeg")
-        #expect(put.value(forHTTPHeaderField: "x-amz-tagging") == "pending=true")
-        #expect(put.httpBody == Data([0xFF, 0xD8, 0xFF]))
+        let post = recorder.requests[1]
+        #expect(post.value(forHTTPHeaderField: "Authorization") == nil, "the bucket gets no access token")
+        let contentType = try #require(post.value(forHTTPHeaderField: "Content-Type"))
+        #expect(contentType.hasPrefix("multipart/form-data; boundary="))
+        let form = String(decoding: post.httpBody ?? Data(), as: UTF8.self)
+        for field in ["key", "Content-Type", "policy", "x-amz-signature"] {
+            #expect(form.contains("name=\"\(field)\""), "\(field)")
+        }
+        // S3 ignores fields after the file, so the file goes last.
+        let fileField = try #require(form.range(of: "name=\"file\""))
+        #expect(form.range(of: "name=\"policy\"")!.lowerBound < fileField.lowerBound)
         let body = try #require(try JSONSerialization.jsonObject(with: recorder.requests[2].httpBody ?? Data()) as? [String: Any])
         #expect(body["circle_ids"] as? [String] == ["c1"])
         #expect((body["photo"] as? [String: String])?["key"] == "photos/ada/abcdefghijklmnopqrstuvwx.jpg")
@@ -59,7 +65,7 @@ struct SharedCardClientTests {
         let recorder = Recorder()
         recorder.responses = [http(403, "")]
         let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
-        let upload = PhotoUpload(key: "photos/ada/x.jpg", uploadURL: URL(string: "https://bucket.test/x")!, headers: [:], expiresAt: .now)
+        let upload = PhotoUpload(key: "photos/ada/x.jpg", uploadURL: URL(string: "https://bucket.test/")!, fields: [:], expiresAt: .now)
         await #expect(throws: CircleError.server(403)) { try await client.uploadPhoto(Data(), to: upload) }
     }
 

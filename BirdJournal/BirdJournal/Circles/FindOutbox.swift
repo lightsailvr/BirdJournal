@@ -111,6 +111,11 @@ final class FindOutbox {
         save()
     }
 
+    /// Whether an automatic put of the sighting is still waiting to go (offline, or backing off).
+    func isWaitingToPublish(_ identifier: UUID) -> Bool {
+        entries.contains { $0.identifier == identifier && $0.operation == .put && $0.owner == signedInOwner }
+    }
+
     /// The Legendary flag a sighting was published with, frozen at the add; nil when it never was.
     func publishedLegendary(_ identifier: UUID) -> Bool? {
         published.last { $0.identifier == identifier && $0.owner == signedInOwner }?.isLegendary

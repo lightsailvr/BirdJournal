@@ -108,8 +108,8 @@ final class CircleStore {
         var key: String?
         if let photo {
             let upload = try await call { try await $0.photoUpload(sightingID: sightingID, accessToken: $1) }
-            guard let client else { throw CircleError.server(0) }
-            try await client.uploadPhoto(photo, to: upload)
+            // The bucket takes the signed form, not the account's token.
+            try await client?.uploadPhoto(photo, to: upload)
             key = upload.key
         }
         let shared = card(key)
@@ -186,7 +186,6 @@ final class CircleStore {
         case CircleError.inviteRevoked: "This invitation no longer works for you. Ask the circle for a new one."
         case CircleError.notFound: "This circle or invitation isn't there any more."
         case CircleError.creatorOnly: "Only the circle's creator can remove members."
-        case CircleError.rejected where action == "share your card": "The server turned this card down. Try again without the photo."
         case CircleError.rejected: "Use a name of up to 40 characters, on one line."
         case AuthError.sessionExpired: "You've been signed out. Sign in again to use your circles."
         default: "Couldn't \(action). Check your connection and try again."

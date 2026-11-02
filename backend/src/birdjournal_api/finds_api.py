@@ -190,8 +190,9 @@ class CardBody(BaseModel):
 class PhotoUploadResponse(BaseModel):
     key: str
     upload_url: str
-    # Send these with the PUT: the URL's signature covers them.
-    headers: dict[str, str]
+    # POST these form fields to the URL, then the JPEG as the `file` field: the signed policy covers them and caps
+    # the size.
+    fields: dict[str, str]
     expires_at: datetime
 
     @field_serializer("expires_at")
@@ -299,13 +300,13 @@ def put_find(
 
 @router.post("/finds/{sighting_id}/photo", status_code=status.HTTP_201_CREATED)
 def create_photo_upload(subject: Subject, sighting_id: str, photos: Photos, request: Request) -> PhotoUploadResponse:
-    """A presigned PUT for a shared card's original photo. The photo waits, tagged pending, until a share names it,
+    """A presigned POST for a shared card's original photo, at most 5 MB. The photo waits, tagged pending, until a share names it,
     and expires after a day if none does."""
-    _sighting_id(sighting_id)
+    sighting = _sighting_id(sighting_id)
     if photos is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "photos_unavailable")
-    upload = photos.upload(new_photo_key(subject), now=request.app.state.clock())
-    return PhotoUploadResponse(key=upload.key, upload_url=upload.url, headers=upload.headers, expires_at=upload.expires_at)
+    upload = photos.upload(new_photo_key(subject, sighting), now=request.app.state.clock())
+    return PhotoUploadResponse(key=upload.key, upload_url=upload.url, fields=upload.fields, expires_at=upload.expires_at)
 
 
 @router.put("/finds/{sighting_id}/card")
