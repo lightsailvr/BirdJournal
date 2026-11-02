@@ -6,6 +6,7 @@ from constructs import Node
 TAG_KEY = "project"
 TAG_VALUE = "birdjournal"
 ART_AUTO_PAINT_RULES = ("every_glasses_add", "legendary_or_rare")
+MODERATION_SWITCH = ("off", "on")
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,13 @@ class BirdJournalConfig:
     # infra/scripts/push-wizard.sh outside the stack, and the app's bundle id, every push's apns-topic.
     apns_secret_name: str = "birdjournal/apns"
     apns_topic: str = "com.matthewcelia.mybirdjournal"
+    # Where reports (issue #71) are mailed through SES, from the same address (one verified SES identity, so the
+    # sandbox is enough). Kept out of the public repo like the budget's: `-c reportEmail=...` or REPORT_EMAIL, else the
+    # budget alert address.
+    report_email: str = ""
+    # Rekognition moderation of art-job inputs and outputs and shared photos (issue #71): `off` in the friends phase,
+    # `on` for the public launch.
+    moderation: str = "off"
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -62,6 +70,10 @@ class BirdJournalConfig:
         art_auto_paint = node.try_get_context("artAutoPaint") or "every_glasses_add"
         if art_auto_paint not in ART_AUTO_PAINT_RULES:
             raise ValueError(f"artAutoPaint must be one of {', '.join(ART_AUTO_PAINT_RULES)}, not {art_auto_paint!r}")
+        moderation = node.try_get_context("moderation") or "off"
+        if moderation not in MODERATION_SWITCH:
+            raise ValueError(f"moderation must be on or off, not {moderation!r}")
+        report_email = node.try_get_context("reportEmail") or os.environ.get("REPORT_EMAIL") or email
         art_daily_allowance = _whole_number(node.try_get_context("artDailyAllowance"), default=5, name="artDailyAllowance")
         return cls(
             cognito_domain_prefix=node.get_context("cognitoDomainPrefix"),
@@ -78,6 +90,8 @@ class BirdJournalConfig:
             art_daily_allowance=art_daily_allowance,
             apns_secret_name=node.get_context("apnsSecretName"),
             apns_topic=node.get_context("apnsTopic"),
+            report_email=report_email,
+            moderation=moderation,
         )
 
 

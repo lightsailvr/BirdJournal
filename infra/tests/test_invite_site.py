@@ -94,6 +94,11 @@ def test_invite_paths_are_rewritten_to_the_fallback_page_at_the_edge(template: T
         ("/.well-known/apple-app-site-association", "/.well-known/apple-app-site-association"),
         ("/invite.html", "/invite.html"),
         ("/ideas", "/ideas"),
+        ("/privacy", "/privacy.html"),
+        ("/privacy/", "/privacy.html"),
+        ("/terms", "/terms.html"),
+        ("/privacy.html", "/privacy.html"),
+        ("/i/privacy", "/invite.html"),
     ],
 )
 def test_the_rewrite_function(uri: str, served: str) -> None:
@@ -133,7 +138,8 @@ def test_the_site_has_the_fallback_and_home_pages() -> None:
     invite = (SITE_DIRECTORY / "invite.html").read_text()
     assert "Bird Journal" in invite
     assert "seven days" in invite
-    assert "https://lightsailvr.github.io/BirdJournal/" in invite
+    # The home page, privacy and terms are on this domain now (#71).
+    assert '<a href="/">Find out how to get it</a>' in invite
 
 
 def test_the_api_makes_links_on_the_invite_domain(template: Template) -> None:
@@ -185,3 +191,17 @@ def test_a_certificate_outside_us_east_1_is_refused() -> None:
             budgetAlertEmail="budget@example.com",
             inviteCertificateArn="arn:aws:acm:us-west-2:123456789012:certificate/11111111-1111-1111-1111-111111111111",
         )
+
+
+def test_the_site_has_the_privacy_policy_and_terms_and_no_page_points_back_to_github() -> None:
+    from birdjournal_infra.invite_site import SITE_DIRECTORY
+
+    pages = {path.name: path.read_text() for path in SITE_DIRECTORY.glob("*.html")}
+    assert {"index.html", "invite.html", "privacy.html", "terms.html"} <= set(pages)
+    for name, text in pages.items():
+        assert "github.io" not in text, name
+        assert 'href="/privacy"' in text, name
+    privacy = pages["privacy.html"]
+    for subject in ("Circles", "finds", "Notifications", "React", "Goals", "Shared cards", "Painted card art",
+                    "Moderation", "Reports", "Blocks", "Deleting your account", "secret spot"):
+        assert subject.lower() in privacy.lower(), subject

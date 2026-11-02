@@ -29,6 +29,7 @@
     "artDailyAllowance": 5,
     "apnsSecretName": "birdjournal/apns",
     "apnsTopic": "com.matthewcelia.mybirdjournal",
+    "moderation": "off",
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,
     "@aws-cdk/core:newStyleStackSynthesis": true,
     "@aws-cdk/core:stackRelativeExports": true,
