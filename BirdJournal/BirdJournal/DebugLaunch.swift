@@ -33,7 +33,7 @@ import UIKit
 ///   work too. `photo-preview` gives it photo art waiting beside its glasses photo (issue #69), `photo-approved`
 ///   approved photo art. `-fakeArtDaily <n>` keeps the public launch's allowance in the fake, and `-fakeLibraryPhoto`
 ///   makes "Choose from your library" pick the card's glasses photo as a library photo (the system picker is out of
-///   the UI tests' reach).
+///   the UI tests' reach). `-autoPhotoArt request|review` opens photo art's request or comparison sheet on the card.
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.

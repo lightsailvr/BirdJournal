@@ -357,6 +357,16 @@ struct PhotoArtActions: View {
         .sheet(isPresented: $requesting) {
             PhotoArtRequestSheet(sighting: sighting, commonName: library.commonName(for: sighting))
         }
+        #if DEBUG
+        // `-autoPhotoArt request|review` opens the request or the comparison, for screenshots.
+        .task {
+            switch UserDefaults.standard.string(forKey: "autoPhotoArt") {
+            case "request": requesting = true
+            case "review": if case .preview = sighting.art.photoStatus { reviewing = true }
+            default: break
+            }
+        }
+        #endif
         .sheet(isPresented: $reviewing) {
             PhotoArtComparisonSheet(sighting: sighting)
         }
