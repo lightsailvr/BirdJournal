@@ -126,6 +126,7 @@ def create_app(
             dynamodb.Table(settings.table_name),
             clock,
             rule=settings.art_auto_paint,  # type: ignore[arg-type]
+            daily_allowance=settings.art_daily_allowance,
             storage=art_storage,
             queue=art_queue,
             notifier=art_notifier or NoNotifier(),

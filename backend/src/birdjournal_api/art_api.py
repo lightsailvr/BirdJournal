@@ -1,5 +1,5 @@
-"""The art job routes (issue #68): the phone's (create, submit, read, list open, received) with the account's access
-token, and the art worker's (claim, ready, failed) with the worker token."""
+"""The art job routes (issues #68 and #69): the phone's (create, submit, read, list open, received, today's allowance)
+with the account's access token, and the art worker's (claim, ready, failed) with the worker token."""
 
 from datetime import UTC, datetime
 from typing import Annotated, Literal
@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from birdjournal_api.art import (
+    Allowance,
+    AllowanceSpent,
     ArtJob,
     ArtJobStore,
     Expired,
@@ -53,7 +55,8 @@ class JobResponse(BaseModel):
     expires_at: datetime
     # The painted art on the art CDN, once ready and until the phone says it has it.
     art_url: str | None
-    # Why it failed: "expired", "filtered" (the content filter), "no_reference", "painting_failed".
+    # Why it failed: "expired", "filtered" (the content filter), "no_reference", "no_bird" (photo art: no bird found in
+    # the photo), "painting_failed", "bad_input".
     failure: str | None
     provenance: str | None
     received: bool
@@ -93,8 +96,8 @@ class JobCreate(BaseModel):
     # Made on the phone, so a create repeated after a lost response is the same job.
     id: UUID
     sighting_id: UUID
-    # Photo art comes with #69.
-    kind: Literal["scene"]
+    # Scene art (#68) paints the bird into the glasses photo; photo art (#69) embellishes the birder's own photo of it.
+    kind: Literal["scene", "photo"]
     scientific_name: str = Field(min_length=1, max_length=120)
     # The pack id of the card's set, whose edition lights the painting; None outside every set.
     edition: str | None = Field(default=None, max_length=60)
@@ -102,6 +105,23 @@ class JobCreate(BaseModel):
     rarity: Literal["common", "uncommon", "rare", "exceptional"] | None = None
     # The birder asked (Try again, Retry art), rather than the add.
     requested: bool = False
+
+
+class AllowanceResponse(BaseModel):
+    # Paintings on request a day; None when unlimited (the friends phase), and then `left` is None too.
+    daily: int | None
+    used: int
+    left: int | None
+    # Midnight UTC, when `used` starts again from 0.
+    resets_at: datetime
+
+    @field_serializer("resets_at")
+    def _resets(self, value: datetime) -> str | None:
+        return _utc(value)
+
+    @classmethod
+    def of(cls, allowance: Allowance) -> "AllowanceResponse":
+        return cls(daily=allowance.daily, used=allowance.used, left=allowance.left, resets_at=allowance.resets_at)
 
 
 class WorkerClaim(BaseModel):
@@ -127,7 +147,7 @@ class WorkerReady(BaseModel):
 class WorkerFailed(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    reason: Literal["filtered", "no_reference", "painting_failed", "bad_input"]
+    reason: Literal["filtered", "no_reference", "no_bird", "painting_failed", "bad_input"]
 
 
 def _store(request: Request) -> ArtJobStore:
@@ -162,6 +182,8 @@ def _refused(error: Exception) -> HTTPException:
             return HTTPException(status.HTTP_404_NOT_FOUND, "not_found")
         case NotEligible():
             return HTTPException(status.HTTP_409_CONFLICT, "not_eligible")
+        case AllowanceSpent():
+            return HTTPException(status.HTTP_409_CONFLICT, "allowance_spent")
         case UploadExpired():
             return HTTPException(status.HTTP_409_CONFLICT, "upload_expired")
         case UploadMissing():
@@ -209,6 +231,11 @@ def submit_job(subject: Subject, job_id: str, jobs: Jobs, cdn: Cdn) -> JobRespon
         return JobResponse.of(jobs.submit(subject, job_id), cdn)
     except Exception as error:
         raise _refused(error) from error
+
+
+@router.get("/v1/art/allowance")
+def get_allowance(subject: Subject, jobs: Jobs) -> AllowanceResponse:
+    return AllowanceResponse.of(jobs.allowance(subject))
 
 
 @router.get("/v1/art/jobs")

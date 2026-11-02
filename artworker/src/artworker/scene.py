@@ -55,6 +55,19 @@ class Unfaithful(Exception):
         self.fidelity = fidelity
 
 
+def edition_prompt(prompts: ArtPrompts, kind: str, edition: str | None, legendary: bool, scientific_name: str) -> str:
+    """A scene or photo prompt in the edition's light (the neutral light outside every edition), never naming the
+    species: the template takes no names, an empty Species makes sure none could slip in, and a prompt that names it
+    anyway is refused."""
+    if edition not in prompts.editions:
+        prompts = dataclasses.replace(prompts, editions={**prompts.editions, "neutral": NEUTRAL_EDITION})
+        edition = "neutral"
+    text = prompts.render(kind, Species("", ""), edition, legendary=legendary)  # type: ignore[arg-type]
+    if scientific_name.lower() in text.lower():
+        raise AssertionError("an art prompt must never name the species")
+    return text
+
+
 @dataclass(frozen=True)
 class Reference:
     scientific_name: str
@@ -102,15 +115,7 @@ class ScenePainter:
         self.workflow = Workflow.load("scene-art")
 
     def prompt(self, edition: str | None, legendary: bool, reference: Reference) -> str:
-        prompts = self.prompts
-        if edition not in prompts.editions:
-            prompts = dataclasses.replace(prompts, editions={**prompts.editions, "neutral": NEUTRAL_EDITION})
-            edition = "neutral"
-        # The template takes no names; an empty Species makes sure none could slip in.
-        text = prompts.render("scene", Species("", ""), edition, legendary=legendary)
-        if reference.scientific_name.lower() in text.lower():
-            raise AssertionError("a scene prompt must never name the species")
-        return text
+        return edition_prompt(self.prompts, "scene", edition, legendary, reference.scientific_name)
 
     def paint(self, job_id: str, scene_jpeg: bytes, scientific_name: str, edition: str | None, legendary: bool) -> SceneArt:
         reference = self.references.find(scientific_name, edition)

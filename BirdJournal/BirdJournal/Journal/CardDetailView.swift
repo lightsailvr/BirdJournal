@@ -93,6 +93,7 @@ struct CardDetailView: View {
                         CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
                     CardArtActions(sighting: sighting)
+                    PhotoArtActions(sighting: sighting)
                     if browse != nil {
                         Button {
                             dismiss()
@@ -169,7 +170,8 @@ struct CardDetailView: View {
 }
 
 /// Scene art's controls under the card (issue #68, spec v2 stories 50 and 52): Try again and Use pack art on a card
-/// with a painting, Use painted art to go back to it, Retry art and Keep current art after a failure. Asking for a new
+/// with a painting, Use painted art to go back to it, Retry art and Keep current art after a failure, and Paint this
+/// scene on a glasses card never painted (the public launch's ordinary adds, issue #69), with "N left today". Asking for a new
 /// painting needs the account (`ArtJobs.isAvailable`); choosing between the painting and the pack art doesn't. A card
 /// whose job is pending polls it while it is open.
 private struct CardArtActions: View {
@@ -205,15 +207,46 @@ private struct CardArtActions: View {
                     Button("Keep current art", systemImage: "checkmark") { art.keepCurrentArt(sighting) }
                         .accessibilityIdentifier("card-art-keep")
                 }
-            case .pending, .none:
+            case .none:
+                // At the public launch an ordinary add isn't painted automatically: scene art is the birder's to ask
+                // for, within the day's allowance (issue #69). A card that was never painted (signed out at the add)
+                // gets the same.
+                if art.isAvailable, sighting.frameImagePath != nil {
+                    Button {
+                        paintAgain()
+                    } label: {
+                        Label("Paint this scene", systemImage: "paintbrush.pointed").frame(maxWidth: .infinity)
+                    }
+                    .accessibilityHint("Paints the bird into your glasses photo.")
+                    .accessibilityIdentifier("card-art-paint")
+                }
+            case .pending:
                 EmptyView()
             }
         }
         .buttonStyle(.journalOutlined)
+        .safeAreaInset(edge: .bottom, spacing: 4) {
+            if let refusal = art.refusal(for: sighting, kind: .scene) {
+                Text(refusal)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("card-art-refusal")
+            }
+            // "N left today" beside the buttons that spend one (issue #69); nothing in the friends phase.
+            if art.isAvailable, status != .pending, sighting.frameImagePath != nil || status != .none, let line = CardText.allowanceLine(art.allowance) {
+                Text(line)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("card-art-allowance")
+            }
+        }
+        .task { await art.refreshAllowance() }
         .disabled(asking)
-        .task(id: sighting.art.pendingSceneJob?.id) {
-            // While this card waits, look in on its job now and then: the painting machine may come back any time.
-            while !Task.isCancelled, sighting.art.pendingSceneJob != nil {
+        .task(id: sighting.art.pendingJobs.map(\.id)) {
+            // While this card waits, look in on its jobs now and then: the painting machine may come back any time.
+            while !Task.isCancelled, !sighting.art.pendingJobs.isEmpty {
                 await art.refresh(sighting)
                 try? await Task.sleep(for: .seconds(30))
             }
