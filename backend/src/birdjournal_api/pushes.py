@@ -3,7 +3,8 @@
 When a find is first written (a repeated put sends nothing), every current member of the circles it went to hears of
 it, except its owner, anyone who muted the owner, and anyone who muted every one of those circles they are in:
 
-- A **notable** find (Legendary, the circle's first of the species, or Rare or Exceptional rarity) pushes at once to
+- A **notable** find (Legendary, the circle's first of the species, Rare or Exceptional rarity, or the find that brings
+  one of the circle's goals to its target, issue #65, once per goal) pushes at once to
   each of the member's phones: an alert plus content-available, carrying the find's summary (`find`), which the lens's
   friend banner (#67) reads.
 - **Any other** find goes into the member's digest buffer for that friend, and a silent push (content-available only)
@@ -33,6 +34,7 @@ from botocore.exceptions import ClientError
 from birdjournal_api.circles import CircleStore
 from birdjournal_api.devices import Device, DeviceStore, Mutes, MuteStore
 from birdjournal_api.finds import SECRET_SPOT, Find, FindContent, FindStore, Rarity
+from birdjournal_api.goals import CompletedGoal, GoalKind, GoalStore
 
 log = logging.getLogger(__name__)
 
@@ -142,6 +144,34 @@ def notable_words(owner_name: str | None, content: FindContent, first_for: str |
     return f"{name} found {_with_article(content.common_name)}", " · ".join(reasons)
 
 
+def goal_words(
+    owner_name: str | None, content: FindContent, circle_name: str | None, completed: CompletedGoal,
+    first_for: str | None,
+) -> tuple[str, str]:
+    """A goal reached (issue #65): "Sunday Group reached the November goal" / "Ada found a Black Phoebe, species 15
+    of 15 · Legendary · Pasadena". The find's own reasons follow, so one alert says both."""
+    goal = completed.goal
+    circle = circle_name or "Your circle"
+    name = owner_name or FRIEND_FALLBACK
+    title = f"{circle} reached the {goal.title}" if goal.kind is GoalKind.MONTHLY else f"{circle} reached “{goal.title}”"
+    _, reasons = notable_words(owner_name, content, first_for)
+    lead = f"{name} found {_with_article(content.common_name)}, species {completed.progress} of {goal.target}"
+    return title, " · ".join(part for part in (lead, reasons) if part)
+
+
+def goal_summary(completed: CompletedGoal) -> dict[str, Any]:
+    """The goal a notable push reports, beside the find."""
+    goal = completed.goal
+    return {
+        "circle_id": goal.circle_id,
+        "goal_id": goal.id,
+        "kind": goal.kind.value,
+        "title": goal.title,
+        "target": goal.target,
+        "progress": completed.progress,
+    }
+
+
 def digest_words(owner_name: str | None, finds: list[FindContent]) -> str:
     """"Maya found 6 birds in Pasadena": the distinct species, and the most common place label among the finds (the
     latest find's on a tie). A secret spot is never named, and with no place the sentence ends at the birds."""
@@ -168,9 +198,10 @@ def _with_article(name: str) -> str:
 class PushService:
     def __init__(
         self, table: Any, circles: CircleStore, finds: FindStore, devices: DeviceStore, mutes: MuteStore,
-        sender: PushSender, clock: Callable[[], datetime],
+        goals: GoalStore, sender: PushSender, clock: Callable[[], datetime],
     ) -> None:
         self._table = table
+        self._goals = goals
         self._circles = circles
         self._finds = finds
         self._devices = devices
@@ -179,11 +210,14 @@ class PushService:
         self._clock = clock
 
     def find_added(self, find: Find) -> None:
-        """A new find: a notable push now, or the digest buffer and a silent refresh, to every member who hears it."""
+        """A new find: a notable push now, or the digest buffer and a silent refresh, to every member who hears it.
+        A find that brings a circle's goal to its target (issue #65) is notable for that circle's members."""
         if not find.circle_ids:
             return
         owner = find.owner
         content = find.content
+        # First, whoever hears it: a goal is noted as completed once, even in a circle of one.
+        completed = self._goals.completed_by(find)
         recipients: dict[str, list[str]] = {}
         for circle_id in find.circle_ids:
             for member in self._circles.current_member_ids(circle_id):
@@ -196,7 +230,8 @@ class PushService:
             if self._finds.is_circle_first(circle_id, owner, find.sighting_id, content.scientific_name)
         ]
         owner_name = self._circles.display_names([owner]).get(owner)
-        circle_names = self._circles.circle_names(firsts) if firsts else {}
+        named = set(firsts) | {goal.goal.circle_id for goal in completed}
+        circle_names = self._circles.circle_names(sorted(named)) if named else {}
         for recipient, circle_ids in recipients.items():
             open_circles = _open_circles(self._mutes.mutes_of(recipient), owner, circle_ids)
             if not open_circles:
@@ -205,14 +240,21 @@ class PushService:
             if not devices:
                 continue
             first_in = [circle_id for circle_id in firsts if circle_id in open_circles]
-            notable = content.legendary or bool(first_in) or content.rarity in NOTABLE_RARITIES
+            goals = [goal for goal in completed if goal.goal.circle_id in open_circles]
+            notable = content.legendary or bool(first_in) or content.rarity in NOTABLE_RARITIES or bool(goals)
             if notable:
-                title, body = notable_words(owner_name, content, circle_names.get(first_in[0]) if first_in else None)
-                push = Push(
-                    kind=PushKind.NOTABLE, title=title, body=body,
-                    data={"find": find_summary(find, owner_name, first_in, open_circles)},
-                    thread_id=f"friend-{owner}",
-                )
+                first_for = circle_names.get(first_in[0]) if first_in else None
+                if goals:
+                    goal = goals[0]
+                    title, body = goal_words(
+                        owner_name, content, circle_names.get(goal.goal.circle_id), goal, first_for
+                    )
+                else:
+                    title, body = notable_words(owner_name, content, first_for)
+                data: dict[str, Any] = {"find": find_summary(find, owner_name, first_in, open_circles)}
+                if goals:
+                    data["goals"] = [goal_summary(goal) for goal in goals]
+                push = Push(kind=PushKind.NOTABLE, title=title, body=body, data=data, thread_id=f"friend-{owner}")
                 if self._deliver(devices, push):
                     self._record_push(recipient, owner)
             else:

@@ -283,6 +283,24 @@ class FindStore:
         (issue #63), the same query the feed's mark reads."""
         return self._first_of(circle_id, scientific_name) == (owner, sighting_id)
 
+    def species_between(self, circle_id: str, starts_at: datetime, ends_at: datetime) -> set[str]:
+        """The distinct species (scientific names) among the circle's feed items found from `starts_at` up to, not
+        including, `ends_at`: a goal's progress (issue #65). The feed's sort key starts with the found minute, so
+        this is one key range; an item at exactly `ends_at` sorts after the bare minute and is left out."""
+        species: set[str] = set()
+        kwargs: dict[str, Any] = {
+            "KeyConditionExpression": Key("pk").eq(_feed_pk(circle_id))
+            & Key("sk").between(_minute(starts_at), _minute(ends_at)),
+            "ProjectionExpression": "scientific_name",
+            "ConsistentRead": True,
+        }
+        while True:
+            response = self._table.query(**kwargs)
+            species.update(str(item["scientific_name"]) for item in response["Items"])
+            if "LastEvaluatedKey" not in response:
+                return species
+            kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
+
     def existing(self, keys: list[tuple[str, str]]) -> dict[tuple[str, str], FindContent]:
         """The finds of these (owner, sighting id) pairs that are still there, for a digest (issue #63)."""
         found: dict[tuple[str, str], FindContent] = {}

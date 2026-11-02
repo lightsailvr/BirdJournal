@@ -165,6 +165,11 @@ class CircleStore:
             ),
         )
 
+    def circle(self, circle_id: str) -> Circle | None:
+        """The circle's meta, whoever asks: for the goals (issue #65), which check membership themselves."""
+        item = self._get(_meta_key(circle_id))
+        return _circle(item) if item is not None else None
+
     def circle_ids_of(self, subject: str) -> list[str]:
         """The ids of the account's current circles, for a find's fan-out (issue #62)."""
         return [item["sk"].removeprefix("CIRCLE#") for item in self._query(pk=_account_pk(subject), sk_prefix="CIRCLE#")]

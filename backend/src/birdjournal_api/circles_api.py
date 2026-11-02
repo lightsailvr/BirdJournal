@@ -165,8 +165,11 @@ def list_circles(subject: Subject, circles: Circles) -> CircleList:
 
 
 @router.post("/circles", status_code=status.HTTP_201_CREATED)
-def create_circle(subject: Subject, body: CircleCreate, circles: Circles) -> CircleDetailResponse:
-    return CircleDetailResponse.of_detail(circles.create(subject, body.name, body.time_zone), subject)
+def create_circle(subject: Subject, body: CircleCreate, circles: Circles, request: Request) -> CircleDetailResponse:
+    detail = circles.create(subject, body.name, body.time_zone)
+    # Its first monthly goal and its place in the goals' rollover (issue #65).
+    request.app.state.goals.circle_created(detail.circle)
+    return CircleDetailResponse.of_detail(detail, subject)
 
 
 @router.get("/circles/{circle_id}")

@@ -453,7 +453,7 @@ def test_the_schedule_s_event_flushes_the_digests(
     assert handler({"birdjournal_job": "flush_digests"}, None) == {"sent": 1, "waiting": 0, "dropped": 0}
     assert [push.kind for push in apns.to(BO_PHONE)] == [PushKind.DIGEST]
     with pytest.raises(ValueError):
-        handler({"birdjournal_job": "rollover_goals"}, None)
+        handler({"birdjournal_job": "paint_everything"}, None)
 
 
 # The words.
