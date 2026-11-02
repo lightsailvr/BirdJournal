@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// A circle's page (issue #61), the shell later tickets fill with the goal card: Recent finds (issue #62), invite (a
-/// link and a QR code), the members, and the settings (leave; the creator removes members).
+/// A circle's page (issue #61): the goal card (issue #65), Recent finds (issue #62), invite (a link and a QR code), the
+/// members, and the settings (leave; the creator removes members).
 struct CirclePageView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(PushCenter.self) private var pushes
@@ -18,6 +18,7 @@ struct CirclePageView: View {
     var body: some View {
         List {
             if let detail {
+                CircleGoalsSection(circleID: detail.circle.id, timeZone: detail.circle.timeZone)
                 CircleFeedSection(circleID: detail.circle.id)
                 header(detail)
                 members(detail)
@@ -194,7 +195,9 @@ struct CirclePageView: View {
         do {
             try await circles.loadDetail(id: id)
             error = nil
+            async let goals: Void = circles.loadGoals(circleID: id)
             await circles.loadFeed(circleID: id)
+            await goals
         } catch {
             self.error = CircleStore.message(for: error, doing: "load the circle")
         }

@@ -24,7 +24,7 @@ import UIKit
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
 ///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
-///   list), `circle` (the first circle's page), `circle-invite` (its invitation, QR code and link), `circle-new` (the
+///   list), `circle` (the first circle's page), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
 ///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
 ///   show those refusals).
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
@@ -156,11 +156,12 @@ struct DebugLaunch: ViewModifier {
                 defaults.set(true, forKey: "autoSource")
             case "circles":
                 tab = .circles
-            case "circle", "circle-invite":
+            case "circle", "circle-invite", "circle-goal":
                 tab = .circles
                 await circles.refresh()
                 if let first = circles.circles.first {
                     if screen == "circle-invite" { defaults.set(true, forKey: "autoCircleInvite") }
+                    if screen == "circle-goal" { defaults.set(true, forKey: "autoNewGoal") }
                     circlesPath.append(Route.circle(id: first.id))
                 }
             case "circle-new":
