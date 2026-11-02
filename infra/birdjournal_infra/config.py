@@ -37,6 +37,10 @@ class BirdJournalConfig:
     # Which adds get scene art without asking (issue #68): `every_glasses_add` in the friends phase, every add with a
     # glasses photo by a signed-in birder; `legendary_or_rare` at the public launch (#69). The API reads it.
     art_auto_paint: str = "every_glasses_add"
+    # The APNs token key (issue #63): a Secrets Manager secret {"key_id", "team_id", "private_key"} created by
+    # infra/scripts/push-wizard.sh outside the stack, and the app's bundle id, every push's apns-topic.
+    apns_secret_name: str = "birdjournal/apns"
+    apns_topic: str = "com.matthewcelia.mybirdjournal"
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -67,4 +71,6 @@ class BirdJournalConfig:
             ios_app_ids=tuple(node.get_context("iosAppIds")),
             invite_certificate_arn=certificate,
             art_auto_paint=art_auto_paint,
+            apns_secret_name=node.get_context("apnsSecretName"),
+            apns_topic=node.get_context("apnsTopic"),
         )

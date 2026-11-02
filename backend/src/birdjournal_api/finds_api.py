@@ -1,6 +1,7 @@
 """The find routes (issue #62): put and delete a find, keyed by the sighting's id, and a circle's feed, paged. A card
 shared by hand (issue #66): an upload URL for its original photo, and the share."""
 
+import logging
 from datetime import UTC, datetime
 from typing import Annotated, Any
 from uuid import UUID
@@ -33,6 +34,9 @@ from birdjournal_api.finds import (
     clean_text,
 )
 from birdjournal_api.photos import PhotoStore, new_photo_key
+from birdjournal_api.pushes import PushService
+
+log = logging.getLogger(__name__)
 
 
 def _utc(value: datetime) -> str:
@@ -269,8 +273,14 @@ def _photos(request: Request) -> PhotoStore | None:
     return photos
 
 
+def _pushes(request: Request) -> PushService:
+    service: PushService = request.app.state.pushes
+    return service
+
+
 Finds = Annotated[FindStore, Depends(_finds)]
 Photos = Annotated[PhotoStore | None, Depends(_photos)]
+Pushes = Annotated[PushService, Depends(_pushes)]
 ArtBaseUrl = Annotated[str | None, Depends(_art_base_url)]
 
 
@@ -287,13 +297,20 @@ router = APIRouter(prefix="/v1")
 
 @router.put("/finds/{sighting_id}")
 def put_find(
-    subject: Subject, sighting_id: str, body: FindBody, finds: Finds, base: ArtBaseUrl, response: Response
+    subject: Subject, sighting_id: str, body: FindBody, finds: Finds, pushes: Pushes, base: ArtBaseUrl,
+    response: Response,
 ) -> FindResponse:
     try:
         content = body.content()
     except ValueError as error:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from None
     find, created = finds.put(subject, _sighting_id(sighting_id), content)
+    if created:
+        # Pushes (issue #63) for a new find only; a repeated put sends nothing. A failure here never fails the put.
+        try:
+            pushes.find_added(find)
+        except Exception:
+            log.exception("pushes for a new find failed")
     response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
     return FindResponse.of(find, base)
 

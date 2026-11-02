@@ -13,6 +13,7 @@ struct DeveloperView: View {
     @Query private var sightings: [Sighting]
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(PushCenter.self) private var pushes
     @State private var path: [Screen] = []
 
     private let planner = WindowPlanner()
@@ -45,6 +46,20 @@ struct DeveloperView: View {
                 }
 
                 GlassesSection()
+
+                if pushes.isAvailable {
+                    Section {
+                        LabeledContent("Permission", value: pushes.permission.map { String(describing: $0) } ?? "not read")
+                        LabeledContent("Environment", value: pushes.environment.rawValue)
+                        Text(pushes.deviceToken ?? "No token yet")
+                            .font(.footnote.monospaced())
+                            .textSelection(.enabled)
+                    } header: {
+                        Text("Push token")
+                    } footer: {
+                        Text("For infra/scripts/push-wizard.sh's test push (issue #63): touch and hold the token to copy it.")
+                    }
+                }
 
                 Section("Modules") {
                     LabeledContent("Identification", value: "\(planner.sampleRate) Hz, \(planner.samplesPerWindow) samples per window")

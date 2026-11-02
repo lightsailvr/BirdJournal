@@ -14,12 +14,22 @@ class Settings:
     dynamodb_endpoint: str | None = None
     # Where invite links point (issue #61): `<invite_base_url>/i/<token>`, served by the invite site's CloudFront.
     invite_base_url: str = "https://birdquest.matthewcelia.com"
+    # Scene art (issue #68). Without the buckets the art routes answer 503; the stack always sets them.
+    upload_bucket: str | None = None
+    art_bucket: str | None = None
+    art_queue_url: str | None = None
+    # The worker token's Secrets Manager ARN (the stack), or the token itself (tests, local runs).
+    art_worker_token_secret: str | None = None
+    art_worker_token: str | None = None
+    # The auto-paint rule: every_glasses_add (friends phase) or legendary_or_rare (public launch).
+    art_auto_paint: str = "every_glasses_add"
     # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
     # the stack has one; the feed then gives keys without URLs.
     art_cdn_base_url: str | None = None
-    # The art CDN's bucket (`ART_BUCKET`): shared cards' original photos go under photos/ (issue #66). None before the
-    # stack has one; sharing a photo then answers 503.
-    art_bucket: str | None = None
+    # The APNs token key's Secrets Manager secret (issue #63; infra/scripts/push-wizard.sh stores it). None: no pushes.
+    apns_secret_name: str | None = None
+    # The app's bundle id, the apns-topic of every push.
+    apns_topic: str = "com.matthewcelia.mybirdjournal"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -32,9 +42,21 @@ class Settings:
             region=env.get("AWS_REGION", "us-west-2"),
             dynamodb_endpoint=env.get("DYNAMODB_ENDPOINT") or None,
             invite_base_url=(env.get("INVITE_BASE_URL") or cls.invite_base_url).rstrip("/"),
-            art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
+            upload_bucket=env.get("UPLOAD_BUCKET") or None,
             art_bucket=env.get("ART_BUCKET") or None,
+            art_queue_url=env.get("ART_QUEUE_URL") or None,
+            art_worker_token_secret=env.get("ART_WORKER_TOKEN_SECRET") or None,
+            art_auto_paint=_rule(env.get("ART_AUTO_PAINT") or cls.art_auto_paint),
+            art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
+            apns_secret_name=env.get("APNS_SECRET_NAME") or None,
+            apns_topic=env.get("APNS_TOPIC") or cls.apns_topic,
         )
+
+
+def _rule(value: str) -> str:
+    if value not in ("every_glasses_add", "legendary_or_rare"):
+        raise ValueError(f"ART_AUTO_PAINT must be every_glasses_add or legendary_or_rare, not {value!r}")
+    return value
 
 
 def _require(env: Mapping[str, str], name: str) -> str:

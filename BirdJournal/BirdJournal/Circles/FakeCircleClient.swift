@@ -26,6 +26,11 @@ final class FakeCircleClient: CircleClient {
     private(set) var sharedCards: [UUID: FindPolicy.Card] = [:]
     /// The photos uploaded, by key.
     private(set) var photos: [String: Data] = [:]
+    /// The phone tokens registered to Pat (issue #63), with their environment.
+    private(set) var devices: [String: PushEnvironment] = [:]
+    /// Every device registration and removal, for the tests: `register <token> <environment>` or `unregister <token>`.
+    private(set) var deviceLog: [String] = []
+    private var muted = Mutes()
 
     init(seeded: Bool, now: @escaping () -> Date = Date.init) {
         self.now = now
@@ -193,6 +198,38 @@ final class FakeCircleClient: CircleClient {
         let page = Array(sorted.dropFirst(start).prefix(HTTPCircleClient.feedPageSize))
         let next = start + page.count < sorted.count ? String(start + page.count) : nil
         return FeedPage(items: page, nextCursor: next)
+    }
+
+    func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws {
+        devices[token] = environment
+        deviceLog.append("register \(token) \(environment.rawValue)")
+    }
+
+    func unregisterDevice(token: String, accessToken: String) async throws {
+        devices[token] = nil
+        deviceLog.append("unregister \(token)")
+    }
+
+    func mutes(accessToken: String) async throws -> Mutes { muted }
+
+    func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws {
+        if muted {
+            _ = try await circle(id: circleID, accessToken: accessToken)
+            self.muted.circles.insert(circleID)
+        } else {
+            self.muted.circles.remove(circleID)
+        }
+    }
+
+    func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws {
+        if muted {
+            guard friendID != Self.me, circlesByID.values.contains(where: { detail in
+                detail.members.contains { $0.id == Self.me } && detail.members.contains { $0.id == friendID }
+            }) else { throw CircleError.notFound }
+            self.muted.friends.insert(friendID)
+        } else {
+            self.muted.friends.remove(friendID)
+        }
     }
 
     /// Friends' finds in a seeded circle: a circle first, a Legendary, a rare bird and one at a secret spot.

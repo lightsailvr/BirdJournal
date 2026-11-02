@@ -22,6 +22,9 @@ final class AccountSession {
     private(set) var identity = AuthTokens.Identity()
     /// The last thing that went wrong, in words for the Account screen.
     private(set) var errorMessage: String?
+    /// Runs at sign-out with an access token, before the refresh token is revoked (which ends the access token too):
+    /// the push center (issue #63) takes the phone off the account so it gets no more of its pushes.
+    @ObservationIgnored var beforeSignOut: ((String) async -> Void)?
 
     private let auth: AuthClient?
     private let api: AccountAPI?
@@ -112,7 +115,17 @@ final class AccountSession {
         identity = .init()
         errorMessage = nil
         if status != .unavailable { status = .signedOut }
-        if let revoked, let auth { Task { await auth.revoke(revoked) } }
+        guard let revoked, let auth else { return }
+        let beforeSignOut = beforeSignOut
+        let now = now()
+        Task {
+            if let beforeSignOut {
+                // A token near its end is renewed once; a refused renewal still revokes.
+                let access = revoked.needsRefresh(now: now) ? (try? await auth.refresh(revoked))?.accessToken : revoked.accessToken
+                if let access { await beforeSignOut(access) }
+            }
+            await auth.revoke(revoked)
+        }
     }
 
     /// An access token good for at least another minute, renewed at the token endpoint when it isn't.
@@ -140,6 +153,8 @@ final class AccountSession {
         } catch AccountAPIError.unauthorized {
             return try await call(try await renew().accessToken)
         } catch CircleError.unauthorized {
+            return try await call(try await renew().accessToken)
+        } catch ArtClientError.unauthorized {
             return try await call(try await renew().accessToken)
         }
     }

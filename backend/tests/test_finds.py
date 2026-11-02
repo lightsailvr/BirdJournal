@@ -332,10 +332,12 @@ def test_feed_items_carry_their_art_on_the_art_cdn(
     assert items["Northern House Wren"]["art"] is None, "the phone falls back to the reference photo or a tile"
 
 
-def test_without_an_art_cdn_the_feed_gives_keys_alone(client: TestClient, issuer: TestIssuer) -> None:
-    circle = _two_friends(client, issuer)
-    _put_ok(client, issuer, "ada", _find())
-    assert _feed(client, issuer, circle, "ben")["items"][0]["art"]["url"] is None
+def test_without_an_art_cdn_the_feed_gives_keys_alone(settings: Settings, issuer: TestIssuer, clock: Clock) -> None:
+    app = create_app(replace(settings, art_cdn_base_url=None), signing_key=issuer.signing_key, clock=clock)
+    with TestClient(app) as client:
+        circle = _two_friends(client, issuer)
+        _put_ok(client, issuer, "ada", _find())
+        assert _feed(client, issuer, circle, "ben")["items"][0]["art"]["url"] is None
 
 
 def test_the_display_name_is_read_with_the_feed(client: TestClient, issuer: TestIssuer) -> None:
