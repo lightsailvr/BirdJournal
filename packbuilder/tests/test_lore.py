@@ -194,6 +194,70 @@ def test_a_warm_lock_makes_no_request_and_is_left_unchanged(tmp_path, caplog):
     assert (tmp_path / "lore.lock.json").read_bytes() == before
 
 
+WREN = ("troglodytes-aedon", "Northern House Wren", "Troglodytes aedon")
+WREN_FACTS = [
+    Fact("f1", "The house wren nests in holes in trees and in nest boxes.", REVISION),
+    Fact("f2", "It feeds mostly on insects and other invertebrates.", "avonet"),
+    Fact("f3", "It lays its eggs in other birds' nests.", "birdbase"),
+    Fact("f4", "The IUCN Red List rates it Least Concern.", "birdbase"),
+]
+WREN_LORE = {
+    "sentences": [
+        {"text": "In a hole in an old tree, or a box that people hung, the small brown wren makes its home.", "facts": ["f1"]},
+        {"text": "It hunts the bark and the leaves for beetles and spiders, and brings them back to the hole.", "facts": ["f2"]},
+        {"text": "The tellers say its eggs lie in nests that other birds once made, a borrowed house for every brood.", "facts": ["f3"]},
+        {"text": "So it goes on, and the world counts it among the birds of least concern.", "facts": ["f4"]},
+    ],
+    "tagline": {"text": "The small brown keeper of the borrowed hole.", "facts": ["f1"]},
+}
+REUSE = "It nests in a cavity, an old nest another bird built or a crevice."
+
+
+def test_a_changed_dataset_fact_the_lore_cites_sends_only_that_entry_back(tmp_path, caplog):
+    writer(tmp_path, StubClient(GOOD, WREN_LORE)).write(PHOEBE + [WREN], {"sayornis-nigricans": FACTS, WREN[0]: WREN_FACTS})
+    review(LoreLock.load(tmp_path / "lore.lock.json"), approve_all=True)
+
+    fixed = [WREN_FACTS[0], WREN_FACTS[1], Fact("f3", REUSE, "birdbase"), WREN_FACTS[3]]
+    retold = {**WREN_LORE, "sentences": WREN_LORE["sentences"][:2] + [{**WREN_LORE["sentences"][2], "text": "The tellers say it takes an old nest another bird built."}] + WREN_LORE["sentences"][3:]}
+    client = StubClient(retold)
+    written = writer(tmp_path, client).write(PHOEBE + [WREN], {"sayornis-nigricans": FACTS, WREN[0]: fixed})
+
+    assert len(client.prompts) == 1 and REUSE in client.prompts[0], "only the wren is written again, from the new sheet"
+    assert "a fact its lore cites changed (f3: \"It lays its eggs in other birds' nests.\")" in caplog.text
+    assert written[WREN[0]].review == PENDING and REUSE in [fact.text for fact in written[WREN[0]].facts]
+    assert written["sayornis-nigricans"].ships, "the phoebe's facts did not change"
+
+
+def test_a_changed_dataset_fact_the_lore_does_not_cite_is_swapped_in_and_the_lore_stays(tmp_path):
+    uncited = {**WREN_LORE, "sentences": WREN_LORE["sentences"][:2] + [{**WREN_LORE["sentences"][2], "facts": ["f1"]}] + WREN_LORE["sentences"][3:]}
+    writer(tmp_path, StubClient(uncited)).write([WREN], {WREN[0]: WREN_FACTS})
+    review(LoreLock.load(tmp_path / "lore.lock.json"), approve_all=True)
+
+    moved_article = [Fact("f1", "The house wren is a small brown bird.", "https://en.wikipedia.org/w/index.php?oldid=2")] + WREN_FACTS[1:2]
+    fixed = moved_article + [Fact("f3", REUSE, "birdbase"), WREN_FACTS[3]]
+    written = writer(tmp_path, NoRequests()).write([WREN], {WREN[0]: fixed})
+
+    entry = LoreLock.load(tmp_path / "lore.lock.json").species[WREN[0]]
+    assert entry["review"] == "approved" and written[WREN[0]].ships
+    assert [fact["text"] for fact in entry["facts"]] == [WREN_FACTS[0].text, WREN_FACTS[1].text, REUSE, WREN_FACTS[3].text], (
+        "the dataset fact is swapped in place under its id; the article's stay as locked"
+    )
+    assert [fact["id"] for fact in entry["facts"]] == ["f1", "f2", "f3", "f4"]
+
+
+def test_refreshing_drops_gone_facts_and_appends_new_ones_with_fresh_ids():
+    from packbuilder.lore import refreshed, stats_changes
+
+    locked = WREN_FACTS
+    current = [WREN_FACTS[0], WREN_FACTS[1], WREN_FACTS[3], Fact("f4", "It migrates.", "avonet"), Fact("f5", "It weighs about 11 g.", "avonet")]
+    removed, added = stats_changes(locked, current)
+    assert [fact.id for fact in removed] == ["f3"] and [fact.text for fact in added] == ["It migrates.", "It weighs about 11 g."]
+    assert [(fact.id, fact.text) for fact in refreshed(locked, removed, added)] == [
+        ("f1", WREN_FACTS[0].text), ("f2", WREN_FACTS[1].text), ("f3", "It migrates."), ("f4", WREN_FACTS[3].text), ("f5", "It weighs about 11 g."),
+    ]
+    assert [fact.id for fact in refreshed(locked, removed, [])] == ["f1", "f2", "f4"]
+
+
 def test_lore_is_written_again_only_on_request(tmp_path):
     writer(tmp_path, StubClient(GOOD)).write(PHOEBE, {"sayornis-nigricans": FACTS})
     review(LoreLock.load(tmp_path / "lore.lock.json"), approve=["Black Phoebe"])
@@ -264,6 +328,7 @@ def test_the_review_file_lists_the_tagline_lore_and_cited_facts(tmp_path):
     writer(tmp_path, StubClient(GOOD)).write(PHOEBE, {"sayornis-nigricans": FACTS})
     sheet = review_sheet(LoreLock.load(tmp_path / "lore.lock.json"), tmp_path / "review.md", "Test Pack").read_text()
     assert "## Black Phoebe (pending)" in sheet
+    assert "Pending: Black Phoebe." in sheet
     assert "**Keeper of the low perch, builder in mud.** (f3, f4)" in sheet
     assert "   - f2: It nests in a half cup or a cup. (BIRDBASE)" in sheet
     assert "   - f4: The nest is a cup of mud and grass fibres stuck to a wall, a bridge or a cliff. (Wikipedia)" in sheet
