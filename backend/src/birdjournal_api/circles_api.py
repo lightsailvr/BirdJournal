@@ -19,6 +19,7 @@ from birdjournal_api.circles import (
     clean_circle_name,
     clean_time_zone,
 )
+from birdjournal_api.goals import GoalStore
 
 
 def _utc(value: datetime) -> str:
@@ -136,7 +137,13 @@ def _invite_base_url(request: Request) -> str:
     return base
 
 
+def _goals(request: Request) -> GoalStore:
+    store: GoalStore = request.app.state.goals
+    return store
+
+
 Circles = Annotated[CircleStore, Depends(_circles)]
+Goals = Annotated[GoalStore, Depends(_goals)]
 
 
 def _refused(error: Exception) -> HTTPException:
@@ -165,10 +172,10 @@ def list_circles(subject: Subject, circles: Circles) -> CircleList:
 
 
 @router.post("/circles", status_code=status.HTTP_201_CREATED)
-def create_circle(subject: Subject, body: CircleCreate, circles: Circles, request: Request) -> CircleDetailResponse:
+def create_circle(subject: Subject, body: CircleCreate, circles: Circles, goals: Goals) -> CircleDetailResponse:
     detail = circles.create(subject, body.name, body.time_zone)
     # Its first monthly goal and its place in the goals' rollover (issue #65).
-    request.app.state.goals.circle_created(detail.circle)
+    goals.circle_created(detail.circle)
     return CircleDetailResponse.of_detail(detail, subject)
 
 

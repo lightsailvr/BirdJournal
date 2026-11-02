@@ -177,20 +177,23 @@ enum GoalWords {
         short ? "\(goal.progress)/\(goal.target)" : "\(goal.progress) of \(goal.target) species"
     }
 
-    /// "5 more to go · 18 days left", "Reached on 12 November", or "The month is over".
+    /// "5 more to go · 18 days left", "5 more to go · Last day", or "Reached! …" once the target is met.
     static func monthlyNote(_ goal: CircleGoal, now: Date = .now) -> String {
         if goal.isReached { return "Reached! Every new bird this month is a bonus." }
         let left = goal.target - goal.progress
         return "\(left) more to go · \(daysLeft(goal, now: now))"
     }
 
-    /// "Big Day · 7 Nov · by Maya Ortiz · starts in 5 days", or with "Reached" or "Ended".
+    /// "7 Nov · by Maya Ortiz · starts in 5 days", "12 Oct – 9 Nov · by Maya Ortiz · 10 days left", or ending in
+    /// "Reached" or "Ended".
     static func customNote(_ goal: CircleGoal, timeZone: String, now: Date = .now) -> String {
         var parts = [days(goal, timeZone: timeZone)]
         if let creator = goal.createdBy { parts.append("by \(creator.name)") }
         switch goal.status {
         case .upcoming:
-            parts.append("starts \(goal.startsAt.formatted(.relative(presentation: .named, unitsStyle: .wide)))")
+            let relative = RelativeDateTimeFormatter()
+            relative.dateTimeStyle = .named
+            parts.append("starts \(relative.localizedString(for: goal.startsAt, relativeTo: now))")
         case .active:
             parts.append(goal.isReached ? "Reached" : daysLeft(goal, now: now))
         case .ended:
@@ -259,7 +262,8 @@ struct NewGoalSheet: View {
                 }
                 Section("Days") {
                     DatePicker("First day", selection: $start, in: Date.now.addingTimeInterval(-365 * 86_400)..., displayedComponents: .date)
-                    DatePicker("Last day", selection: $end, in: max(start, .now)..., displayedComponents: .date)
+                    // The server takes goals of up to a year.
+                    DatePicker("Last day", selection: $end, in: max(start, .now)...start.addingTimeInterval(365 * 86_400), displayedComponents: .date)
                 }
                 if let error {
                     Section { Text(error).foregroundStyle(.red) }
@@ -289,7 +293,7 @@ struct NewGoalSheet: View {
                 try await circles.createGoal(draft, circleID: circleID)
                 dismiss()
             } catch CircleError.rejected {
-                error = "Check the title (up to 40 characters) and that the last day hasn't passed."
+                error = "Check the title (up to 40 characters), and that the last day hasn't passed and is within a year of the first."
             } catch {
                 self.error = CircleStore.message(for: error, doing: "make the goal")
             }

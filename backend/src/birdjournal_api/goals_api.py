@@ -98,7 +98,7 @@ class GoalCreate(BaseModel):
     @classmethod
     def _target(cls, value: int) -> int:
         if not 1 <= value <= TARGET_MAX:
-            raise ValueError(f"The target must be 1 to {TARGET_MAX}")
+            raise ValueError("bad_target")
         return value
 
 

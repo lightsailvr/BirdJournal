@@ -157,7 +157,6 @@ final class CircleStore {
         var draft = draft
         draft.title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let goal = try await call { try await $0.createGoal(draft, circleID: circleID, accessToken: $1) }
-        goals[circleID, default: []].append(goal)
         await loadGoals(circleID: circleID)
         return goal
     }
@@ -232,7 +231,7 @@ final class CircleStore {
         case CircleError.notFound: "This circle or invitation isn't there any more."
         case CircleError.creatorOnly: "Only the circle's creator can remove members."
         case CircleError.rejected: "Use a name of up to 40 characters, on one line."
-        case CircleError.goalNotYours: "Only the goal's creator or the circle's creator can delete it."
+        case CircleError.goalNotYours: "Only a goal's creator or the circle's creator can delete it, and the monthly goal stays."
         case AuthError.sessionExpired: "You've been signed out. Sign in again to use your circles."
         default: "Couldn't \(action). Check your connection and try again."
         }

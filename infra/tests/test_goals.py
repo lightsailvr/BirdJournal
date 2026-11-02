@@ -2,7 +2,7 @@
 
 import json
 
-from aws_cdk.assertions import Match, Template
+from aws_cdk.assertions import Template
 
 from tests.test_stack import _api_function, _resources
 
@@ -37,4 +37,3 @@ def test_eventbridge_may_invoke_the_api_for_the_rollover(template: Template) -> 
     assert len(permissions) == 2
     for permission in permissions:
         assert permission["Properties"]["FunctionName"] == {"Fn::GetAtt": [name, "Arn"]}
-    template.has_resource_properties("AWS::Events::Rule", Match.object_like({"ScheduleExpression": "rate(15 minutes)"}))

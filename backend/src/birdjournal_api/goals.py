@@ -11,13 +11,16 @@
   asked: repeat cards and several members finding the same bird count once, a deleted find stops counting at once, and
   the finds of a member who left still count (they stay in the feed, #62).
 - **Completion** is noted once (`completed_at`, written on the condition that it isn't there): the new find that
-  brings progress to the target makes a notable push (pushes.py), and no later find, nor progress falling and rising
-  again after a delete, pushes it again. A custom goal made already reached is noted without a push.
+  brings progress to the target (its species new to the period, and the count reaching the target with it) makes a
+  notable push (pushes.py), and no later find, nor progress falling and rising again after a delete, pushes it again.
+  A goal that has ended completes no more (a late find shared by hand doesn't announce last March's goal). A custom
+  goal made already reached is noted without a push.
 
 Items, beside the finds' partitions (finds.py):
 
 - `CIRCLE#<id>#GOALS` / `GOAL#<goal id>`: the goal: `kind` (monthly or custom), `title`, `target`, `start_date` and
-  `end_date` (ISO dates, both included), `created_by` (custom only), `created_at`, and `completed_at` once reached.
+  `end_date` (ISO dates, both included), `goal_id`, `created_by` (custom only), `created_at`, and `completed_at` with
+  `completed_by` (`<owner>#<sighting id>`, the find that reached it) once reached.
   The monthly goal's id is `monthly-<yyyy>-<mm>`, so two makers racing write it once.
 - `GOAL_ROLLOVER` / `<circle id>`: every circle the job rolls over, with its time zone and `month`, the last month it
   made a goal for. One partition, like the digest buffers (#63): one query a run, and a circle is read only when its
@@ -167,16 +170,17 @@ class GoalStore:
         circle = self._member_circle(subject, circle_id)
         now = self._clock()
         self._ensure_monthly(circle, now)
-        views = [self._view(circle, goal, subject, now) for goal in self._goal_items(circle_id)]
         this_month = _month_of(now, circle.time_zone)
-        monthly = [
-            view for view in views
-            if view.goal.kind is GoalKind.MONTHLY and (view.goal.start_date.year, view.goal.start_date.month) == this_month
-        ]
-        custom = [
-            view for view in views
-            if view.goal.kind is GoalKind.CUSTOM and now - view.ends_at < ENDED_SHOWN_FOR
-        ]
+
+        def shown(goal: Goal) -> bool:
+            if goal.kind is GoalKind.MONTHLY:
+                return (goal.start_date.year, goal.start_date.month) == this_month
+            return now - period(circle.time_zone, goal.start_date, goal.end_date)[1] < ENDED_SHOWN_FOR
+
+        # Only the shown goals' progress is read: past months and long-ended goals stay in the table.
+        views = [self._view(circle, goal, subject, now) for goal in self._goal_items(circle_id) if shown(goal)]
+        monthly = [view for view in views if view.goal.kind is GoalKind.MONTHLY]
+        custom = [view for view in views if view.goal.kind is GoalKind.CUSTOM]
         order = {GoalStatus.ACTIVE: 0, GoalStatus.UPCOMING: 1, GoalStatus.ENDED: 2}
         custom.sort(key=lambda view: (order[view.status], view.goal.end_date, view.goal.created_at))
         return monthly + custom
@@ -189,8 +193,6 @@ class GoalStore:
 
     def create(self, subject: str, circle_id: str, title: str, target: int, start: date, end: date) -> GoalView:
         circle = self._member_circle(subject, circle_id)
-        if not 1 <= target <= TARGET_MAX:
-            raise ValueError(f"The target must be 1 to {TARGET_MAX}")
         if end < start:
             raise ValueError("ends_before_it_starts")
         if end - start >= LONGEST_GOAL:
@@ -242,11 +244,14 @@ class GoalStore:
                 if goal.completed_at is not None:
                     continue
                 starts_at, ends_at = period(circle.time_zone, goal.start_date, goal.end_date)
-                if not starts_at <= find.content.found_at < ends_at:
+                if not starts_at <= find.content.found_at < ends_at or now >= ends_at:
                     continue
-                progress = self._progress(circle_id, starts_at, ends_at)
-                if progress >= goal.target and self._note_completed(goal, find, now):
-                    completed.append(CompletedGoal(goal=goal, progress=progress))
+                species = self._finds.species_between(circle_id, starts_at, ends_at)
+                # This find is the one that crossed: its species is new to the period, and with it the count reaches
+                # the target. A repeat bird after a goal reached otherwise (a moved find) takes no credit.
+                crossed = species[find.content.scientific_name] == 1 and len(species) == goal.target
+                if crossed and self._note_completed(goal, find, now):
+                    completed.append(CompletedGoal(goal=goal, progress=len(species)))
         return completed
 
     def roll_over(self) -> RolloverReport:
@@ -261,7 +266,11 @@ class GoalStore:
                 current += 1
                 continue
             circle = self._circles.circle(circle_id)
-            if circle is None or circle.member_count == 0:
+            if circle is None:
+                self._table.delete_item(Key={"pk": ROLLOVER_PK, "sk": circle_id})
+                skipped += 1
+                continue
+            if circle.member_count == 0:
                 # Nobody left to chase it: the circle is passed over until someone is back (reading the goals or a
                 # find makes the goal then).
                 self._register(circle_id, item["time_zone"], year, month)

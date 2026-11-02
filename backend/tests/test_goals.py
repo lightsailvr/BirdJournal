@@ -543,3 +543,40 @@ def test_two_circles_reaching_goals_with_one_find_both_say_so(
     _put_ok(client, issuer, "ada", _find(SPECIES[0], found_at="2026-11-01T16:00:00Z"))
     (push,) = _alerts(apns, BO_PHONE)
     assert {goal["circle_id"] for goal in push.payload()["goals"]} == {first, second}
+
+
+def test_a_repeat_bird_takes_no_credit_for_a_goal_reached_by_a_moved_find(
+    client: TestClient, issuer: TestIssuer, apns: FakeApns, group: str
+) -> None:
+    goal_id = _goal_ok(client, issuer, group, target=2, start_date="2026-11-01", end_date="2026-11-07")["id"]
+    _species_finds(client, issuer, "bo", 1, "2026-11-02T16:00:00Z")
+    # Bird 1 found on 31 October, then corrected to 2 November: a repeated put, which pushes nothing.
+    moved = _put_ok(client, issuer, "bo", _find(SPECIES[1], found_at="2026-10-31T16:00:00Z"))
+    _put_ok(client, issuer, "bo", _find(SPECIES[1], found_at="2026-11-02T17:00:00Z"), sighting_id=moved)
+    assert _custom(client, issuer, group, goal_id)["progress"] == 2
+    # Another Bird 0 didn't bring the count to 2: no "species 2 of 2" for it.
+    _species_finds(client, issuer, "bo", 1, "2026-11-03T16:00:00Z")
+    assert _alerts(apns, ADA_PHONE) == []
+    assert _custom(client, issuer, group, goal_id)["completed_at"] is None
+
+
+def test_a_late_find_doesn_t_announce_a_goal_that_has_ended(
+    client: TestClient, issuer: TestIssuer, apns: FakeApns, clock: Clock, group: str
+) -> None:
+    goal_id = _goal_ok(client, issuer, group, target=1, start_date="2026-11-01", end_date="2026-11-03")["id"]
+    clock.now = datetime(2026, 11, 5, 18, 0, tzinfo=UTC)
+    # Shared by hand two days after the goal ended, from its second day.
+    _species_finds(client, issuer, "bo", 1, "2026-11-02T16:00:00Z")
+    assert _alerts(apns, ADA_PHONE) == []
+    goal = _custom(client, issuer, group, goal_id)
+    assert goal["progress"] == 1 and goal["completed_at"] is None and goal["status"] == "ended"
+
+
+def test_a_deleted_circle_leaves_the_rollover(client: TestClient, issuer: TestIssuer, clock: Clock, table: Any) -> None:
+    clock.now = datetime(2026, 10, 5, 18, 0, tzinfo=UTC)
+    circle_id = _circle(client, issuer)
+    table.delete_item(Key={"pk": f"CIRCLE#{circle_id}", "sk": "META"})
+    clock.now = datetime(2026, 11, 1, 8, 0, tzinfo=UTC)
+    assert _roll_over(client).skipped == 1
+    report = _roll_over(client)
+    assert (report.created, report.current, report.skipped) == (0, 0, 0)

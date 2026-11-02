@@ -94,7 +94,7 @@ struct GoalClientTests {
         await #expect(throws: CircleError.goalNotYours) { try await client.deleteGoal(id: "monthly-2026-11", circleID: "c", accessToken: "t") }
         await #expect(throws: CircleError.rejected) { try await client.createGoal(draft, circleID: "c", accessToken: "t") }
         await #expect(throws: CircleError.notFound) { try await client.goals(circleID: "c", accessToken: "t") }
-        #expect(CircleStore.message(for: CircleError.goalNotYours, doing: "delete") == "Only the goal's creator or the circle's creator can delete it.")
+        #expect(CircleStore.message(for: CircleError.goalNotYours, doing: "delete") == "Only a goal's creator or the circle's creator can delete it, and the monthly goal stays.")
     }
 }
 
