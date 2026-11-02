@@ -54,6 +54,14 @@ def test_settings_come_from_the_stacks_environment() -> None:
     assert settings.table_name == "birdjournal"
     assert settings.cognito_client_ids == frozenset({"ios-client", "other-client"})
     assert settings.dynamodb_endpoint is None
+    assert settings.invite_base_url == "https://birdquest.matthewcelia.com"
+
+
+def test_the_invite_base_url_comes_from_the_environment() -> None:
+    settings = Settings.from_env(
+        {"TABLE_NAME": "t", "COGNITO_ISSUER": "x", "COGNITO_CLIENT_IDS": "y", "INVITE_BASE_URL": "https://example.test/"}
+    )
+    assert settings.invite_base_url == "https://example.test"
 
 
 def test_missing_settings_fail_at_start() -> None:

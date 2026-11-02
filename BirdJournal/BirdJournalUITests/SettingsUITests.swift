@@ -63,6 +63,20 @@ final class AccountSwitchUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["ACCOUNT"].exists || app.staticTexts["Account"].exists, "an Account section header")
         #endif
     }
+
+    /// The Circles tab (issue #61) needs the account, so it follows the same switch.
+    @MainActor
+    func testCirclesTabFollowsTheBuildSwitch() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 10), "no tab bar; screen: \(app.debugDescription.prefix(3000))")
+        #if DEBUG
+        XCTAssertTrue(app.tabBars.buttons["Circles"].exists, "no Circles tab in a Debug build")
+        #else
+        XCTAssertFalse(app.tabBars.buttons["Circles"].exists, "a Circles tab in a Release build")
+        #endif
+    }
 }
 
 private extension XCUIElement {

@@ -9,12 +9,13 @@ from birdjournal_infra.auth import Auth
 from birdjournal_infra.budget import Budget
 from birdjournal_infra.config import TAG_KEY, TAG_VALUE, BirdJournalConfig
 from birdjournal_infra.data import Data
+from birdjournal_infra.invite_site import InviteSite
 
 BACKEND_DIRECTORY = Path(__file__).resolve().parents[2] / "backend"
 
 
 class BirdJournalStack(Stack):
-    """The whole BirdJournal backend in one stack (ADR-0002, issue #60)."""
+    """The whole BirdJournal backend in one stack (ADR-0002, issues #60 and #61)."""
 
     def __init__(self, scope: Construct, id: str, *, config: BirdJournalConfig, **kwargs: Any) -> None:
         super().__init__(scope, id, **kwargs)
@@ -23,6 +24,13 @@ class BirdJournalStack(Stack):
 
         auth = Auth(self, "Auth", config=config)
         data = Data(self, "Data")
+        invites = InviteSite(
+            self,
+            "InviteSite",
+            domain=config.invite_domain,
+            certificate_arn=config.invite_certificate_arn,
+            app_ids=list(config.ios_app_ids),
+        )
         api = Api(
             self,
             "Api",
@@ -31,6 +39,7 @@ class BirdJournalStack(Stack):
                 "TABLE_NAME": data.table.table_name,
                 "COGNITO_ISSUER": auth.issuer,
                 "COGNITO_CLIENT_IDS": auth.app_client.user_pool_client_id,
+                "INVITE_BASE_URL": invites.url,
             },
         )
         data.table.grant_read_write_data(api.function)
@@ -45,6 +54,9 @@ class BirdJournalStack(Stack):
             # Both Google's authorized redirect URI and Apple's Services ID return URL.
             "IdpResponseUrl": f"https://{domain}/oauth2/idpresponse",
             "TableName": data.table.table_name,
+            # The invite domain's CNAME target at SiteGround (the circles wizard).
+            "InviteDistributionDomain": invites.distribution.distribution_domain_name,
+            "InviteBaseUrl": invites.url,
         }
         for name, value in outputs.items():
             CfnOutput(self, name, value=value)

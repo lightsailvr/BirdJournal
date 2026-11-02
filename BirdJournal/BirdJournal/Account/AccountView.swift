@@ -45,29 +45,7 @@ struct AccountView: View {
 
     private var signedOut: some View {
         Section {
-            ForEach(IdentityProvider.allCases) { provider in
-                Button {
-                    Task { await account.signIn(with: provider) }
-                } label: {
-                    HStack(spacing: 8) {
-                        if account.status == .signingIn(provider) {
-                            ProgressView()
-                        } else if provider == .apple {
-                            Image(systemName: "apple.logo")
-                        }
-                        Text(provider.buttonTitle)
-                    }
-                    .font(.body.weight(.semibold))
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .foregroundStyle(provider == .apple ? Color.white : Color.ink)
-                    .background(provider == .apple ? Color.black : Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous).strokeBorder(Color.rule, lineWidth: provider == .apple ? 0 : 1))
-                }
-                .buttonStyle(.plain)
-                .disabled(account.status != .signedOut)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-            }
+            SignInButtons()
         } header: {
             Text("Sign in")
         } footer: {
@@ -102,6 +80,37 @@ struct AccountView: View {
     }
 
     static let optionalNote = "An account is optional. Listening, your journal, cards and bird packs all work without one; signing in will let you join circles with friends."
+}
+
+/// Sign in with Apple and with Google, as list rows: Settings → Account, the Circles tab and the join screen.
+struct SignInButtons: View {
+    @Environment(AccountSession.self) private var account
+
+    var body: some View {
+        ForEach(IdentityProvider.allCases) { provider in
+            Button {
+                Task { await account.signIn(with: provider) }
+            } label: {
+                HStack(spacing: 8) {
+                    if account.status == .signingIn(provider) {
+                        ProgressView()
+                    } else if provider == .apple {
+                        Image(systemName: "apple.logo")
+                    }
+                    Text(provider.buttonTitle)
+                }
+                .font(.body.weight(.semibold))
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .foregroundStyle(provider == .apple ? Color.white : Color.ink)
+                .background(provider == .apple ? Color.black : Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous).strokeBorder(Color.rule, lineWidth: provider == .apple ? 0 : 1))
+            }
+            .buttonStyle(.plain)
+            .disabled(account.status != .signedOut)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        }
+    }
 }
 
 /// The Account row on the Settings screen: who is signed in, or that nobody is.

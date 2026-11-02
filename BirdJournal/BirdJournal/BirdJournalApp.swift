@@ -19,7 +19,8 @@ struct BirdJournalApp: App {
     @State private var places: PlaceNames
     @State private var packs: PackLibrary
     @State private var journalEdits: JournalEdits
-    @State private var account = AccountSession.forApp()
+    @State private var account: AccountSession
+    @State private var circles: CircleStore
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @State private var showingSplash = true
     private let album: ModelContainer
@@ -55,6 +56,9 @@ struct BirdJournalApp: App {
         )
         self.album = album
         self.frames = frames
+        let account = AccountSession.forApp()
+        _account = State(initialValue: account)
+        _circles = State(initialValue: CircleStore.forApp(account: account))
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
@@ -208,11 +212,22 @@ struct BirdJournalApp: App {
             .environment(sounds)
             .environment(journalEdits)
             .environment(account)
+            .environment(circles)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)
             .onOpenURL { url in
-                Task { await connection.handle(url: url) }
+                // An invite link (issue #61) arrives here as a universal link; everything else is the toolkit's.
+                if let token = InviteLink.token(from: url) {
+                    circles.pendingInvite = token
+                } else {
+                    Task { await connection.handle(url: url) }
+                }
+            }
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                if let url = activity.webpageURL, let token = InviteLink.token(from: url) {
+                    circles.pendingInvite = token
+                }
             }
     }
 }
