@@ -8,6 +8,8 @@ Items, beside the account's (tables.py):
 - `DEVICE#<token>` / `DEVICE`: which account holds the token now. A phone signed out of one account and into another
   registers the same token again; the previous account's item goes, so a phone never gets a second account's pushes.
 - `ACCOUNT#<sub>` / `MUTE#CIRCLE#<id>` and `MUTE#FRIEND#<sub>`: a muted circle or friend (mutes by account).
+- `ACCOUNT#<sub>` / `BLOCK#<sub>`: a blocked account (issue #71, blocks by account). A block hides the blocked
+  account's finds and reactions from the blocker and holds back every push about them, as a mute does and more.
 """
 
 import re
@@ -39,6 +41,12 @@ class Device:
 class Mutes:
     circles: frozenset[str] = field(default_factory=frozenset)
     friends: frozenset[str] = field(default_factory=frozenset)
+    # Blocked accounts (#71): never heard of, like a muted friend, and hidden from the feed and the reaction counts.
+    blocked: frozenset[str] = field(default_factory=frozenset)
+
+    def silences(self, friend: str) -> bool:
+        """Whether nothing about the friend should reach the birder: muted or blocked."""
+        return friend in self.friends or friend in self.blocked
 
 
 def clean_token(raw: str) -> str:
@@ -98,7 +106,18 @@ class MuteStore:
         items = _query(self._table, Key("pk").eq(f"ACCOUNT#{subject}") & Key("sk").begins_with("MUTE#"))
         circles = {str(item["sk"]).removeprefix("MUTE#CIRCLE#") for item in items if item["sk"].startswith("MUTE#CIRCLE#")}
         friends = {str(item["sk"]).removeprefix("MUTE#FRIEND#") for item in items if item["sk"].startswith("MUTE#FRIEND#")}
-        return Mutes(circles=frozenset(circles), friends=frozenset(friends))
+        return Mutes(circles=frozenset(circles), friends=frozenset(friends), blocked=frozenset(self.blocked_by(subject)))
+
+    def blocked_by(self, subject: str) -> set[str]:
+        """The accounts the birder blocked."""
+        items = _query(self._table, Key("pk").eq(f"ACCOUNT#{subject}") & Key("sk").begins_with("BLOCK#"))
+        return {str(item["sk"]).removeprefix("BLOCK#") for item in items}
+
+    def block(self, subject: str, other: str) -> None:
+        self._put(subject, f"BLOCK#{other}")
+
+    def unblock(self, subject: str, other: str) -> None:
+        self._table.delete_item(Key={"pk": f"ACCOUNT#{subject}", "sk": f"BLOCK#{other}"})
 
     def mute_circle(self, subject: str, circle_id: str) -> None:
         self._put(subject, f"MUTE#CIRCLE#{circle_id}")

@@ -406,11 +406,15 @@ def read_feed(
     finds: Finds,
     reactions: Reactions,
     base: ArtBaseUrl,
+    request: Request,
     limit: Annotated[int, Query(ge=1, le=FEED_PAGE_MAX)] = FEED_PAGE_DEFAULT,
     cursor: str | None = None,
 ) -> FeedResponse:
     try:
-        page = finds.feed(subject, circle_id, limit=limit, cursor=cursor)
+        page = finds.feed(
+            subject, circle_id, limit=limit, cursor=cursor,
+            hidden=frozenset(request.app.state.mutes.blocked_by(subject)),
+        )
     except NotFound:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "not_found") from None
     except BadCursor:

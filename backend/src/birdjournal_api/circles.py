@@ -11,6 +11,8 @@ Items, beside the account's (tables.py):
   transaction as the membership, so the two never disagree.
 - `INVITE#<token>` / `INVITE`: the circle, who invited, `created_at`, `expires_at`, and `ttl` (epoch seconds, 30 days
   after expiry) for DynamoDB's time-to-live to clean up.
+- `ACCOUNT#<sub>` / `INVITE#<token>` and `ACCOUNT#<sub>` / `LEFT#<id>` (issue #71): the invites an account made and
+  the circles it left or was removed from, so deleting the account finds them without a scan. Same `ttl` as the invite.
 
 The cap holds under concurrent joins: a join increments `member_count` on the condition that it is below 20, in one
 transaction with the membership.
@@ -234,6 +236,7 @@ class CircleStore:
             created_at=now,
             expires_at=now + INVITE_LIFETIME,
         )
+        ttl = int((invite.expires_at + INVITE_KEPT_AFTER_EXPIRY).timestamp())
         self._table.put_item(
             Item={
                 **_invite_key(invite.token),
@@ -241,10 +244,12 @@ class CircleStore:
                 "created_by": subject,
                 "created_at": _timestamp(invite.created_at),
                 "expires_at": _timestamp(invite.expires_at),
-                "ttl": int((invite.expires_at + INVITE_KEPT_AFTER_EXPIRY).timestamp()),
+                "ttl": ttl,
             },
             ConditionExpression="attribute_not_exists(pk)",
         )
+        # The account's copy, for account deletion (#71).
+        self._table.put_item(Item={"pk": _account_pk(subject), "sk": f"INVITE#{invite.token}", "ttl": ttl})
         return invite
 
     def preview(self, subject: str, token: str) -> InvitePreview:
@@ -339,6 +344,40 @@ class CircleStore:
             ):
                 return
 
+    # Account deletion (#71).
+
+    def items_of_circle(self, circle_id: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+        """The circle's meta and every membership item, current and past."""
+        return self._circle_items(circle_id)
+
+    def forget_member(self, circle_id: str, subject: str) -> None:
+        """Deletes a past membership's item, once the account has left (deleting the account)."""
+        try:
+            self._table.delete_item(
+                Key=_member_key(circle_id, subject), ConditionExpression="attribute_exists(left_at)"
+            )
+        except ClientError as error:
+            if error.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                raise
+        self._table.delete_item(Key=_left_key(subject, circle_id))
+
+    def delete_circle(self, circle_id: str, subject: str) -> bool:
+        """Deletes a circle with no other current member: its meta, memberships, feed, species entries, goals and
+        rollover entry. False (nothing deleted) when someone else is in it now."""
+        meta, members = self._circle_items(circle_id)
+        if any(_is_current(item) and _member_id(item) != subject for item in members):
+            return False
+        keys: list[dict[str, str]] = []
+        for pk in (_meta_pk(circle_id), f"{_meta_pk(circle_id)}#FEED", f"{_meta_pk(circle_id)}#SPECIES", f"{_meta_pk(circle_id)}#GOALS"):
+            keys.extend({"pk": item["pk"], "sk": item["sk"]} for item in self._query(pk=pk))
+        keys.append({"pk": "GOAL_ROLLOVER", "sk": circle_id})
+        keys.extend(_membership_key(_member_id(item), circle_id) for item in members if _is_current(item))
+        keys.extend(_left_key(_member_id(item), circle_id) for item in members)
+        with self._table.batch_writer(overwrite_by_pkeys=["pk", "sk"]) as batch:
+            for key in keys:
+                batch.delete_item(Key=key)
+        return True
+
     # Helpers.
 
     def _end_membership(
@@ -374,6 +413,8 @@ class CircleStore:
                 }
             },
             {"Delete": {"Key": _membership_key(member_id, circle_id)}},
+            # The circles an account left, for account deletion (#71): its membership item stays in the circle.
+            _put({**_left_key(member_id, circle_id), "left_at": now}, None),
         ]
         if successor is not None:
             items.append(
@@ -521,6 +562,10 @@ def _account_pk(subject: str) -> str:
 
 def _membership_key(subject: str, circle_id: str) -> dict[str, str]:
     return {"pk": _account_pk(subject), "sk": f"CIRCLE#{circle_id}"}
+
+
+def _left_key(subject: str, circle_id: str) -> dict[str, str]:
+    return {"pk": _account_pk(subject), "sk": f"LEFT#{circle_id}"}
 
 
 def _invite_key(token: str) -> dict[str, str]:

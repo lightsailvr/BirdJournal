@@ -48,6 +48,8 @@ from typing import Any, Literal, Protocol
 
 from botocore.exceptions import ClientError
 
+from birdjournal_api.moderation import Moderation
+
 JOB_LIFETIME = timedelta(days=7)
 KEPT_AFTER_RECEIVED = timedelta(days=30)
 UPLOAD_URL_LIFETIME = timedelta(hours=1)
@@ -58,6 +60,8 @@ AutoPaintRule = Literal["every_glasses_add", "legendary_or_rare"]
 Kind = Literal["scene", "photo"]
 Cost = Literal["free", "allowance"]
 RARE_LABELS = ("rare", "exceptional")
+# The failure of a job whose photo or painting moderation withheld (#71).
+FLAGGED = "flagged"
 DAILY_ALLOWANCE = 5
 ALLOWANCE_KEPT = timedelta(days=2)
 """A day's counter outlives its day by this much, then `ttl` removes it."""
@@ -213,6 +217,7 @@ class ArtJobStore:
         queue: ArtQueue | None,
         notifier: ArtNotifier,
         retention: ArtRetention,
+        moderation: Moderation | None = None,
     ) -> None:
         self._table = table
         self._clock = clock
@@ -222,6 +227,7 @@ class ArtJobStore:
         self._queue = queue
         self._notifier = notifier
         self._retention = retention
+        self._moderation = moderation
 
     @property
     def storage(self) -> ArtStorage:
@@ -322,6 +328,12 @@ class ArtJobStore:
             return job
         if not self.storage.has_upload(job.input_key):
             raise UploadMissing()
+        if self._moderation is not None and self._moderation.upload_flag(job.input_key):
+            # A photo moderation withholds is never painted (#71): the job fails and the upload goes.
+            try:
+                return self._finish(job, "failed", {"failure": FLAGGED}, from_states=("awaiting_upload",))
+            except WrongState:
+                return self.get(owner, job_id)
         now = self._clock()
         try:
             item = self._table.update_item(
@@ -440,6 +452,11 @@ class ArtJobStore:
             raise WrongOutput()
         if job.state == "ready":
             return job
+        if self._moderation is not None and self._moderation.art_flag(output_key):
+            # A painting moderation withholds never reaches anyone (#71): it goes, and the job fails.
+            if self._storage is not None:
+                self._storage.delete_art(output_key)
+            return self._finish(job, "failed", {"failure": FLAGGED})
         try:
             return self._finish(job, "ready", {"provenance": provenance} if provenance else {})
         except WrongState:
@@ -458,10 +475,13 @@ class ArtJobStore:
 
     # Internals.
 
-    def _finish(self, job: ArtJob, state: State, extra: dict[str, Any]) -> ArtJob:
+    def _finish(
+        self, job: ArtJob, state: State, extra: dict[str, Any], *, from_states: tuple[str, ...] = ("queued", "painting")
+    ) -> ArtJob:
         names = {"#state": "state", **{f"#{name}": name for name in extra}}
+        allowed = {f":from{index}": value for index, value in enumerate(from_states)}
         values = {
-            ":state": state, ":now": self._clock().isoformat(), ":queued": "queued", ":painting": "painting",
+            ":state": state, ":now": self._clock().isoformat(), **allowed,
             **{f":{name}": value for name, value in extra.items()},
         }
         sets = ", ".join(["#state = :state", "finished_at = :now", *(f"#{name} = :{name}" for name in extra)])
@@ -471,7 +491,7 @@ class ArtJobStore:
                 UpdateExpression=f"SET {sets}",
                 # A report only ends a job that was queued or being painted (a failure may come before a claim: the
                 # worker drops a message it can't read).
-                ConditionExpression="#state IN (:queued, :painting)",
+                ConditionExpression=f"#state IN ({', '.join(allowed)})",
                 ExpressionAttributeNames=names,
                 ExpressionAttributeValues=values,
                 ReturnValues="ALL_NEW",

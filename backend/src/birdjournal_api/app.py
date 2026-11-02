@@ -1,6 +1,6 @@
 """The API: account get and update (issue #60), circles (issue #61), finds (issue #62) with shared cards (issue #66),
-art jobs (issue #68), pushes (issue #63), reactions and compare (issue #64) and goals (issue #65). Later tickets add
-their routers here."""
+art jobs (issue #68), pushes (issue #63), reactions and compare (issue #64), goals (issue #65), and reports, blocks,
+moderation and account deletion (issue #71). Later tickets add their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 import boto3
+import httpx2
 from botocore.config import Config
 from fastapi import Depends, FastAPI, Request
 from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
@@ -28,12 +29,22 @@ from birdjournal_api.art import (
 )
 from birdjournal_api.art_api import router as art_router
 from birdjournal_api.auth import (
+    CurrentIdentity,
     SigningKeyResolver,
-    Subject,
     TokenVerifier,
     cognito_signing_keys,
 )
 from birdjournal_api.circles import CircleStore
+from birdjournal_api.deletion import (
+    AccountDeleter,
+    AppleSignIn,
+    AppleTokens,
+    CognitoUsers,
+    UserDirectory,
+    secrets_manager_apple_key,
+    user_pool_id,
+)
+from birdjournal_api.moderation import ImageModerator, Moderation, RekognitionModerator
 from birdjournal_api.circles_api import router as circles_router
 from birdjournal_api.finds import FindStore
 from birdjournal_api.devices import DeviceStore, MuteStore
@@ -45,6 +56,8 @@ from birdjournal_api.pushes import PushSender, PushService
 from birdjournal_api.pushes_api import router as pushes_router
 from birdjournal_api.reactions import ReactionStore
 from birdjournal_api.reactions_api import router as reactions_router
+from birdjournal_api.safety import BlockStore, Mailer, NoMailer, ReportStore, SesMailer
+from birdjournal_api.safety_api import router as safety_router
 from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
@@ -57,14 +70,16 @@ class AccountResponse(BaseModel):
     id: str
     display_name: str | None
     created_at: datetime
+    # How the birder signs in, `apple` or `google`: the app asks Apple again at deletion only for an Apple account.
+    provider: str | None = None
 
     @field_serializer("created_at")
     def _utc(self, value: datetime) -> str:
         return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
     @classmethod
-    def of(cls, account: Account) -> "AccountResponse":
-        return cls(id=account.id, display_name=account.display_name, created_at=account.created_at)
+    def of(cls, account: Account, provider: str | None = None) -> "AccountResponse":
+        return cls(id=account.id, display_name=account.display_name, created_at=account.created_at, provider=provider)
 
 
 class AccountUpdate(BaseModel):
@@ -88,10 +103,14 @@ def create_app(
     art_notifier: ArtNotifier | None = None,
     photos: PhotoStore | None = None,
     push_sender: PushSender | None = None,
+    mailer: Mailer | None = None,
+    moderator: ImageModerator | None = None,
+    users: UserDirectory | None = None,
+    apple: AppleTokens | None = None,
 ) -> FastAPI:
     """The API over the settings' table. Tests pass a signing key from their own issuer, a clock, and fakes for the art
-    buckets, queue and notifier, the shared photos and APNs; otherwise shared cards' photos go to the art bucket, when
-    the stack has one."""
+    buckets, queue and notifier, the shared photos, APNs, the report mail, Rekognition, the user pool and Apple;
+    otherwise shared cards' photos go to the art bucket, when the stack has one."""
     dynamodb = boto3.resource("dynamodb", region_name=settings.region, endpoint_url=settings.dynamodb_endpoint)
     app = FastAPI(title="BirdJournal API")
     app.state.verifier = TokenVerifier(
@@ -112,8 +131,16 @@ def create_app(
     # Painted art on finds (#70): a find shows a painting only while the server holds it, and lets it go after.
     table = dynamodb.Table(settings.table_name)
     painted = PaintedArt(table, art_storage, clock)
+    # Rekognition (#71), behind the switch: never called while it is off.
+    if moderator is None and settings.moderation:
+        moderator = RekognitionModerator(boto3.client("rekognition", region_name=settings.region))
+    moderation = Moderation(
+        enabled=settings.moderation, moderator=moderator, upload_bucket=settings.upload_bucket,
+        art_bucket=settings.art_bucket,
+    )
+    app.state.moderation = moderation
     app.state.finds = FindStore(
-        dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, painted
+        dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, painted, moderation
     )
     app.state.devices = DeviceStore(table, clock)
     app.state.mutes = MuteStore(table, clock)
@@ -128,6 +155,27 @@ def create_app(
     )
     app.state.invite_base_url = settings.invite_base_url
     app.state.art_cdn_base_url = settings.art_cdn_base_url
+    if mailer is None:
+        mailer = (
+            SesMailer(boto3.client("sesv2", region_name=settings.region), sender=settings.report_sender or settings.report_email, recipient=settings.report_email)
+            if settings.report_email
+            else NoMailer()
+        )
+    app.state.reports = ReportStore(
+        table, app.state.circles, app.state.finds, mailer, clock, art_cdn_base_url=settings.art_cdn_base_url
+    )
+    app.state.blocks = BlockStore(app.state.circles, app.state.mutes)
+    if users is None:
+        users = CognitoUsers(boto3.client("cognito-idp", region_name=settings.region), user_pool_id(settings.cognito_issuer))
+    if apple is None and settings.apple_sign_in_secret_name:
+        apple = AppleSignIn(
+            secrets_manager_apple_key(settings.apple_sign_in_secret_name, settings.region), settings.apple_client_id,
+            post=lambda url, **kwargs: httpx2.post(url, timeout=5, **kwargs),
+        )
+    app.state.deleter = AccountDeleter(
+        table, app.state.circles, app.state.finds, app.state.devices, art_storage=art_storage, users=users, apple=apple
+    )
+    app.include_router(safety_router)
     app.include_router(circles_router)
     app.include_router(finds_router)
     app.include_router(pushes_router)
@@ -146,6 +194,7 @@ def create_app(
             queue=art_queue,
             notifier=art_notifier or NoNotifier(),
             retention=FindsShowArt(app.state.finds.shown_art),
+            moderation=moderation,
         )
         if art_storage is not None
         else None
@@ -167,14 +216,14 @@ def create_app(
         return {"status": "ok"}
 
     @app.get("/v1/account")
-    def get_account(subject: Subject, accounts: Annotated[AccountStore, Depends(_accounts)]) -> AccountResponse:
-        return AccountResponse.of(accounts.get_or_create(subject))
+    def get_account(identity: CurrentIdentity, accounts: Annotated[AccountStore, Depends(_accounts)]) -> AccountResponse:
+        return AccountResponse.of(accounts.get_or_create(identity.subject), identity.provider)
 
     @app.patch("/v1/account")
     def update_account(
-        subject: Subject, update: AccountUpdate, accounts: Annotated[AccountStore, Depends(_accounts)]
+        identity: CurrentIdentity, update: AccountUpdate, accounts: Annotated[AccountStore, Depends(_accounts)]
     ) -> AccountResponse:
-        return AccountResponse.of(accounts.update_display_name(subject, update.display_name))
+        return AccountResponse.of(accounts.update_display_name(identity.subject, update.display_name), identity.provider)
 
     return app
 

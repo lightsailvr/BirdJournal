@@ -180,12 +180,17 @@ class ReactionStore:
         self._table.delete_item(Key=reactor_copy_key(reactor, owner, sighting_id, kind.value))
         return self.counts(reactor, owner, sighting_id)
 
-    def counts(self, reader: str, owner: str, sighting_id: str) -> list[ReactionCount]:
-        return counts_of(self._reactions(owner, sighting_id), reader)
+    def counts(
+        self, reader: str, owner: str, sighting_id: str, *, blocked: set[str] | None = None
+    ) -> list[ReactionCount]:
+        """The find's counts as the reader sees them: without the reactions of accounts the reader blocked (#71)."""
+        hidden = self._mutes.blocked_by(reader) if blocked is None else blocked
+        return counts_of([pair for pair in self._reactions(owner, sighting_id) if pair[0] not in hidden], reader)
 
     def counts_for(self, reader: str, finds: list[tuple[str, str]]) -> dict[tuple[str, str], list[ReactionCount]]:
         """The counts of a feed page's finds: one query of each find's (small) reaction partition."""
-        return {key: self.counts(reader, *key) for key in dict.fromkeys(finds)}
+        blocked = self._mutes.blocked_by(reader)
+        return {key: self.counts(reader, *key, blocked=blocked) for key in dict.fromkeys(finds)}
 
     # Compare birds.
 
@@ -193,7 +198,8 @@ class ReactionStore:
         """The friend's species, best method first (Seen beats Heard), from their finds in the circles the two share
         now. NotFound when they share none."""
         shared = set(self._circles.circle_ids_of(subject)) & set(self._circles.circle_ids_of(friend))
-        if not shared:
+        if not shared or friend in self._mutes.blocked_by(subject):
+            # A blocked friend's birds are hidden like their finds (#71).
             raise NotFound()
         best: dict[str, ComparedSpecies] = {}
         kwargs: dict[str, Any] = {
@@ -301,7 +307,7 @@ class ReactionStore:
     def _hears(self, find: Find, reactor: str) -> bool:
         """Whether the owner hears of this reactor's reactions: not muted, and through a circle not muted."""
         mutes = self._mutes.mutes_of(find.owner)
-        if reactor in mutes.friends:
+        if mutes.silences(reactor):
             return False
         through = set(find.circle_ids) & set(self._circles.circle_ids_of(reactor))
         return bool(through - mutes.circles)
