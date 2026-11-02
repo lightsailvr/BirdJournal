@@ -52,7 +52,10 @@ final class CirclesUITests: XCTestCase {
     func testTheInviteShowsAQRCodeOfTheLink() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         let invite = app.buttons["Invite friends"]
-        XCTAssertTrue(invite.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["Recent finds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // Below the seeded feed: the list builds it only once scrolled to.
+        for _ in 0..<6 where !invite.exists || !invite.isHittable { app.swipeUp() }
+        XCTAssertTrue(invite.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         invite.tap()
         let code = app.images["inviteQRCode"]
         XCTAssertTrue(code.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")

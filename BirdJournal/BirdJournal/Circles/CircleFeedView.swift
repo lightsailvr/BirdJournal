@@ -82,8 +82,9 @@ struct ReactionBar: View {
             }
         } else {
             ViewThatFits(in: .horizontal) {
-                buttons(titled: true)
-                buttons(titled: false)
+                buttons(titled: true, symbols: true)
+                buttons(titled: true, symbols: false)
+                buttons(titled: false, symbols: true)
             }
         }
     }
@@ -93,7 +94,7 @@ struct ReactionBar: View {
         counts.map { "\($0.kind.title) \($0.count)" }.joined(separator: " · ")
     }
 
-    private func buttons(titled: Bool) -> some View {
+    private func buttons(titled: Bool, symbols: Bool) -> some View {
         HStack(spacing: 6) {
             ForEach(ReactionKind.allCases) { kind in
                 let count = item.reaction(kind)
@@ -101,13 +102,13 @@ struct ReactionBar: View {
                     react(kind, !count.mine)
                 } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: kind.symbol)
+                        if symbols { Image(systemName: kind.symbol) }
                         if titled { Text(kind.title) }
                         if count.count > 0 { Text("\(count.count)").monospacedDigit() }
                     }
                     .font(.caption.weight(count.mine ? .semibold : .regular))
                     .foregroundStyle(count.mine ? Color.mossText : Color.moss)
-                    .padding(.horizontal, 9)
+                    .padding(.horizontal, symbols ? 9 : 8)
                     .padding(.vertical, 5)
                     .background(count.mine ? Color.moss : Color.moss.opacity(0.1), in: .capsule)
                     .fixedSize()
