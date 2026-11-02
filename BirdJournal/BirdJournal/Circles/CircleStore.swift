@@ -31,6 +31,10 @@ final class CircleStore {
     private(set) var listState: ListState = .idle
     /// The token of an invite link opened from outside the app, for the join screen.
     var pendingInvite: String?
+    /// What the birder muted (issue #63): those circles' and friends' finds send no pushes.
+    private(set) var mutes = Mutes()
+    /// Runs after the birder creates or joins a circle: the push center asks for permission the first time.
+    @ObservationIgnored var joinedCircle: (() async -> Void)?
 
     let account: AccountSession
     /// The circle server's client; the find outbox (issue #62) sends through the same one.
@@ -53,6 +57,9 @@ final class CircleStore {
         do {
             circles = try await account.withAccessToken(doing: "load your circles") { try await client.circles(accessToken: $0) }
             listState = .loaded
+            if let mutes = try? await account.withAccessToken(doing: "load your circles", { try await client.mutes(accessToken: $0) }) {
+                self.mutes = mutes
+            }
         } catch {
             log.error("couldn't load circles: \(String(describing: error))")
             listState = .failed(Self.message(for: error, doing: "load your circles"))
@@ -64,6 +71,7 @@ final class CircleStore {
     func create(named name: String) async throws -> CircleDetail {
         let detail = try await call { try await $0.createCircle(named: name.trimmingCharacters(in: .whitespacesAndNewlines), timeZone: self.timeZone(), accessToken: $1) }
         remember(detail)
+        await joinedCircle?()
         return detail
     }
 
@@ -88,6 +96,7 @@ final class CircleStore {
     func accept(token: String) async throws -> CircleDetail {
         let detail = try await call { try await $0.acceptInvite(token: token, accessToken: $1) }
         remember(detail)
+        await joinedCircle?()
         return detail
     }
 
@@ -130,11 +139,31 @@ final class CircleStore {
         feeds[circleID] = feed
     }
 
+    /// A push came (issue #63): the list again, and the feeds of the circles it names (every feed the phone has read
+    /// when it names none).
+    func refreshAfterPush(circleIDs: [String]) async {
+        guard account.isSignedIn else { return }
+        await refresh()
+        let open = circleIDs.isEmpty ? Array(feeds.keys) : circleIDs.filter { feeds[$0] != nil }
+        for id in open { await loadFeed(circleID: id) }
+    }
+
+    func setCircleMuted(_ muted: Bool, circleID: String) async throws {
+        try await call { try await $0.setCircleMuted(muted, circleID: circleID, accessToken: $1) }
+        if muted { mutes.circles.insert(circleID) } else { mutes.circles.remove(circleID) }
+    }
+
+    func setFriendMuted(_ muted: Bool, friendID: String) async throws {
+        try await call { try await $0.setFriendMuted(muted, friendID: friendID, accessToken: $1) }
+        if muted { mutes.friends.insert(friendID) } else { mutes.friends.remove(friendID) }
+    }
+
     /// Signed out: nothing of the circles stays on the phone (the root calls it whenever the account signs out).
     func clear() {
         circles = []
         details = [:]
         feeds = [:]
+        mutes = Mutes()
         listState = .idle
     }
 

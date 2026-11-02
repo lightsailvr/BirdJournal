@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct BirdJournalApp: App {
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var appDelegate
     @State private var connection: GlassesConnection
     @State private var spike: SpikeRecorder
     @State private var lens: GlassesLensSession
@@ -24,6 +25,7 @@ struct BirdJournalApp: App {
     @State private var art: ArtJobs
     @Environment(\.scenePhase) private var scenePhase
     @State private var findOutbox: FindOutbox
+    @State private var pushes: PushCenter
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @State private var showingSplash = true
     private let album: ModelContainer
@@ -70,6 +72,12 @@ struct BirdJournalApp: App {
         let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
         sightings.findOutbox = findOutbox
         _findOutbox = State(initialValue: findOutbox)
+        // Pushes (issue #63): permission at the first circle, the token to the account, and a refresh on every push.
+        let pushes = PushCenter.forApp(account: account, client: circles.client) { UIApplication.shared.registerForRemoteNotifications() }
+        pushes.refresh = { [weak circles] circleIDs in await circles?.refreshAfterPush(circleIDs: circleIDs) }
+        circles.joinedCircle = { [weak pushes] in await pushes?.joinedCircle() }
+        PushAppDelegate.pushes = pushes
+        _pushes = State(initialValue: pushes)
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
@@ -239,6 +247,7 @@ struct BirdJournalApp: App {
             .environment(circles)
             .environment(art)
             .environment(findOutbox)
+            .environment(pushes)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)

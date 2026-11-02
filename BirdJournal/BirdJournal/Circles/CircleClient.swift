@@ -153,6 +153,12 @@ struct FeedPage: Equatable, Decodable, Sendable {
     }
 }
 
+/// What the birder muted (backend `GET /v1/mutes`, issue #63): circles and friends whose finds send no pushes.
+struct Mutes: Equatable, Decodable, Sendable {
+    var circles: Set<String> = []
+    var friends: Set<String> = []
+}
+
 enum CircleError: Error, Equatable {
     /// The access token was refused: renew it and try once more (the account's 401, so `AccountSession` retries).
     case unauthorized
@@ -187,6 +193,12 @@ protocol CircleClient: AnyObject {
     /// Removes the find with its feed items and reactions; one that isn't there is no error.
     func deleteFind(sightingID: UUID, accessToken: String) async throws
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage
+    /// Pushes (issue #63): the phone's APNs token and environment go to the signed-in account, and leave it at sign-out.
+    func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws
+    func unregisterDevice(token: String, accessToken: String) async throws
+    func mutes(accessToken: String) async throws -> Mutes
+    func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws
+    func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws
 }
 
 final class HTTPCircleClient: CircleClient {
@@ -246,6 +258,26 @@ final class HTTPCircleClient: CircleClient {
     }
 
     static let feedPageSize = 20
+
+    func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws {
+        _ = try await data("PUT", "v1/account/devices/\(token)", body: try JSONEncoder().encode(["environment": environment.rawValue]), accessToken: accessToken)
+    }
+
+    func unregisterDevice(token: String, accessToken: String) async throws {
+        _ = try await data("DELETE", "v1/account/devices/\(token)", body: nil, accessToken: accessToken)
+    }
+
+    func mutes(accessToken: String) async throws -> Mutes {
+        try await send("GET", "v1/mutes", accessToken: accessToken, as: Mutes.self)
+    }
+
+    func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws {
+        _ = try await data(muted ? "PUT" : "DELETE", "v1/circles/\(circleID)/mute", body: nil, accessToken: accessToken)
+    }
+
+    func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws {
+        _ = try await data(muted ? "PUT" : "DELETE", "v1/friends/\(friendID)/mute", body: nil, accessToken: accessToken)
+    }
 
     private func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, query: [URLQueryItem] = [], accessToken: String, as type: T.Type) async throws -> T {
         let data = try await data(method, path, query: query, body: try body.map { try JSONEncoder().encode($0) }, accessToken: accessToken)

@@ -26,6 +26,10 @@ class Settings:
     # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
     # the stack has one; the feed then gives keys without URLs.
     art_cdn_base_url: str | None = None
+    # The APNs token key's Secrets Manager secret (issue #63; infra/scripts/push-wizard.sh stores it). None: no pushes.
+    apns_secret_name: str | None = None
+    # The app's bundle id, the apns-topic of every push.
+    apns_topic: str = "com.matthewcelia.mybirdjournal"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -44,6 +48,8 @@ class Settings:
             art_worker_token_secret=env.get("ART_WORKER_TOKEN_SECRET") or None,
             art_auto_paint=_rule(env.get("ART_AUTO_PAINT") or cls.art_auto_paint),
             art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
+            apns_secret_name=env.get("APNS_SECRET_NAME") or None,
+            apns_topic=env.get("APNS_TOPIC") or cls.apns_topic,
         )
 
 

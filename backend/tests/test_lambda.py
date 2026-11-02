@@ -67,3 +67,12 @@ def test_the_invite_base_url_comes_from_the_environment() -> None:
 def test_missing_settings_fail_at_start() -> None:
     with pytest.raises(KeyError, match="TABLE_NAME"):
         Settings.from_env({"COGNITO_ISSUER": "x", "COGNITO_CLIENT_IDS": "y"})
+
+
+def test_the_apns_key_secret_and_topic_come_from_the_environment() -> None:
+    base = {"TABLE_NAME": "t", "COGNITO_ISSUER": "x", "COGNITO_CLIENT_IDS": "y"}
+    assert Settings.from_env(base).apns_secret_name is None
+    settings = Settings.from_env({**base, "APNS_SECRET_NAME": "birdjournal/apns", "APNS_TOPIC": "com.example.app"})
+    assert settings.apns_secret_name == "birdjournal/apns"
+    assert settings.apns_topic == "com.example.app"
+    assert Settings.from_env(base).apns_topic == "com.matthewcelia.mybirdjournal"

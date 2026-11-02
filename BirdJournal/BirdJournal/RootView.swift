@@ -110,6 +110,7 @@ struct RootView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(AccountSession.self) private var account
     @Environment(FindOutbox.self) private var findOutbox
+    @Environment(PushCenter.self) private var pushes
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
     @State private var journalMode: JournalView.Mode = .cards
@@ -179,9 +180,30 @@ struct RootView: View {
                 // Finds waiting from before a sign-out go now (issue #62).
                 Task { await findOutbox.flush() }
             }
+            // The phone's push token follows the account (issue #63).
+            Task { await pushes.accountChanged() }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await findOutbox.flush() } }
+            if phase == .active {
+                Task { await findOutbox.flush() }
+                // Settings may have turned notifications on or off meanwhile.
+                Task { await pushes.refreshPermission() }
+            }
+        }
+        // A tapped push (issue #63): its circle, or the list for a digest.
+        .onChange(of: pushes.pendingCircle) { _, circleID in
+            guard let circleID, AccountSession.isEnabledInThisBuild else { return }
+            pushes.pendingCircle = nil
+            tab = .circles
+            circlesPath = NavigationPath()
+            if !circleID.isEmpty { circlesPath.append(Route.circle(id: circleID)) }
+        }
+        // The first circle created or joined (issue #63): why pushes, before the system asks.
+        .alert("Hear about your friends' finds", isPresented: Bindable(pushes).isExplaining) {
+            Button("Turn on notifications") { Task { await pushes.turnOn() } }
+            Button("Not now", role: .cancel) { pushes.notNow() }
+        } message: {
+            Text(PushCenter.explanation)
         }
         // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
         .onChange(of: circles.pendingInvite, initial: true) { _, token in
@@ -194,6 +216,7 @@ struct RootView: View {
         // The index carries every pack's set (issue #54), so it is fetched at launch, not only on the packs screen;
         // the last good copy stands in meanwhile and offline.
         .task { await library.refreshIndex() }
+        .task { await pushes.refreshPermission() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
         .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
