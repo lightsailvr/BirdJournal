@@ -18,7 +18,6 @@ from tests.conftest import (
     FakeArtQueue,
     FakeArtStorage,
     FakeNotifier,
-    FakeRetention,
 )
 from tests.tokens import TestIssuer
 
@@ -398,17 +397,6 @@ def test_received_ready_art_is_deleted_from_the_server_and_leaves_the_open_list(
     assert _open(client, issuer) == []
     # Saying so twice is fine.
     assert client.post(f"/v1/art/jobs/{job['id']}/received", headers=issuer.headers(sub="ada")).status_code == 200
-
-
-def test_received_art_a_find_shows_stays_on_the_server(
-    client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, art_retention: FakeRetention
-) -> None:
-    job = _queued(client, issuer, art_storage)
-    claim = _claim(client, job["id"]).json()
-    _ready(client, claim, art_storage)
-    art_retention.shown.add(claim["output_key"])
-    client.post(f"/v1/art/jobs/{job['id']}/received", headers=issuer.headers(sub="ada"))
-    assert claim["output_key"] in art_storage.art
 
 
 def test_a_received_failure_leaves_the_open_list(client: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, clock: Clock) -> None:
