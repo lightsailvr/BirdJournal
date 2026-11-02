@@ -125,10 +125,11 @@ private struct Harness {
     let authorizer: FakeNotificationAuthorizer
     let pushes: PushCenter
     let registrations: Counter
+    let defaults: UserDefaults
 
     final class Counter { var count = 0 }
 
-    init(permission: PushPermission = .notDetermined, grants: Bool = true, signedIn: Bool = true, seeded: Bool = false) {
+    init(permission: PushPermission = .notDetermined, grants: Bool = true, signedIn: Bool = true, seeded: Bool = false, delay: Duration = .zero) {
         account = FakeAccount.session(signedIn: signedIn)
         client = FakeCircleClient(seeded: seeded)
         store = CircleStore(account: account, client: client, timeZone: { "UTC" })
@@ -136,9 +137,10 @@ private struct Harness {
         let registrations = Counter()
         self.registrations = registrations
         let defaults = UserDefaults(suiteName: "PushTests-\(UUID().uuidString)")!
+        self.defaults = defaults
         pushes = PushCenter(
             account: account, client: client, authorizer: authorizer, environment: .sandbox, defaults: defaults,
-            explanationDelay: .zero, registerForRemoteNotifications: { registrations.count += 1 }
+            explanationDelay: delay, registerForRemoteNotifications: { registrations.count += 1 }
         )
         store.joinedCircle = { [pushes] in await pushes.joinedCircle() }
         pushes.refresh = { [store] ids in await store.refreshAfterPush(circleIDs: ids) }
@@ -175,6 +177,75 @@ struct PushCenterTests {
         await harness.pushes.accountChanged()
         #expect(!harness.pushes.isExplaining)
         #expect(harness.authorizer.requests == 0)
+    }
+
+    @Test("an explanation raised but never answered is offered once more on the next circle page or tab, once (#107)")
+    func droppedExplanation() async throws {
+        let harness = Harness()
+        try await harness.store.create(named: "Sunday Group")
+        #expect(harness.pushes.isExplaining)
+        #expect(!harness.defaults.bool(forKey: PushCenter.askedKey))
+        // The alert was dropped while the sheet went away: nobody answered it.
+        harness.pushes.isExplaining = false
+        await harness.pushes.circlesAppeared()
+        #expect(harness.pushes.isExplaining)
+        harness.pushes.isExplaining = false
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
+        #expect(harness.authorizer.requests == 0)
+    }
+
+    @Test("a binding left up by a dropped alert is lowered and raised again")
+    func stuckBinding() async throws {
+        let harness = Harness(delay: .milliseconds(30))
+        try await harness.store.create(named: "Sunday Group")
+        for _ in 0..<50 where !harness.pushes.isExplaining { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(harness.pushes.isExplaining)
+        // While a retry waits out its delay the alert is down, so SwiftUI sees it rise again.
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
+        // A second page appearing meanwhile schedules nothing more.
+        await harness.pushes.circlesAppeared()
+        for _ in 0..<50 where !harness.pushes.isExplaining { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(harness.pushes.isExplaining)
+    }
+
+    @Test("a page appearing while the first explanation waits out its delay doesn't offer a second")
+    func pageDuringDelay() async throws {
+        let harness = Harness(delay: .milliseconds(50))
+        try await harness.store.create(named: "Sunday Group")
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
+        for _ in 0..<50 where !harness.pushes.isExplaining { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(harness.pushes.isExplaining)
+        harness.pushes.notNow()
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
+    }
+
+    @Test("after Not now nothing asks again by itself; the circle page's button still does")
+    func notNowKept() async throws {
+        let harness = Harness()
+        try await harness.store.create(named: "Sunday Group")
+        harness.pushes.notNow()
+        #expect(harness.defaults.bool(forKey: PushCenter.askedKey))
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
+        _ = try await harness.store.accept(token: "fake-invite")
+        try await harness.store.create(named: "Weekday Walkers")
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
+        #expect(harness.authorizer.requests == 0)
+        await harness.pushes.turnOn()
+        #expect(harness.authorizer.requests == 1)
+        #expect(harness.pushes.permission == .authorized)
+    }
+
+    @Test("opening circles with nothing pending asks nothing")
+    func nothingPending() async {
+        let harness = Harness()
+        await harness.pushes.circlesAppeared()
+        #expect(!harness.pushes.isExplaining)
     }
 
     @Test("allowed already, or denied already: no explanation")
