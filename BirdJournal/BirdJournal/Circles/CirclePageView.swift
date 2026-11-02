@@ -54,6 +54,8 @@ struct CirclePageView: View {
         .paperList()
         .navigationTitle(detail?.circle.name ?? circles.circles.first { $0.id == id }?.name ?? "Circle")
         .task { await load() }
+        // A notifications explanation that never got on screen gets one more chance (issue #107).
+        .task { await pushes.circlesAppeared() }
         .refreshable { await load() }
         .sheet(isPresented: $inviting) { InviteSheet(circleID: id, circleName: detail?.circle.name ?? "") }
         .confirmationDialog("Leave this circle?", isPresented: $confirmingLeave, titleVisibility: .visible) {

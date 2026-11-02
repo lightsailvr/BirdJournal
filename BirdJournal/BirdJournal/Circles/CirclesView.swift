@@ -5,6 +5,7 @@ import SwiftUI
 struct CirclesView: View {
     @Environment(AccountSession.self) private var account
     @Environment(CircleStore.self) private var circles
+    @Environment(PushCenter.self) private var pushes
     @State private var creating = false
 
     var body: some View {
@@ -40,6 +41,8 @@ struct CirclesView: View {
                 await circles.refresh()
             }
         }
+        // A notifications explanation that never got on screen gets one more chance (issue #107).
+        .task { await pushes.circlesAppeared() }
         #if DEBUG
         .task {
             if UserDefaults.standard.bool(forKey: "autoNewCircle") {
