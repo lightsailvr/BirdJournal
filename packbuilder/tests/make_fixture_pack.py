@@ -12,7 +12,8 @@ before #41 and `test-pack-schema3.zip` the schema-3 pack from before #54, kept a
 still open. Since #54 the test pack carries a set (`CARD_SET`): a box around Testland with its two species. Since #55
 it carries `JOINED`: stats and a type line for the phoebe, and the hummingbird as a known gap with a type line and the
 threatened flag from the hand list. Since #57 the Black Phoebe has approved pack art painted from its photo 1 and the
-hummingbird is an art gap.
+hummingbird is an art gap. Since #56 both carry a fact sheet (`FACTS`), and the phoebe approved lore (`LORE`) whose
+sources are a dataset and its Wikipedia revision; the hummingbird has none.
 """
 
 from __future__ import annotations
@@ -28,6 +29,8 @@ from packbuilder.geometry import Box
 from packbuilder.scoring import CropScore
 from packbuilder.selection import ScoredPhoto
 from packbuilder.audio import ClipMaker
+from packbuilder.factsheet import Fact
+from packbuilder.lore import Lore
 from packbuilder.pack_art import Artwork
 from packbuilder.sounds import ChosenSound, SoundCandidate, SoundResult
 from packbuilder.stats import JoinedSpecies, SpeciesStats, Threat, TypeLine
@@ -71,6 +74,27 @@ JOINED = {
         stats=None,
         type_line=TypeLine(order="Caprimulgiformes", family="Trochilidae", group_word="Landbird", family_word="Hummingbird"),
         threat=Threat(threatened=True, iucn_category="LC", source="hand list: a test"),
+    ),
+}
+
+
+REVISION = "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
+FACTS = {
+    "sayornis-nigricans": [
+        Fact("f1", "It feeds mostly on insects and other invertebrates.", "avonet"),
+        Fact("f2", "The black phoebe hunts from a low perch, flying out to catch insects in the air.", REVISION),
+    ],
+    "calypte-anna": [Fact("f1", "It feeds mostly on nectar.", "avonet")],
+}
+LORE = {
+    "sayornis-nigricans": Lore(
+        "sayornis-nigricans", "approved",
+        (
+            {"text": "Where water runs, the dark sentinel keeps its low perch and waits.", "facts": ["f2"]},
+            {"text": "No gnat crosses that air unseen, for insects are its bread.", "facts": ["f1", "f2"]},
+        ),
+        {"text": "Keeper of the low perch.", "facts": ["f2"]},
+        tuple(FACTS["sayornis-nigricans"]),
     ),
 }
 
@@ -122,7 +146,9 @@ def main(target: Path, pack_id: str = "test-pack", version: int = 1) -> None:
                 "sayornis-nigricans": Artwork("sayornis-nigricans", "approved", painting, (1,), "pack-art@3 bird-isolate@1 prompts@8", True),
                 "calypte-anna": Artwork("calypte-anna", "gap", None, (3,), "pack-art@3 bird-isolate@1 prompts@8"),
             }
-        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set, joined=joined, art=art)
+        facts = FACTS if pack_id == "test-pack" else None
+        lore = LORE if pack_id == "test-pack" else None
+        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set, joined=joined, art=art, facts=facts, lore=lore)
         print(f"wrote {target} ({target.stat().st_size} bytes)")
     finally:
         shutil.rmtree(work, ignore_errors=True)

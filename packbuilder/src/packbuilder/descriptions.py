@@ -382,6 +382,12 @@ class WikipediaDescriptions:
         return unquote(urlparse(url).path.rsplit("/", 1)[-1])
 
     def describe(self, entry: SpeciesEntry, trust_article: bool = False) -> Description | None:
+        article = self.article(entry, trust_article)
+        return derive(*article) if article is not None else None
+
+    def article(self, entry: SpeciesEntry, trust_article: bool = False) -> tuple[str, str] | None:
+        """The species' article as (plain-text extract, permanent link to its revision), from the cache, checked as
+        `describe` checks it; None (logged) when there is no usable article. The fact sheet (issue #56) reads it too."""
         if not entry.wikipedia_url:
             log.warning("  %s has no Wikipedia URL; no description", entry.common_name)
             return None
@@ -395,11 +401,10 @@ class WikipediaDescriptions:
             log.warning("  Wikipedia article %r (%s) does not name %s; no description", title, page.get("title"), entry.scientific_name)
             return None
         revision = int(page["revisions"][0]["revid"])
-        if title in self.locked and self.locked[title] != revision:
+        if title in self.locked and self.locked[title] != revision and title not in self.revisions:
             log.warning("  Wikipedia article %r moved from revision %d to %d; the text may differ from the last build", title, self.locked[title], revision)
         self.revisions[title] = revision
-        source = f"{ARTICLE}?title={page['title'].replace(' ', '_')}&oldid={revision}"
-        return derive(extract, source=source)
+        return extract, f"{ARTICLE}?title={page['title'].replace(' ', '_')}&oldid={revision}"
 
     def write_lock(self) -> None:
         """Records this build's revisions in the lock file, keeping entries for titles this build did not describe."""

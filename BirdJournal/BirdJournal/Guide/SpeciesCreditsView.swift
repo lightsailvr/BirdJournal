@@ -2,7 +2,7 @@ import Pack
 import SwiftUI
 
 /// Every photo of one species with its observer, exact license and links, its reference sounds (issue #41), the text
-/// source, and the way to the full credits screen (issue #28).
+/// source, the lore's (issue #56), and the way to the full credits screen (issue #28).
 struct SpeciesCreditsView: View {
     @Environment(PackLibrary.self) private var library
     let scientificName: String
@@ -34,6 +34,16 @@ struct SpeciesCreditsView: View {
                     Section("Text") {
                         Link("Adapted from English Wikipedia, CC BY-SA 4.0", destination: source)
                         Link("CC BY-SA 4.0 license", destination: URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!)
+                    }
+                }
+                if let lore = found.species.lore {
+                    Section("Lore") {
+                        Text(LoreText.credit(lore))
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                        if let revision = lore.wikipediaRevision {
+                            Link("Wikipedia article revision", destination: revision)
+                        }
                     }
                 }
                 Section("Pack") {

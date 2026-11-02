@@ -1,14 +1,38 @@
 {
-  "_comment": "Manual fixes for the stats join (issue #55, packbuilder/stats.py). avonet, wingspan and birdbase map a BirdNET+ name (eBird/Clements) to the name the dataset uses, for renames, splits and lumps since the dataset's taxonomy; each says why. known_gaps lists species the build may leave without stats (none so far); threatened is the hand list of species protected where the packs are though the IUCN rates them lower.",
+  "_comment": "Manual fixes for the stats join (issue #55, packbuilder/stats.py). avonet, wingspan and birdbase map a BirdNET+ name (eBird/Clements) to the name the dataset uses, for renames, splits and lumps since the dataset's taxonomy; each says why. known_gaps lists species the build may leave without stats (none so far); threatened is the hand list of species protected where the packs are though the IUCN rates them lower. borrowed lists species whose AVONET row is a wider species before a split: their fact sheets leave out AVONET's habitat and migration (issue #56).",
   "avonet": {
-    "Anarhynchus nivosus": {"name": "Charadrius nivosus", "why": "Snowy Plover moved to Anarhynchus (Clements 2023); AVONET follows Clements 2021"},
-    "Ardea ibis": {"name": "Bubulcus ibis", "why": "Western Cattle Egret moved to Ardea (Clements 2023)"},
-    "Astur cooperii": {"name": "Accipiter cooperii", "why": "Cooper's Hawk moved to Astur (Clements 2024)"},
-    "Botaurus exilis": {"name": "Ixobrychus exilis", "why": "Least Bittern moved to Botaurus (Clements 2023)"},
-    "Larus smithsonianus": {"name": "Larus argentatus", "why": "American Herring Gull split from Herring Gull (Clements 2025); AVONET's row is the species before the split"},
-    "Numenius hudsonicus": {"name": "Numenius phaeopus", "why": "Hudsonian Whimbrel split from Whimbrel (Clements 2024); AVONET's row is the species before the split"},
-    "Setophaga aestiva": {"name": "Setophaga petechia", "why": "American Yellow Warbler split from Yellow Warbler (Clements 2025); AVONET's row is the species before the split"},
-    "Tyto furcata": {"name": "Tyto alba", "why": "American Barn Owl split from Western Barn Owl (Clements 2023); AVONET's row is the species before the split"}
+    "Anarhynchus nivosus": {
+      "name": "Charadrius nivosus",
+      "why": "Snowy Plover moved to Anarhynchus (Clements 2023); AVONET follows Clements 2021"
+    },
+    "Ardea ibis": {
+      "name": "Bubulcus ibis",
+      "why": "Western Cattle Egret moved to Ardea (Clements 2023)"
+    },
+    "Astur cooperii": {
+      "name": "Accipiter cooperii",
+      "why": "Cooper's Hawk moved to Astur (Clements 2024)"
+    },
+    "Botaurus exilis": {
+      "name": "Ixobrychus exilis",
+      "why": "Least Bittern moved to Botaurus (Clements 2023)"
+    },
+    "Larus smithsonianus": {
+      "name": "Larus argentatus",
+      "why": "American Herring Gull split from Herring Gull (Clements 2025); AVONET's row is the species before the split"
+    },
+    "Numenius hudsonicus": {
+      "name": "Numenius phaeopus",
+      "why": "Hudsonian Whimbrel split from Whimbrel (Clements 2024); AVONET's row is the species before the split"
+    },
+    "Setophaga aestiva": {
+      "name": "Setophaga petechia",
+      "why": "American Yellow Warbler split from Yellow Warbler (Clements 2025); AVONET's row is the species before the split"
+    },
+    "Tyto furcata": {
+      "name": "Tyto alba",
+      "why": "American Barn Owl split from Western Barn Owl (Clements 2023); AVONET's row is the species before the split"
+    }
   },
   "wingspan": {},
   "birdbase": {},
@@ -21,5 +45,12 @@
     "Rallus obsoletus": "the Light-footed and California Ridgway's Rails are listed as Endangered under the US Endangered Species Act",
     "Rostrhamus sociabilis": "the Everglade Snail Kite is listed as Endangered under the US Endangered Species Act",
     "Vireo bellii": "Least Bell's Vireo, the subspecies of southern California, is listed as Endangered under the US Endangered Species Act"
+  },
+  "borrowed": {
+    "Larus smithsonianus": "AVONET's row is the Herring Gull before the split (see avonet above); where it lives and whether it migrates are the wider species', not this one's",
+    "Numenius hudsonicus": "AVONET's row is the Whimbrel before the split; its habitat and migration are the wider species'",
+    "Setophaga aestiva": "AVONET's row is the Yellow Warbler before the split; its habitat and migration are the wider species'",
+    "Tyto furcata": "AVONET's row is the Barn Owl before the split; its habitat and migration are the wider species'",
+    "Troglodytes aedon": "AVONET's House Wren is the complex before its split into eight species (Clements 2025), keeping the name; it rates the complex resident, but the Northern House Wren migrates in much of its range"
   }
 }
