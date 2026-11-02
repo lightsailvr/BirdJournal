@@ -26,3 +26,11 @@ Add an entry to `clips.json`:
 
 Labeled recordings: name the file after the dominant species and date (`house-finch-2026-10-03.wav`),
 record where it was made, and keep clips under a few minutes so the suite stays quick.
+
+## The face-blur fixture (issue #68)
+
+`BirdJournal/BirdJournalTests/Fixtures/face-portrait.jpg` is NASA's official portrait of astronaut Sally K. Ride,
+S84-37256 (Johnson Space Center, June 1984), from https://images.nasa.gov/details-S84-37256 (the `~medium` asset,
+scaled to 576 × 720). A work of the US government, in the public domain; used only to check that the phone finds and
+blurs a face before an art-job photo leaves it (`ArtPhotoTests`). NASA's media guidelines ask that its imagery not
+imply endorsement; it implies none.

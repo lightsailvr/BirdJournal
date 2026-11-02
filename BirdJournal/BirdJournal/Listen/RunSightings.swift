@@ -36,6 +36,9 @@ final class RunSightings {
     @ObservationIgnored let recorder: SightingRecorder
     /// Writes each add's caption after the sighting is written, never blocking it (issue #56); nil writes none.
     @ObservationIgnored var captioner: Captioner?
+    /// Asks for each add's scene art after its undo window, when the birder is signed in and the add has a glasses
+    /// photo (issue #68); nil asks for none.
+    @ObservationIgnored var artJobs: ArtJobs?
 
     init(recorder: SightingRecorder) {
         self.recorder = recorder
@@ -64,6 +67,7 @@ final class RunSightings {
         records[sighting.persistentModelID] = sighting
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
         if let captioner { Task { await captioner.caption(sighting) } }
+        artJobs?.requestAfterAdd(sighting)
         return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: recorded.isLegendary, placement: recorded.placement)
     }
 

@@ -92,6 +92,7 @@ struct CardDetailView: View {
                     } back: {
                         CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
+                    CardArtActions(sighting: sighting)
                     if browse != nil {
                         Button {
                             dismiss()
@@ -164,6 +165,67 @@ struct CardDetailView: View {
         withAnimation(CardFlip.animation(reduceMotion: reduceMotion)) { showsBack.toggle() }
         flipControlFocused = true
         AccessibilityNotification.Announcement(showsBack ? "Back, encounter story" : "Front, collectible art").post()
+    }
+}
+
+/// Scene art's controls under the card (issue #68, spec v2 stories 50 and 52): Try again and Use pack art on a card
+/// with a painting, Use painted art to go back to it, Retry art and Keep current art after a failure. Asking for a new
+/// painting needs the account (`ArtJobs.isAvailable`); choosing between the painting and the pack art doesn't. A card
+/// whose job is pending polls it while it is open.
+private struct CardArtActions: View {
+    @Environment(ArtJobs.self) private var art
+    let sighting: Sighting
+    @State private var asking = false
+
+    var body: some View {
+        let status = sighting.art.sceneStatus
+        Group {
+            switch status {
+            case .ready(let showsPackArt):
+                HStack(spacing: 10) {
+                    if art.isAvailable {
+                        Button("Try again", systemImage: "arrow.clockwise") { paintAgain() }
+                            .accessibilityHint("Paints a new picture. This one stays until the new one is ready.")
+                            .accessibilityIdentifier("card-art-try-again")
+                    }
+                    if showsPackArt {
+                        Button("Use painted art", systemImage: "photo.artframe") { art.setShowsPackArt(false, on: sighting) }
+                            .accessibilityIdentifier("card-art-use-painted")
+                    } else {
+                        Button("Use pack art", systemImage: "square.stack") { art.setShowsPackArt(true, on: sighting) }
+                            .accessibilityIdentifier("card-art-use-pack")
+                    }
+                }
+            case .failed:
+                HStack(spacing: 10) {
+                    if art.isAvailable {
+                        Button("Retry art", systemImage: "arrow.clockwise") { paintAgain() }
+                            .accessibilityIdentifier("card-art-retry")
+                    }
+                    Button("Keep current art", systemImage: "checkmark") { art.keepCurrentArt(sighting) }
+                        .accessibilityIdentifier("card-art-keep")
+                }
+            case .pending, .none:
+                EmptyView()
+            }
+        }
+        .buttonStyle(.journalOutlined)
+        .disabled(asking)
+        .task(id: sighting.art.pendingSceneJob?.id) {
+            // While this card waits, look in on its job now and then: the painting machine may come back any time.
+            while !Task.isCancelled, sighting.art.pendingSceneJob != nil {
+                await art.refresh(sighting)
+                try? await Task.sleep(for: .seconds(30))
+            }
+        }
+    }
+
+    private func paintAgain() {
+        asking = true
+        Task {
+            await art.paintAgain(sighting)
+            asking = false
+        }
     }
 }
 
@@ -317,6 +379,13 @@ private struct CardFront: View {
             .accessibilityLabel("Card art: \(art.label)")
             .accessibilityHint("Flips the card to the encounter story.")
             .accessibilityIdentifier("card-art")
+            if let line = CardText.sceneArtLine(sighting.art.sceneStatus) {
+                Label(line, systemImage: sighting.art.sceneStatus == .failed ? "exclamationmark.circle" : "paintbrush.pointed")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.cardIvory)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("card-art-status")
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(places.cardPlace(for: sighting.location))
                     .font(JournalFont.supporting)
