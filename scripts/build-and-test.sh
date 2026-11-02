@@ -14,6 +14,8 @@
 # Any xcodebuild test arguments given (`-only-testing:…`, `-skip-testing:…`) replace runs 2 to 4 with one app run
 # that takes them, e.g. `scripts/build-and-test.sh -only-testing:BirdJournalTests/MockDeviceKitTests`.
 # `--package` with test arguments runs them on the package instead (`--package -only-testing:LensSessionTests`).
+# Before the app runs, a simulator whose StoreKit has not yet registered the tip jar's test configuration gets one
+# short `storekit-prime` run that does (issue #93), once per simulator.
 #
 # Simulator (one per agent, since agents run in parallel; see CLAUDE.md):
 #   BIRDJOURNAL_SIMULATOR=BJ-82          a simulator by name, created (iPhone 17 Pro, newest iOS) if missing
@@ -126,6 +128,15 @@ elif [[ "$target" == package ]]; then
     run_step package "${package[@]}" "${timeouts[@]}" test ${test_args[@]+"${test_args[@]}"}
 else
     run_step build "${app[@]}" build-for-testing
+    # A new simulator's first tip hangs on a sandbox sign-in (issue #93, `storekit_config_registered`): one test host
+    # that only loads the tips registers the StoreKit configuration, and the runs below launch after it.
+    # Not a recorded run: if it fails, the runs below still go ahead, and the tip jar's own run shows any problem.
+    if ((${#failures[@]} == 0)) && [[ -n "$udid" ]] && ! storekit_config_registered "$udid"; then
+        echo "==> storekit-prime (log: $log_dir/$stamp-storekit-prime.log)"
+        run_watched storekit-prime "$log_dir/$stamp-storekit-prime.log" "$udid" \
+            "${app[@]}" "${timeouts[@]}" test-without-building '-only-testing:BirdJournalTests/TipJarTests/loadsThreeTips()' ||
+            echo "warning: storekit-prime failed; the first tip on this simulator may wait on a sandbox sign-in" >&2
+    fi
     if ((${#failures[@]} == 0)); then
         if ((${#test_args[@]})); then
             run_step app-tests "${app[@]}" "${timeouts[@]}" test-without-building "${test_args[@]}"
