@@ -10,6 +10,8 @@ struct SettingsView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
+    /// "Share my finds automatically" (issue #62): on by default; off is private.
+    @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
     /// Read on appear, so it is current when the reader comes back from the icon screen.
     @State private var iconTitle = ""
     #if DEBUG
@@ -54,8 +56,17 @@ struct SettingsView: View {
             }
 
             if AccountSession.isEnabledInThisBuild {
-                Section("Account") {
+                Section {
                     AccountRow()
+                    Toggle("Share my finds automatically", isOn: $sharesFinds)
+                        .tint(Color.moss)
+                        .accessibilityIdentifier("shareFindsToggle")
+                } header: {
+                    Text("Account")
+                } footer: {
+                    Text(sharesFinds
+                         ? "Birds you add while signed in reach your circles as finds: the bird, Heard or Seen, the city and the time, never the exact spot. Threatened birds show as at a secret spot."
+                         : "You're private: birds you add stay on this iPhone. Finds you already shared stay in your circles until you remove the sighting.")
                 }
             }
 

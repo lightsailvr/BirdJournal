@@ -24,6 +24,8 @@ UNTAGGABLE_TYPES = {
     "AWS::CloudFront::OriginAccessControl",
     "AWS::Lambda::LayerVersion",
     "Custom::CDKBucketDeployment",
+    # Scene art (issue #68): the queues' policies (enforce_ssl's Deny).
+    "AWS::SQS::QueuePolicy",
 }
 
 
@@ -256,19 +258,20 @@ def test_the_function_trusts_the_user_pool_and_its_app_client(template: Template
     assert variables["TABLE_NAME"] == {"Ref": table}
 
 
-def test_the_function_may_read_and_write_the_table_only(template: Template) -> None:
+def test_the_functions_dynamodb_access_is_the_table_only(template: Template) -> None:
+    """Its other grants are scene art's (tests/test_art.py)."""
     (table,) = _resources(template, "AWS::DynamoDB::GlobalTable")
     _, function = _api_function(template)
     role = function["Properties"]["Role"]["Fn::GetAtt"][0]
     (policy,) = [
         resource
         for resource in _resources(template, "AWS::IAM::Policy").values()
-        if {"Ref": role} in resource["Properties"]["Roles"]
+        if {"Ref": role} in resource["Properties"].get("Roles", [])
     ]
     statements = policy["Properties"]["PolicyDocument"]["Statement"]
-    resources = json.dumps([statement["Resource"] for statement in statements])
-    assert table in resources
-    assert all("dynamodb:" in json.dumps(statement["Action"]) for statement in statements)
+    dynamodb = [statement for statement in statements if "dynamodb:" in json.dumps(statement["Action"])]
+    assert dynamodb
+    assert all(table in json.dumps(statement["Resource"]) for statement in dynamodb)
 
 
 def test_the_logs_are_kept_a_month(template: Template) -> None:

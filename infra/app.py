@@ -10,6 +10,6 @@ BirdJournalStack(
     config=BirdJournalConfig.from_context(app.node),
     # Region only: synth needs no credentials. The account is whichever AWS_PROFILE deploys (lsvr-admin).
     env=cdk.Environment(region="us-west-2"),
-    description="BirdJournal: accounts and circles API, invite links (issues #60, #61)",
+    description="BirdJournal: accounts and circles API, invite links, scene art (issues #60, #61, #68)",
 )
 app.synth()

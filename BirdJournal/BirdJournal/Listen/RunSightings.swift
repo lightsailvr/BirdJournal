@@ -36,6 +36,9 @@ final class RunSightings {
     @ObservationIgnored let recorder: SightingRecorder
     /// Writes each add's caption after the sighting is written, never blocking it (issue #56); nil writes none.
     @ObservationIgnored var captioner: Captioner?
+    /// Publishes each add as a find when the birder is signed in and sharing, and deletes it when the add is undone
+    /// (issue #62); nil publishes nothing.
+    @ObservationIgnored var findOutbox: FindOutbox?
 
     init(recorder: SightingRecorder) {
         self.recorder = recorder
@@ -64,6 +67,7 @@ final class RunSightings {
         records[sighting.persistentModelID] = sighting
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
         if let captioner { Task { await captioner.caption(sighting) } }
+        findOutbox?.added(sighting.identifier, isLegendary: recorded.isLegendary)
         return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: recorded.isLegendary, placement: recorded.placement)
     }
 
@@ -71,6 +75,7 @@ final class RunSightings {
     func undo(_ addition: Addition) throws {
         guard let sighting = records[addition.sightingID] else { return }
         try recorder.delete(sighting)
+        findOutbox?.removed(addition.identifier)
         records[addition.sightingID] = nil
         entries.removeAll { $0.id == addition.sightingID }
     }
