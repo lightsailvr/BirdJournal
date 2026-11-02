@@ -33,6 +33,8 @@ enum Route: Hashable {
     case joinCircle(token: String)
     /// Compare birds with a friend (issue #64).
     case compareBirds(friendID: String, friendName: String)
+    /// The accounts the birder blocked, to unblock (issue #71).
+    case blockedAccounts
 }
 
 extension View {
@@ -89,6 +91,8 @@ private struct RouteDestination: View {
             JoinCircleView(token: token)
         case .compareBirds(let friendID, let friendName):
             CompareBirdsView(friendID: friendID, friendName: friendName)
+        case .blockedAccounts:
+            BlockedAccountsView()
         }
     }
 }

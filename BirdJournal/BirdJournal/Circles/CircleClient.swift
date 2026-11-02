@@ -398,6 +398,8 @@ enum CircleError: Error, Equatable {
     case rejected
     /// Only a custom goal's creator or the circle's creator deletes it, and the monthly goal stays (issue #65).
     case goalNotYours
+    /// Twenty reports today already (issue #71).
+    case tooManyReports
     case server(Int)
 }
 
@@ -438,6 +440,11 @@ protocol CircleClient: AnyObject {
     func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount]
     /// A friend's species from their finds in the circles the two share, best method each.
     func compare(friendID: String, accessToken: String) async throws -> FriendBirds
+    /// Reports a find or a member to the maintainer (issue #71).
+    func report(_ report: ReportDraft, accessToken: String) async throws
+    /// The accounts the birder blocked, and blocking or unblocking one: their finds, reactions and pushes are hidden.
+    func blocks(accessToken: String) async throws -> [BlockedAccount]
+    func setBlocked(_ blocked: Bool, accountID: String, accessToken: String) async throws
 }
 
 final class HTTPCircleClient: CircleClient {
@@ -561,6 +568,19 @@ final class HTTPCircleClient: CircleClient {
         try await send("GET", "v1/friends/\(friendID)/compare", accessToken: accessToken, as: FriendBirds.self)
     }
 
+    func report(_ report: ReportDraft, accessToken: String) async throws {
+        _ = try await data("POST", "v1/reports", body: try JSONEncoder().encode(report), accessToken: accessToken)
+    }
+
+    func blocks(accessToken: String) async throws -> [BlockedAccount] {
+        struct List: Decodable { var accounts: [BlockedAccount] }
+        return try await send("GET", "v1/blocks", accessToken: accessToken, as: List.self).accounts
+    }
+
+    func setBlocked(_ blocked: Bool, accountID: String, accessToken: String) async throws {
+        _ = try await data(blocked ? "PUT" : "DELETE", "v1/blocks/\(accountID)", body: nil, accessToken: accessToken)
+    }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, query: [URLQueryItem] = [], accessToken: String, as type: T.Type) async throws -> T {
         try Self.decode(T.self, from: try await data(method, path, query: query, body: try body.map { try JSONEncoder().encode($0) }, accessToken: accessToken))
     }
@@ -600,6 +620,7 @@ final class HTTPCircleClient: CircleClient {
         case (409, _): return .full
         case (410, _): return .inviteExpired
         case (422, _): return .rejected
+        case (429, "too_many_reports"): return .tooManyReports
         default: return .server(status)
         }
     }

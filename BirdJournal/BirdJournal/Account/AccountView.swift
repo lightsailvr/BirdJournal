@@ -1,11 +1,13 @@
 import SwiftUI
 
 /// Settings → Account (issue #60): Sign in with Apple or Google while signed out; the name circles will show, the
-/// email and Sign out while signed in. The account is optional, and the screen says so.
+/// email and Sign out while signed in. The account is optional, and the screen says so. Signed in, the blocked
+/// accounts and **Delete account** (issue #71, App Review 5.1.1(v)), which asks once and says what goes.
 struct AccountView: View {
     @Environment(AccountSession.self) private var account
     @State private var name = ""
     @State private var confirmingSignOut = false
+    @State private var confirmingDeletion = false
 
     var body: some View {
         List {
@@ -18,6 +20,12 @@ struct AccountView: View {
                     Text(Self.optionalNote)
                 }
             case .signedOut, .signingIn:
+                if let notice = account.deletedNotice {
+                    Section {
+                        Label(notice, systemImage: "checkmark.circle")
+                            .accessibilityIdentifier("accountDeleted")
+                    }
+                }
                 signedOut
             case .signedIn:
                 signedIn
@@ -40,6 +48,12 @@ struct AccountView: View {
             Button("Sign out", role: .destructive) { account.signOut() }
         } message: {
             Text("Your journal and cards stay on this iPhone.")
+        }
+        .alert("Delete your account?", isPresented: $confirmingDeletion) {
+            Button("Delete account", role: .destructive) { Task { await account.deleteAccount() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(Self.deletionWarning(apple: account.account?.signsInWithApple ?? account.identity.isApple))
         }
     }
 
@@ -72,11 +86,40 @@ struct AccountView: View {
         } footer: {
             Text("Your name is what friends will see in your circles.")
         }
+        if CircleStore.blocksAvailable {
+            Section {
+                NavigationLink("Blocked accounts", value: Route.blockedAccounts)
+            }
+        }
         Section {
             Button("Sign out", role: .destructive) { confirmingSignOut = true }
         } footer: {
             Text("Signing out keeps your journal and cards on this iPhone.")
         }
+        Section {
+            Button(role: .destructive) {
+                confirmingDeletion = true
+            } label: {
+                HStack {
+                    Text("Delete account")
+                    if account.isDeleting {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(account.isDeleting)
+            .accessibilityIdentifier("deleteAccount")
+        } footer: {
+            Text("Deletes your account and everything Bird Journal keeps about it on the server. Your journal stays on this iPhone.")
+        }
+    }
+
+    /// What deleting takes, in the alert (issue #71).
+    static func deletionWarning(apple: Bool) -> String {
+        var text = "This deletes your account, your finds, reactions, shared cards and photos, painted art, and your place in every circle. A circle you started passes to its longest-standing member. This can't be undone. Your journal and cards stay on this iPhone."
+        if apple { text += " Apple will ask you to confirm once more, so Bird Journal can stop using your Apple ID." }
+        return text
     }
 
     static let optionalNote = "An account is optional. Listening, your journal, cards and bird packs all work without one; signing in will let you join circles with friends."

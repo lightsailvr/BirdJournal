@@ -5,12 +5,18 @@ struct Account: Equatable, Decodable {
     var id: String
     var displayName: String?
     var createdAt: Date
+    /// `apple` or `google`, from the server (issue #71): deleting an Apple account asks Apple once more, so the server
+    /// can revoke the app's access to the Apple ID.
+    var provider: String?
 
     enum CodingKeys: String, CodingKey {
         case id
         case displayName = "display_name"
         case createdAt = "created_at"
+        case provider
     }
+
+    var signsInWithApple: Bool { provider == "apple" }
 }
 
 enum AccountAPIError: Error, Equatable {
@@ -25,6 +31,9 @@ enum AccountAPIError: Error, Equatable {
 protocol AccountAPI: AnyObject {
     func account(accessToken: String) async throws -> Account
     func setDisplayName(_ name: String, accessToken: String) async throws -> Account
+    /// Deletes the account and everything the server holds about it (issue #71). With an authorization code from the
+    /// app's own Sign in with Apple, the server also revokes the app's access to the Apple ID.
+    func deleteAccount(appleAuthorizationCode: String?, accessToken: String) async throws
 }
 
 final class HTTPAccountAPI: AccountAPI {
@@ -45,6 +54,20 @@ final class HTTPAccountAPI: AccountAPI {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(["display_name": name])
         return try await send(request)
+    }
+
+    func deleteAccount(appleAuthorizationCode: String?, accessToken: String) async throws {
+        var request = request("DELETE", accessToken: accessToken)
+        if let appleAuthorizationCode {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONEncoder().encode(["apple_authorization_code": appleAuthorizationCode])
+        }
+        let (_, response) = try await transport(request)
+        switch (response as? HTTPURLResponse)?.statusCode ?? 0 {
+        case 204, 200: return
+        case 401: throw AccountAPIError.unauthorized
+        case let status: throw AccountAPIError.server(status)
+        }
     }
 
     private func request(_ method: String, accessToken: String) -> URLRequest {
