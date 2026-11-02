@@ -120,8 +120,21 @@ def test_only_someone_sharing_a_circle_the_find_went_to_may_react(
     _join(client, issuer, other, "dee")
     assert _react(client, issuer, "dee", "ada", find).status_code == 404
     # Bo leaves the circle: no more reacting.
+    _react(client, issuer, "bo", "ada", find, "jealous")
     assert client.delete(f"/v1/circles/{circle}/members/me", headers=issuer.headers(sub="bo")).status_code == 204
     assert _react(client, issuer, "bo", "ada", find).status_code == 404
+    # Taking one back still works, like unmuting.
+    response = _unreact(client, issuer, "bo", "ada", find, "jealous")
+    assert response.status_code == 200
+    assert _counts(response.json())["jealous"] == (0, False)
+
+
+def test_a_put_cut_short_is_finished_by_its_retry(client: TestClient, issuer: TestIssuer, find: str, table: Any) -> None:
+    _react(client, issuer, "bo", "ada", find)
+    # As if the Lambda stopped between the reaction and its copy under the reactor.
+    table.delete_item(Key={"pk": "ACCOUNT#bo", "sk": f"REACTION#ada#{find}#lovely"})
+    assert _react(client, issuer, "bo", "ada", find).status_code == 200
+    assert "Item" in table.get_item(Key={"pk": "ACCOUNT#bo", "sk": f"REACTION#ada#{find}#lovely"})
 
 
 def test_an_unknown_find_or_bad_id_is_refused(client: TestClient, issuer: TestIssuer, find: str) -> None:

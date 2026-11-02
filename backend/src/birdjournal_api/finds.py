@@ -235,16 +235,12 @@ class FindStore:
         reactions = self._query_keys(Key("pk").eq(_reactions_pk(owner, sighting_id)))
         # Each reaction's copy under its reactor (issue #64), the find's reaction push time and any waiting push.
         by_reactor = [
-            {"pk": f"ACCOUNT#{reactor}", "sk": f"REACTION#{owner}#{sighting_id}#{kind}"}
+            reactor_copy_key(reactor, owner, sighting_id, kind)
             for reactor, _, kind in (str(key["sk"]).removeprefix("REACTION#").rpartition("#") for key in reactions)
             if reactor
         ]
         self._delete_items(
-            [
-                *by_reactor,
-                {"pk": f"ACCOUNT#{owner}", "sk": f"REACTIONPUSH#{sighting_id}"},
-                {"pk": "REACTIONS", "sk": f"{owner}#{sighting_id}"},
-            ]
+            [*by_reactor, reaction_push_key(owner, sighting_id), reaction_buffer_key(owner, sighting_id)]
         )
         # The reactions last: a delete cut short is finished by the retry, which finds them again.
         self._delete_items(reactions)
@@ -419,6 +415,25 @@ def _species_pk(circle_id: str) -> str:
 
 def _reactions_pk(owner: str, sighting_id: str) -> str:
     return f"FIND#{owner}#{sighting_id}"
+
+
+# The reaction items (issue #64, reactions.py) a find's delete takes with it.
+REACTIONS_PK = "REACTIONS"
+
+
+def reactor_copy_key(reactor: str, owner: str, sighting_id: str, kind: str) -> dict[str, str]:
+    """A reaction's copy under its reactor, for account deletion (#71)."""
+    return {"pk": f"ACCOUNT#{reactor}", "sk": f"REACTION#{owner}#{sighting_id}#{kind}"}
+
+
+def reaction_push_key(owner: str, sighting_id: str) -> dict[str, str]:
+    """When the owner last got a reaction push about the find."""
+    return {"pk": f"ACCOUNT#{owner}", "sk": f"REACTIONPUSH#{sighting_id}"}
+
+
+def reaction_buffer_key(owner: str, sighting_id: str) -> dict[str, str]:
+    """The find's reactions waiting for their 10-minute window to close."""
+    return {"pk": REACTIONS_PK, "sk": f"{owner}#{sighting_id}"}
 
 
 def _feed_key(circle_id: str, owner: str, sighting_id: str, content: FindContent) -> dict[str, str]:

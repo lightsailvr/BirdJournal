@@ -39,13 +39,20 @@ from botocore.exceptions import ClientError
 
 from birdjournal_api.circles import CircleStore, NotFound
 from birdjournal_api.devices import DeviceStore, MuteStore
-from birdjournal_api.finds import Find, FindStore, Method
+from birdjournal_api.finds import (
+    REACTIONS_PK,
+    Find,
+    FindStore,
+    Method,
+    reaction_buffer_key,
+    reaction_push_key,
+    reactor_copy_key,
+)
 from birdjournal_api.pushes import FRIEND_FALLBACK, Push, PushKind, PushService
 
 log = logging.getLogger(__name__)
 
 REACTION_WINDOW = timedelta(minutes=10)
-REACTIONS_PK = "REACTIONS"
 
 
 class ReactionKind(StrEnum):
@@ -150,8 +157,10 @@ class ReactionStore:
             if error.response["Error"]["Code"] != "ConditionalCheckFailedException":
                 raise
             created = False
+        # Every time, not only when new: a retry after a put cut short between the two writes still writes the copy
+        # account deletion (#71) reads.
+        self._table.put_item(Item={**reactor_copy_key(reactor, owner, sighting_id, kind.value), "created_at": now})
         if created:
-            self._table.put_item(Item={**_by_reactor_key(reactor, owner, sighting_id, kind), "created_at": now})
             try:
                 self._reacted(find, reactor, kind)
             except Exception:
@@ -161,10 +170,14 @@ class ReactionStore:
 
     def delete(self, reactor: str, owner: str, sighting_id: str, kind: ReactionKind) -> list[ReactionCount]:
         """Takes the reaction back; one that isn't there is no error. A waiting push leaves it out (the flush reads
-        the reactions back)."""
-        self._reachable_find(reactor, owner, sighting_id)
+        the reactions back). Works after leaving the circle too, like unmuting: it only ever removes the reactor's
+        own. NotFound only when the find is gone."""
+        if reactor == owner:
+            raise OwnFind()
+        if self._finds.find(owner, sighting_id) is None:
+            raise NotFound()
         self._table.delete_item(Key=_reaction_key(owner, sighting_id, reactor, kind))
-        self._table.delete_item(Key=_by_reactor_key(reactor, owner, sighting_id, kind))
+        self._table.delete_item(Key=reactor_copy_key(reactor, owner, sighting_id, kind.value))
         return self.counts(reactor, owner, sighting_id)
 
     def counts(self, reader: str, owner: str, sighting_id: str) -> list[ReactionCount]:
@@ -233,7 +246,7 @@ class ReactionStore:
         last, shown = self._last_push(find.owner, find.sighting_id)
         if last is not None and self._clock() - last < REACTION_WINDOW:
             self._table.update_item(
-                Key=_buffer_key(find.owner, find.sighting_id),
+                Key=reaction_buffer_key(find.owner, find.sighting_id),
                 UpdateExpression="ADD reactions :given",
                 ExpressionAttributeValues={":given": {f"{reactor}#{kind.value}"}},
             )
@@ -278,7 +291,7 @@ class ReactionStore:
         if self._pushes.deliver(devices, push):
             self._table.put_item(
                 Item={
-                    **_pushed_key(owner, sighting_id), "at": self._clock().isoformat(),
+                    **reaction_push_key(owner, sighting_id), "at": self._clock().isoformat(),
                     "shown": {f"{reactor}#{kind.value}" for reactor, kind in pairs},
                 }
             )
@@ -319,19 +332,19 @@ class ReactionStore:
             kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
 
     def _buffered(self, owner: str, sighting_id: str) -> set[str]:
-        item = self._table.get_item(Key=_buffer_key(owner, sighting_id), ConsistentRead=True).get("Item")
+        item = self._table.get_item(Key=reaction_buffer_key(owner, sighting_id), ConsistentRead=True).get("Item")
         return set(item.get("reactions", set())) if item else set()
 
     def _clear(self, owner: str, sighting_id: str, given: set[str]) -> None:
         """Takes out what was read; the buffer goes only if nothing came in meanwhile."""
         if given:
             self._table.update_item(
-                Key=_buffer_key(owner, sighting_id), UpdateExpression="DELETE reactions :given",
+                Key=reaction_buffer_key(owner, sighting_id), UpdateExpression="DELETE reactions :given",
                 ExpressionAttributeValues={":given": given},
             )
         try:
             self._table.delete_item(
-                Key=_buffer_key(owner, sighting_id), ConditionExpression="attribute_not_exists(reactions)"
+                Key=reaction_buffer_key(owner, sighting_id), ConditionExpression="attribute_not_exists(reactions)"
             )
         except ClientError as error:
             if error.response["Error"]["Code"] != "ConditionalCheckFailedException":
@@ -349,7 +362,7 @@ class ReactionStore:
 
     def _last_push(self, owner: str, sighting_id: str) -> tuple[datetime | None, set[str]]:
         """When the owner last got a reaction alert about the find, and the reactions it named."""
-        item = self._table.get_item(Key=_pushed_key(owner, sighting_id), ConsistentRead=True).get("Item")
+        item = self._table.get_item(Key=reaction_push_key(owner, sighting_id), ConsistentRead=True).get("Item")
         if not item:
             return None, set()
         return datetime.fromisoformat(item["at"]), set(item.get("shown", set()))
@@ -370,14 +383,3 @@ def _reactions_pk(owner: str, sighting_id: str) -> str:
 def _reaction_key(owner: str, sighting_id: str, reactor: str, kind: ReactionKind) -> dict[str, str]:
     return {"pk": _reactions_pk(owner, sighting_id), "sk": f"REACTION#{reactor}#{kind.value}"}
 
-
-def _by_reactor_key(reactor: str, owner: str, sighting_id: str, kind: ReactionKind) -> dict[str, str]:
-    return {"pk": f"ACCOUNT#{reactor}", "sk": f"REACTION#{owner}#{sighting_id}#{kind.value}"}
-
-
-def _pushed_key(owner: str, sighting_id: str) -> dict[str, str]:
-    return {"pk": f"ACCOUNT#{owner}", "sk": f"REACTIONPUSH#{sighting_id}"}
-
-
-def _buffer_key(owner: str, sighting_id: str) -> dict[str, str]:
-    return {"pk": REACTIONS_PK, "sk": f"{owner}#{sighting_id}"}

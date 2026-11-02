@@ -35,6 +35,8 @@ final class CircleStore {
     private(set) var mutes = Mutes()
     /// Runs after the birder creates or joins a circle: the push center asks for permission the first time.
     @ObservationIgnored var joinedCircle: (() async -> Void)?
+    /// The latest reaction tap on each feed item, by item id.
+    @ObservationIgnored private var reactionTurns: [String: Int] = [:]
 
     let account: AccountSession
     /// The circle server's client; the find outbox (issue #62) sends through the same one.
@@ -161,18 +163,25 @@ final class CircleStore {
     /// Gives or takes back the birder's reaction on a friend's find (issue #64). Every open feed holding the find
     /// shows it at once; the server's counts replace the guess when they come, and a failure puts the find back as
     /// it was and rethrows.
+    /// Overlapping taps on one find answer out of order; only the latest tap's answer is shown.
     func react(_ kind: ReactionKind, given: Bool, to item: FeedItem) async throws {
         guard !item.isMine else { return }
         let before = item.reactions
+        let turn = (reactionTurns[item.id] ?? 0) + 1
+        reactionTurns[item.id] = turn
         update(item.id) { $0.reacting(kind, given: given) }
         do {
             let counts = try await call {
                 try await $0.setReaction(kind, given: given, owner: item.owner.id, sightingID: item.sightingID, accessToken: $1)
             }
-            update(item.id) { var item = $0; item.reactions = counts; return item }
+            if reactionTurns[item.id] == turn {
+                update(item.id) { var item = $0; item.reactions = counts; return item }
+            }
         } catch {
             log.error("couldn't react: \(String(describing: error))")
-            update(item.id) { var item = $0; item.reactions = before; return item }
+            if reactionTurns[item.id] == turn {
+                update(item.id) { var item = $0; item.reactions = before; return item }
+            }
             throw error
         }
     }
