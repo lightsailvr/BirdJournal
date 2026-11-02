@@ -84,6 +84,27 @@ struct CardStatsTests {
         #expect(CardStatsText.clutch(3.5...5) == "3.5–5 eggs")
     }
 
+    @Test("a bird that reuses old nests is not called a brood parasite; a brood parasite is (#86)")
+    func nestReuseAndBroodParasites() throws {
+        let wren = CardStatsText.back(Self.stats(nests: [.cavity, .otherNest, .crevice]))
+        #expect(wren.first { $0.label == "Nest" }?.value == "Tree cavity, another bird's old nest or crevice")
+        let cowbird = CardStatsText.back(Self.stats(nests: [.broodParasite]))
+        #expect(cowbird.first { $0.label == "Nest" }?.value == "Lays in other birds' nests (a brood parasite)")
+    }
+
+    @Test(
+        "the bundled pack's House Wren card back doesn't say brood parasite, and its cowbird's does",
+        .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= 9, "the bundled pack predates the nest fix")
+    )
+    func bundledHouseWren() throws {
+        let pack = try SpeciesPack.bundled()
+        let wren = try #require(pack.species(scientificName: "Troglodytes aedon")?.stats)
+        let back = CardStatsText.back(wren).map(\.value).joined(separator: " ")
+        #expect(!back.contains("parasite") && !back.contains("other birds' nests"))
+        let cowbird = try #require(pack.species(scientificName: "Molothrus ater")?.stats)
+        #expect(CardStatsText.back(cowbird).contains { $0.value.contains("brood parasite") })
+    }
+
     @Test("the sources line credits the datasets the species' stats came from")
     func sources() {
         #expect(CardStatsText.sources(Self.stats()) == "From AVONET, BIRDBASE and the Avian wingspan database (CC BY 4.0). A wingspan marked ≈ is estimated from wing length.")

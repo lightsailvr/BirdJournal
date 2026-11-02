@@ -1,6 +1,7 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
 `packbuilder set <definition-dir>`: builds the pack's set definition into set.json beside pack.json (`sets.py`).
 `packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
+`packbuilder art-references <definition-dir> --pack <pack-dir> --out <dir>`: exports the art worker's reference birds (`art_references.py`).
 `packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
 `packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore in lore.lock.json (`lore.py`).
 `packbuilder thumbnails <pack-dir> --out <dir>`: writes the pack-art thumbnails for the art CDN (`thumbnails.py`).
@@ -80,6 +81,11 @@ def main(argv: list[str] | None = None) -> int:
     art_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a painting: the next build paints it again with new seeds (repeat)")
     art_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on a species' art: its cards fall back to the reference photo (repeat)")
     art_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
+    references = commands.add_parser("art-references", help="export each species' isolated reference bird for the art worker's scene art (issue #68)")
+    references.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and art.lock.json")
+    references.add_argument("--pack", type=Path, required=True, help="the built pack (its pack.sqlite gives each species' size)")
+    references.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the build's download cache (default: packbuilder/cache)")
+    references.add_argument("--out", type=Path, required=True, help="folder to write (replaced): references.json and a PNG per species")
     set_command = commands.add_parser("set", help="build the set definition (boundary, taxonomic order, edition) into set.json")
     set_command.add_argument("definition", type=Path, help="folder holding pack.json")
     set_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
@@ -113,6 +119,8 @@ def main(argv: list[str] | None = None) -> int:
         return _thumbnails(args)
     if args.command == "calibrate-rarity":
         return _calibrate_rarity(args)
+    if args.command == "art-references":
+        return _art_references(args)
     if args.command == "art-review":
         return _art_review(args)
     if args.command == "lore-review":
@@ -316,6 +324,24 @@ def _lore_review(args: argparse.Namespace) -> int:
     sheet = review_sheet(lock, args.sheet or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])
     counts = Counter(entry["review"] for entry in lock.species.values())
     print(f"{lock.path}: " + ", ".join(f"{counts[state]} {state}" for state in (APPROVED, PENDING, REJECTED)) + f"; review file {sheet}", file=sys.stderr)
+    return 0
+
+
+def _art_references(args: argparse.Namespace) -> int:
+    from packbuilder.art_references import export
+    from packbuilder.definition import load_overrides
+    from packbuilder.pack_art import LOCK_FILE, ArtLock
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    references = export(
+        definition.id, ArtLock.load(args.definition / LOCK_FILE), load_overrides(args.definition / "overrides.json"),
+        args.pack / "pack.sqlite", args.cache / "art", args.out,
+    )
+    print(f"{args.out}: {len(references['species'])} reference birds", file=sys.stderr)
+    if references["missing"]:
+        print(f"not in the cache (build the pack art first): {', '.join(references['missing'])}", file=sys.stderr)
+    if references["no_reference"]:
+        print(f"painted from text, so no scene art: {', '.join(references['no_reference'])}", file=sys.stderr)
     return 0
 
 
