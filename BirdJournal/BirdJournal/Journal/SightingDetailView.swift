@@ -150,7 +150,7 @@ struct SightingDetailView: View {
                 }
             }
             .sheet(isPresented: $isSharing) {
-                SharePostcardView(sighting: sighting)
+                ShareCardView(sighting: sighting)
             }
             .sheet(isPresented: $showingMap) {
                 SightingMapView(focus: sighting)

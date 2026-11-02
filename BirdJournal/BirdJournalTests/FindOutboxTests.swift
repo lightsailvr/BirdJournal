@@ -34,6 +34,9 @@ private final class FindRecorder: CircleClient {
     }
 
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage { FeedPage(items: [], nextCursor: nil) }
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws {}
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload { throw CircleError.server(503) }
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {}
     func circles(accessToken: String) async throws -> [CircleSummary] { try await inner.circles(accessToken: accessToken) }
     func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail { try await inner.createCircle(named: name, timeZone: timeZone, accessToken: accessToken) }
     func circle(id: String, accessToken: String) async throws -> CircleDetail { try await inner.circle(id: id, accessToken: accessToken) }
@@ -184,6 +187,23 @@ struct FindOutboxTests {
         await harness.outbox.flush()
         #expect(harness.client.calls.isEmpty)
         #expect(harness.outbox.entries.isEmpty && harness.outbox.published.isEmpty)
+    }
+
+    @Test("a private birder's card shared by hand is corrected and removed like a published find (#66)")
+    func sharedByHand() async {
+        let harness = Harness()
+        harness.sharing = .private
+        let shared = UUID()
+        harness.outbox.added(shared, isLegendary: false)
+        harness.outbox.sharedByHand(shared, isLegendary: true)
+        #expect(harness.outbox.entries.isEmpty, "sharing by hand sends on its own; the outbox queues nothing")
+        #expect(harness.outbox.publishedLegendary(shared) == true)
+        harness.outbox.changed(shared)
+        await harness.outbox.flush()
+        harness.outbox.removed(shared)
+        await harness.outbox.flush()
+        #expect(harness.client.calls == ["put \(shared)", "delete \(shared)"])
+        #expect(harness.legendaryFlags[shared] == true)
     }
 
     @Test("Heard to Seen puts a published find again, with the Legendary flag of its add")
