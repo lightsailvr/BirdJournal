@@ -20,8 +20,14 @@ def _only(template: Template, type_: str) -> dict[str, Any]:
     return resource
 
 
+def _invite(template: Template, type_: str) -> dict[str, Any]:
+    """The invite site's one resource of a type; the art CDN (#68) has its own bucket and distribution."""
+    (resource,) = [resource for name, resource in template.find_resources(type_).items() if name.startswith("InviteSite")]
+    return resource
+
+
 def _distribution(template: Template) -> dict[str, Any]:
-    return _only(template, "AWS::CloudFront::Distribution")["Properties"]["DistributionConfig"]
+    return _invite(template, "AWS::CloudFront::Distribution")["Properties"]["DistributionConfig"]
 
 
 def test_cloudfront_serves_the_invite_domain_with_the_us_east_1_certificate(template: Template) -> None:
@@ -43,7 +49,7 @@ def test_browsers_are_sent_to_https_and_only_read(template: Template) -> None:
 
 
 def test_the_bucket_is_private_behind_origin_access_control(template: Template) -> None:
-    bucket = _only(template, "AWS::S3::Bucket")["Properties"]
+    bucket = _invite(template, "AWS::S3::Bucket")["Properties"]
     assert bucket["PublicAccessBlockConfiguration"] == {
         "BlockPublicAcls": True,
         "BlockPublicPolicy": True,
@@ -56,7 +62,7 @@ def test_the_bucket_is_private_behind_origin_access_control(template: Template) 
         "AWS::CloudFront::OriginAccessControl",
         {"OriginAccessControlConfig": Match.object_like({"OriginAccessControlOriginType": "s3", "SigningBehavior": "always"})},
     )
-    statements = _only(template, "AWS::S3::BucketPolicy")["Properties"]["PolicyDocument"]["Statement"]
+    statements = _invite(template, "AWS::S3::BucketPolicy")["Properties"]["PolicyDocument"]["Statement"]
     allowed = [statement for statement in statements if statement["Effect"] == "Allow"]
     # Only CloudFront reads; the one statement for everyone is enforce_ssl's Deny.
     assert [statement["Principal"] for statement in allowed] == [{"Service": "cloudfront.amazonaws.com"}]
@@ -64,7 +70,7 @@ def test_the_bucket_is_private_behind_origin_access_control(template: Template) 
 
 
 def test_the_site_bucket_outlives_a_destroy(template: Template) -> None:
-    bucket = _only(template, "AWS::S3::Bucket")
+    bucket = _invite(template, "AWS::S3::Bucket")
     assert bucket["DeletionPolicy"] == "Retain"
 
 
@@ -154,7 +160,7 @@ def test_the_new_resources_are_tagged(template: Template) -> None:
 
 def test_the_stack_outputs_the_cname_target(template: Template) -> None:
     outputs = template.to_json()["Outputs"]
-    (distribution,) = template.find_resources("AWS::CloudFront::Distribution")
+    (distribution,) = [name for name in template.find_resources("AWS::CloudFront::Distribution") if name.startswith("InviteSite")]
     assert outputs["InviteDistributionDomain"]["Value"] == {"Fn::GetAtt": [distribution, "DomainName"]}
     assert outputs["InviteBaseUrl"]["Value"] == "https://birdquest.matthewcelia.com"
 
