@@ -20,6 +20,8 @@ final class FindsUITests: XCTestCase {
 
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-'"))
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5), "no finds; screen: \(app.debugDescription.prefix(3000))")
+        // The goal card (issue #65) sits above the finds: scroll until the list has drawn them all.
+        for _ in 0..<4 where rows.count < 4 { app.swipeUp() }
         XCTAssertEqual(rows.count, 4)
         let newest = rows.element(boundBy: 0).label
         XCTAssertTrue(newest.contains("California Gnatcatcher"), newest)

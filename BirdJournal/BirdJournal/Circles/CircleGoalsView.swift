@@ -39,6 +39,26 @@ struct CircleGoalsSection: View {
                     Label("New goal", systemImage: "flag.checkered")
                 }
                 .accessibilityIdentifier("newGoal")
+                // On the button, not the section: a List's sections don't reliably present.
+                .sheet(isPresented: $creating) { NewGoalSheet(circleID: circleID, timeZone: timeZone) }
+                .confirmationDialog(
+                    "Delete “\(deleting?.title ?? "this goal")”?",
+                    isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                    titleVisibility: .visible,
+                    presenting: deleting
+                ) { goal in
+                    Button("Delete goal", role: .destructive) { delete(goal) }
+                } message: { _ in
+                    Text("It goes for everyone in the circle. The finds stay.")
+                }
+                #if DEBUG
+                .task {
+                    if UserDefaults.standard.bool(forKey: "autoNewGoal") {
+                        UserDefaults.standard.removeObject(forKey: "autoNewGoal")
+                        creating = true
+                    }
+                }
+                #endif
                 if let error {
                     Text(error).font(JournalFont.supporting).foregroundStyle(.red)
                 }
@@ -52,25 +72,6 @@ struct CircleGoalsSection: View {
                 Text("Goals count different species, not repeat cards, among everyone's finds.")
             }
         }
-        .sheet(isPresented: $creating) { NewGoalSheet(circleID: circleID, timeZone: timeZone) }
-        .confirmationDialog(
-            "Delete “\(deleting?.title ?? "this goal")”?",
-            isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
-            titleVisibility: .visible,
-            presenting: deleting
-        ) { goal in
-            Button("Delete goal", role: .destructive) { delete(goal) }
-        } message: { _ in
-            Text("It goes for everyone in the circle. The finds stay.")
-        }
-        #if DEBUG
-        .task {
-            if UserDefaults.standard.bool(forKey: "autoNewGoal") {
-                UserDefaults.standard.removeObject(forKey: "autoNewGoal")
-                creating = true
-            }
-        }
-        #endif
     }
 
     private func delete(_ goal: CircleGoal) {
