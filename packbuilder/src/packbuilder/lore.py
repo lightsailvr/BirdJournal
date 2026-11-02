@@ -13,9 +13,12 @@ agree), the sentences with their citations, the tagline, the model, the prompt v
 - `approved`: in the pack.
 - `rejected`: written again by the next build, with the maintainer's reason in the prompt.
 
-A warm lock makes no API call and needs no key. Lore is written again only on request: a rejection, or
-`packbuilder build --regenerate-lore`. A fact sheet that changed since its lore was written (the Wikipedia revision
-moved, a stats fix) is logged and keeps the locked facts and lore until the lore is regenerated.
+A warm lock makes no API call and needs no key. Lore is written again on request (a rejection, or
+`packbuilder build --regenerate-lore`) and when a dataset fact it cites changed (issue #86). A dataset fact is matched
+by its text, since the stats sentences are the datasets' own: one the lore cites that is gone from the sheet sends the
+entry back to be written from the new sheet, and comes back pending; one it doesn't cite is swapped for the new
+sentence in the locked sheet (keeping its id) and the lore and its review stay. The article's facts are left as they
+were locked: a Wikipedia revision that moved is logged and changes nothing until the lore is regenerated.
 
 The key is read from `BIRDJOURNAL_ANTHROPIC_API_KEY` (never `ANTHROPIC_API_KEY`, which would switch Claude Code itself
 to API billing), else from the login Keychain item `birdjournal-anthropic-api-key`, and passed to the client; it is
@@ -339,6 +342,42 @@ def _lore_text(entry: dict) -> str:
     return " ".join(sentence.get("text", "") for sentence in entry.get("sentences") or [])
 
 
+def _cited(entry: dict) -> set[str]:
+    return {fact_id for sentence in (*(entry.get("sentences") or []), entry.get("tagline") or {}) for fact_id in sentence.get("facts") or []}
+
+
+def _is_dataset(fact: Fact) -> bool:
+    return not fact.source.startswith("http")
+
+
+def stats_changes(locked: list[Fact], current: list[Fact]) -> tuple[list[Fact], list[Fact]]:
+    """The locked sheet's dataset facts the current sheet no longer has, and the current sheet's new ones, by text."""
+    now = {(fact.text, fact.source) for fact in current if _is_dataset(fact)}
+    before = {(fact.text, fact.source) for fact in locked if _is_dataset(fact)}
+    return (
+        [fact for fact in locked if _is_dataset(fact) and (fact.text, fact.source) not in now],
+        [fact for fact in current if _is_dataset(fact) and (fact.text, fact.source) not in before],
+    )
+
+
+def refreshed(locked: list[Fact], removed: list[Fact], added: list[Fact]) -> list[Fact]:
+    """The locked sheet with its gone dataset facts swapped for the new ones in turn (each keeping the old id), any
+    left over dropped, and further new ones appended with fresh ids."""
+    swaps = {old.id: Fact(old.id, new.text, new.source) for old, new in zip(removed, added)}
+    gone = {fact.id for fact in removed}
+    facts = [swaps.get(fact.id, fact) for fact in locked if fact.id not in gone or fact.id in swaps]
+    last = max((int(fact.id[1:]) for fact in locked if fact.id[1:].isdigit()), default=0)
+    facts += [Fact(f"f{last + number}", fact.text, fact.source) for number, fact in enumerate(added[len(removed):], start=1)]
+    return facts
+
+
+def stale(entry: dict, facts: list[Fact]) -> list[Fact]:
+    """The dataset facts this locked entry's lore cites that the current sheet no longer has."""
+    removed, _ = stats_changes([Fact.from_dict(f) for f in entry["facts"]], facts)
+    cited = _cited(entry)
+    return [fact for fact in removed if fact.id in cited]
+
+
 def lore_from_entry(species_id: str, entry: dict) -> Lore:
     return Lore(species_id, entry["review"], tuple(entry["sentences"]), entry["tagline"], tuple(Fact.from_dict(f) for f in entry["facts"]), entry.get("model", MODEL))
 
@@ -368,7 +407,12 @@ class LoreWriter:
         """Each species' lore, by id, for (id, common name, scientific name) in pack order; a species whose lore could
         not be written is left out (and logged). The lock is written after each species, so an interrupted run resumes."""
         written: dict[str, Lore] = {}
-        regenerating = {species_id for species_id, _, _ in species if ALL in self.regenerate or species_id in self.regenerate}
+        changed = {
+            species_id: gone for species_id, _, _ in species
+            if (entry := self.lock.species.get(species_id)) is not None and entry["review"] != REJECTED and sheets.get(species_id)
+            and (gone := stale(entry, sheets[species_id]))
+        }
+        regenerating = {species_id for species_id, _, _ in species if ALL in self.regenerate or species_id in self.regenerate} | set(changed)
         kept = [entry for species_id, entry in self.lock.species.items() if species_id not in regenerating]
         self._openings = Counter(opening(entry) for entry in kept)
         self._ask_why = sum(bool(ASK_WHY.search(_lore_text(entry))) for entry in kept)
@@ -377,11 +421,23 @@ class LoreWriter:
             facts = sheets.get(species_id) or []
             entry = self.lock.species.get(species_id)
             wanted = ALL in self.regenerate or species_id in self.regenerate
-            if entry is not None and not wanted and entry["review"] != REJECTED:
-                if problems := validate(entry, [Fact.from_dict(f) for f in entry["facts"]]):
+            if species_id in changed:
+                log.warning(
+                    "  %s: a fact its lore cites changed (%s); writing it again", common_name,
+                    "; ".join(f"{fact.id}: {fact.text!r}" for fact in changed[species_id]),
+                )
+            elif entry is not None and not wanted and entry["review"] != REJECTED:
+                locked = [Fact.from_dict(f) for f in entry["facts"]]
+                if problems := validate(entry, locked):
                     raise InvalidLore(f"{self.lock.path}: {common_name}'s locked lore fails its checks: {'; '.join(problems)}")
                 if [fact.as_dict() for fact in facts] != entry["facts"]:
-                    log.warning("  %s: the fact sheet changed since its lore was written; the locked facts and lore stay (--regenerate-lore to rewrite)", common_name)
+                    removed, added = stats_changes(locked, facts) if facts else ([], [])
+                    if removed or added:
+                        entry["facts"] = [fact.as_dict() for fact in refreshed(locked, removed, added)]
+                        self.lock.write()
+                        log.info("  %s: dataset facts its lore doesn't cite changed; the locked sheet takes them and the lore stays", common_name)
+                    if [fact for fact in facts if not _is_dataset(fact)] != [fact for fact in locked if not _is_dataset(fact)]:
+                        log.warning("  %s: the article's facts changed since its lore was written; the locked facts and lore stay (--regenerate-lore to rewrite)", common_name)
                 written[species_id] = lore_from_entry(species_id, entry)
                 continue
             if not facts:
@@ -510,6 +566,8 @@ def review_sheet(lock: LoreLock, path: Path, pack_name: str, order: list[str] | 
         f"{len(ids)} species: {counts[APPROVED]} approved, {counts[PENDING]} pending, {counts[REJECTED]} rejected. "
         "Each sentence is followed by the facts it cites. Approve or reject with `packbuilder lore-review`.",
     ]
+    if pending := [lock.species[i]["common_name"] for i in ids if lock.species[i]["review"] == PENDING]:
+        lines += ["", f"Pending: {', '.join(pending)}."]
     for species_id in ids:
         entry = lock.species[species_id]
         facts = {fact["id"]: fact for fact in entry["facts"]}

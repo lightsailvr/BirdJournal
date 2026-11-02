@@ -219,6 +219,34 @@ def test_the_type_line_takes_the_genus_word_and_fails_on_an_unmapped_family():
 # The committed fixes and mappings
 
 
+def nest_of(name: str, nest_types: tuple[str, ...], nest_parasite: bool, parasitized: bool) -> tuple[str, ...]:
+    """The joined nest of a species BIRDBASE gives these nest types and Para.1 and Para.2 (issue #86)."""
+    data = datasets(
+        avonet=[avonet(name, "AVIBASE-X")], wingspan=[],
+        birdbase=[birdbase(name, nest_types=nest_types, nest_parasite=nest_parasite, parasitized=parasitized)],
+    )
+    return join([entry(name)], data, fixes(), TYPE_LINES)[name].stats.nest
+
+
+def test_a_cavity_nester_that_reuses_other_birds_nests_is_not_a_brood_parasite():
+    # BIRDBASE's Northern House Wren: CV,O,CR, not a nest parasite, a victim of one. "O" is another bird's old nest.
+    assert nest_of("Troglodytes aedon", ("CV", "O", "CR"), nest_parasite=False, parasitized=True) == ("cavity", "other_nest", "crevice")
+
+
+def test_a_brood_parasite_is_one_by_birdbases_parasitism_column():
+    # The Brown-headed Cowbird: no nest, a nest parasite, never parasitized itself.
+    assert nest_of("Molothrus ater", ("NO",), nest_parasite=True, parasitized=False) == ("brood_parasite",)
+    # The Common Cuckoo, coded "other bird's nest" for its hosts' nests.
+    assert nest_of("Cuculus canorus", ("O",), nest_parasite=True, parasitized=False) == ("brood_parasite",)
+
+
+def test_birds_that_lay_in_their_own_kinds_nests_but_build_one_are_not_brood_parasites():
+    # Intraspecific parasites are 1 in both columns (the Mallard); the California Quail, 1 and 0, scrapes a nest.
+    assert nest_of("Anas platyrhynchos", ("CP", "CV", "O"), nest_parasite=True, parasitized=True) == ("cup", "cavity", "other_nest")
+    assert nest_of("Callipepla californica", ("SC",), nest_parasite=True, parasitized=False) == ("scrape",)
+    assert nest_of("Oxyura maccoa", ("O",), nest_parasite=True, parasitized=True) == ("other_nest",)
+
+
 PACKS = Path(__file__).resolve().parents[1] / "packs"
 CACHE = Path(__file__).resolve().parents[1] / "cache"
 
@@ -258,3 +286,25 @@ def test_every_committed_pack_joins_with_stats_and_a_type_line_for_every_species
         for entry in definition.species:
             assert joined[entry.scientific_name].type_line is not None, entry.common_name
             assert joined[entry.scientific_name].stats is not None or entry.scientific_name in known, entry.common_name
+
+
+@pytest.mark.skipif(not (CACHE / "datasets").exists(), reason="the datasets are not in packbuilder/cache (a pack build fetches them)")
+def test_in_birdbase_the_house_wren_reuses_nests_and_the_cowbird_and_whydah_are_brood_parasites():
+    datasets = Datasets.load(CACHE)
+    species = [entry("Troglodytes aedon"), entry("Molothrus ater"), entry("Vidua macroura"), entry("Bubo virginianus")]
+    joined = join(species, datasets, StatsFixes.load(), TypeLines.load())
+    assert "brood_parasite" not in joined["Troglodytes aedon"].stats.nest
+    assert "other_nest" in joined["Troglodytes aedon"].stats.nest
+    assert joined["Molothrus ater"].stats.nest == ("brood_parasite",)
+    assert joined["Vidua macroura"].stats.nest == ("brood_parasite",)
+    assert "brood_parasite" not in joined["Bubo virginianus"].stats.nest
+
+
+@pytest.mark.skipif(not (CACHE / "datasets").exists(), reason="the datasets are not in packbuilder/cache (a pack build fetches them)")
+def test_the_only_brood_parasites_of_the_packs_are_the_cowbird_and_the_whydah():
+    datasets = Datasets.load(CACHE)
+    parasites = set()
+    for definition in pack_definitions():
+        joined = join(definition.species, datasets, StatsFixes.load(), TypeLines.load())
+        parasites |= {name for name, species in joined.items() if species.stats and "brood_parasite" in species.stats.nest}
+    assert parasites == {"Molothrus ater", "Vidua macroura"}
