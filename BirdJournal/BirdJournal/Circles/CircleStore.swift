@@ -7,6 +7,16 @@ import OSLog
 /// `pendingInvite` until the join screen takes it.
 @Observable
 final class CircleStore {
+    struct Feed: Equatable {
+        var items: [FeedItem] = []
+        /// Where the next page starts; nil once the last is read.
+        var nextCursor: String?
+        var isLoading = false
+        /// The first page has come back.
+        var isLoaded = false
+        var error: String?
+    }
+
     enum ListState: Equatable {
         case idle
         case loading
@@ -16,12 +26,15 @@ final class CircleStore {
 
     private(set) var circles: [CircleSummary] = []
     private(set) var details: [String: CircleDetail] = [:]
+    /// Each circle's Recent finds (issue #62), by circle id: the pages read so far, newest first.
+    private(set) var feeds: [String: Feed] = [:]
     private(set) var listState: ListState = .idle
     /// The token of an invite link opened from outside the app, for the join screen.
     var pendingInvite: String?
 
     let account: AccountSession
-    private let client: CircleClient?
+    /// The circle server's client; the find outbox (issue #62) sends through the same one.
+    let client: CircleClient?
     private let timeZone: () -> String
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "circles")
 
@@ -88,10 +101,40 @@ final class CircleStore {
         try? await loadDetail(id: circleID)
     }
 
+    /// Reads the circle's newest finds again, replacing what was read.
+    func loadFeed(circleID: String) async {
+        await readFeed(circleID: circleID, cursor: nil)
+    }
+
+    /// Reads the next page of the circle's finds, if there is one.
+    func loadMoreFeed(circleID: String) async {
+        guard let feed = feeds[circleID], let cursor = feed.nextCursor, !feed.isLoading else { return }
+        await readFeed(circleID: circleID, cursor: cursor)
+    }
+
+    private func readFeed(circleID: String, cursor: String?) async {
+        var feed = feeds[circleID] ?? Feed()
+        feed.isLoading = true
+        feeds[circleID] = feed
+        do {
+            let page = try await call { try await $0.feed(circleID: circleID, cursor: cursor, accessToken: $1) }
+            feed.items = cursor == nil ? page.items : feed.items + page.items.filter { item in !feed.items.contains { $0.id == item.id } }
+            feed.nextCursor = page.nextCursor
+            feed.isLoaded = true
+            feed.error = nil
+        } catch {
+            log.error("couldn't load the feed: \(String(describing: error))")
+            feed.error = Self.message(for: error, doing: "load the finds")
+        }
+        feed.isLoading = false
+        feeds[circleID] = feed
+    }
+
     /// Signed out: nothing of the circles stays on the phone (the root calls it whenever the account signs out).
     func clear() {
         circles = []
         details = [:]
+        feeds = [:]
         listState = .idle
     }
 
@@ -114,6 +157,7 @@ final class CircleStore {
     private func forget(_ id: String) {
         circles.removeAll { $0.id == id }
         details[id] = nil
+        feeds[id] = nil
     }
 
     /// The words for a failure, on the screen where it happened.

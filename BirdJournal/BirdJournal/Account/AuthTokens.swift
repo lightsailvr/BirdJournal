@@ -33,10 +33,13 @@ struct AuthTokens: Codable, Equatable {
     struct Identity: Equatable {
         var name: String?
         var email: String?
+        /// The account's `sub`, the server's account id: whose finds the outbox is holding (issue #62).
+        var subject: String?
 
-        init(name: String? = nil, email: String? = nil) {
+        init(name: String? = nil, email: String? = nil, subject: String? = nil) {
             self.name = name
             self.email = email
+            self.subject = subject
         }
 
         init(idToken: String) {
@@ -49,7 +52,8 @@ struct AuthTokens: Codable, Equatable {
             let name = (claims["name"] as? String) ?? (claims["given_name"] as? String)
             self.init(
                 name: name?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
-                email: (claims["email"] as? String)?.nilIfEmpty
+                email: (claims["email"] as? String)?.nilIfEmpty,
+                subject: (claims["sub"] as? String)?.nilIfEmpty
             )
         }
     }
