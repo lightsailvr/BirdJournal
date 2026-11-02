@@ -56,6 +56,7 @@ class BirdJournalStack(Stack):
                 "ART_QUEUE_URL": art_jobs.queue.queue_url,
                 "ART_WORKER_TOKEN_SECRET": art_jobs.worker_token.secret_arn,
                 "ART_AUTO_PAINT": config.art_auto_paint,
+                "ART_DAILY_ALLOWANCE": str(config.art_daily_allowance),
                 "APNS_SECRET_NAME": config.apns_secret_name,
                 "APNS_TOPIC": config.apns_topic,
             },

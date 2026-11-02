@@ -24,13 +24,16 @@ import UIKit
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
 ///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
-///   list), `circle` (the first circle's page), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
+///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
 ///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
 ///   show those refusals).
 /// - `-autoArt pending|ready|failed` gives the newest seeded card with a glasses photo that scene art state (issue #68):
 ///   a job on its way, a painting (a warm wash over its photo), or a failed job. With `-fakeAccount signedIn` and
 ///   `-fakeArt paints|pending|fails` (the in-memory art server; `-fakeAccount` alone paints), Try again and Retry art
-///   work too.
+///   work too. `photo-preview` gives it photo art waiting beside its glasses photo (issue #69), `photo-approved`
+///   approved photo art. `-fakeArtDaily <n>` keeps the public launch's allowance in the fake, and `-fakeLibraryPhoto`
+///   makes "Choose from your library" pick the card's glasses photo as a library photo (the system picker is out of
+///   the UI tests' reach). `-autoPhotoArt request|review` opens photo art's request or comparison sheet on the card.
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
@@ -170,6 +173,18 @@ struct DebugLaunch: ViewModifier {
                     if screen == "circle-goal" { defaults.set(true, forKey: "autoNewGoal") }
                     circlesPath.append(Route.circle(id: first.id))
                 }
+            case "compare":
+                // Compare birds with the first circle's first friend (issue #64).
+                tab = .circles
+                await circles.refresh()
+                if let first = circles.circles.first {
+                    circlesPath.append(Route.circle(id: first.id))
+                    try? await circles.loadDetail(id: first.id)
+                    let me = circles.account.account?.id
+                    if let friend = circles.details[first.id]?.members.first(where: { $0.id != me && $0.id != FakeCircleClient.me }) {
+                        circlesPath.append(Route.compareBirds(friendID: friend.id, friendName: friend.name))
+                    }
+                }
             case "circle-new":
                 tab = .circles
                 defaults.set(true, forKey: "autoNewCircle")
@@ -290,6 +305,13 @@ enum DebugSeeds {
             let id = UUID()
             sighting.art.startSceneJob(id: id)
             sighting.art.sceneJobReady(id: id, path: path)
+        case "photo-preview", "photo-approved":
+            guard let frames, let frame = sighting.frameImagePath, let photo = try? Data(contentsOf: frames.url(for: frame)),
+                  let painting = FakeArtClient.paint(photo), let path = try? frames.write(jpeg: painting) else { return }
+            let id = UUID()
+            sighting.art.startPhotoJob(id: id, source: frame)
+            sighting.art.photoJobReady(id: id, path: path)
+            if mode == "photo-approved" { sighting.art.approvePhotoArt() }
         default:
             return
         }

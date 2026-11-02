@@ -31,6 +31,8 @@ enum Route: Hashable {
     case circle(id: String)
     /// The join screen an invite link opens (issue #61).
     case joinCircle(token: String)
+    /// Compare birds with a friend (issue #64).
+    case compareBirds(friendID: String, friendName: String)
 }
 
 extension View {
@@ -85,6 +87,8 @@ private struct RouteDestination: View {
             CirclePageView(id: id)
         case .joinCircle(let token):
             JoinCircleView(token: token)
+        case .compareBirds(let friendID, let friendName):
+            CompareBirdsView(friendID: friendID, friendName: friendName)
         }
     }
 }

@@ -68,6 +68,8 @@ enum PushMessage: Equatable {
     case digest(friend: String)
     /// Silent: a friend's ordinary find landed in these circles.
     case refresh(circleIDs: [String])
+    /// "Maya reacted to your Black Phoebe" (issue #64): the find's circles, whose feeds show the new counts.
+    case reaction(sightingID: String, circleIDs: [String])
 
     init?(userInfo: [AnyHashable: Any]) {
         switch userInfo["kind"] as? String {
@@ -83,6 +85,9 @@ enum PushMessage: Equatable {
             self = .digest(friend: friend)
         case "refresh":
             self = .refresh(circleIDs: userInfo["circle_ids"] as? [String] ?? [])
+        case "reaction":
+            guard let sighting = userInfo["sighting_id"] as? String else { return nil }
+            self = .reaction(sightingID: sighting, circleIDs: userInfo["circle_ids"] as? [String] ?? [])
         default:
             return nil
         }
@@ -94,6 +99,7 @@ enum PushMessage: Equatable {
         case .notable(let find): find.circleIDs
         case .digest: []
         case .refresh(let ids): ids
+        case .reaction(_, let ids): ids
         }
     }
 }

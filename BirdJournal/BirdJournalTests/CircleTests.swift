@@ -174,6 +174,8 @@ private final class RefusingClient: CircleClient {
     func goals(circleID: String, accessToken: String) async throws -> [CircleGoal] { try check(accessToken); return try await inner.goals(circleID: circleID, accessToken: accessToken) }
     func createGoal(_ draft: GoalDraft, circleID: String, accessToken: String) async throws -> CircleGoal { try check(accessToken); return try await inner.createGoal(draft, circleID: circleID, accessToken: accessToken) }
     func deleteGoal(id: String, circleID: String, accessToken: String) async throws { try check(accessToken); try await inner.deleteGoal(id: id, circleID: circleID, accessToken: accessToken) }
+    func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] { try check(accessToken); return try await inner.setReaction(kind, given: given, owner: owner, sightingID: sightingID, accessToken: accessToken) }
+    func compare(friendID: String, accessToken: String) async throws -> FriendBirds { try check(accessToken); return try await inner.compare(friendID: friendID, accessToken: accessToken) }
 }
 
 @Suite("The circle store")

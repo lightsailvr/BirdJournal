@@ -1,5 +1,6 @@
 """The API: account get and update (issue #60), circles (issue #61), finds (issue #62) with shared cards (issue #66),
-art jobs (issue #68), pushes (issue #63) and goals (issue #65). Later tickets add their routers here."""
+art jobs (issue #68), pushes (issue #63), reactions and compare (issue #64) and goals (issue #65). Later tickets add
+their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -42,6 +43,8 @@ from birdjournal_api.goals_api import router as goals_router
 from birdjournal_api.photos import PhotoStore, S3PhotoStore
 from birdjournal_api.pushes import PushSender, PushService
 from birdjournal_api.pushes_api import router as pushes_router
+from birdjournal_api.reactions import ReactionStore
+from birdjournal_api.reactions_api import router as reactions_router
 from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
@@ -112,12 +115,17 @@ def create_app(
         table, app.state.circles, app.state.finds, app.state.devices, app.state.mutes, app.state.goals,
         push_sender or _apns(settings), clock,
     )
+    app.state.reactions = ReactionStore(
+        dynamodb, settings.table_name, app.state.circles, app.state.finds, app.state.devices, app.state.mutes,
+        app.state.pushes, clock,
+    )
     app.state.invite_base_url = settings.invite_base_url
     app.state.art_cdn_base_url = settings.art_cdn_base_url
     app.include_router(circles_router)
     app.include_router(finds_router)
     app.include_router(pushes_router)
     app.include_router(goals_router)
+    app.include_router(reactions_router)
 
     if art_storage is None and settings.upload_bucket and settings.art_bucket:
         art_storage = S3ArtStorage(
@@ -130,6 +138,7 @@ def create_app(
             dynamodb.Table(settings.table_name),
             clock,
             rule=settings.art_auto_paint,  # type: ignore[arg-type]
+            daily_allowance=settings.art_daily_allowance,
             storage=art_storage,
             queue=art_queue,
             notifier=art_notifier or NoNotifier(),

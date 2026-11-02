@@ -450,7 +450,9 @@ def test_the_schedule_s_event_flushes_the_digests(
     apns.clear()
     # The first was the circle's first Bird 0, a notable push: the digest waits two hours from it.
     clock.now += timedelta(hours=2)
-    assert handler({"birdjournal_job": "flush_digests"}, None) == {"sent": 1, "waiting": 0, "dropped": 0}
+    assert handler({"birdjournal_job": "flush_digests"}, None) == {
+        "sent": 1, "waiting": 0, "dropped": 0, "reactions": {"sent": 0, "waiting": 0, "dropped": 0}
+    }
     assert [push.kind for push in apns.to(BO_PHONE)] == [PushKind.DIGEST]
     with pytest.raises(ValueError):
         handler({"birdjournal_job": "paint_everything"}, None)
