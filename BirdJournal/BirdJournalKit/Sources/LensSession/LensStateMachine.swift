@@ -19,11 +19,14 @@ public enum LensPage: Sendable, Hashable {
     /// A problem the run wants the wearer to know about, over whichever page they were on (issue #10). Swipe right,
     /// Back or a tap is the way back to that page.
     case problem(LensProblem)
+    /// A friend's notable find (issue #67), over the species list or a photo page only. A tap or swipe right (or
+    /// Back) dismisses it and returns to the page it covers.
+    case friend(LensFriendBanner)
 
-    /// The stack index the page is about, nil on the root and on a problem page.
+    /// The stack index the page is about, nil on the root, a problem page and a friend banner.
     public var index: Int? {
         switch self {
-        case .list, .problem: nil
+        case .list, .problem, .friend: nil
         case .species(let index), .details(let index), .sounds(let index), .viewfinder(let index): index
         }
     }
