@@ -204,7 +204,8 @@ enum CardStatsText {
         case .mound: "mound"
         case .halfCup: "half cup"
         case .noNest: "no nest"
-        case .otherNest: "other birds' nests"
+        case .otherNest: "another bird's old nest"
+        case .broodParasite: "lays in other birds' nests (a brood parasite)"
         }
     }
 

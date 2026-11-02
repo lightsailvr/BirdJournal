@@ -44,6 +44,21 @@ struct PackStatsTests {
         }
     }
 
+    @Test(
+        "the bundled pack's House Wren reuses old nests and is no brood parasite; the cowbird and the whydah are (#86)",
+        .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= 9, "the bundled pack predates the nest fix")
+    )
+    func bundledNestReuseAndBroodParasites() throws {
+        let pack = try SpeciesPack.bundled()
+        let wren = try #require(pack.species(scientificName: "Troglodytes aedon"))
+        #expect(wren.stats?.nests == [.cavity, .otherNest, .crevice])
+        let told = wren.facts.map(\.text) + [wren.lore?.text, wren.lore?.tagline].compactMap { $0 }
+        #expect(!told.contains { $0.contains("parasite") || $0.contains("other birds' nests") }, "\(told)")
+        let parasites = pack.species.filter { $0.stats?.nests.contains(.broodParasite) == true }.map(\.scientificName)
+        #expect(Set(parasites) == ["Molothrus ater", "Vidua macroura"])
+        #expect(pack.species.allSatisfy { $0.stats?.nests.contains(.broodParasite) != true || $0.stats?.nests == [.broodParasite] })
+    }
+
     @Test("every species in the bundled Los Angeles pack has stats or is a listed gap, and has a type line")
     func bundledPackStats() throws {
         let pack = try SpeciesPack.bundled()
