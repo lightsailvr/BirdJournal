@@ -54,13 +54,35 @@ def test_a_known_gap_keeps_only_what_the_datasets_have():
     gap = JoinedSpecies(stats=None, type_line=None, threat=Threat(threatened=True, iucn_category=None, source="hand list"))
     assert stats_facts(gap) == []
     parasite = JoinedSpecies(
-        stats=SpeciesStats("X", None, False, 1500.0, None, None, None, ("other_nest",), None, 2.0, None, ("birdbase",)),
+        stats=SpeciesStats("X", None, False, 1500.0, None, None, None, ("brood_parasite",), None, 2.0, None, ("birdbase",)),
         type_line=None, threat=Threat(threatened=True, iucn_category="VU", source="BIRDBASE"),
     )
     assert stats_facts(parasite) == [
-        ("It weighs about 1.5 kg.", "avonet"), ("It lays its eggs in other birds' nests.", "birdbase"),
+        ("It weighs about 1.5 kg.", "avonet"),
+        ("It is a brood parasite: it lays its eggs in other birds' nests, and they raise its young.", "birdbase"),
         ("It lays 2 eggs in a clutch.", "birdbase"), ("The IUCN Red List rates it Vulnerable.", "birdbase"),
     ]
+
+
+def nest_fact(nest: tuple[str, ...]) -> str:
+    joined = JoinedSpecies(
+        stats=SpeciesStats("X", None, False, None, None, None, None, nest, None, None, None, ("birdbase",)),
+        type_line=None, threat=Threat(threatened=False, iucn_category=None, source="not assessed"),
+    )
+    return stats_facts(joined)[0][0]
+
+
+def test_a_bird_that_reuses_other_birds_nests_is_not_told_as_a_brood_parasite():
+    # The Northern House Wren (issue #86): BIRDBASE's "other bird's nest" is an old nest another bird built.
+    assert nest_fact(("cavity", "other_nest", "crevice")) == "It nests in a cavity, an old nest another bird built or a crevice."
+    assert "parasite" not in nest_fact(("other_nest",)) and "other birds' nests" not in nest_fact(("other_nest",))
+
+
+def test_a_bird_that_lays_without_a_nest_keeps_its_other_nest_types():
+    assert nest_fact(("no_nest",)) == "It lays its eggs without building a nest."
+    assert nest_fact(("no_nest", "scrape", "other_nest")) == (
+        "It lays its eggs without building a nest, or nests in a scrape on the ground or an old nest another bird built."
+    )
 
 
 def test_a_borrowed_avonet_row_tells_no_habitat_or_migration():

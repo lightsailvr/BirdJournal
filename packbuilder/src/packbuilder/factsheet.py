@@ -198,7 +198,7 @@ LIFESTYLE = {
 NEST = {
     "burrow": "a burrow", "cup": "a cup", "crevice": "a crevice", "cavity": "a cavity", "dome": "a domed nest", "platform": "a platform",
     "pendant": "a hanging nest", "saucer": "a saucer", "scrape": "a scrape on the ground", "sphere": "a ball-shaped nest",
-    "mound": "a mound", "half_cup": "a half cup",
+    "mound": "a mound", "half_cup": "a half cup", "other_nest": "an old nest another bird built",
 }
 IUCN = {"LC": "Least Concern", "NT": "Near Threatened", "VU": "Vulnerable", "EN": "Endangered", "CR": "Critically Endangered"}
 
@@ -232,10 +232,11 @@ def _stats_sentences(stats: SpeciesStats, borrowed: bool = False) -> list[tuple[
     if stats.lifestyle in LIFESTYLE:
         facts.append((LIFESTYLE[stats.lifestyle], "avonet"))
     nests = [NEST[nest] for nest in stats.nest if nest in NEST]
-    if "other_nest" in stats.nest:
-        facts.append(("It lays its eggs in other birds' nests.", "birdbase"))
+    if "brood_parasite" in stats.nest:
+        facts.append(("It is a brood parasite: it lays its eggs in other birds' nests, and they raise its young.", "birdbase"))
     elif "no_nest" in stats.nest:
-        facts.append(("It lays its eggs without building a nest.", "birdbase"))
+        others = f", or nests in {_listed(nests)}" if nests else ""
+        facts.append((f"It lays its eggs without building a nest{others}.", "birdbase"))
     elif nests:
         facts.append((f"It nests in {_listed(nests)}.", "birdbase"))
     if stats.clutch_min is not None or stats.clutch_max is not None:
