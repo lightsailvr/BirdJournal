@@ -1,10 +1,12 @@
 #if DEBUG
+import Album
 import Foundation
 
 /// The debug fake circle server (`-fakeCircles empty|some`, issue #61): circles, members and invites in memory, with
 /// the backend's rules (20 members, seven-day invites, the creator removes). The fake account is "Pat Birder"
 /// (`fake-sub`). Invite tokens it knows besides its own: `fake-invite` (Canyon Walkers, from Maya), `expired` and
-/// `full`. Nothing leaves the phone.
+/// `full`. Finds (issue #62) fan out to the circles Pat is in when first put, as on the server; seeded, Sunday Group's
+/// feed has friends' finds. Nothing leaves the phone.
 final class FakeCircleClient: CircleClient {
     static let me = "fake-sub"
     static let myName = "Pat Birder"
@@ -13,6 +15,12 @@ final class FakeCircleClient: CircleClient {
     private var invites: [String: (circleID: String, expiresAt: Date)] = [:]
     private var nextID = 1
     private let now: () -> Date
+    /// Every circle's feed items, in no order; the feed sorts them.
+    private var feedItems: [String: [FeedItem]] = [:]
+    /// The circles each of Pat's finds went to on its first put.
+    private var findCircles: [UUID: [String]] = [:]
+    /// Every put and delete, for the tests: `put <id>` or `delete <id>`.
+    private(set) var findLog: [String] = []
 
     init(seeded: Bool, now: @escaping () -> Date = Date.init) {
         self.now = now
@@ -20,6 +28,9 @@ final class FakeCircleClient: CircleClient {
         if seeded {
             add(name: "Sunday Group", creator: (Self.me, Self.myName), others: [("maya", "Maya Ortiz"), ("jo", "Jo Park"), ("sam", "Sam Okafor")], at: base)
             add(name: "Family", creator: ("dad", "Robin Birder"), others: [(Self.me, Self.myName), ("lee", "Lee Birder")], at: base.addingTimeInterval(86_400))
+        }
+        if seeded, let sunday = order.first {
+            seedFeed(circleID: sunday)
         }
         let canyon = add(name: "Canyon Walkers", creator: ("maya", "Maya Ortiz"), others: [("ari", "Ari Chen")], at: base)
         invites["fake-invite"] = (canyon, now().addingTimeInterval(6 * 86_400))
@@ -94,6 +105,65 @@ final class FakeCircleClient: CircleClient {
         detail.members.removeAll { $0.id == memberID }
         detail.circle.memberCount = detail.members.count
         circlesByID[circleID] = detail
+    }
+
+    func putFind(_ find: FindPolicy.Find, sightingID: UUID, accessToken: String) async throws {
+        findLog.append("put \(sightingID)")
+        let circles = findCircles[sightingID] ?? order.filter { circlesByID[$0]?.members.contains { $0.id == Self.me } == true }
+        findCircles[sightingID] = circles
+        let item = FeedItem(
+            sightingID: sightingID.uuidString.lowercased(), speciesID: find.speciesID, scientificName: find.scientificName,
+            commonName: find.commonName, method: find.method, place: find.place,
+            foundAt: (try? Date(find.foundAt, strategy: .iso8601)) ?? now(), legendary: find.legendary, rarity: find.rarity,
+            art: find.art.map { FeedItem.Art(kind: $0.kind, key: $0.key, url: nil) },
+            owner: FeedItem.Owner(id: Self.me, displayName: Self.myName), circleFirst: false, isMine: true
+        )
+        for circle in circles {
+            feedItems[circle, default: []].removeAll { $0.id == item.id }
+            feedItems[circle, default: []].append(item)
+        }
+    }
+
+    func deleteFind(sightingID: UUID, accessToken: String) async throws {
+        findLog.append("delete \(sightingID)")
+        let id = "\(Self.me)/\(sightingID.uuidString.lowercased())"
+        for circle in findCircles[sightingID] ?? [] {
+            feedItems[circle]?.removeAll { $0.id == id }
+        }
+        findCircles[sightingID] = nil
+    }
+
+    func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage {
+        _ = try await circle(id: circleID, accessToken: accessToken)
+        let items = feedItems[circleID] ?? []
+        let firsts = Dictionary(grouping: items, by: \.scientificName).compactMapValues { $0.min { ($0.foundAt, $0.id) < ($1.foundAt, $1.id) }?.id }
+        let sorted = items
+            .map { item in var item = item; item.circleFirst = firsts[item.scientificName] == item.id; return item }
+            .sorted { ($0.foundAt, $0.id) > ($1.foundAt, $1.id) }
+        let start = cursor.flatMap(Int.init) ?? 0
+        let page = Array(sorted.dropFirst(start).prefix(HTTPCircleClient.feedPageSize))
+        let next = start + page.count < sorted.count ? String(start + page.count) : nil
+        return FeedPage(items: page, nextCursor: next)
+    }
+
+    /// Friends' finds in a seeded circle: a circle first, a Legendary, a rare bird and one at a secret spot.
+    private func seedFeed(circleID: String) {
+        let finds: [(String, String, String, SightingMethod, String?, RarityLabel?, Bool, String, Double)] = [
+            ("maya", "Maya Ortiz", "Sayornis nigricans_Black Phoebe", .seen, "Pasadena", .common, true, "sayornis-nigricans", 3),
+            ("jo", "Jo Park", "Calypte anna_Anna's Hummingbird", .heard, "Altadena", .common, false, "calypte-anna", 2),
+            ("jo", "Jo Park", "Sayornis nigricans_Black Phoebe", .heard, "Pasadena", .common, false, "sayornis-nigricans", 1.5),
+            ("sam", "Sam Okafor", "Polioptila californica_California Gnatcatcher", .heard, FindPolicy.secretSpot, .rare, false, "polioptila-californica", 1),
+        ]
+        for (index, (owner, name, label, method, place, rarity, legendary, art, daysAgo)) in finds.enumerated() {
+            let common = String(label.split(separator: "_", maxSplits: 1).last ?? "")
+            feedItems[circleID, default: []].append(FeedItem(
+                sightingID: "00000000-0000-4000-8000-00000000000\(index)", speciesID: label,
+                scientificName: Sighting.scientificName(ofLabel: label), commonName: common, method: method, place: place,
+                foundAt: now().addingTimeInterval(-daysAgo * 86_400), legendary: legendary, rarity: rarity,
+                art: FeedItem.Art(kind: "pack", key: "packs/us-ca-la/\(art).jpg", url: nil),
+                owner: FeedItem.Owner(id: owner, displayName: name), circleFirst: false, isMine: false
+            ))
+        }
     }
 
     @discardableResult

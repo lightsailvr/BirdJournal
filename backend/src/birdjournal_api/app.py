@@ -1,5 +1,5 @@
-"""The API: account get and update (issue #60), circles (issue #61) and art jobs (issue #68). Later tickets add their
-routers here."""
+"""The API: account get and update (issue #60), circles (issue #61), finds (issue #62) and art jobs (issue #68). Later
+tickets add their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -33,6 +33,8 @@ from birdjournal_api.auth import (
 )
 from birdjournal_api.circles import CircleStore
 from birdjournal_api.circles_api import router as circles_router
+from birdjournal_api.finds import FindStore
+from birdjournal_api.finds_api import router as finds_router
 from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
@@ -87,8 +89,11 @@ def create_app(
     )
     app.state.accounts = AccountStore(dynamodb.Table(settings.table_name), clock)
     app.state.circles = CircleStore(dynamodb, settings.table_name, app.state.accounts, clock)
+    app.state.finds = FindStore(dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock)
     app.state.invite_base_url = settings.invite_base_url
+    app.state.art_cdn_base_url = settings.art_cdn_base_url
     app.include_router(circles_router)
+    app.include_router(finds_router)
 
     if art_storage is None and settings.upload_bucket and settings.art_bucket:
         art_storage = S3ArtStorage(
@@ -109,7 +114,6 @@ def create_app(
         if art_storage is not None
         else None
     )
-    app.state.art_cdn_base_url = settings.art_cdn_base_url
     app.state.worker_token = (
         WorkerToken(value=settings.art_worker_token)
         if settings.art_worker_token

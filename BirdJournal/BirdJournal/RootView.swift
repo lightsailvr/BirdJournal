@@ -109,6 +109,8 @@ struct RootView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(CircleStore.self) private var circles
     @Environment(AccountSession.self) private var account
+    @Environment(FindOutbox.self) private var findOutbox
+    @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
     @State private var journalMode: JournalView.Mode = .cards
     @State private var listenPath = NavigationPath()
@@ -173,7 +175,13 @@ struct RootView: View {
             if !signedIn {
                 circles.clear()
                 circlesPath = NavigationPath()
+            } else {
+                // Finds waiting from before a sign-out go now (issue #62).
+                Task { await findOutbox.flush() }
             }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await findOutbox.flush() } }
         }
         // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
         .onChange(of: circles.pendingInvite, initial: true) { _, token in

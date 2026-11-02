@@ -23,6 +23,7 @@ struct BirdJournalApp: App {
     @State private var circles: CircleStore
     @State private var art: ArtJobs
     @Environment(\.scenePhase) private var scenePhase
+    @State private var findOutbox: FindOutbox
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @State private var showingSplash = true
     private let album: ModelContainer
@@ -60,10 +61,15 @@ struct BirdJournalApp: App {
         self.frames = frames
         let account = AccountSession.forApp()
         _account = State(initialValue: account)
-        _circles = State(initialValue: CircleStore.forApp(account: account))
+        let circles = CircleStore.forApp(account: account)
+        _circles = State(initialValue: circles)
         let art = Self.makeArtJobs(account: account, frames: frames, album: album, packs: packs)
         sightings.artJobs = art
         _art = State(initialValue: art)
+        // Finds (issue #62): adds made while signed in and sharing reach the birder's circles.
+        let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
+        sightings.findOutbox = findOutbox
+        _findOutbox = State(initialValue: findOutbox)
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
@@ -82,7 +88,9 @@ struct BirdJournalApp: App {
         glasses.lens.sounds = sounds
         lens.sounds = sounds
         _sounds = State(initialValue: sounds)
-        _journalEdits = State(initialValue: JournalEdits(container: album, frames: frames))
+        let journalEdits = JournalEdits(container: album, frames: frames)
+        journalEdits.findOutbox = findOutbox
+        _journalEdits = State(initialValue: journalEdits)
     }
 
     /// The album on disk. Failing to open it is a broken install, not a field condition, so it traps like the
@@ -230,6 +238,7 @@ struct BirdJournalApp: App {
             .environment(account)
             .environment(circles)
             .environment(art)
+            .environment(findOutbox)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)
