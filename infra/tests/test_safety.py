@@ -34,16 +34,16 @@ def _grants(template: Template) -> dict[str, list[str]]:
     return by_action
 
 
-def test_the_report_address_is_an_ses_identity_tagged_like_the_rest(template: Template) -> None:
-    (identity,) = template.find_resources("AWS::SES::EmailIdentity").values()
-    # Without a reportEmail of its own the stack mails the budget's address.
-    assert identity["Properties"]["EmailIdentity"] == BUDGET_EMAIL
-    assert {"Key": "project", "Value": "birdjournal"} in identity["Properties"]["Tags"]
+def test_no_ses_identity_in_the_stack(template: Template) -> None:
+    # The address's domain is a verified identity outside the stack; the wizard checks it.
+    assert template.find_resources("AWS::SES::EmailIdentity") == {}
 
 
-def test_the_api_sends_only_as_the_report_identity(template: Template) -> None:
+def test_the_api_sends_only_as_the_report_address_or_its_domain(template: Template) -> None:
     (resource,) = _grants(template)["ses:SendEmail"]
-    assert f"identity/{BUDGET_EMAIL}" in resource
+    domain = BUDGET_EMAIL.rpartition("@")[2]
+    assert f"identity/{domain}" in resource and f"identity/{BUDGET_EMAIL}" in resource
+    assert resource.count("identity/") == 2
 
 
 def test_the_api_reads_pictures_for_moderation_and_nothing_wider(template: Template) -> None:

@@ -235,7 +235,7 @@ final class FakeCircleClient: CircleClient {
     func mutes(accessToken: String) async throws -> Mutes { muted }
 
     func report(_ report: ReportDraft, accessToken: String) async throws {
-        guard report.accountID != Self.me else { throw CircleError.rejected }
+        guard report.accountID != Self.me else { throw CircleError.ownAccount }
         guard let detail = circlesByID[report.circleID],
               detail.members.contains(where: { $0.id == Self.me }),
               detail.members.contains(where: { $0.id == report.accountID }) else { throw CircleError.notFound }
@@ -250,7 +250,7 @@ final class FakeCircleClient: CircleClient {
     func setBlocked(_ blocked: Bool, accountID: String, accessToken: String) async throws {
         blockedIDs.removeAll { $0 == accountID }
         guard blocked else { return }
-        guard accountID != Self.me else { throw CircleError.rejected }
+        guard accountID != Self.me else { throw CircleError.ownAccount }
         guard circlesByID.values.contains(where: { detail in
             detail.members.contains { $0.id == Self.me } && detail.members.contains { $0.id == accountID }
         }) else { throw CircleError.notFound }

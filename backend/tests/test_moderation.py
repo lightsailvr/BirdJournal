@@ -112,6 +112,20 @@ def test_a_flagged_painting_fails_its_job_and_is_deleted(
     assert (read["state"], read["failure"], read["art_url"], read["art_key"]) == ("failed", "flagged", None, None)
 
 
+def test_a_repeated_ready_after_a_flagged_painting_asks_rekognition_nothing(
+    moderated: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, moderator: FakeModerator
+) -> None:
+    job = _queued(moderated, issuer, art_storage)
+    claim = _claim(moderated, job["id"]).json()
+    moderator.flagged[claim["output_key"]] = EXPLICIT
+    _ready(moderated, claim, art_storage)
+    asked = len(moderator.asked)
+    again = _ready(moderated, claim, art_storage)
+    assert again.status_code == 409, again.text
+    assert len(moderator.asked) == asked
+    assert claim["output_key"] not in art_storage.art
+
+
 def test_a_clean_painting_is_ready(
     moderated: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, moderator: FakeModerator
 ) -> None:

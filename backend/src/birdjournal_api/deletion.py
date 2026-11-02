@@ -4,6 +4,10 @@ server holds about the signed-in birder, deletes the Cognito user and revokes th
 What goes, in this order (each step is idempotent, so a deletion cut short, say by the Lambda's 10 seconds on a very
 full account, is finished by the phone calling again with the same access token):
 
+0. A **tombstone** (`DELETED` / the subject's SHA-256, two hours): the account's access tokens are checked offline and
+   stay valid up to an hour after the Cognito user goes, so any other call with one (an outbox put, a circles refresh)
+   is refused rather than writing the account back. Only a retried deletion gets through. Then, before any circle
+   changes, **other members' items naming it** (step 8 below), since the circles they are found through go in step 5.
 1. **Finds** (`FindStore.delete`, #62): their feed items and species entries in every circle, shared cards and their
    photos (#66), reactions on them with each reactor's copy and the reaction-push items (#64), and the painting a find
    showed (#70).
@@ -43,11 +47,13 @@ waits on Apple.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Protocol
 
 from boto3.dynamodb.conditions import Key
@@ -63,6 +69,14 @@ from birdjournal_api.safety import REPORTS_PK
 log = logging.getLogger(__name__)
 
 APPLE = "https://appleid.apple.com"
+# Access tokens last an hour (#60); the tombstone outlives the last one.
+TOMBSTONE_SECONDS = 2 * 3600
+
+
+def tombstone_key(subject: str) -> dict[str, str]:
+    """A deleted account's marker, by a hash of its subject, so no item names it (the scan test) while its last
+    access tokens could still reach the API."""
+    return {"pk": "DELETED", "sk": hashlib.sha256(subject.encode()).hexdigest()}
 
 
 class UserDirectory(Protocol):
@@ -85,13 +99,13 @@ class DeletionReport:
     circles_deleted: int = 0
     art_jobs: int = 0
     apple_revoked: bool = False
-    removed: list[str] = field(default_factory=list)
 
 
 class AccountDeleter:
     def __init__(
         self, table: Any, circles: CircleStore, finds: FindStore, devices: DeviceStore, *,
         art_storage: ArtStorage | None, users: UserDirectory, apple: AppleTokens | None,
+        clock: Callable[[], datetime],
     ) -> None:
         self._table = table
         self._circles = circles
@@ -100,9 +114,19 @@ class AccountDeleter:
         self._art = art_storage
         self._users = users
         self._apple = apple
+        self._clock = clock
+
+    def is_deleted(self, subject: str) -> bool:
+        """Whether the account was deleted within the life of its last access tokens."""
+        item = self._table.get_item(Key=tombstone_key(subject), ConsistentRead=True).get("Item")
+        return item is not None and int(item["until"]) > self._clock().timestamp()
 
     def delete(self, subject: str, username: str, *, apple_authorization_code: str | None = None) -> DeletionReport:
         account = f"ACCOUNT#{subject}"
+        # First of all: the account's access tokens stay valid for up to an hour after the Cognito user goes, and any
+        # other call with one (the outbox's put, a circles refresh) would write the account back (#71).
+        self._table.put_item(Item={**tombstone_key(subject), "until": int(self._clock().timestamp() + TOMBSTONE_SECONDS),
+                                   "ttl": int(self._clock().timestamp() + TOMBSTONE_SECONDS)})
         current = self._circles.circle_ids_of(subject)
         past = [str(item["sk"]).removeprefix("LEFT#") for item in self._query(account, "LEFT#")]
         circles = list(dict.fromkeys(current + past))
@@ -112,6 +136,13 @@ class AccountDeleter:
             _, members = self._circles.items_of_circle(circle_id)
             co_members.update(str(item["sk"]).removeprefix("MEMBER#") for item in members)
         co_members.discard(subject)
+
+        # Other members' items naming it, first: the circles they are found through change below, so a deletion
+        # cut short and retried could no longer find them.
+        with self._table.batch_writer(overwrite_by_pkeys=["pk", "sk"]) as batch:
+            for member in sorted(co_members):
+                for sort_key in (f"MUTE#FRIEND#{subject}", f"BLOCK#{subject}", f"PUSHED#{subject}"):
+                    batch.delete_item(Key={"pk": f"ACCOUNT#{member}", "sk": sort_key})
 
         # 1. Finds.
         find_ids = [str(item["sk"]).removeprefix("FIND#") for item in self._query(account, "FIND#")]
@@ -176,12 +207,6 @@ class AccountDeleter:
         # 7. Devices.
         for device in self._devices.devices_of(subject):
             self._devices.unregister(subject, device.token)
-
-        # 8. Other members' items naming it.
-        with self._table.batch_writer(overwrite_by_pkeys=["pk", "sk"]) as batch:
-            for member in sorted(co_members):
-                for sort_key in (f"MUTE#FRIEND#{subject}", f"BLOCK#{subject}", f"PUSHED#{subject}"):
-                    batch.delete_item(Key={"pk": f"ACCOUNT#{member}", "sk": sort_key})
 
         # 9. Art jobs.
         jobs = self._query(account, "ARTJOB#")

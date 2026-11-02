@@ -199,16 +199,16 @@ finish() {
 # ──────────────────────────────────────────────────────────────────────────
 
 # The console-only steps of the public launch's safety work (issue #71): the report address saved for the stack; the
-# deploy, which creates its SES identity and makes SES email a verification link; the click; a test report mail; and,
-# when the maintainer decides, moderation on and the AI services opt-out.
+# deploy; a check that SES can send as the address (its domain verified, or the address verified on its own, which
+# needs a click on SES's link); a test report mail; and, when the maintainer decides, moderation on and the AI services
+# opt-out.
 #
 #   infra/scripts/safety-wizard.sh                  # from the start
 #   WIZARD_FROM=3 infra/scripts/safety-wizard.sh    # resume at stage 3 (e.g. after the deploy)
 #
-# Run infra/scripts/accounts-wizard.sh and circles-wizard.sh first (every deploy needs their values). SES stays in the
-# sandbox: the report address is the sender and the only recipient, and a verified identity may mail itself from the
-# sandbox, so no production-access request is needed. Ask for production access only if reports must reach another
-# address (Stage 5 says how).
+# Run infra/scripts/accounts-wizard.sh and circles-wizard.sh first (every deploy needs their values). The report
+# address is the sender and the only recipient. A verified identity may mail itself even from the SES sandbox, so
+# production access is needed only to send reports elsewhere (stage 5 checks it; the shared account has it already).
 
 run_wizard() {
 
@@ -261,8 +261,8 @@ fi
 
 if begin "Deploy: the SES identity and the API's new permissions"; then
   say "infra/scripts/deploy.sh runs the template tests, checks the shared us-west-2 bootstrap (it never"
-  say "bootstraps), and deploys: the SES email identity for $(report_email), the API's rights to send as it,"
-  say "Rekognition (used only once moderation is on), AdminDeleteUser on the user pool and the Apple key's secret."
+  say "bootstraps), and deploys the API's rights to send as $(report_email) or its domain, Rekognition (used"
+  say "only once moderation is on), AdminDeleteUser on the user pool and the Apple key's secret."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
     REPORT_EMAIL="$(report_email)" "$INFRA_DIR/scripts/deploy.sh"
   else
@@ -272,20 +272,31 @@ if begin "Deploy: the SES identity and the API's new permissions"; then
   pause
 fi
 
-if begin "Your inbox: verify the report address"; then
+if begin "SES: can it send as the report address?"; then
   address=$(report_email)
-  say "SES has emailed $address a verification link (from no-reply-aws@amazon.com)."
-  step "Open the email \"Amazon Web Services – Email Address Verification Request in region US West (Oregon)\"."
-  step "Click the link inside within 24 hours."
-  note "No email, or the link expired? This sends a new one:"
-  note "  aws ses verify-email-identity --region $AWS_REGION --email-address $address"
-  pause "Press Enter once you've clicked it."
-  status=$(identity_status "$address")
-  if [[ "$status" == "SUCCESS" ]]; then
-    printf '  %s✓%s %s is verified\n' "$GREEN" "$RESET" "$address"
+  domain="${address#*@}"
+  if [[ "$(identity_status "$domain")" == "SUCCESS" ]]; then
+    printf '  %s✓%s the domain %s is verified in SES: it covers %s\n' "$GREEN" "$RESET" "$domain" "$address"
+  elif [[ "$(identity_status "$address")" == "SUCCESS" ]]; then
+    printf '  %s✓%s %s is verified in SES\n' "$GREEN" "$RESET" "$address"
   else
-    warn "SES says $status. Click the link, then resume with WIZARD_FROM=3."
-    finish; exit 1
+    say "Neither $domain nor $address is a verified SES identity in $AWS_REGION."
+    if confirm "Verify $address on its own now (SES emails it a link)?"; then
+      aws sesv2 create-email-identity --region "$AWS_REGION" --email-identity "$address" \
+        --tags Key=project,Value=birdjournal >/dev/null 2>&1 \
+        || aws ses verify-email-identity --region "$AWS_REGION" --email-address "$address"
+      step "Open the email \"Amazon Web Services – Email Address Verification Request in region US West (Oregon)\"."
+      step "Click the link inside within 24 hours."
+      pause "Press Enter once you've clicked it."
+      status=$(identity_status "$address")
+      if [[ "$status" != "SUCCESS" ]]; then
+        warn "SES says $status. Click the link, then resume with WIZARD_FROM=3."
+        finish; exit 1
+      fi
+      printf '  %s✓%s %s is verified\n' "$GREEN" "$RESET" "$address"
+    else
+      SKIPPED+=("SES identity for $address: WIZARD_FROM=3 infra/scripts/safety-wizard.sh")
+    fi
   fi
   pause
 fi
@@ -306,9 +317,14 @@ if begin "Check: a test report mail"; then
 fi
 
 if begin "Optional: reports to another address (SES production access)"; then
-  say "In the sandbox SES only mails verified addresses. The report address mails itself, so this is"
-  say "needed only to send reports somewhere unverified. Skip it otherwise."
-  if confirm "Request production access now?"; then
+  production=$(aws sesv2 get-account --region "$AWS_REGION" --query 'ProductionAccessEnabled' --output text 2>/dev/null || true)
+  if [[ "$production" == "True" ]]; then
+    printf '  %s✓%s SES production access is on in %s: reports could go to any address.\n' "$GREEN" "$RESET" "$AWS_REGION"
+  else
+    say "In the sandbox SES only mails verified addresses. The report address mails itself, so this is"
+    say "needed only to send reports somewhere unverified. Skip it otherwise."
+  fi
+  if [[ "$production" != "True" ]] && confirm "Request production access now?"; then
     open_url "https://us-west-2.console.aws.amazon.com/ses/home?region=us-west-2#/account"
     step "Request production access. Mail type: Transactional. Website: https://birdquest.matthewcelia.com"
     step "Use case: 'Moderation reports from the Bird Journal app, sent only to the maintainer, a few a week.'"

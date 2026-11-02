@@ -400,6 +400,8 @@ enum CircleError: Error, Equatable {
     case goalNotYours
     /// Twenty reports today already (issue #71).
     case tooManyReports
+    /// Nobody reports or blocks themselves.
+    case ownAccount
     case server(Int)
 }
 
@@ -619,6 +621,7 @@ final class HTTPCircleClient: CircleClient {
         case (404, _): return .notFound
         case (409, _): return .full
         case (410, _): return .inviteExpired
+        case (422, "own_account"): return .ownAccount
         case (422, _): return .rejected
         case (429, "too_many_reports"): return .tooManyReports
         default: return .server(status)

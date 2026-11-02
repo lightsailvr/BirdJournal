@@ -81,10 +81,16 @@ def current_identity(request: Request) -> Identity:
         raise _unauthorized()
     verifier: TokenVerifier = request.app.state.verifier
     try:
-        return verifier.identity(token)
+        identity = verifier.identity(token)
     except jwt.InvalidTokenError as error:
         log.info("token rejected: %s", error)
         raise _unauthorized() from None
+    # A deleted account's last tokens (#71) reach nothing but a retried deletion, which must be able to finish.
+    deleter = getattr(request.app.state, "deleter", None)
+    retrying_deletion = request.method == "DELETE" and request.url.path == "/v1/account"
+    if deleter is not None and not retrying_deletion and deleter.is_deleted(identity.subject):
+        raise _unauthorized()
+    return identity
 
 
 def current_subject(request: Request) -> str:

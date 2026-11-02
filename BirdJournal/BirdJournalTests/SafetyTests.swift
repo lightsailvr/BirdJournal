@@ -157,13 +157,14 @@ struct ReportAndBlockTests {
     @Test("a member's report has no sighting, and a full day's reports say so")
     func reportAccount() async throws {
         let answers = Answers()
-        answers.responses = [respond(201, "{}"), respond(429, #"{"detail":"too_many_reports"}"#)]
+        answers.responses = [respond(201, "{}"), respond(429, #"{"detail":"too_many_reports"}"#), respond(422, #"{"detail":"own_account"}"#)]
         let client = HTTPCircleClient(baseURL: base, transport: answers.transport)
         let draft = ReportDraft(kind: .account, accountID: "maya", circleID: "c1", reason: .harassment, details: "Rude")
         try await client.report(draft, accessToken: "t")
         let body = try #require(try JSONSerialization.jsonObject(with: answers.requests[0].httpBody ?? Data()) as? [String: String])
         #expect(body == ["kind": "account", "account_id": "maya", "circle_id": "c1", "reason": "harassment", "details": "Rude"])
         await #expect(throws: CircleError.tooManyReports) { try await client.report(draft, accessToken: "t") }
+        await #expect(throws: CircleError.ownAccount) { try await client.report(draft, accessToken: "t") }
     }
 
     @Test("blocks list, block and unblock")

@@ -351,7 +351,8 @@ class CircleStore:
         return self._circle_items(circle_id)
 
     def forget_member(self, circle_id: str, subject: str) -> None:
-        """Deletes a past membership's item, once the account has left (deleting the account)."""
+        """Deletes a past membership's item, once the account has left (deleting the account). Its `LEFT#` copy stays
+        for the deletion's last sweep, so a deletion cut short still finds the circle when retried."""
         try:
             self._table.delete_item(
                 Key=_member_key(circle_id, subject), ConditionExpression="attribute_exists(left_at)"
@@ -359,7 +360,6 @@ class CircleStore:
         except ClientError as error:
             if error.response["Error"]["Code"] != "ConditionalCheckFailedException":
                 raise
-        self._table.delete_item(Key=_left_key(subject, circle_id))
 
     def delete_circle(self, circle_id: str, subject: str) -> bool:
         """Deletes a circle with no other current member: its meta, memberships, feed, species entries, goals and

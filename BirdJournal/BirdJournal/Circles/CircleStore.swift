@@ -313,7 +313,8 @@ final class CircleStore {
         case CircleError.creatorOnly: "Only the circle's creator can remove members."
         case CircleError.rejected: "Use a name of up to 40 characters, on one line."
         case CircleError.goalNotYours: "Only a goal's creator or the circle's creator can delete it, and the monthly goal stays."
-        case CircleError.tooManyReports: "You've sent a lot of reports today. Try again tomorrow."
+        case CircleError.tooManyReports: "You've sent a lot of reports today. Try again tomorrow, or email matt@lightsailvr.com."
+        case CircleError.ownAccount: "You can't report or block yourself."
         case AuthError.sessionExpired: "You've been signed out. Sign in again to use your circles."
         default: "Couldn't \(action). Check your connection and try again."
         }

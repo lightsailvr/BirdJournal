@@ -39,7 +39,7 @@ Run after the other two (issue #63). It walks you through making the APNs auth k
 infra/scripts/safety-wizard.sh
 ```
 
-Run after the others (issue #71). It saves the report address as `REPORT_EMAIL` in `~/keys/birdjournal.env` (the budget's address if you keep that), deploys (the SES email identity, the API's grants to send as it, Rekognition, `AdminDeleteUser` on the user pool and the Apple key's secret), waits while you click SES's verification link, sends a test report mail, and covers the optional SES production-access request (not needed while reports go only to the verified address) and, for the public launch, `"moderation": "on"` in `cdk.json` and the AWS Organizations AI services opt-out.
+Run after the others (issue #71). It saves the report address as `REPORT_EMAIL` in `~/keys/birdjournal.env` (the budget's address if you keep that), deploys (the API's grants to send as the address or its domain, Rekognition, `AdminDeleteUser` on the user pool and the Apple key's secret), checks that SES has the address's domain (or the address) verified and verifies the address only if neither is, sends a test report mail, checks SES production access (only needed to send reports elsewhere) and, for the public launch, `"moderation": "on"` in `cdk.json` and the AWS Organizations AI services opt-out.
 
 ## Deploy (one command)
 

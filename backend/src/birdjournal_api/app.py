@@ -173,7 +173,8 @@ def create_app(
             post=lambda url, **kwargs: httpx2.post(url, timeout=5, **kwargs),
         )
     app.state.deleter = AccountDeleter(
-        table, app.state.circles, app.state.finds, app.state.devices, art_storage=art_storage, users=users, apple=apple
+        table, app.state.circles, app.state.finds, app.state.devices, art_storage=art_storage, users=users, apple=apple,
+        clock=clock,
     )
     app.include_router(safety_router)
     app.include_router(circles_router)

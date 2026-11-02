@@ -141,8 +141,6 @@ struct ReportSheet: View {
                 try await circles.report(report.sent)
                 sent = true
                 error = nil
-            } catch CircleError.tooManyReports {
-                error = "You've sent a lot of reports today. Try again tomorrow, or email matt@lightsailvr.com."
             } catch {
                 self.error = CircleStore.message(for: error, doing: "send the report")
             }

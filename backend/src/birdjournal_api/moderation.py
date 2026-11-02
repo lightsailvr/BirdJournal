@@ -16,7 +16,7 @@ Rekognition reads the object straight from S3 (same region), with the API's own 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 log = logging.getLogger(__name__)
@@ -56,7 +56,6 @@ class Moderation:
     moderator: ImageModerator | None = None
     upload_bucket: str | None = None
     art_bucket: str | None = None
-    checked: list[str] = field(default_factory=list)
 
     def upload_flag(self, key: str) -> str | None:
         """Why an art job's input is withheld, or None (always None while the switch is off)."""
@@ -71,7 +70,6 @@ class Moderation:
             return None
         if self.moderator is None or bucket is None:
             raise RuntimeError("Moderation is on but has no moderator or bucket")
-        self.checked.append(key)
         for name, parent in self.moderator.labels(bucket, key):
             category = parent or name
             if category in FLAGGED_CATEGORIES or name in FLAGGED_CATEGORIES:

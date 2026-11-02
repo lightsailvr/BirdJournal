@@ -4,7 +4,6 @@ from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_secretsmanager as secretsmanager
-from aws_cdk import aws_ses as ses
 from constructs import Construct
 
 
@@ -12,10 +11,10 @@ class Safety(Construct):
     """What a public launch needs (issue #71): reports mailed through SES, Rekognition moderation behind the
     `moderation` switch, and account deletion (the Cognito user deleted, the Sign in with Apple token revoked).
 
-    - **SES**: one email identity, the report address, which is both sender and recipient: a verified identity can
-      send to itself from the SES sandbox, so no production-access request is needed. Creating it makes SES email a
-      verification link; `infra/scripts/safety-wizard.sh` waits for the click. Until then a report is stored and its
-      mail fails with a log line.
+    - **SES**: no identity in the stack. The report address's domain (lightsailvr.com) is already a verified SES
+      identity in the shared account, with production access, and a verified domain covers every address in it;
+      `infra/scripts/safety-wizard.sh` checks that, and verifies the address on its own only when neither it nor its
+      domain is. The API may send as the domain or the address, nothing else.
     - **Rekognition** reads the pictures in place, with the API's own S3 access: the art-job uploads, painted art
       (`art/*`, the first time the API reads a painting) and shared photos (`photos/*`, already readable, #66).
       `rekognition:DetectModerationLabels` has no resource-level permissions, so it is granted on `*`. Granted even
@@ -30,12 +29,15 @@ class Safety(Construct):
         art_bucket: s3.IBucket,
     ) -> None:
         super().__init__(scope, id)
-        self.identity = ses.EmailIdentity(self, "ReportIdentity", identity=ses.Identity.email(report_email))
         stack = Stack.of(self)
+        domain = report_email.rpartition("@")[2]
         function.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["ses:SendEmail"],
-                resources=[stack.format_arn(service="ses", resource="identity", resource_name=report_email)],
+                resources=[
+                    stack.format_arn(service="ses", resource="identity", resource_name=name)
+                    for name in (domain, report_email)
+                ],
             )
         )
         function.add_to_role_policy(

@@ -270,6 +270,21 @@ def test_a_circle_she_left_last_and_still_names_her_goes(full: TestClient, issue
     assert table.query(KeyConditionExpression="pk = :pk", ExpressionAttributeValues={":pk": f"CIRCLE#{circle}"})["Items"] == []
 
 
+def test_the_deleted_accounts_last_tokens_reach_nothing_but_a_retried_deletion(
+    full: TestClient, issuer: TestIssuer, table: Any, clock: Clock
+) -> None:
+    full.get("/v1/account", headers=_h(issuer, ADA))
+    assert _delete(full, issuer).status_code == 204
+    # An outbox put or a refresh still in flight with a token from before is refused, and writes nothing back.
+    assert full.get("/v1/account", headers=_h(issuer, ADA)).status_code == 401
+    assert full.put(f"/v1/finds/{uuid4()}", headers=_h(issuer, ADA), json=_find()).status_code == 401
+    assert _delete(full, issuer).status_code == 204
+    assert [item for item in _scan(table) if _mentions(item, ADA)] == []
+    # Two hours on, every token of hers has long expired at Cognito; the tombstone no longer matters.
+    clock.now += timedelta(hours=3)
+    assert full.get("/v1/account", headers=_h(issuer, ADA)).status_code == 200
+
+
 def test_deletion_needs_a_token(full: TestClient) -> None:
     assert full.delete("/v1/account").status_code == 401
 

@@ -452,7 +452,7 @@ class ArtJobStore:
             raise WrongOutput()
         if job.state == "ready":
             return job
-        if self._moderation is not None and self._moderation.art_flag(output_key):
+        if job.state in ("queued", "painting") and self._moderation is not None and self._moderation.art_flag(output_key):
             # A painting moderation withholds never reaches anyone (#71): it goes, and the job fails.
             if self._storage is not None:
                 self._storage.delete_art(output_key)
