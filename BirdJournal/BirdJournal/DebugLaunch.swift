@@ -16,15 +16,31 @@ import UIKit
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Cards view), `sightings`,
 ///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab), `card` and `card-back` (the newest
-///   card, front or back up), `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
+///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
+///   `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
-///   `-autoSet <id>`), `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
-///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `source` (the audio source sheet).
+///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe),
+///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
+///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
+///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
+///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
+///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
+///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
+///   show those refusals).
+/// - `-autoArt pending|ready|failed` gives the newest seeded card with a glasses photo that scene art state (issue #68):
+///   a job on its way, a painting (a warm wash over its photo), or a failed job. With `-fakeAccount signedIn` and
+///   `-fakeArt paints|pending|fails` (the in-memory art server; `-fakeAccount` alone paints), Try again and Retry art
+///   work too. `photo-preview` gives it photo art waiting beside its glasses photo (issue #69), `photo-approved`
+///   approved photo art. `-fakeArtDaily <n>` keeps the public launch's allowance in the fake, and `-fakeLibraryPhoto`
+///   makes "Choose from your library" pick the card's glasses photo as a library photo (the system picker is out of
+///   the UI tests' reach). `-autoPhotoArt request|review` opens photo art's request or comparison sheet on the card.
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
 /// - `-reduceMotion YES` makes the card flip switch faces as with the system's Reduce Motion, which a UI test cannot
 ///   turn on.
+/// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
+///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
 ///   prompting, for the UI tests.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
@@ -34,11 +50,13 @@ struct DebugLaunch: ViewModifier {
     @Environment(\.frameStore) private var frameStore
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
+    @Environment(CircleStore.self) private var circles
     @Binding var tab: RootView.Tab
     @Binding var journalMode: JournalView.Mode
     @Binding var listenPath: NavigationPath
     @Binding var journalPath: NavigationPath
     @Binding var guidePath: NavigationPath
+    @Binding var circlesPath: NavigationPath
     @Binding var showingDeveloper: Bool
 
     func body(content: Content) -> some View {
@@ -46,6 +64,7 @@ struct DebugLaunch: ViewModifier {
             let defaults = UserDefaults.standard
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
+            if let mode = defaults.string(forKey: "autoArt") { DebugSeeds.setArt(mode, context: context, frames: frameStore) }
             if let id = defaults.string(forKey: "autoDownloadPack") {
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -89,7 +108,8 @@ struct DebugLaunch: ViewModifier {
             case "card", "card-back":
                 tab = .journal
                 journalMode = .cards
-                if let newest = try? context.fetch(Sighting.newestFirst()).first {
+                let species = defaults.string(forKey: "autoCardSpecies")
+                if let newest = (try? context.fetch(Sighting.newestFirst()))?.first(where: { species == nil || $0.scientificName == species }) {
                     journalPath.append(Route.card(newest.persistentModelID))
                 }
                 if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }
@@ -107,7 +127,8 @@ struct DebugLaunch: ViewModifier {
                 guidePath.append(Route.set(id: defaults.string(forKey: "autoSet") ?? PackIndex.bundledPackID))
             case "sighting", "share", "map":
                 tab = .journal
-                if let newest = try? context.fetch(Sighting.newestFirst()).first {
+                let species = defaults.string(forKey: "autoCardSpecies")
+                if let newest = (try? context.fetch(Sighting.newestFirst()))?.first(where: { species == nil || $0.scientificName == species }) {
                     journalPath.append(Route.sighting(newest.persistentModelID))
                 }
                 if screen == "share" { defaults.set(true, forKey: "autoShare") }
@@ -131,9 +152,45 @@ struct DebugLaunch: ViewModifier {
             case "settings":
                 tab = .listen
                 listenPath.append(Route.settings)
+            case "account":
+                tab = .listen
+                listenPath.append(Route.settings)
+                listenPath.append(Route.account)
+            case "support":
+                tab = .listen
+                listenPath.append(Route.settings)
+                listenPath.append(Route.support)
             case "source":
                 tab = .listen
                 defaults.set(true, forKey: "autoSource")
+            case "circles":
+                tab = .circles
+            case "circle", "circle-invite", "circle-goal":
+                tab = .circles
+                await circles.refresh()
+                if let first = circles.circles.first {
+                    if screen == "circle-invite" { defaults.set(true, forKey: "autoCircleInvite") }
+                    if screen == "circle-goal" { defaults.set(true, forKey: "autoNewGoal") }
+                    circlesPath.append(Route.circle(id: first.id))
+                }
+            case "compare":
+                // Compare birds with the first circle's first friend (issue #64).
+                tab = .circles
+                await circles.refresh()
+                if let first = circles.circles.first {
+                    circlesPath.append(Route.circle(id: first.id))
+                    try? await circles.loadDetail(id: first.id)
+                    let me = circles.account.account?.id
+                    if let friend = circles.details[first.id]?.members.first(where: { $0.id != me && $0.id != FakeCircleClient.me }) {
+                        circlesPath.append(Route.compareBirds(friendID: friend.id, friendName: friend.name))
+                    }
+                }
+            case "circle-new":
+                tab = .circles
+                defaults.set(true, forKey: "autoNewCircle")
+            case "join":
+                tab = .circles
+                circles.pendingInvite = defaults.string(forKey: "autoInvite") ?? "fake-invite"
             default:
                 break
             }
@@ -181,6 +238,17 @@ final class PacedAudioSource: AudioSource {
     }
 }
 
+/// A caption writer for simulator runs: always available, one fixed line naming the moment.
+struct FixedCaptionWriter: CaptionWriter {
+    static let versionString = "debug-fixed caption@1"
+    let version = Self.versionString
+    let isAvailable = true
+
+    func caption(for request: CaptionRequest) async throws -> String {
+        "\(request.moment.method == .heard ? "Heard" : "Seen") in the \(request.moment.timeOfDay.rawValue), the \(request.commonName) kept its old ways."
+    }
+}
+
 enum DebugSeeds {
     /// Six sightings over nine days with generated frames (a ring at the centre of a 640 × 480 frame with a black
     /// border, so the 2x crop is visible as such), one with a note, three from the phone without a frame, two without
@@ -213,7 +281,39 @@ enum DebugSeeds {
                 note: seed.note
             )
             sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: seed.location, at: sighting.confirmedAt)
+            if seed.label.hasPrefix("Sayornis") {
+                sighting.caption = CardCaption(text: "By the pond at morning, the dark sentinel kept its low perch.", generatorVersion: FixedCaptionWriter.versionString)
+            }
             context.insert(sighting)
+        }
+        try? context.save()
+    }
+
+    /// The newest card with a glasses photo gets a scene art state for screenshots and the UI tests (issue #68).
+    static func setArt(_ mode: String, context: ModelContext, frames: FrameStore?) {
+        guard let sighting = (try? context.fetch(Sighting.newestFirst()))?.first(where: { $0.frameImagePath != nil }) else { return }
+        switch mode {
+        case "pending":
+            sighting.art.startSceneJob(id: UUID())
+        case "failed":
+            let id = UUID()
+            sighting.art.startSceneJob(id: id)
+            sighting.art.sceneJobFailed(id: id)
+        case "ready":
+            guard let frames, let frame = sighting.frameImagePath, let photo = try? Data(contentsOf: frames.url(for: frame)),
+                  let painting = FakeArtClient.paint(photo), let path = try? frames.write(jpeg: painting) else { return }
+            let id = UUID()
+            sighting.art.startSceneJob(id: id)
+            sighting.art.sceneJobReady(id: id, path: path)
+        case "photo-preview", "photo-approved":
+            guard let frames, let frame = sighting.frameImagePath, let photo = try? Data(contentsOf: frames.url(for: frame)),
+                  let painting = FakeArtClient.paint(photo), let path = try? frames.write(jpeg: painting) else { return }
+            let id = UUID()
+            sighting.art.startPhotoJob(id: id, source: frame)
+            sighting.art.photoJobReady(id: id, path: path)
+            if mode == "photo-approved" { sighting.art.approvePhotoArt() }
+        default:
+            return
         }
         try? context.save()
     }

@@ -43,6 +43,23 @@ extension MockDeviceKitTests {
             return run
         }
 
+        /// A started run (see `startRun`) for `body`, always stopped, and awaited, before the mock is torn down: a stop
+        /// left to an unstructured task raced the next test's pairing (issue #82).
+        private static func withRun(
+            source: ManualAudioSource,
+            location: LocationFix = ListeningSessionTests.newYork,
+            _ body: (GlassesListeningSession) async throws -> Void
+        ) async throws {
+            let run = try await startRun(source: source, location: location)
+            do {
+                try await body(run)
+            } catch {
+                await run.stop()
+                throw error
+            }
+            await run.stop()
+        }
+
         /// Whether the mock glasses report themselves off the wearer's face yet.
         private static func isDoffed(_ glasses: any MockGlasses) -> Bool {
             Wearables.shared.deviceForIdentifier(glasses.deviceIdentifier)?.donState == .doffed
@@ -52,48 +69,47 @@ extension MockDeviceKitTests {
         func doffThenDon() async throws {
             try await withMockDisplay { glasses in
                 let source = ManualAudioSource()
-                let run = try await Self.startRun(source: source)
-                defer { Task { await run.stop() } }
+                try await Self.withRun(source: source) { run in
+                    source.feed(seconds: 4.5)
+                    try await waitUntil { run.lens.stack.count == 2 }
+                    let input = glasses.services.input
+                    try await openSpecies(0, on: run.lens, glasses: glasses)
+                    let windowsBefore = run.listening.windowsScored
 
-                source.feed(seconds: 4.5)
-                try await waitUntil { run.lens.stack.count == 2 }
-                let input = glasses.services.input
-                try await openSpecies(0, on: run.lens, glasses: glasses)
-                let windowsBefore = run.listening.windowsScored
+                    // Off the face: the glasses end the session a few seconds later and the link drops.
+                    glasses.doff()
+                    try await waitUntil { Self.isDoffed(glasses) }
+                    glasses.powerOff()
+                    try await waitUntil { run.phase == .paused(.glassesOff) }
+                    #expect(run.lens.phase == .suspended)
+                    #expect(run.lens.page == .species(index: 0), "the pages wait where the wearer left them")
+                    #expect(run.listening.phase == .listening, "the engine keeps its stack")
+                    #expect(source.suspensions == 1)
+                    #expect(!source.isStopped)
+                    #expect(run.sessionState == .stopped)
+                    #expect(run.errorMessage == nil)
 
-                // Off the face: the glasses end the session a few seconds later and the link drops.
-                glasses.doff()
-                try await waitUntil { Self.isDoffed(glasses) }
-                glasses.powerOff()
-                try await waitUntil { run.phase == .paused(.glassesOff) }
-                #expect(run.lens.phase == .suspended)
-                #expect(run.lens.page == .species(index: 0), "the pages wait where the wearer left them")
-                #expect(run.listening.phase == .listening, "the engine keeps its stack")
-                #expect(source.suspensions == 1)
-                #expect(!source.isStopped)
-                #expect(run.sessionState == .stopped)
-                #expect(run.errorMessage == nil)
+                    // Back on: a new session under the same pages and the same stream.
+                    glasses.powerOn()
+                    glasses.don()
+                    try await waitUntil(timeout: .seconds(30)) { run.phase == .listening }
+                    #expect(source.resumedOn.count == 1, "the same stream continues on the new session")
+                    #expect(run.lens.phase == .running)
+                    #expect(run.lens.page == .species(index: 0), "a doff is not a problem the wearer needs telling about")
+                    #expect(run.lens.stack.count == 2)
+                    try await waitUntil { run.lens.inputsState == .active }
 
-                // Back on: a new session under the same pages and the same stream.
-                glasses.powerOn()
-                glasses.don()
-                try await waitUntil(timeout: .seconds(30)) { run.phase == .listening }
-                #expect(source.resumedOn.count == 1, "the same stream continues on the new session")
-                #expect(run.lens.phase == .running)
-                #expect(run.lens.page == .species(index: 0), "a doff is not a problem the wearer needs telling about")
-                #expect(run.lens.stack.count == 2)
-                try await waitUntil { run.lens.inputsState == .active }
+                    source.feed(seconds: 3)
+                    try await waitUntil { run.listening.windowsScored > windowsBefore }
+                    input.navLeft()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 1) }
 
-                source.feed(seconds: 3)
-                try await waitUntil { run.listening.windowsScored > windowsBefore }
-                input.navLeft()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .species(index: 1) }
-
-                await run.stop()
-                #expect(run.phase == .stopped(.phone))
-                #expect(run.lens.phase == .stopped(.phone))
-                #expect(run.listening.phase == .idle)
-                #expect(source.isStopped)
+                    await run.stop()
+                    #expect(run.phase == .stopped(.phone))
+                    #expect(run.lens.phase == .stopped(.phone))
+                    #expect(run.listening.phase == .idle)
+                    #expect(source.isStopped)
+                }
             }
         }
 
@@ -101,29 +117,28 @@ extension MockDeviceKitTests {
         func outOfRangeAndBack() async throws {
             try await withMockDisplay { glasses in
                 let source = ManualAudioSource()
-                let run = try await Self.startRun(source: source)
-                defer { Task { await run.stop() } }
+                try await Self.withRun(source: source) { run in
+                    source.feed(seconds: 4.5)
+                    try await waitUntil { run.lens.stack.count == 2 }
 
-                source.feed(seconds: 4.5)
-                try await waitUntil { run.lens.stack.count == 2 }
+                    // The link drops while the glasses are worn.
+                    glasses.powerOff()
+                    try await waitUntil { run.phase == .paused(.disconnected) }
+                    #expect(run.lens.phase == .suspended)
+                    #expect(run.listening.phase == .listening)
 
-                // The link drops while the glasses are worn.
-                glasses.powerOff()
-                try await waitUntil { run.phase == .paused(.disconnected) }
-                #expect(run.lens.phase == .suspended)
-                #expect(run.listening.phase == .listening)
+                    glasses.powerOn()
+                    try await waitUntil(timeout: .seconds(30)) { run.phase == .listening }
+                    #expect(run.lens.page == .problem(.connectionLost))
+                    #expect(run.lens.card.elements[0] == .heading("Connection lost"))
+                    try await waitUntil { run.lens.inputsState == .active }
+                    glasses.services.input.navRight()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .list }
+                    #expect(run.lens.card.elements[0] == .heading("2 species heard"))
 
-                glasses.powerOn()
-                try await waitUntil(timeout: .seconds(30)) { run.phase == .listening }
-                #expect(run.lens.page == .problem(.connectionLost))
-                #expect(run.lens.card.elements[0] == .heading("Connection lost"))
-                try await waitUntil { run.lens.inputsState == .active }
-                glasses.services.input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .list }
-                #expect(run.lens.card.elements[0] == .heading("2 species heard"))
-
-                await run.stop()
-                #expect(run.phase == .stopped(.phone))
+                    await run.stop()
+                    #expect(run.phase == .stopped(.phone))
+                }
             }
         }
 
@@ -131,28 +146,27 @@ extension MockDeviceKitTests {
         func touchpadPause() async throws {
             try await withMockDisplay { glasses in
                 let source = ManualAudioSource()
-                let run = try await Self.startRun(source: source)
-                defer { Task { await run.stop() } }
+                try await Self.withRun(source: source) { run in
+                    source.feed(seconds: 4.5)
+                    try await waitUntil { run.lens.stack.count == 2 }
+                    try await openSpecies(0, on: run.lens, glasses: glasses)
 
-                source.feed(seconds: 4.5)
-                try await waitUntil { run.lens.stack.count == 2 }
-                try await openSpecies(0, on: run.lens, glasses: glasses)
+                    glasses.services.captouch.tap()
+                    try await waitUntil { run.phase == .paused(.byGlasses) }
+                    #expect(run.sessionState == .paused)
+                    #expect(run.lens.phase == .running, "the toolkit keeps the capabilities through its own pause")
+                    #expect(run.listening.phase == .listening)
+                    #expect(source.suspensions == 0)
 
-                glasses.services.captouch.tap()
-                try await waitUntil { run.phase == .paused(.byGlasses) }
-                #expect(run.sessionState == .paused)
-                #expect(run.lens.phase == .running, "the toolkit keeps the capabilities through its own pause")
-                #expect(run.listening.phase == .listening)
-                #expect(source.suspensions == 0)
+                    glasses.services.captouch.tap()
+                    try await waitUntil { run.phase == .listening }
+                    #expect(run.sessionState == .started)
+                    #expect(source.resumedOn.isEmpty, "the same session resumed")
+                    #expect(run.lens.page == .species(index: 0))
 
-                glasses.services.captouch.tap()
-                try await waitUntil { run.phase == .listening }
-                #expect(run.sessionState == .started)
-                #expect(source.resumedOn.isEmpty, "the same session resumed")
-                #expect(run.lens.page == .species(index: 0))
-
-                await run.stop()
-                #expect(run.phase == .stopped(.phone))
+                    await run.stop()
+                    #expect(run.phase == .stopped(.phone))
+                }
             }
         }
 
@@ -187,24 +201,23 @@ extension MockDeviceKitTests {
         func noLocation() async throws {
             try await withMockDisplay { glasses in
                 let source = ManualAudioSource()
-                let run = try await Self.startRun(source: source, location: .denied)
-                defer { Task { await run.stop() } }
+                try await Self.withRun(source: source, location: .denied) { run in
+                    #expect(run.lens.page == .problem(.noLocation))
+                    #expect(run.lens.card.elements[0] == .heading("No location"))
+                    #expect(run.listening.locationState == .settled(.denied))
 
-                #expect(run.lens.page == .problem(.noLocation))
-                #expect(run.lens.card.elements[0] == .heading("No location"))
-                #expect(run.listening.locationState == .settled(.denied))
+                    // Species heard meanwhile append behind the problem page.
+                    source.feed(seconds: 4.5)
+                    try await waitUntil { run.lens.stack.count == 2 }
+                    #expect(run.lens.page == .problem(.noLocation))
 
-                // Species heard meanwhile append behind the problem page.
-                source.feed(seconds: 4.5)
-                try await waitUntil { run.lens.stack.count == 2 }
-                #expect(run.lens.page == .problem(.noLocation))
+                    glasses.services.input.navRight()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .list }
+                    #expect(run.lens.card.elements[0] == .heading("2 species heard"))
 
-                glasses.services.input.navRight()
-                try await waitUntil(timeout: .seconds(1)) { run.lens.page == .list }
-                #expect(run.lens.card.elements[0] == .heading("2 species heard"))
-
-                await run.stop()
-                #expect(run.phase == .stopped(.phone))
+                    await run.stop()
+                    #expect(run.phase == .stopped(.phone))
+                }
             }
         }
 

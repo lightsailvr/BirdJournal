@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct BirdJournalApp: App {
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var appDelegate
     @State private var connection: GlassesConnection
     @State private var spike: SpikeRecorder
     @State private var lens: GlassesLensSession
@@ -16,9 +17,15 @@ struct BirdJournalApp: App {
     @State private var glassesListening: GlassesListeningSession
     @State private var listening: ListeningCoordinator
     @State private var sounds: ReferenceSounds
-    @State private var places = PlaceNames()
+    @State private var places: PlaceNames
     @State private var packs: PackLibrary
     @State private var journalEdits: JournalEdits
+    @State private var account: AccountSession
+    @State private var circles: CircleStore
+    @State private var art: ArtJobs
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var findOutbox: FindOutbox
+    @State private var pushes: PushCenter
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @State private var showingSplash = true
     private let album: ModelContainer
@@ -43,6 +50,9 @@ struct BirdJournalApp: App {
         recorder.sets = { packs.cardSets }
         Self.backfillRarity(recorder)
         let sightings = RunSightings(recorder: recorder)
+        let places = PlaceNames()
+        sightings.captioner = Self.makeCaptioner(packs: packs, places: places)
+        _places = State(initialValue: places)
         let phone = Self.makePhoneListeningSession(levels: levels, suppression: suppression)
         let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels, suppression: suppression)
         let listening = ListeningCoordinator(
@@ -51,6 +61,23 @@ struct BirdJournalApp: App {
         )
         self.album = album
         self.frames = frames
+        let account = AccountSession.forApp()
+        _account = State(initialValue: account)
+        let circles = CircleStore.forApp(account: account)
+        _circles = State(initialValue: circles)
+        let art = Self.makeArtJobs(account: account, frames: frames, album: album, packs: packs)
+        sightings.artJobs = art
+        _art = State(initialValue: art)
+        // Finds (issue #62): adds made while signed in and sharing reach the birder's circles.
+        let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
+        sightings.findOutbox = findOutbox
+        _findOutbox = State(initialValue: findOutbox)
+        // Pushes (issue #63): permission at the first circle, the token to the account, and a refresh on every push.
+        let pushes = PushCenter.forApp(account: account, client: circles.client) { UIApplication.shared.registerForRemoteNotifications() }
+        pushes.refresh = { [weak circles] circleIDs in await circles?.refreshAfterPush(circleIDs: circleIDs) }
+        circles.joinedCircle = { [weak pushes] in await pushes?.joinedCircle() }
+        PushAppDelegate.pushes = pushes
+        _pushes = State(initialValue: pushes)
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
@@ -68,8 +95,12 @@ struct BirdJournalApp: App {
         // The lens's sounds pages play through the same player as the profile (issue #41, phase 4).
         glasses.lens.sounds = sounds
         lens.sounds = sounds
+        // A friend's notable find, foreground or background, becomes a banner on the lens of a run (issue #67).
+        _ = FriendBanners.forward(pushes.friendFinds()) { [glasses, lens] in [glasses.lens, lens] }
         _sounds = State(initialValue: sounds)
-        _journalEdits = State(initialValue: JournalEdits(container: album, frames: frames))
+        let journalEdits = JournalEdits(container: album, frames: frames)
+        journalEdits.findOutbox = findOutbox
+        _journalEdits = State(initialValue: journalEdits)
     }
 
     /// The album on disk. Failing to open it is a broken install, not a field condition, so it traps like the
@@ -85,6 +116,41 @@ struct BirdJournalApp: App {
         } catch {
             fatalError("album store unavailable: \(error)")
         }
+    }
+
+    /// The caption writer every add uses (issue #56): Apple's on-device model over the packs' fact sheets, with the
+    /// place named by the phone's reverse geocoding. In debug builds `-captionWriter fixed` writes a fixed line instead,
+    /// for simulators without Apple Intelligence, and `-captionWriter none` none.
+    private static func makeCaptioner(packs: PackLibrary, places: PlaceNames) -> Captioner? {
+        var writer: any CaptionWriter = FoundationModelsCaptionWriter()
+        #if DEBUG
+        switch UserDefaults.standard.string(forKey: "captionWriter") {
+        case "fixed": writer = FixedCaptionWriter()
+        case "none": return nil
+        default: break
+        }
+        #endif
+        return Captioner(
+            writer: writer,
+            species: { name in
+                packs.species(scientificName: name).map { Captioner.Species(commonName: $0.species.commonName, facts: $0.species.facts.map(\.text), isThreatened: $0.species.isThreatened) }
+            },
+            placeLabel: { coordinate in
+                await places.resolve(coordinate)
+                return places.name(for: coordinate)
+            }
+        )
+    }
+
+    /// Scene art (issue #68): each add's job carries whether its card is Legendary and its set's edition, read from the
+    /// collection at the moment the job is created.
+    private static func makeArtJobs(account: AccountSession, frames: FrameStore, album: ModelContainer, packs: PackLibrary) -> ArtJobs {
+        let art = ArtJobs.forApp(account: account, frames: frames, container: album)
+        art.cardFacts = { sighting in
+            let collection = packs.collection(of: (try? album.mainContext.fetch(FetchDescriptor<Sighting>())) ?? [])
+            return ArtJobs.CardFacts(legendary: collection.isLegendary(sighting.identifier), edition: collection.placement(of: sighting.identifier)?.setID)
+        }
+        return art
     }
 
     /// Sightings saved before rarity existed get theirs once (issue #52), after launch and with the geomodel read off
@@ -179,11 +245,31 @@ struct BirdJournalApp: App {
             .environment(listening)
             .environment(sounds)
             .environment(journalEdits)
+            .environment(account)
+            .environment(circles)
+            .environment(art)
+            .environment(findOutbox)
+            .environment(pushes)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)
+            // Art jobs are polled on launch and whenever the app comes back (issue #68).
+            .task { await art.refresh() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await art.refresh() } }
+            }
             .onOpenURL { url in
-                Task { await connection.handle(url: url) }
+                // An invite link (issue #61) arrives here as a universal link; everything else is the toolkit's.
+                if let token = InviteLink.token(from: url) {
+                    circles.pendingInvite = token
+                } else {
+                    Task { await connection.handle(url: url) }
+                }
+            }
+            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                if let url = activity.webpageURL, let token = InviteLink.token(from: url) {
+                    circles.pendingInvite = token
+                }
             }
     }
 }

@@ -35,7 +35,7 @@ struct LensCardRendererTests {
     /// Every page kind, on a species with a profile (index 0) and one without (index 1).
     static let pages: [LensPage] = [
         .list, .species(index: 0), .species(index: 1), .details(index: 0), .details(index: 1),
-        .problem(.noLocation), .problem(.connectionLost),
+        .problem(.noLocation), .problem(.connectionLost), .friend(Fakes.mayasPhoebe),
     ]
 
     @Test("every page is one screenful inside the word budget; the details page has the larger one of its small-style text", arguments: pages)
@@ -312,6 +312,27 @@ struct LensCardRendererTests {
             .meta("Swipe right to continue"),
         ])
         #expect(Self.render(.problem(.noLocation)).photo == nil)
+    }
+
+    // MARK: - Friend banners (issue #67)
+
+    @Test("a friend banner says who found what and where, and how to close it")
+    func friendBanner() {
+        #expect(Self.render(.friend(Fakes.mayasPhoebe)).elements == [
+            .status("A friend's find"),
+            .heading("Maya heard a Black Phoebe · Pasadena"),
+            .meta("Tap or swipe right to close"),
+        ])
+        #expect(Self.render(.friend(Fakes.mayasPhoebe)).photo == nil)
+    }
+
+    @Test("the banner's line: saw for a bird seen, an before a vowel, a secret spot named as such, and no place at all")
+    func friendBannerText() {
+        #expect(Fakes.samsOriole.text == "Sam saw a Hooded Oriole")
+        let owl = LensFriendBanner(id: "x", friendName: "A friend", method: .heard, speciesName: "Oak Titmouse", place: "a secret spot")
+        #expect(owl.text == "A friend heard an Oak Titmouse · a secret spot")
+        let empty = LensFriendBanner(id: "y", friendName: "Maya", method: .saw, speciesName: "Black Phoebe", place: "")
+        #expect(empty.text == "Maya saw a Black Phoebe")
     }
 
     @Test("confidence rounds the session score to a whole percent")

@@ -113,8 +113,8 @@ struct CardHeading: View {
 
 /// One card of the collection (issue #51): the Legendary label on the birder's first of a species or the set's
 /// edition with the collector number (issue #54), the art, the species and the date and method, on the card face
-/// inside a gold frame when Legendary and a sage one otherwise. Until pack art arrives the art is the glasses photo,
-/// else the pack's reference photo, labelled as such.
+/// inside a gold frame when Legendary and a sage one otherwise. The art is `CardText.Art`'s: pack art until the card has
+/// its own (issue #57), labelled as what it is.
 struct CardTile: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
@@ -122,10 +122,9 @@ struct CardTile: View {
     let placement: CardPlacement?
 
     var body: some View {
-        let reference = library.species(scientificName: sighting.scientificName)
         VStack(alignment: .leading, spacing: 8) {
             CardHeading(isLegendary: isLegendary, placement: placement)
-            CardArtView(sighting: sighting, reference: reference, commonName: library.commonName(for: sighting))
+            CardArtView(art: CardArtView.art(for: sighting, library: library, setID: placement?.setID), commonName: library.commonName(for: sighting))
             VStack(alignment: .leading, spacing: 2) {
                 Text(library.commonName(for: sighting))
                     .font(JournalFont.heading)
@@ -145,7 +144,7 @@ struct CardTile: View {
         ([library.commonName(for: sighting)] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
-            CardArtView.art(for: sighting, reference: library.species(scientificName: sighting.scientificName)).label,
+            CardArtView.art(for: sighting, library: library, setID: placement?.setID).label,
         ])
         .compactMap { $0 }
         .joined(separator: ", ")
@@ -192,10 +191,9 @@ struct GalleryTile: View {
     let isSelected: Bool
 
     var body: some View {
-        let reference = library.species(scientificName: sighting.scientificName)
         VStack(alignment: .leading, spacing: 8) {
             CardHeading(isLegendary: isLegendary, placement: placement)
-            CardArtView(sighting: sighting, reference: reference, commonName: library.commonName(for: sighting))
+            CardArtView(art: CardArtView.art(for: sighting, library: library, setID: placement?.setID), commonName: library.commonName(for: sighting))
             VStack(alignment: .leading, spacing: 2) {
                 Text(place ?? SpeciesGallery.PlaceFilter.notRecorded.title)
                     .font(JournalFont.rowTitle)
@@ -220,38 +218,49 @@ struct GalleryTile: View {
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
         ] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
-            CardArtView.art(for: sighting, reference: library.species(scientificName: sighting.scientificName)).label,
+            CardArtView.art(for: sighting, library: library, setID: placement?.setID).label,
         ])
         .compactMap { $0 }
         .joined(separator: ", ")
     }
 }
 
-/// A card's art for now: the glasses photo at the album's crop, else the pack's reference photo, each labelled, so a
-/// reference photo is never taken for the birder's own; with neither, a typographic face naming the bird (issue #52).
+/// A card's art (`CardText.Art`): photo or scene art from the frame store, the pack's art or reference photo from the
+/// pack, or a typographic face naming the bird, with its label under it (issue #57).
 struct CardArtView: View {
-    let sighting: Sighting
-    let reference: (pack: SpeciesPack, species: PackSpecies)?
+    let art: CardText.Art
     let commonName: String
+    /// The picture already loaded (the share sheet's renderer, issue #66); nil loads it from `art`.
+    var image: UIImage? = nil
 
-    /// What the art is.
-    static func art(for sighting: Sighting, reference: (pack: SpeciesPack, species: PackSpecies)?) -> CardText.Art {
-        CardText.Art(sighting: sighting, referenceCredit: reference?.species.photos.first?.creditLine)
+    /// What the card's art is: its own, else the pack art of its set's pack (`PackLibrary.packArt`), else the first
+    /// pack photo of the species.
+    static func art(for sighting: Sighting, library: PackLibrary, setID: String?) -> CardText.Art {
+        let packArt = library.packArt(scientificName: sighting.scientificName, setID: setID).map { found in
+            (url: found.pack.artURL(for: found.art), credit: found.pack.sourcePhotos(of: found.art).first?.creditLine)
+        }
+        let reference = library.species(scientificName: sighting.scientificName).flatMap { found in
+            found.species.photos.first.map { (url: found.pack.phoneImageURL(for: $0), credit: $0.creditLine) }
+        }
+        return CardText.Art(sighting: sighting, packArt: packArt, reference: reference)
     }
 
     var body: some View {
-        let art = Self.art(for: sighting, reference: reference)
         VStack(alignment: .leading, spacing: 4) {
             Color.clear
                 .aspectRatio(CollectibleLayout.artAspectRatio, contentMode: .fit)
                 .overlay {
-                    switch art {
-                    case .glassesPhoto(let path):
-                        FrameImage(frameImagePath: path)
-                    case .referencePhoto:
-                        PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.phoneImageURL(for:)) })
-                    case .none:
-                        TypographicArt(commonName: commonName)
+                    if let image, art != .none {
+                        Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)
+                    } else {
+                        switch art {
+                        case .photoArt(let path), .sceneArt(let path):
+                            FrameImage(frameImagePath: path, zoom: 1)
+                        case .packArt(let url, _), .referencePhoto(let url, _):
+                            PackImage(url: url)
+                        case .none:
+                            TypographicArt(commonName: commonName)
+                        }
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))

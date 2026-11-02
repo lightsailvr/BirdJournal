@@ -1,0 +1,31 @@
+[project]
+name = "birdjournal-api"
+version = "0.1.0"
+description = "BirdJournal API: accounts (and later circles, finds and art jobs) on Lambda and DynamoDB"
+authors = [
+    { name = "Matthew Celia", email = "matt@lightsailvr.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.40",
+    "fastapi>=0.115",
+    "httpx2[http2]>=2.16",
+    "mangum>=0.19",
+    "pyjwt[crypto]>=2.10",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "cryptography>=44",
+    "httpx2>=2.13",
+    "pytest>=8",
+    "testcontainers>=4.10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

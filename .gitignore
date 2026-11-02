@@ -29,3 +29,17 @@ packs/*
 !packs/manifest.json
 docs/My-Bird-Journal-Bird-Variants.zip
 docs/MyBirdJournal_Icon_prompts_ChatGPT.txt
+
+# Backend (backend/) and its stack (infra/): environments, pytest state, CDK output and the pinned CLI
+backend/.venv/
+backend/.pytest_cache/
+infra/.venv/
+infra/.pytest_cache/
+infra/cdk.out/
+infra/node_modules/
+
+# Art worker (artworker/): environment, the content filter model (scripts/download-filter.sh), pytest state.
+artworker/.venv/
+artworker/models/
+artworker/.pytest_cache/
+artworker/**/__pycache__/

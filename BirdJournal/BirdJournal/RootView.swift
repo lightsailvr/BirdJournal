@@ -24,6 +24,15 @@ enum Route: Hashable {
     case packLicense(id: String)
     case settings
     case appIcon
+    case account
+    /// The tip jar (issue #59).
+    case support
+    /// A circle's page (issue #61).
+    case circle(id: String)
+    /// The join screen an invite link opens (issue #61).
+    case joinCircle(token: String)
+    /// Compare birds with a friend (issue #64).
+    case compareBirds(friendID: String, friendName: String)
 }
 
 extension View {
@@ -70,6 +79,16 @@ private struct RouteDestination: View {
             SettingsView()
         case .appIcon:
             AppIconView()
+        case .account:
+            AccountView()
+        case .support:
+            SupportView()
+        case .circle(let id):
+            CirclePageView(id: id)
+        case .joinCircle(let token):
+            JoinCircleView(token: token)
+        case .compareBirds(let friendID, let friendName):
+            CompareBirdsView(friendID: friendID, friendName: friendName)
         }
     }
 }
@@ -79,22 +98,30 @@ extension EnvironmentValues {
     @Entry var openCollection: @MainActor () -> Void = {}
     /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
+    /// Opens a circle's page on the Circles tab: the join screen once joined (issue #61).
+    @Entry var openCircle: @MainActor (String) -> Void = { _ in }
 }
 
-/// The three destinations (issue #28): Listen, Journal and Field Guide, with the compact listening strip above the
+/// The destinations (issue #28): Listen, Journal and Field Guide, and Circles (issue #61) in builds with accounts, with the compact listening strip above the
 /// tab bar while a run is on and another tab is showing.
 struct RootView: View {
     enum Tab: String, Hashable {
-        case listen, journal, guide
+        case listen, journal, guide, circles
     }
 
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
+    @Environment(CircleStore.self) private var circles
+    @Environment(AccountSession.self) private var account
+    @Environment(FindOutbox.self) private var findOutbox
+    @Environment(PushCenter.self) private var pushes
+    @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
     @State private var journalMode: JournalView.Mode = .cards
     @State private var listenPath = NavigationPath()
     @State private var journalPath = NavigationPath()
     @State private var guidePath = NavigationPath()
+    @State private var circlesPath = NavigationPath()
     #if DEBUG
     @State private var showingDeveloper = false
     #endif
@@ -119,6 +146,17 @@ struct RootView: View {
                         .appDestinations()
                 }
             }
+            // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
+            // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
+            // links' associated domain is Debug-only until then, so a release build leaves them to the browser.
+            if AccountSession.isEnabledInThisBuild {
+                SwiftUI.Tab("Circles", systemImage: "person.3", value: Tab.circles) {
+                    NavigationStack(path: $circlesPath) {
+                        CirclesView()
+                            .appDestinations()
+                    }
+                }
+            }
         }
         .tabViewBottomAccessory(isEnabled: run.state.isActive && tab != .listen) {
             ListeningAccessory { tab = .listen }
@@ -132,12 +170,61 @@ struct RootView: View {
             tab = .journal
         }
         .environment(\.openListen) { tab = .listen }
+        .environment(\.openCircle) { circleID in
+            tab = .circles
+            circlesPath = NavigationPath()
+            circlesPath.append(Route.circle(id: circleID))
+        }
+        // Signed out (from Settings or a revoked token): nothing of the circles stays on the phone.
+        .onChange(of: account.isSignedIn) { _, signedIn in
+            if !signedIn {
+                circles.clear()
+                circlesPath = NavigationPath()
+            } else {
+                // Finds waiting from before a sign-out go now (issue #62).
+                Task { await findOutbox.flush() }
+            }
+            // The phone's push token follows the account (issue #63).
+            Task { await pushes.accountChanged() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                Task { await findOutbox.flush() }
+                // Settings may have turned notifications on or off meanwhile.
+                Task { await pushes.refreshPermission() }
+            }
+        }
+        // A tapped push (issue #63): its circle, or the list for a digest.
+        .onChange(of: pushes.pendingCircle) { _, circleID in
+            guard let circleID, AccountSession.isEnabledInThisBuild else { return }
+            pushes.pendingCircle = nil
+            tab = .circles
+            circlesPath = NavigationPath()
+            if !circleID.isEmpty { circlesPath.append(Route.circle(id: circleID)) }
+        }
+        // The first circle created or joined (issue #63): why pushes, before the system asks.
+        .alert("Hear about your friends' finds", isPresented: Bindable(pushes).isExplaining) {
+            Button("Turn on notifications") { Task { await pushes.turnOn() } }
+            Button("Not now", role: .cancel) { pushes.notNow() }
+        } message: {
+            Text(PushCenter.explanation)
+        }
+        // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
+        .onChange(of: circles.pendingInvite, initial: true) { _, token in
+            guard let token, AccountSession.isEnabledInThisBuild else { return }
+            circles.pendingInvite = nil
+            tab = .circles
+            circlesPath = NavigationPath()
+            circlesPath.append(Route.joinCircle(token: token))
+        }
         // The index carries every pack's set (issue #54), so it is fetched at launch, not only on the packs screen;
         // the last good copy stands in meanwhile and offline.
         .task { await library.refreshIndex() }
+        .task { await pushes.refreshPermission() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
-        .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, showingDeveloper: $showingDeveloper))
+        .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }
 }
+

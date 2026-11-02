@@ -88,10 +88,12 @@ struct CardDetailView: View {
                     .accessibilityIdentifier("card-flip")
                     .accessibilityFocused($flipControlFocused)
                     CollectibleCard(showsBack: showsBack, rotates: !reduceMotion) {
-                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, flip: flip)
+                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, place: places.cardPlace(for: sighting.location), flip: flip)
                     } back: {
-                        CardBack(sighting: sighting, isLegendary: isLegendary, showOriginal: { showingOriginal = true })
+                        CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
+                    CardArtActions(sighting: sighting)
+                    PhotoArtActions(sighting: sighting)
                     if browse != nil {
                         Button {
                             dismiss()
@@ -133,7 +135,7 @@ struct CardDetailView: View {
                 }
             }
             .sheet(isPresented: $isSharing) {
-                SharePostcardView(sighting: sighting)
+                ShareCardView(sighting: sighting)
             }
             .task(id: id) {
                 browse?.selected = sighting.identifier
@@ -164,6 +166,99 @@ struct CardDetailView: View {
         withAnimation(CardFlip.animation(reduceMotion: reduceMotion)) { showsBack.toggle() }
         flipControlFocused = true
         AccessibilityNotification.Announcement(showsBack ? "Back, encounter story" : "Front, collectible art").post()
+    }
+}
+
+/// Scene art's controls under the card (issue #68, spec v2 stories 50 and 52): Try again and Use pack art on a card
+/// with a painting, Use painted art to go back to it, Retry art and Keep current art after a failure, and Paint this
+/// scene on a glasses card never painted (the public launch's ordinary adds, issue #69), with "N left today". Asking for a new
+/// painting needs the account (`ArtJobs.isAvailable`); choosing between the painting and the pack art doesn't. A card
+/// whose job is pending polls it while it is open.
+private struct CardArtActions: View {
+    @Environment(ArtJobs.self) private var art
+    let sighting: Sighting
+    @State private var asking = false
+
+    var body: some View {
+        let status = sighting.art.sceneStatus
+        Group {
+            switch status {
+            case .ready(let showsPackArt):
+                HStack(spacing: 10) {
+                    if art.isAvailable {
+                        Button("Try again", systemImage: "arrow.clockwise") { paintAgain() }
+                            .accessibilityHint("Paints a new picture. This one stays until the new one is ready.")
+                            .accessibilityIdentifier("card-art-try-again")
+                    }
+                    if showsPackArt {
+                        Button("Use painted art", systemImage: "photo.artframe") { art.setShowsPackArt(false, on: sighting) }
+                            .accessibilityIdentifier("card-art-use-painted")
+                    } else {
+                        Button("Use pack art", systemImage: "square.stack") { art.setShowsPackArt(true, on: sighting) }
+                            .accessibilityIdentifier("card-art-use-pack")
+                    }
+                }
+            case .failed:
+                HStack(spacing: 10) {
+                    if art.isAvailable {
+                        Button("Retry art", systemImage: "arrow.clockwise") { paintAgain() }
+                            .accessibilityIdentifier("card-art-retry")
+                    }
+                    Button("Keep current art", systemImage: "checkmark") { art.keepCurrentArt(sighting) }
+                        .accessibilityIdentifier("card-art-keep")
+                }
+            case .none:
+                // At the public launch an ordinary add isn't painted automatically: scene art is the birder's to ask
+                // for, within the day's allowance (issue #69). A card that was never painted (signed out at the add)
+                // gets the same.
+                if art.isAvailable, sighting.frameImagePath != nil {
+                    Button {
+                        paintAgain()
+                    } label: {
+                        Label("Paint this scene", systemImage: "paintbrush.pointed").frame(maxWidth: .infinity)
+                    }
+                    .accessibilityHint("Paints the bird into your glasses photo.")
+                    .accessibilityIdentifier("card-art-paint")
+                }
+            case .pending:
+                EmptyView()
+            }
+        }
+        .buttonStyle(.journalOutlined)
+        .safeAreaInset(edge: .bottom, spacing: 4) {
+            if let refusal = art.refusal(for: sighting, kind: .scene) {
+                Text(refusal)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("card-art-refusal")
+            }
+            // "N left today" beside the buttons that spend one (issue #69); nothing in the friends phase.
+            if art.isAvailable, status != .pending, sighting.frameImagePath != nil || status != .none, let line = CardText.allowanceLine(art.allowance) {
+                Text(line)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("card-art-allowance")
+            }
+        }
+        .task { await art.refreshAllowance() }
+        .disabled(asking)
+        .task(id: sighting.art.pendingJobs.map(\.id)) {
+            // While this card waits, look in on its jobs now and then: the painting machine may come back any time.
+            while !Task.isCancelled, !sighting.art.pendingJobs.isEmpty {
+                await art.refresh(sighting)
+                try? await Task.sleep(for: .seconds(30))
+            }
+        }
+    }
+
+    private func paintAgain() {
+        asking = true
+        Task {
+            await art.paintAgain(sighting)
+            asking = false
+        }
     }
 }
 
@@ -291,18 +386,26 @@ private struct CardFrame: ViewModifier {
 }
 
 /// The collectible face: the Legendary label or the edition with the collector number, the art (a tap flips the card),
-/// the place and species, the type line and stats (issue #55), the rarity for that place and season, and the date and
-/// method.
-private struct CardFront: View {
+/// the place and species, the caption written for this sighting or else the lore's tagline (issue #56), the type line
+/// and stats (issue #55), the rarity for that place and season, and the date and method. The share sheet (issue #66)
+/// draws the same face with the place it may share (a city, a secret spot or none) and the art already loaded, so the
+/// renderer has the pixels when it draws.
+struct CardFront: View {
     @Environment(PackLibrary.self) private var library
-    @Environment(PlaceNames.self) private var places
     let sighting: Sighting
     let isLegendary: Bool
     let placement: CardPlacement?
-    let flip: () -> Void
+    /// The place line: the card's place on the phone; on a shared face, only what the share may carry.
+    let place: String?
+    /// The art to draw, in place of what `CardArtView.art` gives; nil draws that.
+    var art: CardText.Art? = nil
+    /// The art's picture, loaded already (the share's renderer can't wait for it).
+    var artImage: UIImage? = nil
+    var flip: () -> Void = {}
 
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
+        let art = art ?? CardArtView.art(for: sighting, library: library, setID: placement?.setID)
         let commonName = library.commonName(for: sighting)
         VStack(alignment: .leading, spacing: 12) {
             CardHeading(isLegendary: isLegendary, placement: placement)
@@ -310,16 +413,27 @@ private struct CardFront: View {
                 .accessibilityLabel(CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement).compactMap { $0 }.joined(separator: ", "))
                 .accessibilityIdentifier("card-heading")
             Button(action: flip) {
-                CardArtView(sighting: sighting, reference: reference, commonName: commonName)
+                CardArtView(art: art, commonName: commonName, image: artImage)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Card art: \(CardArtView.art(for: sighting, reference: reference).label)")
+            .accessibilityLabel("Card art: \(art.label)")
             .accessibilityHint("Flips the card to the encounter story.")
             .accessibilityIdentifier("card-art")
-            VStack(alignment: .leading, spacing: 2) {
-                Text(places.cardPlace(for: sighting.location))
+            if let line = CardText.sceneArtLine(sighting.art.sceneStatus) {
+                Label(line, systemImage: sighting.art.sceneStatus == .failed ? "exclamationmark.circle" : "paintbrush.pointed")
                     .font(JournalFont.supporting)
-                    .foregroundStyle(Color.cardIvory.opacity(0.85))
+                    .foregroundStyle(Color.cardIvory)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(line)
+                    .accessibilityIdentifier("card-art-status")
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                if let place {
+                    Text(place)
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.cardIvory.opacity(0.85))
+                }
                 Text(commonName)
                     .font(JournalFont.title)
                     .foregroundStyle(Color.cardIvory)
@@ -329,6 +443,14 @@ private struct CardFront: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityElement(children: .combine)
+            if let caption = CaptionText.front(caption: sighting.caption, tagline: reference?.species.lore?.tagline) {
+                Text(caption)
+                    .font(JournalFont.supporting.italic())
+                    .foregroundStyle(Color.cardIvory)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel(sighting.caption == nil ? "Tagline: \(caption)" : "Caption: \(caption)")
+                    .accessibilityIdentifier("card-caption")
+            }
             if let typeLine = reference?.species.typeLine {
                 Text(typeLine.text)
                     .font(JournalFont.supporting.weight(.semibold))
@@ -392,7 +514,7 @@ private struct FrontStats: View {
 }
 
 /// The encounter story: when and where, Heard or Seen (changed here), the note, the original photo, what the art is,
-/// where the rarity came from, and the species' natural history (issue #55). Its controls act on their own and never
+/// where the rarity came from, the species' lore with its credit (issue #56) and its natural history (issue #55). Its controls act on their own and never
 /// flip the card.
 private struct CardBack: View {
     @Environment(PackLibrary.self) private var library
@@ -400,6 +522,7 @@ private struct CardBack: View {
     @Environment(JournalEdits.self) private var edits
     let sighting: Sighting
     let isLegendary: Bool
+    let placement: CardPlacement?
     let showOriginal: () -> Void
 
     var body: some View {
@@ -440,12 +563,31 @@ private struct CardBack: View {
                 }
             }
             BackSection(title: "Art") {
-                Text(CardArtView.art(for: sighting, reference: reference).provenance)
+                Text(CardArtView.art(for: sighting, library: library, setID: placement?.setID).provenance)
                     .foregroundStyle(Color.ink)
             }
             BackSection(title: "Rarity") {
                 Text(CardText.rarityExplanation(sighting.rarity, commonName: library.commonName(for: sighting), hasLocation: sighting.location != nil))
                     .foregroundStyle(Color.ink)
+            }
+            BackSection(title: "Lore") {
+                if let lore = reference?.species.lore {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(lore.text)
+                            .foregroundStyle(Color.ink)
+                        Text(LoreText.credit(lore))
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                        if let revision = lore.wikipediaRevision {
+                            Link("Wikipedia article revision", destination: revision)
+                                .font(JournalFont.attribution)
+                        }
+                    }
+                    .accessibilityIdentifier("card-lore")
+                } else {
+                    Text("No lore for this bird in your packs yet.")
+                        .foregroundStyle(Color.inkSecondary)
+                }
             }
             BackSection(title: "Natural history") {
                 if let stats = reference?.species.stats {

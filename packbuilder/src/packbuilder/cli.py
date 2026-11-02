@@ -1,5 +1,10 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
 `packbuilder set <definition-dir>`: builds the pack's set definition into set.json beside pack.json (`sets.py`).
+`packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
+`packbuilder art-references <definition-dir> --pack <pack-dir> --out <dir>`: exports the art worker's reference birds (`art_references.py`).
+`packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
+`packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore in lore.lock.json (`lore.py`).
+`packbuilder thumbnails <pack-dir> --out <dir>`: writes the pack-art thumbnails for the art CDN (`thumbnails.py`).
 `packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
 `packbuilder calibrate-rarity --version <n>`: writes the rarity label thresholds the app ships (`rarity.py`)."""
@@ -18,6 +23,9 @@ from packbuilder.detector import BirdDetector, ensure_model
 from packbuilder.licenses import PHOTO_LICENSES, inat_codes, normalize_license
 from packbuilder.pipeline import BuildOptions, build_pack
 from packbuilder.sets import check_set, load_set
+
+COMFY = "http://comfybox:8189"
+"""The FLUX.3 ComfyUI on comfybox (art/README.md), reached over the tailnet."""
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,6 +49,43 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--xc-interval", type=float, default=xenocanto.DEFAULT_INTERVAL, help=f"seconds between xeno-canto requests (default {xenocanto.DEFAULT_INTERVAL:g}; {xenocanto.MIN_INTERVAL:g} is the floor)")
     build.add_argument("--xc-max-requests", type=int, default=xenocanto.DEFAULT_MAX_REQUESTS, help=f"xeno-canto requests after which the run stops; rerun to continue from the cache (default {xenocanto.DEFAULT_MAX_REQUESTS})")
     build.add_argument("--sound-tries", type=int, default=3, help="recordings downloaded per species and kind before the kind is a gap (default 3)")
+    build.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints the pack art the lock lacks (default {COMFY}, on the tailnet)")
+    build.add_argument("--no-art", action="store_true", help="skip the pack art (the pack then has none)")
+    build.add_argument("--art-sheets", type=Path, help="folder for the pack art's contact sheets (default build/pack-art/<pack id>)")
+    build.add_argument("--no-lore", action="store_true", help="skip the lore (the pack then has none; the fact sheet still ships)")
+    build.add_argument("--regenerate-lore", action="append", default=[], metavar="SPECIES", help="write a species' lore again (species id or common name; repeat; 'all' for every species)")
+    build.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests for the lore (default lore.DEFAULT_INTERVAL)")
+    build.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
+    build.add_argument("--lore-budget", type=float, default=None, help="dollars the lore may spend; the build stops once past them")
+    build.add_argument("--lore-review", type=Path, help="the lore's review file (default build/lore/<pack id>/review.md)")
+    lore_command = commands.add_parser("lore", help="write the lore lore.lock.json lacks, and its review file, without building the pack")
+    lore_command.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and lore.lock.json")
+    lore_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
+    lore_command.add_argument("--regenerate-lore", action="append", default=[], metavar="SPECIES", help="write a species' lore again (repeat; 'all' for every species)")
+    lore_command.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests (default lore.DEFAULT_INTERVAL)")
+    lore_command.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
+    lore_command.add_argument("--lore-review", type=Path, help="the review file (default build/lore/<pack id>/review.md)")
+    lore_command.add_argument("--lore-budget", type=float, default=None, help="dollars the run may spend; it stops once past them")
+    lore_command.add_argument("--only", action="append", default=[], metavar="SPECIES", help="only these species (repeat), for a trial")
+    lore_review = commands.add_parser("lore-review", help="record the review of the lore in lore.lock.json and rewrite its review file")
+    lore_review.add_argument("definition", type=Path, help="folder holding pack.json and lore.lock.json")
+    lore_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve a species' lore (species id or common name; repeat)")
+    lore_review.add_argument("--approve-all", action="store_true", help="approve all lore still pending")
+    lore_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a species' lore: the next build writes it again, with --why in the prompt (repeat)")
+    lore_review.add_argument("--why", help="the reason, kept in the lock and given to the model with --reject")
+    lore_review.add_argument("--sheet", type=Path, help="the review file to write (default build/lore/<pack id>/review.md)")
+    art_review = commands.add_parser("art-review", help="record the review of the pack art's contact sheets in art.lock.json")
+    art_review.add_argument("definition", type=Path, help="folder holding pack.json and art.lock.json")
+    art_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve a painting (species id or common name; repeat)")
+    art_review.add_argument("--approve-all", action="store_true", help="approve every painting still pending")
+    art_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a painting: the next build paints it again with new seeds (repeat)")
+    art_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on a species' art: its cards fall back to the reference photo (repeat)")
+    art_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
+    references = commands.add_parser("art-references", help="export each species' isolated reference bird for the art worker's scene art (issue #68)")
+    references.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and art.lock.json")
+    references.add_argument("--pack", type=Path, required=True, help="the built pack (its pack.sqlite gives each species' size)")
+    references.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the build's download cache (default: packbuilder/cache)")
+    references.add_argument("--out", type=Path, required=True, help="folder to write (replaced): references.json and a PNG per species")
     set_command = commands.add_parser("set", help="build the set definition (boundary, taxonomic order, edition) into set.json")
     set_command.add_argument("definition", type=Path, help="folder holding pack.json")
     set_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
@@ -48,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
     index_command = commands.add_parser("index", help="write the pack index from packs/manifest.json and every pack's set.json")
     index_command.add_argument("--out", type=Path, required=True, help="index file to write")
     index_command.add_argument("--repo", default="lightsailvr/BirdJournal", help="GitHub repository the pack zips are released on")
+    thumbnails = commands.add_parser("thumbnails", help="write a built pack's pack-art thumbnails for the art CDN")
+    thumbnails.add_argument("pack", type=Path, help="built pack folder (with pack.sqlite)")
+    thumbnails.add_argument("--out", type=Path, required=True, help="folder to write <species id>.jpg into")
     draft = commands.add_parser("draft", help="print a species list for a new pack from iNaturalist observation counts")
     draft.add_argument("--place", type=int, action="append", required=True, help="iNaturalist place id (repeat for several)")
     draft.add_argument("--before", required=True, help="count observations created up to this date (YYYY-MM-DD); goes in the pack as inat_created_before")
@@ -67,8 +115,18 @@ def main(argv: list[str] | None = None) -> int:
         return _set(args)
     if args.command == "index":
         return _index(args)
+    if args.command == "thumbnails":
+        return _thumbnails(args)
     if args.command == "calibrate-rarity":
         return _calibrate_rarity(args)
+    if args.command == "art-references":
+        return _art_references(args)
+    if args.command == "art-review":
+        return _art_review(args)
+    if args.command == "lore-review":
+        return _lore_review(args)
+    if args.command == "lore":
+        return _lore(args)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     definition = PackDefinition.load(args.definition / "pack.json")
@@ -98,12 +156,23 @@ def main(argv: list[str] | None = None) -> int:
         archive_path=args.zip, built_at=args.built_at, download_workers=args.workers, photo_licenses=args.photo_licenses,
     )
     sounds = None if args.no_sounds else _sound_picker(args, definition)
+    artist = None if args.no_art else _artist(args, definition)
+    sheets = args.art_sheets or Path(__file__).resolve().parents[3] / "build" / "pack-art" / definition.id
+    lore = None if args.no_lore else _lore_writer(args, definition)
+    lore_review = args.lore_review or _lore_review_path(definition.id)
+    from packbuilder.lore import InvalidLore, LoreAPIError, LoreBudgetExceeded, MissingAPIKey as MissingLoreKey
     from packbuilder.xenocanto import MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError
 
     try:
-        build_pack(definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds, card_set=card_set, joined=joined)
+        build_pack(
+            definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds,
+            card_set=card_set, joined=joined, artist=artist, art_sheets=sheets, lore=lore, lore_review=lore_review,
+        )
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
+        return 2
+    except (MissingLoreKey, LoreAPIError, LoreBudgetExceeded, InvalidLore) as error:
+        logging.getLogger("packbuilder").error("lore stopped the build: %s", error)
         return 2
     if descriptions is not None:
         descriptions.write_lock()
@@ -145,6 +214,165 @@ def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
         sources=[xeno_canto, inaturalist], clips=ClipMaker(), check=BirdNETCheck(repo / "models"),
         clip_dir=cache / "clips", lock=SoundLock(args.definition / "sounds.lock.json"), country=country, max_tries=args.sound_tries,
     )
+
+
+def _artist(args: argparse.Namespace, definition: PackDefinition):
+    """The pack-art step (issue #57): paints in the set's edition theme on comfybox what `art.lock.json` lacks, into
+    the art cache, with the reference photos `overrides.json` pins as `art.reference` and each species' setting
+    (`art.setting`, `art.length_cm`)."""
+    from packbuilder.art import ArtSetting
+    from packbuilder.comfy import ComfyClient
+    from packbuilder.definition import load_overrides
+    from packbuilder.pack_art import LOCK_FILE, ArtLock, PackArtist
+
+    if definition.set is None:
+        raise SystemExit(f"{definition.id}: pack art is painted in the set's edition theme, and pack.json has no set (or pass --no-art)")
+    overrides = load_overrides(args.definition / "overrides.json")
+    art = {
+        entry.id: data["art"]
+        for entry in definition.species
+        if isinstance(data := overrides.get(entry.scientific_name), dict) and isinstance(data.get("art"), dict)
+    }
+    references = {species_id: int(pins["reference"]) for species_id, pins in art.items() if pins.get("reference") is not None}
+    settings = {}
+    for species_id, pins in art.items():
+        try:
+            settings[species_id] = ArtSetting(pins.get("setting"), pins.get("length_cm"))
+        except ValueError as error:
+            raise SystemExit(f"{definition.id}: overrides.json, {species_id}: {error}")
+    return PackArtist(
+        ComfyClient(args.comfy), pack_id=definition.id, theme=definition.set.edition.theme, lock=ArtLock.load(args.definition / LOCK_FILE),
+        cache_dir=args.cache / "art", references=references, settings=settings,
+    )
+
+
+def _lore_writer(args: argparse.Namespace, definition: PackDefinition):
+    """The lore step (issue #56): writes what `lore.lock.json` lacks, or what --regenerate-lore names, through the
+    Anthropic API; the key is read only when a request is needed."""
+    from packbuilder.lore import ALL, DEFAULT_INTERVAL, LOCK_FILE, MODEL, AnthropicLoreClient, LoreLock, LoreWriter, api_key_from_environment
+
+    model = args.lore_model or MODEL
+    lock = LoreLock.load(args.definition / LOCK_FILE)
+    by_name = {entry.common_name.lower(): entry.id for entry in definition.species}
+    ids = {entry.id for entry in definition.species}
+    regenerate = set()
+    for name in args.regenerate_lore:
+        if name == ALL or name in ids:
+            regenerate.add(name)
+        elif name.lower() in by_name:
+            regenerate.add(by_name[name.lower()])
+        else:
+            raise SystemExit(f"--regenerate-lore {name!r}: no such species in {definition.id}")
+    return LoreWriter(
+        lock=lock, client_factory=lambda: AnthropicLoreClient(api_key_from_environment(), model), model=model,
+        regenerate=frozenset(regenerate), interval=args.lore_interval if args.lore_interval is not None else DEFAULT_INTERVAL,
+        budget=args.lore_budget,
+    )
+
+
+def _lore(args: argparse.Namespace) -> int:
+    """The fact sheets and lore alone: the descriptions and stats from the cache, then the lore step, as `build` runs
+    them, so the lore can be written and reviewed before a pack build."""
+    from packbuilder.definition import load_overrides
+    from packbuilder.lore import InvalidLore, LoreAPIError, LoreBudgetExceeded, MissingAPIKey, review_sheet
+    from packbuilder.pipeline import describe, fact_sheets
+    from packbuilder.selection import Overrides
+    from packbuilder.stats import Datasets, StatsFixes, TypeLines, join
+    from packbuilder.writer import SpeciesResult
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    definition = PackDefinition.load(args.definition / "pack.json")
+    species = [entry for entry in definition.species if not args.only or entry.id in args.only or entry.common_name.lower() in {name.lower() for name in args.only}]
+    joined = join(species, Datasets.load(args.cache), StatsFixes.load(), TypeLines.load())
+    descriptions = WikipediaDescriptions(args.cache, lock_path=args.definition / "wikipedia.lock.json")
+    overrides = load_overrides(args.definition / "overrides.json")
+    results = [
+        SpeciesResult(entry=entry, photos=[], gap=False, description=describe(entry, Overrides.from_mapping(overrides.get(entry.scientific_name, {})), descriptions))
+        for entry in species
+    ]
+    sheets = fact_sheets(results, overrides, joined, descriptions)
+    writer = _lore_writer(args, definition)
+    try:
+        written = writer.write([(r.entry.id, r.entry.common_name, r.entry.scientific_name) for r in results], sheets)
+    except (MissingAPIKey, LoreAPIError, LoreBudgetExceeded, InvalidLore) as error:
+        logging.getLogger("packbuilder").error("lore stopped: %s", error)
+        return 2
+    sheet = review_sheet(writer.lock, args.lore_review or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])
+    print(f"{len(written)} of {len(species)} species have lore ({writer.requests} requests); review file {sheet}", file=sys.stderr)
+    return 0
+
+
+def _lore_review_path(pack_id: str) -> Path:
+    return Path(__file__).resolve().parents[3] / "build" / "lore" / pack_id / "review.md"
+
+
+def _lore_review(args: argparse.Namespace) -> int:
+    from collections import Counter
+
+    from packbuilder.lore import APPROVED, LOCK_FILE, PENDING, REJECTED, LoreLock, review, review_sheet
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    lock = LoreLock.load(args.definition / LOCK_FILE)
+    if not lock.species:
+        print(f"{lock.path} has no lore yet: build the pack first", file=sys.stderr)
+        return 1
+    try:
+        review(lock, approve=args.approve, reject=args.reject, approve_all=args.approve_all, why=args.why)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    sheet = review_sheet(lock, args.sheet or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])
+    counts = Counter(entry["review"] for entry in lock.species.values())
+    print(f"{lock.path}: " + ", ".join(f"{counts[state]} {state}" for state in (APPROVED, PENDING, REJECTED)) + f"; review file {sheet}", file=sys.stderr)
+    return 0
+
+
+def _art_references(args: argparse.Namespace) -> int:
+    from packbuilder.art_references import export
+    from packbuilder.definition import load_overrides
+    from packbuilder.pack_art import LOCK_FILE, ArtLock
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    references = export(
+        definition.id, ArtLock.load(args.definition / LOCK_FILE), load_overrides(args.definition / "overrides.json"),
+        args.pack / "pack.sqlite", args.cache / "art", args.out,
+    )
+    print(f"{args.out}: {len(references['species'])} reference birds", file=sys.stderr)
+    if references["missing"]:
+        print(f"not in the cache (build the pack art first): {', '.join(references['missing'])}", file=sys.stderr)
+    if references["no_reference"]:
+        print(f"painted from text, so no scene art: {', '.join(references['no_reference'])}", file=sys.stderr)
+    return 0
+
+
+def _art_review(args: argparse.Namespace) -> int:
+    from collections import Counter
+
+    from packbuilder.pack_art import APPROVED, GAP, LOCK_FILE, PENDING, REJECTED, ArtLock, review
+
+    lock = ArtLock.load(args.definition / LOCK_FILE)
+    if not lock.species:
+        print(f"{lock.path} has no pack art yet: build the pack first", file=sys.stderr)
+        return 1
+    try:
+        review(lock, approve=args.approve, reject=args.reject, gap=args.gap, approve_all=args.approve_all, why=args.why)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    counts = Counter(entry["review"] for entry in lock.species.values())
+    print(f"{lock.path}: " + ", ".join(f"{counts[state]} {state}" for state in (APPROVED, PENDING, REJECTED, GAP)), file=sys.stderr)
+    unchecked = [entry["common_name"] for entry in lock.species.values() if entry["review"] == PENDING]
+    if unchecked:
+        print(f"still pending (from text or not faithful, approve by name): {', '.join(unchecked)}", file=sys.stderr)
+    return 0
+
+
+def _thumbnails(args: argparse.Namespace) -> int:
+    from packbuilder.thumbnails import write_thumbnails
+
+    written = write_thumbnails(args.pack, args.out)
+    print(f"{len(written)} thumbnails in {args.out}")
+    return 0
 
 
 def _set(args: argparse.Namespace) -> int:

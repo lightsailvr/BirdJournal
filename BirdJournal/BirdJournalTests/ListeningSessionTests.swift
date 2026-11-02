@@ -8,7 +8,7 @@ import Testing
 
 // Issue #6: listening on the phone with no glasses. Audio, location and the models are doubles at their seams
 // (`AudioSource`, `LocationProvider`, `BirdModel` + `SpeciesOccurrenceModel`); the session under test is real.
-@Suite("Listening session")
+@Suite("Listening session", .timeLimit(.minutes(1)))
 struct ListeningSessionTests {
     static let losAngeles = LocationFix.fix(latitude: 34.05, longitude: -118.25, accuracy: 12, at: Date(timeIntervalSince1970: 1_790_000_000))
     static let newYork = LocationFix.fix(latitude: 40.7, longitude: -74, accuracy: 30, at: Date(timeIntervalSince1970: 1_790_000_600))
@@ -156,7 +156,11 @@ struct ListeningSessionTests {
         await session.start(source: source)
         source.feed(seconds: 4.5, amplitude: 0.5)  // a finch calls: windows at 0, 1.5 and 3 s hear it
         source.feed(seconds: 1.5)
-        try await waitUntil("three windows are scored") { session.windowsScored == 3 }
+        // The engine reports a window before the stack it changed (issue #93): wait for the stack itself.
+        try await waitUntil("the third window's stack arrives") {
+            session.stack.candidates.first?.windowsAboveThreshold == 3
+        }
+        #expect(session.windowsScored == 3)
         let heard = try #require(session.stack.candidates.first)
         #expect(heard.species.commonName == "House Finch")
         #expect(heard.windowsAboveThreshold == 3)
@@ -167,13 +171,14 @@ struct ListeningSessionTests {
         suppression.end()
         source.feed(seconds: 3)
         try await waitUntil("the windows after it are scored") { session.windowsScored == 9 }
+        // Stop drains the engine, so a stack sent after the ninth window's report has landed before the checks.
+        await session.stop()
+        #expect(source.isStopped)
+        #expect(session.windowsScored == 9)
 
         #expect(session.stack.candidates.map(\.species.commonName) == ["House Finch"])
         #expect(session.stack.candidates.first?.windowsAboveThreshold == 3, "the clip did not count as hearing the finch again")
         #expect(session.stack.candidates.first?.score == heard.score)
-
-        await session.stop()
-        #expect(source.isStopped)
     }
 
     @Test("a source that cannot start leaves the session idle with the error shown")
@@ -190,12 +195,16 @@ struct ListeningSessionTests {
         #expect(session.errorMessage == "Microphone access was not granted. Allow it in Settings > BirdJournal.")
     }
 
-    private func waitUntil(_ what: String, timeout: Duration = .seconds(5), _ condition: () -> Bool) async throws {
-        let clock = ContinuousClock()
-        let deadline = clock.now + timeout
+    /// Waits for `condition`, which the fed audio makes true, with no deadline of its own (issue #93): a loaded Mac
+    /// can take seconds over a window, so the suite's time limit ends a wait that never comes true, and the
+    /// cancellation it brings names the wait.
+    private func waitUntil(_ what: String, _ condition: () -> Bool) async throws {
         while !condition() {
-            guard clock.now < deadline else { throw TimedOut(what: what) }
-            try await Task.sleep(for: .milliseconds(10))
+            do {
+                try await Task.sleep(for: .milliseconds(10))
+            } catch {
+                throw TimedOut(what: what)
+            }
         }
     }
 

@@ -42,6 +42,43 @@ final class SettingsUITests: XCTestCase {
     }
 }
 
+/// The account's build-time switch (issue #88): on in Debug, Settings has the Account row; off in Release, it has none.
+/// The Release case runs in the `BirdJournal-Release` scheme (`scripts/build-and-test.sh --release`). The expectation
+/// keys on DEBUG, not on the switch, so turning the account on in Release fails here until #71 updates this test.
+final class AccountSwitchUITests: XCTestCase {
+    @MainActor
+    func testAccountRowFollowsTheBuildSwitch() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        app.buttons["Settings"].tap()
+
+        // The Appearance section is always there, so the list has loaded before the Account row is looked for.
+        XCTAssertTrue(app.buttons["Dark"].waitForExistence(timeout: 10), "Settings didn't open; screen: \(app.debugDescription.prefix(3000))")
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Account'")).firstMatch
+        #if DEBUG
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "no Account row in a Debug build")
+        #else
+        XCTAssertFalse(row.exists, "an Account row in a Release build: \(row.label)")
+        XCTAssertFalse(app.staticTexts["ACCOUNT"].exists || app.staticTexts["Account"].exists, "an Account section header")
+        #endif
+    }
+
+    /// The Circles tab (issue #61) needs the account, so it follows the same switch.
+    @MainActor
+    func testCirclesTabFollowsTheBuildSwitch() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 10), "no tab bar; screen: \(app.debugDescription.prefix(3000))")
+        #if DEBUG
+        XCTAssertTrue(app.tabBars.buttons["Circles"].exists, "no Circles tab in a Debug build")
+        #else
+        XCTAssertFalse(app.tabBars.buttons["Circles"].exists, "a Circles tab in a Release build")
+        #endif
+    }
+}
+
 private extension XCUIElement {
     func waitForSelected(timeout: TimeInterval = 5) -> Bool {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: self)

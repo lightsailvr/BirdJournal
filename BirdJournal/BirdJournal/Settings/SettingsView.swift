@@ -2,13 +2,16 @@ import MWDATCore
 import Pack
 import SwiftUI
 
-/// Settings (issue #28): the glasses in plain words, the appearance and app icon, the bird packs, sources and credits,
-/// and, in debug builds, the developer screens that used to be the app's front page.
+/// Settings (issue #28): the glasses in plain words, the optional account (issue #60), the appearance and app icon,
+/// the bird packs, sources and credits, and, in debug builds, the developer screens that used to be the app's front
+/// page.
 struct SettingsView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
+    /// "Share my finds automatically" (issue #62): on by default; off is private.
+    @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
     /// Read on appear, so it is current when the reader comes back from the icon screen.
     @State private var iconTitle = ""
     #if DEBUG
@@ -52,6 +55,21 @@ struct SettingsView: View {
                 Text("BirdJournal registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             }
 
+            if AccountSession.isEnabledInThisBuild {
+                Section {
+                    AccountRow()
+                    Toggle("Share my finds automatically", isOn: $sharesFinds)
+                        .tint(Color.moss)
+                        .accessibilityIdentifier("shareFindsToggle")
+                } header: {
+                    Text("Account")
+                } footer: {
+                    Text(sharesFinds
+                         ? "Birds you add while signed in reach your circles as finds: the bird, Heard or Seen, the city and the time, never the exact spot. Threatened birds show as at a secret spot."
+                         : "You're private: birds you add stay on this iPhone. Finds you already shared stay in your circles until you remove the sighting.")
+                }
+            }
+
             Section("Appearance") {
                 Picker("Appearance", selection: $appearance) {
                     ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
@@ -69,6 +87,7 @@ struct SettingsView: View {
             }
 
             Section("About") {
+                NavigationLink("Support Bird Journal", value: Route.support)
                 NavigationLink("Sources & credits", value: Route.credits)
                 LabeledContent("Version", value: Self.versionText)
                 Text("Powered by BirdNET. Birds are identified on this iPhone; no audio is saved or sent anywhere.")

@@ -11,8 +11,9 @@ CC BY 4.0 datasets pinned by SHA-256 and fetched into the cache once.
   midpoint, flagged so the card shows "≈". The database has no flightless species, nor the Galliformes; a species it
   lacks has no wingspan.
 - BIRDBASE (Şekercioğlu et al. 2025) carries no Avibase ID, so it is matched by name: its eBird/Clements v2024b column
-  (BirdNET's own taxonomy), then its main name. It gives the clutch range, nest type, flightlessness, the IUCN category
-  behind the threatened flag, and the order and Clements family behind the type line.
+  (BirdNET's own taxonomy), then its main name. It gives the clutch range, nest type, brood parasitism,
+  flightlessness, the IUCN category behind the threatened flag, and the order and Clements family behind the type
+  line.
 
 A species AVONET or BIRDBASE lacks fails the build unless `fixes.json` lists it as a known gap; a stat a dataset lacks
 is left off, never guessed. The type line ("Songbird — Finch") comes from the committed `stats/type-lines.json`: a
@@ -80,7 +81,26 @@ NEST_TYPES = {
     "BU": "burrow", "CP": "cup", "CR": "crevice", "CV": "cavity", "DM": "dome", "HC": "half_cup", "NO": "no_nest",
     "O": "other_nest", "PL": "platform", "PN": "pendant", "SA": "saucer", "SC": "scrape", "SP": "sphere", "M": "mound",
 }
-"""BIRDBASE's Nest_Type codes (its Legend sheet). "O" is another bird's nest: a brood parasite's."""
+"""BIRDBASE's Nest_Type codes (its Legend sheet). "O" is "other bird's nest": the bird nests in a nest another bird
+built, as the Great Horned Owl, the falcons and the Solitary Sandpiper do and the Northern House Wren in old cavities.
+It is not brood parasitism, which BIRDBASE keeps in its own column (`brood_parasite`; issue #86)."""
+
+BROOD_PARASITE = "brood_parasite"
+"""The nest value of a brood parasite, in place of BIRDBASE's nest types (see `brood_parasite`)."""
+NO_OWN_NEST = frozenset({"NO", "O"})
+"""Nest types that mean the bird builds no nest of its own: none, or another bird's."""
+
+
+def brood_parasite(row: "BirdbaseSpecies") -> bool:
+    """A brood parasite by BIRDBASE: "Para.1" (1 = nest parasite) set, "Para.2" (1 = victim of nest parasitism) not,
+    and no nest of its own (its nest types, if any, only "no nest" and "other bird's nest").
+
+    BIRDBASE marks a species that parasitizes its own kind 1 in both columns, so Para.1 alone takes in most ducks,
+    which dump eggs in each other's nests but build their own; the nest types leave out the California Quail, a 1 and 0
+    that scrapes a nest. Across BIRDBASE this gives the cuckoos, whydahs and indigobirds, honeyguides, cowbirds and the
+    Black-headed Duck, and in the packs the Brown-headed Cowbird and the Pin-tailed Whydah. It misses the Screaming
+    Cowbird (itself parasitized by the Shiny Cowbird, so 1 and 1); none of the packs has it."""
+    return row.nest_parasite and not row.parasitized and set(row.nest_types) <= NO_OWN_NEST
 
 
 def _key(value: str) -> str:
@@ -126,6 +146,10 @@ class BirdbaseSpecies:
     clutch_min: float | None
     clutch_max: float | None
     flightless: bool
+    nest_parasite: bool = False
+    """BIRDBASE's Para.1: lays in other nests, of its own species or others."""
+    parasitized: bool = False
+    """BIRDBASE's Para.2: other birds lay in its nests."""
 
 
 @dataclass
@@ -183,6 +207,7 @@ class Datasets:
                     nest_types=tuple(code.strip() for code in (_text(row["Nest_Type"]) or "").split(",") if code.strip()),
                     clutch_min=_number(row["Clutch_Min"]), clutch_max=_number(row["Clutch_Max"]),
                     flightless=_text(row["Flightlessness"]) == "Yes",
+                    nest_parasite=_int(row["Para.1"]) == 1, parasitized=_int(row["Para.2"]) == 1,
                 )
                 for row in _sheet(paths["birdbase"], "Data", header_row=2)
             ],
@@ -227,13 +252,17 @@ class StatsFixes:
     birdbase: dict[str, str]
     known_gaps: dict[str, str]
     threatened: dict[str, str]
+    borrowed: dict[str, str] = field(default_factory=dict)
+    """Species whose AVONET row is a wider species before a split, with the reason (issue #56)."""
 
     @classmethod
     def load(cls, path: Path = STATS_DIR / "fixes.json") -> "StatsFixes":
         """Each fix is {"name": ..., "why": ...}; the gaps and the hand list map a name to the reason."""
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         names = {kind: {species: fix["name"] for species, fix in data.get(kind, {}).items()} for kind in ("avonet", "wingspan", "birdbase")}
-        return cls(**names, known_gaps=dict(data.get("known_gaps", {})), threatened=dict(data.get("threatened", {})))
+        return cls(
+            **names, known_gaps=dict(data.get("known_gaps", {})), threatened=dict(data.get("threatened", {})), borrowed=dict(data.get("borrowed", {})),
+        )
 
 
 @dataclass(frozen=True)
@@ -296,6 +325,9 @@ class JoinedSpecies:
     """None for a known gap."""
     type_line: TypeLine | None
     threat: Threat
+    borrowed: bool = False
+    """AVONET's row is a wider species before a split (`fixes.json` "borrowed"): its habitat and migration are not
+    this species' to tell on the fact sheet."""
 
 
 def join(species: list[SpeciesEntry], datasets: Datasets, fixes: StatsFixes, type_lines: TypeLines) -> dict[str, JoinedSpecies]:
@@ -320,7 +352,7 @@ def join(species: list[SpeciesEntry], datasets: Datasets, fixes: StatsFixes, typ
             unmapped.append(f"{name} (no type line for the order {birdbase.order} or the family {birdbase.family} in stats/type-lines.json)")
             continue
         stats = _stats(avonet, birdbase, wingspan) if avonet is not None else None
-        joined[name] = JoinedSpecies(stats=stats, type_line=type_line, threat=_threat(name, birdbase, fixes))
+        joined[name] = JoinedSpecies(stats=stats, type_line=type_line, threat=_threat(name, birdbase, fixes), borrowed=name in fixes.borrowed)
     if unmapped:
         raise UnmappedSpecies(f"not in the stats datasets (add a fix or a known gap to stats/fixes.json): {', '.join(unmapped)}")
     return joined
@@ -339,7 +371,10 @@ def _wingspan(name: str, avonet: AvonetSpecies, birdbase: BirdbaseSpecies | None
 
 
 def _stats(avonet: AvonetSpecies, birdbase: BirdbaseSpecies | None, wingspan: WingspanSpecies | None) -> SpeciesStats:
-    nest = tuple(NEST_TYPES[code] for code in birdbase.nest_types if code in NEST_TYPES) if birdbase else ()
+    if birdbase is not None and brood_parasite(birdbase):
+        nest: tuple[str, ...] = (BROOD_PARASITE,)
+    else:
+        nest = tuple(NEST_TYPES[code] for code in birdbase.nest_types if code in NEST_TYPES) if birdbase else ()
     clutch_min, clutch_max = (birdbase.clutch_min, birdbase.clutch_max) if birdbase else (None, None)
     measured = wingspan.measured_cm if wingspan else None
     span = measured if measured is not None else (wingspan.predicted_cm if wingspan else None)

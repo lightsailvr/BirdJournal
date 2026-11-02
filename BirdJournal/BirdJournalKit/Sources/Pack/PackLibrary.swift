@@ -92,6 +92,16 @@ public final class PackLibrary {
         return nil
     }
 
+    /// A species' pack art (issue #57): the art of the pack whose set the card is in first, since each pack paints its
+    /// species in its set's edition theme, else the first pack (bundled first) that has art for it.
+    public func packArt(scientificName: String, setID: String?) -> (pack: SpeciesPack, art: PackArt)? {
+        let ordered = packs.filter { $0.info.id == setID } + packs.filter { $0.info.id != setID }
+        for pack in ordered {
+            if let art = pack.species(scientificName: scientificName)?.packArt { return (pack, art) }
+        }
+        return nil
+    }
+
     /// The first pack that has this photo (an iNaturalist photo id; two packs sharing a species share its photos).
     public func photo(id: String) -> (pack: SpeciesPack, photo: PackPhoto)? {
         for pack in packs {

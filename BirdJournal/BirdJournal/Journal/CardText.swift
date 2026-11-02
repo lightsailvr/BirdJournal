@@ -56,40 +56,84 @@ enum CardText {
         originalPhotoPath(sighting) == nil ? "No photo attached" : "Photo attached"
     }
 
-    /// A card's art until pack art arrives: the glasses photo, else the pack's reference photo, else none.
+    /// A card's art (issue #57), in this order: approved photo art, then ready scene art unless the birder chose "Use
+    /// pack art", then the pack's art, then the pack's reference photo, then none (a typographic face). The glasses
+    /// photo is the sighting's evidence, never its art.
     enum Art: Equatable {
-        case glassesPhoto(String)
-        case referencePhoto(credit: String)
+        /// The birder's photo, painted and approved; relative to the `FrameStore`.
+        case photoArt(path: String)
+        /// The glasses photo from the add, painted; relative to the `FrameStore`.
+        case sceneArt(path: String)
+        /// The pack's painting of the species, with the credit of the photo it was painted from (nil when it was
+        /// painted from text, for a species with no open-license photo).
+        case packArt(URL, credit: String?)
+        case referencePhoto(URL, credit: String)
         case none
 
-        /// `referenceCredit` is the credit of the pack's first photo of the species, nil when no pack has one.
-        init(sighting: Sighting, referenceCredit: String?) {
-            if let path = sighting.frameImagePath {
-                self = .glassesPhoto(path)
-            } else if let referenceCredit {
-                self = .referencePhoto(credit: referenceCredit)
+        /// `packArt` is the pack art for the card's set (`PackLibrary.packArt`) and `reference` the pack's first photo
+        /// of the species, each nil when no pack has one.
+        init(sighting: Sighting, packArt: (url: URL, credit: String?)?, reference: (url: URL, credit: String)?) {
+            let art = sighting.art
+            if let photo = art.photo, photo.state == .ready, let path = photo.path {
+                self = .photoArt(path: path)
+            } else if let scene = art.scene, scene.state == .ready, let path = scene.path, !art.prefersPackArt {
+                self = .sceneArt(path: path)
+            } else if let packArt {
+                self = .packArt(packArt.url, credit: packArt.credit)
+            } else if let reference {
+                self = .referencePhoto(reference.url, credit: reference.credit)
             } else {
                 self = .none
             }
         }
 
-        /// The label under the art on the front.
+        /// The label under the art on the front: what kind of picture it is, so art is never taken for evidence.
         var label: String {
             switch self {
-            case .glassesPhoto: "Your glasses photo"
+            case .photoArt: "AI-embellished from your photo"
+            case .sceneArt, .packArt: "AI illustration"
             case .referencePhoto: "Reference photo"
             case .none: "No art yet"
             }
         }
 
-        /// The back's provenance line.
+        /// The back's provenance line, naming the model (ADR-0007).
         var provenance: String {
             switch self {
-            case .glassesPhoto: "Your glasses photo from this sighting, at the journal's crop. A photo, not a painting."
-            case .referencePhoto(let credit): "A reference photo from your bird pack, not your bird. \(credit)."
-            case .none: "No art yet: no photo of this sighting, and no pack photo of this bird."
+            case .photoArt: "Your own photo, AI-embellished by FLUX.3 Image Klein and approved by you. The original is kept as evidence."
+            case .sceneArt: "An AI illustration painted by FLUX.3 Image Klein into your glasses photo from this sighting. Not a photo."
+            case .packArt(_, let credit?): "An AI illustration from your bird pack, painted by FLUX.3 Image Klein from a reference photo (\(credit)). It shows the species, not your bird."
+            case .packArt(_, nil): "An AI illustration from your bird pack, painted by FLUX.3 Image Klein from a description of the species. It shows the species, not your bird."
+            case .referencePhoto(_, let credit): "A reference photo from your bird pack, not your bird. \(credit)."
+            case .none: "No art yet: no pack art and no pack photo of this bird."
             }
         }
+    }
+
+    /// What the card's front says about scene art under way (issue #68): the encounter is safe while the painting
+    /// waits, even for days with the painting machine off; a failure says so plainly. Nil otherwise.
+    static func sceneArtLine(_ status: CardArt.SceneStatus) -> String? {
+        switch status {
+        case .pending: "Your encounter is saved. Artwork is on its way."
+        case .failed: "The artwork couldn't be painted this time."
+        case .none, .ready: nil
+        }
+    }
+
+    /// What the card says about photo art under way (issue #69); nil otherwise.
+    static func photoArtLine(_ status: CardArt.PhotoStatus) -> String? {
+        switch status {
+        case .pending: "Your photo is being painted. Your encounter is saved."
+        case .failed: "Your photo couldn't be painted this time."
+        case .preview: "Your photo art is ready to review."
+        case .none, .approved: nil
+        }
+    }
+
+    /// "N left today": the public launch's daily paintings on request (issue #69); nil without a limit.
+    static func allowanceLine(_ allowance: ArtAllowance?) -> String? {
+        guard let allowance, allowance.daily != nil, let left = allowance.left else { return nil }
+        return "\(left) left today"
     }
 
     private static func article(for name: String) -> String {

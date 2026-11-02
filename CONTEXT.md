@@ -153,8 +153,12 @@ A number of distinct species a circle aims to find within a period: the automati
 _Avoid_: challenge, quest, target (as the noun)
 
 **Reaction**:
-One of a fixed set of responses a friend can leave on a find, such as "Lovely find".
+One of a fixed set of responses a friend can leave on a find: "Lovely find", "Jealous!" or "Let's go together". Never on one's own find, never with words.
 _Avoid_: like, comment
+
+**Compare birds**:
+You and a friend side by side, each species Heard, Seen or not yet: the friend's side from their finds in circles you share, yours from the collection on your phone.
+_Avoid_: leaderboard, ranking, life list comparison
 
 **Notable find**:
 A find that sends its own push: a Legendary, a circle first, Rare or Exceptional rarity, or one that completes a goal.
@@ -163,6 +167,10 @@ _Avoid_: highlight, alert
 **Digest**:
 One push bundling a friend's other finds, at most one per friend every two hours.
 _Avoid_: summary, batch
+
+**Mute**:
+A member's choice to get no pushes about one circle's or one friend's finds. The feed still shows them.
+_Avoid_: block (which also hides content), silence
 
 **Friend banner**:
 A notable find shown on the lens while the birder is on a run.

@@ -1,6 +1,6 @@
-"""Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, sounds/ clips, LICENSE (every photo, sound and text
-credit), report.json (counts, chosen ids, and the photo, description and sound gaps), and optionally a zip of it (the download format for other
-regions, DECISIONS.md "Species pack")."""
+"""Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, sounds/ clips, art/ (the reviewed pack art as AVIF, #57),
+LICENSE (every photo, sound, art and text credit), report.json (counts, chosen ids, and the photo, description, sound and
+art gaps), and optionally a zip of it (the download format for other regions, DECISIONS.md "Species pack")."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import zipfile
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PIL import Image
 
@@ -23,11 +24,21 @@ from packbuilder.selection import ScoredPhoto
 from packbuilder.sounds import SoundResult
 from packbuilder.stats import DATASETS, LICENSE as STATS_LICENSE, JoinedSpecies
 
+if TYPE_CHECKING:
+    from packbuilder.factsheet import Fact
+    from packbuilder.lore import Lore
+    from packbuilder.pack_art import Artwork
+
+ART_QUALITY = 60
+"""Pack art is 864 x 1152 (3:4) AVIF, which iOS decodes natively: at this quality a painting is about 120 KB, half a
+JPEG's at the same look, so 160 of them stay inside the bundled pack's 200 MB budget (#57)."""
+
 SCHEMA_VERSION = 4
 """3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
 added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
 lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that
-fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family."""
+fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family, #57
+the pack art and #56 the fact sheet and the lore."""
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -207,16 +218,21 @@ class WrittenPack:
 
 def write_pack(
     definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None, card_set: dict | None = None,
-    joined: dict[str, JoinedSpecies] | None = None,
+    joined: dict[str, JoinedSpecies] | None = None, art: dict[str, Artwork] | None = None, facts: dict[str, list[Fact]] | None = None,
+    lore: dict[str, Lore] | None = None,
 ) -> WrittenPack:
     """`joined` is the joined stats, threatened flags and type lines by scientific name (`stats.join`); None leaves
-    their tables empty."""
+    their tables empty. `art` is each species' pack art by species id (`pack_art.py`); only approved paintings are
+    written. None (a build without art) writes an empty `pack_art` table and no art gaps. `facts` is each species' fact
+    sheet by species id (`factsheet.py`) and `lore` its lore (`lore.py`), of which only the approved is written; None
+    writes empty tables and, for the lore, no lore gaps."""
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
     (out_dir / "lens").mkdir(parents=True)
     (out_dir / "phone").mkdir()
     (out_dir / "sounds").mkdir()
+    (out_dir / "art").mkdir()
 
     photo_rows = []
     for result in results:
@@ -262,7 +278,26 @@ def write_pack(
                 )
             )
 
-    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined))
+    art_rows = []
+    for result in results:
+        artwork = (art or {}).get(result.entry.id)
+        if artwork is None or not artwork.ships:
+            continue
+        file = f"art/{result.entry.id}.avif"
+        with Image.open(artwork.file) as painting:
+            painting.convert("RGB").save(out_dir / file, "AVIF", quality=ART_QUALITY)
+        art_rows.append((result.entry.id, file, json.dumps(list(artwork.photos)), artwork.workflow))
+
+    fact_rows = [
+        (result.entry.id, rank, fact.text, fact.source)
+        for result in results for rank, fact in enumerate((facts or {}).get(result.entry.id, []))
+    ]
+    lore_rows = [
+        (result.entry.id, written.text, written.tagline["text"], json.dumps(written.sources, separators=(",", ":")))
+        for result in results if (written := (lore or {}).get(result.entry.id)) is not None and written.ships
+    ]
+
+    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined), art=art, facts=bool(fact_rows), lore=lore)
     (out_dir / "LICENSE").write_text(license_text)
 
     database = out_dir / "pack.sqlite"
@@ -282,6 +317,9 @@ def write_pack(
         )
         db.executemany("INSERT INTO photo VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", photo_rows)
         db.executemany("INSERT INTO sound VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sound_rows)
+        db.executemany("INSERT INTO pack_art VALUES (?, ?, ?, ?)", art_rows)
+        db.executemany("INSERT INTO fact VALUES (?, ?, ?, ?)", fact_rows)
+        db.executemany("INSERT INTO lore VALUES (?, ?, ?, ?)", lore_rows)
         if card_set is not None:
             db.execute("INSERT INTO set_definition VALUES (?)", (json.dumps(card_set, ensure_ascii=False, separators=(",", ":")),))
         if joined:
@@ -289,7 +327,7 @@ def write_pack(
         db.commit()
         db.execute("VACUUM")
 
-    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined), indent=2) + "\n")
+    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined, art, lore), indent=2) + "\n")
 
     archive = None
     if archive_path is not None:
@@ -328,7 +366,10 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
     return tuple(value or None for value in (description.summary, description.field_marks, description.size, description.habitat, description.source))
 
 
-def _license_text(definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None, stats: bool = False) -> str:
+def _license_text(
+    definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None, stats: bool = False, art: dict[str, Artwork] | None = None,
+    facts: bool = False, lore: dict[str, Lore] | None = None,
+) -> str:
     carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
     lines = [
         f"{definition.name} species pack for BirdJournal (pack id {definition.id}, version {definition.version}, built {built_at})",
@@ -354,6 +395,7 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
         "",
         *(_set_credits(card_set) if card_set else []),
         *(_stats_credits() if stats else []),
+        *(_lore_credits(lore) if facts or lore else []),
         "Photo credits",
         "=============",
     ]
@@ -367,11 +409,41 @@ def _license_text(definition: PackDefinition, results: list[SpeciesResult], buil
     for result in results:
         for chosen in result.sounds.sounds if result.sounds else []:
             lines.append(f"  {result.entry.common_name}, {chosen.kind}: {chosen.candidate.credit_line}")
+    lines += _art_credits(results, art) if art else []
     lines += ["", "Text credits", "============"]
     for result in results:
         if result.description and result.description.source:
             lines.append(f"  {result.entry.common_name} — {result.description.source}")
     return "\n".join(lines) + "\n"
+
+
+def _art_credits(results: list[SpeciesResult], art: dict[str, Artwork]) -> list[str]:
+    """Pack art (issue #57): AI illustrations (ADR-0007), each derived from the pack photo it names, under that photo's
+    license (ShareAlike passing on), or painted from text alone."""
+    shipped = [(result, art[result.entry.id]) for result in results if result.entry.id in art and art[result.entry.id].ships]
+    if not shipped:
+        return []
+    lines = [
+        "",
+        "Pack art",
+        "========",
+        "",
+        "Each species' card art in art/ is an AI illustration painted by FLUX.3 Image Klein (Black Forest Labs, FLUX Kommunity",
+        "License; https://bfl.ai/legal) and reviewed by hand. Each is painted from the photo of that species named below, whose",
+        "photographer and license are as in the photo credits; the painting is a derivative of it, credited the same way.",
+        "Paintings from CC BY-SA photos are shared under CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0/). A painting",
+        "with no photo was painted from a text description alone.",
+        "",
+    ]
+    for result, artwork in shipped:
+        photos = {chosen.candidate.photo_id: chosen for chosen in result.photos}
+        sources = [photos[photo_id] for photo_id in artwork.photos if photo_id in photos]
+        if sources:
+            for chosen in sources:
+                lines.append(f"  {result.entry.common_name}: painted from photo {chosen.candidate.photo_id}, {Credit.of(chosen.candidate).line} — {chosen.candidate.source_url}")
+        else:
+            lines.append(f"  {result.entry.common_name}: painted from a text description, no photo")
+    return lines
 
 
 def _set_credits(card_set: dict) -> list[str]:
@@ -397,14 +469,36 @@ def _stats_credits() -> list[str]:
     ]
 
 
+def _lore_credits(lore: dict[str, Lore] | None) -> list[str]:
+    """The fact sheet and the lore (issue #56); the lore's paragraph only when the pack ships some."""
+    models = sorted({written.model for written in (lore or {}).values() if written.ships})
+    facts = [
+        "Each species' fact sheet is its stats (above) told as short sentences, and sentences taken from its English",
+        "Wikipedia article at the revision listed under \"Text credits\" (Wikipedia contributors, CC BY-SA 4.0,",
+        "https://creativecommons.org/licenses/by-sa/4.0/).",
+        "",
+    ]
+    if not models:
+        return facts
+    return facts[:-1] + [
+        f"The lore and its tagline were written from the fact sheet alone by Claude ({', '.join(models)}, Anthropic), each",
+        "sentence citing the facts it rests on, and reviewed by hand. As an adaptation of the Wikipedia text, the lore is",
+        "shared under CC BY-SA 4.0, credited to the article revisions listed under \"Text credits\".",
+        "",
+    ]
+
+
 def _one_of(licenses: set[str]) -> str:
     """The licenses in iNaturalist's order, as "CC0, CC BY or CC BY-SA"."""
     ordered = [license for license in INAT_CODES if license in licenses] or ["none"]
     return ordered[0] if len(ordered) == 1 else ", ".join(ordered[:-1]) + f" or {ordered[-1]}"
 
 
-def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: str, joined: dict[str, JoinedSpecies] | None = None) -> dict:
-    return {
+def _report(
+    definition: PackDefinition, results: list[SpeciesResult], built_at: str, joined: dict[str, JoinedSpecies] | None = None, art: dict[str, Artwork] | None = None,
+    lore: dict[str, Lore] | None = None,
+) -> dict:
+    report = {
         "pack": definition.id,
         "version": definition.version,
         "built_at": built_at,
@@ -419,6 +513,7 @@ def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: 
                 "chosen": [chosen.candidate.photo_id for chosen in r.photos],
                 "description": r.description.source if r.description and r.description.source else None,
                 **({"sounds": {"chosen": {s.kind: s.id for s in r.sounds.sounds}, "rejected": r.sounds.rejections}} if r.sounds is not None else {}),
+                **({"art": {"review": art[r.entry.id].review, "photos": list(art[r.entry.id].photos)}} if art and r.entry.id in art else {}),
             }
             for r in results
         },
@@ -431,3 +526,13 @@ def _report(definition: PackDefinition, results: list[SpeciesResult], built_at: 
             "stats": [r.entry.id for r in results if joined and joined[r.entry.scientific_name].stats is None],
         },
     }
+    if art is not None:
+        # Gaps are the reviewed ones (no art, on purpose); unreviewed art, or art that failed to paint, is not shipped
+        # and is no gap: a pack with any is not ready to publish.
+        report["gaps"]["art"] = [r.entry.id for r in results if r.entry.id in art and art[r.entry.id].is_gap]
+        report["unreviewed"] = {"art": [r.entry.id for r in results if r.entry.id not in art or not art[r.entry.id].settled]}
+    if lore is not None:
+        # Lore not approved yet, or not written (no fact sheet, or every draft failed its checks): not shipped, and a
+        # pack with any is not ready to publish.
+        report.setdefault("unreviewed", {})["lore"] = [r.entry.id for r in results if r.entry.id not in lore or not lore[r.entry.id].ships]
+    return report
