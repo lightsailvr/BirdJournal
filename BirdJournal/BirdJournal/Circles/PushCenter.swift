@@ -299,16 +299,23 @@ extension PushCenter {
     /// The app's push center over the system's permission and APNs registration. In debug builds
     /// `-fakePushPermission notDetermined|denied|authorized` answers for the system (`-fakePushGrant NO` makes the
     /// prompt deny), so the UI tests can tap through the explanation.
+    ///
+    /// With the fake circle server (`-fakeCircles`, `-fakeAccount`) and no `-fakePushPermission`, notifications count as
+    /// allowed, so the other UI tests never meet the explanation or the system prompt. Under any fake, whether the
+    /// explanation was shown lasts one launch only.
     static func forApp(account: AccountSession, client: CircleClient?, register: @escaping () -> Void) -> PushCenter {
         var authorizer: NotificationAuthorizing = SystemNotificationAuthorizer()
+        var store = UserDefaults.standard
         #if DEBUG
         let defaults = UserDefaults.standard
-        if let raw = defaults.string(forKey: "fakePushPermission") {
+        let fakeServer = defaults.string(forKey: "fakeCircles") != nil || defaults.string(forKey: "fakeAccount") != nil
+        if let raw = defaults.string(forKey: "fakePushPermission") ?? (fakeServer ? "authorized" : nil) {
             let start: PushPermission = switch raw { case "denied": .denied; case "authorized": .authorized; default: .notDetermined }
-            authorizer = FakeNotificationAuthorizer(permission: start, grants: defaults.object(forKey: "fakePushGrant") as? Bool ?? true)
+            authorizer = FakeNotificationAuthorizer(permission: start, grants: defaults.object(forKey: "fakePushGrant") == nil || defaults.bool(forKey: "fakePushGrant"))
+            store = UserDefaults(suiteName: "fake-push-\(UUID().uuidString)") ?? .standard
         }
         #endif
-        return PushCenter(account: account, client: client, authorizer: authorizer, registerForRemoteNotifications: register)
+        return PushCenter(account: account, client: client, authorizer: authorizer, defaults: store, registerForRemoteNotifications: register)
     }
 }
 

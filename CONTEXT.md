@@ -164,6 +164,10 @@ _Avoid_: highlight, alert
 One push bundling a friend's other finds, at most one per friend every two hours.
 _Avoid_: summary, batch
 
+**Mute**:
+A member's choice to get no pushes about one circle's or one friend's finds. The feed still shows them.
+_Avoid_: block (which also hides content), silence
+
 **Friend banner**:
 A notable find shown on the lens while the birder is on a run.
 _Avoid_: lens notification
