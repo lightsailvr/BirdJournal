@@ -9,6 +9,7 @@ requires-python = ">=3.13"
 dependencies = [
     "boto3>=1.40",
     "fastapi>=0.115",
+    "httpx2[http2]>=2.16",
     "mangum>=0.19",
     "pyjwt[crypto]>=2.10",
 ]

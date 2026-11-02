@@ -172,6 +172,7 @@ class FindStore:
         self, dynamodb: Any, table_name: str, accounts: AccountStore, circles: CircleStore,
         clock: Callable[[], datetime],
     ) -> None:
+        self._dynamodb = dynamodb
         self._table = dynamodb.Table(table_name)
         self._accounts = accounts
         self._circles = circles
@@ -276,6 +277,30 @@ class FindStore:
             for item in items
         ]
         return FeedPage(items=page, next_cursor=_encode_cursor(last["sk"]) if last else None)
+
+    def is_circle_first(self, circle_id: str, owner: str, sighting_id: str, scientific_name: str) -> bool:
+        """Whether the find is the circle's earliest surviving item of its species: the push decision at write time
+        (issue #63), the same query the feed's mark reads."""
+        return self._first_of(circle_id, scientific_name) == (owner, sighting_id)
+
+    def existing(self, keys: list[tuple[str, str]]) -> dict[tuple[str, str], FindContent]:
+        """The finds of these (owner, sighting id) pairs that are still there, for a digest (issue #63)."""
+        found: dict[tuple[str, str], FindContent] = {}
+        unique = list(dict.fromkeys(keys))
+        for start in range(0, len(unique), 100):
+            request: dict[str, Any] = {
+                self._table.name: {
+                    "Keys": [_find_key(owner, sighting_id) for owner, sighting_id in unique[start : start + 100]],
+                    "ConsistentRead": True,
+                }
+            }
+            while request:
+                response = self._dynamodb.batch_get_item(RequestItems=request)
+                for item in response.get("Responses", {}).get(self._table.name, []):
+                    owner = str(item["pk"]).removeprefix("ACCOUNT#")
+                    found[(owner, str(item["sk"]).removeprefix("FIND#"))] = _content(item)
+                request = response.get("UnprocessedKeys") or {}
+        return found
 
     def _first_of(self, circle_id: str, scientific_name: str) -> tuple[str, str] | None:
         """The earliest surviving item of the species in the circle: (owner, sighting id)."""

@@ -177,6 +177,19 @@ class CircleStore:
         """The names of the accounts that set one."""
         return self._display_names(subjects)
 
+    def current_member_ids(self, circle_id: str) -> list[str]:
+        """Who is in the circle now, for a find's pushes (issue #63)."""
+        return [_member_id(item) for item in self._query(pk=_meta_pk(circle_id), sk_prefix="MEMBER#") if _is_current(item)]
+
+    def circle_names(self, circle_ids: list[str]) -> dict[str, str]:
+        """The circles' names by id, for a push's words."""
+        metas = self._batch_get([_meta_key(circle_id) for circle_id in circle_ids])
+        return {pk.removeprefix("CIRCLE#"): item["name"] for pk, item in metas.items()}
+
+    def share_a_circle(self, subject: str, other: str) -> bool:
+        """Whether the two accounts are in a circle together now."""
+        return bool(set(self.circle_ids_of(subject)) & set(self.circle_ids_of(other)))
+
     # Writes.
 
     def create(self, subject: str, name: str, time_zone: str) -> CircleDetail:

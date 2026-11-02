@@ -17,6 +17,10 @@ class Settings:
     # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
     # the stack has one; the feed then gives keys without URLs.
     art_cdn_base_url: str | None = None
+    # The APNs token key's Secrets Manager secret (issue #63; infra/scripts/push-wizard.sh stores it). None: no pushes.
+    apns_secret_name: str | None = None
+    # The app's bundle id, the apns-topic of every push.
+    apns_topic: str = "com.matthewcelia.mybirdjournal"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -30,6 +34,8 @@ class Settings:
             dynamodb_endpoint=env.get("DYNAMODB_ENDPOINT") or None,
             invite_base_url=(env.get("INVITE_BASE_URL") or cls.invite_base_url).rstrip("/"),
             art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
+            apns_secret_name=env.get("APNS_SECRET_NAME") or None,
+            apns_topic=env.get("APNS_TOPIC") or cls.apns_topic,
         )
 
 

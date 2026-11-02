@@ -18,6 +18,8 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
 from birdjournal_api.app import create_app
+from birdjournal_api.devices import Device
+from birdjournal_api.pushes import Push, SendResult
 from birdjournal_api.settings import Settings
 from birdjournal_api.tables import create_table
 from tests.tokens import CLIENT_ID, ISSUER, TestIssuer
@@ -94,8 +96,33 @@ def clock() -> Clock:
     return Clock()
 
 
+class FakeApns:
+    """Records what the API asked APNs to send (issue #63). Tokens in `gone` answer as unregistered."""
+
+    def __init__(self) -> None:
+        self.sent: list[tuple[Device, Push]] = []
+        self.gone: set[str] = set()
+
+    def send(self, device: Device, push: Push) -> SendResult:
+        if device.token in self.gone:
+            return SendResult.GONE
+        self.sent.append((device, push))
+        return SendResult.SENT
+
+    def to(self, token: str) -> list[Push]:
+        return [push for device, push in self.sent if device.token == token]
+
+    def clear(self) -> None:
+        self.sent.clear()
+
+
 @pytest.fixture
-def client(settings: Settings, issuer: TestIssuer, clock: Clock) -> Iterator[TestClient]:
-    app = create_app(settings, signing_key=issuer.signing_key, clock=clock)
+def apns() -> FakeApns:
+    return FakeApns()
+
+
+@pytest.fixture
+def client(settings: Settings, issuer: TestIssuer, clock: Clock, apns: FakeApns) -> Iterator[TestClient]:
+    app = create_app(settings, signing_key=issuer.signing_key, clock=clock, push_sender=apns)
     with TestClient(app) as client:
         yield client
