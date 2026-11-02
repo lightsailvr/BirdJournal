@@ -56,6 +56,8 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertTrue(picker.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         picker.buttons["Compare birds"].tap()
         let maya = app.buttons["compareWith-maya"]
+        // Below the goal card (issue #65): the list builds the friends only once scrolled to.
+        for _ in 0..<6 where !maya.exists || !maya.isHittable { app.swipeUp() }
         XCTAssertTrue(maya.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons["compareWith-fake-sub"].exists, "never yourself")
         screenshot(app, "64-compare-friends")
