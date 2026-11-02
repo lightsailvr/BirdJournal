@@ -105,10 +105,10 @@ private struct FindMark: View {
     var body: some View {
         Text(title)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(title == "Legendary" ? Color.goldInk : Color.mossText)
+            .foregroundStyle(title == "Legendary" ? Color.goldInk : Color.moss)
             .padding(.horizontal, 7)
             .padding(.vertical, 2)
-            .background(title == "Legendary" ? Color.goldWash : Color.moss.opacity(0.18), in: .capsule)
+            .background(title == "Legendary" ? Color.goldWash : Color.moss.opacity(0.14), in: .capsule)
     }
 }
 
