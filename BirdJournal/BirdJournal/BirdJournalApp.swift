@@ -71,6 +71,14 @@ struct BirdJournalApp: App {
         // Finds (issue #62): adds made while signed in and sharing reach the birder's circles.
         let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
         sightings.findOutbox = findOutbox
+        // Painted art in finds (issue #70): the find follows the card's art, and a painting is acknowledged only once
+        // the find's put has gone, so the server never deletes one its find is about to show.
+        art.artChanged = { [weak findOutbox] identifier in
+            guard let findOutbox else { return }
+            findOutbox.changed(identifier)
+            await findOutbox.flush()
+        }
+        art.holdsReceipt = { [weak findOutbox] identifier in findOutbox?.isWaitingToPublish(identifier) ?? false }
         _findOutbox = State(initialValue: findOutbox)
         // Pushes (issue #63): permission at the first circle, the token to the account, and a refresh on every push.
         let pushes = PushCenter.forApp(account: account, client: circles.client) { UIApplication.shared.registerForRemoteNotifications() }

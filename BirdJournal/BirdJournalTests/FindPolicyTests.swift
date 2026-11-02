@@ -93,4 +93,31 @@ struct FindPolicyTests {
         #expect(FindPolicy.packArtKey(packID: "us-ca-sd", file: "art/calypte-anna.png") == "packs/us-ca-sd/calypte-anna.jpg")
         #expect(FindPolicy.packArtKey(packID: "us-ca-la", file: "art/x.v2.avif") == "packs/us-ca-la/x.v2.jpg", "the last extension only")
     }
+
+    // Issue #70: the card's painting on the find.
+
+    @Test("a card showing a painting sends it, falling back to its pack art; still ten keys and no coordinate")
+    func paintedArt() throws {
+        var input = Self.input(isThreatened: true)
+        input.paintedArtKey = "art/fake-sub/abc.jpg"
+        let find = try #require(FindPolicy.find(for: input, sharing: .automatic))
+        #expect(find.art == FindPolicy.Find.Art(
+            kind: "painted", key: "art/fake-sub/abc.jpg",
+            fallback: .init(kind: "pack", key: "packs/us-ca-la/sayornis-nigricans.jpg")
+        ))
+        #expect(find.place == FindPolicy.secretSpot, "the secret spot holds with a painting")
+        let json = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(find)) as? [String: Any])
+        #expect(json.keys.count == 10)
+        let art = try #require(json["art"] as? [String: Any])
+        #expect(Set(art.keys) == ["kind", "key", "fallback"])
+
+        let pack = try #require(FindPolicy.find(for: Self.input(), sharing: .automatic))
+        let packJSON = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(pack)) as? [String: Any])
+        #expect(Set(try #require(packJSON["art"] as? [String: Any]).keys) == ["kind", "key"], "pack art has no fallback")
+
+        var noPack = Self.input(packArt: nil)
+        noPack.paintedArtKey = "art/fake-sub/abc.jpg"
+        #expect(FindPolicy.find(for: noPack, sharing: .automatic)?.art == .init(kind: "painted", key: "art/fake-sub/abc.jpg"))
+        #expect(FindPolicy.card(for: input, choices: .init(), circleIDs: ["c"], photoKey: nil).find.art?.kind == "painted")
+    }
 }

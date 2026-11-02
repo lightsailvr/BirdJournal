@@ -55,10 +55,10 @@ extension CardArt {
     /// The painting arrived and is stored at `path`: it waits for the birder beside its original. Returns whether it
     /// applied and the earlier waiting painting it replaced, for the caller to delete.
     @discardableResult
-    public mutating func photoJobReady(id: UUID, path: String) -> (applied: Bool, replaced: String?) {
+    public mutating func photoJobReady(id: UUID, path: String, serverKey: String? = nil) -> (applied: Bool, replaced: String?) {
         guard photoJob?.id == id else { return (false, nil) }
         let replaced = photoPreview?.path
-        photoPreview = ArtImage(path: path, state: .preview, source: photoJob?.source)
+        photoPreview = ArtImage(path: path, state: .preview, source: photoJob?.source, serverKey: serverKey)
         photoJob?.state = .ready
         return (true, replaced == path ? nil : replaced)
     }
@@ -80,7 +80,7 @@ extension CardArt {
     public mutating func approvePhotoArt() -> String? {
         guard let preview = photoPreview, preview.path != nil else { return nil }
         let replaced = photo?.path
-        photo = ArtImage(path: preview.path, state: .ready, source: preview.source)
+        photo = ArtImage(path: preview.path, state: .ready, source: preview.source, serverKey: preview.serverKey)
         photoPreview = nil
         return replaced == preview.path ? nil : replaced
     }

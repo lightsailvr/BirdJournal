@@ -121,7 +121,8 @@ final class FindOutbox {
         published.last { $0.identifier == identifier && $0.owner == signedInOwner }?.isLegendary
     }
 
-    /// A published sighting changed (Heard or Seen): its find is put again. Others change nothing.
+    /// A published sighting changed (Heard or Seen, or the art its card shows, issue #70): its find is put again.
+    /// Others change nothing.
     func changed(_ identifier: UUID) {
         guard let owner = owner(of: identifier) else { return }
         enqueue(.put, identifier, owner: owner)
@@ -323,7 +324,7 @@ extension FindOutbox {
             identifier: sighting.identifier, speciesID: sighting.speciesID, commonName: packs.commonName(for: sighting),
             method: sighting.method, confirmedAt: sighting.confirmedAt, rarity: sighting.rarity?.label, isLegendary: isLegendary,
             isThreatened: isThreatened, placeName: placeName, packArt: art.map { ($0.pack.info.id, $0.art.file) },
-            note: sighting.note, caption: sighting.caption?.text
+            paintedArtKey: sighting.art.shownPaintingKey, note: sighting.note, caption: sighting.caption?.text
         )
     }
 }
