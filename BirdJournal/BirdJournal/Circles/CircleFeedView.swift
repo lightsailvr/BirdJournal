@@ -69,6 +69,9 @@ struct FindRow: View {
                     }
                     .padding(.top, 2)
                 }
+                if let card = item.card {
+                    SharedCardExtras(card: card)
+                }
             }
         }
         .padding(.vertical, 2)
@@ -96,6 +99,37 @@ struct FindRow: View {
         if item.circleFirst { marks.append("First for the circle") }
         if let rarity = item.rarity, rarity == .rare || rarity == .exceptional { marks.append(rarity.title) }
         return marks
+    }
+}
+
+/// What a card shared by hand to this circle adds (issue #66): its caption, the finder's note and their original
+/// photo, faces blurred.
+private struct SharedCardExtras: View {
+    let card: FeedItem.SharedCard
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let caption = card.caption {
+                Text(caption).font(JournalFont.supporting.italic()).foregroundStyle(Color.ink)
+            }
+            if let note = card.note {
+                Text("“\(note)”").font(JournalFont.supporting).foregroundStyle(Color.ink)
+            }
+            if let url = card.photo?.url {
+                Color.raised
+                    .aspectRatio(3 / 2, contentMode: .fit)
+                    .overlay {
+                        AsyncImage(url: url) { phase in
+                            if let image = phase.image { image.resizable().scaledToFill() } else { ProgressView() }
+                        }
+                        .allowsHitTesting(false)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                    .accessibilityLabel("Their photo")
+            }
+        }
+        .padding(.top, 4)
+        .accessibilityIdentifier("shared-card-extras")
     }
 }
 
