@@ -1,4 +1,4 @@
-"""The API: account get and update (issue #60), circles (issue #61) and finds (issue #62). Later tickets add their routers here."""
+"""The API: account get and update (issue #60), circles (issue #61) and finds (issue #62), with shared cards (issue #66). Later tickets add their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -15,6 +15,7 @@ from birdjournal_api.circles import CircleStore
 from birdjournal_api.circles_api import router as circles_router
 from birdjournal_api.finds import FindStore
 from birdjournal_api.finds_api import router as finds_router
+from birdjournal_api.photos import PhotoStore, S3PhotoStore
 from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
@@ -50,8 +51,10 @@ def create_app(
     *,
     signing_key: SigningKeyResolver | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    photos: PhotoStore | None = None,
 ) -> FastAPI:
-    """The API over the settings' table. Tests pass a signing key from their own issuer and a clock."""
+    """The API over the settings' table. Tests pass a signing key from their own issuer, a clock and a photo store;
+    otherwise the photos of shared cards go to the art bucket, when the stack has one."""
     dynamodb = boto3.resource("dynamodb", region_name=settings.region, endpoint_url=settings.dynamodb_endpoint)
     app = FastAPI(title="BirdJournal API")
     app.state.verifier = TokenVerifier(
@@ -61,7 +64,11 @@ def create_app(
     )
     app.state.accounts = AccountStore(dynamodb.Table(settings.table_name), clock)
     app.state.circles = CircleStore(dynamodb, settings.table_name, app.state.accounts, clock)
-    app.state.finds = FindStore(dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock)
+    if photos is None and settings.art_bucket is not None:
+        photos = S3PhotoStore(boto3.client("s3", region_name=settings.region), settings.art_bucket)
+    app.state.photos = photos
+    app.state.clock = clock
+    app.state.finds = FindStore(dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos)
     app.state.invite_base_url = settings.invite_base_url
     app.state.art_cdn_base_url = settings.art_cdn_base_url
     app.include_router(circles_router)

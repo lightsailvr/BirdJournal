@@ -17,6 +17,9 @@ class Settings:
     # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
     # the stack has one; the feed then gives keys without URLs.
     art_cdn_base_url: str | None = None
+    # The art CDN's bucket (`ART_BUCKET`): shared cards' original photos go under photos/ (issue #66). None before the
+    # stack has one; sharing a photo then answers 503.
+    art_bucket: str | None = None
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -30,6 +33,7 @@ class Settings:
             dynamodb_endpoint=env.get("DYNAMODB_ENDPOINT") or None,
             invite_base_url=(env.get("INVITE_BASE_URL") or cls.invite_base_url).rstrip("/"),
             art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
+            art_bucket=env.get("ART_BUCKET") or None,
         )
 
 

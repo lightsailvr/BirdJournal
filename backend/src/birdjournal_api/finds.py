@@ -19,6 +19,10 @@ Items, beside the account's and the circles' (tables.py, circles.py):
   is read, so a deleted first passes the mark on with nothing to recompute.
 - `FIND#<sub>#<sighting id>` / `REACTION#...`: reactions by find, written by the reactions ticket (#63); a delete
   removes the whole partition.
+- `FIND#<sub>#<sighting id>` / `SHARE#<circle id>`: a card shared by hand to that circle (issue #66): the note, the
+  caption and the original photo the birder chose, and whether the place was left out. Every write of the find's feed
+  items lays the circle's share over the find, so the extras show in the circles chosen and nowhere else, and a later
+  put (Heard changed to Seen) keeps them. In the reactions' partition, so a delete takes them with it.
 
 Not transactional: a find can go to more circles than one transaction holds. A put writes the find (with the circles it
 goes to) before its feed items, and a delete removes the items before the find, so the find always lists every circle
@@ -30,7 +34,7 @@ import binascii
 import re
 import unicodedata
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
@@ -39,12 +43,17 @@ from boto3.dynamodb.conditions import Key
 
 from birdjournal_api.accounts import AccountStore
 from birdjournal_api.circles import CircleStore, NotFound
+from birdjournal_api.photos import PHOTO_MAX_BYTES, PhotoStore, is_photo_key_of
 
 SECRET_SPOT = "a secret spot"
 PLACE_MAX = 80
 NAME_MAX = 120
 FEED_PAGE_DEFAULT = 20
 FEED_PAGE_MAX = 50
+NOTE_MAX = 2000
+CAPTION_MAX = 300
+# More than any one birder's circles in the friends phase; a bound on what one share writes.
+SHARE_CIRCLES_MAX = 50
 # A decimal number with two or more decimals (34.13), a degree sign, or degrees-minutes notation: what a coordinate
 # looks like in text, or minutes and seconds after a number (34 8' N). A city name has none of these.
 _COORDINATE = re.compile(r"\d+[.,]\d{2,}|°|\d\s*['′″\"]")
@@ -103,6 +112,24 @@ class Find:
 
 
 @dataclass(frozen=True)
+class CardExtras:
+    """What a card shared by hand adds to the find, in the circles it was shared to (issue #66). The phone's find
+    policy includes each only when the birder chose it."""
+
+    note: str | None = None
+    caption: str | None = None
+    # The original photo, faces blurred and metadata stripped on the phone: a `photos/<sub>/...` key.
+    photo_key: str | None = None
+
+
+@dataclass(frozen=True)
+class Share:
+    extras: CardExtras
+    # The birder turned the city off: the card shows no place in this circle, whatever the find says.
+    place_hidden: bool
+
+
+@dataclass(frozen=True)
 class FeedItem:
     owner: str
     owner_name: str | None
@@ -110,6 +137,8 @@ class FeedItem:
     content: FindContent
     posted_at: datetime
     circle_first: bool
+    # The card's extras when it was shared by hand to this circle; None for an automatic find.
+    card: CardExtras | None = None
 
 
 @dataclass(frozen=True)
@@ -120,6 +149,25 @@ class FeedPage:
 
 class BadCursor(ValueError):
     pass
+
+
+class PhotoUnavailable(Exception):
+    """The stack has no art bucket, so no photo can be shared."""
+
+
+def clean_text(raw: str | None, *, field: str, limit: int) -> str | None:
+    """A note or caption: trimmed, none when empty, at most `limit` characters, line breaks and tabs the only control
+    characters."""
+    if raw is None:
+        return None
+    text = raw.strip()
+    if not text:
+        return None
+    if len(text) > limit:
+        raise ValueError(f"The {field} is longer than {limit} characters")
+    if any(character not in "\n\t" and unicodedata.category(character).startswith("C") for character in text):
+        raise ValueError(f"The {field} has a control character")
+    return text
 
 
 def clean_place(raw: str | None, *, threatened: bool) -> str | None:
@@ -170,12 +218,13 @@ def clean_art(kind: ArtKind, key: str) -> ArtReference:
 class FindStore:
     def __init__(
         self, dynamodb: Any, table_name: str, accounts: AccountStore, circles: CircleStore,
-        clock: Callable[[], datetime],
+        clock: Callable[[], datetime], photos: PhotoStore | None = None,
     ) -> None:
         self._table = dynamodb.Table(table_name)
         self._accounts = accounts
         self._circles = circles
         self._clock = clock
+        self._photos = photos
 
     def put(self, owner: str, sighting_id: str, content: FindContent) -> tuple[Find, bool]:
         """Writes the find; True when it is new. A new find goes to the owner's current circles; a repeated put
@@ -197,37 +246,84 @@ class FindStore:
             owner=owner, sighting_id=sighting_id, content=content, circle_ids=circle_ids,
             created_at=created_at, updated_at=now,
         )
-        posted_at = _timestamp(created_at)
-        # The find first: a retry after a failure part way reads the circles from it, not from today's memberships.
-        self._table.put_item(
-            Item={
-                **_find_key(owner, sighting_id),
-                **_content_attributes(content),
-                "circle_ids": circle_ids,
-                "created_at": posted_at,
-                "updated_at": _timestamp(now),
-            }
+        self._write(find, self._shares(owner, sighting_id) if existing is not None else {})
+        return find, existing is None
+
+    def share(
+        self, owner: str, sighting_id: str, content: FindContent, circle_ids: list[str], extras: CardExtras,
+        *, include_place: bool,
+    ) -> tuple[Find, bool]:
+        """A card shared by hand (issue #66): the find with the extras chosen, in the circles chosen, which must be
+        the owner's current circles (NotFound otherwise, so a circle's existence never leaks). It is the only way a
+        private birder's sighting reaches a circle. A card already there (an automatic find, or an earlier share) goes
+        to the chosen circles it wasn't in yet, keeps the circles it was in, and gets the extras only in the chosen
+        ones; sharing again to a circle replaces what it showed there. True when the find is new."""
+        self._accounts.get_or_create(owner)
+        chosen = list(dict.fromkeys(circle_ids))
+        if not chosen or len(chosen) > SHARE_CIRCLES_MAX:
+            raise ValueError("circles")
+        for circle_id in chosen:
+            if not self._circles.is_member(owner, circle_id):
+                raise NotFound()
+        if extras.photo_key is not None:
+            if self._photos is None:
+                raise PhotoUnavailable()
+            if not is_photo_key_of(extras.photo_key, owner):
+                raise ValueError("photo_key")
+            size = self._photos.size(extras.photo_key)
+            if size is None:
+                raise ValueError("photo_missing")
+            if size > PHOTO_MAX_BYTES:
+                self._photos.delete(extras.photo_key)
+                raise ValueError("photo_too_large")
+        now = self._clock()
+        existing = self._get(_find_key(owner, sighting_id))
+        shares = self._shares(owner, sighting_id) if existing is not None else {}
+        if existing is None:
+            all_circles = chosen
+            created_at = now
+        else:
+            previous_circles = list(existing.get("circle_ids", []))
+            all_circles = previous_circles + [circle_id for circle_id in chosen if circle_id not in previous_circles]
+            created_at = _parse(existing["created_at"])
+            previous = _content(existing)
+            if not include_place:
+                # The city left out applies to the circles chosen; the find keeps the place its other circles show.
+                content = replace(content, place=previous.place)
+            if (previous.found_at, previous.scientific_name) != (content.found_at, content.scientific_name):
+                self._delete_items(_item_keys(owner, sighting_id, previous, previous_circles))
+        if extras.photo_key is not None and self._photos is not None:
+            self._photos.keep(extras.photo_key)
+        replaced = [shares[circle_id].extras.photo_key for circle_id in chosen if circle_id in shares]
+        new_share = Share(extras=extras, place_hidden=not include_place)
+        for circle_id in chosen:
+            shares[circle_id] = new_share
+        find = Find(
+            owner=owner, sighting_id=sighting_id, content=content, circle_ids=all_circles,
+            created_at=created_at, updated_at=now,
         )
+        # The find (with every circle it may be in), then the shares, then the items: a retry of either the share or
+        # a plain put rebuilds the items from what is already written.
+        self._write_find(find)
         with self._table.batch_writer() as batch:
-            for circle_id in circle_ids:
-                batch.put_item(
-                    Item={
-                        **_feed_key(circle_id, owner, sighting_id, content),
-                        **_content_attributes(content),
-                        "owner": owner,
-                        "sighting_id": sighting_id,
-                        "posted_at": posted_at,
-                    }
-                )
-                batch.put_item(
-                    Item={**_species_key(circle_id, owner, sighting_id, content), "owner": owner, "sighting_id": sighting_id}
-                )
+            for circle_id in chosen:
+                batch.put_item(Item={**_share_key(owner, sighting_id, circle_id), **_share_attributes(new_share, now)})
+        self._write_items(find, shares)
+        still_shown = {share.extras.photo_key for share in shares.values()}
+        for key in replaced:
+            if key is not None and key not in still_shown and self._photos is not None:
+                self._photos.delete(key)
         return find, existing is None
 
     def delete(self, owner: str, sighting_id: str) -> None:
         """Removes the find with its feed items, species entries and reactions. Deleting one that isn't there (a
-        retried delete) changes nothing."""
+        retried delete) changes nothing. The photos its shared cards showed go first, so a delete cut short is
+        retried while the shares still name them."""
         existing = self._get(_find_key(owner, sighting_id))
+        if self._photos is not None:
+            for share in self._shares(owner, sighting_id).values():
+                if share.extras.photo_key is not None:
+                    self._photos.delete(share.extras.photo_key)
         if existing is not None:
             content = _content(existing)
             self._delete_items(_item_keys(owner, sighting_id, content, list(existing.get("circle_ids", []))))
@@ -272,10 +368,66 @@ class FindStore:
                 content=_content(item),
                 posted_at=_parse(item["posted_at"]),
                 circle_first=firsts.get(str(item["scientific_name"])) == (item["owner"], item["sighting_id"]),
+                card=_card(item),
             )
             for item in items
         ]
         return FeedPage(items=page, next_cursor=_encode_cursor(last["sk"]) if last else None)
+
+    def _write_find(self, find: Find) -> None:
+        self._table.put_item(
+            Item={
+                **_find_key(find.owner, find.sighting_id),
+                **_content_attributes(find.content),
+                "circle_ids": find.circle_ids,
+                "created_at": _timestamp(find.created_at),
+                "updated_at": _timestamp(find.updated_at),
+            }
+        )
+
+    def _write(self, find: Find, shares: dict[str, Share]) -> None:
+        # The find first: a retry after a failure part way reads the circles from it, not from today's memberships.
+        self._write_find(find)
+        self._write_items(find, shares)
+
+    def _write_items(self, find: Find, shares: dict[str, Share]) -> None:
+        """One feed item and species entry per circle the find is in, each the find with that circle's share laid
+        over it."""
+        owner, sighting_id, content = find.owner, find.sighting_id, find.content
+        posted_at = _timestamp(find.created_at)
+        with self._table.batch_writer(overwrite_by_pkeys=["pk", "sk"]) as batch:
+            for circle_id in find.circle_ids:
+                batch.put_item(
+                    Item={
+                        **_feed_key(circle_id, owner, sighting_id, content),
+                        **_content_attributes(_shown(content, shares.get(circle_id))),
+                        **_card_attributes(shares.get(circle_id)),
+                        "owner": owner,
+                        "sighting_id": sighting_id,
+                        "posted_at": posted_at,
+                    }
+                )
+                batch.put_item(
+                    Item={**_species_key(circle_id, owner, sighting_id, content), "owner": owner, "sighting_id": sighting_id}
+                )
+
+    def _shares(self, owner: str, sighting_id: str) -> dict[str, Share]:
+        """The find's cards shared by hand, by circle."""
+        shares: dict[str, Share] = {}
+        kwargs: dict[str, Any] = {
+            "KeyConditionExpression": Key("pk").eq(_reactions_pk(owner, sighting_id)) & Key("sk").begins_with("SHARE#"),
+            "ConsistentRead": True,
+        }
+        while True:
+            response = self._table.query(**kwargs)
+            for item in response["Items"]:
+                shares[str(item["sk"]).removeprefix("SHARE#")] = Share(
+                    extras=CardExtras(note=item.get("note"), caption=item.get("caption"), photo_key=item.get("photo_key")),
+                    place_hidden=bool(item.get("place_hidden", False)),
+                )
+            if "LastEvaluatedKey" not in response:
+                return shares
+            kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
 
     def _first_of(self, circle_id: str, scientific_name: str) -> tuple[str, str] | None:
         """The earliest surviving item of the species in the circle: (owner, sighting id)."""
@@ -338,6 +490,38 @@ def _content_attributes(content: FindContent) -> dict[str, Any]:
     return attributes
 
 
+def _shown(content: FindContent, share: Share | None) -> FindContent:
+    """The find as a circle sees it: without a place where the card shared there left the city out."""
+    if share is not None and share.place_hidden:
+        return replace(content, place=None)
+    return content
+
+
+def _card_attributes(share: Share | None) -> dict[str, Any]:
+    if share is None:
+        return {}
+    attributes: dict[str, Any] = {"shared_card": True}
+    if share.extras.note is not None:
+        attributes["note"] = share.extras.note
+    if share.extras.caption is not None:
+        attributes["caption"] = share.extras.caption
+    if share.extras.photo_key is not None:
+        attributes["photo_key"] = share.extras.photo_key
+    return attributes
+
+
+def _share_attributes(share: Share, now: datetime) -> dict[str, Any]:
+    attributes = _card_attributes(share)
+    attributes.pop("shared_card")
+    return {**attributes, "place_hidden": share.place_hidden, "shared_at": _timestamp(now)}
+
+
+def _card(item: dict[str, Any]) -> CardExtras | None:
+    if not item.get("shared_card"):
+        return None
+    return CardExtras(note=item.get("note"), caption=item.get("caption"), photo_key=item.get("photo_key"))
+
+
 def _content(item: dict[str, Any]) -> FindContent:
     art = (
         ArtReference(kind=ArtKind(item["art_kind"]), key=item["art_key"])
@@ -368,6 +552,10 @@ def _item_keys(owner: str, sighting_id: str, content: FindContent, circle_ids: l
 
 def _find_key(owner: str, sighting_id: str) -> dict[str, str]:
     return {"pk": f"ACCOUNT#{owner}", "sk": f"FIND#{sighting_id}"}
+
+
+def _share_key(owner: str, sighting_id: str, circle_id: str) -> dict[str, str]:
+    return {"pk": _reactions_pk(owner, sighting_id), "sk": f"SHARE#{circle_id}"}
 
 
 def _feed_pk(circle_id: str) -> str:
