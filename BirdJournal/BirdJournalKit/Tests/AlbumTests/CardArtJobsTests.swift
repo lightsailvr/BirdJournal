@@ -114,4 +114,49 @@ struct CardArtJobsTests {
         #expect(try context.fetch(FetchDescriptor<Sighting>()).count == 1)
         #expect(fetched.filePaths == ["frame.jpg", "art-1.jpg"])
     }
+
+    // Issue #70: the painting's server key, for the find to show what the card shows.
+
+    @Test("The card's painting key follows the card face: approved photo art, then scene art unless pack art is chosen")
+    func shownPaintingKey() {
+        var art = CardArt()
+        #expect(art.shownPaintingKey == nil)
+        art.startSceneJob(id: Self.first)
+        #expect(art.shownPaintingKey == nil, "pending: the find keeps its pack art")
+        art.sceneJobReady(id: Self.first, path: "scene.jpg", serverKey: "art/ada/scene.jpg")
+        #expect(art.scene?.serverKey == "art/ada/scene.jpg")
+        #expect(art.shownPaintingKey == "art/ada/scene.jpg")
+        art.prefersPackArt = true
+        #expect(art.shownPaintingKey == nil)
+        art.prefersPackArt = false
+        art.startPhotoJob(id: Self.second, source: "photo.jpg")
+        art.photoJobReady(id: Self.second, path: "preview.jpg", serverKey: "art/ada/photo.jpg")
+        #expect(art.shownPaintingKey == "art/ada/scene.jpg", "a preview waits for the birder and isn't on the card")
+        #expect(art.photoJobAwaitingDecision == Self.second)
+        art.approvePhotoArt()
+        #expect(art.photo?.serverKey == "art/ada/photo.jpg")
+        #expect(art.shownPaintingKey == "art/ada/photo.jpg")
+        #expect(art.photoJobAwaitingDecision == nil)
+    }
+
+    @Test("A painting landed before #70 has no key, so its find keeps pack art; art saved then still decodes")
+    func paintingWithoutKey() throws {
+        var art = CardArt()
+        art.startSceneJob(id: Self.first)
+        art.sceneJobReady(id: Self.first, path: "scene.jpg")
+        #expect(art.shownPaintingKey == nil)
+        let saved = #"{"prefersPackArt":false,"scene":{"path":"scene.jpg","state":"ready"}}"#
+        let decoded = try JSONDecoder().decode(CardArt.self, from: Data(saved.utf8))
+        #expect(decoded.scene?.serverKey == nil && decoded.shownPaintingKey == nil)
+    }
+
+    @Test("Keep original lets the waiting painting go: nothing waits for a decision and the card's key is unchanged")
+    func keepOriginal() {
+        var art = CardArt()
+        art.startPhotoJob(id: Self.second, source: "photo.jpg")
+        art.photoJobReady(id: Self.second, path: "preview.jpg", serverKey: "art/ada/photo.jpg")
+        art.keepOriginalPhoto()
+        #expect(art.photoJobAwaitingDecision == nil)
+        #expect(art.shownPaintingKey == nil)
+    }
 }

@@ -13,7 +13,14 @@ The lifecycle:
    the key the job was given (`art/<sub>/<unguessable>.jpg`) and reports `ready`, or `failed` with a reason. Either way
    the upload is deleted.
 4. The phone learns of it by polling its open jobs (a silent push joins with #63's device tokens), downloads the art
-   and says it has it (`received`). Painted art is then deleted from the art bucket unless a find shows it (#70).
+   and says it has it (`received`). Painted art is then deleted from the art bucket unless the sighting's find shows
+   it (#70, ADR-0004: the server keeps painted art only while a find or a shared card shows it).
+
+Painted art on finds (issue #70): a find (or a card shared by hand, which is the same find) may name a painting by its
+key once the phone has it. `PaintedArt` is what the finds ask: whether the server still holds a painting for that
+sighting, and to let one go once no find shows it. A painting is deleted at whichever comes last of the phone's
+`received` and the last find showing it moving on (another painting, pack art, or the find deleted); the job records
+`art_deleted_at`, so a later put naming it falls back to pack art instead of pointing at nothing.
 
 Which jobs are painted is server configuration (`ART_AUTO_PAINT`, `ART_DAILY_ALLOWANCE`; `paint_policy`). In the
 friends phase every job is painted. At the public launch Legendary and Rare-or-rarer adds are painted automatically, and
@@ -114,21 +121,15 @@ class ArtNotifier(Protocol):
 
 
 class ArtRetention(Protocol):
-    """Whether something shared still shows a painting (a find, #70, or a shared card, #66), so it must stay."""
+    """Whether something shared still shows a painting, so it must stay: the sighting's find (#70), which is also what
+    a card shared by hand (#66) shows."""
 
-    def is_shown(self, owner: str, key: str) -> bool: ...
+    def is_shown(self, owner: str, sighting_id: str, key: str) -> bool: ...
 
 
 class NoNotifier:
     def job_finished(self, job: ArtJob) -> None:
         return None
-
-
-class NothingShared:
-    """Until finds carry painted art (#70), nothing on the server shows it, so it goes once the phone has it."""
-
-    def is_shown(self, owner: str, key: str) -> bool:
-        return False
 
 
 def paint_policy(rule: AutoPaintRule, *, kind: Kind, legendary: bool, rarity: str | None, requested: bool) -> Cost | None:
@@ -178,6 +179,8 @@ class ArtJob:
     queued_at: datetime | None = None
     finished_at: datetime | None = None
     received_at: datetime | None = None
+    # When the painting left the art bucket (#70): received with nothing showing it, or let go by its last find.
+    art_deleted_at: datetime | None = None
     failure: str | None = None
     provenance: str | None = None
 
@@ -370,12 +373,18 @@ class ArtJobStore:
             raise WrongState()
         if job.received_at is not None:
             return job
-        if job.state == "ready" and not self._retention.is_shown(owner, job.output_key):
-            self.storage.delete_art(job.output_key)
         now = self._clock()
+        sets = ["received_at = :now", "#ttl = :ttl"]
+        if (
+            job.state == "ready"
+            and job.art_deleted_at is None
+            and not self._retention.is_shown(owner, job.sighting_id, job.output_key)
+        ):
+            self.storage.delete_art(job.output_key)
+            sets.append("art_deleted_at = :now")
         item = self._table.update_item(
             Key=_key(owner, job_id),
-            UpdateExpression="SET received_at = :now, #ttl = :ttl",
+            UpdateExpression="SET " + ", ".join(sets),
             ExpressionAttributeNames={"#ttl": "ttl"},
             ExpressionAttributeValues={":now": now.isoformat(), ":ttl": int((now + KEPT_AFTER_RECEIVED).timestamp())},
             ReturnValues="ALL_NEW",
@@ -528,6 +537,7 @@ class ArtJobStore:
             queued_at=moment("queued_at"),
             finished_at=moment("finished_at"),
             received_at=moment("received_at"),
+            art_deleted_at=moment("art_deleted_at"),
             failure=item.get("failure"),
             provenance=item.get("provenance"),
         )
@@ -535,6 +545,83 @@ class ArtJobStore:
 
 def _key(owner: str, job_id: str) -> dict[str, str]:
     return {"pk": f"ACCOUNT#{owner}", "sk": f"ARTJOB#{job_id}"}
+
+
+class PaintedArt:
+    """Painted art as the finds see it (issue #70, ADR-0004): whether a painting may go on a find, and letting one go
+    when its last find moves on.
+
+    A painting is found by its key among the owner's jobs: one query of `ACCOUNT#<sub>` / `ARTJOB#…` with a filter, no
+    index (a birder has a few jobs a day, kept 30 days after the phone received them).
+    """
+
+    def __init__(self, table: Any, storage: ArtStorage | None, clock: Callable[[], datetime]) -> None:
+        self._table = table
+        self._storage = storage
+        self._clock = clock
+
+    def is_held(self, owner: str, sighting_id: str, key: str) -> bool:
+        """The key is a painting of this owner's job for this sighting, ready, and still in the art bucket. Anything
+        else (another account's key, another sighting's painting, one already deleted, one never painted) is not, so
+        no find ever points at nothing or at someone else's painting."""
+        item = self._job_of(owner, key)
+        return (
+            item is not None
+            and item.get("sighting_id") == sighting_id
+            and item.get("state") == "ready"
+            and "art_deleted_at" not in item
+        )
+
+    def release(self, owner: str, key: str) -> None:
+        """No find shows the painting any more. It goes now if the phone already has it (or its job is so old the
+        `ttl` took it, long after the phone did); otherwise the phone's `received` deletes it, since nothing shows it."""
+        if self._storage is None or not key.startswith(f"art/{owner}/"):
+            return
+        item = self._job_of(owner, key)
+        if item is not None and ("received_at" not in item or "art_deleted_at" in item):
+            return
+        self._storage.delete_art(key)
+        if item is not None:
+            try:
+                self._table.update_item(
+                    Key={"pk": item["pk"], "sk": item["sk"]},
+                    UpdateExpression="SET art_deleted_at = :now",
+                    ConditionExpression="attribute_exists(pk)",
+                    ExpressionAttributeValues={":now": self._clock().isoformat()},
+                )
+            except ClientError as error:
+                if not _conditional(error):
+                    raise
+
+    def _job_of(self, owner: str, key: str) -> dict[str, Any] | None:
+        """The owner's job that painted `key`; None for a key outside the owner's paintings, or with no art bucket."""
+        if self._storage is None or not key.startswith(f"art/{owner}/"):
+            return None
+        query: dict[str, Any] = {
+            "KeyConditionExpression": "pk = :pk AND begins_with(sk, :prefix)",
+            "FilterExpression": "output_key = :key",
+            "ExpressionAttributeValues": {":pk": f"ACCOUNT#{owner}", ":prefix": "ARTJOB#", ":key": key},
+            "ConsistentRead": True,
+        }
+        while True:
+            page = self._table.query(**query)
+            if page["Items"]:
+                item: dict[str, Any] = page["Items"][0]
+                return item
+            if "LastEvaluatedKey" not in page:
+                return None
+            query["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+
+
+class FindsShowArt:
+    """The real retention rule (#70): a painting stays while its sighting's find shows it. A card shared by hand is
+    that same find in the circles chosen, so it counts too; a private birder with no find has nothing showing it."""
+
+    def __init__(self, find_art: Callable[[str, str], str | None]) -> None:
+        self._find_art = find_art
+
+    def is_shown(self, owner: str, sighting_id: str, key: str) -> bool:
+        return self._find_art(owner, sighting_id) == key
 
 
 def _day_start(moment: datetime) -> datetime:

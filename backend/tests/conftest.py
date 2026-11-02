@@ -125,16 +125,6 @@ class FakeNotifier:
         self.finished.append((job.id, job.state))
 
 
-class FakeRetention:
-    """Keys a find shows (#70 will look this up)."""
-
-    def __init__(self) -> None:
-        self.shown: set[str] = set()
-
-    def is_shown(self, owner: str, key: str) -> bool:
-        return key in self.shown
-
-
 @pytest.fixture
 def art_storage() -> FakeArtStorage:
     return FakeArtStorage()
@@ -148,11 +138,6 @@ def art_queue() -> FakeArtQueue:
 @pytest.fixture
 def art_notifier() -> FakeNotifier:
     return FakeNotifier()
-
-
-@pytest.fixture
-def art_retention() -> FakeRetention:
-    return FakeRetention()
 
 
 class Clock:
@@ -203,7 +188,6 @@ def client(
     art_storage: FakeArtStorage,
     art_queue: FakeArtQueue,
     art_notifier: FakeNotifier,
-    art_retention: FakeRetention,
     apns: FakeApns,
 ) -> Iterator[TestClient]:
     app = create_app(
@@ -213,7 +197,6 @@ def client(
         art_storage=art_storage,
         art_queue=art_queue,
         art_notifier=art_notifier,
-        art_retention=art_retention,
         push_sender=apns,
     )
     with TestClient(app) as client:

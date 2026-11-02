@@ -36,6 +36,9 @@ enum FindPolicy {
         var placeName: String?
         /// The species' pack art, as the pack names it: the pack's id and the `pack_art` file.
         var packArt: (packID: String, file: String)?
+        /// The server key of the painting the card shows (scene or approved photo art, issue #70), nil when it shows
+        /// pack art: `CardArt.shownPaintingKey`.
+        var paintedArtKey: String? = nil
         /// The birder's note; only a card shared by hand carries it, and only when chosen.
         var note: String? = nil
         /// The caption written for the sighting (#56): part of the card face, so a card shared by hand carries it.
@@ -87,9 +90,23 @@ enum FindPolicy {
     /// The find as the API takes it (`PUT /v1/finds/<sighting id>`): every field the server stores, and nothing else.
     struct Find: Codable, Equatable, Sendable {
         struct Art: Codable, Equatable, Sendable {
-            /// `pack`: a pack-art thumbnail on the art CDN. Painted art (`painted`) joins finds with #70.
+            /// `pack`: a pack-art thumbnail on the art CDN; `painted`: the card's painting (issue #70).
             var kind: String
             var key: String
+            /// With a painting only: the pack art the find shows if the server no longer holds the painting (it was
+            /// deleted after the phone downloaded it while nothing showed it). Omitted when nil.
+            var fallback: Fallback?
+
+            struct Fallback: Codable, Equatable, Sendable {
+                var kind: String
+                var key: String
+            }
+
+            init(kind: String, key: String, fallback: Fallback? = nil) {
+                self.kind = kind
+                self.key = key
+                self.fallback = fallback
+            }
         }
 
         var speciesID: String
@@ -153,8 +170,15 @@ enum FindPolicy {
             legendary: input.isLegendary,
             rarity: input.rarity,
             threatened: threatened,
-            art: input.packArt.map { Find.Art(kind: "pack", key: packArtKey(packID: $0.packID, file: $0.file)) }
+            art: art(for: input)
         )
+    }
+
+    /// The card's painting when it shows one the server painted, falling back to its pack art; else the pack art.
+    private static func art(for input: Input) -> Find.Art? {
+        let pack = input.packArt.map { Find.Art(kind: "pack", key: packArtKey(packID: $0.packID, file: $0.file)) }
+        guard let painted = input.paintedArtKey else { return pack }
+        return Find.Art(kind: "painted", key: painted, fallback: pack.map { Find.Art.Fallback(kind: $0.kind, key: $0.key) })
     }
 
     /// A card shared by hand (issue #66): the find whatever the sharing setting (it is the only way a private birder's

@@ -65,6 +65,7 @@ struct PhotoArtTests {
         #expect(exists(path))
         // Not the card's art until approved.
         #expect(sighting.art.photo == nil)
+        // No find could show it (this card has none), so the server may let it go at once (#70).
         #expect(client.received == [request.id])
     }
 

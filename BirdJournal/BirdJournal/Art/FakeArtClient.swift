@@ -71,6 +71,7 @@ final class FakeArtClient: ArtClient {
             paintings[url] = Self.paint(photo) ?? photo
             job.state = .ready
             job.artURL = url
+            job.artKey = "art/fake/\(url.lastPathComponent)"
         }
         jobs[jobID] = job
         return job
@@ -119,6 +120,7 @@ final class FakeArtClient: ArtClient {
             paintings[url] = uploads[id].flatMap(Self.paint) ?? uploads[id]
             job.state = .ready
             job.artURL = url
+            job.artKey = "art/fake/\(url.lastPathComponent)"
         }
         jobs[id] = job
     }

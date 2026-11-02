@@ -55,6 +55,8 @@ class JobResponse(BaseModel):
     expires_at: datetime
     # The painted art on the art CDN, once ready and until the phone says it has it.
     art_url: str | None
+    # The painting's key on the art CDN once ready: what a find names to show it (#70).
+    art_key: str | None = None
     # Why it failed: "expired", "filtered" (the content filter), "no_reference", "no_bird" (photo art: no bird found in
     # the photo), "painting_failed", "bad_input".
     failure: str | None
@@ -79,6 +81,7 @@ class JobResponse(BaseModel):
             finished_at=job.finished_at,
             expires_at=job.deadline,
             art_url=f"{cdn}/{job.output_key}" if job.state == "ready" and job.received_at is None else None,
+            art_key=job.output_key if job.state == "ready" and job.art_deleted_at is None else None,
             failure=job.failure,
             provenance=job.provenance,
             received=job.received_at is not None,

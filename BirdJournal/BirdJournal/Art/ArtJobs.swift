@@ -20,6 +20,13 @@ import SwiftData
 /// no connection or a painting machine that is off for days: the next refresh picks it up where it stopped (creating
 /// a job is idempotent, by the phone's own job id). Nothing here ever inserts a sighting: every change is to the one
 /// sighting's `art`, so a retry can never duplicate a card.
+///
+/// Painted art in finds (issue #70, ADR-0004): the server keeps a painting only while a find shows it, and otherwise
+/// deletes it when the phone says it has it (`received`). So the order matters: when the art a published card shows
+/// changes (a painting lands, Approve, Use pack art or back), the find is put again first (`artChanged`), and the
+/// phone says it has the painting only once that put has gone (`holdsReceipt` false); while it waits, the next refresh
+/// says so instead. A photo painting waiting for Approve or Keep original on a card with a find isn't acknowledged
+/// until the birder decides.
 @MainActor
 @Observable
 final class ArtJobs {
@@ -36,6 +43,15 @@ final class ArtJobs {
     @ObservationIgnored private let container: ModelContainer
     /// Read when a job is created; the app reads them from the packs and the collection.
     @ObservationIgnored var cardFacts: (Sighting) -> CardFacts = { _ in CardFacts(legendary: false, edition: nil) }
+    /// The art a card shows changed: its find, if it has one, is put again and sent (`FindOutbox.changed`, then a
+    /// flush). The app wires it to the find outbox.
+    @ObservationIgnored var artChanged: @MainActor (UUID) async -> Void = { _ in }
+    /// Whether the sighting's find still waits to be put (offline, backing off): the phone doesn't say it has a
+    /// painting until then, or the server would delete one its find is about to show.
+    @ObservationIgnored var holdsReceipt: @MainActor (UUID) -> Bool = { _ in false }
+    /// Whether the sighting has a find on the server (published automatically or shared by hand). Only then does a
+    /// photo painting waiting for the birder stay on the server for the find; otherwise nothing could ever show it.
+    @ObservationIgnored var hasFind: @MainActor (UUID) -> Bool = { _ in false }
     /// An add is left alone this long first, so an add undone in its six-second window never sends a photo.
     @ObservationIgnored var undoGrace: Duration = .seconds(7)
     /// The photo as it leaves the phone; tests swap in a stub. A library photo is scaled down too (`maxSide`).
@@ -115,17 +131,26 @@ final class ArtJobs {
     }
 
     /// Approve: the waiting painting becomes the card's art, labelled "AI-embellished from your photo".
-    func approvePhotoArt(_ sighting: Sighting) {
+    /// The find shows it from now on, and the server keeps it for the find.
+    @discardableResult
+    func approvePhotoArt(_ sighting: Sighting) -> Task<Void, Never> {
+        let decided = sighting.art.photoJobAwaitingDecision
         let replaced = sighting.art.approvePhotoArt()
         save(sighting)
         if let replaced { try? FileManager.default.removeItem(at: frames.url(for: replaced)) }
+        return settle(sighting.identifier, receiving: decided)
     }
 
-    /// Keep original: the waiting painting goes; the original photo and the card's art stay as they were.
-    func keepOriginalPhoto(_ sighting: Sighting) {
+    /// Keep original: the waiting painting goes; the original photo and the card's art stay as they were. Nothing shows
+    /// it, so the phone says it has it and the server deletes it.
+    @discardableResult
+    func keepOriginalPhoto(_ sighting: Sighting) -> Task<Void, Never> {
+        let decided = sighting.art.photoJobAwaitingDecision
         let discarded = sighting.art.keepOriginalPhoto()
         save(sighting)
         if let discarded { try? FileManager.default.removeItem(at: frames.url(for: discarded)) }
+        let identifier = sighting.identifier
+        return Task { await self.receive(decided, of: identifier) }
     }
 
     /// Keep current art after a failed photo painting.
@@ -142,10 +167,13 @@ final class ArtJobs {
         }
     }
 
-    /// "Use pack art", or back to the painting.
-    func setShowsPackArt(_ showsPackArt: Bool, on sighting: Sighting) {
+    /// "Use pack art", or back to the painting: the find follows the card (issue #70). Pack art lets the painting go on
+    /// the server, so going back leaves the find on pack art until a new painting.
+    @discardableResult
+    func setShowsPackArt(_ showsPackArt: Bool, on sighting: Sighting) -> Task<Void, Never> {
         sighting.art.prefersPackArt = showsPackArt
         save(sighting)
+        return settle(sighting.identifier, receiving: nil)
     }
 
     /// Keep current art: the failure is dismissed and the card stays as it is.
@@ -169,7 +197,10 @@ final class ArtJobs {
                 }
             }
             let waitedOn = Set(pending.flatMap { [$0.art.job?.id, $0.art.photoJob?.id].compactMap { $0 } })
-            for orphan in open where !waitedOn.contains(orphan.id) && (orphan.state == .ready || orphan.state == .failed) {
+            // Paintings waiting for Approve or Keep original stay on the server for the find until the birder decides.
+            let undecided = Set(allSightings().filter { hasFind($0.identifier) }.compactMap(\.art.photoJobAwaitingDecision))
+            for orphan in open where !waitedOn.contains(orphan.id) && !undecided.contains(orphan.id)
+                && (orphan.state == .ready || orphan.state == .failed) && !holdsReceipt(orphan.sightingID) {
                 try? await account.withAccessToken(doing: "check your artwork") { try await client.received(jobID: orphan.id, accessToken: $0) }
             }
         } catch {
@@ -287,13 +318,26 @@ final class ArtJobs {
             // Always a new file: a painting never takes the original's place on disk.
             let path = try frames.write(jpeg: painting)
             let result = switch job.kind {
-            case .scene: sighting.art.sceneJobReady(id: job.id, path: path)
-            case .photo: sighting.art.photoJobReady(id: job.id, path: path)
+            case .scene: sighting.art.sceneJobReady(id: job.id, path: path, serverKey: remote.artKey)
+            case .photo: sighting.art.photoJobReady(id: job.id, path: path, serverKey: remote.artKey)
             }
             save(sighting)
             if !result.applied { try? FileManager.default.removeItem(at: frames.url(for: path)) }
             if let replaced = result.replaced { try? FileManager.default.removeItem(at: frames.url(for: replaced)) }
-            try await call { try await client.received(jobID: job.id, accessToken: $0) }
+            switch job.kind {
+            case .scene:
+                // The card shows it now: the find is put with it before the phone says it has it (issue #70).
+                if result.applied { await artChanged(sighting.identifier) }
+                if !holdsReceipt(sighting.identifier) {
+                    try await call { try await client.received(jobID: job.id, accessToken: $0) }
+                }
+            case .photo:
+                // Waits for Approve or Keep original when a find could show it; otherwise (a private card, or a result
+                // for a job the card no longer waits on) it is let go now.
+                if !result.applied || !hasFind(sighting.identifier) {
+                    try await call { try await client.received(jobID: job.id, accessToken: $0) }
+                }
+            }
         case .failed:
             log.info("art job \(job.id, privacy: .public) failed: \(remote.failure ?? "unknown", privacy: .public)")
             switch job.kind {
@@ -302,6 +346,24 @@ final class ArtJobs {
             }
             save(sighting)
             try await call { try await client.received(jobID: job.id, accessToken: $0) }
+        }
+    }
+
+    /// The find follows the card, then the decided photo painting, if any, is acknowledged once the put has gone.
+    private func settle(_ identifier: UUID, receiving jobID: UUID?) -> Task<Void, Never> {
+        Task {
+            await self.artChanged(identifier)
+            await self.receive(jobID, of: identifier)
+        }
+    }
+
+    /// Says the phone has a painting, unless its find's put still waits (the next refresh says so then).
+    private func receive(_ jobID: UUID?, of identifier: UUID) async {
+        guard let jobID, let client, isAvailable, !holdsReceipt(identifier) else { return }
+        do {
+            try await call { try await client.received(jobID: jobID, accessToken: $0) }
+        } catch {
+            log.info("art job \(jobID, privacy: .public) not acknowledged yet: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -322,7 +384,11 @@ final class ArtJobs {
     }
 
     private func pendingSightings() -> [Sighting] {
-        ((try? container.mainContext.fetch(FetchDescriptor<Sighting>())) ?? []).filter { !$0.art.pendingJobs.isEmpty }
+        allSightings().filter { !$0.art.pendingJobs.isEmpty }
+    }
+
+    private func allSightings() -> [Sighting] {
+        (try? container.mainContext.fetch(FetchDescriptor<Sighting>())) ?? []
     }
 
     private func save(_ sighting: Sighting) {

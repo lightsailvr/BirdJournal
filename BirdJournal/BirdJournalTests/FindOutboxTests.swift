@@ -7,7 +7,7 @@ import Testing
 // removes the find, signing out stops publishing, and what waits survives a relaunch and a failing server.
 #if DEBUG
 /// Records the finds sent; the other circle calls go to the in-memory fake.
-private final class FindRecorder: CircleClient {
+final class FindRecorder: CircleClient {
     private let inner = FakeCircleClient(seeded: false)
     var calls: [String] = []
     var puts: [UUID: FindPolicy.Find] = [:]

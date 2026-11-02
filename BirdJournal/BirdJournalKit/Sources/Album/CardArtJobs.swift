@@ -51,10 +51,10 @@ extension CardArt {
     /// counts on from its attempts. Returns whether it applied (a result for a job that is not this card's current one
     /// changes nothing) and the replaced painting's path, for the caller to delete.
     @discardableResult
-    public mutating func sceneJobReady(id: UUID, path: String) -> (applied: Bool, replaced: String?) {
+    public mutating func sceneJobReady(id: UUID, path: String, serverKey: String? = nil) -> (applied: Bool, replaced: String?) {
         guard job?.id == id else { return (false, nil) }
         let replaced = scene?.path
-        scene = ArtImage(path: path, state: .ready)
+        scene = ArtImage(path: path, state: .ready, serverKey: serverKey)
         prefersPackArt = false
         job?.state = .ready
         return (true, replaced == path ? nil : replaced)
@@ -77,5 +77,21 @@ extension CardArt {
     public mutating func keepCurrentArt() {
         guard job?.state == .failed else { return }
         job = nil
+    }
+
+    /// The server key of the painting the card shows (issue #70), for its find to show too: approved photo art first,
+    /// then scene art unless the birder chose pack art; the same order as the card face. Nil when the card shows pack
+    /// art, or a painting with no key (landed before #70), so the find shows pack art.
+    public var shownPaintingKey: String? {
+        if let photo, photo.state == .ready, photo.path != nil { return photo.serverKey }
+        if let scene, scene.state == .ready, scene.path != nil, !prefersPackArt { return scene.serverKey }
+        return nil
+    }
+
+    /// The photo job whose painting waits for the birder's Approve or Keep original: the phone says it has it only once
+    /// the birder decides, so the server keeps it for the find until then (issue #70).
+    public var photoJobAwaitingDecision: UUID? {
+        guard let photoJob, photoJob.state == .ready, photoPreview?.path != nil else { return nil }
+        return photoJob.id
     }
 }

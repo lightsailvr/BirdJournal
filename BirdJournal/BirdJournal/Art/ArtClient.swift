@@ -21,6 +21,8 @@ struct RemoteArtJob: Equatable, Decodable, Sendable {
     var state: State
     /// The painting on the art CDN, once ready and until the phone says it has it.
     var artURL: URL?
+    /// The painting's key on the art CDN once ready (issue #70): what the sighting's find names to show it.
+    var artKey: String?
     /// "expired", "filtered", "no_reference", "no_bird" (photo art), "painting_failed" or "bad_input".
     var failure: String?
     /// Present while the job waits for its photo.
@@ -30,6 +32,7 @@ struct RemoteArtJob: Equatable, Decodable, Sendable {
         case id, state, failure, upload
         case sightingID = "sighting_id"
         case artURL = "art_url"
+        case artKey = "art_key"
     }
 }
 

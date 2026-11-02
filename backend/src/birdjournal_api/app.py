@@ -18,10 +18,10 @@ from birdjournal_api.art import (
     ArtJobStore,
     ArtNotifier,
     ArtQueue,
-    ArtRetention,
     ArtStorage,
     NoNotifier,
-    NothingShared,
+    FindsShowArt,
+    PaintedArt,
     S3ArtStorage,
     SqsArtQueue,
     WorkerToken,
@@ -86,7 +86,6 @@ def create_app(
     art_storage: ArtStorage | None = None,
     art_queue: ArtQueue | None = None,
     art_notifier: ArtNotifier | None = None,
-    art_retention: ArtRetention | None = None,
     photos: PhotoStore | None = None,
     push_sender: PushSender | None = None,
 ) -> FastAPI:
@@ -106,8 +105,16 @@ def create_app(
         photos = S3PhotoStore(boto3.client("s3", region_name=settings.region), settings.art_bucket)
     app.state.photos = photos
     app.state.clock = clock
-    app.state.finds = FindStore(dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos)
+    if art_storage is None and settings.upload_bucket and settings.art_bucket:
+        art_storage = S3ArtStorage(
+            boto3.client("s3", region_name=settings.region, config=S3_CONFIG), upload_bucket=settings.upload_bucket, art_bucket=settings.art_bucket
+        )
+    # Painted art on finds (#70): a find shows a painting only while the server holds it, and lets it go after.
     table = dynamodb.Table(settings.table_name)
+    painted = PaintedArt(table, art_storage, clock)
+    app.state.finds = FindStore(
+        dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, painted
+    )
     app.state.devices = DeviceStore(table, clock)
     app.state.mutes = MuteStore(table, clock)
     app.state.goals = GoalStore(table, app.state.circles, app.state.finds, clock)
@@ -127,10 +134,6 @@ def create_app(
     app.include_router(goals_router)
     app.include_router(reactions_router)
 
-    if art_storage is None and settings.upload_bucket and settings.art_bucket:
-        art_storage = S3ArtStorage(
-            boto3.client("s3", region_name=settings.region, config=S3_CONFIG), upload_bucket=settings.upload_bucket, art_bucket=settings.art_bucket
-        )
     if art_queue is None and settings.art_queue_url:
         art_queue = SqsArtQueue(boto3.client("sqs", region_name=settings.region), settings.art_queue_url)
     app.state.art_jobs = (
@@ -142,7 +145,7 @@ def create_app(
             storage=art_storage,
             queue=art_queue,
             notifier=art_notifier or NoNotifier(),
-            retention=art_retention or NothingShared(),
+            retention=FindsShowArt(app.state.finds.shown_art),
         )
         if art_storage is not None
         else None

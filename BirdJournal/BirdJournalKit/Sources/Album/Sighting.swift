@@ -249,11 +249,15 @@ public struct ArtImage: Codable, Sendable, Equatable {
     /// Photo art: the original photo it was painted from (the glasses photo or an attached one), relative to the
     /// `FrameStore`. The original is a file of its own and never written over.
     public var source: String?
+    /// The painting's key on the art CDN (`art/<sub>/…`), as its job named it (issue #70): what the sighting's find
+    /// shows once the card does. Nil for art landed before #70 and for anything not painted on the server.
+    public var serverKey: String?
 
-    public init(path: String?, state: State, source: String? = nil) {
+    public init(path: String?, state: State, source: String? = nil, serverKey: String? = nil) {
         self.path = path
         self.state = state
         self.source = source
+        self.serverKey = serverKey
     }
 }
 
