@@ -159,6 +159,25 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
         case reactions
         case card
     }
+
+    /// The count of one kind.
+    func reaction(_ kind: ReactionKind) -> ReactionCount {
+        reactions.first { $0.kind == kind } ?? ReactionCount(kind: kind, count: 0, mine: false)
+    }
+
+    /// The item with the birder's reaction of this kind given or taken back, as the server will count it.
+    func reacting(_ kind: ReactionKind, given: Bool) -> FeedItem {
+        var item = self
+        item.reactions = ReactionKind.allCases.map { each in
+            var count = reaction(each)
+            if each == kind, count.mine != given {
+                count.count = max(0, count.count + (given ? 1 : -1))
+                count.mine = given
+            }
+            return count
+        }
+        return item
+    }
 }
 
 /// Where the phone sends a shared card's original photo (backend `POST /v1/finds/<id>/photo`, issue #66): a presigned
@@ -188,25 +207,6 @@ struct PhotoUpload: Equatable, Decodable, Sendable {
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))
         return body
     }
-
-    /// The count of one kind.
-    func reaction(_ kind: ReactionKind) -> ReactionCount {
-        reactions.first { $0.kind == kind } ?? ReactionCount(kind: kind, count: 0, mine: false)
-    }
-
-    /// The item with the birder's reaction of this kind given or taken back, as the server will count it.
-    func reacting(_ kind: ReactionKind, given: Bool) -> FeedItem {
-        var item = self
-        item.reactions = ReactionKind.allCases.map { each in
-            var count = reaction(each)
-            if each == kind, count.mine != given {
-                count.count = max(0, count.count + (given ? 1 : -1))
-                count.mine = given
-            }
-            return count
-        }
-        return item
-    }
 }
 
 extension FeedItem {
@@ -227,6 +227,8 @@ extension FeedItem {
         isMine = try values.decode(Bool.self, forKey: .isMine)
         // A server from before reactions sends none.
         reactions = ReactionCount.complete(try values.decodeIfPresent([ReactionCount.Sent].self, forKey: .reactions) ?? [])
+        // A find not shared by hand to this circle has no card (issue #66).
+        card = try values.decodeIfPresent(SharedCard.self, forKey: .card)
     }
 }
 
