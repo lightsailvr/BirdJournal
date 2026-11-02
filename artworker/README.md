@@ -1,7 +1,8 @@
 # Art worker
 
-BirdJournal's art worker (issue #68, ADR-0003): a Python service on comfybox that paints **scene art**, the species
-painted into the glasses photo from an add, on the FLUX.3 ComfyUI (port 8189, loopback; `art/README.md`).
+BirdJournal's art worker (issues #68 and #69, ADR-0003): a Python service on comfybox that paints **scene art**, the
+species painted into the glasses photo from an add, and **photo art**, the birder's own photo of the bird embellished,
+on the FLUX.3 ComfyUI (port 8189, loopback; `art/README.md`).
 
 It long-polls the art queue (SQS) as the `birdjournal-art-worker` IAM user, which may only consume that queue, read
 `uploads/` in the upload bucket and write `art/` in the art bucket. For each job it:
@@ -11,16 +12,18 @@ It long-polls the art queue (SQS) as the `birdjournal-art-worker` IAM user, whic
 3. paints it with the committed `scene-art` workflow and `prompts.json` (the Legendary light for a Legendary card),
    from the species' isolated reference bird and a telephoto crop of the photo sized by the bird's length, through
    the fidelity gate (ΔE ≤ 10 and IoU ≥ 0.65 against the reference bird after the colour fit, three seeds at most);
-   no prompt names the species;
+   no prompt names the species. A photo-art job (`kind` `photo`) instead finds the bird in the birder's photo
+   (BiRefNet), crops 3:4 around it with room for its setting, and paints it with the `photo-art` workflow and the
+   photo template, its fidelity gate measured against the bird in that photo; it needs no reference bird;
 4. runs the content filter (Falconsai/nsfw_image_detection, Apache 2.0, ONNX; ADR-0007);
 5. uploads the JPEG to the art bucket at the job's unguessable key and reports `ready`, or reports `failed` with a
-   reason (`no_reference`, `painting_failed`, `filtered`, `bad_input`).
+   reason (`no_reference`, `no_bird` (photo art with no bird found), `painting_failed`, `filtered`, `bad_input`).
 
 With ComfyUI down it leaves the message for later; the job fails as expired after 7 days in the queue either way.
 
 ## Layout
 
-- `src/artworker/`: `scene.py` (the painting, over `packbuilder.art`, `packbuilder.painting` and
+- `src/artworker/`: `scene.py` and `photo.py` (the paintings, over `packbuilder.art`, `packbuilder.painting` and
   `packbuilder.fidelity`), `content_filter.py`, `api.py`, `worker.py` (the loop) and `__main__.py` (settings from the
   environment; `python -m artworker --help` lists them).
 - `comfybox/`: the systemd unit, `deploy-to-comfybox.sh` (copies the worker, the reference birds and the filter to the
