@@ -206,19 +206,32 @@ public struct CardCaption: Codable, Sendable, Equatable {
 }
 
 /// A card's art beyond the pack's: the scene and photo art with their states, whether the birder chose pack art over
-/// scene art, and the art job under way.
+/// scene art, and the art jobs under way. Scene and photo art have a job each (issue #69), so asking for photo art never
+/// loses track of a scene painting still on its way.
 public struct CardArt: Codable, Sendable, Equatable {
     /// "Use pack art": scene art stays on file but the card shows the pack's.
     public var prefersPackArt: Bool
     public var scene: ArtImage?
+    /// Approved photo art: what the card shows above everything else.
     public var photo: ArtImage?
+    /// Photo art painted and waiting for the birder: Approve, Keep original or Try again. Any approved photo art stays
+    /// on the card meanwhile.
+    public var photoPreview: ArtImage?
+    /// The scene job (issue #68).
     public var job: ArtJob?
+    /// The photo-art job (issue #69).
+    public var photoJob: ArtJob?
 
-    public init(prefersPackArt: Bool = false, scene: ArtImage? = nil, photo: ArtImage? = nil, job: ArtJob? = nil) {
+    public init(
+        prefersPackArt: Bool = false, scene: ArtImage? = nil, photo: ArtImage? = nil, photoPreview: ArtImage? = nil, job: ArtJob? = nil,
+        photoJob: ArtJob? = nil
+    ) {
         self.prefersPackArt = prefersPackArt
         self.scene = scene
         self.photo = photo
+        self.photoPreview = photoPreview
         self.job = job
+        self.photoJob = photoJob
     }
 }
 
@@ -233,10 +246,14 @@ public struct ArtImage: Codable, Sendable, Equatable {
 
     public var path: String?
     public var state: State
+    /// Photo art: the original photo it was painted from (the glasses photo or an attached one), relative to the
+    /// `FrameStore`. The original is a file of its own and never written over.
+    public var source: String?
 
-    public init(path: String?, state: State) {
+    public init(path: String?, state: State, source: String? = nil) {
         self.path = path
         self.state = state
+        self.source = source
     }
 }
 
@@ -258,12 +275,15 @@ public struct ArtJob: Codable, Sendable, Equatable {
     public var kind: Kind
     public var state: State
     public var attempts: Int
+    /// Photo art: the original photo the job paints from, relative to the `FrameStore`.
+    public var source: String?
 
-    public init(id: UUID, kind: Kind, state: State, attempts: Int) {
+    public init(id: UUID, kind: Kind, state: State, attempts: Int, source: String? = nil) {
         self.id = id
         self.kind = kind
         self.state = state
         self.attempts = attempts
+        self.source = source
     }
 }
 
@@ -319,7 +339,7 @@ extension Sighting {
     /// Every file on disk the sighting refers to, relative to the `FrameStore`: the glasses photo, the attached
     /// originals and the painted art. What goes when the sighting does.
     public var filePaths: [String] {
-        [frameImagePath].compactMap { $0 } + attachedPhotoPaths + [art.scene?.path, art.photo?.path].compactMap { $0 }
+        [frameImagePath].compactMap { $0 } + attachedPhotoPaths + [art.scene?.path, art.photo?.path, art.photoPreview?.path].compactMap { $0 }
     }
 
     /// The common name half of the BirdNET label, so a species the pack lacks still has a name (spec user story 40).

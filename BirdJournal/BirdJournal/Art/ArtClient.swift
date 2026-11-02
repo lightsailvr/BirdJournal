@@ -20,7 +20,7 @@ struct RemoteArtJob: Equatable, Decodable, Sendable {
     var state: State
     /// The painting on the art CDN, once ready and until the phone says it has it.
     var artURL: URL?
-    /// "expired", "filtered", "no_reference", "painting_failed" or "bad_input".
+    /// "expired", "filtered", "no_reference", "no_bird" (photo art), "painting_failed" or "bad_input".
     var failure: String?
     /// Present while the job waits for its photo.
     var upload: Upload?
@@ -32,17 +32,18 @@ struct RemoteArtJob: Equatable, Decodable, Sendable {
     }
 }
 
-/// What the phone asks to be painted: one sighting's scene art.
+/// What the phone asks to be painted: one sighting's scene art, or photo art from the birder's photo (issue #69).
 struct ArtJobRequest: Equatable, Encodable, Sendable {
     var id: UUID
     var sightingID: UUID
+    /// "scene" or "photo".
     var kind = "scene"
     var scientificName: String
     /// The pack id of the card's set, whose edition lights the painting; nil outside every set.
     var edition: String?
     var legendary: Bool
     var rarity: String?
-    /// Try again or Retry art, rather than the add.
+    /// Try again or Retry art, rather than the add; photo art always is.
     var requested: Bool
 
     enum CodingKeys: String, CodingKey {
@@ -52,6 +53,38 @@ struct ArtJobRequest: Equatable, Encodable, Sendable {
     }
 }
 
+/// Today's paintings on request (issue #69): at the public launch 5 a day per account, shown as "N left today"; no
+/// limit in the friends phase.
+struct ArtAllowance: Equatable, Decodable, Sendable {
+    /// Nil when there is no limit.
+    var daily: Int?
+    var left: Int?
+    var resetsAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case daily, left
+        case resetsAt = "resets_at"
+    }
+
+    static let unlimited = ArtAllowance(daily: nil, left: nil, resetsAt: nil)
+
+    init(daily: Int?, left: Int?, resetsAt: Date?) {
+        self.daily = daily
+        self.left = left
+        self.resetsAt = resetsAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        daily = try container.decodeIfPresent(Int.self, forKey: .daily)
+        left = try container.decodeIfPresent(Int.self, forKey: .left)
+        resetsAt = (try container.decodeIfPresent(String.self, forKey: .resetsAt)).flatMap { try? Date($0, strategy: .iso8601) }
+    }
+
+    /// Whether another painting on request may be asked for today.
+    var hasPaintingsLeft: Bool { left.map { $0 > 0 } ?? true }
+}
+
 enum ArtClientError: Error, Equatable {
     /// The access token was refused: `AccountSession` renews it and tries once more.
     case unauthorized
@@ -59,6 +92,8 @@ enum ArtClientError: Error, Equatable {
     case notFound
     /// The auto-paint rule doesn't paint this add.
     case notEligible
+    /// Today's paintings on request are used up.
+    case allowanceSpent
     /// Submitted before the photo arrived.
     case uploadMissing
     case server(Int)
@@ -74,6 +109,7 @@ protocol ArtClient: AnyObject {
     func openJobs(accessToken: String) async throws -> [RemoteArtJob]
     func received(jobID: UUID, accessToken: String) async throws
     func download(_ url: URL) async throws -> Data
+    func allowance(accessToken: String) async throws -> ArtAllowance
 }
 
 final class HTTPArtClient: ArtClient {
@@ -123,6 +159,10 @@ final class HTTPArtClient: ArtClient {
         return data
     }
 
+    func allowance(accessToken: String) async throws -> ArtAllowance {
+        try decode(try await send("GET", "v1/art/allowance", accessToken: accessToken))
+    }
+
     private func decode<T: Decodable>(_ data: Data, as type: T.Type = T.self) throws -> T {
         try JSONDecoder().decode(T.self, from: data)
     }
@@ -148,6 +188,7 @@ final class HTTPArtClient: ArtClient {
         case (401, _): return .unauthorized
         case (404, _): return .notFound
         case (409, "not_eligible"): return .notEligible
+        case (409, "allowance_spent"): return .allowanceSpent
         case (409, "upload_missing"): return .uploadMissing
         default: return .server(status)
         }

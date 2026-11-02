@@ -4,7 +4,9 @@ import Foundation
 
 /// The art server in memory, for the tests and the simulator (`-fakeArt paints|pending|fails`, issue #68). A job is
 /// created, waits for its photo, and on submit is painted at once (a warm wash over the uploaded photo, so a screenshot
-/// shows it came from it), stays queued as if the painting machine were off, or fails.
+/// shows it came from it), stays queued as if the painting machine were off, or fails. With `daily` set it keeps the
+/// public launch's allowance (issue #69): every photo job and every scene job asked for takes one of the day's
+/// paintings, and past them a create is refused with `allowanceSpent`.
 final class FakeArtClient: ArtClient {
     enum Behaviour: String {
         case paints
@@ -21,6 +23,9 @@ final class FakeArtClient: ArtClient {
     private var paintings: [URL: Data] = [:]
     /// Calls fail with this while set (no connection, the API down).
     var failing: Error?
+    /// Paintings on request a day (the public launch), nil for none (the friends phase).
+    var daily: Int?
+    private(set) var used = 0
 
     init(behaviour: Behaviour = .paints) {
         self.behaviour = behaviour
@@ -32,6 +37,10 @@ final class FakeArtClient: ArtClient {
         if var existing = jobs[request.id] {
             existing.upload = existing.state == .awaitingUpload ? Self.upload(for: request.id) : nil
             return existing
+        }
+        if let daily, request.kind == "photo" || request.requested {
+            guard used < daily else { throw ArtClientError.allowanceSpent }
+            used += 1
         }
         let job = RemoteArtJob(id: request.id, sightingID: request.sightingID, state: .awaitingUpload, upload: Self.upload(for: request.id))
         jobs[request.id] = job
@@ -90,6 +99,12 @@ final class FakeArtClient: ArtClient {
         if let failing { throw failing }
         guard let data = paintings[url] else { throw ArtClientError.server(404) }
         return data
+    }
+
+    func allowance(accessToken: String) async throws -> ArtAllowance {
+        if let failing { throw failing }
+        guard let daily else { return .unlimited }
+        return ArtAllowance(daily: daily, left: max(daily - used, 0), resetsAt: nil)
     }
 
     /// The painting machine finishing a queued job later (the box coming back on).

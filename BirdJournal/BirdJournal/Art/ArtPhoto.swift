@@ -20,8 +20,13 @@ nonisolated enum ArtPhoto {
     static let faceMargin: CGFloat = 0.35
     static let jpegQuality: CGFloat = 0.9
 
-    /// The prepared JPEG, and how many faces were blurred.
-    static func prepare(jpeg: Data) throws -> (jpeg: Data, faces: Int) {
+    /// The longest side a photo from the library leaves at (issue #69): a camera's 48 MP is far more than the painting
+    /// takes (at most 1536 px a side) and slow to send.
+    static let libraryMaxSide: CGFloat = 2048
+
+    /// The prepared JPEG, and how many faces were blurred. With `maxSide` a larger picture is scaled down first. The
+    /// photo may be any format ImageIO reads (a library photo is often HEIC); what leaves is always a JPEG.
+    static func prepare(jpeg: Data, maxSide: CGFloat? = nil) throws -> (jpeg: Data, faces: Int) {
         guard let source = CGImageSourceCreateWithData(jpeg as CFData, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { throw Failure.unreadable }
         let orientation = (CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])?[kCGImagePropertyOrientation] as? UInt32
@@ -30,6 +35,12 @@ nonisolated enum ArtPhoto {
             picture = picture.oriented(exif)
         }
         picture = picture.transformed(by: CGAffineTransform(translationX: -picture.extent.minX, y: -picture.extent.minY))
+        if let maxSide, max(picture.extent.width, picture.extent.height) > maxSide {
+            let scale = maxSide / max(picture.extent.width, picture.extent.height)
+            picture = picture.applyingFilter("CILanczosScaleTransform", parameters: [kCIInputScaleKey: scale, kCIInputAspectRatioKey: 1])
+            picture = picture.transformed(by: CGAffineTransform(translationX: -picture.extent.minX, y: -picture.extent.minY))
+            picture = picture.cropped(to: CGRect(x: 0, y: 0, width: picture.extent.width.rounded(.down), height: picture.extent.height.rounded(.down)))
+        }
         let faces = try faceBoxes(in: picture)
         let blurred = blur(faces, in: picture)
         return (try encode(blurred), faces.count)

@@ -93,6 +93,7 @@ struct CardDetailView: View {
                         CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
                     CardArtActions(sighting: sighting)
+                    PhotoArtActions(sighting: sighting)
                     if browse != nil {
                         Button {
                             dismiss()
@@ -211,9 +212,9 @@ private struct CardArtActions: View {
         }
         .buttonStyle(.journalOutlined)
         .disabled(asking)
-        .task(id: sighting.art.pendingSceneJob?.id) {
-            // While this card waits, look in on its job now and then: the painting machine may come back any time.
-            while !Task.isCancelled, sighting.art.pendingSceneJob != nil {
+        .task(id: [sighting.art.pendingSceneJob?.id, sighting.art.pendingPhotoJob?.id]) {
+            // While this card waits, look in on its jobs now and then: the painting machine may come back any time.
+            while !Task.isCancelled, sighting.art.pendingSceneJob != nil || sighting.art.pendingPhotoJob != nil {
                 await art.refresh(sighting)
                 try? await Task.sleep(for: .seconds(30))
             }

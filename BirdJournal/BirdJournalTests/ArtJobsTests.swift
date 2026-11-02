@@ -24,7 +24,7 @@ struct ArtJobsTests {
         art.undoGrace = .zero
         let prepared = prepared
         // The real preparation (faces, metadata) is ArtPhotoTests'; here the upload is told apart from the original.
-        art.preparePhoto = { _ in prepared }
+        art.preparePhoto = { _, _ in prepared }
         art.cardFacts = { _ in ArtJobs.CardFacts(legendary: true, edition: "us-ca-la") }
     }
 
