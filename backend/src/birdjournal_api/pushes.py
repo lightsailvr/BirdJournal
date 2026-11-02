@@ -45,6 +45,8 @@ FRIEND_FALLBACK = "A friend"
 class PushKind(StrEnum):
     NOTABLE = "notable"
     DIGEST = "digest"
+    # Someone reacted to the recipient's find (issue #64), collapsed per find within 10 minutes.
+    REACTION = "reaction"
     # Silent: the phone refreshes its circle feeds.
     REFRESH = "refresh"
 
@@ -213,11 +215,11 @@ class PushService:
                     data={"find": find_summary(find, owner_name, first_in, open_circles)},
                     thread_id=f"friend-{owner}",
                 )
-                if self._deliver(devices, push):
+                if self.deliver(devices, push):
                     self._record_push(recipient, owner)
             else:
                 self._buffer(recipient, owner, find.sighting_id, open_circles)
-                self._deliver(devices, Push(kind=PushKind.REFRESH, data={"circle_ids": open_circles}))
+                self.deliver(devices, Push(kind=PushKind.REFRESH, data={"circle_ids": open_circles}))
 
     def flush_digests(self) -> FlushReport:
         """Sends every buffer whose recipient's last push about that friend is two hours old or more (or never was)."""
@@ -248,7 +250,7 @@ class PushService:
                 data={"friend": friend, "count": len({content.scientific_name for content in finds})},
                 thread_id=f"friend-{friend}", collapse_id=f"digest-{friend}"[:64],
             )
-            if self._deliver(devices, push):
+            if self.deliver(devices, push):
                 self._record_push(recipient, friend)
                 self._clear_buffer(recipient, friend, sighting_ids)
                 sent += 1
@@ -256,7 +258,7 @@ class PushService:
                 waiting += 1
         return FlushReport(sent=sent, waiting=waiting, dropped=dropped)
 
-    def _deliver(self, devices: list[Device], push: Push) -> bool:
+    def deliver(self, devices: list[Device], push: Push) -> bool:
         """True when at least one of the phones took it."""
         delivered = False
         for device in devices:

@@ -50,6 +50,8 @@ private final class FindRecorder: CircleClient {
     func mutes(accessToken: String) async throws -> Mutes { try await inner.mutes(accessToken: accessToken) }
     func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws { try await inner.setCircleMuted(muted, circleID: circleID, accessToken: accessToken) }
     func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws { try await inner.setFriendMuted(muted, friendID: friendID, accessToken: accessToken) }
+    func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] { return try await inner.setReaction(kind, given: given, owner: owner, sightingID: sightingID, accessToken: accessToken) }
+    func compare(friendID: String, accessToken: String) async throws -> FriendBirds { return try await inner.compare(friendID: friendID, accessToken: accessToken) }
 }
 
 /// Signs in as another account than the fake's `fake-sub`.

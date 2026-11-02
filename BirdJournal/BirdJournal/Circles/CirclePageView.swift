@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// A circle's page (issue #61), the shell later tickets fill with the goal card: Recent finds (issue #62), invite (a
-/// link and a QR code), the members, and the settings (leave; the creator removes members).
+/// A circle's page (issue #61), the shell later tickets fill with the goal card: Recent finds (issue #62) or Compare
+/// birds (issue #64), invite (a link and a QR code), the members, and the settings (leave; the creator removes
+/// members).
 struct CirclePageView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(PushCenter.self) private var pushes
@@ -12,13 +13,32 @@ struct CirclePageView: View {
     @State private var confirmingLeave = false
     @State private var removing: CircleMember?
     @State private var error: String?
+    @State private var showing: Showing = .finds
+
+    enum Showing: Hashable {
+        case finds
+        case compare
+    }
 
     private var detail: CircleDetail? { circles.details[id] }
 
     var body: some View {
         List {
             if let detail {
-                CircleFeedSection(circleID: detail.circle.id)
+                Section {
+                    Picker("Show", selection: $showing) {
+                        Text("Recent finds").tag(Showing.finds)
+                        Text("Compare birds").tag(Showing.compare)
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("circlePageShowing")
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                switch showing {
+                case .finds: CircleFeedSection(circleID: detail.circle.id)
+                case .compare: compare(detail)
+                }
                 header(detail)
                 members(detail)
                 settings(detail)
@@ -59,6 +79,30 @@ struct CirclePageView: View {
             }
         }
         #endif
+    }
+
+    /// Compare birds: the friends in the circle, each opening the two of you side by side.
+    private func compare(_ detail: CircleDetail) -> some View {
+        let friends = detail.members.filter { $0.id != myID(in: detail) }
+        return Section {
+            if friends.isEmpty {
+                Text("Invite a friend, then compare your birds with theirs.")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+            }
+            ForEach(friends) { friend in
+                NavigationLink(value: Route.compareBirds(friendID: friend.id, friendName: friend.name)) {
+                    MemberRow(member: friend, isMe: false)
+                }
+                .accessibilityIdentifier("compareWith-\(friend.id)")
+            }
+        } header: {
+            Text("Compare birds")
+        } footer: {
+            if !friends.isEmpty {
+                Text("Each species Heard, Seen or not yet, for you and a friend: plan the next walk.")
+            }
+        }
     }
 
     private func header(_ detail: CircleDetail) -> some View {

@@ -171,6 +171,8 @@ private final class RefusingClient: CircleClient {
     func mutes(accessToken: String) async throws -> Mutes { try check(accessToken); return try await inner.mutes(accessToken: accessToken) }
     func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws { try check(accessToken); try await inner.setCircleMuted(muted, circleID: circleID, accessToken: accessToken) }
     func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws { try check(accessToken); try await inner.setFriendMuted(muted, friendID: friendID, accessToken: accessToken) }
+    func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] { try check(accessToken); return try await inner.setReaction(kind, given: given, owner: owner, sightingID: sightingID, accessToken: accessToken) }
+    func compare(friendID: String, accessToken: String) async throws -> FriendBirds { try check(accessToken); return try await inner.compare(friendID: friendID, accessToken: accessToken) }
 }
 
 @Suite("The circle store")

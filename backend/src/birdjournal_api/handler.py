@@ -29,9 +29,10 @@ def make_handler(app: FastAPI) -> Callable[[dict[str, Any], Any], Any]:
     def handle(event: dict[str, Any], context: Any) -> Any:
         job = event.get(JOB_KEY) if isinstance(event, dict) else None
         if job == "flush_digests":
-            report = app.state.pushes.flush_digests()
-            log.info("digest flush: %s", json.dumps(asdict(report)))
-            return asdict(report)
+            # The same schedule sends the reaction pushes whose 10-minute window has closed (issue #64).
+            report = {**asdict(app.state.pushes.flush_digests()), "reactions": asdict(app.state.reactions.flush())}
+            log.info("digest flush: %s", json.dumps(report))
+            return report
         if job is not None:
             raise ValueError(f"unknown job {job!r}")
         return http(event, context)
