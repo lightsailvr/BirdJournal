@@ -194,8 +194,22 @@ private final class FakeAPI: AccountAPI {
 
     func setDisplayName(_ name: String, accessToken: String) async throws -> Account {
         try check(accessToken)
-        stored = Account(id: "sub-1", displayName: name, createdAt: stored?.createdAt ?? start)
+        stored = Account(id: "sub-1", displayName: name, createdAt: stored?.createdAt ?? start, provider: stored?.provider)
         return stored!
+    }
+
+    /// Deletions the server took (issue #71), with the Apple code or nil; `failNext` answers 503 that many times.
+    var deleted: [String?] = []
+    var failNext = 0
+
+    func deleteAccount(appleAuthorizationCode: String?, accessToken: String) async throws {
+        try check(accessToken)
+        if failNext > 0 {
+            failNext -= 1
+            throw AccountAPIError.server(503)
+        }
+        deleted.append(appleAuthorizationCode)
+        stored = nil
     }
 
     private func check(_ token: String) throws {
@@ -330,6 +344,7 @@ struct AccountSessionTests {
         final class RejectingAPI: AccountAPI {
             func account(accessToken: String) async throws -> Account { Account(id: "s", displayName: "Old", createdAt: start) }
             func setDisplayName(_ name: String, accessToken: String) async throws -> Account { throw AccountAPIError.rejected }
+            func deleteAccount(appleAuthorizationCode: String?, accessToken: String) async throws {}
         }
         let session = AccountSession(auth: FakeAuth(), api: RejectingAPI(), store: InMemoryTokenStore(tokens()), now: { start })
         await session.loadAccount()

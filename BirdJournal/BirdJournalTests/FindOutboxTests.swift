@@ -55,6 +55,9 @@ final class FindRecorder: CircleClient {
     func deleteGoal(id: String, circleID: String, accessToken: String) async throws { try await inner.deleteGoal(id: id, circleID: circleID, accessToken: accessToken) }
     func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] { return try await inner.setReaction(kind, given: given, owner: owner, sightingID: sightingID, accessToken: accessToken) }
     func compare(friendID: String, accessToken: String) async throws -> FriendBirds { return try await inner.compare(friendID: friendID, accessToken: accessToken) }
+    func report(_ report: ReportDraft, accessToken: String) async throws { try await inner.report(report, accessToken: accessToken) }
+    func blocks(accessToken: String) async throws -> [BlockedAccount] { try await inner.blocks(accessToken: accessToken) }
+    func setBlocked(_ blocked: Bool, accountID: String, accessToken: String) async throws { try await inner.setBlocked(blocked, accountID: accountID, accessToken: accessToken) }
 }
 
 /// Signs in as another account than the fake's `fake-sub`.
