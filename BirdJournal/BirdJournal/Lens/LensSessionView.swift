@@ -107,6 +107,7 @@ extension LensPage {
         case .viewfinder(let index): "Species \(index + 1) · viewfinder"
         case .problem(.noLocation): "Problem · no location"
         case .problem(.connectionLost): "Problem · connection lost"
+        case .friend: "Friend's find"
         }
     }
 }
