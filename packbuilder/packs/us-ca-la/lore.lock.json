@@ -342,7 +342,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a cup or an old nest another bird built.",
           "source": "birdbase"
         },
         {
@@ -745,7 +745,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a cup or an old nest another bird built.",
           "source": "birdbase"
         },
         {
@@ -1418,7 +1418,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a cup, a cavity or an old nest another bird built.",
           "source": "birdbase"
         },
         {
@@ -3150,7 +3150,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in an old nest another bird built, a platform or a scrape on the ground.",
           "source": "birdbase"
         },
         {
@@ -4857,7 +4857,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It lays its eggs without building a nest, or nests in a scrape on the ground or an old nest another bird built.",
           "source": "birdbase"
         },
         {
@@ -7391,7 +7391,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a scrape on the ground or an old nest another bird built.",
           "source": "birdbase"
         },
         {
@@ -7520,7 +7520,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a cavity or an old nest another bird built.",
           "source": "birdbase"
         },
         {
@@ -9095,7 +9095,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a burrow, a crevice, an old nest another bird built or a cup.",
           "source": "birdbase"
         },
         {
@@ -10908,7 +10908,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a crevice, a cavity or an old nest another bird built.",
           "source": "birdbase"
         },
         {
@@ -11837,7 +11837,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs without building a nest.",
+          "text": "It is a brood parasite: it lays its eggs in other birds' nests, and they raise its young.",
           "source": "birdbase"
         },
         {
@@ -11853,44 +11853,42 @@
       ],
       "sentences": [
         {
-          "text": "In open country the cowbird keeps to the ground, traveling in flocks, sometimes beside red-winged blackbirds, bobolinks, grackles or starlings.",
+          "text": "In open and half-open country across North America, the brown-headed cowbird roams in flocks, sometimes beside red-winged blackbirds, bobolinks and starlings.",
           "facts": [
-            "f2",
-            "f14"
+            "f1",
+            "f2"
           ]
         },
         {
-          "text": "It eats seeds and insects, and rarely a berry.",
+          "text": "It eats mostly seeds and insects, and only rarely berries.",
           "facts": [
             "f3"
           ]
         },
         {
-          "text": "A brood parasite through and through, it builds no nest of its own.",
+          "text": "Yet its true legend lies in other birds' nests: there it lays its eggs, and strangers raise its young.",
           "facts": [
             "f1",
             "f15"
           ]
         },
         {
-          "text": "Its males fight with song in fierce contests, yet each stays true to one female.",
+          "text": "Males battle rivals in fierce singing bouts, yet bond with a single mate.",
           "facts": [
             "f4"
           ]
         },
         {
-          "text": "Many call it a pest, and some people work to control it.",
+          "text": "For its spreading range and borrowed cradles, many call it a pest.",
           "facts": [
-            "f5",
-            "f8"
+            "f5"
           ]
         }
       ],
       "tagline": {
-        "text": "Builds no nest, sings to win, and stays true.",
+        "text": "Its young are raised in strangers' nests.",
         "facts": [
-          "f15",
-          "f4"
+          "f15"
         ]
       },
       "review": "approved"
@@ -19444,7 +19442,7 @@
         },
         {
           "id": "f6",
-          "text": "It lays its eggs in other birds' nests.",
+          "text": "It nests in a cavity, an old nest another bird built or a crevice.",
           "source": "birdbase"
         },
         {
@@ -19460,39 +19458,42 @@
       ],
       "sentences": [
         {
-          "text": "Among trees and shrubs, the northern house wren keeps its perch, a slight bird hunting insects and other small creatures without backbones.",
-          "facts": [
-            "f5",
-            "f4",
-            "f3"
-          ]
-        },
-        {
-          "text": "Once it shared one name with its cousins; now the old house wren group has been split into eight species, and this is the northern one.",
+          "text": "Once the house wrens were one; now they are eight, and this northern one keeps its own name.",
           "facts": [
             "f1"
           ]
         },
         {
-          "text": "It lays its eggs in nests other birds have made, a clutch of several in a borrowed home.",
+          "text": "Light as a whisper, it spends most of its days perched in trees and shrubs.",
+          "facts": [
+            "f3",
+            "f5"
+          ]
+        },
+        {
+          "text": "There it feeds mostly on insects and other small creatures without backbones.",
+          "facts": [
+            "f4",
+            "f5"
+          ]
+        },
+        {
+          "text": "For a home it seeks a hole, a crevice, or an old nest some other bird built, and there it lays its eggs.",
           "facts": [
             "f6",
             "f7"
           ]
         },
         {
-          "text": "Small as it is, the IUCN Red List rates it Least Concern.",
+          "text": "The Red List rates it Least Concern.",
           "facts": [
-            "f3",
             "f8"
           ]
         }
       ],
       "tagline": {
-        "text": "A tiny wren of tree and shrub, with eggs in borrowed nests.",
+        "text": "It moves into hollows and old nests other birds left behind.",
         "facts": [
-          "f3",
-          "f5",
           "f6"
         ]
       },
@@ -20226,7 +20227,7 @@
         },
         {
           "id": "f15",
-          "text": "It lays its eggs without building a nest.",
+          "text": "It is a brood parasite: it lays its eggs in other birds' nests, and they raise its young.",
           "source": "birdbase"
         },
         {
@@ -20242,45 +20243,40 @@
       ],
       "sentences": [
         {
-          "text": "In the grasslands of Africa south of the Sahara, a small songbird builds no nest of its own.",
+          "text": "Through the grassland and savannah of Africa south of the Sahara, the breeding male whydah trails a tail like a long black pennant.",
           "facts": [
-            "f1",
             "f4",
             "f5",
-            "f15"
-          ]
-        },
-        {
-          "text": "Instead, the whydah slips its eggs into the nests of waxbills and other finches.",
-          "facts": [
-            "f2"
-          ]
-        },
-        {
-          "text": "Yet this trickster is gentle: unlike the cuckoo, it leaves the host's own eggs unharmed.",
-          "facts": [
-            "f3"
-          ]
-        },
-        {
-          "text": "Come breeding time, the male wears a long black tail like a pennant, white beneath and black-crowned above.",
-          "facts": [
             "f1",
+            "f7"
+          ]
+        },
+        {
+          "text": "He wears a black crown and back, a white face and belly, and white patches on dark brown wings.",
+          "facts": [
             "f7",
             "f8"
           ]
         },
         {
-          "text": "Now it turns up in parks and gardens, and even around Aveiro in Portugal.",
+          "text": "Yet whydahs leave their eggs in the nests of waxbills and other finches, and those birds raise the young.",
           "facts": [
-            "f5",
-            "f6"
+            "f2",
+            "f15"
+          ]
+        },
+        {
+          "text": "Unlike the cuckoo, the whydah spares its hosts' own eggs: a guest that takes a bed but breaks nothing.",
+          "facts": [
+            "f3"
           ]
         }
       ],
       "tagline": {
-        "text": "The gentle trickster that spares its hosts' eggs.",
+        "text": "The long-tailed guest that leaves its host's eggs unbroken.",
         "facts": [
+          "f1",
+          "f7",
           "f2",
           "f3"
         ]
