@@ -22,6 +22,7 @@ struct LensStateMachineTests {
             _ = machine.apply(.tap)
         }
         if case .problem(let problem) = page { machine.report(problem) }
+        if case .friend(let banner) = page { machine.friendFound(banner, at: 0) }
         precondition(machine.page == page, "could not reach \(page)")
         return machine
     }
@@ -222,6 +223,14 @@ struct LensStateMachineTests {
         Transition(.problem(.noLocation), .swipeDown, .problem(.noLocation)),
         Transition(.problem(.noLocation), .tap, .list),
         Transition(.problem(.noLocation), .back, .list),
+
+        // A friend banner over the list (issue #67): a tap, swipe right and Back dismiss it; the other swipes stay.
+        Transition(.friend(Fakes.mayasPhoebe), .swipeLeft, .friend(Fakes.mayasPhoebe)),
+        Transition(.friend(Fakes.mayasPhoebe), .swipeRight, .list),
+        Transition(.friend(Fakes.mayasPhoebe), .swipeUp, .friend(Fakes.mayasPhoebe)),
+        Transition(.friend(Fakes.mayasPhoebe), .swipeDown, .friend(Fakes.mayasPhoebe)),
+        Transition(.friend(Fakes.mayasPhoebe), .tap, .list),
+        Transition(.friend(Fakes.mayasPhoebe), .back, .list),
     ]
 
     @Test("every page and gesture pair lands on the expected page with the expected effect", arguments: transitions)
@@ -234,7 +243,7 @@ struct LensStateMachineTests {
 
     @Test("the table covers every page kind and gesture")
     func tableIsComplete() {
-        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1), .sounds(index: 1), .viewfinder(index: 1), .problem(.noLocation)]
+        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1), .sounds(index: 1), .viewfinder(index: 1), .problem(.noLocation), .friend(Fakes.mayasPhoebe)]
         for page in pages {
             for gesture in LensGesture.allCases {
                 #expect(Self.transitions.contains { $0.from == page && $0.gesture == gesture }, "\(page) + \(gesture) is not in the table")
@@ -508,5 +517,157 @@ struct LensStateMachineTests {
         #expect(machine.page == .viewfinder(index: 1))
         #expect(machine.savedIndices.isEmpty)
         #expect(machine.apply(.tap) == .takePhoto(Fakes.candidate(Fakes.finch)))
+    }
+
+    // MARK: - Friend banners (issue #67)
+
+    @Test("a friend's find shows at once over the list and over a photo page, and dismissing returns there", arguments: [LensPage.list, .species(index: 1)])
+    func bannerShowsOverListAndPhoto(_ page: LensPage) {
+        var machine = Self.machine(on: page)
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+        #expect(machine.heldBanner == nil)
+        #expect(machine.currentCandidate == nil)
+        #expect(machine.apply(.tap) == nil)
+        #expect(machine.page == page)
+    }
+
+    @Test("a friend's find is held on the viewfinder, a details page and a sounds page, and shown when the wearer returns to a photo page", arguments: [LensPage.viewfinder(index: 1), .details(index: 1), .sounds(index: 1)])
+    func bannerHeld(_ page: LensPage) {
+        var machine = Self.machine(on: page)
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        #expect(machine.page == page)
+        #expect(machine.heldBanner == Fakes.mayasPhoebe)
+        #expect(machine.heldBannerExpiry == 10 + LensStateMachine.bannerHoldLimit)
+        // Off the viewfinder (a swipe adds the bird) lands on details: still held. Up is the photo page: shown.
+        if case .viewfinder = page {
+            #expect(machine.apply(.swipeLeft) == .saveSighting(Fakes.candidate(Fakes.finch)))
+            #expect(machine.page == .details(index: 1))
+            #expect(machine.heldBanner == Fakes.mayasPhoebe)
+        }
+        _ = machine.apply(page == .sounds(index: 1) ? .swipeDown : .swipeUp)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+        #expect(machine.heldBanner == nil)
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .species(index: 1))
+    }
+
+    @Test("a banner held while a clip plays shows when the swipe that stops the clip lands on the list")
+    func bannerHeldWhilePlaying() {
+        var machine = Self.machine(on: .sounds(index: 0))
+        guard case .playSound = machine.apply(.tap, sounds: Fakes.sounds) else { Issue.record("no clip started"); return }
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        #expect(machine.page == .sounds(index: 0))
+        #expect(machine.apply(.swipeRight, sounds: Fakes.sounds) == .stopSound)
+        #expect(machine.playing == nil)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+        _ = machine.apply(.tap)
+        #expect(machine.page == .list)
+    }
+
+    @Test("a newer find replaces the banner showing, and the way back still leads to the covered page")
+    func bannerReplacedWhileShowing() {
+        var machine = Self.machine(on: .species(index: 2))
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        machine.friendFound(Fakes.samsOriole, at: 20)
+        #expect(machine.page == .friend(Fakes.samsOriole))
+        #expect(machine.heldBanner == nil)
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .species(index: 2))
+    }
+
+    @Test("a newer find replaces the held one, restarting the hold; only the newer shows on return")
+    func bannerReplacedWhileHeld() {
+        var machine = Self.machine(on: .details(index: 1))
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        machine.friendFound(Fakes.samsOriole, at: 200)
+        #expect(machine.heldBanner == Fakes.samsOriole)
+        #expect(machine.heldBannerExpiry == 200 + LensStateMachine.bannerHoldLimit)
+        #expect(machine.expireBanner(at: 10 + LensStateMachine.bannerHoldLimit + 1) == false)
+        _ = machine.apply(.swipeUp)
+        #expect(machine.page == .friend(Fakes.samsOriole))
+        _ = machine.apply(.tap)
+        #expect(machine.page == .species(index: 1))
+        #expect(machine.heldBanner == nil)
+    }
+
+    @Test("the same find delivered twice is one banner: dismissed, it does not come back, and a repeat while held keeps the first arrival")
+    func bannerDuplicate() {
+        var machine = Self.machine(on: .details(index: 1))
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        machine.friendFound(Fakes.mayasPhoebe, at: 100)
+        #expect(machine.heldBannerExpiry == 10 + LensStateMachine.bannerHoldLimit)
+        var showing = Self.machine(on: .list)
+        showing.friendFound(Fakes.mayasPhoebe, at: 10)
+        showing.friendFound(Fakes.mayasPhoebe, at: 11)
+        #expect(showing.page == .friend(Fakes.mayasPhoebe))
+        _ = showing.apply(.tap)
+        #expect(showing.page == .list)
+    }
+
+    @Test("a banner held for more than five minutes is dropped, and the wearer returns to the page itself")
+    func bannerExpires() {
+        var machine = Self.machine(on: .viewfinder(index: 1))
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        #expect(machine.expireBanner(at: 10 + LensStateMachine.bannerHoldLimit) == false, "exactly five minutes is not more than five")
+        #expect(machine.heldBanner == Fakes.mayasPhoebe)
+        #expect(machine.expireBanner(at: 10 + LensStateMachine.bannerHoldLimit + 0.5))
+        #expect(machine.heldBanner == nil)
+        #expect(machine.heldBannerExpiry == nil)
+        _ = machine.apply(.tap)
+        _ = machine.apply(.swipeUp)
+        #expect(machine.page == .species(index: 1))
+    }
+
+    @Test("a banner showing never expires; the wearer dismisses it")
+    func shownBannerStays() {
+        var machine = Self.machine(on: .list)
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        #expect(machine.expireBanner(at: 10_000) == false)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+    }
+
+    @Test("a problem goes over a banner showing, which is held and back once the problem is dismissed")
+    func problemOverBanner() {
+        var machine = Self.machine(on: .species(index: 1))
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        machine.report(.connectionLost)
+        #expect(machine.page == .problem(.connectionLost))
+        #expect(machine.heldBanner == Fakes.mayasPhoebe)
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .species(index: 1))
+    }
+
+    @Test("a find arriving while a problem shows is held until the problem is dismissed")
+    func bannerHeldUnderProblem() {
+        var machine = Self.machine(on: .list)
+        machine.report(.noLocation)
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        #expect(machine.page == .problem(.noLocation))
+        _ = machine.apply(.tap)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+    }
+
+    @Test("the Add button does nothing on a banner, and a species arriving appends under it")
+    func bannerIgnoresSaveAndStack() {
+        var machine = Self.machine(on: .species(index: 1), species: 2)
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        #expect(machine.press(.save) == nil)
+        machine.update(with: Fakes.stack(3), at: Fakes.quiet)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+        _ = machine.apply(.tap)
+        #expect(machine.page == .species(index: 1))
+    }
+
+    @Test("a new session restarts the pages on the list with the banner still showing")
+    func bannerSurvivesNewSession() {
+        var machine = Self.machine(on: .species(index: 2))
+        machine.friendFound(Fakes.mayasPhoebe, at: 10)
+        machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]), at: 5)
+        #expect(machine.page == .friend(Fakes.mayasPhoebe))
+        _ = machine.apply(.tap)
+        #expect(machine.page == .list)
     }
 }

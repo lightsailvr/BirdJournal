@@ -37,6 +37,43 @@ public enum LensProblem: Sendable, Hashable {
     case connectionLost
 }
 
+/// A friend's notable find as the lens shows it (issue #67): "Maya heard a Black Phoebe · Pasadena".
+public struct LensFriendBanner: Sendable, Hashable {
+    public enum Method: Sendable, Hashable {
+        case heard
+        case saw
+    }
+
+    /// Tells one find from another (the friend and their sighting): the same find delivered twice is one banner.
+    public var id: String
+    /// The friend's first name, or "A friend".
+    public var friendName: String
+    public var method: Method
+    public var speciesName: String
+    /// The city, "a secret spot", or nil when the find has no place.
+    public var place: String?
+
+    public init(id: String, friendName: String, method: Method, speciesName: String, place: String?) {
+        self.id = id
+        self.friendName = friendName
+        self.method = method
+        self.speciesName = speciesName
+        self.place = place
+    }
+
+    /// "Maya heard a Black Phoebe · Pasadena"; without a place the line ends at the bird.
+    public var text: String {
+        let verb = switch method {
+        case .heard: "heard"
+        case .saw: "saw"
+        }
+        let article = speciesName.first.map { "aeiou".contains($0.lowercased()) } == true ? "an" : "a"
+        let find = "\(friendName) \(verb) \(article) \(speciesName)"
+        guard let place, !place.isEmpty else { return find }
+        return "\(find) · \(place)"
+    }
+}
+
 /// Semantic input events as the app sees them. Swipes arrive as Nav events and taps as Select events from the
 /// Neural Band. Real glasses do not deliver `back` (DAT 1.0.0 Inputs docs, "Current limitations"): the system's
 /// back gesture ends the display session instead. The rule is here for the mock and for when hardware delivers it.
@@ -119,6 +156,12 @@ public enum LensEffect: Sendable, Equatable {
 /// reorders and new species append at the end, so an update never moves the page the wearer is on. A reported problem covers the current page until swipe right, Back or a
 /// tap returns there (issue #10).
 ///
+/// A friend's notable find (issue #67) is a banner page like the problem page, shown only over the species list or a
+/// photo page. Anywhere else (the viewfinder, a details page, a sounds page, a problem page) it is held and shown
+/// when the wearer lands back on the list or a photo page. One at a time: a newer find replaces the banner showing
+/// or the one held, and a banner held for more than `bannerHoldLimit` seconds after it arrived is dropped
+/// (`expireBanner(at:)`). A tap or swipe right (or Back) dismisses it; the other swipes do nothing there.
+///
 /// The list shows the stack in `order` (issue #42): calling birds first, then the rest most recently heard first.
 /// The highlight is unpinned until the wearer swipes: it sits on row one, so the calling bird is the highlighted
 /// row and a tap opens it. Swipe down or up pins it to a species, and it stays on that bird as the list moves under
@@ -146,6 +189,13 @@ public struct LensStateMachine: Sendable, Equatable {
     public private(set) var nextSounds: [Int: Int] = [:]
     /// Playbacks started this session, for their ids.
     private var playbacks = 0
+    /// The friend banner waiting for the list or a photo page, nil when none is.
+    public private(set) var heldBanner: LensFriendBanner?
+    /// When the current banner (held or showing) arrived, on the clock `friendFound(_:at:)` was given.
+    private var bannerArrivedAt: Double = 0
+
+    /// How long a held friend banner waits for the list or a photo page before it is dropped: five minutes.
+    public static let bannerHoldLimit: Double = 300
 
     public init() {}
 
@@ -175,6 +225,8 @@ public struct LensStateMachine: Sendable, Equatable {
             && zip(stack.candidates, self.stack.candidates).allSatisfy { $0.species == $1.species }
         self.stack = stack
         if !continues {
+            // A banner showing survives the new session: it waits a moment as held and is shown on the list.
+            if case .friend(let banner) = page { heldBanner = banner }
             page = .list
             coveredPage = .list
             pinnedSpecies = nil
@@ -186,6 +238,7 @@ public struct LensStateMachine: Sendable, Equatable {
         }
         let previousOrder = order
         order.update(with: stack, at: time)
+        if !continues { presentHeldBanner() }
         return stackChanged || order != previousOrder
     }
 
@@ -195,6 +248,11 @@ public struct LensStateMachine: Sendable, Equatable {
     /// right, taps or goes back. A clip playing under it is stopped.
     @discardableResult
     public mutating func report(_ problem: LensProblem) -> LensEffect? {
+        // A banner showing gives way to the problem and is held again, so it comes back after it.
+        if case .friend(let banner) = page {
+            heldBanner = banner
+            page = coveredPage
+        }
         if case .problem = page {} else { coveredPage = page }
         page = .problem(problem)
         return stopPlaying()
@@ -209,12 +267,15 @@ public struct LensStateMachine: Sendable, Equatable {
             // A clip plays only on a sounds page, whose moves have no effect of their own to lose.
             let moved = navigate(gesture)
             assert(moved == nil, "a move from a sounds page returned \(String(describing: moved))")
+            presentHeldBanner()
             return stop
         }
         if case let .sounds(index) = page, gesture == .tap {
             return stopPlaying() ?? play(index, sounds: sounds(stack.candidates[index].species))
         }
-        return navigate(gesture)
+        let effect = navigate(gesture)
+        presentHeldBanner()
+        return effect
     }
 
     /// The page map's moves. A tap on a sounds page is the play control, handled by `apply`.
@@ -258,6 +319,11 @@ public struct LensStateMachine: Sendable, Equatable {
             page = coveredPage
         case (.problem, .swipeLeft), (.problem, .swipeUp), (.problem, .swipeDown):
             break
+
+        case (.friend, .swipeRight), (.friend, .back), (.friend, .tap):
+            page = coveredPage
+        case (.friend, .swipeLeft), (.friend, .swipeUp), (.friend, .swipeDown):
+            break
         }
         return nil
     }
@@ -268,8 +334,53 @@ public struct LensStateMachine: Sendable, Equatable {
         switch (page, action) {
         case let (.details(index), .save):
             return openViewfinder(index)
-        case (.list, .save), (.species, .save), (.sounds, .save), (.viewfinder, .save), (.problem, .save):
+        case (.list, .save), (.species, .save), (.sounds, .save), (.viewfinder, .save), (.problem, .save), (.friend, .save):
             return nil
+        }
+    }
+
+    // MARK: - Friend banners
+
+    /// A friend's notable find arrived at `time` (seconds on any steady clock; `expireBanner(at:)` takes the same
+    /// one). Shown at once over the species list or a photo page, else held. It replaces the banner showing or the
+    /// one held; the same find again changes nothing.
+    public mutating func friendFound(_ banner: LensFriendBanner, at time: Double) {
+        if case .friend(let showing) = page {
+            guard showing.id != banner.id else { return }
+            page = .friend(banner)
+            bannerArrivedAt = time
+            return
+        }
+        guard heldBanner?.id != banner.id else { return }
+        heldBanner = banner
+        bannerArrivedAt = time
+        presentHeldBanner()
+    }
+
+    /// Drops the held banner if it has waited more than `bannerHoldLimit` by `time`. Returns whether it did. A banner
+    /// showing is left for the wearer to dismiss.
+    @discardableResult
+    public mutating func expireBanner(at time: Double) -> Bool {
+        guard heldBanner != nil, time - bannerArrivedAt > Self.bannerHoldLimit else { return false }
+        heldBanner = nil
+        return true
+    }
+
+    /// When the held banner is dropped, nil when none is held: the adapter wakes then to call `expireBanner(at:)`.
+    public var heldBannerExpiry: Double? {
+        heldBanner.map { _ in bannerArrivedAt + Self.bannerHoldLimit }
+    }
+
+    /// Shows the held banner if the wearer is on the list or a photo page.
+    private mutating func presentHeldBanner() {
+        guard let banner = heldBanner else { return }
+        switch page {
+        case .list, .species:
+            coveredPage = page
+            page = .friend(banner)
+            heldBanner = nil
+        case .details, .sounds, .viewfinder, .problem, .friend:
+            break
         }
     }
 

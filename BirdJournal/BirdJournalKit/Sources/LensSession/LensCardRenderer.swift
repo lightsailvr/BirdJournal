@@ -3,7 +3,8 @@ import Identification
 /// Maps a page and the stack to its card (spec "Card renderer", issue #24): the species list (count, one row per
 /// species on the page holding the selected row, which is highlighted), the photo page (photo, name and match rate,
 /// status strip and a hint) and the details page (name, field marks, size and habitat, credit and "Add to my list"
-/// or the saved line) and the problem page (what went wrong, what it means for the run, the way back). Every page
+/// or the saved line), the problem page (what went wrong, what it means for the run, the way back) and the friend
+/// banner (issue #67: "Maya heard a Black Phoebe · Pasadena"). Every page
 /// fits the canvas. No page exceeds `wordBudget` words (spec user story 24) but the details page, whose field marks
 /// are set in the small style and get `detailsWordBudget` less the fixed lines (issue #32); pack text is cut to
 /// fit, field marks first.
@@ -53,6 +54,8 @@ public enum LensCardRenderer {
             return details(candidate, isSaved: saved.contains(index), earned: earned[index], calling: callingText(for: index, stack: stack, order: order), profile: profile(candidate.species))
         case .problem(let problem):
             return self.problem(problem)
+        case .friend(let banner):
+            return friend(banner)
         }
     }
 
@@ -176,6 +179,11 @@ public enum LensCardRenderer {
             ("Connection lost", "The glasses were out of range. BirdJournal kept listening and is back on the lens.")
         }
         return LensCard(screenfuls: [[.heading(heading), .body(body), .meta("Swipe right to continue")]])
+    }
+
+    /// A friend's notable find (issue #67): who found what and where, one heading, and the way back.
+    static func friend(_ banner: LensFriendBanner) -> LensCard {
+        LensCard(screenfuls: [[.status("A friend's find"), .heading(banner.text), .meta("Tap or swipe right to close")]])
     }
 
     /// A saved species shows what its latest add earned ("Your first House Finch" for a Legendary card, else "New
