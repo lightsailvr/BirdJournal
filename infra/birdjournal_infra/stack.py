@@ -15,12 +15,13 @@ from birdjournal_infra.data import Data
 from birdjournal_infra.invite_site import InviteSite
 from birdjournal_infra.goals import GoalRollover
 from birdjournal_infra.pushes import Pushes
+from birdjournal_infra.safety import Safety
 
 BACKEND_DIRECTORY = Path(__file__).resolve().parents[2] / "backend"
 
 
 class BirdJournalStack(Stack):
-    """The whole BirdJournal backend in one stack (ADR-0002, issues #60, #61, #63 and #68)."""
+    """The whole BirdJournal backend in one stack (ADR-0002, issues #60, #61, #63, #68 and #71)."""
 
     def __init__(self, scope: Construct, id: str, *, config: BirdJournalConfig, **kwargs: Any) -> None:
         super().__init__(scope, id, **kwargs)
@@ -59,6 +60,11 @@ class BirdJournalStack(Stack):
                 "ART_DAILY_ALLOWANCE": str(config.art_daily_allowance),
                 "APNS_SECRET_NAME": config.apns_secret_name,
                 "APNS_TOPIC": config.apns_topic,
+                # Reports, moderation and account deletion (#71).
+                "REPORT_EMAIL": config.report_email,
+                "MODERATION": config.moderation,
+                "APPLE_SIGN_IN_SECRET_NAME": config.apple_sign_in_secret_name,
+                "APPLE_CLIENT_ID": config.apns_topic,
             },
         )
         data.table.grant_read_write_data(api.function)
@@ -66,6 +72,11 @@ class BirdJournalStack(Stack):
         shared_photos.grant_api(api.function)
         Pushes(self, "Pushes", function=api.function, apns_secret_name=config.apns_secret_name)
         GoalRollover(self, "GoalRollover", function=api.function)
+        Safety(
+            self, "Safety", function=api.function, report_email=config.report_email, user_pool=auth.user_pool,
+            apple_sign_in_secret_name=config.apple_sign_in_secret_name, upload_bucket=art_jobs.uploads,
+            art_bucket=self.art.bucket,
+        )
         Budget(self, "Budget", monthly_usd=config.monthly_budget_usd, email=config.budget_alert_email)
 
         domain = f"{config.cognito_domain_prefix}.auth.{self.region}.amazoncognito.com"

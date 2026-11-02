@@ -13,12 +13,16 @@ SITE_DIRECTORY = Path(__file__).resolve().parents[1] / "site"
 AASA_KEY = ".well-known/apple-app-site-association"
 
 # Viewer request: an invite link, /i/<token>, gets the fallback page. Apple fetches the association file through its
-# own CDN, and in the app the link never reaches CloudFront at all.
+# own CDN, and in the app the link never reaches CloudFront at all. The privacy policy and terms (#71) answer at
+# /privacy and /terms, the addresses the app and the App Store listing give.
 REWRITE_INVITES = """
+var PAGES = { '/privacy': '/privacy.html', '/privacy/': '/privacy.html', '/terms': '/terms.html', '/terms/': '/terms.html' };
 function handler(event) {
   var request = event.request;
   if (request.uri === '/i' || request.uri.indexOf('/i/') === 0) {
     request.uri = '/invite.html';
+  } else if (PAGES[request.uri]) {
+    request.uri = PAGES[request.uri];
   }
   return request;
 }
@@ -65,7 +69,7 @@ class InviteSite(Construct):
             "RewriteInvites",
             code=cloudfront.FunctionCode.from_inline(REWRITE_INVITES),
             runtime=cloudfront.FunctionRuntime.JS_2_0,
-            comment="BirdJournal: /i/<token> serves the invite fallback page",
+            comment="BirdJournal: /i/<token> serves the invite fallback page; /privacy and /terms their pages",
         )
 
         self.distribution = cloudfront.Distribution(

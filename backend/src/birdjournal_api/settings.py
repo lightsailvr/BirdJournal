@@ -34,6 +34,16 @@ class Settings:
     apns_secret_name: str | None = None
     # The app's bundle id, the apns-topic of every push.
     apns_topic: str = "com.matthewcelia.mybirdjournal"
+    # Reports (issue #71) are mailed through SES to this address, from `report_sender` (both verified SES identities;
+    # in the SES sandbox one verified address can be both). None: reports are stored but not mailed.
+    report_email: str | None = None
+    report_sender: str | None = None
+    # Rekognition moderation of art-job inputs and outputs and of shared photos (issue #71): off until the public launch.
+    moderation: bool = False
+    # Sign in with Apple's key (the accounts wizard's secret), for revoking the birder's token at account deletion; and
+    # the client the app's own Sign in with Apple authorizes as (the bundle id).
+    apple_sign_in_secret_name: str | None = None
+    apple_client_id: str = "com.matthewcelia.mybirdjournal"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -55,7 +65,18 @@ class Settings:
             art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
             apns_secret_name=env.get("APNS_SECRET_NAME") or None,
             apns_topic=env.get("APNS_TOPIC") or cls.apns_topic,
+            report_email=env.get("REPORT_EMAIL") or None,
+            report_sender=env.get("REPORT_SENDER") or env.get("REPORT_EMAIL") or None,
+            moderation=_switch(env.get("MODERATION") or "off"),
+            apple_sign_in_secret_name=env.get("APPLE_SIGN_IN_SECRET_NAME") or None,
+            apple_client_id=env.get("APPLE_CLIENT_ID") or cls.apple_client_id,
         )
+
+
+def _switch(value: str) -> bool:
+    if value not in ("on", "off"):
+        raise ValueError(f"MODERATION must be on or off, not {value!r}")
+    return value == "on"
 
 
 def _rule(value: str) -> str:

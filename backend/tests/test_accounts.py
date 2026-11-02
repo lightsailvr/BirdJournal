@@ -16,7 +16,14 @@ def test_the_first_call_creates_the_account_and_returns_it(client: TestClient, i
         "id": "apple-sub-1",
         "display_name": None,
         "created_at": "2026-11-01T09:30:00Z",
+        # From the token's username (signinwithapple_…): the app asks Apple again at deletion (#71).
+        "provider": "apple",
     }
+
+
+def test_a_google_account_says_so(client: TestClient, issuer: TestIssuer) -> None:
+    headers = issuer.headers(sub="g-1", username="google_1234")
+    assert client.get("/v1/account", headers=headers).json()["provider"] == "google"
 
 
 def test_later_calls_return_the_same_account(client: TestClient, issuer: TestIssuer, clock: Clock) -> None:
@@ -44,7 +51,9 @@ def test_the_display_name_can_be_updated(client: TestClient, issuer: TestIssuer)
 def test_updating_before_any_read_creates_the_account(client: TestClient, issuer: TestIssuer) -> None:
     response = client.patch("/v1/account", headers=issuer.headers(sub="new"), json={"display_name": "Wren"})
     assert response.status_code == 200
-    assert response.json() == {"id": "new", "display_name": "Wren", "created_at": "2026-11-01T09:30:00Z"}
+    assert response.json() == {
+        "id": "new", "display_name": "Wren", "created_at": "2026-11-01T09:30:00Z", "provider": "apple"
+    }
 
 
 def test_the_display_name_is_trimmed(client: TestClient, issuer: TestIssuer) -> None:

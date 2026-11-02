@@ -36,6 +36,9 @@ final class FakeCircleClient: CircleClient {
     /// Every device registration and removal, for the tests: `register <token> <environment>` or `unregister <token>`.
     private(set) var deviceLog: [String] = []
     private var muted = Mutes()
+    /// Reports and blocks (issue #71).
+    private(set) var reports: [ReportDraft] = []
+    private var blockedIDs: [String] = []
     /// Every circle's goals without their progress, which is counted from the feed when read. `head start` stands in
     /// for seeded finds older than the feed shows, so the seeded goals aren't all at zero.
     private var storedGoals: [String: [(goal: CircleGoal, headStart: Int)]] = [:]
@@ -202,7 +205,8 @@ final class FakeCircleClient: CircleClient {
 
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage {
         _ = try await circle(id: circleID, accessToken: accessToken)
-        let items = feedItems[circleID] ?? []
+        // A blocked account's finds are left out, as the server does (issue #71).
+        let items = (feedItems[circleID] ?? []).filter { !blockedIDs.contains($0.owner.id) }
         let firsts = Dictionary(grouping: items, by: \.scientificName).compactMapValues { $0.min { ($0.foundAt, $0.id) < ($1.foundAt, $1.id) }?.id }
         let sorted = items
             .map { item in
@@ -229,6 +233,33 @@ final class FakeCircleClient: CircleClient {
     }
 
     func mutes(accessToken: String) async throws -> Mutes { muted }
+
+    func report(_ report: ReportDraft, accessToken: String) async throws {
+        guard report.accountID != Self.me else { throw CircleError.ownAccount }
+        guard let detail = circlesByID[report.circleID],
+              detail.members.contains(where: { $0.id == Self.me }),
+              detail.members.contains(where: { $0.id == report.accountID }) else { throw CircleError.notFound }
+        guard reports.count < 20 else { throw CircleError.tooManyReports }
+        reports.append(report)
+    }
+
+    func blocks(accessToken: String) async throws -> [BlockedAccount] {
+        blockedIDs.map { id in BlockedAccount(id: id, displayName: name(of: id)) }
+    }
+
+    func setBlocked(_ blocked: Bool, accountID: String, accessToken: String) async throws {
+        blockedIDs.removeAll { $0 == accountID }
+        guard blocked else { return }
+        guard accountID != Self.me else { throw CircleError.ownAccount }
+        guard circlesByID.values.contains(where: { detail in
+            detail.members.contains { $0.id == Self.me } && detail.members.contains { $0.id == accountID }
+        }) else { throw CircleError.notFound }
+        blockedIDs.append(accountID)
+    }
+
+    private func name(of id: String) -> String? {
+        circlesByID.values.lazy.flatMap(\.members).first { $0.id == id }?.displayName
+    }
 
     func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws {
         if muted {

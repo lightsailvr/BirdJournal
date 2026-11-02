@@ -26,8 +26,13 @@ final class AccountSession {
     /// the push center (issue #63) takes the phone off the account so it gets no more of its pushes.
     @ObservationIgnored var beforeSignOut: ((String) async -> Void)?
 
+    /// Set after the account was deleted (issue #71), for the Account screen to say so.
+    private(set) var deletedNotice: String?
+    private(set) var isDeleting = false
+
     private let auth: AuthClient?
     private let api: AccountAPI?
+    private let apple: AppleReauthorizing?
     private let store: TokenStore
     private let now: () -> Date
     private var tokens: AuthTokens?
@@ -35,9 +40,13 @@ final class AccountSession {
     private var refreshing: Task<AuthTokens, Error>?
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "account")
 
-    init(auth: AuthClient?, api: AccountAPI?, store: TokenStore, now: @escaping () -> Date = Date.init) {
+    init(
+        auth: AuthClient?, api: AccountAPI?, store: TokenStore, apple: AppleReauthorizing? = nil,
+        now: @escaping () -> Date = Date.init
+    ) {
         self.auth = auth
         self.api = api
+        self.apple = apple
         self.store = store
         self.now = now
         guard auth != nil, api != nil else {
@@ -58,6 +67,7 @@ final class AccountSession {
         guard let auth, status == .signedOut else { return }
         status = .signingIn(provider)
         errorMessage = nil
+        deletedNotice = nil
         do {
             let tokens = try await auth.signIn(with: provider)
             try store.save(tokens)
@@ -103,6 +113,61 @@ final class AccountSession {
         } catch {
             report(error, doing: "save your name")
         }
+    }
+
+    /// Deletes the account and everything the server holds about it (issue #71, App Review 5.1.1(v)), then signs
+    /// out. For an Apple account it asks Apple once more first (a cancelled sheet still deletes). The server's deletion
+    /// is idempotent, so a timeout or a server error is tried twice more before giving up; the journal and cards stay
+    /// on the phone. True when the account is gone.
+    @discardableResult
+    func deleteAccount() async -> Bool {
+        guard let api, status == .signedIn, !isDeleting else { return false }
+        isDeleting = true
+        defer { isDeleting = false }
+        errorMessage = nil
+        if account == nil { await loadAccount() }
+        var appleCode: String?
+        if let apple, account?.signsInWithApple ?? identity.isApple {
+            do {
+                appleCode = try await apple.authorizationCode()
+            } catch {
+                // Apple's sheet failing never stops a deletion; the server just has nothing to revoke.
+                log.error("Sign in with Apple for revocation failed: \(String(describing: error))")
+            }
+        }
+        var lastError: Error?
+        for attempt in 0..<3 {
+            do {
+                try await authorized { try await api.deleteAccount(appleAuthorizationCode: appleCode, accessToken: $0) }
+                lastError = nil
+                break
+            } catch AuthError.sessionExpired {
+                report(AuthError.sessionExpired, doing: "delete your account")
+                return false
+            } catch {
+                lastError = error
+                log.error("deleting the account failed (attempt \(attempt + 1)): \(String(describing: error))")
+            }
+        }
+        if lastError != nil {
+            errorMessage = "Couldn't delete your account. Check your connection and try again."
+            return false
+        }
+        // The server already took the phone off the account, and its user is gone: forget the tokens, nothing to
+        // unregister or revoke.
+        forgetTokens()
+        deletedNotice = "Your account and everything Bird Journal kept about it on the server were deleted. Your journal and cards stay on this iPhone."
+        return true
+    }
+
+    private func forgetTokens() {
+        tokens = nil
+        refreshing = nil
+        store.clear()
+        account = nil
+        identity = .init()
+        errorMessage = nil
+        if status != .unavailable { status = .signedOut }
     }
 
     /// Forgets the tokens here and revokes the refresh token at Cognito. The journal and cards stay on the phone.
@@ -221,7 +286,8 @@ extension AccountSession {
         return AccountSession(
             auth: CognitoAuthClient(server: server, web: SystemWebSignIn()),
             api: HTTPAccountAPI(baseURL: server.apiURL),
-            store: store
+            store: store,
+            apple: SystemAppleReauthorization()
         )
     }
 

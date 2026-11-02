@@ -51,6 +51,7 @@ from boto3.dynamodb.conditions import Key
 from birdjournal_api.accounts import AccountStore
 from birdjournal_api.art import PaintedArt
 from birdjournal_api.circles import CircleStore, NotFound
+from birdjournal_api.moderation import Moderation
 from birdjournal_api.photos import PHOTO_MAX_BYTES, PhotoStore, is_photo_key_of
 
 SECRET_SPOT = "a secret spot"
@@ -227,6 +228,7 @@ class FindStore:
     def __init__(
         self, dynamodb: Any, table_name: str, accounts: AccountStore, circles: CircleStore,
         clock: Callable[[], datetime], photos: PhotoStore | None = None, painted: PaintedArt | None = None,
+        moderation: Moderation | None = None,
     ) -> None:
         self._dynamodb = dynamodb
         self._table = dynamodb.Table(table_name)
@@ -235,6 +237,7 @@ class FindStore:
         self._clock = clock
         self._photos = photos
         self._painted = painted
+        self._moderation = moderation
 
     def put(
         self, owner: str, sighting_id: str, content: FindContent, *, art_fallback: ArtReference | None = None
@@ -292,6 +295,10 @@ class FindStore:
             if size > PHOTO_MAX_BYTES:
                 photos.delete(extras.photo_key)
                 raise ValueError("photo_too_large")
+            if self._moderation is not None and self._moderation.art_flag(extras.photo_key):
+                # Withheld from the circle (#71): nothing is written and the photo goes; the card can go without it.
+                photos.delete(extras.photo_key)
+                raise ValueError("photo_flagged")
         now = self._clock()
         existing = self._get(_find_key(owner, sighting_id))
         content = self._with_held_art(owner, sighting_id, content, art_fallback, existing)
@@ -374,6 +381,23 @@ class FindStore:
             created_at=_parse(item["created_at"]), updated_at=_parse(item["updated_at"]),
         )
 
+    def as_shown(self, find: Find, circle_id: str) -> dict[str, Any]:
+        """The find as the circle sees it, with that circle's shared card: a report's snapshot (#71)."""
+        share = self._shares(find.owner, find.sighting_id).get(circle_id)
+        content = _shown(find.content, share)
+        snapshot: dict[str, Any] = {
+            "species_id": content.species_id,
+            "scientific_name": content.scientific_name,
+            "common_name": content.common_name,
+            "method": content.method.value,
+            "place": content.place,
+            "found_at": _minute(content.found_at),
+            "art_key": content.art.key if content.art is not None else None,
+        }
+        if share is not None:
+            snapshot.update(_extras_attributes(share.extras))
+        return snapshot
+
     def shown_art(self, owner: str, sighting_id: str) -> str | None:
         """The key of the art the sighting's find shows, if it has a find: what keeps a painting on the server."""
         item = self._get(_find_key(owner, sighting_id))
@@ -402,8 +426,12 @@ class FindStore:
         if previous is not None and previous.kind is ArtKind.PAINTED and (content is None or previous != content.art):
             self._painted.release(owner, previous.key)
 
-    def feed(self, subject: str, circle_id: str, *, limit: int, cursor: str | None) -> FeedPage:
-        """A page of the circle's feed, newest find first, for a current member; NotFound for anyone else."""
+    def feed(
+        self, subject: str, circle_id: str, *, limit: int, cursor: str | None, hidden: frozenset[str] = frozenset()
+    ) -> FeedPage:
+        """A page of the circle's feed, newest find first, for a current member; NotFound for anyone else. The finds
+        of `hidden` owners (accounts the reader blocked, #71) are left out, so a page can hold fewer than `limit`
+        items while `next_cursor` still leads on."""
         if not self._circles.is_member(subject, circle_id):
             raise NotFound()
         kwargs: dict[str, Any] = {
@@ -415,8 +443,8 @@ class FindStore:
         if cursor is not None:
             kwargs["ExclusiveStartKey"] = {"pk": _feed_pk(circle_id), "sk": _decode_cursor(cursor)}
         response = self._table.query(**kwargs)
-        items = response["Items"]
         last = response.get("LastEvaluatedKey")
+        items = [item for item in response["Items"] if item["owner"] not in hidden]
         names = self._circles.display_names([item["owner"] for item in items])
         firsts = {
             name: self._first_of(circle_id, name) for name in {str(item["scientific_name"]) for item in items}

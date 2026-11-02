@@ -58,7 +58,7 @@ class JobResponse(BaseModel):
     # The painting's key on the art CDN once ready: what a find names to show it (#70).
     art_key: str | None = None
     # Why it failed: "expired", "filtered" (the content filter), "no_reference", "no_bird" (photo art: no bird found in
-    # the photo), "painting_failed", "bad_input".
+    # the photo), "painting_failed", "bad_input", "flagged" (moderation withheld the photo or the painting, #71).
     failure: str | None
     provenance: str | None
     received: bool

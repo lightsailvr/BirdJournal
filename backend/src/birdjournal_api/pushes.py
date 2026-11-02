@@ -362,7 +362,7 @@ class PushService:
 
 def _open_circles(mutes: Mutes, friend: str, circle_ids: list[str]) -> list[str]:
     """The circles through which the recipient still hears of the friend: none when the friend is muted."""
-    if friend in mutes.friends:
+    if mutes.silences(friend):
         return []
     return [circle_id for circle_id in circle_ids if circle_id not in mutes.circles]
 

@@ -89,6 +89,14 @@ struct SettingsView: View {
             Section("About") {
                 NavigationLink("Support Bird Journal", value: Route.support)
                 NavigationLink("Sources & credits", value: Route.credits)
+                Link(destination: SiteLinks.privacy) {
+                    LabeledContent("Privacy policy") { Image(systemName: "arrow.up.right.square") }
+                }
+                .accessibilityIdentifier("privacyPolicyLink")
+                Link(destination: SiteLinks.terms) {
+                    LabeledContent("Terms of use") { Image(systemName: "arrow.up.right.square") }
+                }
+                .accessibilityIdentifier("termsLink")
                 LabeledContent("Version", value: Self.versionText)
                 Text("Powered by BirdNET. Birds are identified on this iPhone; no audio is saved or sent anywhere.")
                     .font(JournalFont.supporting)
@@ -144,4 +152,10 @@ struct GlassesDeviceRow: View {
             }
         }
     }
+}
+
+/// The privacy policy and terms (issue #71), on the invite domain's site (`infra/site/`).
+enum SiteLinks {
+    static let privacy = URL(string: "https://birdquest.matthewcelia.com/privacy")!
+    static let terms = URL(string: "https://birdquest.matthewcelia.com/terms")!
 }

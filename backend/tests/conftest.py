@@ -180,6 +180,76 @@ def apns() -> FakeApns:
     return FakeApns()
 
 
+class FakeMailer:
+    """Records the report mails SES would send (issue #71)."""
+
+    def __init__(self) -> None:
+        self.sent: list[tuple[str, str]] = []
+        self.failing = False
+
+    def send(self, subject: str, body: str) -> None:
+        if self.failing:
+            raise RuntimeError("SES is down")
+        self.sent.append((subject, body))
+
+
+class FakeModerator:
+    """Rekognition in memory (issue #71): keys in `flagged` get a moderation label; every key it was asked about is
+    in `asked`, with its bucket."""
+
+    def __init__(self) -> None:
+        self.flagged: dict[str, tuple[str, str]] = {}
+        self.asked: list[tuple[str, str]] = []
+
+    def labels(self, bucket: str, key: str) -> list[tuple[str, str]]:
+        self.asked.append((bucket, key))
+        return [self.flagged[key]] if key in self.flagged else []
+
+
+class FakeUsers:
+    """The user pool's deletions (issue #71)."""
+
+    def __init__(self) -> None:
+        self.deleted: list[str] = []
+
+    def delete_user(self, username: str) -> None:
+        self.deleted.append(username)
+
+
+class FakeApple:
+    """Apple's token endpoints (issue #71): the codes it was asked to revoke, and whether it takes them."""
+
+    def __init__(self) -> None:
+        self.revoked: list[str] = []
+        self.refusing = False
+
+    def revoke(self, authorization_code: str) -> bool:
+        if self.refusing:
+            return False
+        self.revoked.append(authorization_code)
+        return True
+
+
+@pytest.fixture
+def mailer() -> FakeMailer:
+    return FakeMailer()
+
+
+@pytest.fixture
+def moderator() -> FakeModerator:
+    return FakeModerator()
+
+
+@pytest.fixture
+def users() -> FakeUsers:
+    return FakeUsers()
+
+
+@pytest.fixture
+def apple() -> FakeApple:
+    return FakeApple()
+
+
 @pytest.fixture
 def client(
     settings: Settings,
@@ -189,6 +259,10 @@ def client(
     art_queue: FakeArtQueue,
     art_notifier: FakeNotifier,
     apns: FakeApns,
+    mailer: FakeMailer,
+    moderator: FakeModerator,
+    users: FakeUsers,
+    apple: FakeApple,
 ) -> Iterator[TestClient]:
     app = create_app(
         settings,
@@ -198,6 +272,10 @@ def client(
         art_queue=art_queue,
         art_notifier=art_notifier,
         push_sender=apns,
+        mailer=mailer,
+        moderator=moderator,
+        users=users,
+        apple=apple,
     )
     with TestClient(app) as client:
         yield client

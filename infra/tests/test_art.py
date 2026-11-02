@@ -179,8 +179,11 @@ def test_the_api_may_presign_uploads_delete_painted_art_queue_jobs_and_read_the_
     assert any(art in r and "/art/*" in r for r in by_action["s3:DeleteObject"])
     assert all(queue in r for r in by_action["sqs:SendMessage"])
     assert all(secret in r for r in by_action["secretsmanager:GetSecretValue"])
-    # Never the art bucket's whole contents, and never a read of painted art (CloudFront serves it).
-    assert not any(art in r and "/photos/*" not in r for r in by_action.get("s3:GetObject", []))
+    # Never the art bucket's whole contents; painted art is read only by Rekognition's moderation (#71,
+    # tests/test_safety.py), shared photos for theirs (#66).
+    assert not any(
+        art in r and "/photos/*" not in r and "/art/*" not in r for r in by_action.get("s3:GetObject", [])
+    )
 
 
 def test_an_unknown_auto_paint_rule_is_refused() -> None:

@@ -35,11 +35,14 @@ struct AuthTokens: Codable, Equatable {
         var email: String?
         /// The account's `sub`, the server's account id: whose finds the outbox is holding (issue #62).
         var subject: String?
+        /// Signed in with Apple: the user pool's username for an Apple user is `signinwithapple_<id>` (issue #71).
+        var isApple = false
 
-        init(name: String? = nil, email: String? = nil, subject: String? = nil) {
+        init(name: String? = nil, email: String? = nil, subject: String? = nil, isApple: Bool = false) {
             self.name = name
             self.email = email
             self.subject = subject
+            self.isApple = isApple
         }
 
         init(idToken: String) {
@@ -53,7 +56,8 @@ struct AuthTokens: Codable, Equatable {
             self.init(
                 name: name?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
                 email: (claims["email"] as? String)?.nilIfEmpty,
-                subject: (claims["sub"] as? String)?.nilIfEmpty
+                subject: (claims["sub"] as? String)?.nilIfEmpty,
+                isApple: ((claims["cognito:username"] as? String) ?? "").lowercased().hasPrefix("signinwithapple_")
             )
         }
     }

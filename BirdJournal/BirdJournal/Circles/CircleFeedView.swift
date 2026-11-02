@@ -9,6 +9,10 @@ import SwiftUI
 struct CircleFeedSection: View {
     @Environment(CircleStore.self) private var circles
     let circleID: String
+    /// Report a friend's find, and block its owner (issue #71): the circle's page presents the sheet and the dialog,
+    /// since a sheet hung on a list section never presents.
+    var onReport: (FeedItem) -> Void = { _ in }
+    var onBlock: (FeedItem.Owner) -> Void = { _ in }
     @State private var reactionError: String?
 
     private var feed: CircleStore.Feed { circles.feeds[circleID] ?? .init() }
@@ -31,6 +35,12 @@ struct CircleFeedSection: View {
                 VStack(alignment: .leading, spacing: 8) {
                     FindRow(item: item)
                     ReactionBar(item: item) { kind, given in react(kind, given: given, to: item) }
+                }
+                .contextMenu {
+                    if !item.isMine {
+                        Button("Report this find…", systemImage: "exclamationmark.bubble") { onReport(item) }
+                        Button("Block \(item.owner.name)…", systemImage: "hand.raised", role: .destructive) { onBlock(item.owner) }
+                    }
                 }
             }
             if let reactionError {

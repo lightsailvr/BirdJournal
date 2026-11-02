@@ -11,6 +11,9 @@ struct CirclePageView: View {
     @State private var inviting = false
     @State private var confirmingLeave = false
     @State private var removing: CircleMember?
+    /// Report and block (issue #71).
+    @State private var reporting: ReportDraft?
+    @State private var blocking: BlockedAccount?
     @State private var error: String?
     @State private var showing: Showing = .finds
 
@@ -36,7 +39,12 @@ struct CirclePageView: View {
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                 switch showing {
-                case .finds: CircleFeedSection(circleID: detail.circle.id)
+                case .finds:
+                    CircleFeedSection(
+                        circleID: detail.circle.id,
+                        onReport: { item in reporting = .find(item, circleID: detail.circle.id) },
+                        onBlock: { owner in blocking = BlockedAccount(id: owner.id, displayName: owner.displayName) }
+                    )
                 case .compare: compare(detail)
                 }
                 header(detail)
@@ -73,7 +81,28 @@ struct CirclePageView: View {
         } message: { _ in
             Text("They can come back only with a new invitation.")
         }
+        .sheet(item: $reporting) { draft in
+            ReportSheet(draft: draft, subject: subject(of: draft))
+        }
+        .confirmationDialog(
+            "Block \(blocking?.name ?? "this member")?",
+            isPresented: Binding(get: { blocking != nil }, set: { if !$0 { blocking = nil } }),
+            titleVisibility: .visible,
+            presenting: blocking
+        ) { account in
+            Button("Block \(account.name)", role: .destructive) { block(account) }
+        } message: { account in
+            Text(Self.blockMessage(account.name))
+        }
         #if DEBUG
+        .task(id: detail?.members.count) {
+            // Issue #71's screenshot: the report sheet for the first friend.
+            if UserDefaults.standard.bool(forKey: "autoCircleReport"), let detail,
+               let friend = detail.members.first(where: { $0.id != myID(in: detail) }) {
+                UserDefaults.standard.removeObject(forKey: "autoCircleReport")
+                reporting = .account(friend, circleID: detail.circle.id)
+            }
+        }
         .task {
             if UserDefaults.standard.bool(forKey: "autoCircleInvite") {
                 UserDefaults.standard.removeObject(forKey: "autoCircleInvite")
@@ -129,7 +158,8 @@ struct CirclePageView: View {
             ForEach(detail.members) { member in
                 let isMe = member.id == myID(in: detail)
                 let isMuted = circles.mutes.friends.contains(member.id)
-                MemberRow(member: member, isMe: isMe, isMuted: isMuted)
+                let isBlocked = circles.blocked.contains { $0.id == member.id }
+                MemberRow(member: member, isMe: isMe, isMuted: isMuted, isBlocked: isBlocked)
                     .swipeActions {
                         if detail.circle.isCreator, !isMe {
                             Button("Remove", role: .destructive) { removing = member }
@@ -144,6 +174,18 @@ struct CirclePageView: View {
                             Button(isMuted ? "Unmute \(member.name)" : "Mute \(member.name)", systemImage: isMuted ? "bell" : "bell.slash") {
                                 setFriendMuted(!isMuted, member)
                             }
+                            Button("Report \(member.name)…", systemImage: "exclamationmark.bubble") {
+                                reporting = .account(member, circleID: detail.circle.id)
+                            }
+                            if isBlocked {
+                                Button("Unblock \(member.name)", systemImage: "hand.raised.slash") {
+                                    unblock(BlockedAccount(id: member.id, displayName: member.displayName))
+                                }
+                            } else {
+                                Button("Block \(member.name)…", systemImage: "hand.raised", role: .destructive) {
+                                    blocking = BlockedAccount(id: member.id, displayName: member.displayName)
+                                }
+                            }
                         }
                         if detail.circle.isCreator, !isMe {
                             Button("Remove from circle", systemImage: "person.badge.minus", role: .destructive) { removing = member }
@@ -155,8 +197,8 @@ struct CirclePageView: View {
         } footer: {
             if detail.members.count > 1 {
                 Text(detail.circle.isCreator
-                     ? "You started this circle: swipe a member to mute or remove them."
-                     : "Swipe a friend to mute their finds' notifications.")
+                     ? "You started this circle: swipe a member to mute or remove them. Touch and hold to report or block."
+                     : "Swipe a friend to mute their finds' notifications. Touch and hold to report or block.")
             }
         }
     }
@@ -222,6 +264,39 @@ struct CirclePageView: View {
         }
     }
 
+    static func blockMessage(_ name: String) -> String {
+        "You won't see \(name)'s finds or reactions, or get notifications about them, in any circle. \(name) isn't told. Unblock in Settings → Account."
+    }
+
+    private func subject(of draft: ReportDraft) -> String {
+        let name = detail?.members.first { $0.id == draft.accountID }?.name
+            ?? circles.feeds[id]?.items.first { $0.owner.id == draft.accountID }?.owner.name
+            ?? "this member"
+        return draft.kind == .find ? "\(name)'s find" : name
+    }
+
+    private func block(_ account: BlockedAccount) {
+        Task {
+            do {
+                try await circles.setBlocked(true, accountID: account.id, name: account.displayName)
+                error = nil
+            } catch {
+                self.error = CircleStore.message(for: error, doing: "block \(account.name)")
+            }
+        }
+    }
+
+    private func unblock(_ account: BlockedAccount) {
+        Task {
+            do {
+                try await circles.setBlocked(false, accountID: account.id, name: account.displayName)
+                error = nil
+            } catch {
+                self.error = CircleStore.message(for: error, doing: "unblock \(account.name)")
+            }
+        }
+    }
+
     private var leaveMessage: String {
         guard let detail else { return "" }
         if detail.circle.isCreator, detail.members.count > 1 {
@@ -275,6 +350,7 @@ private struct MemberRow: View {
     let member: CircleMember
     let isMe: Bool
     var isMuted = false
+    var isBlocked = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -290,8 +366,14 @@ private struct MemberRow: View {
                     Text("Started the circle").font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
                 }
             }
-            if isMuted {
+            if isMuted || isBlocked {
                 Spacer()
+            }
+            if isBlocked {
+                Image(systemName: "hand.raised")
+                    .foregroundStyle(Color.inkSecondary)
+                    .accessibilityLabel("Blocked")
+            } else if isMuted {
                 Image(systemName: "bell.slash")
                     .foregroundStyle(Color.inkSecondary)
                     .accessibilityLabel("Muted")

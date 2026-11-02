@@ -35,6 +35,8 @@ final class CircleStore {
     var pendingInvite: String?
     /// What the birder muted (issue #63): those circles' and friends' finds send no pushes.
     private(set) var mutes = Mutes()
+    /// The accounts the birder blocked (issue #71): the server hides their finds and reactions.
+    private(set) var blocked: [BlockedAccount] = []
     /// Runs after the birder creates or joins a circle: the push center asks for permission the first time.
     @ObservationIgnored var joinedCircle: (() async -> Void)?
     /// The latest reaction tap on each feed item, by item id.
@@ -64,6 +66,7 @@ final class CircleStore {
             if let mutes = try? await account.withAccessToken(doing: "load your circles", { try await client.mutes(accessToken: $0) }) {
                 self.mutes = mutes
             }
+            await loadBlocks()
         } catch {
             log.error("couldn't load circles: \(String(describing: error))")
             listState = .failed(Self.message(for: error, doing: "load your circles"))
@@ -235,6 +238,25 @@ final class CircleStore {
         }
     }
 
+    /// Reports a find or a member (issue #71).
+    func report(_ report: ReportDraft) async throws {
+        try await call { try await $0.report(report, accessToken: $1) }
+    }
+
+    func loadBlocks() async {
+        if let blocked = try? await call({ try await $0.blocks(accessToken: $1) }) {
+            self.blocked = blocked
+        }
+    }
+
+    /// Blocks or unblocks an account. Every open feed reloads, since the server leaves a blocked account's finds out.
+    func setBlocked(_ isBlocked: Bool, accountID: String, name: String?) async throws {
+        try await call { try await $0.setBlocked(isBlocked, accountID: accountID, accessToken: $1) }
+        blocked.removeAll { $0.id == accountID }
+        if isBlocked { blocked.append(BlockedAccount(id: accountID, displayName: name)) }
+        for id in feeds.keys { await loadFeed(circleID: id) }
+    }
+
     /// A friend's side of Compare birds (issue #64).
     func compare(friendID: String) async throws -> FriendBirds {
         try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
@@ -254,6 +276,7 @@ final class CircleStore {
         feeds = [:]
         goals = [:]
         mutes = Mutes()
+        blocked = []
         listState = .idle
     }
 
@@ -290,6 +313,8 @@ final class CircleStore {
         case CircleError.creatorOnly: "Only the circle's creator can remove members."
         case CircleError.rejected: "Use a name of up to 40 characters, on one line."
         case CircleError.goalNotYours: "Only a goal's creator or the circle's creator can delete it, and the monthly goal stays."
+        case CircleError.tooManyReports: "You've sent a lot of reports today. Try again tomorrow, or email matt@lightsailvr.com."
+        case CircleError.ownAccount: "You can't report or block yourself."
         case AuthError.sessionExpired: "You've been signed out. Sign in again to use your circles."
         default: "Couldn't \(action). Check your connection and try again."
         }
@@ -297,6 +322,9 @@ final class CircleStore {
 }
 
 extension CircleStore {
+    /// Blocks live with the circles: any build with accounts has them (issue #71).
+    static var blocksAvailable: Bool { AccountSession.isEnabledInThisBuild }
+
     /// The app's store: the bundled server's API, or none when the build has no server (the tab then says circles
     /// aren't available). In debug builds `-fakeCircles empty|some`, or `-fakeAccount` alone, swaps in the in-memory
     /// fake, so the UI tests and screenshots need no network.
