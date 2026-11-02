@@ -13,8 +13,8 @@ it, except its owner, anyone who muted the owner, and anyone who muted every one
 Items, beside the devices and mutes (devices.py):
 
 - `ACCOUNT#<recipient>` / `PUSHED#<friend>`: when the recipient last got an alert about the friend's finds.
-- `DIGEST` / `<recipient>#<friend>`: the digest buffer, the friend's buffered sighting ids (a string set) and when the
-  first went in. One partition, so the flush reads every buffer with one query and no scan or index; the friends phase
+- `DIGEST` / `<recipient>#<friend>`: the digest buffer, the friend's buffered sighting ids and the circles they came
+  through (string sets), and when the first went in. One partition, so the flush reads every buffer with one query and no scan or index; the friends phase
   holds a few hundred pairs at most. A find deleted before the flush is left out of the digest (the flush reads the
   finds back), and a buffer whose finds are all gone sends nothing.
 """
@@ -104,8 +104,9 @@ class FlushReport:
     dropped: int = 0
 
 
-def find_summary(find: Find, owner_name: str | None, circle_first_in: list[str]) -> dict[str, Any]:
-    """What a notable push carries for the lens's friend banner (#67): the find as the feed shows it."""
+def find_summary(find: Find, owner_name: str | None, circle_first_in: list[str], circle_ids: list[str]) -> dict[str, Any]:
+    """What a notable push carries for the lens's friend banner (#67): the find as the feed shows it, with only the
+    recipient's circles it reached (another member's circles stay theirs)."""
     content = find.content
     return {
         "owner": find.owner,
@@ -120,7 +121,7 @@ def find_summary(find: Find, owner_name: str | None, circle_first_in: list[str])
         "legendary": content.legendary,
         "rarity": content.rarity.value if content.rarity else None,
         "circle_first": bool(circle_first_in),
-        "circle_ids": find.circle_ids,
+        "circle_ids": circle_ids,
     }
 
 
@@ -209,13 +210,13 @@ class PushService:
                 title, body = notable_words(owner_name, content, circle_names.get(first_in[0]) if first_in else None)
                 push = Push(
                     kind=PushKind.NOTABLE, title=title, body=body,
-                    data={"find": find_summary(find, owner_name, first_in)},
+                    data={"find": find_summary(find, owner_name, first_in, open_circles)},
                     thread_id=f"friend-{owner}",
                 )
                 if self._deliver(devices, push):
                     self._record_push(recipient, owner)
             else:
-                self._buffer(recipient, owner, find.sighting_id)
+                self._buffer(recipient, owner, find.sighting_id, open_circles)
                 self._deliver(devices, Push(kind=PushKind.REFRESH, data={"circle_ids": open_circles}))
 
     def flush_digests(self) -> FlushReport:
@@ -230,18 +231,21 @@ class PushService:
                 waiting += 1
                 continue
             mutes = self._mutes.mutes_of(recipient)
-            shared = sorted(set(self._circles.circle_ids_of(recipient)) & set(self._circles.circle_ids_of(friend)))
+            # The circles the buffered finds came through that the recipient is still in.
+            through = sorted(set(item.get("circle_ids", set())) & set(self._circles.circle_ids_of(recipient)))
             live = self._finds.existing([(friend, sighting_id) for sighting_id in sighting_ids])
             devices = self._devices.devices_of(recipient)
-            if not live or not devices or not _open_circles(mutes, friend, shared):
-                # Deleted finds, a phone signed out, a mute, or no circle together any more: nothing to say.
+            if not live or not devices or not _open_circles(mutes, friend, through):
+                # Deleted finds, a phone signed out, a mute, or out of those circles now: nothing to say.
                 self._clear_buffer(recipient, friend, sighting_ids)
                 dropped += 1
                 continue
             owner_name = self._circles.display_names([friend]).get(friend)
+            finds = list(live.values())
             push = Push(
-                kind=PushKind.DIGEST, body=digest_words(owner_name, list(live.values())),
-                data={"friend": friend, "count": len(live)},
+                kind=PushKind.DIGEST, body=digest_words(owner_name, finds),
+                # The birds the words count: distinct species.
+                data={"friend": friend, "count": len({content.scientific_name for content in finds})},
                 thread_id=f"friend-{friend}", collapse_id=f"digest-{friend}"[:64],
             )
             if self._deliver(devices, push):
@@ -267,15 +271,17 @@ class PushService:
                 self._devices.forget(device.token)
         return delivered
 
-    def _buffer(self, recipient: str, friend: str, sighting_id: str) -> None:
+    def _buffer(self, recipient: str, friend: str, sighting_id: str, circle_ids: list[str]) -> None:
+        """Remembers the find and the circles it came through, whose mutes the flush checks again."""
         self._table.update_item(
             Key=_buffer_key(recipient, friend),
             UpdateExpression=(
-                "ADD sighting_ids :ids SET recipient = :recipient, friend = :friend, "
+                "ADD sighting_ids :ids, circle_ids :circles SET recipient = :recipient, friend = :friend, "
                 "first_at = if_not_exists(first_at, :now)"
             ),
             ExpressionAttributeValues={
-                ":ids": {sighting_id}, ":recipient": recipient, ":friend": friend, ":now": self._clock().isoformat(),
+                ":ids": {sighting_id}, ":circles": set(circle_ids), ":recipient": recipient, ":friend": friend,
+                ":now": self._clock().isoformat(),
             },
         )
 

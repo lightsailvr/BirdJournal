@@ -135,7 +135,7 @@ final class SystemNotificationAuthorizer: NotificationAuthorizing {
 final class PushCenter {
     static let askedKey = "pushPermissionExplained"
     /// Why, before the system's prompt.
-    static let explanation = "Bird Journal can tell you when someone in your circles finds a Legendary, a first for the circle or a rare bird, and bundles their other finds into one note every couple of hours. You can mute a circle or a friend at any time."
+    static let explanation = "Bird Journal can tell you when someone in your circles finds a Legendary, a first for the circle or a rare bird, and bundles their other finds into one notification every couple of hours. You can mute a circle or a friend at any time."
 
     private(set) var permission: PushPermission?
     /// The explanation before the system prompt is showing.
@@ -194,12 +194,9 @@ final class PushCenter {
     /// The birder created or joined a circle: the first time, explain pushes before the system asks.
     func joinedCircle() async {
         guard isAvailable, !defaults.bool(forKey: Self.askedKey) else { return }
-        permission = await authorizer.permission()
-        guard permission == .notDetermined else {
-            defaults.set(true, forKey: Self.askedKey)
-            return
-        }
         defaults.set(true, forKey: Self.askedKey)
+        permission = await authorizer.permission()
+        guard permission == .notDetermined else { return }
         guard explanationDelay > .zero else {
             isExplaining = true
             return

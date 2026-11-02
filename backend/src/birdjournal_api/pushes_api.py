@@ -38,7 +38,7 @@ def _circles(request: Request) -> CircleStore:
 
 
 Devices = Annotated[DeviceStore, Depends(_devices)]
-Mutes = Annotated[MuteStore, Depends(_mutes)]
+Muting = Annotated[MuteStore, Depends(_mutes)]
 Circles = Annotated[CircleStore, Depends(_circles)]
 
 
@@ -65,13 +65,13 @@ def unregister_device(subject: Subject, token: str, devices: Devices) -> Respons
 
 
 @router.get("/mutes")
-def read_mutes(subject: Subject, mutes: Mutes) -> MutesResponse:
+def read_mutes(subject: Subject, mutes: Muting) -> MutesResponse:
     current = mutes.mutes_of(subject)
     return MutesResponse(circles=sorted(current.circles), friends=sorted(current.friends))
 
 
 @router.put("/circles/{circle_id}/mute", status_code=status.HTTP_204_NO_CONTENT)
-def mute_circle(subject: Subject, circle_id: str, mutes: Mutes, circles: Circles) -> Response:
+def mute_circle(subject: Subject, circle_id: str, mutes: Muting, circles: Circles) -> Response:
     if not circles.is_member(subject, circle_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "not_found")
     mutes.mute_circle(subject, circle_id)
@@ -79,13 +79,13 @@ def mute_circle(subject: Subject, circle_id: str, mutes: Mutes, circles: Circles
 
 
 @router.delete("/circles/{circle_id}/mute", status_code=status.HTTP_204_NO_CONTENT)
-def unmute_circle(subject: Subject, circle_id: str, mutes: Mutes) -> Response:
+def unmute_circle(subject: Subject, circle_id: str, mutes: Muting) -> Response:
     mutes.unmute_circle(subject, circle_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.put("/friends/{friend_id}/mute", status_code=status.HTTP_204_NO_CONTENT)
-def mute_friend(subject: Subject, friend_id: str, mutes: Mutes, circles: Circles) -> Response:
+def mute_friend(subject: Subject, friend_id: str, mutes: Muting, circles: Circles) -> Response:
     if friend_id == subject:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "cannot_mute_yourself")
     # Only someone the birder shares a circle with: an account's existence never leaks.
@@ -96,6 +96,6 @@ def mute_friend(subject: Subject, friend_id: str, mutes: Mutes, circles: Circles
 
 
 @router.delete("/friends/{friend_id}/mute", status_code=status.HTTP_204_NO_CONTENT)
-def unmute_friend(subject: Subject, friend_id: str, mutes: Mutes) -> Response:
+def unmute_friend(subject: Subject, friend_id: str, mutes: Muting) -> Response:
     mutes.unmute_friend(subject, friend_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

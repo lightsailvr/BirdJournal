@@ -263,7 +263,7 @@ def test_a_burst_of_ordinary_finds_arrives_as_one_digest(
     _flush(client)
     (digest,) = _alerts(apns, BO_PHONE)
     assert digest.body == "Ada Lovelace found 6 birds in Pasadena"
-    assert digest.data == {"friend": "ada", "count": 7}
+    assert digest.data == {"friend": "ada", "count": 6}
     apns.clear()
     _flush(client)
     assert apns.sent == []
@@ -340,7 +340,30 @@ def test_an_unnamed_friend_is_a_friend(client: TestClient, issuer: TestIssuer, a
     assert [push.body for push in _alerts(apns, BO_PHONE)] == ["A friend found a Bird 0 in Pasadena"]
 
 
+def test_a_notable_push_names_only_the_recipient_s_circles(
+    client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
+) -> None:
+    second = str(_create(client, issuer, sub="ada", name="Weekday walkers")["id"])
+    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    # Bo isn't in the weekday circle: his push doesn't name it.
+    assert apns.to(BO_PHONE)[0].payload()["find"]["circle_ids"] == [circle]
+    assert second
+
+
 # Mutes.
+
+
+def test_muting_the_circle_a_buffered_find_came_through_drops_it_though_another_is_shared(
+    client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str, table: Any
+) -> None:
+    _put_ok(client, issuer, "ada", _find(SPECIES[0]))
+    second = str(_create(client, issuer, sub="ada", name="Weekday walkers")["id"])
+    _join(client, issuer, second, "bo")
+    client.put(f"/v1/circles/{circle}/mute", headers=issuer.headers(sub="bo"))
+    apns.clear()
+    _flush(client)
+    assert apns.to(BO_PHONE) == []
+    assert "Item" not in table.get_item(Key={"pk": "DIGEST", "sk": "bo#ada"})
 
 
 def test_a_muted_friend_sends_nothing(client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str) -> None:

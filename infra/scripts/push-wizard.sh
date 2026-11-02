@@ -248,7 +248,7 @@ secret_exists() { aws secretsmanager describe-secret --region "$AWS_REGION" --se
 api_function() {
   aws cloudformation describe-stack-resources --region "$AWS_REGION" --stack-name BirdJournal \
     --query "StackResources[?ResourceType=='AWS::Lambda::Function' && starts_with(LogicalResourceId, 'ApiFunction')].PhysicalResourceId | [0]" \
-    --output text 2>/dev/null
+    --output text 2>/dev/null || true
 }
 
 banner "BirdJournal: pushes (APNs key, App ID, deploy)"
@@ -336,7 +336,7 @@ if begin "Check: the stack, and a test push to your phone"; then
   function_name=$(api_function)
   if [[ -n "$function_name" && "$function_name" != "None" ]]; then
     configured=$(aws lambda get-function-configuration --region "$AWS_REGION" --function-name "$function_name" \
-      --query 'Environment.Variables.APNS_SECRET_NAME' --output text 2>/dev/null)
+      --query 'Environment.Variables.APNS_SECRET_NAME' --output text 2>/dev/null || true)
     [[ "$configured" == "$SECRET_NAME" ]] && printf '  %s✓%s the API reads %s\n' "$GREEN" "$RESET" "$SECRET_NAME" \
       || warn "The API's function doesn't name $SECRET_NAME yet: deploy (WIZARD_FROM=4)."
   else
@@ -358,7 +358,7 @@ sender = ApnsSender(secrets_manager_credentials(secret, region), topic)
 push = Push(kind=PushKind.NOTABLE, title="Bird Journal", body="A test push from the push wizard")
 print(sender.send(Device(token.lower(), Environment(environment)), push).value)
 PY
-)
+) || result="error"
     case "$result" in
       sent) printf '  %s✓%s APNs took it: the phone should show "A test push from the push wizard".\n' "$GREEN" "$RESET" ;;
       gone) warn "APNs says the token isn't valid for $BUNDLE_ID in $push_environment: check the environment." ;;
