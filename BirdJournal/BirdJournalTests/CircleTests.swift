@@ -163,6 +163,9 @@ private final class RefusingClient: CircleClient {
     func putFind(_ find: FindPolicy.Find, sightingID: UUID, accessToken: String) async throws { try check(accessToken); try await inner.putFind(find, sightingID: sightingID, accessToken: accessToken) }
     func deleteFind(sightingID: UUID, accessToken: String) async throws { try check(accessToken); try await inner.deleteFind(sightingID: sightingID, accessToken: accessToken) }
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage { try check(accessToken); return try await inner.feed(circleID: circleID, cursor: cursor, accessToken: accessToken) }
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws { try check(accessToken); try await inner.shareCard(card, sightingID: sightingID, accessToken: accessToken) }
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload { try check(accessToken); return try await inner.photoUpload(sightingID: sightingID, accessToken: accessToken) }
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws { try await inner.uploadPhoto(jpeg, to: upload) }
     func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws { try check(accessToken); try await inner.registerDevice(token: token, environment: environment, accessToken: accessToken) }
     func unregisterDevice(token: String, accessToken: String) async throws { try check(accessToken); try await inner.unregisterDevice(token: token, accessToken: accessToken) }
     func mutes(accessToken: String) async throws -> Mutes { try check(accessToken); return try await inner.mutes(accessToken: accessToken) }
