@@ -7,6 +7,7 @@
 #
 #   BIRDJOURNAL_SIMULATOR=BJ-82 scripts/mock-lens-in-chrome.sh                  # walk "navLeft navDown"
 #   BIRDJOURNAL_SIMULATOR=BJ-82 scripts/mock-lens-in-chrome.sh "navLeft select"  # another walk
+#   --friend     then a friend's notable find arrives as a push would: the lens's friend banner (issue #67)
 #   --port 9001  another port (default 9000, the port the maintainer's tab has open)
 #   --no-build   reuse the last build in build/DerivedData
 #   --stop       quit the app on that simulator, which frees the port
@@ -22,13 +23,15 @@ source "$repo_root/scripts/lib/simulator.sh"
 port=9000
 build=1
 stop=0
+friend=NO
 inputs="navLeft navDown"
 while (($#)); do
     case "$1" in
         --port) port="${2:?--port needs a number}"; shift ;;
         --no-build) build=0 ;;
         --stop) stop=1 ;;
-        -*) echo "error: unknown option $1 (--port N, --no-build, --stop)" >&2; exit 2 ;;
+        --friend) friend=YES ;;
+        -*) echo "error: unknown option $1 (--port N, --no-build, --stop, --friend)" >&2; exit 2 ;;
         *) inputs="$1" ;;
     esac
     shift
@@ -76,7 +79,7 @@ fi
 echo "==> Installing and launching in mock-lens mode (inputs: $inputs, port $port)"
 xcrun simctl install "$udid" "$app_path"
 xcrun simctl launch --terminate-running-process "$udid" "$app_bundle_id" \
-    -autoMockLens YES -autoMockLensInputs "$inputs" -mockPreviewPort "$port" >/dev/null
+    -autoMockLens YES -autoMockLensInputs "$inputs" -autoMockLensFriend "$friend" -mockPreviewPort "$port" >/dev/null
 
 for _ in $(seq 1 60); do
     if curl -fs -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then

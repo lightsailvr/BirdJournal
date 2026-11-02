@@ -355,12 +355,23 @@ from birdjournal_api.devices import Device, Environment
 from birdjournal_api.pushes import Push, PushKind
 token, environment, secret, topic, region = sys.argv[1:6]
 sender = ApnsSender(secrets_manager_credentials(secret, region), topic)
-push = Push(kind=PushKind.NOTABLE, title="Bird Journal", body="A test push from the push wizard")
+import uuid
+from datetime import datetime, timezone
+# A notable push's find summary too, so a glasses run on that phone shows the lens's friend banner (#67).
+find = {
+    "owner": "push-wizard", "owner_name": "Maya Ortiz", "sighting_id": str(uuid.uuid4()),
+    "species_id": "sayornis_nigricans", "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe",
+    "method": "heard", "place": "Pasadena",
+    "found_at": datetime.now(timezone.utc).replace(second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "legendary": True, "rarity": None, "circle_first": False, "circle_ids": [],
+}
+push = Push(kind=PushKind.NOTABLE, title="Bird Journal", body="A test push from the push wizard", data={"find": find})
 print(sender.send(Device(token.lower(), Environment(environment)), push).value)
 PY
 ) || result="error"
     case "$result" in
-      sent) printf '  %s✓%s APNs took it: the phone should show "A test push from the push wizard".\n' "$GREEN" "$RESET" ;;
+      sent) printf '  %s✓%s APNs took it: the phone should show "A test push from the push wizard",\n' "$GREEN" "$RESET"
+            say "and a glasses run on it the friend banner \"Maya heard a Black Phoebe · Pasadena\" (#67)." ;;
       gone) warn "APNs says the token isn't valid for $BUNDLE_ID in $push_environment: check the environment." ;;
       *) warn "APNs didn't take it ($result). Check the Key ID, Team ID and the .p8, then WIZARD_FROM=2." ;;
     esac

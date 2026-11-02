@@ -41,6 +41,11 @@ import UIKit
 ///
 /// Opening the viewfinder and landing back on the species list tell `onStreamNeeded`, so the run can put a camera
 /// stream back that stopped or stalled (#46): the wearer is about to frame a bird, or is back to listening.
+///
+/// A friend's notable find (issue #67) reaches `friendFound(_:)` from the push center while the adapter holds a
+/// run's pages (running, or suspended until the glasses come back); with no run it is dropped. The machine shows it
+/// over the list or a photo page, or holds it; a held banner is dropped `LensStateMachine.bannerHoldLimit` after it
+/// arrived, by a one-shot timer here and again before each gesture.
 @Observable
 final class GlassesLensSession {
     enum Phase: Equatable {
@@ -147,6 +152,10 @@ final class GlassesLensSession {
     /// Counts `start()`s: playback ids restart with each run's machine, so the player's late news of a clip from an
     /// earlier run is told apart by this.
     @ObservationIgnored private var runs = 0
+    /// Zero on the clock the machine's friend banner times are on.
+    @ObservationIgnored private let bannerClockOrigin = ContinuousClock.now
+    /// The one-shot wake to drop a held friend banner.
+    @ObservationIgnored private var bannerExpiryTask: Task<Void, Never>?
     /// Written straight from the toolkit callback, so the end of a run can tell a device-side end from a failure.
     @ObservationIgnored private nonisolated let lastSessionError = Mutex<DeviceSessionError?>(nil)
 
@@ -190,6 +199,8 @@ final class GlassesLensSession {
         sessionOrigin = nil
         lapseTask?.cancel()
         lapseTask = nil
+        bannerExpiryTask?.cancel()
+        bannerExpiryTask = nil
         savedSightings = []
         viewfinderOpenedAt = nil
         inputRecords = []
@@ -457,6 +468,8 @@ final class GlassesLensSession {
         if gesture == .tap, case .viewfinder = machine.page, let viewfinderOpenedAt, ContinuousClock.now - viewfinderOpenedAt < echoWindow {
             return
         }
+        // A held banner past its limit must not show on the page this gesture lands on, even if the timer is late.
+        machine.expireBanner(at: bannerTime)
         perform(machine.apply(gesture) { [self] in cardProfile(for: $0)?.sounds ?? [] })
     }
 
@@ -494,8 +507,41 @@ final class GlassesLensSession {
         }
         refreshCard()
         syncViewfinder()
-        if machine.page == .list, landedPage != .list { onStreamNeeded?("species list") }
-        landedPage = machine.page
+        // A banner over the list is still the list for the camera: the wearer is back to listening.
+        if machine.pageUnderBanner == .list, landedPage != .list { onStreamNeeded?("species list") }
+        landedPage = machine.pageUnderBanner
+        scheduleBannerExpiry()
+    }
+
+    // MARK: - Friend banners
+
+    /// A friend's notable find arrived (issue #67): shown now over the list or a photo page, else held for the wearer's
+    /// return. Dropped when no run holds the pages; while suspended it waits with them for the glasses.
+    func friendFound(_ banner: LensFriendBanner) {
+        guard isActive else { return }
+        machine.friendFound(banner, at: bannerTime)
+        refreshCard()
+        scheduleBannerExpiry()
+    }
+
+    /// Seconds on the adapter's own steady clock, which the machine's banner times are on.
+    private var bannerTime: Double {
+        let elapsed = (ContinuousClock.now - bannerClockOrigin).components
+        return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
+    }
+
+    /// One wake at the held banner's limit, to drop it; none when nothing is held.
+    private func scheduleBannerExpiry() {
+        bannerExpiryTask?.cancel()
+        bannerExpiryTask = nil
+        guard let expiry = machine.heldBannerExpiry else { return }
+        // Just past the limit: "held for more than" five minutes.
+        let delay = max(expiry - bannerTime, 0) + 0.05
+        bannerExpiryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled, let self else { return }
+            self.machine.expireBanner(at: self.bannerTime)
+        }
     }
 
     // MARK: - Reference clips

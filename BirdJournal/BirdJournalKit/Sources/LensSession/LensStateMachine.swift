@@ -369,6 +369,11 @@ public struct LensStateMachine: Sendable, Equatable {
         return true
     }
 
+    /// The page under a friend banner showing, else the page: where the wearer is in the page map.
+    public var pageUnderBanner: LensPage {
+        if case .friend = page { coveredPage } else { page }
+    }
+
     /// When the held banner is dropped, nil when none is held: the adapter wakes then to call `expireBanner(at:)`.
     public var heldBannerExpiry: Double? {
         heldBanner.map { _ in bannerArrivedAt + Self.bannerHoldLimit }

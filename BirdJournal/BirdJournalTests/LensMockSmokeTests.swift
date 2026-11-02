@@ -240,6 +240,47 @@ extension MockDeviceKitTests {
             }
         }
 
+        @Test("a friend's notable push becomes a banner on the lens: shown over the list, held on a details page and shown on the way back, dismissed by a tap or swipe right (issue #67)")
+        func friendBanner() async throws {
+            try await withRunningLens { lens, glasses in
+                let pushes = PushCenter(
+                    account: FakeAccount.session(signedIn: true), client: nil,
+                    authorizer: FakeNotificationAuthorizer(permission: .authorized, grants: true), environment: .sandbox,
+                    defaults: UserDefaults(suiteName: "LensFriendBanner-\(UUID().uuidString)")!, explanationDelay: .zero,
+                    registerForRemoteNotifications: {}
+                )
+                let relay = FriendBanners.forward(pushes.friendFinds()) { [lens] }
+                defer { relay.cancel() }
+                lens.update(with: FakeLensStack.stack(count: 2), at: FakeLensStack.quiet)
+
+                // Over the list: shown at once, as the push center hands it on.
+                await pushes.received(FriendBanners.samplePush())
+                try await waitUntil(timeout: .seconds(1)) { if case .friend = lens.page { true } else { false } }
+                #expect(lens.card.elements == [
+                    .status("A friend's find"), .heading("Maya heard a Black Phoebe · Pasadena"), .meta("Tap or swipe right to close"),
+                ])
+                let input = glasses.services.input
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+
+                // On a details page: held, and shown when the wearer swipes up to the photo page.
+                input.navLeft()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1) }
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .details(index: 1) }
+                await pushes.received(FriendBanners.samplePush())
+                try await waitUntil(timeout: .seconds(1)) { lens.machine.heldBanner != nil }
+                #expect(lens.page == .details(index: 1))
+                input.navUp()
+                try await waitUntil(timeout: .seconds(1)) { if case .friend = lens.page { true } else { false } }
+                #expect(lens.card.elements.contains(.heading("Maya heard a Black Phoebe · Pasadena")))
+                input.navRight()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1) }
+                #expect(lens.machine.heldBanner == nil)
+                #expect(lens.errorMessage == nil)
+            }
+        }
+
         /// Starts a lens session with the fake stack's profiles on a connected mock Display, waits for Inputs to be
         /// active, and always stops it.
         private func withRunningLens(_ body: (GlassesLensSession, any MockGlasses) async throws -> Void) async throws {
