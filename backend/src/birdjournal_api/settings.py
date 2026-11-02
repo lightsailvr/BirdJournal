@@ -14,6 +14,17 @@ class Settings:
     dynamodb_endpoint: str | None = None
     # Where invite links point (issue #61): `<invite_base_url>/i/<token>`, served by the invite site's CloudFront.
     invite_base_url: str = "https://birdquest.matthewcelia.com"
+    # Scene art (issue #68). Without the buckets the art routes answer 503; the stack always sets them.
+    upload_bucket: str | None = None
+    art_bucket: str | None = None
+    art_queue_url: str | None = None
+    # Where painted art is served: the art CDN, https://<distribution>.cloudfront.net.
+    art_cdn_base_url: str = ""
+    # The worker token's Secrets Manager ARN (the stack), or the token itself (tests, local runs).
+    art_worker_token_secret: str | None = None
+    art_worker_token: str | None = None
+    # The auto-paint rule: every_glasses_add (friends phase) or legendary_or_rare (public launch).
+    art_auto_paint: str = "every_glasses_add"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -26,6 +37,12 @@ class Settings:
             region=env.get("AWS_REGION", "us-west-2"),
             dynamodb_endpoint=env.get("DYNAMODB_ENDPOINT") or None,
             invite_base_url=(env.get("INVITE_BASE_URL") or cls.invite_base_url).rstrip("/"),
+            upload_bucket=env.get("UPLOAD_BUCKET") or None,
+            art_bucket=env.get("ART_BUCKET") or None,
+            art_queue_url=env.get("ART_QUEUE_URL") or None,
+            art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/"),
+            art_worker_token_secret=env.get("ART_WORKER_TOKEN_SECRET") or None,
+            art_auto_paint=env.get("ART_AUTO_PAINT") or cls.art_auto_paint,
         )
 
 

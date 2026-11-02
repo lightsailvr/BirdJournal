@@ -1,4 +1,5 @@
-"""The API: account get and update (issue #60) and circles (issue #61). Later tickets add their routers here."""
+"""The API: account get and update (issue #60), circles (issue #61) and art jobs (issue #68). Later tickets add their
+routers here."""
 
 import logging
 from collections.abc import Callable
@@ -6,16 +7,33 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 import boto3
+from botocore.config import Config
 from fastapi import Depends, FastAPI, Request
 from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from birdjournal_api.accounts import Account, AccountStore, clean_display_name
+from birdjournal_api.art import (
+    ArtJobStore,
+    ArtNotifier,
+    ArtQueue,
+    ArtRetention,
+    ArtStorage,
+    NoNotifier,
+    NothingShared,
+    S3ArtStorage,
+    SqsArtQueue,
+    WorkerToken,
+)
+from birdjournal_api.art_api import router as art_router
 from birdjournal_api.auth import SigningKeyResolver, Subject, TokenVerifier, cognito_signing_keys
 from birdjournal_api.circles import CircleStore
 from birdjournal_api.circles_api import router as circles_router
 from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
+
+# Presigned upload URLs must be SigV4 on the bucket's own regional host.
+S3_CONFIG = Config(signature_version="s3v4", s3={"addressing_style": "virtual"})
 
 
 class AccountResponse(BaseModel):
@@ -48,8 +66,13 @@ def create_app(
     *,
     signing_key: SigningKeyResolver | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    art_storage: ArtStorage | None = None,
+    art_queue: ArtQueue | None = None,
+    art_notifier: ArtNotifier | None = None,
+    art_retention: ArtRetention | None = None,
 ) -> FastAPI:
-    """The API over the settings' table. Tests pass a signing key from their own issuer and a clock."""
+    """The API over the settings' table. Tests pass a signing key from their own issuer, a clock, and fakes for the art
+    buckets, queue and notifier."""
     dynamodb = boto3.resource("dynamodb", region_name=settings.region, endpoint_url=settings.dynamodb_endpoint)
     app = FastAPI(title="BirdJournal API")
     app.state.verifier = TokenVerifier(
@@ -61,6 +84,38 @@ def create_app(
     app.state.circles = CircleStore(dynamodb, settings.table_name, app.state.accounts, clock)
     app.state.invite_base_url = settings.invite_base_url
     app.include_router(circles_router)
+
+    if art_storage is None and settings.upload_bucket and settings.art_bucket:
+        art_storage = S3ArtStorage(
+            boto3.client("s3", region_name=settings.region, config=S3_CONFIG), upload_bucket=settings.upload_bucket, art_bucket=settings.art_bucket
+        )
+    if art_queue is None and settings.art_queue_url:
+        art_queue = SqsArtQueue(boto3.client("sqs", region_name=settings.region), settings.art_queue_url)
+    app.state.art_jobs = (
+        ArtJobStore(
+            dynamodb.Table(settings.table_name),
+            clock,
+            rule=settings.art_auto_paint,  # type: ignore[arg-type]
+            storage=art_storage,
+            queue=art_queue,
+            notifier=art_notifier or NoNotifier(),
+            retention=art_retention or NothingShared(),
+        )
+        if art_storage is not None
+        else None
+    )
+    app.state.art_cdn_base_url = settings.art_cdn_base_url
+    app.state.worker_token = (
+        WorkerToken(value=settings.art_worker_token)
+        if settings.art_worker_token
+        else WorkerToken(
+            secret_id=settings.art_worker_token_secret,
+            secrets_client=boto3.client("secretsmanager", region_name=settings.region),
+        )
+        if settings.art_worker_token_secret
+        else None
+    )
+    app.include_router(art_router)
 
     @app.get("/health")
     def health() -> dict[str, str]:
