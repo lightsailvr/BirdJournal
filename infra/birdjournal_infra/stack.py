@@ -12,6 +12,7 @@ from birdjournal_infra.budget import Budget
 from birdjournal_infra.config import TAG_KEY, TAG_VALUE, BirdJournalConfig
 from birdjournal_infra.data import Data
 from birdjournal_infra.invite_site import InviteSite
+from birdjournal_infra.goals import GoalRollover
 from birdjournal_infra.pushes import Pushes
 
 BACKEND_DIRECTORY = Path(__file__).resolve().parents[2] / "backend"
@@ -59,6 +60,7 @@ class BirdJournalStack(Stack):
         data.table.grant_read_write_data(api.function)
         art_jobs.grant_api(api.function)
         Pushes(self, "Pushes", function=api.function, apns_secret_name=config.apns_secret_name)
+        GoalRollover(self, "GoalRollover", function=api.function)
         Budget(self, "Budget", monthly_usd=config.monthly_budget_usd, email=config.budget_alert_email)
 
         domain = f"{config.cognito_domain_prefix}.auth.{self.region}.amazoncognito.com"
