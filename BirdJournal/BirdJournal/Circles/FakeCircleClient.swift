@@ -199,7 +199,7 @@ final class FakeCircleClient: CircleClient {
     private func seedFeed(circleID: String) {
         let finds: [(String, String, String, SightingMethod, String?, RarityLabel?, Bool, String, Double)] = [
             ("maya", "Maya Ortiz", "Sayornis nigricans_Black Phoebe", .seen, "Pasadena", .common, true, "sayornis-nigricans", 3),
-            ("jo", "Jo Park", "Calypte anna_Anna's Hummingbird", .heard, "Altadena", .common, false, "calypte-anna", 2),
+            ("jo", "Jo Park", "Calypte anna_Anna's Hummingbird", .heard, nil, .common, false, "calypte-anna", 2),
             ("jo", "Jo Park", "Sayornis nigricans_Black Phoebe", .heard, "Pasadena", .common, false, "sayornis-nigricans", 1.5),
             ("sam", "Sam Okafor", "Polioptila californica_California Gnatcatcher", .heard, FindPolicy.secretSpot, .rare, false, "polioptila-californica", 1),
         ]
@@ -210,7 +210,9 @@ final class FakeCircleClient: CircleClient {
                 scientificName: Sighting.scientificName(ofLabel: label), commonName: common, method: method, place: place,
                 foundAt: now().addingTimeInterval(-daysAgo * 86_400), legendary: legendary, rarity: rarity,
                 art: FeedItem.Art(kind: "pack", key: "packs/us-ca-la/\(art).jpg", url: nil),
-                owner: FeedItem.Owner(id: owner, displayName: name), circleFirst: false, isMine: false
+                owner: FeedItem.Owner(id: owner, displayName: name), circleFirst: false, isMine: false,
+                // Jo shared the hummingbird by hand (issue #66), with the caption and a note, and left the city out.
+                card: index == 1 ? FeedItem.SharedCard(note: "Buzzing the sage by the gate, twice.", caption: "A green spark hums where the sage is in flower.", photo: nil) : nil
             ))
         }
     }

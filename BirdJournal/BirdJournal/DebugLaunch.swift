@@ -19,7 +19,7 @@ import UIKit
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
-///   `-autoSet <id>`), `sighting` (the newest), `map` (the newest sighting's full map), `share`, `guide`, `profile` (the Black Phoebe),
+///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
@@ -119,7 +119,8 @@ struct DebugLaunch: ViewModifier {
                 guidePath.append(Route.set(id: defaults.string(forKey: "autoSet") ?? PackIndex.bundledPackID))
             case "sighting", "share", "map":
                 tab = .journal
-                if let newest = try? context.fetch(Sighting.newestFirst()).first {
+                let species = defaults.string(forKey: "autoCardSpecies")
+                if let newest = (try? context.fetch(Sighting.newestFirst()))?.first(where: { species == nil || $0.scientificName == species }) {
                     journalPath.append(Route.sighting(newest.persistentModelID))
                 }
                 if screen == "share" { defaults.set(true, forKey: "autoShare") }

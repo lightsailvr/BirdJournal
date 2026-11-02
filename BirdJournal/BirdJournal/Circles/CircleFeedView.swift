@@ -129,7 +129,7 @@ private struct SharedCardExtras: View {
             }
         }
         .padding(.top, 4)
-        .accessibilityIdentifier("find-card")
+        .accessibilityIdentifier("shared-card-extras")
     }
 }
 

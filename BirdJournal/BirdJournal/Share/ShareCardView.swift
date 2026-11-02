@@ -89,10 +89,18 @@ struct ShareCardView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    face
-                        .frame(maxWidth: 360)
+                    // The rendered face itself, so the preview is exactly the image the system share sends.
+                    Group {
+                        if let export {
+                            Image(uiImage: export.image)
+                                .resizable()
+                                .scaledToFit()
+                        } else {
+                            ProgressView().frame(height: 200)
+                        }
+                    }
+                        .frame(maxHeight: 420)
                         .frame(maxWidth: .infinity)
-                        .allowsHitTesting(false)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(previewLabel)
                         .accessibilityIdentifier("share-preview")
@@ -139,18 +147,35 @@ struct ShareCardView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                Group {
-                    if let export {
-                        ShareLink(item: export, message: Text(export.text), preview: SharePreview(export.title, image: Image(uiImage: export.image))) {
-                            Label("Share card image…", systemImage: "square.and.arrow.up")
+                // Both ways out stay in reach whatever the scroll: Send for the circles, the card image for anywhere.
+                VStack(spacing: 8) {
+                    sendStatus
+                    if canSend {
+                        Button {
+                            Task { await send() }
+                        } label: {
+                            Label(sendTitle, systemImage: "paperplane")
+                                .frame(maxWidth: .infinity)
                         }
-                        .accessibilityIdentifier("share-system")
-                    } else {
-                        Label("Preparing the card…", systemImage: "square.and.arrow.up")
-                            .foregroundStyle(Color.inkSecondary)
+                        .buttonStyle(.journalPrimary)
+                        .disabled(chosenCircles.isEmpty || sending == .sending)
+                        .accessibilityIdentifier("share-send")
                     }
+                    Group {
+                        if let export {
+                            ShareLink(item: export, message: Text(export.text), preview: SharePreview(export.title, image: Image(uiImage: export.image))) {
+                                Label("Share card image…", systemImage: "square.and.arrow.up")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .accessibilityIdentifier("share-system")
+                        } else {
+                            Label("Preparing the card…", systemImage: "square.and.arrow.up")
+                                .foregroundStyle(Color.inkSecondary)
+                        }
+                    }
+                    .buttonStyle(.journalOutlined)
                 }
-                .buttonStyle(.journalOutlined)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, JournalLayout.margin)
                 .padding(.vertical, 12)
                 .background(.bar)
@@ -208,32 +233,27 @@ struct ShareCardView: View {
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 4)
-            Button {
-                Task { await send() }
-            } label: {
-                Label(sendTitle, systemImage: "paperplane")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.journalPrimary)
-            .disabled(chosenCircles.isEmpty || sending == .sending)
-            .padding(.top, 14)
-            .accessibilityIdentifier("share-send")
-            switch sending {
-            case .sent(let message):
-                Label(message, systemImage: "checkmark.circle")
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(Color.moss)
-                    .padding(.top, 8)
-                    .accessibilityIdentifier("share-sent")
-            case .failed(let message):
-                Text(message)
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(.red)
-                    .padding(.top, 8)
-                    .accessibilityIdentifier("share-failed")
-            case .idle, .sending:
-                EmptyView()
-            }
+        }
+    }
+
+    /// Signed in with a circle to send to.
+    private var canSend: Bool { showsCircles && account.isSignedIn && !circles.circles.isEmpty }
+
+    @ViewBuilder private var sendStatus: some View {
+        switch sending {
+        case .sent(let message):
+            Label(message, systemImage: "checkmark.circle")
+                .font(JournalFont.supporting)
+                .foregroundStyle(Color.moss)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("share-sent")
+        case .failed(let message):
+            Text(message)
+                .font(JournalFont.supporting)
+                .foregroundStyle(.red)
+                .accessibilityIdentifier("share-failed")
+        case .idle, .sending:
+            EmptyView()
         }
     }
 
@@ -315,7 +335,6 @@ struct ShareCardView: View {
     /// Renders the face at the screen's scale into a PNG with nothing but its pixels.
     @MainActor
     private func render() {
-        export = nil
         guard let image = CardExport.render(face, scale: max(displayScale, 2)) else { return }
         let content = content
         export = CardExport(image: image.image, png: image.png, text: SharePolicy.text(for: content), title: "\(content.commonName) · Bird Journal")
