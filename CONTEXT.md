@@ -84,6 +84,10 @@ _Avoid_: variant, version
 A species' short myth-voiced text built from its fact sheet, written once per pack and reviewed, shown on the card back.
 _Avoid_: flavor text, description (the Wikipedia summary), story
 
+**Story title**:
+Two to five words heading a species' lore on the card front, an epithet from what the bird does ("The Waterside Mason"), written and reviewed with the lore; it never names the species.
+_Avoid_: name, heading, tagline
+
 **Caption**:
 One line on a card's front written for that sighting on the phone, from the fact sheet and the moment.
 _Avoid_: flavor text, tagline (the lore's one-line fallback)

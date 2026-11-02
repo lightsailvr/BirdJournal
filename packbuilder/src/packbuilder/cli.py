@@ -3,7 +3,8 @@
 `packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
 `packbuilder art-references <definition-dir> --pack <pack-dir> --out <dir>`: exports the art worker's reference birds (`art_references.py`).
 `packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
-`packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore in lore.lock.json (`lore.py`).
+`packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore, and of the story titles on
+their own (issue #113), in lore.lock.json (`lore.py`).
 `packbuilder thumbnails <pack-dir> --out <dir>`: writes the pack-art thumbnails for the art CDN (`thumbnails.py`).
 `packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
@@ -54,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--art-sheets", type=Path, help="folder for the pack art's contact sheets (default build/pack-art/<pack id>)")
     build.add_argument("--no-lore", action="store_true", help="skip the lore (the pack then has none; the fact sheet still ships)")
     build.add_argument("--regenerate-lore", action="append", default=[], metavar="SPECIES", help="write a species' lore again (species id or common name; repeat; 'all' for every species)")
+    build.add_argument("--regenerate-title", action="append", default=[], metavar="SPECIES", help="write a species' story title again, leaving its lore (repeat; 'all' for every species)")
+    build.add_argument("--no-titles", action="store_true", help="make no request for a story title alone (lore written new still comes with one)")
     build.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests for the lore (default lore.DEFAULT_INTERVAL)")
     build.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
     build.add_argument("--lore-budget", type=float, default=None, help="dollars the lore may spend; the build stops once past them")
@@ -62,6 +65,8 @@ def main(argv: list[str] | None = None) -> int:
     lore_command.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and lore.lock.json")
     lore_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
     lore_command.add_argument("--regenerate-lore", action="append", default=[], metavar="SPECIES", help="write a species' lore again (repeat; 'all' for every species)")
+    lore_command.add_argument("--regenerate-title", action="append", default=[], metavar="SPECIES", help="write a species' story title again, leaving its lore (repeat; 'all' for every species)")
+    lore_command.add_argument("--no-titles", action="store_true", help="make no request for a story title alone (lore written new still comes with one)")
     lore_command.add_argument("--lore-interval", type=float, default=None, help="seconds between Anthropic API requests (default lore.DEFAULT_INTERVAL)")
     lore_command.add_argument("--lore-model", default=None, help="the Claude model that writes the lore (default lore.MODEL)")
     lore_command.add_argument("--lore-review", type=Path, help="the review file (default build/lore/<pack id>/review.md)")
@@ -72,7 +77,10 @@ def main(argv: list[str] | None = None) -> int:
     lore_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve a species' lore (species id or common name; repeat)")
     lore_review.add_argument("--approve-all", action="store_true", help="approve all lore still pending")
     lore_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a species' lore: the next build writes it again, with --why in the prompt (repeat)")
-    lore_review.add_argument("--why", help="the reason, kept in the lock and given to the model with --reject")
+    lore_review.add_argument("--approve-title", action="append", default=[], metavar="SPECIES", help="approve a species' story title alone; its lore's review stays (repeat)")
+    lore_review.add_argument("--approve-all-titles", action="store_true", help="approve all story titles still pending; the lore's review stays")
+    lore_review.add_argument("--reject-title", action="append", default=[], metavar="SPECIES", help="reject a species' story title alone: the next build writes the title again, with --why in the prompt, and leaves the lore (repeat)")
+    lore_review.add_argument("--why", help="the reason, kept in the lock and given to the model with --reject or --reject-title")
     lore_review.add_argument("--sheet", type=Path, help="the review file to write (default build/lore/<pack id>/review.md)")
     art_review = commands.add_parser("art-review", help="record the review of the pack art's contact sheets in art.lock.json")
     art_review.add_argument("definition", type=Path, help="folder holding pack.json and art.lock.json")
@@ -255,18 +263,22 @@ def _lore_writer(args: argparse.Namespace, definition: PackDefinition):
     lock = LoreLock.load(args.definition / LOCK_FILE)
     by_name = {entry.common_name.lower(): entry.id for entry in definition.species}
     ids = {entry.id for entry in definition.species}
-    regenerate = set()
-    for name in args.regenerate_lore:
-        if name == ALL or name in ids:
-            regenerate.add(name)
-        elif name.lower() in by_name:
-            regenerate.add(by_name[name.lower()])
-        else:
-            raise SystemExit(f"--regenerate-lore {name!r}: no such species in {definition.id}")
+
+    def species_ids(names: list[str], option: str) -> frozenset[str]:
+        found = set()
+        for name in names:
+            if name == ALL or name in ids:
+                found.add(name)
+            elif name.lower() in by_name:
+                found.add(by_name[name.lower()])
+            else:
+                raise SystemExit(f"{option} {name!r}: no such species in {definition.id}")
+        return frozenset(found)
+
     return LoreWriter(
         lock=lock, client_factory=lambda: AnthropicLoreClient(api_key_from_environment(), model), model=model,
-        regenerate=frozenset(regenerate), interval=args.lore_interval if args.lore_interval is not None else DEFAULT_INTERVAL,
-        budget=args.lore_budget,
+        regenerate=species_ids(args.regenerate_lore, "--regenerate-lore"), regenerate_titles=species_ids(args.regenerate_title, "--regenerate-title"),
+        titles=not args.no_titles, interval=args.lore_interval if args.lore_interval is not None else DEFAULT_INTERVAL, budget=args.lore_budget,
     )
 
 
@@ -298,7 +310,11 @@ def _lore(args: argparse.Namespace) -> int:
         logging.getLogger("packbuilder").error("lore stopped: %s", error)
         return 2
     sheet = review_sheet(writer.lock, args.lore_review or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])
-    print(f"{len(written)} of {len(species)} species have lore ({writer.requests} requests); review file {sheet}", file=sys.stderr)
+    titled = sum(bool(lore.title) for lore in written.values())
+    print(
+        f"{len(written)} of {len(species)} species have lore and {titled} a story title ({writer.requests} requests, "
+        f"{writer.title_requests} of them for a title alone); review file {sheet}", file=sys.stderr,
+    )
     return 0
 
 
@@ -317,13 +333,21 @@ def _lore_review(args: argparse.Namespace) -> int:
         print(f"{lock.path} has no lore yet: build the pack first", file=sys.stderr)
         return 1
     try:
-        review(lock, approve=args.approve, reject=args.reject, approve_all=args.approve_all, why=args.why)
+        review(
+            lock, approve=args.approve, reject=args.reject, approve_all=args.approve_all, why=args.why,
+            approve_titles=args.approve_title, reject_titles=args.reject_title, approve_all_titles=args.approve_all_titles,
+        )
     except KeyError as error:
         print(error.args[0], file=sys.stderr)
         return 1
     sheet = review_sheet(lock, args.sheet or _lore_review_path(definition.id), definition.name, [entry.id for entry in definition.species])
     counts = Counter(entry["review"] for entry in lock.species.values())
-    print(f"{lock.path}: " + ", ".join(f"{counts[state]} {state}" for state in (APPROVED, PENDING, REJECTED)) + f"; review file {sheet}", file=sys.stderr)
+    titles = Counter(entry["title"]["review"] if entry.get("title") else "not written" for entry in lock.species.values())
+    print(
+        f"{lock.path}: lore " + ", ".join(f"{counts[state]} {state}" for state in (APPROVED, PENDING, REJECTED))
+        + "; titles " + ", ".join(f"{titles[state]} {state}" for state in (APPROVED, PENDING, REJECTED, "not written")) + f"; review file {sheet}",
+        file=sys.stderr,
+    )
     return 0
 
 
