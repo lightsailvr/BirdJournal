@@ -284,7 +284,21 @@ if begin "AWS Secrets Manager: store the key as $SECRET_NAME"; then
     read -e -r -p "  ${BOLD}Path to the .p8${RESET} ${DIM}[$default_path]${RESET} " key_path || exit 1
     key_path="${key_path:-$default_path}"
     key_path="${key_path/#\~/$HOME}"
-    if [[ -f "$key_path" ]] && grep -q "BEGIN PRIVATE KEY" "$key_path"; then break; fi
+    if [[ -f "$key_path" ]] && grep -q "BEGIN PRIVATE KEY" "$key_path"; then
+      # Apple names the download AuthKey_<Key ID>.p8: a different ID there means the saved Key ID belongs to another key
+      # (Sign in with Apple's, say), and APNs would refuse every push with InvalidProviderToken.
+      file_id=$(basename "$key_path" | sed -nE 's/^AuthKey_([A-Z0-9]{10})\.p8$/\1/p')
+      if [[ -n "$file_id" && "$file_id" != "$APNS_KEY_ID" ]]; then
+        warn "This file is key $file_id, but the saved Key ID is $APNS_KEY_ID."
+        if confirm "Use $file_id as the Key ID?"; then
+          APNS_KEY_ID="$file_id"
+          write_env APNS_KEY_ID "$APNS_KEY_ID"
+        else
+          continue
+        fi
+      fi
+      break
+    fi
     warn "That isn't a .p8 key file ($key_path)."
   done
   jq -n --arg key_id "$APNS_KEY_ID" --arg team_id "$APNS_TEAM_ID" --rawfile private_key "$key_path" \
