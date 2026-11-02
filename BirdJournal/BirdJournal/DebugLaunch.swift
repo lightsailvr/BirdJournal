@@ -30,7 +30,10 @@ import UIKit
 /// - `-autoArt pending|ready|failed` gives the newest seeded card with a glasses photo that scene art state (issue #68):
 ///   a job on its way, a painting (a warm wash over its photo), or a failed job. With `-fakeAccount signedIn` and
 ///   `-fakeArt paints|pending|fails` (the in-memory art server; `-fakeAccount` alone paints), Try again and Retry art
-///   work too.
+///   work too. `photo-preview` gives it photo art waiting beside its glasses photo (issue #69), `photo-approved`
+///   approved photo art. `-fakeArtDaily <n>` keeps the public launch's allowance in the fake, and `-fakeLibraryPhoto`
+///   makes "Choose from your library" pick the card's glasses photo as a library photo (the system picker is out of
+///   the UI tests' reach). `-autoPhotoArt request|review` opens photo art's request or comparison sheet on the card.
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
@@ -301,6 +304,13 @@ enum DebugSeeds {
             let id = UUID()
             sighting.art.startSceneJob(id: id)
             sighting.art.sceneJobReady(id: id, path: path)
+        case "photo-preview", "photo-approved":
+            guard let frames, let frame = sighting.frameImagePath, let photo = try? Data(contentsOf: frames.url(for: frame)),
+                  let painting = FakeArtClient.paint(photo), let path = try? frames.write(jpeg: painting) else { return }
+            let id = UUID()
+            sighting.art.startPhotoJob(id: id, source: frame)
+            sighting.art.photoJobReady(id: id, path: path)
+            if mode == "photo-approved" { sighting.art.approvePhotoArt() }
         default:
             return
         }

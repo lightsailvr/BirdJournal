@@ -215,6 +215,29 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - A long name ("Your first Northern Rough-winged Swallow") fits on one line or wraps without pushing the button
      off the page; the field marks above give way.
    - Record the answers in DECISIONS.md, "Every sighting is a card".
+14. [ ] The friend banner on the lens (issue #67), a Debug build signed in, from "Listen with the glasses". Settings →
+   Developer → Friend banner has two buttons that each act 10 s after the tap, time to set up the page or lock the phone.
+   - **Shown, held, replaced, dismissed** ("Friend's find on the lens in 10 s", which hands the push center a notable push
+     as if APNs had delivered it): on the species list or a photo page the lens shows "A friend's find" / "Maya heard a
+     Black Phoebe · Pasadena" / "Tap or swipe right to close" within a second. A tap dismisses it; again, and a swipe
+     right does. Tap the button, then open a details page (or the viewfinder, or a sounds page with a clip playing):
+     nothing shows there; swipe back to the photo page and the banner is there. Two taps of the button 5 s apart while
+     on a details page show only one banner on return. Record whether the banner reads at a glance and fits one screen.
+   - [ ] **Does a backgrounded glasses run get the push in time?** Needs the deploy, the APNs key (`push-wizard.sh`) and
+     this phone's token on the account (Circles → create or join a circle → allow notifications). Start "Listen with the
+     glasses", sit on the species list, lock the phone and pocket it. Then either run `WIZARD_FROM=5
+     infra/scripts/push-wizard.sh` and send the test push to this phone's token (Settings → Developer → Push token; the
+     test push carries a find, so it makes the banner), or have a second account in a shared circle add a species it has
+     never added (a Legendary, so notable). Note the time the push is sent and the time the banner appears on the lens.
+     Repeat three times, once after 10+ minutes locked. Record in DECISIONS.md, "Friend banner on the lens": every delay,
+     any push that never made a banner, and whether the phone's own notification arrived meanwhile (iOS can throttle
+     background pushes; the banner needs the app to wake for `content-available`).
+   - [ ] **Do the glasses mirror an ordinary iOS notification?** With the glasses on and connected (no run needed, then
+     again during a glasses run), tap "Post a local notification in 10 s" and lock the phone. Record whether "Maya Ortiz
+     found a Black Phoebe" appears on the glasses' display by itself (Meta AI app → Devices → notifications settings may
+     list Bird Journal; note what it says), and if it does, whether it covers or interrupts the app's lens pages. If the
+     glasses mirror it, a friend's push may show twice on the lens (the system's copy and the banner): record it, and
+     DECISIONS.md decides whether the banner stays.
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.

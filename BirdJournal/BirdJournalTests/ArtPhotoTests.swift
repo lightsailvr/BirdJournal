@@ -97,6 +97,22 @@ struct ArtPhotoTests {
         #expect(prepared.faces == 0)
     }
 
+    @Test("A large library photo leaves scaled down, still with its face blurred and as a JPEG (issue #69)")
+    func libraryPhotoScaledDown() throws {
+        let original = try Self.picture(try Self.fixture())
+        let side = max(original.extent.width, original.extent.height)
+        let limit = (side / 2).rounded(.down)
+        let prepared = try ArtPhoto.prepare(jpeg: try Self.fixture(), maxSide: limit)
+        let picture = try Self.picture(prepared.jpeg)
+        #expect(max(picture.extent.width, picture.extent.height) <= limit)
+        #expect(max(picture.extent.width, picture.extent.height) >= limit - 1)
+        #expect(prepared.faces == 1)
+        #expect(try ArtPhoto.faceBoxes(in: picture).isEmpty)
+        // Smaller than the limit: untouched in size.
+        let small = try Self.picture(try ArtPhoto.prepare(jpeg: try Self.fixture(), maxSide: side * 2).jpeg)
+        #expect(small.extent.size == original.extent.size)
+    }
+
     @Test("Bytes that aren't a picture are refused")
     func unreadable() {
         #expect(throws: ArtPhoto.Failure.unreadable) { try ArtPhoto.prepare(jpeg: Data("not a jpeg".utf8)) }

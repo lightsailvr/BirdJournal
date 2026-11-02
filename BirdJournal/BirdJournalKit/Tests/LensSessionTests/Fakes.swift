@@ -8,6 +8,10 @@ enum Fakes {
     static let towhee = Species(index: 2, scientificName: "Melozone crissalis", commonName: "California Towhee", taxonomicClass: "Aves")
     static let all = [phoebe, finch, towhee]
 
+    /// Friend banners (issue #67): Maya's phoebe, and a newer find from Sam.
+    static let mayasPhoebe = LensFriendBanner(id: "maya/s1", friendName: "Maya", method: .heard, speciesName: "Black Phoebe", place: "Pasadena")
+    static let samsOriole = LensFriendBanner(id: "sam/s2", friendName: "Sam", method: .saw, speciesName: "Hooded Oriole", place: nil)
+
     /// A session time at which no fake candidate is calling.
     static let quiet: Double = 100
 

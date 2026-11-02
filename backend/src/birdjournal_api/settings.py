@@ -21,8 +21,12 @@ class Settings:
     # The worker token's Secrets Manager ARN (the stack), or the token itself (tests, local runs).
     art_worker_token_secret: str | None = None
     art_worker_token: str | None = None
-    # The auto-paint rule: every_glasses_add (friends phase) or legendary_or_rare (public launch).
+    # The switch between the friends phase and the public launch (issue #69): every_glasses_add (friends phase: every
+    # add with a glasses photo, and every painting asked for) or legendary_or_rare (public launch: Legendary and
+    # Rare-or-rarer adds automatically, everything else on request within the daily allowance).
     art_auto_paint: str = "every_glasses_add"
+    # Paintings on request per account and UTC day at the public launch; unused in the friends phase.
+    art_daily_allowance: int = 5
     # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
     # the stack has one; the feed then gives keys without URLs.
     art_cdn_base_url: str | None = None
@@ -47,6 +51,7 @@ class Settings:
             art_queue_url=env.get("ART_QUEUE_URL") or None,
             art_worker_token_secret=env.get("ART_WORKER_TOKEN_SECRET") or None,
             art_auto_paint=_rule(env.get("ART_AUTO_PAINT") or cls.art_auto_paint),
+            art_daily_allowance=_allowance(env.get("ART_DAILY_ALLOWANCE") or str(cls.art_daily_allowance)),
             art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
             apns_secret_name=env.get("APNS_SECRET_NAME") or None,
             apns_topic=env.get("APNS_TOPIC") or cls.apns_topic,
@@ -57,6 +62,16 @@ def _rule(value: str) -> str:
     if value not in ("every_glasses_add", "legendary_or_rare"):
         raise ValueError(f"ART_AUTO_PAINT must be every_glasses_add or legendary_or_rare, not {value!r}")
     return value
+
+
+def _allowance(value: str) -> int:
+    try:
+        allowance = int(value)
+    except ValueError:
+        allowance = -1
+    if allowance < 0:
+        raise ValueError(f"ART_DAILY_ALLOWANCE must be a whole number of paintings, not {value!r}")
+    return allowance
 
 
 def _require(env: Mapping[str, str], name: str) -> str:

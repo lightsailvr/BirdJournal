@@ -95,6 +95,8 @@ struct BirdJournalApp: App {
         // The lens's sounds pages play through the same player as the profile (issue #41, phase 4).
         glasses.lens.sounds = sounds
         lens.sounds = sounds
+        // A friend's notable find, foreground or background, becomes a banner on the lens of a run (issue #67).
+        _ = FriendBanners.forward(pushes.friendFinds()) { [glasses, lens] in [glasses.lens, lens] }
         _sounds = State(initialValue: sounds)
         let journalEdits = JournalEdits(container: album, frames: frames)
         journalEdits.findOutbox = findOutbox

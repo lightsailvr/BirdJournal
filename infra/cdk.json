@@ -26,6 +26,7 @@
       "647FZYVR5Q.com.matthewcelia.mybirdjournal"
     ],
     "artAutoPaint": "every_glasses_add",
+    "artDailyAllowance": 5,
     "apnsSecretName": "birdjournal/apns",
     "apnsTopic": "com.matthewcelia.mybirdjournal",
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,

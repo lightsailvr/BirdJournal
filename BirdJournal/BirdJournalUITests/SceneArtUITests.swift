@@ -77,6 +77,20 @@ final class SceneArtUITests: XCTestCase {
     }
 
     @MainActor
+    func testAnUnpaintedGlassesCardCanAskForSceneArtWithinTheDaysAllowance() {
+        // Issue #69: at the public launch an ordinary add isn't painted automatically; the birder asks.
+        let app = launch(["-fakeAccount", "signedIn", "-fakeArt", "paints", "-fakeArtDaily", "5"])
+        let allowance = app.descendants(matching: .any).matching(identifier: "card-art-allowance").firstMatch
+        XCTAssertTrue(allowance.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(allowance.label, "5 left today")
+        tap(app.buttons["card-art-paint"], app)
+        XCTAssertTrue(app.buttons["card-art-try-again"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
+        expectation(for: NSPredicate(format: "label == %@", "4 left today"), evaluatedWith: allowance)
+        waitForExpectations(timeout: 10)
+        XCTAssertEqual(app.staticTexts["card-position"].label, "Card 1 of 2")
+    }
+
+    @MainActor
     func testAPendingCardSaysItsArtIsOnItsWay() {
         let app = launch(["-autoArt", "pending", "-fakeAccount", "signedIn", "-fakeArt", "pending"])
         XCTAssertTrue(status(app).waitForExistence(timeout: 5))
