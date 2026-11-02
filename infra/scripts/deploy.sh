@@ -7,6 +7,7 @@
 # Needs the wizards' console steps done first: infra/scripts/accounts-wizard.sh (the two secrets in Secrets
 # Manager, the CDK bootstrap, BUDGET_ALERT_EMAIL in ~/keys/birdjournal.env) and, from issue #61,
 # infra/scripts/circles-wizard.sh (the invite domain's issued certificate, INVITE_CERTIFICATE_ARN in the same file).
+# Scene art (issue #68) needs nothing more to deploy; infra/scripts/art-wizard.sh then sets up the worker on comfybox.
 set -euo pipefail
 
 infra="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

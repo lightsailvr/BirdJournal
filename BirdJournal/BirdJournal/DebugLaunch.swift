@@ -27,6 +27,10 @@ import UIKit
 ///   list), `circle` (the first circle's page), `circle-invite` (its invitation, QR code and link), `circle-new` (the
 ///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
 ///   show those refusals).
+/// - `-autoArt pending|ready|failed` gives the newest seeded card with a glasses photo that scene art state (issue #68):
+///   a job on its way, a painting (a warm wash over its photo), or a failed job. With `-fakeAccount signedIn` and
+///   `-fakeArt paints|pending|fails` (the in-memory art server; `-fakeAccount` alone paints), Try again and Retry art
+///   work too.
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
@@ -57,6 +61,7 @@ struct DebugLaunch: ViewModifier {
             let defaults = UserDefaults.standard
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
+            if let mode = defaults.string(forKey: "autoArt") { DebugSeeds.setArt(mode, context: context, frames: frameStore) }
             if let id = defaults.string(forKey: "autoDownloadPack") {
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -263,6 +268,28 @@ enum DebugSeeds {
                 sighting.caption = CardCaption(text: "By the pond at morning, the dark sentinel kept its low perch.", generatorVersion: FixedCaptionWriter.versionString)
             }
             context.insert(sighting)
+        }
+        try? context.save()
+    }
+
+    /// The newest card with a glasses photo gets a scene art state for screenshots and the UI tests (issue #68).
+    static func setArt(_ mode: String, context: ModelContext, frames: FrameStore?) {
+        guard let sighting = (try? context.fetch(Sighting.newestFirst()))?.first(where: { $0.frameImagePath != nil }) else { return }
+        switch mode {
+        case "pending":
+            sighting.art.startSceneJob(id: UUID())
+        case "failed":
+            let id = UUID()
+            sighting.art.startSceneJob(id: id)
+            sighting.art.sceneJobFailed(id: id)
+        case "ready":
+            guard let frames, let frame = sighting.frameImagePath, let photo = try? Data(contentsOf: frames.url(for: frame)),
+                  let painting = FakeArtClient.paint(photo), let path = try? frames.write(jpeg: painting) else { return }
+            let id = UUID()
+            sighting.art.startSceneJob(id: id)
+            sighting.art.sceneJobReady(id: id, path: path)
+        default:
+            return
         }
         try? context.save()
     }

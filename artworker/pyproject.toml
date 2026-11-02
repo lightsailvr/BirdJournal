@@ -1,0 +1,37 @@
+[project]
+name = "artworker"
+version = "0.1.0"
+description = "BirdJournal's art worker on comfybox (issue #68): long-polls SQS, paints scene art on the FLUX.3 ComfyUI, uploads it and reports back"
+authors = [
+    { name = "Matthew Celia", email = "matt@lightsailvr.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.40",
+    "numpy>=2.0",
+    "onnxruntime>=1.20",
+    "packbuilder",
+    "pillow>=11.0",
+    "requests>=2.32",
+]
+
+[project.scripts]
+artworker = "artworker.__main__:main"
+
+[tool.uv.sources]
+# Editable, so packbuilder.art finds the committed art/ folder beside it (prompts and workflows) as in the repo.
+packbuilder = { path = "../packbuilder", editable = true }
+
+[build-system]
+requires = ["uv_build>=0.8,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "moto[s3,sqs]>=5.1",
+    "pytest>=8",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
