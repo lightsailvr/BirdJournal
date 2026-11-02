@@ -1,3 +1,4 @@
+import Album
 import Foundation
 
 /// One of the birder's circles as the list shows it (backend `GET /v1/circles`, issue #61). Named `CircleSummary`, not
@@ -90,6 +91,74 @@ struct InvitePreview: Equatable, Decodable, Sendable {
     }
 }
 
+/// One find in a circle's feed (backend `GET /v1/circles/<id>/feed`, issue #62): what the owner's find policy sent,
+/// with who found it and whether it is the circle's first of the species.
+struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
+    struct Owner: Equatable, Decodable, Sendable {
+        var id: String
+        var displayName: String?
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case displayName = "display_name"
+        }
+
+        var name: String { displayName ?? "A birder" }
+    }
+
+    struct Art: Equatable, Decodable, Sendable {
+        var kind: String
+        var key: String
+        /// On the art CDN; nil before the stack has one. Without it the row shows the reference photo or a tile.
+        var url: URL?
+    }
+
+    var sightingID: String
+    var speciesID: String
+    var scientificName: String
+    var commonName: String
+    var method: SightingMethod
+    var place: String?
+    var foundAt: Date
+    var legendary: Bool
+    var rarity: RarityLabel?
+    var art: Art?
+    var owner: Owner
+    var circleFirst: Bool
+    var isMine: Bool
+
+    var id: String { "\(owner.id)/\(sightingID)" }
+
+    enum CodingKeys: String, CodingKey {
+        case sightingID = "sighting_id"
+        case speciesID = "species_id"
+        case scientificName = "scientific_name"
+        case commonName = "common_name"
+        case method, place
+        case foundAt = "found_at"
+        case legendary, rarity, art, owner
+        case circleFirst = "circle_first"
+        case isMine = "is_mine"
+    }
+}
+
+/// A page of the feed, newest first; `nextCursor` asks for the next.
+struct FeedPage: Equatable, Decodable, Sendable {
+    var items: [FeedItem]
+    var nextCursor: String?
+
+    enum CodingKeys: String, CodingKey {
+        case items
+        case nextCursor = "next_cursor"
+    }
+}
+
+/// What the birder muted (backend `GET /v1/mutes`, issue #63): circles and friends whose finds send no pushes.
+struct Mutes: Equatable, Decodable, Sendable {
+    var circles: Set<String> = []
+    var friends: Set<String> = []
+}
+
 enum CircleError: Error, Equatable {
     /// The access token was refused: renew it and try once more (the account's 401, so `AccountSession` retries).
     case unauthorized
@@ -118,6 +187,18 @@ protocol CircleClient: AnyObject {
     func acceptInvite(token: String, accessToken: String) async throws -> CircleDetail
     func leave(circleID: String, accessToken: String) async throws
     func removeMember(_ memberID: String, circleID: String, accessToken: String) async throws
+    /// Writes the find of a sighting (issue #62): the first put fans it out to the birder's circles, a repeated one
+    /// updates it.
+    func putFind(_ find: FindPolicy.Find, sightingID: UUID, accessToken: String) async throws
+    /// Removes the find with its feed items and reactions; one that isn't there is no error.
+    func deleteFind(sightingID: UUID, accessToken: String) async throws
+    func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage
+    /// Pushes (issue #63): the phone's APNs token and environment go to the signed-in account, and leave it at sign-out.
+    func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws
+    func unregisterDevice(token: String, accessToken: String) async throws
+    func mutes(accessToken: String) async throws -> Mutes
+    func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws
+    func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws
 }
 
 final class HTTPCircleClient: CircleClient {
@@ -162,20 +243,58 @@ final class HTTPCircleClient: CircleClient {
         _ = try await data("DELETE", "v1/circles/\(circleID)/members/\(memberID)", body: nil, accessToken: accessToken)
     }
 
-    private func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, accessToken: String, as type: T.Type) async throws -> T {
-        let data = try await data(method, path, body: body, accessToken: accessToken)
+    func putFind(_ find: FindPolicy.Find, sightingID: UUID, accessToken: String) async throws {
+        _ = try await data("PUT", "v1/finds/\(sightingID.uuidString.lowercased())", body: try JSONEncoder().encode(find), accessToken: accessToken)
+    }
+
+    func deleteFind(sightingID: UUID, accessToken: String) async throws {
+        _ = try await data("DELETE", "v1/finds/\(sightingID.uuidString.lowercased())", body: nil, accessToken: accessToken)
+    }
+
+    func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage {
+        var query = [URLQueryItem(name: "limit", value: String(Self.feedPageSize))]
+        if let cursor { query.append(URLQueryItem(name: "cursor", value: cursor)) }
+        return try await send("GET", "v1/circles/\(circleID)/feed", query: query, accessToken: accessToken, as: FeedPage.self)
+    }
+
+    static let feedPageSize = 20
+
+    func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws {
+        _ = try await data("PUT", "v1/account/devices/\(token)", body: try JSONEncoder().encode(["environment": environment.rawValue]), accessToken: accessToken)
+    }
+
+    func unregisterDevice(token: String, accessToken: String) async throws {
+        _ = try await data("DELETE", "v1/account/devices/\(token)", body: nil, accessToken: accessToken)
+    }
+
+    func mutes(accessToken: String) async throws -> Mutes {
+        try await send("GET", "v1/mutes", accessToken: accessToken, as: Mutes.self)
+    }
+
+    func setCircleMuted(_ muted: Bool, circleID: String, accessToken: String) async throws {
+        _ = try await data(muted ? "PUT" : "DELETE", "v1/circles/\(circleID)/mute", body: nil, accessToken: accessToken)
+    }
+
+    func setFriendMuted(_ muted: Bool, friendID: String, accessToken: String) async throws {
+        _ = try await data(muted ? "PUT" : "DELETE", "v1/friends/\(friendID)/mute", body: nil, accessToken: accessToken)
+    }
+
+    private func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, query: [URLQueryItem] = [], accessToken: String, as type: T.Type) async throws -> T {
+        let data = try await data(method, path, query: query, body: try body.map { try JSONEncoder().encode($0) }, accessToken: accessToken)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(T.self, from: data)
     }
 
-    private func data(_ method: String, _ path: String, body: [String: String]?, accessToken: String) async throws -> Data {
-        var request = URLRequest(url: baseURL.appending(path: path))
+    private func data(_ method: String, _ path: String, query: [URLQueryItem] = [], body: Data?, accessToken: String) async throws -> Data {
+        var url = baseURL.appending(path: path)
+        if !query.isEmpty { url.append(queryItems: query) }
+        var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(body)
+            request.httpBody = body
         }
         let (data, response) = try await transport(request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0

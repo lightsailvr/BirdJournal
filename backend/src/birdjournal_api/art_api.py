@@ -158,8 +158,8 @@ def _store(request: Request) -> ArtJobStore:
 
 
 def _cdn(request: Request) -> str:
-    base: str = request.app.state.art_cdn_base_url
-    return base
+    base: str | None = request.app.state.art_cdn_base_url
+    return base or ""
 
 
 Jobs = Annotated[ArtJobStore, Depends(_store)]

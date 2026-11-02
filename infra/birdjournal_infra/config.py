@@ -40,6 +40,10 @@ class BirdJournalConfig:
     # and all photo art on request within `art_daily_allowance` a day per account. The API reads both.
     art_auto_paint: str = "every_glasses_add"
     art_daily_allowance: int = 5
+    # The APNs token key (issue #63): a Secrets Manager secret {"key_id", "team_id", "private_key"} created by
+    # infra/scripts/push-wizard.sh outside the stack, and the app's bundle id, every push's apns-topic.
+    apns_secret_name: str = "birdjournal/apns"
+    apns_topic: str = "com.matthewcelia.mybirdjournal"
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -72,6 +76,8 @@ class BirdJournalConfig:
             invite_certificate_arn=certificate,
             art_auto_paint=art_auto_paint,
             art_daily_allowance=art_daily_allowance,
+            apns_secret_name=node.get_context("apnsSecretName"),
+            apns_topic=node.get_context("apnsTopic"),
         )
 
 

@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// A circle's page (issue #61), the shell later tickets fill with the goal card and the feed: invite (a link and a QR
-/// code), the members, and the settings (leave; the creator removes members).
+/// A circle's page (issue #61), the shell later tickets fill with the goal card: Recent finds (issue #62), invite (a
+/// link and a QR code), the members, and the settings (leave; the creator removes members).
 struct CirclePageView: View {
     @Environment(CircleStore.self) private var circles
+    @Environment(PushCenter.self) private var pushes
+    @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
     let id: String
     @State private var inviting = false
@@ -16,6 +18,7 @@ struct CirclePageView: View {
     var body: some View {
         List {
             if let detail {
+                CircleFeedSection(circleID: detail.circle.id)
                 header(detail)
                 members(detail)
                 settings(detail)
@@ -78,14 +81,25 @@ struct CirclePageView: View {
     private func members(_ detail: CircleDetail) -> some View {
         Section {
             ForEach(detail.members) { member in
-                MemberRow(member: member, isMe: member.id == myID(in: detail))
+                let isMe = member.id == myID(in: detail)
+                let isMuted = circles.mutes.friends.contains(member.id)
+                MemberRow(member: member, isMe: isMe, isMuted: isMuted)
                     .swipeActions {
-                        if detail.circle.isCreator, member.id != myID(in: detail) {
+                        if detail.circle.isCreator, !isMe {
                             Button("Remove", role: .destructive) { removing = member }
+                        }
+                        if !isMe {
+                            Button(isMuted ? "Unmute" : "Mute") { setFriendMuted(!isMuted, member) }
+                                .tint(Color.inkSecondary)
                         }
                     }
                     .contextMenu {
-                        if detail.circle.isCreator, member.id != myID(in: detail) {
+                        if !isMe {
+                            Button(isMuted ? "Unmute \(member.name)" : "Mute \(member.name)", systemImage: isMuted ? "bell" : "bell.slash") {
+                                setFriendMuted(!isMuted, member)
+                            }
+                        }
+                        if detail.circle.isCreator, !isMe {
                             Button("Remove from circle", systemImage: "person.badge.minus", role: .destructive) { removing = member }
                         }
                     }
@@ -93,17 +107,72 @@ struct CirclePageView: View {
         } header: {
             Text("Members · \(detail.members.count) of 20")
         } footer: {
-            if detail.circle.isCreator, detail.members.count > 1 {
-                Text("You started this circle: swipe a member to remove them.")
+            if detail.members.count > 1 {
+                Text(detail.circle.isCreator
+                     ? "You started this circle: swipe a member to mute or remove them."
+                     : "Swipe a friend to mute their finds' notifications.")
             }
         }
     }
 
     private func settings(_ detail: CircleDetail) -> some View {
         Section {
+            if pushes.isAvailable {
+                notifications(detail)
+            }
             Button("Leave circle", role: .destructive) { confirmingLeave = true }
         } header: {
             Text("Settings")
+        } footer: {
+            if pushes.isAvailable, pushes.permission == .denied {
+                Text("Notifications are off for Bird Journal, so friends' finds arrive only in the feed. Turn them on in Settings → Notifications.")
+            } else if circles.mutes.circles.contains(detail.circle.id) {
+                Text("Muted: this circle's finds still show here, without notifications.")
+            }
+        }
+    }
+
+    /// Mute, and the way back to notifications when they are off (issue #63).
+    @ViewBuilder
+    private func notifications(_ detail: CircleDetail) -> some View {
+        switch pushes.permission {
+        case .denied:
+            Button("Open notification settings", systemImage: "bell.badge") {
+                if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+            }
+        case .notDetermined:
+            Button("Turn on notifications", systemImage: "bell.badge") { Task { await pushes.turnOn() } }
+        default:
+            EmptyView()
+        }
+        Toggle(isOn: Binding(
+            get: { circles.mutes.circles.contains(detail.circle.id) },
+            set: { muted in setCircleMuted(muted, detail.circle.id) }
+        )) {
+            Label("Mute this circle", systemImage: "bell.slash")
+        }
+        .tint(Color.moss)
+    }
+
+    private func setCircleMuted(_ muted: Bool, _ circleID: String) {
+        Task {
+            do {
+                try await circles.setCircleMuted(muted, circleID: circleID)
+                error = nil
+            } catch {
+                self.error = CircleStore.message(for: error, doing: muted ? "mute the circle" : "unmute the circle")
+            }
+        }
+    }
+
+    private func setFriendMuted(_ muted: Bool, _ member: CircleMember) {
+        Task {
+            do {
+                try await circles.setFriendMuted(muted, friendID: member.id)
+                error = nil
+            } catch {
+                self.error = CircleStore.message(for: error, doing: muted ? "mute \(member.name)" : "unmute \(member.name)")
+            }
         }
     }
 
@@ -125,6 +194,7 @@ struct CirclePageView: View {
         do {
             try await circles.loadDetail(id: id)
             error = nil
+            await circles.loadFeed(circleID: id)
         } catch {
             self.error = CircleStore.message(for: error, doing: "load the circle")
         }
@@ -156,6 +226,7 @@ struct CirclePageView: View {
 private struct MemberRow: View {
     let member: CircleMember
     let isMe: Bool
+    var isMuted = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -170,6 +241,12 @@ private struct MemberRow: View {
                 if member.isCreator {
                     Text("Started the circle").font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
                 }
+            }
+            if isMuted {
+                Spacer()
+                Image(systemName: "bell.slash")
+                    .foregroundStyle(Color.inkSecondary)
+                    .accessibilityLabel("Muted")
             }
         }
         .accessibilityElement(children: .combine)

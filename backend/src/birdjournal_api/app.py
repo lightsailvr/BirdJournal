@@ -1,5 +1,5 @@
-"""The API: account get and update (issue #60), circles (issue #61) and art jobs (issue #68). Later tickets add their
-routers here."""
+"""The API: account get and update (issue #60), circles (issue #61), finds (issue #62), art jobs (issue #68) and pushes (issue #63). Later
+tickets add their routers here."""
 
 import logging
 from collections.abc import Callable
@@ -12,6 +12,7 @@ from fastapi import Depends, FastAPI, Request
 from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from birdjournal_api.accounts import Account, AccountStore, clean_display_name
+from birdjournal_api.apns import ApnsSender, DisabledSender, secrets_manager_credentials
 from birdjournal_api.art import (
     ArtJobStore,
     ArtNotifier,
@@ -33,6 +34,11 @@ from birdjournal_api.auth import (
 )
 from birdjournal_api.circles import CircleStore
 from birdjournal_api.circles_api import router as circles_router
+from birdjournal_api.finds import FindStore
+from birdjournal_api.devices import DeviceStore, MuteStore
+from birdjournal_api.finds_api import router as finds_router
+from birdjournal_api.pushes import PushSender, PushService
+from birdjournal_api.pushes_api import router as pushes_router
 from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
@@ -75,9 +81,10 @@ def create_app(
     art_queue: ArtQueue | None = None,
     art_notifier: ArtNotifier | None = None,
     art_retention: ArtRetention | None = None,
+    push_sender: PushSender | None = None,
 ) -> FastAPI:
     """The API over the settings' table. Tests pass a signing key from their own issuer, a clock, and fakes for the art
-    buckets, queue and notifier."""
+    buckets, queue and notifier and for APNs."""
     dynamodb = boto3.resource("dynamodb", region_name=settings.region, endpoint_url=settings.dynamodb_endpoint)
     app = FastAPI(title="BirdJournal API")
     app.state.verifier = TokenVerifier(
@@ -87,8 +94,19 @@ def create_app(
     )
     app.state.accounts = AccountStore(dynamodb.Table(settings.table_name), clock)
     app.state.circles = CircleStore(dynamodb, settings.table_name, app.state.accounts, clock)
+    app.state.finds = FindStore(dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock)
+    table = dynamodb.Table(settings.table_name)
+    app.state.devices = DeviceStore(table, clock)
+    app.state.mutes = MuteStore(table, clock)
+    app.state.pushes = PushService(
+        table, app.state.circles, app.state.finds, app.state.devices, app.state.mutes,
+        push_sender or _apns(settings), clock,
+    )
     app.state.invite_base_url = settings.invite_base_url
+    app.state.art_cdn_base_url = settings.art_cdn_base_url
     app.include_router(circles_router)
+    app.include_router(finds_router)
+    app.include_router(pushes_router)
 
     if art_storage is None and settings.upload_bucket and settings.art_bucket:
         art_storage = S3ArtStorage(
@@ -110,7 +128,6 @@ def create_app(
         if art_storage is not None
         else None
     )
-    app.state.art_cdn_base_url = settings.art_cdn_base_url
     app.state.worker_token = (
         WorkerToken(value=settings.art_worker_token)
         if settings.art_worker_token
@@ -138,6 +155,12 @@ def create_app(
         return AccountResponse.of(accounts.update_display_name(subject, update.display_name))
 
     return app
+
+
+def _apns(settings: Settings) -> PushSender:
+    if settings.apns_secret_name is None:
+        return DisabledSender()
+    return ApnsSender(secrets_manager_credentials(settings.apns_secret_name, settings.region), settings.apns_topic)
 
 
 def _accounts(request: Request) -> AccountStore:

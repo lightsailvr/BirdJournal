@@ -8,6 +8,8 @@
 # Manager, the CDK bootstrap, BUDGET_ALERT_EMAIL in ~/keys/birdjournal.env) and, from issue #61,
 # infra/scripts/circles-wizard.sh (the invite domain's issued certificate, INVITE_CERTIFICATE_ARN in the same file).
 # Scene art (issue #68) needs nothing more to deploy; infra/scripts/art-wizard.sh then sets up the worker on comfybox.
+# Pushes (issue #63) need infra/scripts/push-wizard.sh's APNs key in Secrets Manager, but a deploy without it works:
+# the API sends no pushes until the key is there.
 set -euo pipefail
 
 infra="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

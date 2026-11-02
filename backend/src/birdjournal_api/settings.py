@@ -18,8 +18,6 @@ class Settings:
     upload_bucket: str | None = None
     art_bucket: str | None = None
     art_queue_url: str | None = None
-    # Where painted art is served: the art CDN, https://<distribution>.cloudfront.net.
-    art_cdn_base_url: str = ""
     # The worker token's Secrets Manager ARN (the stack), or the token itself (tests, local runs).
     art_worker_token_secret: str | None = None
     art_worker_token: str | None = None
@@ -29,6 +27,13 @@ class Settings:
     art_auto_paint: str = "every_glasses_add"
     # Paintings on request per account and UTC day at the public launch; unused in the friends phase.
     art_daily_allowance: int = 5
+    # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
+    # the stack has one; the feed then gives keys without URLs.
+    art_cdn_base_url: str | None = None
+    # The APNs token key's Secrets Manager secret (issue #63; infra/scripts/push-wizard.sh stores it). None: no pushes.
+    apns_secret_name: str | None = None
+    # The app's bundle id, the apns-topic of every push.
+    apns_topic: str = "com.matthewcelia.mybirdjournal"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> "Settings":
@@ -44,10 +49,12 @@ class Settings:
             upload_bucket=env.get("UPLOAD_BUCKET") or None,
             art_bucket=env.get("ART_BUCKET") or None,
             art_queue_url=env.get("ART_QUEUE_URL") or None,
-            art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/"),
             art_worker_token_secret=env.get("ART_WORKER_TOKEN_SECRET") or None,
             art_auto_paint=_rule(env.get("ART_AUTO_PAINT") or cls.art_auto_paint),
             art_daily_allowance=_allowance(env.get("ART_DAILY_ALLOWANCE") or str(cls.art_daily_allowance)),
+            art_cdn_base_url=(env.get("ART_CDN_BASE_URL") or "").rstrip("/") or None,
+            apns_secret_name=env.get("APNS_SECRET_NAME") or None,
+            apns_topic=env.get("APNS_TOPIC") or cls.apns_topic,
         )
 
 

@@ -41,6 +41,9 @@ final class JournalEdits {
     @ObservationIgnored private let container: ModelContainer
     @ObservationIgnored private let frames: FrameStore
     @ObservationIgnored private var expiry: Task<Void, Never>?
+    /// Keeps a published sighting's find in step (issue #62): Heard or Seen puts it again, a removal deletes it, and
+    /// Undo puts it back. Nil changes nothing on the server.
+    @ObservationIgnored var findOutbox: FindOutbox?
 
     init(container: ModelContainer, frames: FrameStore) {
         self.container = container
@@ -61,6 +64,7 @@ final class JournalEdits {
         guard sighting.method != method else { return }
         sighting.method = method
         save()
+        findOutbox?.changed(sighting.identifier)
     }
 
     /// Removes the sighting from the journal, keeping what it was for `undoWindow`.
@@ -74,6 +78,8 @@ final class JournalEdits {
         )
         container.mainContext.delete(sighting)
         save()
+        // At once, not when the undo window closes: a quit in the window must not leave the find behind.
+        findOutbox?.removed(removed.identifier)
         pendingRemoval = removed
         expiry = Task { [weak self] in
             try? await Task.sleep(for: Self.undoWindow)
@@ -99,6 +105,7 @@ final class JournalEdits {
         sighting.attachedPhotoPaths = removed.attachedPhotoPaths
         container.mainContext.insert(sighting)
         save()
+        findOutbox?.restored(removed.identifier)
     }
 
     /// Lets the last removal stand: its files leave the disk.

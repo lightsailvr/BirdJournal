@@ -1,0 +1,118 @@
+import XCTest
+
+// Debug only: pushes need the account, switched off in Release (`ACCOUNTS_ENABLED`, issue #88), and the fakes are DEBUG.
+#if ACCOUNTS_ENABLED && DEBUG
+
+/// Pushes on the phone (issue #63) over the fake circle server and a fake notification permission
+/// (`-fakePushPermission`, `-fakePushGrant`): the explanation comes at the first circle and only then, a denial leaves a
+/// way to Settings, and a circle and a friend can be muted.
+final class PushesUITests: XCTestCase {
+    private let explanation = "Hear about your friends' finds"
+
+    private func launch(_ arguments: [String]) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-fakeAccount", "signedIn"] + arguments
+        app.launch()
+        return app
+    }
+
+    private func create(_ name: String, in app: XCUIApplication) {
+        app.buttons["New circle"].firstMatch.tap()
+        let field = app.textFields["Circle name"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        field.typeText(name)
+        app.buttons["Create"].tap()
+    }
+
+    private func open(_ name: String, in app: XCUIApplication) {
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "not listed; screen: \(app.debugDescription.prefix(3000))")
+        row.tap()
+        XCTAssertTrue(app.staticTexts["Members · 1 of 20"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    /// The settings are the page's last section, below the feed and the members.
+    private func scrollToSettings(_ app: XCUIApplication) {
+        let leave = app.buttons["Leave circle"]
+        for _ in 0..<6 where !(leave.exists && leave.isHittable) { app.collectionViews.firstMatch.swipeUp() }
+    }
+
+    @MainActor
+    func testTheFirstCircleExplainsPushesOnceAndAllowingThemTurnsThemOn() {
+        let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined"])
+        app.tabBars.buttons["Circles"].tap()
+        XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // Opening the tab asks nothing.
+        XCTAssertFalse(app.alerts[explanation].waitForExistence(timeout: 2))
+
+        create("Backyard Crew", in: app)
+        let alert = app.alerts[explanation]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5), "no explanation; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(alert.staticTexts.matching(NSPredicate(format: "label CONTAINS 'mute a circle or a friend'")).firstMatch.exists)
+        alert.buttons["Turn on notifications"].tap()
+
+        open("Backyard Crew", in: app)
+        scrollToSettings(app)
+        XCTAssertTrue(app.switches["Mute this circle"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Turn on notifications"].exists)
+        XCTAssertFalse(app.buttons["Open notification settings"].exists)
+
+        app.navigationBars.buttons.firstMatch.tap()
+        create("Weekday Walkers", in: app)
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Weekday Walkers'")).firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.alerts[explanation].waitForExistence(timeout: 3), "asked again at the second circle")
+    }
+
+    @MainActor
+    func testADenialLeavesAWayToSettings() {
+        let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined", "-fakePushGrant", "NO"])
+        app.tabBars.buttons["Circles"].tap()
+        XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        create("Backyard Crew", in: app)
+        let alert = app.alerts[explanation]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5), "no explanation; screen: \(app.debugDescription.prefix(3000))")
+        alert.buttons["Turn on notifications"].tap()
+
+        open("Backyard Crew", in: app)
+        scrollToSettings(app)
+        XCTAssertTrue(app.buttons["Open notification settings"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Notifications are off for Bird Journal'")).firstMatch.exists)
+    }
+
+    @MainActor
+    func testNotNowLeavesTheChoiceOnTheCirclePage() {
+        let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined"])
+        app.tabBars.buttons["Circles"].tap()
+        XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10))
+        create("Backyard Crew", in: app)
+        let alert = app.alerts[explanation]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["Not now"].tap()
+        open("Backyard Crew", in: app)
+        scrollToSettings(app)
+        XCTAssertTrue(app.buttons["Turn on notifications"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    @MainActor
+    func testACircleAndAFriendCanBeMuted() {
+        let app = launch(["-fakeCircles", "some", "-autoScreen", "circle", "-fakePushPermission", "authorized"])
+        let mute = app.switches["Mute this circle"]
+        let list = app.collectionViews.firstMatch
+        XCTAssertTrue(list.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<6 where !mute.exists { list.swipeUp() }
+        XCTAssertTrue(mute.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        mute.switches.firstMatch.tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Muted: this circle'")).firstMatch.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+
+        let maya = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Maya Ortiz'")).firstMatch
+        let mayaRow = maya.exists ? maya : app.staticTexts["Maya Ortiz"].firstMatch
+        for _ in 0..<6 where !mayaRow.isHittable { list.swipeDown() }
+        mayaRow.press(forDuration: 1.0)
+        let muteMaya = app.buttons["Mute Maya Ortiz"]
+        XCTAssertTrue(muteMaya.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        muteMaya.tap()
+        XCTAssertTrue(app.images["Muted"].waitForExistence(timeout: 5) || app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Muted'")).firstMatch.exists,
+                      "screen: \(app.debugDescription.prefix(3000))")
+    }
+}
+#endif

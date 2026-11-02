@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct BirdJournalApp: App {
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var appDelegate
     @State private var connection: GlassesConnection
     @State private var spike: SpikeRecorder
     @State private var lens: GlassesLensSession
@@ -23,6 +24,8 @@ struct BirdJournalApp: App {
     @State private var circles: CircleStore
     @State private var art: ArtJobs
     @Environment(\.scenePhase) private var scenePhase
+    @State private var findOutbox: FindOutbox
+    @State private var pushes: PushCenter
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @State private var showingSplash = true
     private let album: ModelContainer
@@ -60,10 +63,21 @@ struct BirdJournalApp: App {
         self.frames = frames
         let account = AccountSession.forApp()
         _account = State(initialValue: account)
-        _circles = State(initialValue: CircleStore.forApp(account: account))
+        let circles = CircleStore.forApp(account: account)
+        _circles = State(initialValue: circles)
         let art = Self.makeArtJobs(account: account, frames: frames, album: album, packs: packs)
         sightings.artJobs = art
         _art = State(initialValue: art)
+        // Finds (issue #62): adds made while signed in and sharing reach the birder's circles.
+        let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
+        sightings.findOutbox = findOutbox
+        _findOutbox = State(initialValue: findOutbox)
+        // Pushes (issue #63): permission at the first circle, the token to the account, and a refresh on every push.
+        let pushes = PushCenter.forApp(account: account, client: circles.client) { UIApplication.shared.registerForRemoteNotifications() }
+        pushes.refresh = { [weak circles] circleIDs in await circles?.refreshAfterPush(circleIDs: circleIDs) }
+        circles.joinedCircle = { [weak pushes] in await pushes?.joinedCircle() }
+        PushAppDelegate.pushes = pushes
+        _pushes = State(initialValue: pushes)
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
@@ -82,7 +96,9 @@ struct BirdJournalApp: App {
         glasses.lens.sounds = sounds
         lens.sounds = sounds
         _sounds = State(initialValue: sounds)
-        _journalEdits = State(initialValue: JournalEdits(container: album, frames: frames))
+        let journalEdits = JournalEdits(container: album, frames: frames)
+        journalEdits.findOutbox = findOutbox
+        _journalEdits = State(initialValue: journalEdits)
     }
 
     /// The album on disk. Failing to open it is a broken install, not a field condition, so it traps like the
@@ -230,6 +246,8 @@ struct BirdJournalApp: App {
             .environment(account)
             .environment(circles)
             .environment(art)
+            .environment(findOutbox)
+            .environment(pushes)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)
