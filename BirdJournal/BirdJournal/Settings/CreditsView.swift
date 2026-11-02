@@ -5,7 +5,8 @@ import SwiftUI
 /// Sources & credits (issues #11 and #28, spec user story 36): "Powered by BirdNET" with both models' licenses, then,
 /// for every pack on the phone (#13), the text credit, each photo with its observer, exact license and observation
 /// link, each reference sound with its recordist, license and recording page (#41), and the pack's LICENSE text. The
-/// datasets behind the card stats (#55) follow the models when a pack carries stats.
+/// datasets behind the card stats (#55) follow the models when a pack carries stats, and the sources of the lore and
+/// captions (#56) when a pack carries fact sheets.
 struct CreditsView: View {
     @Environment(PackLibrary.self) private var library
 
@@ -40,6 +41,14 @@ struct CreditsView: View {
                 }
             }
 
+            if library.packs.contains(where: { $0.species.contains { !$0.facts.isEmpty } }) {
+                Section {
+                    LoreCredits(packs: library.packs)
+                } header: {
+                    Text("Lore and captions")
+                }
+            }
+
             if library.packs.isEmpty {
                 Section("Photos") {
                     Text("No bird pack is on this iPhone, so there are no photos to credit.")
@@ -52,6 +61,30 @@ struct CreditsView: View {
         }
         .paperList()
         .navigationTitle("Sources & credits")
+    }
+}
+
+/// Who writes the lore and the captions, from what (issue #56): each bird's fact sheet is its stats and sentences of its
+/// Wikipedia article at the pack's revision; the lore is Claude's, reviewed by hand, CC BY-SA 4.0 with the article's
+/// credit; captions are written on this iPhone by Apple's on-device model.
+private struct LoreCredits: View {
+    static let license = URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!
+    let packs: [SpeciesPack]
+
+    var body: some View {
+        let withLore = packs.reduce(0) { $0 + $1.species.count { $0.lore != nil } }
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Each bird's fact sheet is its card stats and sentences from its English Wikipedia article, at the article revision its pack was built from (Wikipedia contributors, CC BY-SA 4.0). Each bird's Sources & credits links that revision.")
+            if withLore > 0 {
+                Text("The lore of \(withLore) birds was written by Claude (Anthropic) from the fact sheet alone, every sentence citing the facts it rests on, and reviewed by hand. As an adaptation of the Wikipedia text it is shared under CC BY-SA 4.0.")
+            }
+            Text("The caption on a card's front is written on this iPhone by Apple's on-device model from the fact sheet and the moment: the season, the time of day, Heard or Seen, and the place, never for a threatened bird. Without the model the card shows the lore's tagline.")
+        }
+        .font(JournalFont.supporting)
+        .foregroundStyle(Color.inkSecondary)
+        .accessibilityIdentifier("credits-lore")
+        Link("Wikipedia text and lore: CC BY-SA 4.0", destination: Self.license)
+            .font(JournalFont.attribution)
     }
 }
 

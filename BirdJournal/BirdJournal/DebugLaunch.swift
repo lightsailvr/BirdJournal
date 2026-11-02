@@ -32,6 +32,8 @@ import UIKit
 ///   domain overrides the remembered flag); `YES` keeps it away.
 /// - `-reduceMotion YES` makes the card flip switch faces as with the system's Reduce Motion, which a UI test cannot
 ///   turn on.
+/// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
+///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
 ///   prompting, for the UI tests.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
@@ -214,6 +216,17 @@ final class PacedAudioSource: AudioSource {
     }
 }
 
+/// A caption writer for simulator runs: always available, one fixed line naming the moment.
+struct FixedCaptionWriter: CaptionWriter {
+    static let versionString = "debug-fixed caption@1"
+    let version = Self.versionString
+    let isAvailable = true
+
+    func caption(for request: CaptionRequest) async throws -> String {
+        "\(request.moment.method == .heard ? "Heard" : "Seen") in the \(request.moment.timeOfDay.rawValue), the \(request.commonName) kept its old ways."
+    }
+}
+
 enum DebugSeeds {
     /// Six sightings over nine days with generated frames (a ring at the centre of a 640 × 480 frame with a black
     /// border, so the 2x crop is visible as such), one with a note, three from the phone without a frame, two without
@@ -246,6 +259,9 @@ enum DebugSeeds {
                 note: seed.note
             )
             sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: seed.location, at: sighting.confirmedAt)
+            if seed.label.hasPrefix("Sayornis") {
+                sighting.caption = CardCaption(text: "By the pond at morning, the dark sentinel kept its low perch.", generatorVersion: FixedCaptionWriter.versionString)
+            }
             context.insert(sighting)
         }
         try? context.save()

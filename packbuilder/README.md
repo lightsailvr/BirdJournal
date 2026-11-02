@@ -108,10 +108,11 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 9. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
    logged gap (`selection.py`).
 10. **Pack art.** One painting per species in the set's edition theme, painted from its best-lit photo (below).
-11. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
-   pinned `set.json`, the joined `stats`, `threatened` and `family` (see "Stats and type lines"), `pack_art` with each approved painting's file, source photo ids and workflow versions, and the empty `fact` and `lore` that later tickets fill), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
+11. **Fact sheet and lore.** Each species' sourced facts, and lore written from them by a Claude model (below).
+12. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
+   pinned `set.json`, the joined `stats`, `threatened` and `family` (see "Stats and type lines"), `pack_art` with each approved painting's file, source photo ids and workflow versions, `fact` with each species' fact sheet and `lore` with its approved lore and tagline (see "Fact sheet and lore")), `lens/<photo>.jpg` (552 × 368 px, tight card-width crop),
    `phone/<photo>.jpg` (looser crop, 1200 px max), `sounds/<id>.m4a`, `art/<species>.avif` (864 × 1152, 3:4), `LICENSE` with every photo, sound, art and text credit and link, `report.json`
-   with counts, chosen ids, description sources, chosen and rejected sounds, each species' art review, the photo, description, sound, stats and art gaps and the art not yet approved (`unreviewed.art`), and optionally a zip (`writer.py`).
+   with counts, chosen ids, description sources, chosen and rejected sounds, each species' art review, the photo, description, sound, stats and art gaps and the art and lore not yet approved (`unreviewed.art`, `unreviewed.lore`), and optionally a zip (`writer.py`).
 
 The Swift `Pack` module (`SpeciesPack`) reads the output; `SCHEMA_VERSION` in `writer.py` and
 `SpeciesPack.schemaVersion` move together.
@@ -204,6 +205,42 @@ writes the label thresholds the app ships to `BirdJournal/BirdJournalKit/Sources
 (`rarity.py`; ADR-0006, issue #52). It takes a few seconds. Run it again only for a new calibration, with the next
 version: cards keep the version they were labelled under.
 
+## Fact sheet and lore
+
+Lore and captions state only true facts (issue #56). `factsheet.py` gives each species a **fact sheet**: its stats
+told as short sentences, each credited to the dataset it came from, then up to eight sentences of its Wikipedia
+article at the pinned revision that stand alone, taken across the kinds of section (the lead, behaviour and diet,
+breeding, voice, people, names, range, status, appearance) so one long section never fills it. The pack ships it in
+`fact`; the phone's captions read it.
+
+`lore.py` then has Claude (`claude-opus-5-5` by default, `--lore-model`) write 50 to 80 words of myth-voiced lore and a
+tagline of 12 words or fewer from the sheet alone, every sentence citing the fact ids it rests on. A draft that cites
+nothing, cites a fact the sheet lacks or misses the counts is sent back with what was wrong, three times at most.
+
+- **The key** is read from `BIRDJOURNAL_ANTHROPIC_API_KEY` in the shell profile, else the login Keychain item
+  `birdjournal-anthropic-api-key` (never the repository, and not `ANTHROPIC_API_KEY`, which would switch Claude Code
+  itself to API billing). It is needed only when lore is missing from the lock; the build stops with a clear message
+  without it, or at once when the API refuses it. `--no-lore` skips the step.
+- **Lore alone**: `uv run packbuilder lore packs/us-ca-la` writes the fact sheets and the missing lore from the cache
+  without building the pack (`--only "Black Phoebe"` for a trial).
+- **Pacing**: one request at a time, `--lore-interval` seconds apart (default 2).
+- **The lock**, `packs/<id>/lore.lock.json` (committed), pins each species' fact sheet as the lore used it, the
+  sentences with their citations, the tagline, the model, the prompt version and the review. A warm lock makes no
+  request, and the pack ships the locked facts, so lore and fact sheet never disagree; a sheet that moved since (a
+  new Wikipedia revision) is logged and kept as locked. A hand-edited entry that cites a fact its sheet lacks stops
+  the build.
+- **Only on request**: `--regenerate-lore "House Finch"` (repeat, or `all`) writes lore again; so does a rejection.
+- **The review.** Every build writes `build/lore/<id>/review.md` (species, state, tagline, lore and the facts each
+  sentence cites). Record the verdicts, then rebuild:
+
+  ```sh
+  uv run packbuilder lore-review packs/us-ca-la --approve-all --reject "House Finch" --why "too grand; keep to the seeds"
+  ```
+
+  Only `approved` lore goes into the pack; a rejected species is written again by the next build with the reason in
+  the prompt. The lore is CC BY-SA 4.0 as an adaptation of the Wikipedia text, credited in the LICENSE with the
+  article revisions.
+
 ## Layout
 
 | Path | What |
@@ -211,7 +248,8 @@ version: cards keep the version they were labelled under.
 | `src/packbuilder/` | The package; `cli.py` is the `packbuilder` command, `pipeline.py` the build order. |
 | `src/packbuilder/art.py`, `comfy.py`, `fidelity.py`, `painting.py`, `contact_sheets.py`, `bakeoff.py` | Card art (#49): prompts and workflows from the repo's `art/`, the 3:4 card crop and the telephoto crop of a glasses photo, a ComfyUI client for comfybox, the painted bird's fidelity to its photo and the colour fit, painting through the fidelity gate, contact sheets, and the art model bake-off (`python -m packbuilder.bakeoff`; see `art/README.md`). |
 | `src/packbuilder/pack_art.py` | The pack-art step (#57): the reference by lighting, the lock, the review and the contact sheets. |
-| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from and the pack art's sources and review (committed). |
+| `src/packbuilder/factsheet.py`, `lore.py` | The fact sheet and the lore step (#56): the Anthropic client, the citation checks, the lock, the review and its file. |
+| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json`, `lore.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from, the pack art's sources and review, and the lore with its facts and review (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
 | `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |

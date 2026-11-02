@@ -10,7 +10,7 @@ public struct SpeciesPack: Sendable, Hashable {
     /// description columns' source; schema 3 (issue #41) the `sound` table and the `sounds/` folder; schema 4 (issue
     /// #54) the set definition and the tables for stats, the fact sheet, lore, pack art, the threatened flag and the
     /// family, which stay empty until the tickets that fill them (an empty table means "not available yet"); issue #55
-    /// fills the stats, the threatened flag and the family, and issue #57 the pack art.
+    /// fills the stats, the threatened flag and the family, issue #57 the pack art and issue #56 the fact sheet and the lore.
     public static let schemaVersion = 4
     /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds; a schema-3
     /// pack without its set.
@@ -123,6 +123,11 @@ public struct PackSpecies: Sendable, Hashable, Identifiable {
     /// IUCN Vulnerable, Endangered or Critically Endangered, or on the pack builder's hand list; nil when the pack does
     /// not say (before schema 4, or built without the flag).
     public var isThreatened: Bool? = nil
+    /// The fact sheet (issue #56): the stats as short sentences, then sentences of the species' Wikipedia article, in
+    /// the pack's order. Lore and captions state nothing that is not on it. Empty for a pack before it.
+    public var facts: [PackFact] = []
+    /// The reviewed lore and its tagline (issue #56); nil for a pack before it, or lore not approved yet.
+    public var lore: PackLore? = nil
 
     /// Whether the pack has any description text for this species.
     public var isDescribed: Bool {
@@ -203,6 +208,45 @@ public struct PackArt: Sendable, Hashable {
         self.sourcePhotoIDs = sourcePhotoIDs
         self.workflowVersion = workflowVersion
     }
+}
+
+/// One fact-sheet entry (issue #56): a short sentence and where it comes from.
+public struct PackFact: Sendable, Hashable {
+    public let rank: Int
+    public let text: String
+    /// The Wikipedia article revision as a permanent link, or the dataset's key ("avonet", "birdbase", "wingspan").
+    public let source: String
+
+    public init(rank: Int, text: String, source: String) {
+        self.rank = rank
+        self.text = text
+        self.source = source
+    }
+
+    /// The Wikipedia revision this fact was taken from; nil for a dataset's.
+    public var wikipediaRevision: URL? { source.hasPrefix("https://") ? URL(string: source) : nil }
+    /// The dataset this fact was told from; nil for an article's.
+    public var dataset: PackStats.Source? { PackStats.Source(rawValue: source) }
+}
+
+/// One `lore` row (issue #56): 50 to 80 words of myth-voiced lore and a tagline of 12 words or fewer, written by a
+/// Claude model from the fact sheet alone and reviewed by hand. CC BY-SA 4.0 as an adaptation of the Wikipedia text.
+public struct PackLore: Sendable, Hashable {
+    public let text: String
+    public let tagline: String
+    /// The sources of the facts it cites, in sheet order: Wikipedia revision links and dataset keys.
+    public let sources: [String]
+
+    public init(text: String, tagline: String, sources: [String]) {
+        self.text = text
+        self.tagline = tagline
+        self.sources = sources
+    }
+
+    /// The Wikipedia revision its facts came from, for the credit; nil when it rests on the datasets alone.
+    public var wikipediaRevision: URL? { sources.first { $0.hasPrefix("https://") }.flatMap(URL.init(string:)) }
+    /// The datasets its facts came from.
+    public var datasets: [PackStats.Source] { sources.compactMap(PackStats.Source.init(rawValue:)) }
 }
 
 /// One `sound` row (issue #41): an 8 s reference clip of the species, where it is and whom to credit.
@@ -294,11 +338,15 @@ extension SpeciesPack {
             let stats = try readStats(database)
             let typeLines = try readTypeLines(database)
             let threatened = try readThreatened(database)
+            let facts = try readFacts(database)
+            let lore = try readLore(database)
             for index in species.indices {
                 let id = species[index].id
                 species[index].stats = stats[id]
                 species[index].typeLine = typeLines[id]
                 species[index].isThreatened = threatened[id]
+                species[index].facts = facts[id] ?? []
+                species[index].lore = lore[id]
             }
         }
         return SpeciesPack(info: info, directory: directory, species: species, set: set)
@@ -432,6 +480,26 @@ extension SpeciesPack {
         let rows = try database.rows("SELECT species_id, threatened FROM threatened") { row in
             guard let speciesID = row.text(0), let threatened = row.int(1) else { throw PackError.malformedRow(table: "threatened") }
             return (speciesID, threatened != 0)
+        }
+        return Dictionary(rows, uniquingKeysWith: { first, _ in first })
+    }
+
+    private static func readFacts(_ database: SQLiteDatabase) throws -> [String: [PackFact]] {
+        let facts = try database.rows("SELECT species_id, rank, text, source FROM fact ORDER BY species_id, rank") { row in
+            guard let speciesID = row.text(0), let rank = row.int(1), let text = row.text(2), let source = row.text(3) else {
+                throw PackError.malformedRow(table: "fact")
+            }
+            return (speciesID, PackFact(rank: rank, text: text, source: source))
+        }
+        return Dictionary(grouping: facts, by: \.0).mapValues { $0.map(\.1) }
+    }
+
+    private static func readLore(_ database: SQLiteDatabase) throws -> [String: PackLore] {
+        let rows = try database.rows("SELECT species_id, text, tagline, sources FROM lore") { row in
+            guard let speciesID = row.text(0), let text = row.text(1), let tagline = row.text(2),
+                  let sources = row.text(3).flatMap({ try? JSONDecoder().decode([String].self, from: Data($0.utf8)) })
+            else { throw PackError.malformedRow(table: "lore") }
+            return (speciesID, PackLore(text: text, tagline: tagline, sources: sources))
         }
         return Dictionary(rows, uniquingKeysWith: { first, _ in first })
     }
