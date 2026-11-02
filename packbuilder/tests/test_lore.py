@@ -190,7 +190,7 @@ def test_a_warm_lock_makes_no_request_and_is_left_unchanged(tmp_path, caplog):
     # A sheet that moved keeps the locked facts and lore until a regeneration is asked for.
     moved = writer(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS[:3]})
     assert moved["sayornis-nigricans"].facts == tuple(FACTS)
-    assert "the fact sheet changed since its lore was written" in caplog.text
+    assert "the article's facts changed since its lore was written" in caplog.text
     assert (tmp_path / "lore.lock.json").read_bytes() == before
 
 

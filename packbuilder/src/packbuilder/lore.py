@@ -436,8 +436,8 @@ class LoreWriter:
                         entry["facts"] = [fact.as_dict() for fact in refreshed(locked, removed, added)]
                         self.lock.write()
                         log.info("  %s: dataset facts its lore doesn't cite changed; the locked sheet takes them and the lore stays", common_name)
-                    if [fact.as_dict() for fact in facts] != entry["facts"]:
-                        log.warning("  %s: the fact sheet changed since its lore was written; the locked facts and lore stay (--regenerate-lore to rewrite)", common_name)
+                    if [fact for fact in facts if not _is_dataset(fact)] != [fact for fact in locked if not _is_dataset(fact)]:
+                        log.warning("  %s: the article's facts changed since its lore was written; the locked facts and lore stay (--regenerate-lore to rewrite)", common_name)
                 written[species_id] = lore_from_entry(species_id, entry)
                 continue
             if not facts:

@@ -87,7 +87,7 @@ It is not brood parasitism, which BIRDBASE keeps in its own column (`brood_paras
 
 BROOD_PARASITE = "brood_parasite"
 """The nest value of a brood parasite, in place of BIRDBASE's nest types (see `brood_parasite`)."""
-OWN_NEST_FREE = frozenset({"NO", "O"})
+NO_OWN_NEST = frozenset({"NO", "O"})
 """Nest types that mean the bird builds no nest of its own: none, or another bird's."""
 
 
@@ -100,7 +100,7 @@ def brood_parasite(row: "BirdbaseSpecies") -> bool:
     that scrapes a nest. Across BIRDBASE this gives the cuckoos, whydahs and indigobirds, honeyguides, cowbirds and the
     Black-headed Duck, and in the packs the Brown-headed Cowbird and the Pin-tailed Whydah. It misses the Screaming
     Cowbird (itself parasitized by the Shiny Cowbird, so 1 and 1); none of the packs has it."""
-    return row.nest_parasite and not row.parasitized and set(row.nest_types) <= OWN_NEST_FREE
+    return row.nest_parasite and not row.parasitized and set(row.nest_types) <= NO_OWN_NEST
 
 
 def _key(value: str) -> str:
