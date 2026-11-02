@@ -126,6 +126,20 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
     var owner: Owner
     var circleFirst: Bool
     var isMine: Bool
+    /// What a card shared by hand to this circle adds (issue #66); nil for an automatic find.
+    var card: SharedCard? = nil
+
+    /// A card shared by hand: the note, the caption and the original photo the owner chose for this circle.
+    struct SharedCard: Equatable, Decodable, Sendable {
+        struct Photo: Equatable, Decodable, Sendable {
+            var key: String
+            var url: URL?
+        }
+
+        var note: String?
+        var caption: String?
+        var photo: Photo?
+    }
 
     var id: String { "\(owner.id)/\(sightingID)" }
 
@@ -139,6 +153,36 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
         case legendary, rarity, art, owner
         case circleFirst = "circle_first"
         case isMine = "is_mine"
+        case card
+    }
+}
+
+/// Where the phone sends a shared card's original photo (backend `POST /v1/finds/<id>/photo`, issue #66): a presigned
+/// POST to the art bucket, the form fields its signed policy covers (it caps the size at 5 MB), and the key the card
+/// then names.
+struct PhotoUpload: Equatable, Decodable, Sendable {
+    var key: String
+    var uploadURL: URL
+    var fields: [String: String]
+    var expiresAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case key
+        case uploadURL = "upload_url"
+        case fields
+        case expiresAt = "expires_at"
+    }
+
+    /// The multipart form S3 takes: every policy field, then the JPEG as `file`, last as S3 requires.
+    func form(_ jpeg: Data, boundary: String) -> Data {
+        var body = Data()
+        for (name, value) in fields.sorted(by: { $0.key < $1.key }) {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".utf8))
+        }
+        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n".utf8))
+        body.append(jpeg)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        return body
     }
 }
 
@@ -193,6 +237,12 @@ protocol CircleClient: AnyObject {
     /// Removes the find with its feed items and reactions; one that isn't there is no error.
     func deleteFind(sightingID: UUID, accessToken: String) async throws
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage
+    /// Shares a card by hand (issue #66): the find with the extras chosen, in the circles chosen.
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws
+    /// An upload URL for a shared card's original photo.
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload
+    /// POSTs the photo (faces blurred, metadata stripped) to the URL: no access token, the form is signed.
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws
     /// Pushes (issue #63): the phone's APNs token and environment go to the signed-in account, and leave it at sign-out.
     func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws
     func unregisterDevice(token: String, accessToken: String) async throws
@@ -255,6 +305,25 @@ final class HTTPCircleClient: CircleClient {
         var query = [URLQueryItem(name: "limit", value: String(Self.feedPageSize))]
         if let cursor { query.append(URLQueryItem(name: "cursor", value: cursor)) }
         return try await send("GET", "v1/circles/\(circleID)/feed", query: query, accessToken: accessToken, as: FeedPage.self)
+    }
+
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws {
+        _ = try await data("PUT", "v1/finds/\(sightingID.uuidString.lowercased())/card", body: try JSONEncoder().encode(card), accessToken: accessToken)
+    }
+
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload {
+        try await send("POST", "v1/finds/\(sightingID.uuidString.lowercased())/photo", accessToken: accessToken, as: PhotoUpload.self)
+    }
+
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {
+        let boundary = "BirdJournal-\(UUID().uuidString)"
+        var request = URLRequest(url: upload.uploadURL)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.httpBody = upload.form(jpeg, boundary: boundary)
+        let (_, response) = try await transport(request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else { throw CircleError.server(status) }
     }
 
     static let feedPageSize = 20

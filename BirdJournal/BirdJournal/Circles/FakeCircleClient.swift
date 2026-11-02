@@ -19,8 +19,13 @@ final class FakeCircleClient: CircleClient {
     private var feedItems: [String: [FeedItem]] = [:]
     /// The circles each of Pat's finds went to on its first put.
     private var findCircles: [UUID: [String]] = [:]
-    /// Every put and delete, for the tests: `put <id>` or `delete <id>`.
+    /// Every put and delete, for the tests: `put <id>` or `delete <id>`; `card <id>` for a card shared by hand and
+    /// `photo <key>` for an uploaded photo.
     private(set) var findLog: [String] = []
+    /// The cards shared by hand, as they were sent.
+    private(set) var sharedCards: [UUID: FindPolicy.Card] = [:]
+    /// The photos uploaded, by key.
+    private(set) var photos: [String: Data] = [:]
     /// The phone tokens registered to Pat (issue #63), with their environment.
     private(set) var devices: [String: PushEnvironment] = [:]
     /// Every device registration and removal, for the tests: `register <token> <environment>` or `unregister <token>`.
@@ -116,17 +121,59 @@ final class FakeCircleClient: CircleClient {
         findLog.append("put \(sightingID)")
         let circles = findCircles[sightingID] ?? order.filter { circlesByID[$0]?.members.contains { $0.id == Self.me } == true }
         findCircles[sightingID] = circles
-        let item = FeedItem(
+        for circle in circles {
+            var item = feedItem(find, sightingID: sightingID)
+            // A card shared by hand there keeps its extras and its hidden place, as on the server.
+            if let card = sharedCards[sightingID], card.circleIDs.contains(circle) {
+                item.card = feedItems[circle]?.first { $0.id == item.id }?.card
+                if !card.includePlace { item.place = nil }
+            }
+            feedItems[circle, default: []].removeAll { $0.id == item.id }
+            feedItems[circle, default: []].append(item)
+        }
+    }
+
+    func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws {
+        let mine = Set(order.filter { circlesByID[$0]?.members.contains { $0.id == Self.me } == true })
+        guard !card.circleIDs.isEmpty, card.circleIDs.allSatisfy(mine.contains) else { throw CircleError.notFound }
+        if let key = card.photo?.key, photos[key] == nil { throw CircleError.rejected }
+        findLog.append("card \(sightingID)")
+        sharedCards[sightingID] = card
+        let previous = findCircles[sightingID] ?? []
+        findCircles[sightingID] = previous + card.circleIDs.filter { !previous.contains($0) }
+        let extras = FeedItem.SharedCard(note: card.note, caption: card.caption, photo: card.photo.map { FeedItem.SharedCard.Photo(key: $0.key, url: nil) })
+        for circle in findCircles[sightingID] ?? [] {
+            let chosen = card.circleIDs.contains(circle)
+            let existing = feedItems[circle]?.first { $0.id == "\(Self.me)/\(sightingID.uuidString.lowercased())" }
+            var item = existing ?? feedItem(card.find, sightingID: sightingID)
+            if chosen {
+                item = feedItem(card.find, sightingID: sightingID)
+                item.place = card.includePlace ? card.find.place : nil
+                item.card = extras
+            }
+            feedItems[circle, default: []].removeAll { $0.id == item.id }
+            feedItems[circle, default: []].append(item)
+        }
+    }
+
+    func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload {
+        let key = "photos/\(Self.me)/\(sightingID.uuidString.lowercased())/\(UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()).jpg"
+        return PhotoUpload(key: key, uploadURL: URL(string: "https://bucket.invalid/")!, fields: ["key": key, "Content-Type": "image/jpeg"], expiresAt: now().addingTimeInterval(900))
+    }
+
+    func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {
+        findLog.append("photo \(upload.key)")
+        photos[upload.key] = jpeg
+    }
+
+    private func feedItem(_ find: FindPolicy.Find, sightingID: UUID) -> FeedItem {
+        FeedItem(
             sightingID: sightingID.uuidString.lowercased(), speciesID: find.speciesID, scientificName: find.scientificName,
             commonName: find.commonName, method: find.method, place: find.place,
             foundAt: (try? Date(find.foundAt, strategy: .iso8601)) ?? now(), legendary: find.legendary, rarity: find.rarity,
             art: find.art.map { FeedItem.Art(kind: $0.kind, key: $0.key, url: nil) },
             owner: FeedItem.Owner(id: Self.me, displayName: Self.myName), circleFirst: false, isMine: true
         )
-        for circle in circles {
-            feedItems[circle, default: []].removeAll { $0.id == item.id }
-            feedItems[circle, default: []].append(item)
-        }
     }
 
     func deleteFind(sightingID: UUID, accessToken: String) async throws {
@@ -136,6 +183,8 @@ final class FakeCircleClient: CircleClient {
             feedItems[circle]?.removeAll { $0.id == id }
         }
         findCircles[sightingID] = nil
+        if let key = sharedCards[sightingID]?.photo?.key { photos[key] = nil }
+        sharedCards[sightingID] = nil
     }
 
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage {
@@ -187,7 +236,7 @@ final class FakeCircleClient: CircleClient {
     private func seedFeed(circleID: String) {
         let finds: [(String, String, String, SightingMethod, String?, RarityLabel?, Bool, String, Double)] = [
             ("maya", "Maya Ortiz", "Sayornis nigricans_Black Phoebe", .seen, "Pasadena", .common, true, "sayornis-nigricans", 3),
-            ("jo", "Jo Park", "Calypte anna_Anna's Hummingbird", .heard, "Altadena", .common, false, "calypte-anna", 2),
+            ("jo", "Jo Park", "Calypte anna_Anna's Hummingbird", .heard, nil, .common, false, "calypte-anna", 2),
             ("jo", "Jo Park", "Sayornis nigricans_Black Phoebe", .heard, "Pasadena", .common, false, "sayornis-nigricans", 1.5),
             ("sam", "Sam Okafor", "Polioptila californica_California Gnatcatcher", .heard, FindPolicy.secretSpot, .rare, false, "polioptila-californica", 1),
         ]
@@ -198,7 +247,9 @@ final class FakeCircleClient: CircleClient {
                 scientificName: Sighting.scientificName(ofLabel: label), commonName: common, method: method, place: place,
                 foundAt: now().addingTimeInterval(-daysAgo * 86_400), legendary: legendary, rarity: rarity,
                 art: FeedItem.Art(kind: "pack", key: "packs/us-ca-la/\(art).jpg", url: nil),
-                owner: FeedItem.Owner(id: owner, displayName: name), circleFirst: false, isMine: false
+                owner: FeedItem.Owner(id: owner, displayName: name), circleFirst: false, isMine: false,
+                // Jo shared the hummingbird by hand (issue #66), with the caption and a note, and left the city out.
+                card: index == 1 ? FeedItem.SharedCard(note: "Buzzing the sage by the gate, twice.", caption: "A green spark hums where the sage is in flower.", photo: nil) : nil
             ))
         }
     }

@@ -53,6 +53,8 @@ final class CirclesUITests: XCTestCase {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         let invite = app.buttons["Invite friends"]
         XCTAssertTrue(invite.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // Below Recent finds: scroll it clear of the tab bar.
+        app.swipeUp()
         invite.tap()
         let code = app.images["inviteQRCode"]
         XCTAssertTrue(code.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")

@@ -110,6 +110,24 @@ final class CircleStore {
         try? await loadDetail(id: circleID)
     }
 
+    /// Shares a card by hand (issue #66). With a photo (faces blurred and metadata stripped already), it is uploaded
+    /// first and the card names its key; `card` makes the card given that key. The feeds of the circles chosen are
+    /// read again, so the card shows there at once.
+    func shareCard(sightingID: UUID, photo: Data?, card: (String?) -> FindPolicy.Card) async throws {
+        var key: String?
+        if let photo {
+            let upload = try await call { try await $0.photoUpload(sightingID: sightingID, accessToken: $1) }
+            // The bucket takes the signed form, not the account's token.
+            try await client?.uploadPhoto(photo, to: upload)
+            key = upload.key
+        }
+        let shared = card(key)
+        try await call { try await $0.shareCard(shared, sightingID: sightingID, accessToken: $1) }
+        for circleID in shared.circleIDs where feeds[circleID] != nil {
+            await loadFeed(circleID: circleID)
+        }
+    }
+
     /// Reads the circle's newest finds again, replacing what was read.
     func loadFeed(circleID: String) async {
         await readFeed(circleID: circleID, cursor: nil)
