@@ -66,3 +66,8 @@ sets show their index cover thumbnails. Each screen is in `dark`, `light` and `a
 - `profile`, `profile-tale`: the Black Phoebe's profile, and scrolled to its tale and stats
 
 Compare them with pages 3–4 (and the rules on 13–14) of `docs/design/featherguild/`.
+
+`110/` is the final review of the Featherguild reskin (#110), taken for issue #119 (slice 4: states, contrast and the
+screenshot review) by `110/capture.sh`: every reskinned screen and every designed state of design guide page 16 in
+`dark`, `light` and `ax3`, the five screens of the VoiceOver walk at `ax5`, and the system glass with Increase Contrast.
+`110/README.md` indexes the shots against the boards (pages 3–6 and 15 of `docs/design/featherguild/`).

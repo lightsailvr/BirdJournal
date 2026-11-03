@@ -178,8 +178,9 @@ struct LicenseTextView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .textSelection(.enabled)
-            case .failure(let error):
-                ContentUnavailableView("License not bundled", systemImage: "doc", description: Text(String(describing: error)))
+            case .failure:
+                StateNotice("License text missing", message: "This build doesn't carry the full license text. The credits page still names the work, its author and its license.", mark: .symbol("doc"))
+                    .padding(.horizontal, JournalLayout.margin)
             case nil:
                 ProgressView()
             }

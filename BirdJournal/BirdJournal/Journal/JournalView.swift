@@ -88,6 +88,12 @@ struct JournalView: View {
                 }
                 .background(Color.paper)
                 .searchable(text: $state.query, prompt: "Search birds")
+                #if DEBUG
+                .task {
+                    // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
+                    if let text = UserDefaults.standard.string(forKey: "autoQuery") { state.query = text }
+                }
+                #endif
                 .toolbar {
                     if state.mode == .cards {
                         ToolbarItem(placement: .topBarTrailing) {
@@ -131,8 +137,8 @@ struct JournalView: View {
         }
         let shown = filtered
         if shown.isEmpty {
-            ContentUnavailableView.search(text: state.query)
-                .padding(.top, 40)
+            NoSearchMatch(query: state.query) { state.query = "" }
+                .padding(.top, 24)
         } else {
             switch state.mode {
             case .cards:
@@ -188,26 +194,42 @@ struct JournalView: View {
     }
 }
 
+/// No cards yet (issue #119, design guide page 16): what a card is, and Start listening as the way to the first one.
 private struct EmptyJournal: View {
+    @Environment(\.openListen) private var openListen
+
     var body: some View {
         PaperPage {
-            VStack(alignment: .leading, spacing: 14) {
-                PerchedBirdDrawing()
-                    .frame(height: 110)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 30)
-                    .accessibilityHidden(true)
-                Text("Nothing here yet")
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-                    .frame(maxWidth: .infinity)
-                Text("Start listening, review the birds you hear and add the ones you recognize. Each one becomes a card in your collection, with the day, the place and a note if you like. Your first of each species is Legendary.")
-                    .font(JournalFont.body)
-                    .foregroundStyle(Color.inkSecondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
+            StateNotice(
+                "No cards yet",
+                message: "Start listening, review the birds you hear and add the ones you recognize. Each one becomes a card in your collection, with the day, the place and a note if you like. Your first of each species is Legendary.",
+                mark: .drawing
+            ) {
+                Button {
+                    openListen()
+                } label: {
+                    Label("Start listening", systemImage: "waveform")
+                }
+                .buttonStyle(.journalPrimary)
+                .accessibilityHint("Opens the Listen tab")
             }
+            .padding(.top, 12)
         }
+    }
+}
+
+/// A search with no match (issue #119): what was searched, what the search reads, and the way back to everything.
+struct NoSearchMatch: View {
+    let query: String
+    var searches = "Search by a bird's common or scientific name."
+    let clear: () -> Void
+
+    var body: some View {
+        StateNotice("No birds match “\(query)”", message: searches, mark: .symbol("magnifyingglass")) {
+            Button("Clear search", action: clear)
+                .buttonStyle(.journalOutlined)
+        }
+        .accessibilityIdentifier("no-search-match")
     }
 }
 

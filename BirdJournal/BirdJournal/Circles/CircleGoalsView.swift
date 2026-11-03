@@ -60,7 +60,7 @@ struct CircleGoalsSection: View {
                 }
                 #endif
                 if let error {
-                    Text(error).font(JournalFont.supporting).foregroundStyle(.red)
+                    InlineError(error)
                 }
             } else {
                 ProgressView().frame(maxWidth: .infinity)
@@ -291,7 +291,7 @@ struct NewGoalSheet: View {
                     DatePicker("Last day", selection: $end, in: max(start, .now)...start.addingTimeInterval(365 * 86_400), displayedComponents: .date)
                 }
                 if let error {
-                    Section { Text(error).foregroundStyle(.red) }
+                    Section { Text(error).foregroundStyle(Color.alert) }
                 }
             }
             .environment(\.timeZone, zone)

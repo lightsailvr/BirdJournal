@@ -11,6 +11,7 @@ struct GlassesSection: View {
             switch connection.registrationState {
             case .registered:
                 Button("Unregister", role: .destructive) { Task { await connection.unregister() } }
+                    .foregroundStyle(Color.alert)
             case .available:
                 Button("Register with Meta AI") { Task { await connection.register() } }
             case .registering, .unavailable:
@@ -30,7 +31,7 @@ struct GlassesSection: View {
                 Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
             }
             if let errorMessage = connection.errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                Text(errorMessage).foregroundStyle(Color.alert)
             }
         }
 

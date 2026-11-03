@@ -47,8 +47,12 @@ final class FakeCircleClient: CircleClient {
     /// Every reaction given or taken back, for the tests: `put lovely maya/<id>` or `delete …`.
     private(set) var reactionLog: [String] = []
 
-    init(seeded: Bool, now: @escaping () -> Date = Date.init) {
+    /// `-fakeCircles offline` (issue #119): the list can't be read, as with no connection.
+    var isOffline = false
+
+    init(seeded: Bool, offline: Bool = false, now: @escaping () -> Date = Date.init) {
         self.now = now
+        isOffline = offline
         let base = Date(timeIntervalSince1970: 1_790_000_000)
         if seeded {
             add(name: "Sunday Group", creator: (Self.me, Self.myName), others: [("maya", "Maya Ortiz"), ("jo", "Jo Park"), ("sam", "Sam Okafor")], at: base)
@@ -66,7 +70,8 @@ final class FakeCircleClient: CircleClient {
     }
 
     func circles(accessToken: String) async throws -> [CircleSummary] {
-        order.compactMap { circlesByID[$0] }.filter { $0.members.contains { $0.id == Self.me } }.map { summary($0) }
+        if isOffline { throw URLError(.notConnectedToInternet) }
+        return order.compactMap { circlesByID[$0] }.filter { $0.members.contains { $0.id == Self.me } }.map { summary($0) }
     }
 
     func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail {

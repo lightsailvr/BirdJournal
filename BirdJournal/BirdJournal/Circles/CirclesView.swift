@@ -22,7 +22,7 @@ struct CirclesView: View {
                 list
             }
             if let error = account.errorMessage, !account.isSignedIn {
-                Section { Text(error).foregroundStyle(.red).font(JournalFont.supporting) }
+                Section { InlineError(error) }
             }
         }
         .paperList()
@@ -69,6 +69,8 @@ struct CirclesView: View {
                     GuildEmblem(identity: GuildIdentity(circleID: "featherguild"), size: 56)
                     Text("Bird with your friends")
                         .font(JournalFont.section)
+                        .foregroundStyle(Color.ink)
+                        .accessibilityAddTraits(.isHeader)
                     Text("A Guild is a small, invite-only group of up to 20 birders who see each other's finds and chase goals together. Sign in with Apple or Google to start one or join one from an invitation.")
                         .font(JournalFont.body)
                         .foregroundStyle(Color.inkSecondary)
@@ -106,9 +108,11 @@ struct CirclesView: View {
             Section { ProgressView().frame(maxWidth: .infinity) }
                 .listRowBackground(Color.clear)
         case .failed(let message) where circles.circles.isEmpty:
+            // Offline or the server out of reach (issue #119): say so plainly, with what still works and Try again.
             Section {
-                Text(message).foregroundStyle(Color.inkSecondary)
-                Button("Try again") { Task { await circles.refresh() } }
+                GuildsUnreachable(message: message) { Task { await circles.refresh() } }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
             }
         default:
             if circles.circles.isEmpty {
@@ -158,6 +162,8 @@ struct CirclesView: View {
                 GuildEmblem(identity: GuildIdentity(circleID: "featherguild"), size: 56)
                 Text("No Guilds yet")
                     .font(JournalFont.section)
+                    .foregroundStyle(Color.ink)
+                    .accessibilityAddTraits(.isHeader)
                 Text("Start one for your family or your Sunday group, then invite friends with a link or a QR code. Got an invitation? Open its link on this iPhone.")
                     .foregroundStyle(Color.inkSecondary)
                 Button("Start a Guild") { creating = true }
@@ -282,7 +288,7 @@ struct NewCircleSheet: View {
                     Text("Up to 40 characters. Everyone in the Guild sees it.")
                 }
                 if let error {
-                    Section { Text(error).foregroundStyle(.red).font(JournalFont.supporting) }
+                    Section { InlineError(error) }
                 }
             }
             .paperList()
@@ -313,5 +319,25 @@ struct NewCircleSheet: View {
             }
             saving = false
         }
+    }
+}
+
+/// The Guilds can't be read (issue #119): offline, or the server out of reach. What happened in plain words, that the
+/// collection, listening and the Atlas carry on without a connection, and Try again.
+struct GuildsUnreachable: View {
+    let message: String
+    let retry: () -> Void
+
+    private var isConnection: Bool { message.localizedCaseInsensitiveContains("connection") }
+
+    var body: some View {
+        ErrorNotice(
+            isConnection ? "Can't reach your Guilds" : "Couldn't load your Guilds",
+            message: isConnection ? "You may be offline. Your collection, listening and the Atlas all keep working; your Guilds come back when you're connected." : message,
+            symbol: isConnection ? "wifi.slash" : "exclamationmark.triangle"
+        ) {
+            Button("Try again", action: retry)
+        }
+        .accessibilityIdentifier("guilds-unreachable")
     }
 }

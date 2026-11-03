@@ -74,8 +74,9 @@ struct BirdPacksView: View {
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 12)
-                } else if let error = library.indexError, library.index == nil {
-                    ErrorNotice("Couldn't fetch the list of packs", message: "\(error) The packs already on this iPhone, your collection and identification keep working.", symbol: "wifi.exclamationmark") {
+                } else if library.indexError != nil, library.index == nil {
+                    // Plain words, not the system's error string (issue #119: no diagnostics in a normal page).
+                    ErrorNotice("Couldn't fetch the list of packs", message: "You may be offline. The packs already on this iPhone, your collection and identification keep working.", symbol: "wifi.exclamationmark") {
                         Button("Try again") { Task { await library.refreshIndex() } }
                     }
                     .padding(.top, 12)

@@ -139,14 +139,17 @@ extension ActiveListeningView {
     }
 }
 
-/// The dot and the source under the title: green while listening, amber while paused, grey once ended.
+/// The dot and the source under the title: a filled moss dot while listening, a hollow ring while starting, paused or
+/// stopping, and a filled grey dot once ended. The shape tells them apart as well as the colour (issue #119: the
+/// system orange it used measured 2:1 on the light page, under the 3:1 a glyph needs).
 private struct StatusLine: View {
     @Environment(ListeningCoordinator.self) private var run
 
     var body: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(color)
+                .fill(isWaiting ? Color.clear : color)
+                .overlay(Circle().strokeBorder(isWaiting ? color : Color.clear, lineWidth: 1.5))
                 .frame(width: 9, height: 9)
             Text(text)
                 .font(JournalFont.body)
@@ -158,8 +161,15 @@ private struct StatusLine: View {
     private var color: Color {
         switch run.state {
         case .listening: .moss
-        case .starting, .interrupted, .paused, .resuming, .stopping: .orange
+        case .starting, .interrupted, .paused, .resuming, .stopping: .ink
         case .idle, .ended: .inkSecondary
+        }
+    }
+
+    private var isWaiting: Bool {
+        switch run.state {
+        case .starting, .interrupted, .paused, .resuming, .stopping: true
+        case .listening, .idle, .ended: false
         }
     }
 

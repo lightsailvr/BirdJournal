@@ -49,6 +49,7 @@ struct AudioSourceSheet: View {
                         Button("Register with Meta AI") { Task { await connection.register() } }
                     } else if connection.registrationState == .registered {
                         Button("Unregister", role: .destructive) { Task { await connection.unregister() } }
+                            .foregroundStyle(Color.alert)
                     }
                     if connection.devices.isEmpty {
                         Text("No glasses are linked in the Meta AI app.")
@@ -69,7 +70,7 @@ struct AudioSourceSheet: View {
                         Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                     }
                     if let error = connection.errorMessage {
-                        Text(error).foregroundStyle(.red).font(JournalFont.supporting)
+                        InlineError(error)
                     }
                 }
 

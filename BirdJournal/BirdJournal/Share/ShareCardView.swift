@@ -250,7 +250,7 @@ struct ShareCardView: View {
         case .failed(let message):
             Text(message)
                 .font(JournalFont.supporting)
-                .foregroundStyle(.red)
+                .foregroundStyle(Color.alert)
                 .accessibilityIdentifier("share-failed")
         case .idle, .sending:
             EmptyView()

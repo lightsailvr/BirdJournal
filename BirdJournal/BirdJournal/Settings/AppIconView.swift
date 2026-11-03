@@ -80,7 +80,7 @@ struct AppIconView: View {
                 }
             } footer: {
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Color.alert)
                 }
             }
         }

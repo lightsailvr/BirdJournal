@@ -134,7 +134,7 @@ struct SightingDetailView: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.bordered)
-                    .tint(.red)
+                    .tint(Color.alert)
                     .padding(.top, JournalLayout.sectionGap)
                 }
             }

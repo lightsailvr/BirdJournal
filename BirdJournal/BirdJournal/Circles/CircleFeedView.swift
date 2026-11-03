@@ -46,7 +46,7 @@ struct CircleFeedSection: View {
                 }
             }
             if let reactionError {
-                Text(reactionError).font(JournalFont.supporting).foregroundStyle(.red)
+                InlineError(reactionError)
             }
             if feed.nextCursor != nil {
                 Button {
@@ -58,7 +58,7 @@ struct CircleFeedSection: View {
                 .accessibilityIdentifier("feedMore")
             }
             if let error = feed.error, !feed.items.isEmpty {
-                Text(error).font(JournalFont.supporting).foregroundStyle(.red)
+                InlineError(error)
             }
         } header: {
             Text("Recent finds")

@@ -7,7 +7,7 @@ import XCTest
 /// glasses photo), the debug art states (`-autoArt`) and the in-memory art server (`-fakeArt`).
 final class SceneArtUITests: XCTestCase {
     private static let pendingLine = "Your encounter is saved. Artwork is on its way."
-    private static let failedLine = "The artwork couldn't be painted this time."
+    private static let failedLine = "Your encounter is saved. The artwork couldn't be painted this time."
 
     @MainActor
     private func launch(_ extra: [String]) -> XCUIApplication {
