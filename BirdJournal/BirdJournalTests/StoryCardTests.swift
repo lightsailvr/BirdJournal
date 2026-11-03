@@ -162,7 +162,7 @@ struct DesignTokenTests {
 
 // Issue #116 with #52's walk: the real front and back in the two-sided card, hosted in a window with app
 // accessibility on, expose only the face that is up to VoiceOver.
-@Suite("Story card accessibility")
+@Suite("Story card accessibility", .serialized)
 @MainActor
 struct StoryCardAccessibilityTests {
     static func card(showsBack: Bool) throws -> some View {
@@ -184,9 +184,28 @@ struct StoryCardAccessibilityTests {
         .modelContainer(album)
     }
 
+    /// The labels VoiceOver reaches in the hosted card, walked again until `ready` holds or ten seconds pass: SwiftUI
+    /// fills the accessibility tree some time after the first render, later under a full parallel test run.
+    static func labels(showsBack: Bool, ready: ([String]) -> Bool) async throws -> [String] {
+        CardFlipAccessibilityTests.enableAccessibility()
+        let host = UIHostingController(rootView: try card(showsBack: showsBack))
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 900))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        host.view.layoutIfNeeded()
+        defer { window.isHidden = true }
+        var labels: [String] = []
+        for _ in 0..<40 {
+            try await Task.sleep(for: .milliseconds(250))
+            labels = CardFlipAccessibilityTests.accessibleLabels(host.view)
+            if ready(labels) { break }
+        }
+        return labels
+    }
+
     @Test("front up: the art, the names and the excerpt, nothing of the back")
     func front() async throws {
-        let labels = try await CardFlipAccessibilityTests.labels(of: try Self.card(showsBack: false))
+        let labels = try await Self.labels(showsBack: false) { $0.contains("Card art: AI illustration") && $0.contains { $0.hasPrefix("Black Phoebe") } }
         #expect(labels.contains("Card art: AI illustration"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Black Phoebe") }, "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Wherever the black phoebe keeps house") || $0.hasPrefix("Where water runs") }, "the excerpt: \(labels)")
@@ -196,7 +215,7 @@ struct StoryCardAccessibilityTests {
 
     @Test("back up: the encounter, the lore and the natural history, nothing of the front")
     func back() async throws {
-        let labels = try await CardFlipAccessibilityTests.labels(of: try Self.card(showsBack: true))
+        let labels = try await Self.labels(showsBack: true) { $0.contains("Encounter story") && $0.contains("Natural history") }
         #expect(labels.contains("Encounter story"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Tagline:") }, "\(labels)")
         #expect(labels.contains("Natural history"), "\(labels)")
