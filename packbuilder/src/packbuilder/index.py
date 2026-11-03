@@ -6,6 +6,10 @@ Each entry carries its pack's set definition from the committed `set.json` besid
 knows every set (boundary, species in taxonomic order, edition) before it downloads the pack. An app build that
 cannot open the entry's schema still lists the pack without offering it (`PackDescriptor.isSupported`, #41) and
 ignores keys it doesn't know.
+
+Since #114 an entry whose set has an approved cover carries `cover`: the committed thumbnail beside the cover lock
+(`cover-thumbnail.jpg`, 480 x 270 JPEG) in base64, with its size and credit, so the Atlas shows a set's landscape
+before its pack is downloaded. A thumbnail that isn't the one the lock approved stops the index (`covers.index_cover`).
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from packbuilder.covers import index_cover
 from packbuilder.definition import PackDefinition
 from packbuilder.sets import check_set, load_set
 
@@ -34,6 +39,8 @@ def pack_index(manifest: dict, definitions_dir: Path, repo: str) -> dict:
         card_set = load_set(folder / "set.json")
         check_set(card_set, PackDefinition.load(folder / "pack.json"))
         entry["set"] = card_set
+        if (cover := index_cover(folder)) is not None:
+            entry["cover"] = cover
         packs.append(entry)
     return {"packs": packs}
 

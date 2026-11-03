@@ -197,6 +197,35 @@ species once per pack with the committed `pack-art` workflow and prompts (`art/`
   name. Painting the Los Angeles pack from scratch takes about 3.3 hours from the Mac
   (about 75 s a species); run it under `caffeinate -i`.
 
+### Set covers
+
+Each regional set has one illustrated landscape cover (issue #114), for the Atlas tiles and the Listen tab's ready
+state. `covers.py` paints it on comfybox from text alone with the `set-cover` workflow and `art/cover-prompts.json`, in
+the set's edition theme (`set.json`'s `edition.theme`): a landscape with no bird in focus, no text, no map and no
+location marker. FLUX.3 paints a 1664 × 944 canvas, cropped to the middle 1536 × 864 past the ragged paper edge its
+watercolours often end in.
+
+- **A round** is four candidates from consecutive seeds, about 5 s each. `packbuilder build` paints what the lock lacks
+  (skipped by `--no-art` or `--no-cover`); `packbuilder cover` does the same without building the pack.
+- **The lock**, `packs/<id>/cover.lock.json` (committed), pins the round: the theme, workflow, prompts version and
+  model, each candidate's seed and SHA-256 (the painting is `cache/covers/<sha256>.png`), and the review. A warm lock
+  paints nothing; a changed theme or template paints a new round for review; a cover gone from the cache is
+  repainted from its seed.
+- **The review.** The sheet is `build/pack-art/<id>/cover.jpg`, beside the pack art's: the candidates numbered, the
+  Atlas (2.4:1) and Listen (3:2) crops drawn faintly. Choose one, or turn the round down:
+
+  ```sh
+  uv run packbuilder cover packs/us-ca-sd                         # paint the round (or repaint missing candidates)
+  uv run packbuilder cover-review packs/us-ca-sd --approve 2      # writes packs/us-ca-sd/cover-thumbnail.jpg
+  uv run packbuilder cover-review packs/us-ca-sd --reject --why "too much sky"   # the next run paints four more
+  ```
+
+  Only the approved cover ships: `cover.avif` in the pack (a `cover` row with its workflow, seed and model, and a
+  "Set cover" credit in the LICENSE, labelled as an AI illustration), and in the pack index, where
+  `packbuilder index` carries the committed `cover-thumbnail.jpg` (480 × 270 JPEG, base64) and refuses one that isn't
+  the approved cover's. Commit the lock and the thumbnail together; then rebuild and pin the pack and publish the
+  index, so the pack and the index show the same cover.
+
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
