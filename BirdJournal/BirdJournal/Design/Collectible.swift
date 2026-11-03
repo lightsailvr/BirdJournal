@@ -283,8 +283,12 @@ struct CardTile: View {
     let sighting: Sighting
     let isLegendary: Bool
     let placement: CardPlacement?
-    /// The species' story title (#113); nil until the packs carry them.
+    /// The story title in place of the pack's (#113, `PackLore.title`); nil reads the pack's.
     var storyTitle: String? = nil
+
+    private var title: String? {
+        storyTitle ?? library.species(scientificName: sighting.scientificName)?.species.lore?.title?.nilIfEmpty
+    }
 
     var body: some View {
         let name = library.commonName(for: sighting)
@@ -297,8 +301,8 @@ struct CardTile: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             CardArtView(art: CardArtView.art(for: sighting, library: library, setID: placement?.setID), commonName: name)
-            if let storyTitle {
-                Text(storyTitle)
+            if let title {
+                Text(title)
                     .font(CardFont.tileStoryTitle)
                     .foregroundStyle(Color.cardInk)
                     .multilineTextAlignment(.center)
@@ -315,7 +319,7 @@ struct CardTile: View {
     }
 
     private var accessibilityText: String {
-        ([library.commonName(for: sighting), storyTitle] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
+        ([library.commonName(for: sighting), title] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
             CardArtView.art(for: sighting, library: library, setID: placement?.setID).label,

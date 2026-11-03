@@ -4,12 +4,15 @@ import Testing
 
 /// The fact sheet and lore (issue #56): a schema-4 pack carries each species' sourced facts and its reviewed lore with
 /// a tagline; an older pack has neither, and the bundled Los Angeles pack has lore for every species once its lore
-/// lock is filled and the pack rebuilt (version 7, the build that ships #57's art and this lore together).
+/// lock is filled and the pack rebuilt (version 7, the build that ships #57's art and this lore together). Since #113 the
+/// lore carries an approved story title; a pack built before has none.
 @Suite("PackLore")
 @MainActor
 struct PackLoreTests {
     /// The first Los Angeles version built with lore.
     nonisolated static let firstLoreVersion = 7
+    /// The first Los Angeles version built with story titles (#113).
+    nonisolated static let firstTitleVersion = 10
 
     @Test("a species' fact sheet and lore read as the builder wrote them; a species without approved lore has none")
     func fixtureLore() throws {
@@ -28,6 +31,7 @@ struct PackLoreTests {
         let lore = try #require(phoebe.lore)
         #expect(lore.text.hasPrefix("Where water runs, the dark sentinel"))
         #expect(lore.tagline == "Keeper of the low perch.")
+        #expect(lore.title == "The Waterside Sentinel")
         #expect(lore.wikipediaRevision == revision)
         #expect(lore.datasets == [.avonet])
 
@@ -35,6 +39,17 @@ struct PackLoreTests {
         #expect(hummingbird.facts.map(\.text) == ["It feeds mostly on nectar."])
         #expect(hummingbird.lore == nil)
         #expect(pack.info.licenseText.contains("written from the fact sheet alone by Claude"))
+    }
+
+    @Test("a schema-4 pack from before story titles reads its lore with no title")
+    func untitledPack() throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let pack = try PackSetTests.install("test-pack-untitled", root: root)
+        #expect(pack.info.schemaVersion == 4)
+        let lore = try #require(pack.species(scientificName: "Sayornis nigricans")?.lore)
+        #expect(lore.tagline == "Keeper of the low perch.")
+        #expect(lore.title == nil)
     }
 
     @Test("a schema-3 pack has no fact sheet and no lore")
@@ -62,5 +77,18 @@ struct PackLoreTests {
             }
         }
         #expect(pack.info.licenseText.contains("written from the fact sheet alone by Claude"))
+    }
+
+    @Test(
+        "every Los Angeles species has a story title of 2 to 5 words",
+        .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= firstTitleVersion, "the bundled pack predates the story titles")
+    )
+    func bundledTitles() throws {
+        let pack = try SpeciesPack.bundled()
+        for species in pack.species {
+            let title = try #require(species.lore?.title, "\(species.commonName) has no story title")
+            #expect((2...5).contains(title.split(separator: " ").count), "\(species.commonName)'s title is \(title)")
+            #expect(!title.localizedCaseInsensitiveContains(species.commonName), "\(species.commonName)'s title names it")
+        }
     }
 }

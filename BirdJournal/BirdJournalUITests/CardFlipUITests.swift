@@ -58,7 +58,11 @@ final class CardFlipUITests: XCTestCase {
         let excerpt = app.staticTexts["card-lore-excerpt"]
         XCTAssertTrue(excerpt.exists, "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue([".", "!", "?"].contains(String(excerpt.label.last ?? " ")), "the excerpt ends a sentence: \(excerpt.label)")
-        XCTAssertFalse(app.descendants(matching: .any)["card-story-title"].exists, "no story titles in the packs yet: the excerpt leads")
+        // The pack's story title (#113) when it has an approved one, 2 to 5 words; without one the excerpt leads.
+        let title = app.descendants(matching: .any)["card-story-title"]
+        if title.exists {
+            XCTAssertTrue((2...5).contains(title.label.split(separator: " ").count), title.label)
+        }
         XCTAssertTrue(app.staticTexts["card-footer-line"].label.hasSuffix("· Heard"), app.staticTexts["card-footer-line"].label)
         XCTAssertEqual(app.staticTexts["card-art-credit"].label, "AI illustration")
 

@@ -88,7 +88,7 @@ struct CardDetailView: View {
                     .accessibilityIdentifier("card-flip")
                     .accessibilityFocused($flipControlFocused)
                     CollectibleCard(showsBack: showsBack, rotates: !reduceMotion) {
-                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, place: places.cardPlace(for: sighting.location), storyTitle: nil, flip: flip)
+                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, place: places.cardPlace(for: sighting.location), flip: flip)
                     } back: {
                         CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
@@ -377,7 +377,7 @@ struct FlipFace: ViewModifier, Animatable {
 
 /// The story-first front (issue #116, design guide page 5, the reference card): the Legendary label or the edition, the
 /// bird's name upright and its scientific name in italics, the painting (a tap flips the card) with its compact credit,
-/// then the tale: the story title when the pack has one (#113), and an excerpt of the approved lore in a true italic
+/// then the tale: the story title when the pack has an approved one (#113), and an excerpt of the approved lore in a true italic
 /// serif (`LoreExcerpt`: whole sentences, about 25–40 words). Without a title the excerpt leads; without lore the tale
 /// is left out. Then the quiet footer: the place, the date and Heard or Seen, the rarity in words, and the collector
 /// number. The stats, the type line and the caption are on the back. Nothing is clipped or shrunk: at large text sizes
@@ -390,8 +390,8 @@ struct CardFront: View {
     let placement: CardPlacement?
     /// The place line: the card's place on the phone; on a shared face, only what the share may carry.
     let place: String?
-    /// The species' story title, 2–5 words of editorial pack data (#113); nil until the packs carry them, and then the
-    /// excerpt leads. The app never invents one.
+    /// The story title in place of the pack's (#113: `PackLore.title`, 2–5 reviewed words); nil reads the pack's, and
+    /// without one the excerpt leads. The app never invents one.
     var storyTitle: String? = nil
     /// The art to draw, in place of what `CardArtView.art` gives; nil draws that.
     var art: CardText.Art? = nil
@@ -404,6 +404,7 @@ struct CardFront: View {
         let art = art ?? CardArtView.art(for: sighting, library: library, setID: placement?.setID)
         let commonName = library.commonName(for: sighting)
         let excerpt = reference?.species.lore.flatMap { LoreExcerpt.front($0.text) }
+        let storyTitle = self.storyTitle ?? reference?.species.lore?.title?.nilIfEmpty
         let heading = CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement)
         VStack(spacing: 12) {
             CardHeading(isLegendary: isLegendary, placement: placement)

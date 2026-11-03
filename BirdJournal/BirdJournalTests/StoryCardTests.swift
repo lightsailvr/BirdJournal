@@ -165,7 +165,7 @@ struct DesignTokenTests {
 @Suite("Story card accessibility", .serialized)
 @MainActor
 struct StoryCardAccessibilityTests {
-    static func card(showsBack: Bool) throws -> some View {
+    static func card(showsBack: Bool, storyTitle: String? = nil) throws -> some View {
         let album = try AlbumSchema.makeContainer(inMemory: true)
         let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, soundConfidence: 0.8, source: .phone)
         album.mainContext.insert(sighting)
@@ -173,7 +173,7 @@ struct StoryCardAccessibilityTests {
         let edits = JournalEdits(container: album, frames: FrameStore(directory: URL.temporaryDirectory))
         return ScrollView {
             CollectibleCard(showsBack: showsBack, rotates: true) {
-                CardFront(sighting: sighting, isLegendary: true, placement: nil, place: "Griffith Park")
+                CardFront(sighting: sighting, isLegendary: true, placement: nil, place: "Griffith Park", storyTitle: storyTitle)
             } back: {
                 CardBack(sighting: sighting, isLegendary: true, placement: nil, showOriginal: {})
             }
@@ -186,9 +186,9 @@ struct StoryCardAccessibilityTests {
 
     /// The labels VoiceOver reaches in the hosted card, walked again until `ready` holds or ten seconds pass: SwiftUI
     /// fills the accessibility tree some time after the first render, later under a full parallel test run.
-    static func labels(showsBack: Bool, ready: ([String]) -> Bool) async throws -> [String] {
+    static func labels(showsBack: Bool, storyTitle: String? = nil, ready: ([String]) -> Bool) async throws -> [String] {
         CardFlipAccessibilityTests.enableAccessibility()
-        let host = UIHostingController(rootView: try card(showsBack: showsBack))
+        let host = UIHostingController(rootView: try card(showsBack: showsBack, storyTitle: storyTitle))
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 900))
         window.rootViewController = host
         window.makeKeyAndVisible()
@@ -220,5 +220,13 @@ struct StoryCardAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("Tagline:") }, "\(labels)")
         #expect(labels.contains("Natural history"), "\(labels)")
         #expect(!labels.contains("Card art: AI illustration"), "\(labels)")
+    }
+
+    @Test("a story title leads the tale, before the excerpt")
+    func storyTitle() async throws {
+        let labels = try await Self.labels(showsBack: false, storyTitle: "The Waterside Mason") { $0.contains("The Waterside Mason") }
+        let title = try #require(labels.firstIndex(of: "The Waterside Mason"), "\(labels)")
+        let excerpt = try #require(labels.firstIndex { $0.hasPrefix("Wherever the black phoebe keeps house") || $0.hasPrefix("Where water runs") }, "\(labels)")
+        #expect(title < excerpt)
     }
 }

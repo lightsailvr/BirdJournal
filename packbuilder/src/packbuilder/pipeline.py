@@ -137,8 +137,9 @@ def build_pack(
     silent = [r.entry.common_name for r in results if r.sounds is not None and r.sounds.gap]
     unreviewed = [r.entry.common_name for r in results if art is not None and not (r.entry.id in art and art[r.entry.id].settled)]
     unapproved_lore = [r.entry.common_name for r in results if written_lore is not None and not (r.entry.id in written_lore and written_lore[r.entry.id].ships)]
+    untitled = [species_id for species_id, entry in (written_lore or {}).items() if entry.ships and not entry.shipped_title]
     log.info(
-        "wrote %s (%d species, %d photos, %d sounds%s%s%s%s%s%s)",
+        "wrote %s (%d species, %d photos, %d sounds%s%s%s%s%s%s%s)",
         written.directory, len(results), sum(len(r.photos) for r in results), sum(len(r.sounds.sounds) for r in results if r.sounds),
         f", {sum(a.ships for a in art.values())} paintings" if art is not None else "",
         f"; photo gaps: {', '.join(gaps)}" if gaps else "",
@@ -146,6 +147,7 @@ def build_pack(
         f"; no sound: {', '.join(silent)}" if silent else "",
         f"; art not approved yet: {len(unreviewed)} species" if unreviewed else "",
         f"; lore not approved yet: {len(unapproved_lore)} species" if unapproved_lore else "",
+        f"; story title not approved yet: {len(untitled)} species" if untitled else "",
     )
     if cover is not None and not cover.ships:
         log.info("the set's cover is %s: the pack has none", cover.review)

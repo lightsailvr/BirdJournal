@@ -269,6 +269,23 @@ nothing, cites a fact the sheet lacks or misses the counts is sent back with wha
   Only `approved` lore goes into the pack; a rejected species is written again by the next build with the reason in
   the prompt. The lore is CC BY-SA 4.0 as an adaptation of the Wikipedia text, credited in the LICENSE with the
   article revisions.
+- **Story titles** (issue #113): each species' lore has a title of 2 to 5 words that heads it on the card front
+  ("The Waterside Mason"), citing the facts it rests on. It never names the bird (its common or scientific name, the
+  word for its kind, the person it is named for, a hyphenated marking such as "red-tailed"), holds no number, and a
+  set's titles may not begin with the same two words or end on the same word past 15 % of the set. New lore is
+  written with its title; lore locked before titles gets one from a title-only request (the locked lore and tagline
+  in the prompt), and the lore, its tagline and their review stay byte for byte. The title has its own review:
+
+  ```sh
+  uv run packbuilder lore packs/us-ca-la --only "Black Phoebe"          # a trial: one title-only request
+  uv run packbuilder lore packs/us-ca-la --lore-budget 6                # every title the lock lacks
+  uv run packbuilder lore-review packs/us-ca-la --approve-all-titles --reject-title "House Finch" --why "say what it eats"
+  ```
+
+  A rejected title is written again alone by the next run, with the reason; `--regenerate-title <species>|all` asks
+  for another, and `--no-titles` makes no title-only request. Only an approved title on approved lore ships (the
+  nullable `lore.title` column); the rest is listed under `unreviewed.titles` in `report.json`, and the lore ships
+  without one.
 
 ## Layout
 

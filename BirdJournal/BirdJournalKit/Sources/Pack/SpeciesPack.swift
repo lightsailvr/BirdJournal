@@ -281,11 +281,15 @@ public struct PackLore: Sendable, Hashable {
     public let tagline: String
     /// The sources of the facts it cites, in sheet order: Wikipedia revision links and dataset keys.
     public let sources: [String]
+    /// The story title (issue #113): 2 to 5 words heading the lore on the card front ("The Waterside Mason"), written
+    /// and reviewed like the lore. Nil when it is not approved yet, and in a pack built before titles.
+    public let title: String?
 
-    public init(text: String, tagline: String, sources: [String]) {
+    public init(text: String, tagline: String, sources: [String], title: String? = nil) {
         self.text = text
         self.tagline = tagline
         self.sources = sources
+        self.title = title
     }
 
     /// The Wikipedia revision its facts came from, for the credit; nil when it rests on the datasets alone.
@@ -555,12 +559,16 @@ extension SpeciesPack {
         return Dictionary(grouping: facts, by: \.0).mapValues { $0.map(\.1) }
     }
 
+    /// The lore rows; `title` is a nullable column added within schema 4 (issue #113), so a pack built before it
+    /// has none and reads as untitled.
     private static func readLore(_ database: SQLiteDatabase) throws -> [String: PackLore] {
-        let rows = try database.rows("SELECT species_id, text, tagline, sources FROM lore") { row in
+        let columns = Set(try database.rows("SELECT name FROM pragma_table_info('lore')") { $0.text(0) }.compactMap { $0 })
+        let title = columns.contains("title") ? "title" : "NULL"
+        let rows = try database.rows("SELECT species_id, text, tagline, sources, \(title) FROM lore") { row in
             guard let speciesID = row.text(0), let text = row.text(1), let tagline = row.text(2),
                   let sources = row.text(3).flatMap({ try? JSONDecoder().decode([String].self, from: Data($0.utf8)) })
             else { throw PackError.malformedRow(table: "lore") }
-            return (speciesID, PackLore(text: text, tagline: tagline, sources: sources))
+            return (speciesID, PackLore(text: text, tagline: tagline, sources: sources, title: row.text(4)))
         }
         return Dictionary(rows, uniquingKeysWith: { first, _ in first })
     }

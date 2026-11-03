@@ -79,7 +79,7 @@ struct ShareCardView: View {
     private var face: some View {
         CardFront(
             sighting: sighting, isLegendary: isLegendary, placement: collection.placement(of: sighting.identifier), place: place,
-            storyTitle: nil, art: faceArt, artImage: artImage
+            art: faceArt, artImage: artImage
         )
         .environment(library)
         .environment(\.colorScheme, .light)

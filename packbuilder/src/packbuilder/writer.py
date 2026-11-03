@@ -40,11 +40,12 @@ COVER_FILE = "cover.avif"
 SCHEMA_VERSION = 4
 """3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
 added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
-lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that
-fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family, #57
-the pack art and #56 the fact sheet and the lore. Issue #114 added the `cover` table to schema 4 without a bump: a
-reader that doesn't know it never opens it, and a schema-4 pack written before it has no such table, which a reader
-takes as no cover."""
+lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that fill
+them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family, #57 the pack
+art and #56 the fact sheet and the lore. Issue #113 added the nullable `lore.title` (the story title) within schema 4: a
+reader that names its columns is untouched by it, and an older pack reads as having no titles. Issue #114 added the
+`cover` table to schema 4 without a bump: a reader that doesn't know it never opens it, and a schema-4 pack written
+before it has no such table, which a reader takes as no cover."""
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -134,7 +135,8 @@ CREATE TABLE lore (
     species_id TEXT PRIMARY KEY REFERENCES species(id),
     text TEXT NOT NULL,
     tagline TEXT NOT NULL,
-    sources TEXT NOT NULL
+    sources TEXT NOT NULL,
+    title TEXT
 );
 CREATE TABLE pack_art (
     species_id TEXT PRIMARY KEY REFERENCES species(id),
@@ -313,7 +315,7 @@ approved; None (a build without art) writes an empty `cover` table."""
         for result in results for rank, fact in enumerate((facts or {}).get(result.entry.id, []))
     ]
     lore_rows = [
-        (result.entry.id, written.text, written.tagline["text"], json.dumps(written.sources, separators=(",", ":")))
+        (result.entry.id, written.text, written.tagline["text"], json.dumps(written.sources, separators=(",", ":")), written.shipped_title)
         for result in results if (written := (lore or {}).get(result.entry.id)) is not None and written.ships
     ]
 
@@ -339,7 +341,7 @@ approved; None (a build without art) writes an empty `cover` table."""
         db.executemany("INSERT INTO sound VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sound_rows)
         db.executemany("INSERT INTO pack_art VALUES (?, ?, ?, ?)", art_rows)
         db.executemany("INSERT INTO fact VALUES (?, ?, ?, ?)", fact_rows)
-        db.executemany("INSERT INTO lore VALUES (?, ?, ?, ?)", lore_rows)
+        db.executemany("INSERT INTO lore VALUES (?, ?, ?, ?, ?)", lore_rows)
         if cover_row is not None:
             db.execute("INSERT INTO cover VALUES (?, ?, ?, ?)", cover_row)
         if card_set is not None:
@@ -509,6 +511,7 @@ def _stats_credits() -> list[str]:
 def _lore_credits(lore: dict[str, Lore] | None) -> list[str]:
     """The fact sheet and the lore (issue #56); the lore's paragraph only when the pack ships some."""
     models = sorted({written.model for written in (lore or {}).values() if written.ships})
+    titled = any(written.shipped_title for written in (lore or {}).values())
     facts = [
         "Each species' fact sheet is its stats (above) told as short sentences, and sentences taken from its English",
         "Wikipedia article at the revision listed under \"Text credits\" (Wikipedia contributors, CC BY-SA 4.0,",
@@ -521,6 +524,10 @@ def _lore_credits(lore: dict[str, Lore] | None) -> list[str]:
         f"The lore and its tagline were written from the fact sheet alone by Claude ({', '.join(models)}, Anthropic), each",
         "sentence citing the facts it rests on, and reviewed by hand. As an adaptation of the Wikipedia text, the lore is",
         "shared under CC BY-SA 4.0, credited to the article revisions listed under \"Text credits\".",
+        *([
+            "Each story title was written the same way, from the facts it cites, reviewed by hand and shared under the same",
+            "license.",
+        ] if titled else []),
         "",
     ]
 
@@ -575,4 +582,6 @@ def _report(
         # Lore not approved yet, or not written (no fact sheet, or every draft failed its checks): not shipped, and a
         # pack with any is not ready to publish.
         report.setdefault("unreviewed", {})["lore"] = [r.entry.id for r in results if r.entry.id not in lore or not lore[r.entry.id].ships]
+        # Shipped lore whose story title is not approved yet, or not written (#113): the lore ships without one.
+        report["unreviewed"]["titles"] = [r.entry.id for r in results if r.entry.id in lore and lore[r.entry.id].ships and not lore[r.entry.id].shipped_title]
     return report
