@@ -5,7 +5,8 @@ import SwiftData
 import SwiftUI
 
 /// A bird's profile (issue #28): photo first with its credit, the names, its song and call to play (issue #41), a
-/// short introduction, the field marks, size and habitat, the other photos, and the sources; sections the pack has
+/// short introduction, the field marks, size and habitat, the tale (its story title and reviewed lore, #118) and the
+/// stats at a glance (#55), the other photos, and the sources with the full credits a tap away; sections the pack has
 /// no text or sound for are left out rather than filled. Reached from the guide, the journal and a candidate review
 /// (with `match`, the live detection). Outside a review it links to the bird's gallery of cards (issue #53).
 struct BirdProfileView: View {
@@ -16,6 +17,7 @@ struct BirdProfileView: View {
 
     var body: some View {
         let reference = library.species(scientificName: scientificName)
+        ScrollViewReader { proxy in
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
                 Text(reference?.species.commonName ?? commonName)
@@ -47,6 +49,10 @@ struct BirdProfileView: View {
                     NameOnlyProfile(match: match)
                 }
             }
+        }
+        #if DEBUG
+        .debugScroll(proxy, to: "profile-tale")
+        #endif
         }
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -91,6 +97,60 @@ private struct ProfileContent: View {
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
                 .padding(.top, 12)
+        }
+
+        if let lore = species.lore {
+            SectionTitle(text: "The tale")
+                .id("profile-tale")
+            VStack(alignment: .leading, spacing: 8) {
+                if let title = lore.title {
+                    Text(title)
+                        .font(CardFont.storyTitle)
+                        .foregroundStyle(Color.ink)
+                }
+                Text(lore.text)
+                    .font(CardFont.lore)
+                    .lineSpacing(CardFont.loreLeading)
+                    .foregroundStyle(Color.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Lore written from this bird's sourced fact sheet and reviewed by hand · CC BY-SA 4.0")
+                    .font(JournalFont.attribution)
+                    .foregroundStyle(Color.inkSecondary)
+            }
+            .padding(.top, 12)
+            .accessibilityElement(children: .combine)
+        }
+
+        if let stats = species.stats {
+            let rows = CardStatsText.front(stats) + CardStatsText.back(stats)
+            if !rows.isEmpty {
+                SectionTitle(text: "At a glance")
+                if let typeLine = species.typeLine {
+                    Text(typeLine.text)
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.inkSecondary)
+                        .padding(.top, 8)
+                }
+                VStack(spacing: 0) {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { position, stat in
+                        if position > 0 { RowRule() }
+                        HStack(alignment: .firstTextBaseline, spacing: 16) {
+                            Text(stat.label)
+                                .font(JournalFont.body)
+                                .foregroundStyle(Color.ink)
+                                .frame(width: 92, alignment: .leading)
+                            Text(stat.value)
+                                .font(JournalFont.body)
+                                .foregroundStyle(Color.inkSecondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(.vertical, 11)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(stat.spoken)
+                    }
+                }
+                .padding(.top, 8)
+            }
         }
 
         let facts: [(String, String)] = [
@@ -153,9 +213,15 @@ private struct ProfileContent: View {
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
             }
-            NavigationLink(value: Route.speciesCredits(scientificName: species.scientificName)) {
-                Label(species.sounds.isEmpty ? "Photo credits and sources" : "Photo and sound credits", systemImage: "text.document")
+            if species.stats != nil {
+                Text("Stats from the datasets named on the credits page.")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
             }
+            NavigationLink(value: Route.speciesCredits(scientificName: species.scientificName)) {
+                Label("Every credit and source", systemImage: "text.document")
+            }
+            .accessibilityIdentifier("profile-credits")
             .buttonStyle(.journalOutlined)
             if let wikipedia = species.wikipediaURL {
                 Link(destination: wikipedia) {

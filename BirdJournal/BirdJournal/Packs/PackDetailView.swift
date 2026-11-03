@@ -1,11 +1,17 @@
+import Album
 import Pack
+import SwiftData
 import SwiftUI
 
-/// One pack in detail (issue #28): a preview of its birds, what it holds, the storage it needs or takes, its version
-/// and credits, and its download, update or removal. Works for a pack on the phone and for one the index offers.
+/// One pack in detail (issue #28; restyled for the Atlas in #118): its set's cover, a preview of its birds, what it
+/// holds, the storage it needs or takes, its version and credits, and its download, update or removal. "Species
+/// collected" (the birder's progress) stays apart from "Ready offline" (the pack on the phone). Removing a pack never
+/// touches a card, sighting, note or original photo: those live in the album, not the pack. Works for a pack on the
+/// phone and for one the index offers.
 struct PackDetailView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dismiss) private var dismiss
+    @Query private var sightings: [Sighting]
     let id: String
     @State private var confirmingRemoval = false
     @State private var removalError: String?
@@ -18,13 +24,23 @@ struct PackDetailView: View {
 
     var body: some View {
         let name = installed?.info.name ?? descriptor?.name ?? id
+        let edition = installed?.set?.edition.name ?? descriptor?.set?.edition.name
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
-                if let region = installed?.info.region ?? descriptor?.region {
-                    Text(region)
+                SetCoverImage(setID: id, edition: edition ?? "")
+                    .frame(height: 150)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                    .padding(.top, 4)
+                if let line = [edition, installed?.info.region ?? descriptor?.region].compactMap({ $0?.isEmpty == false ? $0 : nil }).joined(separator: " · ").nilIfEmpty {
+                    Text(line)
                         .font(JournalFont.body)
                         .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 2)
+                        .padding(.top, 12)
+                }
+                if library.sets.contains(where: { $0.id == id }) {
+                    SpeciesCollected(progress: library.collection(of: sightings).progress(of: id))
+                        .padding(.top, 12)
                 }
                 if let installed {
                     PackPreview(pack: installed)
@@ -62,7 +78,9 @@ struct PackDetailView: View {
                     }
                     FactRow(label: "Version", value: versionText)
                     RowRule()
-                    FactRow(label: "Works offline", value: installed != nil ? "Yes" : "Once downloaded")
+                    FactRow(label: "Ready offline", value: installed != nil ? "Yes, on this iPhone" : "Once downloaded")
+                    RowRule()
+                    FactRow(label: "Your collection", value: "Not changed by downloading or removing a pack")
                 }
                 .padding(.top, 8)
 
@@ -81,7 +99,7 @@ struct PackDetailView: View {
 
                 if isDownload || isBundledUpdate {
                     SectionTitle(text: "Storage")
-                    Text(isBundledUpdate ? "Removing this update goes back to the copy of the pack in the app." : "Removing the pack frees its space. Your journal keeps every sighting, note and snapshot; birds from this pack are then named without photos until it is downloaded again.")
+                    Text(isBundledUpdate ? "Removing this update goes back to the copy of the pack in the app. Your collection is not touched." : "Removing the pack frees its space. Your collection keeps every card, sighting, note and original photo; birds from this pack are then named without photos until it is downloaded again.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 12)
@@ -109,7 +127,7 @@ struct PackDetailView: View {
                 }
             }
         } message: {
-            Text("Your journal is not affected. The pack can be downloaded again.")
+            Text("Your cards, sightings, notes and original photos stay. The pack can be downloaded again.")
         }
         .alert("The pack could not be removed", isPresented: Binding(get: { removalError != nil }, set: { if !$0 { removalError = nil } })) {
             Button("OK") { removalError = nil }

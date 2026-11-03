@@ -5,8 +5,9 @@ import SwiftUI
 
 /// One set's page (issue #54): its species in collector order, each with its number; a species with a card in the set
 /// shows its photo, and one the birder hasn't collected there shows as a silhouette, so the page reads as what is
-/// still out there. Reached from the Field Guide's sets and the Journal's set progress; every row opens the bird's
-/// profile. Works for a set whose pack isn't downloaded: the names come from the set definition.
+/// still out there. Reached from the Atlas's set tiles and the Collection's set progress; every row opens the bird's
+/// profile. It leads with the set's tile (#118): the cover, "Ready offline" or the download, and "Species collected".
+/// Works for a set whose pack isn't downloaded: the names come from the set definition.
 struct SetView: View {
     @Environment(PackLibrary.self) private var library
     @Query private var sightings: [Sighting]
@@ -19,12 +20,10 @@ struct SetView: View {
             let progress = collection.progress(of: set.id)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("\(set.edition.name) · \(progress.collected) of \(progress.total) collected")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
+                    SetTile(set: set, progress: progress, opensSet: false)
                         .padding(.top, 4)
                     if library.pack(id: set.id) == nil {
-                        Text("This pack isn't on your iPhone yet. Cards you add in its region still count toward the set.")
+                        Text("This pack isn't on your iPhone yet: downloading it adds photos, sounds and field notes, not birds. Cards you add in its region count toward the set either way.")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 8)

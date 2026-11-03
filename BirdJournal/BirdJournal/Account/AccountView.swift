@@ -93,7 +93,7 @@ struct AccountView: View {
         } header: {
             Text("Signed in")
         } footer: {
-            Text("Your name is what friends will see in your circles.")
+            Text("Your name is what friends will see in your Guilds.")
         }
         if CircleStore.blocksAvailable {
             Section {
@@ -126,12 +126,12 @@ struct AccountView: View {
 
     /// What deleting takes, in the alert (issue #71).
     static func deletionWarning(apple: Bool) -> String {
-        var text = "This deletes your account, your finds, reactions, shared cards and photos, painted art, and your place in every circle. A circle you started passes to its longest-standing member. This can't be undone. Your journal and cards stay on this iPhone."
+        var text = "This deletes your account, your finds, reactions, shared cards and photos, painted art, and your place in every Guild. A Guild you started passes to its longest-standing member. This can't be undone. Your journal and cards stay on this iPhone."
         if apple { text += " Apple will ask you to confirm once more, so Featherguild can stop using your Apple ID." }
         return text
     }
 
-    static let optionalNote = "An account is optional. Listening, your journal, cards and bird packs all work without one; signing in will let you join circles with friends."
+    static let optionalNote = "An account is optional. Listening, your journal, cards and bird packs all work without one; signing in will let you join Guilds with friends."
 }
 
 /// Sign in with Apple and with Google, as list rows: Settings → Account, the Circles tab and the join screen.

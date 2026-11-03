@@ -27,7 +27,7 @@ final class ReactionsUITests: XCTestCase {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         let lovely = app.buttons["react-lovely-\(Self.mayasPhoebe)"]
         // Maya's Black Phoebe is the fourth find: scroll to it.
-        for _ in 0..<4 where !lovely.isHittable { app.swipeUp() }
+        app.scrolledTo(lovely, limit: 24)
         XCTAssertTrue(lovely.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(lovely.value as? String, "2 reactions", "Jo's and Sam's, seeded")
         XCTAssertFalse(lovely.isSelected)
@@ -53,7 +53,8 @@ final class ReactionsUITests: XCTestCase {
     func testComparingBirdsWithAFriend() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-seedJournal", "YES", "-autoScreen", "circle"])
         let picker = app.segmentedControls["circlePageShowing"]
-        XCTAssertTrue(picker.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledTo(picker), "screen: \(app.debugDescription.prefix(3000))")
         picker.buttons["Compare birds"].tap()
         let maya = app.buttons["compareWith-maya"]
         // Below the goal card (issue #65): the list builds the friends only once scrolled to.

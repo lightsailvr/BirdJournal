@@ -580,3 +580,26 @@ def test_a_deleted_circle_leaves_the_rollover(client: TestClient, issuer: TestIs
     assert _roll_over(client).skipped == 1
     report = _roll_over(client)
     assert (report.created, report.current, report.skipped) == (0, 0, 0)
+
+
+
+def test_a_goal_push_without_the_circle_name_says_your_guild() -> None:
+    """Issue #118: the user-facing word is Guild; a circle whose name wasn't read is "Your Guild" in the push."""
+    from datetime import date
+
+    from birdjournal_api.finds import FindContent, Method
+    from birdjournal_api.goals import CompletedGoal, Goal, GoalKind
+    from birdjournal_api.pushes import goal_words
+
+    goal = Goal(
+        circle_id="c", id="g", kind=GoalKind.MONTHLY, title="November goal", target=15, start_date=date(2026, 11, 1),
+        end_date=date(2026, 11, 30), created_by=None, created_at=datetime(2026, 11, 1, tzinfo=UTC), completed_at=None,
+    )
+    content = FindContent(
+        species_id="Sayornis nigricans_Black Phoebe", scientific_name="Sayornis nigricans", common_name="Black Phoebe",
+        method=Method("heard"), place="Pasadena", found_at=datetime(2026, 11, 3, tzinfo=UTC), legendary=False,
+        rarity=None, threatened=False, art=None,
+    )
+    title, body = goal_words("Ada", content, None, CompletedGoal(goal=goal, progress=15), None)
+    assert title == "Your Guild reached the November goal"
+    assert body.startswith("Ada found a Black Phoebe, species 15 of 15")

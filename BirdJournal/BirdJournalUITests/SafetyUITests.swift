@@ -93,7 +93,7 @@ final class SafetyUITests: XCTestCase {
     private func pressMaya(_ app: XCUIApplication) {
         let list = app.collectionViews.firstMatch
         let members = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Members'")).firstMatch
-        for _ in 0..<8 where !(members.exists && members.isHittable) { list.swipeUp() }
+        for _ in 0..<24 where !(members.exists && members.isHittable) { list.swipeUp() }
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Maya Ortiz'")).firstMatch
         let mayaRow = row.exists ? row : app.staticTexts["Maya Ortiz"].firstMatch
         for _ in 0..<4 where !mayaRow.isHittable { list.swipeUp() }
@@ -118,10 +118,10 @@ final class SafetyUITests: XCTestCase {
     /// Every find row's label, scrolling the page from top to bottom: the list builds only the rows on screen.
     private func findLabels(_ app: XCUIApplication) -> [String] {
         let list = app.collectionViews.firstMatch
-        for _ in 0..<8 { list.swipeDown() }
+        for _ in 0..<20 { list.swipeDown() }
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-'"))
         var labels: [String: String] = [:]
-        for _ in 0..<10 {
+        for _ in 0..<18 {
             for row in rows.allElementsBoundByIndex where row.exists { labels[row.identifier] = row.label }
             list.swipeUp()
         }
@@ -131,7 +131,7 @@ final class SafetyUITests: XCTestCase {
     @MainActor
     func testBlockingAMemberHidesTheirFindsAndUnblockingBringsThemBack() {
         let app = circlePage()
-        XCTAssertTrue(app.staticTexts["Recent finds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         let byMaya = { (labels: [String]) in labels.filter { $0.contains("by Maya Ortiz") } }
         XCTAssertFalse(byMaya(findLabels(app)).isEmpty, "no find of Maya's to hide")
 
