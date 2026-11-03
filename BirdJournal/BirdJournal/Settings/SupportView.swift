@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// Settings → Support Bird Journal (issue #59, ADR-0001): what a tip pays for, the three tips with the App Store's
+/// Settings → Support Featherguild (issue #59, ADR-0001): what a tip pays for, the three tips with the App Store's
 /// prices, and a thank-you once one goes through. Every feature stays free, so a tip unlocks nothing.
 struct SupportView: View {
     /// The promise the screen makes; `NoPurchaseGateTests` holds the copy to it.
-    static let unlocksNothing = "Tips are one-time and unlock nothing. Every feature of Bird Journal stays free for everyone, whether you tip or not."
-    static let pitch = "Bird Journal is free and has no ads. If you'd like to help, a tip goes toward the server and the machine at home that paints the cards."
-    static let privacy = "No account needed. Apple handles the payment; Bird Journal keeps no record of it and sends nothing to its server."
+    static let unlocksNothing = "Tips are one-time and unlock nothing. Every feature of Featherguild stays free for everyone, whether you tip or not."
+    static let pitch = "Featherguild is free and has no ads. If you'd like to help, a tip goes toward the server and the machine at home that paints the cards."
+    static let privacy = "No account needed. Apple handles the payment; Featherguild keeps no record of it and sends nothing to its server."
 
     @State private var tipJar = TipJar()
 
@@ -14,7 +14,7 @@ struct SupportView: View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
-                    Label("Support Bird Journal", systemImage: "heart")
+                    Label("Support Featherguild", systemImage: "heart")
                         .font(JournalFont.heading)
                         .foregroundStyle(Color.ink)
                     Text(Self.pitch)

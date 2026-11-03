@@ -77,7 +77,7 @@ struct AudioSourceSheet: View {
                     Text("The iPhone microphone asks for microphone access the first time you start listening. Sound is analysed on the phone as it arrives and never saved.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
-                    Text("The glasses' microphones only reach the phone inside their camera stream, so BirdJournal asks Meta AI for camera and microphone access the first time. The video is not used to tell birds apart; the most recent frame is kept with a sighting you add, as a snapshot of where you were looking.")
+                    Text("The glasses' microphones only reach the phone inside their camera stream, so Featherguild asks Meta AI for camera and microphone access the first time. The video is not used to tell birds apart; the most recent frame is kept with a sighting you add, as a snapshot of where you were looking.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                     Text("Location narrows the list to birds that live where you are. Without it every species stays possible, which means more lookalikes to review.")

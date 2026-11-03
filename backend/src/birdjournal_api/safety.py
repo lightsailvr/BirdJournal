@@ -203,7 +203,7 @@ class ReportStore:
         snapshot = report.snapshot
         who = snapshot.get("account_name") or "an unnamed account"
         what = "a find" if report.kind is ReportKind.FIND else "an account"
-        subject = f"BirdJournal report: {what} by {who} ({report.reason.words})"
+        subject = f"Featherguild report: {what} by {who} ({report.reason.words})"
         lines = [
             f"Report {report.id} at {report.created_at.astimezone(UTC).strftime('%Y-%m-%d %H:%M UTC')}",
             "",

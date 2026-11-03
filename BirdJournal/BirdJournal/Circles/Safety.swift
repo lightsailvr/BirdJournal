@@ -107,7 +107,7 @@ struct ReportSheet: View {
                             .lineLimit(3...6)
                             .accessibilityIdentifier("reportDetails")
                     } footer: {
-                        Text("Your report goes to Bird Journal only, with what you saw. To stop seeing someone, block them too.")
+                        Text("Your report goes to Featherguild only, with what you saw. To stop seeing someone, block them too.")
                     }
                     if let error {
                         Section { Text(error).foregroundStyle(.red).font(JournalFont.supporting) }

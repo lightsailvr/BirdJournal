@@ -120,14 +120,14 @@ struct AccountView: View {
             .disabled(account.isDeleting)
             .accessibilityIdentifier("deleteAccount")
         } footer: {
-            Text("Deletes your account and everything Bird Journal keeps about it on the server. Your journal stays on this iPhone.")
+            Text("Deletes your account and everything Featherguild keeps about it on the server. Your journal stays on this iPhone.")
         }
     }
 
     /// What deleting takes, in the alert (issue #71).
     static func deletionWarning(apple: Bool) -> String {
         var text = "This deletes your account, your finds, reactions, shared cards and photos, painted art, and your place in every circle. A circle you started passes to its longest-standing member. This can't be undone. Your journal and cards stay on this iPhone."
-        if apple { text += " Apple will ask you to confirm once more, so Bird Journal can stop using your Apple ID." }
+        if apple { text += " Apple will ask you to confirm once more, so Featherguild can stop using your Apple ID." }
         return text
     }
 

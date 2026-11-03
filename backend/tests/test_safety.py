@@ -63,7 +63,7 @@ def test_a_find_reported_is_stored_and_mailed_with_what_the_reporter_saw(
     assert stored["snapshot"]["common_name"] == "Black Phoebe"
     assert stored["snapshot"]["place"] == "Pasadena"
     ((subject, body),) = mailer.sent
-    assert subject == "BirdJournal report: a find by Bo (Inappropriate content)"
+    assert subject == "Featherguild report: a find by Bo (Inappropriate content)"
     assert "Not a bird." in body and "Black Phoebe" in body and "Sunday group" in body
     assert "Reported by: Ada Lovelace (ada)" in body
     assert "packs/us-ca-la/sayornis-nigricans.jpg" in body
@@ -90,7 +90,7 @@ def test_an_account_reported(client: TestClient, issuer: TestIssuer, circle: str
     (stored,) = _reports(client)
     assert (stored["kind"], stored["account"], stored["reason"]) == ("account", "cy", "harassment")
     assert "sighting_id" not in stored
-    assert mailer.sent[0][0] == "BirdJournal report: an account by Cy (Harassment or bullying)"
+    assert mailer.sent[0][0] == "Featherguild report: an account by Cy (Harassment or bullying)"
 
 
 def test_only_someone_sharing_the_circle_may_report(client: TestClient, issuer: TestIssuer, circle: str) -> None:

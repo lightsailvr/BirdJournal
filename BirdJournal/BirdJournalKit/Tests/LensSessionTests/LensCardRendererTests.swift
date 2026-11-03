@@ -303,12 +303,12 @@ struct LensCardRendererTests {
     func problemPages() {
         #expect(Self.render(.problem(.noLocation)).elements == [
             .heading("No location"),
-            .body("Species are not filtered by your region. Allow location for BirdJournal in Settings on the phone."),
+            .body("Species are not filtered by your region. Allow location for Featherguild in Settings on the phone."),
             .meta("Swipe right to continue"),
         ])
         #expect(Self.render(.problem(.connectionLost)).elements == [
             .heading("Connection lost"),
-            .body("The glasses were out of range. BirdJournal kept listening and is back on the lens."),
+            .body("The glasses were out of range. Featherguild kept listening and is back on the lens."),
             .meta("Swipe right to continue"),
         ])
         #expect(Self.render(.problem(.noLocation)).photo == nil)

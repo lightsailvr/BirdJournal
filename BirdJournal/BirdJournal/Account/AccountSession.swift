@@ -156,7 +156,7 @@ final class AccountSession {
         // The server already took the phone off the account, and its user is gone: forget the tokens, nothing to
         // unregister or revoke.
         forgetTokens()
-        deletedNotice = "Your account and everything Bird Journal kept about it on the server were deleted. Your journal and cards stay on this iPhone."
+        deletedNotice = "Your account and everything Featherguild kept about it on the server were deleted. Your journal and cards stay on this iPhone."
         return true
     }
 

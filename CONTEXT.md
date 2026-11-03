@@ -1,6 +1,26 @@
-# BirdJournal
+# Featherguild
 
 Bird identification on Meta Ray-Ban Display glasses, a field journal on the phone, and a collection of cards earned from real sightings and shared with small circles of friends.
+
+## Names
+
+**Featherguild**:
+The product's name, everywhere a person reads it: the home screen, the launch splash, Settings, permission prompts, the lens, share captions, pushes, invites and the site. Since 2026-11-02.
+_Avoid_: Bird Journal, My Bird Journal, BirdJournal (in copy), Bird Quest (the design guide's dropped working name)
+
+**BirdJournal**:
+The internal name, which stays: the repository, the bundle ID `com.matthewcelia.mybirdjournal`, the targets and schemes, `BirdJournalKit` and its modules, Keychain items, the `birdjournal_api` backend package, the `BirdJournal` stack and its `project=birdjournal` tags, the `birdjournal://` scheme, and asset names such as `MyBirdJournal-*`.
+_Avoid_: using it in anything a person reads
+
+The user-facing words for three places differ from the internal ones, which code, models, endpoints and routes keep:
+
+| User-facing | Internal | Where |
+|---|---|---|
+| **Collection** | Journal | the tab with a birder's cards, sightings and species (`Journal/`); "Collection" below is already the domain word for all of one birder's cards |
+| **Atlas**, "Field guide & regional sets" | Field Guide | the tab with every species, the sets and the packs (`Guide/`, `Packs/`) |
+| **Guild** | Circle | the invite-only group (`Circles/`, `Circle*` models, `/v1/circles` routes) |
+
+The tabs still read Journal, Field Guide and Circles until #117 renames them; Circle becomes Guild in copy with #118.
 
 ## Listening
 

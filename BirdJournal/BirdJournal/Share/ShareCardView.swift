@@ -358,7 +358,7 @@ struct ShareCardView: View {
     private func render() {
         guard let image = CardExport.render(face, scale: max(displayScale, 2)) else { return }
         let content = content
-        export = CardExport(image: image.image, png: image.png, text: SharePolicy.text(for: content), title: "\(content.commonName) · Bird Journal")
+        export = CardExport(image: image.image, png: image.png, text: SharePolicy.text(for: content), title: "\(content.commonName) · Featherguild")
     }
 }
 
