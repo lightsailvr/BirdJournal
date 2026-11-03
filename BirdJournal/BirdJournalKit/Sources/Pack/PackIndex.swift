@@ -23,6 +23,10 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
     /// The pack's set (issue #54), so a set works before its pack is downloaded; nil in an index written before sets,
     /// or when the entry's set cannot be read (the rest of the entry still is).
     public let set: PackSet?
+    /// The set's cover as a small thumbnail (issue #114), so the Atlas shows the set's landscape before its pack is
+    /// downloaded; nil in an index written before covers, for a set whose cover isn't approved, or when the entry's
+    /// cover cannot be read (the rest of the entry still is).
+    public let cover: PackIndexCover?
 
     /// Whether this build can open the pack. A pack of a newer schema is listed but not offered for download.
     public var isSupported: Bool {
@@ -31,7 +35,7 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
 
     public init(
         id: String, name: String, version: Int, url: URL, sha256: String, byteCount: Int, speciesCount: Int? = nil, photoCount: Int? = nil,
-        region: String? = nil, soundCount: Int? = nil, schemaVersion: Int? = nil, set: PackSet? = nil
+        region: String? = nil, soundCount: Int? = nil, schemaVersion: Int? = nil, set: PackSet? = nil, cover: PackIndexCover? = nil
     ) {
         self.id = id
         self.name = name
@@ -45,10 +49,11 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
         self.soundCount = soundCount
         self.schemaVersion = schemaVersion
         self.set = set
+        self.cover = cover
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, version, url, sha256, byteCount, speciesCount, photoCount, region, soundCount, schemaVersion, set
+        case id, name, version, url, sha256, byteCount, speciesCount, photoCount, region, soundCount, schemaVersion, set, cover
     }
 
     public init(from decoder: any Decoder) throws {
@@ -66,6 +71,31 @@ public struct PackDescriptor: Codable, Sendable, Hashable, Identifiable {
         schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion)
         // A set this build can't read must not cost the phone the whole index.
         set = try? container.decodeIfPresent(PackSet.self, forKey: .set)
+        // Nor may a cover.
+        cover = (try? container.decodeIfPresent(PackIndexCover.self, forKey: .cover)) ?? nil
+    }
+}
+
+/// A set's cover as the pack index carries it (issue #114): a 480 × 270 JPEG of the approved cover, base64 in the JSON,
+/// with the credit the pack's LICENSE gives the full cover. Like the cover, an AI illustration, never a map.
+public struct PackIndexCover: Codable, Sendable, Hashable {
+    /// The JPEG's bytes.
+    public let thumbnail: Data
+    public let width: Int
+    public let height: Int
+    /// The model that painted the cover, e.g. "FLUX.3 Image Klein".
+    public let model: String
+    /// The workflow and prompts versions, e.g. "set-cover@1 cover-prompts@1".
+    public let workflowVersion: String
+    public let seed: Int
+
+    public init(thumbnail: Data, width: Int, height: Int, model: String, workflowVersion: String, seed: Int) {
+        self.thumbnail = thumbnail
+        self.width = width
+        self.height = height
+        self.model = model
+        self.workflowVersion = workflowVersion
+        self.seed = seed
     }
 }
 

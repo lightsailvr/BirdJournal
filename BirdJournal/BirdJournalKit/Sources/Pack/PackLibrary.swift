@@ -131,6 +131,17 @@ public final class PackLibrary {
         return sets
     }
 
+    /// A set's cover (issue #114) for the Atlas and the Listen tab: the full cover of the pack on the phone whose set it
+    /// is, else the index's thumbnail, so a set shows its landscape before its pack is downloaded; nil when neither has
+    /// one, which the app shows with its designed fallback.
+    public func cover(setID: String) -> SetCover? {
+        if let pack = pack(id: setID) {
+            if let cover = pack.cover, let url = pack.coverURL { return .pack(cover, url) }
+        }
+        if let cover = index?.descriptor(id: setID)?.cover { return .thumbnail(cover) }
+        return nil
+    }
+
     // MARK: - The index
 
     /// The index's packs that are neither bundled nor installed: what the packs screen offers to download. A build

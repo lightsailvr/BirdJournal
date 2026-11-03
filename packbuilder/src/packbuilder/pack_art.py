@@ -307,8 +307,8 @@ class PackArtist:
         the pack's order, `per_sheet` species to a sheet, plus one overview of every painting."""
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
-        for old in out_dir.glob("*.jpg"):
-            old.unlink()
+        for old in [*out_dir.glob("sheet-*.jpg"), out_dir / "overview.jpg"]:  # its own sheets only: the set's cover.jpg stays
+            old.unlink(missing_ok=True)
         cells = []
         for number, result in enumerate(results, start=1):
             artwork = art.get(result.entry.id)
