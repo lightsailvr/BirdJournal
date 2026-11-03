@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings → Support Bird Journal (issue #59): the row opens the tip jar, the copy says tips unlock nothing, and a
+/// Settings → Support Featherguild (issue #59): the row opens the tip jar, the copy says tips unlock nothing, and a
 /// tip bought against the scheme's StoreKit configuration ends in the thank-you.
 final class SupportUITests: XCTestCase {
     @MainActor
@@ -9,7 +9,7 @@ final class SupportUITests: XCTestCase {
         app.launchArguments = ["-inMemoryAlbum", "YES", "-autoScreen", "settings"]
         app.launch()
 
-        let row = app.buttons["Support Bird Journal"]
+        let row = app.buttons["Support Featherguild"]
         for _ in 0..<4 where !row.isHittable { app.swipeUp() }
         XCTAssertTrue(row.waitForExistence(timeout: 10), "no Support row; screen: \(app.debugDescription.prefix(3000))")
         row.tap()

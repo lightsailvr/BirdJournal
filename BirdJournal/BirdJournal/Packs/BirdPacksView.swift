@@ -196,7 +196,7 @@ struct PackTransferStatus: View {
                 .padding(.top, 4)
             }
         case .needsNewerApp:
-            Label("Needs a newer version of BirdJournal", systemImage: "arrow.up.circle")
+            Label("Needs a newer version of Featherguild", systemImage: "arrow.up.circle")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
         case .updateAvailable(_, let available):

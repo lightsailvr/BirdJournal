@@ -25,7 +25,7 @@ struct LaunchSplash: View {
             PerchedBirdDrawing()
                 .frame(width: Self.birdSize.width, height: Self.birdSize.height)
                 .overlay(alignment: .bottom) {
-                    Text("My Bird Journal")
+                    Text("Featherguild")
                         .font(JournalFont.largeTitle)
                         .foregroundStyle(Color.ink)
                         .fixedSize()

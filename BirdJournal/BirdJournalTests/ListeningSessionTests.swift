@@ -192,7 +192,7 @@ struct ListeningSessionTests {
         await session.start()
 
         #expect(session.phase == .idle)
-        #expect(session.errorMessage == "Microphone access was not granted. Allow it in Settings > BirdJournal.")
+        #expect(session.errorMessage == "Microphone access was not granted. Allow it in Settings > Featherguild.")
     }
 
     /// Waits for `condition`, which the fed audio makes true, with no deadline of its own (issue #93): a loaded Mac

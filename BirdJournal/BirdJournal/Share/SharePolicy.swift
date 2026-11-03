@@ -56,7 +56,7 @@ enum SharePolicy {
         let attribution: String?
         if choices.useSnapshot, let frame = sighting.frameImagePath {
             picture = .snapshot(framePath: frame)
-            caption = "My glasses snapshot · Bird Journal"
+            caption = "My glasses snapshot · Featherguild"
             attribution = nil
         } else if let reference, mayShare(reference) {
             picture = .reference(reference)
@@ -64,7 +64,7 @@ enum SharePolicy {
             attribution = "Photo: \(reference.creditLine), via iNaturalist \(reference.sourceURL.absoluteString)"
         } else {
             picture = .none
-            caption = "Bird Journal"
+            caption = "Featherguild"
             attribution = nil
         }
         let note = sighting.note?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -88,7 +88,7 @@ enum SharePolicy {
         if let area = content.areaText { first += " · \(area)" }
         lines.append(first)
         if let note = content.note { lines.append("“\(note)”") }
-        lines.append("Heard with Bird Journal · Powered by BirdNET")
+        lines.append("Heard with Featherguild · Powered by BirdNET")
         if let attribution = content.attribution { lines.append(attribution) }
         return lines.joined(separator: "\n")
     }

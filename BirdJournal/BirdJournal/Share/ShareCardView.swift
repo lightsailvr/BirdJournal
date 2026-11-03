@@ -360,7 +360,7 @@ struct ShareCardView: View {
         let content = content
         let lore = library.species(scientificName: sighting.scientificName)?.species.lore
         let text = [SharePolicy.text(for: content), lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
-        export = CardExport(image: image.image, png: image.png, text: text, title: "\(content.commonName) · Bird Journal")
+        export = CardExport(image: image.image, png: image.png, text: text, title: "\(content.commonName) · Featherguild")
     }
 
     /// The credit of the lore excerpt the face carries (issue #116; design guide page 17: lore licenses and revision
