@@ -2,7 +2,7 @@ import Identification
 import Pack
 import SwiftUI
 
-/// Reviewing a candidate (issue #28): the bird's profile with the match details, and the explicit Add to journal.
+/// Reviewing a candidate (issue #28): the bird's profile with the match details, and the explicit Add to collection.
 /// A detection is not an observation until the birder says so here (or on the lens).
 struct CandidateReviewSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -39,7 +39,7 @@ struct CandidateReviewView: View {
                 VStack(spacing: 8) {
                     if run.isAdded(candidate) {
                         let count = run.sightings.count(of: candidate.species)
-                        Label(count > 1 ? "Added to your journal · \(count) sightings" : "Added to your journal", systemImage: "checkmark.circle.fill")
+                        Label(count > 1 ? "Added to your collection · \(count) cards" : "Added to your collection", systemImage: "checkmark.circle.fill")
                             .font(JournalFont.supporting.weight(.medium))
                             .foregroundStyle(Color.moss)
                         Button(isAdding ? "Adding…" : "Add another sighting") { add() }
@@ -49,10 +49,15 @@ struct CandidateReviewView: View {
                         Button {
                             add()
                         } label: {
-                            Label(isAdding ? "Adding…" : "Add to journal", systemImage: "plus")
+                            Label(isAdding ? "Adding…" : "Add to collection", systemImage: "plus")
                         }
                         .buttonStyle(.journalPrimary)
                         .disabled(isAdding)
+                        // Heard is the default; Seen is a deliberate change on the card's back (#52).
+                        Text("Added as Heard. You can mark it Seen on the card.")
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .multilineTextAlignment(.center)
                     }
                 }
                 .padding(.horizontal, JournalLayout.margin)

@@ -130,7 +130,7 @@ struct SightingDetailView: View {
                     Button(role: .destructive) {
                         confirmingRemoval = true
                     } label: {
-                        Label("Remove from journal", systemImage: "trash")
+                        Label("Remove from collection", systemImage: "trash")
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.bordered)
@@ -155,7 +155,7 @@ struct SightingDetailView: View {
             .sheet(isPresented: $showingMap) {
                 SightingMapView(focus: sighting)
             }
-            .confirmationDialog("Remove this sighting from your journal?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
+            .confirmationDialog("Remove this sighting and its card?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button("Remove", role: .destructive) {
                     edits.remove(sighting, commonName: commonName)
                     dismiss()

@@ -15,7 +15,8 @@ import UIKit
 ///   the species gallery (issue #53).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Cards view), `sightings`,
-///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab), `card` and `card-back` (the newest
+///   `reveal` (the Legendary reveal of the newest seeded card, over the Listen tab; over a phone run with
+///   `-autoPhoneListening <wav>`; `-autoCardSpecies` picks the species), `card` and `card-back` (the newest
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
@@ -102,8 +103,15 @@ struct DebugLaunch: ViewModifier {
                 journalMode = .sightings
             case "reveal":
                 tab = .listen
-                if let newest = try? context.fetch(Sighting.newestFirst()).first {
-                    run.showRevealForScreenshot(of: newest)
+                // With `-autoPhoneListening`, over a run, as after a real add (issue #117's screenshots).
+                if defaults.string(forKey: "autoPhoneListening") != nil {
+                    run.source = .phone
+                    await run.start()
+                }
+                let species = defaults.string(forKey: "autoCardSpecies")
+                let all = (try? context.fetch(Sighting.newestFirst())) ?? []
+                if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
+                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted)
                 }
             case "card", "card-back":
                 tab = .journal

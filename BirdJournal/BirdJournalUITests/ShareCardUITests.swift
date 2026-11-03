@@ -59,6 +59,9 @@ final class ShareCardUITests: XCTestCase {
         XCTAssertTrue(sent.label.contains("Sunday Group"), sent.label)
         app.navigationBars["A story to share"].buttons["Done"].tap()
 
+        // A card's page hides the tab bar (issue #117): back to Collection first.
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(app.tabBars.buttons["Guilds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         app.tabBars.buttons["Guilds"].tap()
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sunday Group'")).firstMatch.tap()
         let mine = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-' AND label CONTAINS 'by you'")).firstMatch

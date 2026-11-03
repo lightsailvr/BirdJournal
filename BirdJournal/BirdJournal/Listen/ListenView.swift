@@ -5,8 +5,9 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// The Listen tab (issue #28): one Start listening action over the chosen audio source when idle, and the live run
-/// (source, elapsed time, waveform, species heard, Stop) once it is under way. Runs live in the
+/// The Listen tab (issue #28; issue #117's ready and active states): one Start listening action over the chosen audio
+/// source under the local set's cover when idle, and the live run (source, elapsed time, waveform, species heard,
+/// Stop) without decoration once it is under way. Runs live in the
 /// `ListeningCoordinator`, so leaving the tab never ends one.
 struct ListenView: View {
     @Environment(ListeningCoordinator.self) private var run
@@ -45,82 +46,90 @@ struct ListenView: View {
     }
 }
 
-/// The quiet page: a source row, Start listening, and the last thing in the journal.
+/// The calm ready state (issue #117, design guide page 11): the local set's cover as the atmosphere, the connection
+/// with the chosen microphones, one obvious Start listening, and the local set with the birder's progress in it. The
+/// navigation bar gives way to the cover; Settings sits on it.
 private struct ReadyToListenView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(GlassesConnection.self) private var connection
+    @Environment(PackLibrary.self) private var library
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @State private var choosingSource = false
 
     var body: some View {
-        PaperPage {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Make room for a little birdsong.")
-                    .font(JournalFont.body)
-                    .foregroundStyle(Color.inkSecondary)
-                    .padding(.top, 2)
+        let collection = library.collection(of: sightings)
+        let local = LocalSet.find(library: library, collection: collection, newest: sightings.first)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ListenCoverHeader(local: local, topInset: proxy.safeAreaInsets.top)
+                    VStack(alignment: .leading, spacing: 0) {
+                        AudioSourceRow(source: run.source, status: sourceStatus, isConnected: isConnected) { choosingSource = true }
+                        Text(run.source.microphoneText)
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 8)
 
-                PerchedBirdDrawing()
-                    .frame(height: 118)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 22)
-                    .accessibilityHidden(true)
+                        if case .ended(.failed(let message)) = run.state {
+                            ErrorNotice("Listening stopped", message: message) {
+                                RecoveryActions(message: message)
+                            }
+                            .padding(.top, 16)
+                        } else if case .ended(.endedByGlasses) = run.state {
+                            ErrorNotice("Listening stopped", message: "The glasses ended the session. Start again when you are ready.", symbol: "eyeglasses")
+                                .padding(.top, 16)
+                        }
+                        if run.source == .glasses, let blocker = glassesBlocker {
+                            ErrorNotice(blocker.title, message: blocker.message, symbol: "eyeglasses") {
+                                blocker.action
+                            }
+                            .padding(.top, 16)
+                        }
 
-                AudioSourceRow(source: run.source, status: sourceStatus) { choosingSource = true }
-                Text(run.source.microphoneText)
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(Color.inkSecondary)
-                    .padding(.top, 8)
+                        Button {
+                            Task { await run.start() }
+                        } label: {
+                            Label("Start listening", systemImage: "waveform")
+                                .font(.title3.weight(.semibold))
+                        }
+                        .buttonStyle(.journalPrimary)
+                        .disabled(run.state == .starting)
+                        .padding(.top, 20)
+                        .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
 
-                if case .ended(.failed(let message)) = run.state {
-                    ErrorNotice("Listening stopped", message: message) {
-                        RecoveryActions(message: message)
+                        Text(run.source == .glasses ? "You can lock your phone and look up." : "Keep your phone out where it can hear.")
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 12)
+
+                        if let local {
+                            LocalSetSection(local: local, collection: collection, sightings: sightings)
+                        }
                     }
-                    .padding(.top, 16)
-                } else if case .ended(.endedByGlasses) = run.state {
-                    ErrorNotice("Listening stopped", message: "The glasses ended the session. Start again when you are ready.", symbol: "eyeglasses")
-                        .padding(.top, 16)
+                    .padding(.horizontal, JournalLayout.margin)
+                    .padding(.top, -36)
+                    .padding(.bottom, JournalLayout.sectionGap)
                 }
-                if run.source == .glasses, let blocker = glassesBlocker {
-                    ErrorNotice(blocker.title, message: blocker.message, symbol: "eyeglasses") {
-                        blocker.action
-                    }
-                    .padding(.top, 16)
+            }
+            .ignoresSafeArea(edges: .top)
+            .background(Color.paper)
+            .overlay(alignment: .topTrailing) {
+                NavigationLink(value: Route.settings) {
+                    Image(systemName: "gearshape")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .background(.black.opacity(0.28), in: Circle())
                 }
-
-                Button {
-                    Task { await run.start() }
-                } label: {
-                    Label("Start listening", systemImage: "waveform")
-                }
-                .buttonStyle(.journalPrimary)
-                .disabled(run.state == .starting)
-                .padding(.top, 20)
-                .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
-
-                Text(run.source == .glasses ? "You can lock your phone and look up." : "Keep your phone out where it can hear.")
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(Color.inkSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 12)
-
-                if let latest = sightings.first {
-                    SectionTitle(text: "Last in your journal")
-                    NavigationLink(value: Route.sighting(latest.persistentModelID)) {
-                        LatestSightingCard(sighting: latest)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 14)
-                } else {
-                    SectionTitle(text: "Your journal")
-                    Text("Birds you add while listening are kept here, one sighting at a time, with the day, the place and a note if you like.")
-                        .font(JournalFont.body)
-                        .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 12)
-                }
+                .accessibilityLabel("Settings")
+                .padding(.trailing, JournalLayout.margin - 6)
+                .padding(.top, 4)
             }
         }
         .navigationTitle("Listen")
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $choosingSource) {
             AudioSourceSheet()
         }
@@ -133,6 +142,14 @@ private struct ReadyToListenView: View {
             }
         }
         #endif
+    }
+
+    /// Whether the chosen source can listen now: the dot on the source row.
+    private var isConnected: Bool {
+        switch run.source {
+        case .phone: true
+        case .glasses: connection.registrationState == .registered && connection.connectedDevice?.state.compatibility == .compatible
+        }
     }
 
     private var sourceStatus: String {
@@ -203,6 +220,8 @@ struct RecoveryActions: View {
 struct AudioSourceRow: View {
     let source: ListeningCoordinator.Source
     let status: String
+    /// A dot before the status: the moss of a source ready to listen, or a hollow ring.
+    var isConnected: Bool?
     var isEnabled = true
     let action: () -> Void
 
@@ -217,9 +236,18 @@ struct AudioSourceRow: View {
                     Text(source.title)
                         .font(JournalFont.rowTitle)
                         .foregroundStyle(Color.ink)
-                    Text(status)
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
+                    HStack(spacing: 6) {
+                        if let isConnected {
+                            Circle()
+                                .fill(isConnected ? Color.moss : Color.clear)
+                                .overlay(Circle().strokeBorder(isConnected ? Color.clear : Color.inkSecondary, lineWidth: 1.5))
+                                .frame(width: 8, height: 8)
+                                .accessibilityHidden(true)
+                        }
+                        Text(status)
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                    }
                 }
                 Spacer()
                 if isEnabled {
@@ -238,49 +266,5 @@ struct AudioSourceRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(source.title), \(status)")
         .accessibilityHint(isEnabled ? "Choose the audio source" : "")
-    }
-}
-
-/// The newest sighting as a wide card: the glasses snapshot when there is one, else the reference photo, labelled.
-private struct LatestSightingCard: View {
-    @Environment(PackLibrary.self) private var library
-    @Environment(PlaceNames.self) private var places
-    let sighting: Sighting
-
-    var body: some View {
-        let reference = library.species(scientificName: sighting.scientificName)
-        Color.clear
-            .aspectRatio(16 / 10, contentMode: .fit)
-            .overlay {
-                if sighting.frameImagePath != nil {
-                    FrameImage(frameImagePath: sighting.frameImagePath)
-                } else if let reference, let photo = reference.species.photos.first {
-                    PackImage(url: reference.pack.phoneImageURL(for: photo))
-                } else {
-                    Color.raised
-                }
-            }
-            .overlay(alignment: .bottomLeading) {
-            LinearGradient(colors: [.clear, .black.opacity(0.72)], startPoint: .center, endPoint: .bottom)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(library.commonName(for: sighting))
-                    .font(JournalFont.heading)
-                    .foregroundStyle(.white)
-                Text("\(Journal.title(for: sighting.confirmedAt)) · \(places.placeText(for: sighting.location))")
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(.white.opacity(0.92))
-                    .lineLimit(1)
-                Text(sighting.frameImagePath != nil ? "Your glasses snapshot" : (reference?.species.photos.first.map { "Reference photo · \($0.shortCredit)" } ?? "No photo"))
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(.white.opacity(0.85))
-                    .lineLimit(1)
-            }
-            .padding(16)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-        .task(id: sighting.location) {
-            if let location = sighting.location { await places.resolve(location) }
-        }
-        .accessibilityElement(children: .combine)
     }
 }
