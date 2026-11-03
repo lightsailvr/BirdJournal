@@ -26,6 +26,10 @@ extension Color {
     static let sharedGoal = Color("JournalSharedGoal")
     /// Text and marks on a `sharedGoal` fill.
     static let onSharedGoal = Color("JournalOnSharedGoal")
+    /// Errors and destructive actions in a page (issue #119): brick #A3322A light, salmon #F4A79B dark, at least 5.5:1
+    /// on the page and a raised surface. The system red measured 3.2:1 on the light page and 3.6:1 on the dark raised
+    /// surface, under the 4.5:1 text needs.
+    static let alert = Color("JournalAlert")
 }
 
 /// The type scale (design guide page 8): the system serif (New York) for titles, names and the tale, the system sans

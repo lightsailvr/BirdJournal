@@ -32,7 +32,7 @@ struct AccountView: View {
             }
             if let error = account.errorMessage {
                 Section {
-                    Text(error).foregroundStyle(.red).font(JournalFont.supporting)
+                    InlineError(error)
                 }
             }
         }
@@ -102,6 +102,7 @@ struct AccountView: View {
         }
         Section {
             Button("Sign out", role: .destructive) { confirmingSignOut = true }
+                .foregroundStyle(Color.alert)
         } footer: {
             Text("Signing out keeps your collection on this iPhone.")
         }
@@ -117,6 +118,7 @@ struct AccountView: View {
                     }
                 }
             }
+            .foregroundStyle(Color.alert)
             .disabled(account.isDeleting)
             .accessibilityIdentifier("deleteAccount")
         } footer: {

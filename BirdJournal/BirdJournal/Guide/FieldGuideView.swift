@@ -87,13 +87,17 @@ struct FieldGuideView: View {
                 }
                 if shown.isEmpty {
                     if entries.isEmpty {
-                        Text("No bird pack is installed, so there is nothing to browse yet. Download one under Bird packs.")
-                            .font(JournalFont.body)
-                            .foregroundStyle(Color.inkSecondary)
-                            .padding(.top, 20)
+                        StateNotice(
+                            "No field guide yet",
+                            message: "No bird pack is on this iPhone, so there are no pages to browse. Download a regional set for its photos, sounds and stories. Listening and identification work without one.",
+                            mark: .symbol("map")
+                        ) {
+                            NavigationLink("See bird packs", value: Route.packs)
+                                .buttonStyle(.journalOutlined)
+                        }
                     } else if sets.isEmpty {
-                        ContentUnavailableView.search(text: query)
-                            .padding(.top, 40)
+                        NoSearchMatch(query: query, searches: "Search by a bird's common or scientific name, or a region.") { query = "" }
+                            .padding(.top, 12)
                     }
                 } else {
                     if !query.isEmpty { AtlasHeading(text: "Birds") }
@@ -120,6 +124,12 @@ struct FieldGuideView: View {
         .navigationTitle("Atlas")
         .navigationSubtitle("Field guide & regional sets")
         .searchable(text: $query, prompt: "Search birds or regions")
+        #if DEBUG
+        .task {
+            // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
+            if let text = UserDefaults.standard.string(forKey: "autoQuery") { query = text }
+        }
+        #endif
         .task { if library.index == nil { await library.refreshIndex() } }
         .refreshable { await library.refreshIndex() }
     }

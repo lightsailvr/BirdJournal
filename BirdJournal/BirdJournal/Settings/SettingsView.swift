@@ -32,6 +32,7 @@ struct SettingsView: View {
                     Button("Register with Meta AI") { Task { await connection.register() } }
                 case .registered:
                     Button("Unregister", role: .destructive) { Task { await connection.unregister() } }
+                        .foregroundStyle(Color.alert)
                 case .registering, .unavailable:
                     EmptyView()
                 @unknown default:
@@ -47,7 +48,7 @@ struct SettingsView: View {
                     Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                 }
                 if let error = connection.errorMessage {
-                    Text(error).foregroundStyle(.red).font(JournalFont.supporting)
+                    InlineError(error)
                 }
             } header: {
                 Text("Glasses")
@@ -146,7 +147,7 @@ struct GlassesDeviceRow: View {
             case .deviceUpdateRequired:
                 Button("Update glasses firmware") { Task { await connection.openFirmwareUpdate() } }
             case .sdkUpdateRequired:
-                Text("This Featherguild build needs a newer toolkit.").font(JournalFont.attribution).foregroundStyle(.red)
+                Text("This Featherguild build needs a newer toolkit.").font(JournalFont.attribution).foregroundStyle(Color.alert)
             default:
                 EmptyView()
             }

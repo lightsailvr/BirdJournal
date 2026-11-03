@@ -33,6 +33,7 @@ struct CirclePageView: View {
             page
                 #if DEBUG
                 .debugScroll(proxy, to: "guild-feed", when: circles.feeds[id]?.isLoaded == true)
+                .debugScroll(proxy, to: "guild-settings", when: circles.feeds[id]?.isLoaded == true)
                 #endif
         }
     }
@@ -66,12 +67,16 @@ struct CirclePageView: View {
                 members(detail)
                 settings(detail)
             } else if let error {
-                Section { Text(error).foregroundStyle(Color.inkSecondary) }
+                Section {
+                    GuildsUnreachable(message: error) { Task { await load() } }
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                }
             } else {
                 Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
             }
             if let error, detail != nil {
-                Section { Text(error).foregroundStyle(.red).font(JournalFont.supporting) }
+                Section { InlineError(error) }
             }
         }
         .paperList()
@@ -279,6 +284,8 @@ struct CirclePageView: View {
                 notifications(detail)
             }
             Button("Leave Guild", role: .destructive) { confirmingLeave = true }
+                .foregroundStyle(Color.alert)
+                .id("guild-settings")
         } header: {
             Text("Settings")
         } footer: {

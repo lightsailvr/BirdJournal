@@ -9,7 +9,8 @@ import SwiftUI
 /// sets its subtree to the light scheme (`CardSurface`), so the system controls on its back draw for ivory and the
 /// page tokens read on it. Pack art keeps its natural colours on it.
 extension Color {
-    /// Legendary text and marks: #7F5E20 on light surfaces and the card face, #D3B475 on the dark page.
+    /// Legendary text and marks: #7A5A1E on light surfaces and the card face (issue #119 darkened #116's #7F5E20, which
+    /// measured 4.4:1 under the feed's Legendary mark on the gold wash), #D3B475 on the dark page.
     static let goldInk = Color("CollectibleGoldInk")
     /// The quiet gold ground of the first-discovery moment.
     static let goldWash = Color("CollectibleGoldWash")

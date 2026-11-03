@@ -29,7 +29,7 @@ struct JoinCircleView: View {
                 Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
             }
             if let message = account.errorMessage, !account.isSignedIn {
-                Section { Text(message).foregroundStyle(.red).font(JournalFont.supporting) }
+                Section { InlineError(message) }
             }
         }
         .paperList()
@@ -79,7 +79,7 @@ struct JoinCircleView: View {
         }
         .listRowBackground(Color.clear)
         if let error {
-            Section { Text(error).foregroundStyle(.red).font(JournalFont.supporting) }
+            Section { InlineError(error) }
         }
     }
 

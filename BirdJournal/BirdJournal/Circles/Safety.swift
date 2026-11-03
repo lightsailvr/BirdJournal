@@ -110,7 +110,7 @@ struct ReportSheet: View {
                         Text("Your report goes to Featherguild only, with what you saw. To stop seeing someone, block them too.")
                     }
                     if let error {
-                        Section { Text(error).foregroundStyle(.red).font(JournalFont.supporting) }
+                        Section { InlineError(error) }
                     }
                 }
             }
@@ -174,7 +174,7 @@ struct BlockedAccountsView: View {
                 Text("You don't see a blocked member's finds or reactions, and you aren't notified about them. They aren't told.")
             }
             if let error {
-                Section { Text(error).foregroundStyle(.red).font(JournalFont.supporting) }
+                Section { InlineError(error) }
             }
         }
         .paperList()

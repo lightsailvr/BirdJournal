@@ -110,7 +110,7 @@ struct PackDetailView: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.bordered)
-                    .tint(.red)
+                    .tint(Color.alert)
                     .padding(.top, 12)
                 }
             }

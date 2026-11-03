@@ -80,7 +80,7 @@ struct SupportView: View {
             if case .failed(let message) = tipJar.outcome {
                 Text(message)
                     .font(JournalFont.supporting)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.alert)
             }
         }
     }

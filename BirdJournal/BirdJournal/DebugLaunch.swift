@@ -44,6 +44,10 @@ import UIKit
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
 ///   prompting, for the UI tests.
+/// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
+///   opens; `-fakeGlasses unregistered|noneLinked|notConnected` gives the Listen page those glasses states;
+///   `-fakeCircles offline` makes the Guilds unreachable; `-autoScrollTo guild-settings` scrolls a Guild's page to its
+///   settings (issue #119's screenshots of the states).
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -205,6 +209,12 @@ struct DebugLaunch: ViewModifier {
                 circles.pendingInvite = defaults.string(forKey: "autoInvite") ?? "fake-invite"
             default:
                 break
+            }
+            // Issue #119: `-autoThenTab journal|guide|circles` switches tab once the screen is up, so a phone run's
+            // listening accessory shows over another tab.
+            if let next = defaults.string(forKey: "autoThenTab").flatMap(RootView.Tab.init(rawValue:)) {
+                try? await Task.sleep(for: .seconds(1.5))
+                tab = next
             }
         }
     }

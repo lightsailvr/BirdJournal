@@ -370,6 +370,10 @@ struct FlipFace: ViewModifier, Animatable {
     func body(content: Content) -> some View {
         let face = CardFlip.face(isBack: isBack, angle: angle, rotates: rotates)
         content
+            // A container first (issue #119): `.accessibilityHidden(false)` straight on the face that is up re-exposed the
+            // decorations inside it that hide themselves (the edge, the keyline, the sprigs, the fine rules), as empty
+            // VoiceOver stops. As a container the face keeps their hiding and still hides whole when it isn't up.
+            .accessibilityElement(children: .contain)
             .accessibilityHidden(!isUp)
             .allowsHitTesting(isUp)
             .rotation3DEffect(.degrees(face.degrees), axis: (x: 0, y: 1, z: 0), perspective: 0.35)

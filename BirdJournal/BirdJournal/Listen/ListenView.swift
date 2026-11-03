@@ -71,7 +71,7 @@ private struct ReadyToListenView: View {
                             .padding(.top, 8)
 
                         if case .ended(.failed(let message)) = run.state {
-                            ErrorNotice("Listening stopped", message: message) {
+                            ErrorNotice(Self.failureTitle(message), message: message, symbol: Self.failureSymbol(message)) {
                                 RecoveryActions(message: message)
                             }
                             .padding(.top, 16)
@@ -144,11 +144,44 @@ private struct ReadyToListenView: View {
         #endif
     }
 
+    /// A denied permission says what is off (issue #119); anything else is that listening stopped.
+    static func failureTitle(_ message: String) -> String {
+        if message.localizedCaseInsensitiveContains("Microphone access") { return "Microphone access is off" }
+        if message.localizedCaseInsensitiveContains("permission was not granted") { return "Glasses access is off" }
+        return "Listening stopped"
+    }
+
+    static func failureSymbol(_ message: String) -> String {
+        if message.localizedCaseInsensitiveContains("Microphone access") { return "mic.slash" }
+        if message.localizedCaseInsensitiveContains("permission was not granted") { return "eyeglasses" }
+        return "exclamationmark.triangle"
+    }
+
+    /// The glasses as the toolkit reports them; in debug builds `-fakeGlasses unregistered|noneLinked|notConnected`
+    /// stands in for them (issue #119's screenshots of the disconnected states, which the simulator can't reach).
+    private var registrationState: RegistrationState {
+        #if DEBUG
+        if let fake = FakeGlasses.current { return fake.registrationState }
+        #endif
+        return connection.registrationState
+    }
+
+    private var devices: [GlassesDeviceStatus] {
+        #if DEBUG
+        if let fake = FakeGlasses.current { return fake.devices }
+        #endif
+        return connection.devices
+    }
+
+    private var connectedDevice: GlassesDeviceStatus? {
+        devices.first { $0.state.linkState == .connected }
+    }
+
     /// Whether the chosen source can listen now: the dot on the source row.
     private var isConnected: Bool {
         switch run.source {
         case .phone: true
-        case .glasses: connection.registrationState == .registered && connection.connectedDevice?.state.compatibility == .compatible
+        case .glasses: registrationState == .registered && connectedDevice?.state.compatibility == .compatible
         }
     }
 
@@ -156,9 +189,9 @@ private struct ReadyToListenView: View {
         switch run.source {
         case .phone: "Ready"
         case .glasses:
-            if connection.registrationState != .registered { "Not registered" }
-            else if let device = connection.connectedDevice { device.state.compatibility == .compatible ? "Connected" : "Update needed" }
-            else if connection.devices.isEmpty { "No glasses linked" }
+            if registrationState != .registered { "Not registered" }
+            else if let device = connectedDevice { device.state.compatibility == .compatible ? "Connected" : "Update needed" }
+            else if devices.isEmpty { "No glasses linked" }
             else { "Not connected" }
         }
     }
@@ -171,7 +204,7 @@ private struct ReadyToListenView: View {
 
     /// Why a glasses run could not start right now, with the way to fix it; nil when it can.
     private var glassesBlocker: Blocker? {
-        switch connection.registrationState {
+        switch registrationState {
         case .registered: break
         case .available:
             return Blocker(title: "Register with Meta AI", message: "The Meta AI app has to allow Featherguild on your glasses once. Registration opens Meta AI and comes back here.", action: AnyView(Button("Register") { Task { await connection.register() } }))
@@ -185,10 +218,10 @@ private struct ReadyToListenView: View {
         if connection.glassesAppUpdateRequired {
             return Blocker(title: "Update the glasses app", message: "The Meta app on the glasses is too old for this Featherguild build.", action: AnyView(Button("Update") { Task { await connection.openGlassesAppUpdate() } }))
         }
-        if connection.devices.isEmpty {
+        if devices.isEmpty {
             return Blocker(title: "No glasses linked", message: "Pair your Ray-Ban Display in the Meta AI app, or listen with the iPhone microphone for now.", action: AnyView(Button("Use iPhone microphone") { run.source = .phone }))
         }
-        guard let device = connection.connectedDevice else {
+        guard let device = connectedDevice else {
             return Blocker(title: "Glasses not connected", message: "Turn the glasses on and keep them near your iPhone with Bluetooth on. Listening starts once they connect.", action: AnyView(Button("Use iPhone microphone") { run.source = .phone }))
         }
         switch device.state.compatibility {
@@ -268,3 +301,21 @@ struct AudioSourceRow: View {
         .accessibilityHint(isEnabled ? "Choose the audio source" : "")
     }
 }
+
+#if DEBUG
+/// `-fakeGlasses unregistered|noneLinked|notConnected` (issue #119): the Listen page's glasses states without glasses.
+enum FakeGlasses: String {
+    case unregistered, noneLinked, notConnected
+
+    static var current: FakeGlasses? {
+        UserDefaults.standard.string(forKey: "fakeGlasses").flatMap(FakeGlasses.init(rawValue:))
+    }
+
+    var registrationState: RegistrationState { self == .unregistered ? .available : .registered }
+
+    var devices: [GlassesDeviceStatus] {
+        guard self == .notConnected else { return [] }
+        return [GlassesDeviceStatus(id: "fake-glasses", name: "Ray-Ban Display", type: .unknown, state: DeviceState(linkState: .disconnected))]
+    }
+}
+#endif

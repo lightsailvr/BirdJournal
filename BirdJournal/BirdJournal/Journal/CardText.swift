@@ -115,7 +115,7 @@ enum CardText {
     static func sceneArtLine(_ status: CardArt.SceneStatus) -> String? {
         switch status {
         case .pending: "Your encounter is saved. Artwork is on its way."
-        case .failed: "The artwork couldn't be painted this time."
+        case .failed: "Your encounter is saved. The artwork couldn't be painted this time."
         case .none, .ready: nil
         }
     }
@@ -124,7 +124,7 @@ enum CardText {
     static func photoArtLine(_ status: CardArt.PhotoStatus) -> String? {
         switch status {
         case .pending: "Your photo is being painted. Your encounter is saved."
-        case .failed: "Your photo couldn't be painted this time."
+        case .failed: "Your encounter is saved. Your photo couldn't be painted this time."
         case .preview: "Your photo art is ready to review."
         case .none, .approved: nil
         }
