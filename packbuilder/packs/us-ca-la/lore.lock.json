@@ -10752,7 +10752,7 @@
         ],
         "model": "claude-opus-5-5",
         "prompt_version": 5,
-        "review": "pending"
+        "review": "approved"
       }
     },
     "limosa-fedoa": {
