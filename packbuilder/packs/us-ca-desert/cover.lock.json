@@ -23,6 +23,10 @@
       "sha256": "b5c9952873bb8e3e4dc55989c892ef5e120515a57e99c9347aafb8a6e5ffea40"
     }
   ],
-  "review": "pending",
-  "chosen": null
+  "review": "approved",
+  "chosen": 2,
+  "thumbnail": {
+    "file": "cover-thumbnail.jpg",
+    "sha256": "f764bcea99459ba9d46f5b501ecc9b7b665476804813f30d8b3c1714031e72a2"
+  }
 }
