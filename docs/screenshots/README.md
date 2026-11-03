@@ -29,7 +29,7 @@ and its back with the Art section naming FLUX.3 Image Klein and the reference ph
 Both fronts show the Los Angeles v7 pack art labelled "AI illustration".
 
 `116/` is the evidence for issue #116 (Featherguild slice 1: the tokens and the story-first card), half size from an
-iPhone 17 Pro simulator (iOS 27.2) with `-inMemoryAlbum YES -seedJournal YES`, reduced to 256 colours. Each screen is
+iPhone 17 Pro simulator (iOS 27.2) on Los Angeles v10 (with the story titles) with `-inMemoryAlbum YES -seedJournal YES`, reduced to 256 colours. Each screen is
 in `dark`, `light` and `ax3` (light at accessibility extra large), numbered top to bottom where the screen scrolls:
 - `front-legendary`: the Black Phoebe, the seeded journal's Legendary card with the caption, from `-autoScreen card
   -autoCardSpecies "Sayornis nigricans"`
