@@ -3,10 +3,12 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// The Journal tab (issue #28): the collection's cards (issue #51), every sighting by day, or the distinct species,
-/// with search; a card opens the card, a sighting the sighting and a species its gallery (issue #53). Removals can be
-/// undone for a few seconds. The first time the collection has a card, a one-time "your collection so far" moment
-/// introduces it.
+/// The Collection tab (issue #28, renamed from Journal in #117): the collection's cards (issue #51), every sighting by
+/// day (the journal), or the distinct species, with search; a card opens the card, a sighting the sighting and a
+/// species its gallery (issue #53). The mode picker stays pinned under the title, and the mode, the search, the Cards
+/// sort and each mode's scroll offset live in the root's `CollectionState`, so coming back finds them as they were
+/// (design guide page 10). Removals can be undone for a few seconds. The first time the collection has a card, a
+/// one-time "your collection so far" moment introduces it.
 struct JournalView: View {
     enum Mode: String, CaseIterable, Identifiable {
         case cards = "Cards"
@@ -19,12 +21,19 @@ struct JournalView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Binding var mode: Mode
-    @State private var query = ""
+    @Bindable var state: CollectionState
     @State private var showsIntro = false
+    @State private var position = ScrollPosition(edge: .top)
+    /// The offset the scroll view reports, from the top of the content.
+    @State private var offset: CGFloat = 0
+    /// While a mode's saved offset is being restored, the scroll view's reports are not saved over it.
+    @State private var restoring = false
+    /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
+    /// meanwhile are not the birder's.
+    var isCovered = false
 
     private var filtered: [Sighting] {
-        sightings.filter { Journal.matches(query: query, commonName: library.commonName(for: $0), scientificName: $0.scientificName) }
+        sightings.filter { Journal.matches(query: state.query, commonName: library.commonName(for: $0), scientificName: $0.scientificName) }
     }
 
     var body: some View {
@@ -34,48 +43,65 @@ struct JournalView: View {
             } else {
                 let collection = library.collection(of: sightings)
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Picker("Show", selection: $mode) {
-                            ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.top, 2)
-                        Text(mode == .cards ? collection.summary : Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
+                    LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                        Text(state.mode == .cards ? collection.summary : Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
-                            .padding(.top, 12)
-                        if showsIntro {
-                            CollectionIntroCard(collection: collection) { showsIntro = false }
-                                .padding(.top, 16)
-                        }
-
-                        let shown = filtered
-                        if shown.isEmpty {
-                            ContentUnavailableView.search(text: query)
-                                .padding(.top, 40)
-                        } else {
-                            switch mode {
-                            case .cards: CardsGrid(sightings: shown, collection: collection)
-                            case .sightings: SightingsByDay(sightings: shown)
-                            case .species:
-                                if query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
-                                    SetProgressList(collection: collection)
-                                }
-                                SpeciesRows(entries: Journal.species(shown))
+                            .padding(.top, 2)
+                            .padding(.bottom, 10)
+                        Section {
+                            content(collection)
+                        } header: {
+                            Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
+                                ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
                             }
-                            Text(mode == .cards ? "Every add is a card. Your first of each species is Legendary." : "Your notes, one bird at a time.")
-                                .multilineTextAlignment(.center)
-                                .font(JournalFont.supporting)
-                                .foregroundStyle(Color.inkSecondary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.top, 28)
+                            .pickerStyle(.segmented)
+                            .padding(.vertical, 8)
+                            .background(Color.paper)
+                            .accessibilityIdentifier("collection-mode")
                         }
                     }
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.bottom, JournalLayout.sectionGap)
                 }
+                .scrollPosition($position)
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.contentOffset.y + geometry.contentInsets.top
+                } action: { _, newOffset in
+                    offset = newOffset
+                    if !isCovered, !restoring { state.offsets[state.mode] = max(newOffset, 0) }
+                }
+                .onChange(of: isCovered) { _, covered in
+                    guard !covered else { return }
+                    // Under a card's page the tab bar hides, and at the foot of the grid the offset is clamped to the
+                    // taller page; once the way back has settled, put back anything that moved meanwhile.
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(450))
+                        let saved = state.offsets[state.mode] ?? 0
+                        if !isCovered, abs(saved - offset) > 1 { restore(saved) }
+                    }
+                }
+                .onChange(of: state.sort) {
+                    // A new order starts from its first card.
+                    state.offsets[.cards] = 0
+                    restore(0)
+                }
                 .background(Color.paper)
-                .searchable(text: $query, prompt: "Search birds")
+                .searchable(text: $state.query, prompt: "Search birds")
+                .toolbar {
+                    if state.mode == .cards {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Menu {
+                                Picker("Sort", selection: $state.sort) {
+                                    ForEach(CardSort.allCases) { Text($0.rawValue).tag($0) }
+                                }
+                            } label: {
+                                Label("Sort", systemImage: "arrow.up.arrow.down")
+                            }
+                            .accessibilityValue(state.sort.rawValue)
+                        }
+                    }
+                }
             }
         }
         .navigationTitle("Collection")
@@ -95,6 +121,70 @@ struct JournalView: View {
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: edits.pendingRemoval)
+    }
+
+    @ViewBuilder
+    private func content(_ collection: CardCollection) -> some View {
+        if showsIntro {
+            CollectionIntroCard(collection: collection) { showsIntro = false }
+                .padding(.top, 8)
+        }
+        let shown = filtered
+        if shown.isEmpty {
+            ContentUnavailableView.search(text: state.query)
+                .padding(.top, 40)
+        } else {
+            switch state.mode {
+            case .cards:
+                if state.query.isEmpty, let progress = collection.progress.max(by: { $0.collected < $1.collected }) {
+                    NavigationLink(value: Route.set(id: progress.setID)) {
+                        SetProgressRow(progress: progress, detail: library.sets.first { $0.id == progress.setID }?.edition.name)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("cards-set-progress")
+                }
+                CardsGrid(sightings: shown, collection: collection, sort: state.sort)
+            case .sightings: SightingsByDay(sightings: shown)
+            case .species:
+                if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
+                    SetProgressList(collection: collection)
+                }
+                SpeciesRows(entries: Journal.species(shown))
+            }
+            Text(state.mode == .cards ? "Every add is a card. Your first of each species is Legendary." : "Your notes, one bird at a time.")
+                .multilineTextAlignment(.center)
+                .font(JournalFont.supporting)
+                .foregroundStyle(Color.inkSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 28)
+        }
+    }
+
+    /// Shows `mode` where it was left: the picker stays pinned, so each mode keeps its own place.
+    private func switchMode(to mode: Mode) {
+        guard mode != state.mode else { return }
+        let saved = state.offsets[mode] ?? 0
+        state.mode = mode
+        restore(saved)
+    }
+
+    /// Scrolls to `saved` once the shown mode has laid out, without saving the offsets passed on the way. The scroll
+    /// view's reported offset and `scrollTo(y:)` can differ by the collapsing title's height, so a second step corrects
+    /// by whatever the first one missed.
+    private func restore(_ saved: CGFloat) {
+        restoring = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(60))
+            position.scrollTo(y: saved)
+            try? await Task.sleep(for: .milliseconds(80))
+            let missed = saved - offset
+            if abs(missed) > 1 {
+                position.scrollTo(y: saved + missed)
+                try? await Task.sleep(for: .milliseconds(80))
+            }
+            restoring = false
+            state.offsets[state.mode] = max(offset, 0)
+        }
     }
 }
 
@@ -121,18 +211,19 @@ private struct EmptyJournal: View {
     }
 }
 
-/// The Cards view (issue #51): every card newest first, two columns, one at accessibility text sizes, each opening
+/// The Cards view (issue #51): every card newest first (or as `sort` orders them, issue #117), two columns, one at accessibility text sizes, each opening
 /// its card (issue #52). Legendary comes from the whole collection, so a search never changes which card is the first.
 private struct CardsGrid: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let sightings: [Sighting]
     let collection: CardCollection
+    var sort: CardSort = .newest
 
     var body: some View {
         let byIdentifier = Dictionary(sightings.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
         let columns = Array(repeating: GridItem(.flexible(), spacing: JournalLayout.rowGap, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2)
         LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
-            ForEach(collection.cards.compactMap { byIdentifier[$0.identifier] }) { sighting in
+            ForEach(sort.ordered(collection.cards, in: collection).compactMap { byIdentifier[$0.identifier] }) { sighting in
                 NavigationLink(value: Route.card(sighting.persistentModelID)) {
                     CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier), placement: collection.placement(of: sighting.identifier))
                 }

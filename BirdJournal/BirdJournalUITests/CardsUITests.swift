@@ -1,7 +1,7 @@
 import XCTest
 
 /// Issue #51: every add earns a card. Real taps on a phone run over the example soundscape: the first add of a species
-/// shows the Legendary reveal, Back to my collection lands on its Legendary card, a second add of the same species is
+/// shows the Legendary reveal (Keep listening first, issue #117), See it in my collection lands on its Legendary card, a second add of the same species is
 /// the quieter acknowledgment, and opening the card never replays the reveal. Skipped when the clip is not on disk
 /// (`scripts/download-clips.sh`).
 final class CardsUITests: XCTestCase {
@@ -25,13 +25,14 @@ final class CardsUITests: XCTestCase {
         XCTAssertTrue(review.waitForExistence(timeout: 60), "no species to review; screen: \(app.debugDescription.prefix(3000))")
         let name = String(review.label.dropFirst("Review ".count))
         review.tap()
-        let add = app.buttons["Add to journal"]
-        XCTAssertTrue(add.waitForExistence(timeout: 10), "no Add to journal; screen: \(app.debugDescription.prefix(3000))")
+        let add = app.buttons["Add to collection"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), "no Add to collection; screen: \(app.debugDescription.prefix(3000))")
         add.tap()
 
         let reveal = app.staticTexts["Your first \(name)"]
         XCTAssertTrue(reveal.waitForExistence(timeout: 10), "no Legendary reveal for \(name); screen: \(app.debugDescription.prefix(4000))")
-        let back = app.buttons["Back to my collection"]
+        XCTAssertTrue(app.buttons["Keep listening"].exists, "no Keep listening during a run; screen: \(app.debugDescription.prefix(4000))")
+        let back = app.buttons["See it in my collection"]
         XCTAssertTrue(back.exists)
         back.tap()
         XCTAssertFalse(reveal.waitForExistence(timeout: 2), "the reveal closed")

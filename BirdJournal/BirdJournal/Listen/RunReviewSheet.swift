@@ -57,7 +57,7 @@ struct RunReviewSheet: View {
             }
         }
         .legendaryReveal()
-        // Back to my collection from a reveal over this sheet: the review closes, as Done does, so the collection shows.
+        // See it in my collection from a reveal over this sheet: the review closes, as Done does, so the collection shows.
         .environment(\.openCollection) {
             dismiss()
             openCollection()

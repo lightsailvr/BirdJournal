@@ -5,7 +5,7 @@ import Observation
 import SwiftData
 
 /// The sightings one listening run has written to the album (issue #28), shared by the glasses' "Add to my list" and
-/// the phone's "Add to journal". Every add writes a new sighting, with its own time, place and photo, so the same bird
+/// the phone's "Add to collection". Every add writes a new sighting, with its own time, place and photo, so the same bird
 /// can be added as often as the birder likes (user's choice, 2026-10-10, replacing spec user story 33's one sighting
 /// per species and run); an addition can be undone, which removes that sighting.
 @MainActor

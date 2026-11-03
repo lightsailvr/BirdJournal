@@ -6,7 +6,7 @@ import SwiftData
 import Testing
 @testable import BirdJournal
 
-// Issue #28: the ledger the lens's "Add to my list" and the phone's "Add to journal" share.
+// Issue #28: the ledger the lens's "Add to my list" and the phone's "Add to collection" share.
 @Suite("Run sightings")
 @MainActor
 struct RunSightingsTests {

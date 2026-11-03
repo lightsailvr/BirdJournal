@@ -97,7 +97,7 @@ final class GlassesListeningSession {
     @ObservationIgnored private let wearables: any WearablesInterface
     @ObservationIgnored private let connection: GlassesConnection?
     @ObservationIgnored private let makeSource: (DeviceSession) -> any FrameKeepingAudioSource
-    /// The run's sightings, shared with the phone's "Add to journal" (issue #28) so both add each species once.
+    /// The run's sightings, shared with the phone's "Add to collection" (issue #28) so both add each species once.
     let sightings: RunSightings
     @ObservationIgnored private let policy: ReconnectPolicy
     @ObservationIgnored private var session: DeviceSession?

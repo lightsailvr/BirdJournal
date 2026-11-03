@@ -98,7 +98,7 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Collection tab on the Cards view: the Legendary reveal's "Back to my collection" (issue #51).
+    /// Opens the Collection tab at the top of the Cards view: the Legendary reveal's "See it in my collection" (issue #51).
     @Entry var openCollection: @MainActor () -> Void = {}
     /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
@@ -122,7 +122,7 @@ struct RootView: View {
     @Environment(PushCenter.self) private var pushes
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
-    @State private var journalMode: JournalView.Mode = .cards
+    @State private var collection = CollectionState()
     @State private var listenPath = NavigationPath()
     @State private var journalPath = NavigationPath()
     @State private var guidePath = NavigationPath()
@@ -141,7 +141,7 @@ struct RootView: View {
             }
             SwiftUI.Tab("Collection", systemImage: "leaf", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
-                    JournalView(mode: $journalMode)
+                    JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()
                 }
             }
@@ -170,7 +170,9 @@ struct RootView: View {
         // Over the tabs and their bars; the run review sheet carries its own, since an add there happens over it.
         .legendaryReveal()
         .environment(\.openCollection) {
-            journalMode = .cards
+            collection.mode = .cards
+            collection.query = ""
+            collection.offsets[.cards] = 0
             journalPath = NavigationPath()
             tab = .journal
         }
@@ -228,7 +230,7 @@ struct RootView: View {
         .task { await pushes.refreshPermission() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
-        .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
+        .modifier(DebugLaunch(tab: $tab, journalMode: $collection.mode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }
 }
