@@ -28,6 +28,7 @@ from packbuilder.writer import ChosenPhoto, SpeciesResult, WrittenPack, write_pa
 if TYPE_CHECKING:
     from packbuilder.factsheet import Fact
     from packbuilder.lore import LoreWriter
+    from packbuilder.covers import CoverPainter
     from packbuilder.pack_art import PackArtist
 
 log = logging.getLogger("packbuilder")
@@ -88,13 +89,15 @@ class BuildOptions:
 def build_pack(
     definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None,
     sounds: SoundPicker | None = None, card_set: dict | None = None, joined: dict[str, JoinedSpecies] | None = None, artist: PackArtist | None = None,
-    art_sheets: Path | None = None, lore: LoreWriter | None = None, lore_review: Path | None = None,
+    art_sheets: Path | None = None, lore: LoreWriter | None = None, lore_review: Path | None = None, cover_painter: CoverPainter | None = None,
 ) -> WrittenPack:
     """`card_set` is the pinned set definition (`sets.py`) the pack carries; None writes an empty set table. `joined` is
     the joined stats, threatened flags and type lines (`stats.join`); None leaves their tables empty. `artist` paints
     the pack art the lock lacks once the photos are chosen (issue #57) and draws its contact sheets into `art_sheets`;
     None builds a pack without art. Every species gets its fact sheet (issue #56), and `lore` writes the lore the lore
-    lock lacks from it and its review file into `lore_review`; None builds a pack without lore."""
+    lock lacks from it and its review file into `lore_review`; None builds a pack without lore. `cover_painter` paints
+    the set's cover the cover lock lacks (issue #114) and draws its contact sheet into `art_sheets` too; None builds a
+    pack without a cover."""
     raw_overrides = load_overrides(overrides_path)
     shared = shared_photo_ids(definition.species, metadata)
     if shared:
@@ -111,6 +114,11 @@ def build_pack(
         if art_sheets is not None:
             sheets = artist.sheets(results, art, art_sheets)
             log.info("pack art contact sheets: %s", ", ".join(str(sheet) for sheet in sheets))
+    cover = None
+    if cover_painter is not None:
+        cover = cover_painter.paint()
+        if art_sheets is not None and (sheet := cover_painter.sheet(art_sheets, (card_set or {}).get("edition", {}).get("name", ""))):
+            log.info("set cover contact sheet: %s", sheet)
     facts = fact_sheets(results, raw_overrides, joined, descriptions)
     written_lore = None
     if lore is not None:
@@ -123,7 +131,7 @@ def build_pack(
             log.info("lore review: %s", review_sheet(lore.lock, lore_review, definition.name, [r.entry.id for r in results]))
     built_at = options.built_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     written = write_pack(definition, results, options.out_dir, built_at=built_at, archive_path=options.archive_path, card_set=card_set, joined=joined, art=art,
-                         facts=facts, lore=written_lore)
+                         facts=facts, lore=written_lore, cover=cover)
     gaps = [r.entry.common_name for r in results if r.gap]
     undescribed = [r.entry.common_name for r in results if r.description is None]
     silent = [r.entry.common_name for r in results if r.sounds is not None and r.sounds.gap]
@@ -139,6 +147,8 @@ def build_pack(
         f"; art not approved yet: {len(unreviewed)} species" if unreviewed else "",
         f"; lore not approved yet: {len(unapproved_lore)} species" if unapproved_lore else "",
     )
+    if cover is not None and not cover.ships:
+        log.info("the set's cover is %s: the pack has none", cover.review)
     return written
 
 

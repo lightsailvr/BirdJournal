@@ -23,6 +23,9 @@ public struct SpeciesPack: Sendable, Hashable {
     public let species: [PackSpecies]
     /// The set the pack's species make (schema 4); nil for an older pack, whose set the index may still know.
     public let set: PackSet?
+    /// The set's cover (issue #114), an illustrated landscape for the Atlas and the Listen tab; nil for a pack built
+    /// before covers or whose cover isn't approved yet, which the app shows with its designed fallback.
+    public let cover: PackCover?
 
     public func species(scientificName: String) -> PackSpecies? {
         species.first { $0.scientificName == scientificName }
@@ -67,6 +70,11 @@ public struct SpeciesPack: Sendable, Hashable {
 
     public func artURL(for art: PackArt) -> URL {
         directory.appending(path: art.file)
+    }
+
+    /// The set's cover on disk, when the pack has one.
+    public var coverURL: URL? {
+        cover.map { directory.appending(path: $0.file) }
     }
 
     /// The pack's photos a painting was painted from, for its credit; empty for a painting from text.
@@ -210,6 +218,43 @@ public struct PackArt: Sendable, Hashable {
     }
 }
 
+/// The `cover` row (issue #114): the set's cover, an AI illustration of its edition theme painted from text alone (no
+/// photo, no place) and reviewed before the pack shipped. It is illustrative: never a map or evidence of where a bird
+/// was seen. The pack's LICENSE credits it under "Set cover".
+public struct PackCover: Sendable, Hashable {
+    /// Path relative to the pack directory: `cover.avif` (1536 × 864, 16:9; the app crops it from the middle).
+    public let file: String
+    /// The workflow and prompts versions, e.g. "set-cover@1 cover-prompts@1".
+    public let workflowVersion: String
+    /// The seed it was painted with, for the credit.
+    public let seed: Int
+    /// The model that painted it, e.g. "FLUX.3 Image Klein".
+    public let model: String
+
+    public init(file: String, workflowVersion: String, seed: Int, model: String) {
+        self.file = file
+        self.workflowVersion = workflowVersion
+        self.seed = seed
+        self.model = model
+    }
+}
+
+/// A set's cover where the phone has it (issue #114): `PackLibrary.cover(setID:)`.
+public enum SetCover: Sendable, Hashable {
+    /// The full cover of the pack on the phone, and its file.
+    case pack(PackCover, URL)
+    /// The index's thumbnail, before the pack is downloaded.
+    case thumbnail(PackIndexCover)
+
+    /// The credit for the credits screen, labelled as illustration: "AI illustration: FLUX.3 Image Klein, set-cover@1 cover-prompts@1, seed 42".
+    public var credit: String {
+        switch self {
+        case let .pack(cover, _): "AI illustration: \(cover.model), \(cover.workflowVersion), seed \(cover.seed)"
+        case let .thumbnail(cover): "AI illustration: \(cover.model), \(cover.workflowVersion), seed \(cover.seed)"
+        }
+    }
+}
+
 /// One fact-sheet entry (issue #56): a short sentence and where it comes from.
 public struct PackFact: Sendable, Hashable {
     public let rank: Int
@@ -349,7 +394,8 @@ extension SpeciesPack {
                 species[index].lore = lore[id]
             }
         }
-        return SpeciesPack(info: info, directory: directory, species: species, set: set)
+        let cover = info.schemaVersion >= 4 ? try readCover(database) : nil
+        return SpeciesPack(info: info, directory: directory, species: species, set: set, cover: cover)
     }
 
     /// The pack compiled into the package's `Packs` resource folder (the symlink to the repo's `packs/` directory).
@@ -428,6 +474,21 @@ extension SpeciesPack {
             return set
         }
         guard rows.count <= 1 else { throw PackError.malformedRow(table: "set_definition") }
+        return rows.first
+    }
+
+    /// The one `cover` row (issue #114); nil while the table is empty or, in a schema-4 pack built before covers,
+    /// absent.
+    private static func readCover(_ database: SQLiteDatabase) throws -> PackCover? {
+        let tables = try database.rows("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'cover'") { $0.text(0) }
+        guard !tables.isEmpty else { return nil }
+        let rows = try database.rows("SELECT file, workflow_version, seed, model FROM cover") { row in
+            guard let file = row.text(0), let workflow = row.text(1), let seed = row.int(2), let model = row.text(3) else {
+                throw PackError.malformedRow(table: "cover")
+            }
+            return PackCover(file: file, workflowVersion: workflow, seed: seed, model: model)
+        }
+        guard rows.count <= 1 else { throw PackError.malformedRow(table: "cover") }
         return rows.first
     }
 

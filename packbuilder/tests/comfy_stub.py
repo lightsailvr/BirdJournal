@@ -4,7 +4,9 @@ inputs, so that the fidelity gate passes for a faithful "painting":
 
 - the cut-out (`BiRefNetRMBG`) makes every pixel that is neither near white nor the photo's BACKGROUND opaque;
 - a painting with a reference returns that reference with its BACKGROUND made white, at the canvas size;
-- a painting from text alone returns a plain bird on white.
+- a painting from text alone returns a plain bird on white;
+- a set cover (#114, the `set-cover` workflow) returns a landscape of bands whose colours follow the seed, so each
+  candidate differs; `cover_drift` shifts them, as a repaint on another box might.
 
 `unfaithful` holds the output prefixes (workflows) whose paintings come back with the bird's colour channels swapped,
 which no colour fit repairs.
@@ -66,6 +68,7 @@ class StubComfy:
     jobs: list[Job] = field(default_factory=list)
     outputs: dict[str, bytes] = field(default_factory=dict)
     unfaithful: set[str] = field(default_factory=set)
+    cover_drift: int = 0
 
     @property
     def paintings(self) -> list[Job]:
@@ -82,6 +85,8 @@ class StubComfy:
             return png(cutout)
         canvas = job.node("canvas")["inputs"]
         size = (canvas["width"], canvas["height"])
+        if job.filename_prefix == "birdjournal/set-cover":
+            return png(landscape(size, job.seed + self.cover_drift))
         if job.kind == "text":
             return png(bird_on(Image.new("RGB", size, "white")))
         image = np.asarray(Image.open(io.BytesIO(job.images[0])).convert("RGB")).copy()
@@ -104,6 +109,17 @@ def bird_on(image: Image.Image, box=(0.3, 0.3, 0.7, 0.75), colours=((180, 60, 40
     draw = ImageDraw.Draw(image)
     draw.ellipse((x0, y0 + (y1 - y0) * 0.35, x1, y1), fill=colours[1])
     draw.ellipse((x0 + (x1 - x0) * 0.2, y0, x1 - (x1 - x0) * 0.2, y0 + (y1 - y0) * 0.5), fill=colours[0])
+    return image
+
+
+def landscape(size: tuple[int, int], seed: int) -> Image.Image:
+    """Sky, hills and a foreground in bands whose colours follow `seed`."""
+    image = Image.new("RGB", size, (200, 220, 235))
+    draw = ImageDraw.Draw(image)
+    width, height = size
+    tint = seed % 97
+    draw.rectangle((0, height * 0.4, width, height * 0.7), fill=(120 + tint, 140, 110))
+    draw.rectangle((0, height * 0.7, width, height), fill=(80, 110 + tint, 60))
     return image
 
 

@@ -13,7 +13,9 @@ still open. Since #54 the test pack carries a set (`CARD_SET`): a box around Tes
 it carries `JOINED`: stats and a type line for the phoebe, and the hummingbird as a known gap with a type line and the
 threatened flag from the hand list. Since #57 the Black Phoebe has approved pack art painted from its photo 1 and the
 hummingbird is an art gap. Since #56 both carry a fact sheet (`FACTS`), and the phoebe approved lore (`LORE`) whose
-sources are a dataset and its Wikipedia revision; the hummingbird has none.
+sources are a dataset and its Wikipedia revision; the hummingbird has none. Since #114 the test pack has an approved
+set cover (`COVER_SEED`, a 1536 x 864 landscape of bands); the Los Angeles form, like every pack built before covers,
+has none. Whichever of two branches that both change this script merges second reruns it for test-pack.zip.
 """
 
 from __future__ import annotations
@@ -29,6 +31,7 @@ from packbuilder.geometry import Box
 from packbuilder.scoring import CropScore
 from packbuilder.selection import ScoredPhoto
 from packbuilder.audio import ClipMaker
+from packbuilder.covers import COVER_SIZE, Cover
 from packbuilder.factsheet import Fact
 from packbuilder.lore import Lore
 from packbuilder.pack_art import Artwork
@@ -36,7 +39,7 @@ from packbuilder.sounds import ChosenSound, SoundCandidate, SoundResult
 from packbuilder.stats import JoinedSpecies, SpeciesStats, Threat, TypeLine
 from packbuilder.writer import ChosenPhoto, SpeciesResult, write_pack
 from PIL import Image
-from tests.comfy_stub import bird_on
+from tests.comfy_stub import bird_on, landscape
 from tests.conftest import make_candidate, synthetic_photo
 
 def definition(pack_id: str = "test-pack", version: int = 1) -> PackDefinition:
@@ -76,6 +79,10 @@ JOINED = {
         threat=Threat(threatened=True, iucn_category="LC", source="hand list: a test"),
     ),
 }
+
+
+COVER_SEED = 2471396767
+COVER_WORKFLOW = "set-cover@1 cover-prompts@1"
 
 
 REVISION = "https://en.wikipedia.org/w/index.php?title=Black_phoebe&oldid=1361402245"
@@ -148,7 +155,12 @@ def main(target: Path, pack_id: str = "test-pack", version: int = 1) -> None:
             }
         facts = FACTS if pack_id == "test-pack" else None
         lore = LORE if pack_id == "test-pack" else None
-        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set, joined=joined, art=art, facts=facts, lore=lore)
+        cover = None
+        if pack_id == "test-pack":
+            landscape(COVER_SIZE, COVER_SEED).save(work / "cover.png")
+            cover = Cover("approved", work / "cover.png", COVER_SEED, COVER_WORKFLOW, CARD_SET["edition"]["theme"])
+        write_pack(pack, results, work / "out", built_at="2026-09-27T00:00:00Z", archive_path=target, card_set=card_set, joined=joined, art=art, facts=facts, lore=lore,
+                   cover=cover)
         print(f"wrote {target} ({target.stat().st_size} bytes)")
     finally:
         shutil.rmtree(work, ignore_errors=True)

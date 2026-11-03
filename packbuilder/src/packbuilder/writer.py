@@ -1,5 +1,5 @@
 """Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, sounds/ clips, art/ (the reviewed pack art as AVIF, #57),
-LICENSE (every photo, sound, art and text credit), report.json (counts, chosen ids, and the photo, description, sound and
+cover.avif (the set's approved cover, #114), LICENSE (every photo, sound, art and text credit), report.json (counts, chosen ids, and the photo, description, sound and
 art gaps), and optionally a zip of it (the download format for other regions, DECISIONS.md "Species pack")."""
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from packbuilder.sounds import SoundResult
 from packbuilder.stats import DATASETS, LICENSE as STATS_LICENSE, JoinedSpecies
 
 if TYPE_CHECKING:
+    from packbuilder.covers import Cover
     from packbuilder.factsheet import Fact
     from packbuilder.lore import Lore
     from packbuilder.pack_art import Artwork
@@ -33,12 +34,17 @@ ART_QUALITY = 60
 """Pack art is 864 x 1152 (3:4) AVIF, which iOS decodes natively: at this quality a painting is about 120 KB, half a
 JPEG's at the same look, so 160 of them stay inside the bundled pack's 200 MB budget (#57)."""
 
+COVER_FILE = "cover.avif"
+"""The set's cover (#114), 1536 x 864 AVIF at ART_QUALITY."""
+
 SCHEMA_VERSION = 4
 """3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
 added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
 lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that
 fill them, so they need no further schema change. Issue #55 fills the stats, the threatened flag and the family, #57
-the pack art and #56 the fact sheet and the lore."""
+the pack art and #56 the fact sheet and the lore. Issue #114 added the `cover` table to schema 4 without a bump: a
+reader that doesn't know it never opens it, and a schema-4 pack written before it has no such table, which a reader
+takes as no cover."""
 
 SCHEMA = """
 CREATE TABLE pack (
@@ -149,13 +155,20 @@ CREATE TABLE family (
     group_word TEXT NOT NULL,
     family_word TEXT NOT NULL
 );
+CREATE TABLE cover (
+    file TEXT NOT NULL,
+    workflow_version TEXT NOT NULL,
+    seed INTEGER NOT NULL,
+    model TEXT NOT NULL
+);
 CREATE INDEX photo_species ON photo(species_id, rank);
 CREATE INDEX sound_species ON sound(species_id, rank);
 CREATE INDEX fact_species ON fact(species_id, rank);
 """
 """`set_definition` holds one row, the pack's set (`sets.py`) as the same JSON the index carries, so the two never
 disagree. Every other schema-4 table has one row per species once its ticket fills it (several per species for
-`fact`); `threatened` then has a row for every species, threatened or not, so an empty table still means "unknown"."""
+`fact`); `threatened` then has a row for every species, threatened or not, so an empty table still means "unknown".
+`cover` (#114) has at most one row, the set's approved cover; empty means the pack has none."""
 
 
 @dataclass(frozen=True)
@@ -219,13 +232,14 @@ class WrittenPack:
 def write_pack(
     definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None, card_set: dict | None = None,
     joined: dict[str, JoinedSpecies] | None = None, art: dict[str, Artwork] | None = None, facts: dict[str, list[Fact]] | None = None,
-    lore: dict[str, Lore] | None = None,
+    lore: dict[str, Lore] | None = None, cover: Cover | None = None,
 ) -> WrittenPack:
     """`joined` is the joined stats, threatened flags and type lines by scientific name (`stats.join`); None leaves
     their tables empty. `art` is each species' pack art by species id (`pack_art.py`); only approved paintings are
     written. None (a build without art) writes an empty `pack_art` table and no art gaps. `facts` is each species' fact
     sheet by species id (`factsheet.py`) and `lore` its lore (`lore.py`), of which only the approved is written; None
-    writes empty tables and, for the lore, no lore gaps."""
+    writes empty tables and, for the lore, no lore gaps. `cover` is the set's cover (`covers.py`), written only when
+approved; None (a build without art) writes an empty `cover` table."""
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -288,6 +302,12 @@ def write_pack(
             painting.convert("RGB").save(out_dir / file, "AVIF", quality=ART_QUALITY)
         art_rows.append((result.entry.id, file, json.dumps(list(artwork.photos)), artwork.workflow))
 
+    cover_row = None
+    if cover is not None and cover.ships:
+        with Image.open(cover.file) as painting:
+            painting.convert("RGB").save(out_dir / COVER_FILE, "AVIF", quality=ART_QUALITY)
+        cover_row = (COVER_FILE, cover.workflow, cover.seed, cover.model)
+
     fact_rows = [
         (result.entry.id, rank, fact.text, fact.source)
         for result in results for rank, fact in enumerate((facts or {}).get(result.entry.id, []))
@@ -297,7 +317,7 @@ def write_pack(
         for result in results if (written := (lore or {}).get(result.entry.id)) is not None and written.ships
     ]
 
-    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined), art=art, facts=bool(fact_rows), lore=lore)
+    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined), art=art, facts=bool(fact_rows), lore=lore, cover=cover)
     (out_dir / "LICENSE").write_text(license_text)
 
     database = out_dir / "pack.sqlite"
@@ -320,6 +340,8 @@ def write_pack(
         db.executemany("INSERT INTO pack_art VALUES (?, ?, ?, ?)", art_rows)
         db.executemany("INSERT INTO fact VALUES (?, ?, ?, ?)", fact_rows)
         db.executemany("INSERT INTO lore VALUES (?, ?, ?, ?)", lore_rows)
+        if cover_row is not None:
+            db.execute("INSERT INTO cover VALUES (?, ?, ?, ?)", cover_row)
         if card_set is not None:
             db.execute("INSERT INTO set_definition VALUES (?)", (json.dumps(card_set, ensure_ascii=False, separators=(",", ":")),))
         if joined:
@@ -327,7 +349,7 @@ def write_pack(
         db.commit()
         db.execute("VACUUM")
 
-    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined, art, lore), indent=2) + "\n")
+    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined, art, lore, cover), indent=2) + "\n")
 
     archive = None
     if archive_path is not None:
@@ -368,7 +390,7 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
 
 def _license_text(
     definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None, stats: bool = False, art: dict[str, Artwork] | None = None,
-    facts: bool = False, lore: dict[str, Lore] | None = None,
+    facts: bool = False, lore: dict[str, Lore] | None = None, cover: Cover | None = None,
 ) -> str:
     carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
     lines = [
@@ -410,6 +432,7 @@ def _license_text(
         for chosen in result.sounds.sounds if result.sounds else []:
             lines.append(f"  {result.entry.common_name}, {chosen.kind}: {chosen.candidate.credit_line}")
     lines += _art_credits(results, art) if art else []
+    lines += _cover_credits(cover) if cover is not None and cover.ships else []
     lines += ["", "Text credits", "============"]
     for result in results:
         if result.description and result.description.source:
@@ -444,6 +467,20 @@ def _art_credits(results: list[SpeciesResult], art: dict[str, Artwork]) -> list[
         else:
             lines.append(f"  {result.entry.common_name}: painted from a text description, no photo")
     return lines
+
+
+def _cover_credits(cover: Cover) -> list[str]:
+    """The set's cover (issue #114): an AI illustration of the edition theme, painted from text with no photo."""
+    return [
+        "",
+        "Set cover",
+        "=========",
+        "",
+        f"The set's cover ({COVER_FILE}) is an AI illustration, not a photograph: a landscape painted from the edition theme",
+        f"\"{cover.theme}\" alone, with no photo, by {cover.model} (Black Forest Labs, FLUX Kommunity License;",
+        f"https://bfl.ai/legal), workflow {cover.workflow}, seed {cover.seed}, and reviewed by hand. It is illustrative, not",
+        "a map, and not a record of where any bird was seen.",
+    ]
 
 
 def _set_credits(card_set: dict) -> list[str]:
@@ -496,7 +533,7 @@ def _one_of(licenses: set[str]) -> str:
 
 def _report(
     definition: PackDefinition, results: list[SpeciesResult], built_at: str, joined: dict[str, JoinedSpecies] | None = None, art: dict[str, Artwork] | None = None,
-    lore: dict[str, Lore] | None = None,
+    lore: dict[str, Lore] | None = None, cover: Cover | None = None,
 ) -> dict:
     report = {
         "pack": definition.id,
@@ -531,6 +568,9 @@ def _report(
         # and is no gap: a pack with any is not ready to publish.
         report["gaps"]["art"] = [r.entry.id for r in results if r.entry.id in art and art[r.entry.id].is_gap]
         report["unreviewed"] = {"art": [r.entry.id for r in results if r.entry.id not in art or not art[r.entry.id].settled]}
+    if cover is not None:
+        # The set's cover (#114): a pack whose cover isn't approved ships without one, and isn't ready to publish.
+        report["cover"] = {"review": cover.review, "ships": cover.ships, "seed": cover.seed}
     if lore is not None:
         # Lore not approved yet, or not written (no fact sheet, or every draft failed its checks): not shipped, and a
         # pack with any is not ready to publish.
