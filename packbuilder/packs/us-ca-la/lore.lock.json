@@ -1,5 +1,5 @@
 {
-  "comment": "Lore (issue #56), written by `packbuilder build` and `packbuilder lore-review`; read it in build/lore/<pack id>/review.md. Per species: the fact sheet the lore was written from (shipped with it), the sentences with the fact ids each rests on, the tagline, the model and prompt version, and the review: pending, approved (in the pack) or rejected (written again by the next build, with the reason).",
+  "comment": "Lore (issue #56), written by `packbuilder build` and `packbuilder lore-review`; read it in build/lore/<pack id>/review.md. Per species: the fact sheet the lore was written from (shipped with it), the sentences with the fact ids each rests on, the tagline, the model and prompt version, and the review: pending, approved (in the pack) or rejected (written again by the next build, with the reason). The story title (issue #113) has its own citations, model, prompt version and review.",
   "species": {
     "actitis-macularius": {
       "common_name": "Spotted Sandpiper",
@@ -130,7 +130,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "She Who Arrives First",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "aechmophorus-occidentalis": {
       "common_name": "Western Grebe",
@@ -263,7 +272,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Pattering Pair of the Lakes",
+        "facts": [
+          "f8",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "aeronautes-saxatalis": {
       "common_name": "White-throated Swift",
@@ -397,7 +416,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Flier Who Rarely Lands",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "agelaius-phoeniceus": {
       "common_name": "Red-winged Blackbird",
@@ -530,7 +558,18 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Whistler of Swamp and Ditch",
+        "facts": [
+          "f5",
+          "f6",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "aimophila-ruficeps": {
       "common_name": "Rufous-crowned Sparrow",
@@ -666,7 +705,17 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer at the Brushland's Edge",
+        "facts": [
+          "f4",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "alopochen-aegyptiaca": {
       "common_name": "Egyptian Goose",
@@ -800,7 +849,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Reed Builder of the Nile",
+        "facts": [
+          "f2",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "amazona-oratrix": {
       "common_name": "Yellow-headed Amazon",
@@ -935,7 +994,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Riverside Keeper of Hollows",
+        "facts": [
+          "f5",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "amazona-viridigenalis": {
       "common_name": "Red-crowned Amazon",
@@ -1063,7 +1132,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Echo of the Ringing Telephone",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "anarhynchus-nivosus": {
       "common_name": "Snowy Plover",
@@ -1204,7 +1282,16 @@
           "f12"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Digger of Many Nests",
+        "facts": [
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "anas-crecca": {
       "common_name": "Eurasian Teal",
@@ -1339,7 +1426,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Tail-Up Dabbler of Sheltered Wetlands",
+        "facts": [
+          "f6",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "anas-platyrhynchos": {
       "common_name": "Mallard",
@@ -1467,7 +1564,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "She Whose Quacks Grow Softer",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "anthus-rubescens": {
       "common_name": "American Pipit",
@@ -1609,7 +1715,18 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Meadow Floor",
+        "facts": [
+          "f5",
+          "f12",
+          "f14"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "aphelocoma-californica": {
       "common_name": "California Scrub Jay",
@@ -1743,7 +1860,18 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Feast of the Oak Woods",
+        "facts": [
+          "f5",
+          "f7",
+          "f11"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "aratinga-nenday": {
       "common_name": "Nanday Parakeet",
@@ -1880,7 +2008,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Seeker of Tree Hollows",
+        "facts": [
+          "f3",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "archilochus-alexandri": {
       "common_name": "Black-chinned Hummingbird",
@@ -2015,7 +2153,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Pendulum Dancer of the West",
+        "facts": [
+          "f4",
+          "f1"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "ardea-alba": {
       "common_name": "Great Egret",
@@ -2144,7 +2292,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Suitor Who Builds First",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "ardea-herodias": {
       "common_name": "Great Blue Heron",
@@ -2271,7 +2428,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Fisher of the Shallows",
+        "facts": [
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "astur-cooperii": {
       "common_name": "Cooper's Hawk",
@@ -2410,7 +2577,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hunter of the Forest Edge",
+        "facts": [
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "aythya-collaris": {
       "common_name": "Ring-necked Duck",
@@ -2544,7 +2720,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Pondweed Diver",
+        "facts": [
+          "f1",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "baeolophus-inornatus": {
       "common_name": "Oak Titmouse",
@@ -2670,7 +2856,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Leafy Hollow",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "bombycilla-cedrorum": {
       "common_name": "Cedar Waxwing",
@@ -2802,7 +2997,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Petal Passers",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "branta-canadensis": {
       "common_name": "Canada Goose",
@@ -2936,7 +3140,16 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Voice of the Changing Seasons",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "brotogeris-chiriri": {
       "common_name": "Yellow-chevroned Parakeet",
@@ -3071,7 +3284,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Seed-Keeper of the Dry Spells",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "bubo-virginianus": {
       "common_name": "Great Horned Owl",
@@ -3204,7 +3426,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hunter of the Skunk",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "bucephala-albeola": {
       "common_name": "Bufflehead",
@@ -3338,7 +3569,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Lodger in the Flicker's Hollow",
+        "facts": [
+          "f2",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "buteo-jamaicensis": {
       "common_name": "Red-tailed Hawk",
@@ -3465,7 +3706,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Guardian of the Long-Held Ground",
+        "facts": [
+          "f8",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "buteo-lineatus": {
       "common_name": "Red-shouldered Hawk",
@@ -3595,7 +3846,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Watcher Over the Woodlands",
+        "facts": [
+          "f2",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "butorides-virescens": {
       "common_name": "Green Heron",
@@ -3723,7 +3984,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hunter of Day and Night",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "cairina-moschata": {
       "common_name": "Muscovy Duck",
@@ -3857,7 +4127,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Hollow Tree",
+        "facts": [
+          "f6",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "calidris-alba": {
       "common_name": "Sanderling",
@@ -3992,7 +4272,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Seeker of the Buried Feast",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "calidris-mauri": {
       "common_name": "Western Sandpiper",
@@ -4120,7 +4409,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Grazer of the Tidal Mud",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "calidris-minutilla": {
       "common_name": "Least Sandpiper",
@@ -4254,7 +4552,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Tiniest Shore Traveler",
+        "facts": [
+          "f1",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "callipepla-californica": {
       "common_name": "California Quail",
@@ -4384,7 +4692,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Gatherer of Small Flocks",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "calypte-anna": {
       "common_name": "Anna's Hummingbird",
@@ -4513,7 +4830,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Thief of the Spider's Web",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "campylorhynchus-brunneicapillus": {
       "common_name": "Cactus Wren",
@@ -4648,7 +4974,17 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Rasping Thorn-Nester",
+        "facts": [
+          "f5",
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "cardellina-pusilla": {
       "common_name": "Wilson's Warbler",
@@ -4778,7 +5114,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Chatterer of the Wet Thickets",
+        "facts": [
+          "f4",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "cathartes-aura": {
       "common_name": "Turkey Vulture",
@@ -4912,7 +5258,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Feaster Who Never Kills",
+        "facts": [
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "catharus-guttatus": {
       "common_name": "Hermit Thrush",
@@ -5042,7 +5398,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Low Nest, High Song",
+        "facts": [
+          "f3",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "catharus-ustulatus": {
       "common_name": "Swainson's Thrush",
@@ -5176,7 +5542,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Berry Hunter of Conifer Woods",
+        "facts": [
+          "f3",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "catherpes-mexicanus": {
       "common_name": "Canyon Wren",
@@ -5310,7 +5686,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Thief of the Spiderwebs",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "chamaea-fasciata": {
       "common_name": "Wrentit",
@@ -5447,7 +5832,17 @@
           "f1"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Hidden Voice of Chaparral",
+        "facts": [
+          "f4",
+          "f1"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "charadrius-vociferus": {
       "common_name": "Killdeer",
@@ -5584,7 +5979,16 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Builder of Pretend Nests",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "chondestes-grammacus": {
       "common_name": "Lark Sparrow",
@@ -5718,7 +6122,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Scrawled Eggs",
+        "facts": [
+          "f3",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "colaptes-auratus": {
       "common_name": "Northern Flicker",
@@ -5848,7 +6262,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Ground-Feeding Drummer",
+        "facts": [
+          "f2",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "columba-livia": {
       "common_name": "Rock Dove",
@@ -5983,7 +6407,16 @@
           "f12"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Diver of the Air",
+        "facts": [
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "contopus-sordidulus": {
       "common_name": "Western Wood Pewee",
@@ -6102,7 +6535,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Watcher Halfway Up the Tree",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "corthylio-calendula": {
       "common_name": "Ruby-crowned Kinglet",
@@ -6233,7 +6675,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Hidden Cup",
+        "facts": [
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "corvus-brachyrhynchos": {
       "common_name": "American Crow",
@@ -6373,7 +6825,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Helper Who Stays Home",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "corvus-corax": {
       "common_name": "Northern Raven",
@@ -6504,7 +6965,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Partners of the Sea Cliff",
+        "facts": [
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "cyanocitta-stelleri": {
       "common_name": "Steller's Jay",
@@ -6643,7 +7114,16 @@
           "f12"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Pump-Handle Caller",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "dryobates-nuttallii": {
       "common_name": "Nuttall's Woodpecker",
@@ -6781,7 +7261,16 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Tapper of the Oak Cracks",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "dryobates-pubescens": {
       "common_name": "Downy Woodpecker",
@@ -6919,7 +7408,17 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Little Carver of Dead Wood",
+        "facts": [
+          "f1",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "egretta-thula": {
       "common_name": "Snowy Egret",
@@ -7055,7 +7554,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Shuffler of the Shallows",
+        "facts": [
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "empidonax-difficilis": {
       "common_name": "Western Flycatcher",
@@ -7180,7 +7688,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Mosquito Warden of the Woods",
+        "facts": [
+          "f2",
+          "f10"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "euphagus-cyanocephalus": {
       "common_name": "Brewer's Blackbird",
@@ -7312,7 +7830,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Diver Against the Hawk",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "falco-peregrinus": {
       "common_name": "Peregrine Falcon",
@@ -7441,7 +7968,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Pigeon Hunter of the City",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "falco-sparverius": {
       "common_name": "American Kestrel",
@@ -7574,7 +8110,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Watcher from the Perch",
+        "facts": [
+          "f2",
+          "f14"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "fulica-americana": {
       "common_name": "American Coot",
@@ -7708,7 +8254,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Drill Team of the Marsh",
+        "facts": [
+          "f8",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "geococcyx-californianus": {
       "common_name": "Greater Roadrunner",
@@ -7848,7 +8404,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Swift Chaser of Rattlesnakes",
+        "facts": [
+          "f2",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "geothlypis-trichas": {
       "common_name": "Common Yellowthroat",
@@ -7983,7 +8549,17 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Twichety Singer of Wetlands",
+        "facts": [
+          "f4",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "haematopus-bachmani": {
       "common_name": "Black Oystercatcher",
@@ -8113,7 +8689,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Dodger of the Crashing Surf",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "haemorhous-mexicanus": {
       "common_name": "House Finch",
@@ -8238,7 +8823,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Painted by Its Berries",
+        "facts": [
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "haliaeetus-leucocephalus": {
       "common_name": "Bald Eagle",
@@ -8371,7 +8965,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Guardian of the High Nest",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "himantopus-mexicanus": {
       "common_name": "Black-necked Stilt",
@@ -8493,7 +9096,16 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Wardens of the Shared Border",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "hirundo-rustica": {
       "common_name": "Barn Swallow",
@@ -8624,7 +9236,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Lodger in Our Buildings",
+        "facts": [
+          "f2",
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "hydroprogne-caspia": {
       "common_name": "Caspian Tern",
@@ -8758,7 +9380,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Croaker of the Wide Lakes",
+        "facts": [
+          "f4",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "icterus-bullockii": {
       "common_name": "Bullock's Oriole",
@@ -8893,7 +9525,17 @@
           "f15"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Weaver of the Hanging Basket",
+        "facts": [
+          "f3",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "icterus-cucullatus": {
       "common_name": "Hooded Oriole",
@@ -9016,7 +9658,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Pouch Beneath the Leaf",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "junco-hyemalis": {
       "common_name": "Dark-eyed Junco",
@@ -9145,7 +9796,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Guest of the Winter Feeder",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "lanius-ludovicianus": {
       "common_name": "Loggerhead Shrike",
@@ -9279,7 +9939,17 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Thorn and Wire Hunter",
+        "facts": [
+          "f2",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "larus-californicus": {
       "common_name": "California Gull",
@@ -9402,7 +10072,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Ally Against the Crickets",
+        "facts": [
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "larus-delawarensis": {
       "common_name": "Ring-billed Gull",
@@ -9524,7 +10203,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Nester on the Factory Roofs",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "larus-heermanni": {
       "common_name": "Heermann's Gull",
@@ -9645,7 +10333,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "When the Islands Became Rooftops",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "larus-occidentalis": {
       "common_name": "Western Gull",
@@ -9776,7 +10473,18 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Fierce Keeper of the Rocks",
+        "facts": [
+          "f2",
+          "f6",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "larus-smithsonianus": {
       "common_name": "American Herring Gull",
@@ -9902,7 +10610,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Songless Crier of the Cliffs",
+        "facts": [
+          "f5",
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "leiothlypis-celata": {
       "common_name": "Orange-crowned Warbler",
@@ -10026,7 +10744,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Hidden Cup",
+        "facts": [
+          "f3",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "limosa-fedoa": {
       "common_name": "Marbled Godwit",
@@ -10160,7 +10888,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Supper at Low Tide",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "lonchura-punctulata": {
       "common_name": "Scaly-breasted Munia",
@@ -10293,7 +11030,18 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Whisperer of the Paddy Fields",
+        "facts": [
+          "f2",
+          "f4",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "lophodytes-cucullatus": {
       "common_name": "Hooded Merganser",
@@ -10426,7 +11174,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Seeker of the Dead-Tree Hollow",
+        "facts": [
+          "f5",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "mareca-americana": {
       "common_name": "American Wigeon",
@@ -10556,7 +11314,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Noisy Grazer of Clover",
+        "facts": [
+          "f7",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "mareca-strepera": {
       "common_name": "Gadwall",
@@ -10696,7 +11464,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Quiet Thief of Coots",
+        "facts": [
+          "f2",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "megaceryle-alcyon": {
       "common_name": "Belted Kingfisher",
@@ -10829,7 +11607,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Headfirst Diver of the Streams",
+        "facts": [
+          "f2",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "megascops-kennicottii": {
       "common_name": "Western Screech Owl",
@@ -10966,7 +11754,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer of Woodland Duets",
+        "facts": [
+          "f2",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "melanerpes-formicivorus": {
       "common_name": "Acorn Woodpecker",
@@ -11099,7 +11897,18 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Carver of the Crowded Hollow",
+        "facts": [
+          "f3",
+          "f4",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "melanitta-perspicillata": {
       "common_name": "Surf Scoter",
@@ -11233,7 +12042,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Faithful Nester Near Spruce",
+        "facts": [
+          "f4",
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "melospiza-lincolnii": {
       "common_name": "Lincoln's Sparrow",
@@ -11365,7 +12184,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Sweet Voice Under Thick Cover",
+        "facts": [
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "melospiza-melodia": {
       "common_name": "Song Sparrow",
@@ -11492,7 +12321,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer of the Salt Marsh",
+        "facts": [
+          "f3",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "melozone-crissalis": {
       "common_name": "California Towhee",
@@ -11621,7 +12460,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Seed-Stripper of the Scrub",
+        "facts": [
+          "f7",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "mimus-polyglottos": {
       "common_name": "Northern Mockingbird",
@@ -11758,7 +12607,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Echo of the Mowed Lawns",
+        "facts": [
+          "f2",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "molothrus-ater": {
       "common_name": "Brown-headed Cowbird",
@@ -11891,7 +12750,16 @@
           "f15"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Borrower of Cradles",
+        "facts": [
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "myiarchus-cinerascens": {
       "common_name": "Ash-throated Flycatcher",
@@ -12024,7 +12892,16 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Voice That Says Kabrick",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "nannopterum-auritum": {
       "common_name": "Double-crested Cormorant",
@@ -12146,7 +13023,16 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Wings Spread Wide to Dry",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "numenius-hudsonicus": {
       "common_name": "Hudsonian Whimbrel",
@@ -12266,7 +13152,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Whistler of the Bare Scrape",
+        "facts": [
+          "f6",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "nyctanassa-violacea": {
       "common_name": "Yellow-crowned Night Heron",
@@ -12392,7 +13288,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hunter of Fresh and Salt",
+        "facts": [
+          "f4",
+          "f11"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "nycticorax-nycticorax": {
       "common_name": "Black-crowned Night Heron",
@@ -12526,7 +13432,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Greeter with Slender White Plumes",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "oxyura-jamaicensis": {
       "common_name": "Ruddy Duck",
@@ -12660,7 +13575,17 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Bubbling Suitor",
+        "facts": [
+          "f7",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pandion-haliaetus": {
       "common_name": "Osprey",
@@ -12784,7 +13709,17 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Fisher of the Driftwood Heap",
+        "facts": [
+          "f2",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "passer-domesticus": {
       "common_name": "House Sparrow",
@@ -12912,7 +13847,17 @@
           "f1"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Caller of the Clustered Nests",
+        "facts": [
+          "f3",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "passerculus-sandwichensis": {
       "common_name": "Savannah Sparrow",
@@ -13049,7 +13994,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Lone One of the Grass",
+        "facts": [
+          "f1",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "passerina-amoena": {
       "common_name": "Lazuli Bunting",
@@ -13179,7 +14134,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hidden Singer of the Treetops",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "patagioenas-fasciata": {
       "common_name": "Band-tailed Pigeon",
@@ -13316,7 +14280,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Low Caller of the Forest",
+        "facts": [
+          "f2",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pavo-cristatus": {
       "common_name": "Indian Peafowl",
@@ -13446,7 +14420,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Grain-Picker Who Hunts Snakes",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pelecanus-erythrorhynchos": {
       "common_name": "American White Pelican",
@@ -13579,7 +14562,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Horn-Shedder of Island Lakes",
+        "facts": [
+          "f5",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pelecanus-occidentalis": {
       "common_name": "Brown Pelican",
@@ -13711,7 +14704,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Plunger with the Draining Pouch",
+        "facts": [
+          "f1",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "petrochelidon-pyrrhonota": {
       "common_name": "American Cliff Swallow",
@@ -13846,7 +14849,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Knower of One Small Voice",
+        "facts": [
+          "f5",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "phainopepla-nitens": {
       "common_name": "Phainopepla",
@@ -13978,7 +14991,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of Borrowed Calls",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "phalaenoptilus-nuttallii": {
       "common_name": "Common Poorwill",
@@ -14112,7 +15134,18 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Night Leaper of Stony Slopes",
+        "facts": [
+          "f1",
+          "f5",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pheucticus-melanocephalus": {
       "common_name": "Black-headed Grosbeak",
@@ -14245,7 +15278,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Summer Spider Hunter",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pipilo-maculatus": {
       "common_name": "Spotted Towhee",
@@ -14382,7 +15424,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hunter of the Fallen Leaves",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "piranga-ludoviciana": {
       "common_name": "Western Tanager",
@@ -14509,7 +15560,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Builder of the Flimsy Cup",
+        "facts": [
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "plegadis-chihi": {
       "common_name": "White-faced Ibis",
@@ -14645,7 +15705,17 @@
           "f11"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Weaver of the Reed Nest",
+        "facts": [
+          "f6",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pluvialis-squatarola": {
       "common_name": "Grey Plover",
@@ -14785,7 +15855,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hunter of the Tidal Flats",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "podiceps-nigricollis": {
       "common_name": "Black-necked Grebe",
@@ -14915,7 +15994,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Anchored Nest",
+        "facts": [
+          "f4",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "podilymbus-podiceps": {
       "common_name": "Pied-billed Grebe",
@@ -15048,7 +16137,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Hidden Watcher of the Pond",
+        "facts": [
+          "f1",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "poecile-gambeli": {
       "common_name": "Mountain Chickadee",
@@ -15177,7 +16276,16 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Seed Hammerer Beneath the Branches",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "polioptila-caerulea": {
       "common_name": "Blue-grey Gnatcatcher",
@@ -15308,7 +16416,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Small Father, Busy Nest",
+        "facts": [
+          "f1",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "polioptila-californica": {
       "common_name": "California Gnatcatcher",
@@ -15443,7 +16561,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Spider Hunter of the Sage",
+        "facts": [
+          "f1",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "psaltriparus-minimus": {
       "common_name": "American Bushtit",
@@ -15583,7 +16711,18 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Sleepers in the Hanging House",
+        "facts": [
+          "f7",
+          "f15",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "psittacara-mitratus": {
       "common_name": "Mitred Parakeet",
@@ -15711,7 +16850,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Sentry of the Screeching Skies",
+        "facts": [
+          "f4",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pycnonotus-jocosus": {
       "common_name": "Red-whiskered Bulbul",
@@ -15840,7 +16989,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Greeter in Plain Sight",
+        "facts": [
+          "f2",
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "pyrocephalus-rubinus": {
       "common_name": "Scarlet Flycatcher",
@@ -15972,7 +17131,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Song That Claims Ground",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "quiscalus-mexicanus": {
       "common_name": "Great-tailed Grackle",
@@ -16099,7 +17267,16 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Treetop Weaver",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "sayornis-nigricans": {
       "common_name": "Black Phoebe",
@@ -16240,7 +17417,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Mason Beneath the Bridge",
+        "facts": [
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "sayornis-saya": {
       "common_name": "Say's Phoebe",
@@ -16381,7 +17567,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Skimmer of the Dry West",
+        "facts": [
+          "f3",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "selasphorus-sasin": {
       "common_name": "Allen's Hummingbird",
@@ -16510,7 +17706,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Coastal Meadows",
+        "facts": [
+          "f2",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "setophaga-aestiva": {
       "common_name": "American Yellow Warbler",
@@ -16636,7 +17842,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Sweet Singer, Fierce Defender",
+        "facts": [
+          "f4",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "setophaga-coronata": {
       "common_name": "Myrtle Warbler",
@@ -16773,7 +17989,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Loop-Flying Forager",
+        "facts": [
+          "f6",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "setophaga-nigrescens": {
       "common_name": "Black-throated Grey Warbler",
@@ -16906,7 +18132,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Buzzing Voice of the Junipers",
+        "facts": [
+          "f5",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "setophaga-townsendi": {
       "common_name": "Townsend's Warbler",
@@ -17021,7 +18257,18 @@
           "f1"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Cup-Maker of the Forest Trees",
+        "facts": [
+          "f12",
+          "f9",
+          "f11"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "sialia-mexicana": {
       "common_name": "Western Bluebird",
@@ -17150,7 +18397,17 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Cheer-Singer of the Hollows",
+        "facts": [
+          "f3",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "sitta-carolinensis": {
       "common_name": "White-breasted Nuthatch",
@@ -17285,7 +18542,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Partners of the Woodland Patch",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "spatula-clypeata": {
       "common_name": "Northern Shoveler",
@@ -17418,7 +18684,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Sifter With Hidden Blue",
+        "facts": [
+          "f2",
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "spatula-cyanoptera": {
       "common_name": "Cinnamon Teal",
@@ -17554,7 +18830,17 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Slow Grazers of the Marsh",
+        "facts": [
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "spatula-discors": {
       "common_name": "Blue-winged Teal",
@@ -17686,7 +18972,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Suitor of the Spring Flight",
+        "facts": [
+          "f7",
+          "f13"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "spinus-psaltria": {
       "common_name": "Lesser Goldfinch",
@@ -17820,7 +19116,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer of Borrowed Songs",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "spinus-tristis": {
       "common_name": "American Goldfinch",
@@ -17963,7 +19268,17 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Seed Plucker of the Thistles",
+        "facts": [
+          "f7",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "spizella-passerina": {
       "common_name": "Chipping Sparrow",
@@ -18098,7 +19413,17 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Caller in the Night Sky",
+        "facts": [
+          "f2",
+          "f13"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "stelgidopteryx-serripennis": {
       "common_name": "Northern Rough-winged Swallow",
@@ -18226,7 +19551,17 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Low Flier Over Water",
+        "facts": [
+          "f2",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "streptopelia-decaocto": {
       "common_name": "Eurasian Collared Dove",
@@ -18359,7 +19694,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Night Mother, Day Father",
+        "facts": [
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "sturnella-neglecta": {
       "common_name": "Western Meadowlark",
@@ -18493,7 +19837,18 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer of the Dry Grass",
+        "facts": [
+          "f6",
+          "f7",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "sturnus-vulgaris": {
       "common_name": "Common Starling",
@@ -18620,7 +19975,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Herbs for a Noisy Suitor",
+        "facts": [
+          "f4",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "thalasseus-elegans": {
       "common_name": "Elegant Tern",
@@ -18751,7 +20116,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Sea's Straight Diver",
+        "facts": [
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "thalasseus-maximus": {
       "common_name": "Royal Tern",
@@ -18888,7 +20263,18 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Lagoon Hunter of Lonely Beaches",
+        "facts": [
+          "f2",
+          "f3",
+          "f11"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "thryomanes-bewickii": {
       "common_name": "Bewick's Wren",
@@ -19021,7 +20407,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer of the Neighbors' Tune",
+        "facts": [
+          "f5",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "toxostoma-redivivum": {
       "common_name": "California Thrasher",
@@ -19152,7 +20548,18 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Mimic Beneath the Brush",
+        "facts": [
+          "f4",
+          "f2",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "tringa-melanoleuca": {
       "common_name": "Greater Yellowlegs",
@@ -19277,7 +20684,17 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Clear Voice of the Bogs",
+        "facts": [
+          "f4",
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "tringa-semipalmata": {
       "common_name": "Willet",
@@ -19408,7 +20825,16 @@
           "f8"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer of Its Own Name",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "troglodytes-aedon": {
       "common_name": "Northern House Wren",
@@ -19497,7 +20923,16 @@
           "f6"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Tenant of Old Nests",
+        "facts": [
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "turdus-migratorius": {
       "common_name": "American Robin",
@@ -19624,7 +21059,16 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Made to Please the People",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "tyrannus-verticalis": {
       "common_name": "Western Kingbird",
@@ -19758,7 +21202,16 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Hidden Crimson",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "tyrannus-vociferans": {
       "common_name": "Cassin's Kingbird",
@@ -19901,7 +21354,16 @@
           "f1"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Builder on the Level Limb",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "tyto-furcata": {
       "common_name": "American Barn Owl",
@@ -20019,7 +21481,16 @@
           "f2"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Listener in Darkness",
+        "facts": [
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "urile-penicillatus": {
       "common_name": "Brandt's Cormorant",
@@ -20148,7 +21619,17 @@
           "f1"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Blue Throat of the Lagoons",
+        "facts": [
+          "f8",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "vidua-macroura": {
       "common_name": "Pin-tailed Whydah",
@@ -20281,7 +21762,18 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Guest Who Breaks Nothing",
+        "facts": [
+          "f2",
+          "f3",
+          "f15"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "vireo-bellii": {
       "common_name": "Bell's Vireo",
@@ -20422,7 +21914,17 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Waterside Cradle-Hanger",
+        "facts": [
+          "f2",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "vireo-gilvus": {
       "common_name": "Warbling Vireo",
@@ -20547,7 +22049,17 @@
           "f5"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Singer in the Hanging Cup",
+        "facts": [
+          "f4",
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "vireo-huttoni": {
       "common_name": "Hutton's Vireo",
@@ -20682,7 +22194,16 @@
           "f7"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Hidden Year-Round Singer",
+        "facts": [
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "zenaida-macroura": {
       "common_name": "Mourning Dove",
@@ -20810,7 +22331,17 @@
           "f4"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Swelling Throat, Sorrowful Song",
+        "facts": [
+          "f5",
+          "f6"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "zonotrichia-atricapilla": {
       "common_name": "Golden-crowned Sparrow",
@@ -20944,7 +22475,17 @@
           "f1"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "The Miners' Weary Whistler",
+        "facts": [
+          "f4",
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     },
     "zonotrichia-leucophrys": {
       "common_name": "White-crowned Sparrow",
@@ -21079,7 +22620,18 @@
           "f3"
         ]
       },
-      "review": "approved"
+      "review": "approved",
+      "title": {
+        "text": "Dweller in the Northern Brush",
+        "facts": [
+          "f4",
+          "f6",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "pending"
+      }
     }
   }
 }

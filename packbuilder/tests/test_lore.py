@@ -413,20 +413,25 @@ def titled(text, facts=("f4",)):
     return {"title": {"text": text, "facts": list(facts)}}
 
 
+def untitled(text):
+    """A lore lock's text with its titles taken out, written as `LoreLock` writes it."""
+    document = json.loads(text)
+    for entry in document["species"].values():
+        entry.pop("title", None)
+    return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+
+
 def la_lock(tmp_path):
-    """A copy of the committed Los Angeles lore lock (every entry approved under prompts v4, none titled yet)."""
-    (tmp_path / "lore.lock.json").write_bytes((LA / "lore.lock.json").read_bytes())
+    """A copy of the committed Los Angeles lore lock as it was before titles: every entry approved under prompts v4,
+    its titles (written 2026-11-02, see `test_the_committed_los_angeles_titles_pass_the_checks`) taken out."""
+    (tmp_path / "lore.lock.json").write_text(untitled((LA / "lore.lock.json").read_text()))
     lock = LoreLock.load(tmp_path / "lore.lock.json")
     return lock, {species_id: [Fact.from_dict(f) for f in lock.species[species_id]["facts"]] for species_id, _, _ in LA_SPECIES}
 
 
 def without_titles(path):
-    """The lock as the committed Los Angeles lock's text: its titles taken out and its comment from before them."""
-    document = json.loads(Path(path).read_text())
-    for entry in document["species"].values():
-        entry.pop("title", None)
-    document["comment"] = json.loads((LA / "lore.lock.json").read_text())["comment"]
-    return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+    """The lock's text with its titles taken out: what must stay byte for byte when titles are written or reviewed."""
+    return untitled(Path(path).read_text())
 
 
 def test_a_title_is_two_to_five_words_citing_facts_on_the_sheet_and_holds_no_number():
@@ -486,7 +491,7 @@ def test_new_lore_comes_with_its_title_and_a_bad_title_sends_the_draft_back(tmp_
 def test_titles_for_approved_lore_leave_it_byte_for_byte(tmp_path):
     lock, sheets = la_lock(tmp_path)
     before = without_titles(tmp_path / "lore.lock.json")
-    assert before == (LA / "lore.lock.json").read_text(), "the committed lock, byte for byte"
+    assert before == (tmp_path / "lore.lock.json").read_text(), "the untitled copy, byte for byte"
     client = StubClient(titled("The Waterside Mason"), titled("The Orchard Singer", ("f6",)), titled("The White Architect", ("f3",)))
     lore_writer = LoreWriter(lock=lock, client_factory=lambda: client, sleep=lambda _: None)
     written = lore_writer.write(LA_SPECIES, sheets)
@@ -507,6 +512,20 @@ def test_titles_for_approved_lore_leave_it_byte_for_byte(tmp_path):
     titled_lock = (tmp_path / "lore.lock.json").read_bytes()
     again.write(LA_SPECIES, sheets)
     assert again.requests == 0 and (tmp_path / "lore.lock.json").read_bytes() == titled_lock, "a titled lock is warm"
+
+
+def test_the_committed_los_angeles_titles_pass_the_checks():
+    """Every Los Angeles species has a title (written 2026-11-02) that passes the build's checks against its own
+    sheet, and the lore under it is still the approved prompts-v4 lore, so a build takes the lock warm."""
+    names = {entry["common_name"]: entry["scientific_name"] for entry in json.loads((LA / "pack.json").read_text())["species"]}
+    species = LoreLock.load(LA / "lore.lock.json").species
+    assert len(species) == len(names) == 160
+    for species_id, entry in species.items():
+        assert entry["review"] == "approved" and entry["prompt_version"] == 4, species_id
+        title = entry["title"]
+        assert title["review"] in (PENDING, "approved", "rejected") and title["prompt_version"] == 5, species_id
+        facts = [Fact.from_dict(f) for f in entry["facts"]]
+        assert validate_title(title, facts, entry["common_name"], names[entry["common_name"]]) == [], (species_id, title["text"])
 
 
 def test_no_titles_makes_no_title_request(tmp_path):
