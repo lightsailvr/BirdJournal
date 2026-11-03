@@ -42,6 +42,7 @@ struct ListenCoverHeader: View {
                 .font(.system(.caption, design: .serif, weight: .semibold))
                 .tracking(3)
                 .foregroundStyle(.white.opacity(0.9))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .accessibilityHidden(true)
             Text("Wonder is nearby.")
                 .font(.system(.largeTitle, design: .serif, weight: .regular))

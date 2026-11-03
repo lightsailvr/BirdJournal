@@ -423,6 +423,13 @@ private struct SpeciesRows: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let entries: [Journal.SpeciesEntry]
 
+    /// "today, November 2", "yesterday" or "October 30": the day's title inside a sentence, the month kept capitalised.
+    static func lastSeen(_ date: Date) -> String {
+        let title = Journal.title(for: date)
+        guard title.hasPrefix("Today") || title.hasPrefix("Yesterday"), let first = title.first else { return title }
+        return first.lowercased() + title.dropFirst()
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ForEach(entries) { entry in
@@ -440,7 +447,7 @@ private struct SpeciesRows: View {
                             Text(entry.scientificName)
                                 .font(JournalFont.scientific)
                                 .foregroundStyle(Color.inkSecondary)
-                            Text("\(entry.count) \(entry.count == 1 ? "card" : "cards") · last \(Journal.title(for: entry.latest.confirmedAt).lowercased())")
+                            Text("\(entry.count) \(entry.count == 1 ? "card" : "cards") · last \(Self.lastSeen(entry.latest.confirmedAt))")
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }
