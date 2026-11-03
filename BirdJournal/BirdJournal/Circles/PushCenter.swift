@@ -144,7 +144,7 @@ final class PushCenter {
     /// Raised but not answered yet (issue #107): the next Circles tab or circle page offers it once more.
     static let pendingKey = "pushPermissionExplanationPending"
     /// Why, before the system's prompt.
-    static let explanation = "Bird Journal can tell you when someone in your circles finds a Legendary, a first for the circle or a rare bird, and bundles their other finds into one notification every couple of hours. You can mute a circle or a friend at any time."
+    static let explanation = "Featherguild can tell you when someone in your circles finds a Legendary, a first for the circle or a rare bird, and bundles their other finds into one notification every couple of hours. You can mute a circle or a friend at any time."
 
     private(set) var permission: PushPermission?
     /// The explanation before the system prompt is raised. A dropped alert can leave it up with nothing on screen.

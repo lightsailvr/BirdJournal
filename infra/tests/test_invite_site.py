@@ -136,7 +136,7 @@ def test_the_site_has_the_fallback_and_home_pages() -> None:
     names = {path.name for path in SITE_DIRECTORY.iterdir()}
     assert {"index.html", "invite.html", "style.css"} <= names
     invite = (SITE_DIRECTORY / "invite.html").read_text()
-    assert "Bird Journal" in invite
+    assert "Featherguild" in invite
     assert "seven days" in invite
     # The home page, privacy and terms are on this domain now (#71).
     assert '<a href="/">Find out how to get it</a>' in invite

@@ -54,7 +54,7 @@ struct SharePolicyTests {
         none.includeArea = false
         let bare = SharePolicy.content(for: Self.sighting, commonName: "Black Phoebe", reference: nil, area: "Los Angeles, CA", choices: none, locale: Self.english)
         #expect(bare.dateText == nil && bare.areaText == nil && bare.note == nil)
-        #expect(SharePolicy.text(for: bare) == "Black Phoebe (Sayornis nigricans)\nHeard with Bird Journal · Powered by BirdNET")
+        #expect(SharePolicy.text(for: bare) == "Black Phoebe (Sayornis nigricans)\nHeard with Featherguild · Powered by BirdNET")
     }
 
     @Test("a reference photo carries its observer, license and source; one under a license that does not allow sharing is left out")

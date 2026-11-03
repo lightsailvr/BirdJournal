@@ -53,7 +53,7 @@ extension FriendBanners {
     static func postLocalNotification(after delay: TimeInterval) async -> String {
         let center = UNUserNotificationCenter.current()
         guard (try? await center.requestAuthorization(options: [.alert, .sound])) == true else {
-            return "Notifications are off for Bird Journal."
+            return "Notifications are off for Featherguild."
         }
         let content = UNMutableNotificationContent()
         content.title = "Maya Ortiz found a Black Phoebe"

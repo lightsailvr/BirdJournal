@@ -17,7 +17,7 @@ nonisolated final class PhoneMicAudioSource: AudioSource {
     nonisolated enum StartError: LocalizedError {
         case permissionDenied
 
-        var errorDescription: String? { "Microphone access was not granted. Allow it in Settings > BirdJournal." }
+        var errorDescription: String? { "Microphone access was not granted. Allow it in Settings > Featherguild." }
     }
 
     private let engine = Mutex<AVAudioEngine?>(nil)

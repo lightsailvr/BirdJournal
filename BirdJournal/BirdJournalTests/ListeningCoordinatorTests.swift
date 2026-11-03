@@ -242,10 +242,10 @@ struct ListeningCoordinatorTests {
 
         await run.start()
 
-        #expect(run.state == .ended(.failed("Microphone access was not granted. Allow it in Settings > BirdJournal.")))
+        #expect(run.state == .ended(.failed("Microphone access was not granted. Allow it in Settings > Featherguild.")))
         #expect(!run.isReviewing, "nothing was heard, so there is nothing to review")
         await run.stop()
-        #expect(run.state == .ended(.failed("Microphone access was not granted. Allow it in Settings > BirdJournal.")))
+        #expect(run.state == .ended(.failed("Microphone access was not granted. Allow it in Settings > Featherguild.")))
     }
 
     @Test("the chosen source is remembered, and a phone with no glasses linked starts on the microphone")
