@@ -19,7 +19,7 @@ nonisolated final class LevelSink: Sendable {
 /// One listening run as the phone presents it (issue #28), over either audio source: the glasses run
 /// (`GlassesListeningSession`) or the phone microphone (`ListeningSession`). The Listen tab, the listening accessory
 /// on the other tabs and the candidate review all read this one object, so switching tabs never touches the run, and
-/// the phone's "Add to journal" writes through the same ledger as the lens's "Add to my list".
+/// the phone's "Add to collection" writes through the same ledger as the lens's "Add to my list".
 @MainActor
 @Observable
 final class ListeningCoordinator {
@@ -304,9 +304,9 @@ final class ListeningCoordinator {
 
     #if DEBUG
     /// The reveal for a seeded sighting, for `-autoScreen reveal`; there is no add to undo.
-    func showRevealForScreenshot(of sighting: Sighting) {
+    func showRevealForScreenshot(of sighting: Sighting, placement: CardPlacement = .uncharted) {
         let species = Species(index: 0, scientificName: sighting.scientificName, commonName: sighting.commonName, taxonomicClass: "Aves")
-        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: true, placement: .uncharted), commonName: sighting.commonName)
+        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: true, placement: placement), commonName: sighting.commonName)
     }
     #endif
 

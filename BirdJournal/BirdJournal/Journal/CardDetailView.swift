@@ -119,6 +119,8 @@ struct CardDetailView: View {
             }
             .navigationTitle(commonName)
             .navigationBarTitleDisplayMode(.inline)
+            // The card and its reading area get the whole height (design guide page 10); back returns to the tabs.
+            .toolbar(.hidden, for: .tabBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {

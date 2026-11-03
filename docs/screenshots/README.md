@@ -40,3 +40,15 @@ in `dark`, `light` and `ax3` (light at accessibility extra large), numbered top 
 - `reveal`: the Legendary reveal
 
 Compare them with page 5 of `docs/design/featherguild/`.
+
+`117/` is the evidence for issue #117 (Featherguild slice 2: Collection, Listen and the app shell), half size from an
+iPhone 17 Pro simulator (iOS 27.2) on Los Angeles v10 (with its cover) with `-inMemoryAlbum YES -seedJournal YES`. Each
+screen is in `dark`, `light` and `ax3` (light at accessibility extra large):
+- `listen-ready`: the ready state under the Los Angeles cover, with the local set (`-autoScreen listen`)
+- `listen-active`: a phone run over the example soundscape, location denied (`-autoScreen listening`)
+- `reveal`: the Legendary reveal of the Black Phoebe over that run (`-autoScreen reveal -autoCardSpecies "Sayornis
+  nigricans" -autoPhoneListening <wav>`)
+- `cards`, `sightings`, `species`: Collection's three modes
+- `card`: a card's page, the tab bar hidden (`-autoScreen card`)
+
+Compare them with pages 3, 4, 6 and 15 of `docs/design/featherguild/`.

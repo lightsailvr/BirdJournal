@@ -98,16 +98,17 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Journal tab on the Cards view: the Legendary reveal's "Back to my collection" (issue #51).
+    /// Opens the Collection tab at the top of the Cards view: the Legendary reveal's "See it in my collection" (issue #51).
     @Entry var openCollection: @MainActor () -> Void = {}
     /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
-    /// Opens a circle's page on the Circles tab: the join screen once joined (issue #61).
+    /// Opens a circle's page on the Guilds tab: the join screen once joined (issue #61).
     @Entry var openCircle: @MainActor (String) -> Void = { _ in }
 }
 
-/// The destinations (issue #28): Listen, Journal and Field Guide, and Circles (issue #61) in builds with accounts, with the compact listening strip above the
-/// tab bar while a run is on and another tab is showing.
+/// The destinations (issue #28): Listen, Collection (the journal, issue #117) and Atlas (the field guide), and Guilds
+/// (circles, issue #61) in builds with accounts, with the compact listening strip above the tab bar while a run is on and
+/// another tab is showing. The `Tab` cases keep their internal names.
 struct RootView: View {
     enum Tab: String, Hashable {
         case listen, journal, guide, circles
@@ -121,7 +122,7 @@ struct RootView: View {
     @Environment(PushCenter.self) private var pushes
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
-    @State private var journalMode: JournalView.Mode = .cards
+    @State private var collection = CollectionState()
     @State private var listenPath = NavigationPath()
     @State private var journalPath = NavigationPath()
     @State private var guidePath = NavigationPath()
@@ -138,13 +139,13 @@ struct RootView: View {
                         .appDestinations()
                 }
             }
-            SwiftUI.Tab("Journal", systemImage: "book", value: Tab.journal) {
+            SwiftUI.Tab("Collection", systemImage: "leaf", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
-                    JournalView(mode: $journalMode)
+                    JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()
                 }
             }
-            SwiftUI.Tab("Field Guide", systemImage: "bird", value: Tab.guide) {
+            SwiftUI.Tab("Atlas", systemImage: "map", value: Tab.guide) {
                 NavigationStack(path: $guidePath) {
                     FieldGuideView()
                         .appDestinations()
@@ -154,7 +155,7 @@ struct RootView: View {
             // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
             // links' associated domain is Debug-only until then, so a release build leaves them to the browser.
             if AccountSession.isEnabledInThisBuild {
-                SwiftUI.Tab("Circles", systemImage: "person.3", value: Tab.circles) {
+                SwiftUI.Tab("Guilds", systemImage: "person.3", value: Tab.circles) {
                     NavigationStack(path: $circlesPath) {
                         CirclesView()
                             .appDestinations()
@@ -169,7 +170,9 @@ struct RootView: View {
         // Over the tabs and their bars; the run review sheet carries its own, since an add there happens over it.
         .legendaryReveal()
         .environment(\.openCollection) {
-            journalMode = .cards
+            collection.mode = .cards
+            collection.query = ""
+            collection.offsets[.cards] = 0
             journalPath = NavigationPath()
             tab = .journal
         }
@@ -227,7 +230,7 @@ struct RootView: View {
         .task { await pushes.refreshPermission() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
-        .modifier(DebugLaunch(tab: $tab, journalMode: $journalMode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
+        .modifier(DebugLaunch(tab: $tab, journalMode: $collection.mode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }
 }

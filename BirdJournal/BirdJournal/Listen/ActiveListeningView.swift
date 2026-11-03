@@ -4,7 +4,9 @@ import Pack
 import SwiftUI
 
 /// The run under way (issue #28): the source with its state, the elapsed time, a modest waveform, the species heard
-/// with Review or Added on each row, and Stop listening; and, once the run has ended, the same list for the review.
+/// with Review or Added on each row (a calling bird's row raised), and Stop listening pinned above the tab bar; and,
+/// once the run has ended, the same list for the review. No cover or other decoration here (issue #117, design guide
+/// page 11): the list gets the room.
 struct ActiveListeningView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -49,11 +51,14 @@ struct ActiveListeningView: View {
                 Text(run.summary)
                     .font(JournalFont.body)
                     .foregroundStyle(Color.ink)
-                    .padding(.top, 22)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 10)
                     .accessibilityAddTraits(.isHeader)
                 if let coordinate = run.coordinate {
                     PlaceLine(coordinate: coordinate, fixedAt: run.locationFixedAt, isRunning: run.state.isActive)
-                        .padding(.top, 6)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 4)
                 }
 
                 if run.candidates.isEmpty {
@@ -72,9 +77,13 @@ struct ActiveListeningView: View {
                         let calling = run.callingSpecies
                         VStack(spacing: 0) {
                             ForEach(Array(ordered.enumerated()), id: \.element.id) { position, candidate in
-                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: calling.contains(candidate.species), startedAt: run.startedAt, now: context.date, position: position) {
+                                let isCalling = calling.contains(candidate.species)
+                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: isCalling, startedAt: run.startedAt, now: context.date, position: position) {
                                     run.reviewing = candidate
                                 }
+                                .padding(.horizontal, 10)
+                                .background(isCalling ? Color.raised : Color.clear, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                                .padding(.horizontal, -10)
                                 RowRule()
                             }
                         }
@@ -343,9 +352,15 @@ struct CandidateRow: View {
                         .font(JournalFont.supporting.weight(.medium))
                         .foregroundStyle(Color.moss)
                     } else {
-                        Text(isAdded ? "Added to journal" : Self.heardText(candidate, startedAt: startedAt, now: now))
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
+                        if isAdded {
+                            Label("Added to collection", systemImage: "checkmark.circle.fill")
+                                .font(JournalFont.supporting)
+                                .foregroundStyle(Color.inkSecondary)
+                        } else {
+                            Text(Self.heardText(candidate, startedAt: startedAt, now: now))
+                                .font(JournalFont.supporting)
+                                .foregroundStyle(Color.inkSecondary)
+                        }
                     }
                 }
                 .accessibilityIdentifier(position.map { "candidate-status-\($0)" } ?? "")
