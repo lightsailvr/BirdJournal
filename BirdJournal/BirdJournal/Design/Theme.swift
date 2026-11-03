@@ -1,24 +1,35 @@
 import SwiftUI
 import UIKit
 
-/// The field journal's design tokens (issue #28): warm paper, ink and moss in the light appearance, forest charcoal,
-/// warm ivory and sage in the dark one, each with an Increase Contrast variant, all from the asset catalog so the
-/// system picks the variant. Headings are set in the system serif, everything else in the system sans.
+/// The app's design tokens: Featherguild design guide 1.0, page 9 (issue #116, replacing #28's field-journal palette).
+/// Deep teal and warm ivory: a teal page with ivory ink in the dark appearance, an ivory page with teal ink in the light
+/// one, each with an Increase Contrast variant, all from the asset catalog so the system picks the variant. The guide's
+/// values are starting tokens; the secondary ink, the rules and the text on an action are derived here, and
+/// `DesignTokenTests` measures every text pairing in all four variants. Gold has one job, the personal-first Legendary
+/// (`Color.goldInk`, in `Collectible.swift`); shared goals take the lavender accent; bird art keeps its own colours.
 extension Color {
-    /// The main content surface.
+    /// The page: #10292D dark, #F4F2E9 light.
     static let paper = Color("JournalPaper")
-    /// Grouped rows, cards and thumbnail placeholders.
+    /// Grouped rows, panels and thumbnail placeholders: #193A3D dark, #DFEAE5 light.
     static let raised = Color("JournalRaised")
+    /// Primary text: #F5F1E7 dark, #15363A light.
     static let ink = Color("JournalInk")
+    /// Supporting text, at least 4.5:1 on the page and on a raised surface.
     static let inkSecondary = Color("JournalInkSecondary")
-    /// Primary actions and the selected tab.
+    /// Primary actions, links and the selected tab: aqua #BCE3D9 dark, teal #15363A light.
     static let moss = Color("JournalMoss")
-    /// Text on a moss fill.
+    /// Text on a primary action's fill.
     static let mossText = Color("JournalMossText")
-    /// Fine separators.
+    /// Fine separators; decorative, stronger under Increase Contrast.
     static let rule = Color("JournalRule")
+    /// The quiet lavender of shared goals (#B9BEDD dark, #E8E6F0 light): a fill, never gold.
+    static let sharedGoal = Color("JournalSharedGoal")
+    /// Text and marks on a `sharedGoal` fill.
+    static let onSharedGoal = Color("JournalOnSharedGoal")
 }
 
+/// The type scale (design guide page 8): the system serif (New York) for titles, names and the tale, the system sans
+/// for every control and supporting detail, all on native text styles so Dynamic Type scales them.
 enum JournalFont {
     /// Page titles, about 34 pt.
     static let largeTitle = Font.system(.largeTitle, design: .serif, weight: .regular)
@@ -34,6 +45,34 @@ enum JournalFont {
     static let supporting = Font.subheadline
     static let attribution = Font.footnote
     static let scientific = Font.system(.subheadline, design: .serif).italic()
+}
+
+/// The card's type (design guide pages 5 and 8): the bird's name upright, the story title upright and smaller, the lore
+/// in a true italic serif with generous leading, the edition in small capitals, and a quiet sans footer.
+enum CardFont {
+    /// The bird's name on a card's front, about 28 pt, upright.
+    static let birdName = Font.system(.title, design: .serif, weight: .semibold)
+    /// The scientific name under it, italic.
+    static let scientific = Font.system(.subheadline, design: .serif).italic()
+    /// The story title, about 20 pt, upright.
+    static let storyTitle = Font.system(.title3, design: .serif, weight: .medium)
+    /// The lore excerpt: New York's true italic at 16 pt (callout).
+    static let lore = Font.system(.callout, design: .serif).italic()
+    /// The lore's extra leading, in points.
+    static let loreLeading: CGFloat = 5
+    /// "CITRUS EDITION", "LEGENDARY · YOUR FIRST": the edition line, set in capitals with open tracking.
+    static let edition = Font.system(.caption, design: .serif, weight: .semibold)
+    static let editionTracking: CGFloat = 1.6
+    /// The edition line on a tile.
+    static let editionCompact = Font.system(.caption2, design: .serif, weight: .semibold)
+    static let editionCompactTracking: CGFloat = 1
+    /// A tile's name, about 17 pt.
+    static let tileName = Font.system(.headline, design: .serif, weight: .semibold)
+    /// A tile's story title, about 15 pt.
+    static let tileStoryTitle = Font.system(.subheadline, design: .serif, weight: .medium)
+    /// The footer and the art credit: system sans, quieter than the story.
+    static let footer = Font.footnote
+    static let credit = Font.caption2
 }
 
 enum JournalLayout {

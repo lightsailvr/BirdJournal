@@ -79,7 +79,7 @@ struct ShareCardView: View {
     private var face: some View {
         CardFront(
             sighting: sighting, isLegendary: isLegendary, placement: collection.placement(of: sighting.identifier), place: place,
-            art: faceArt, artImage: artImage
+            storyTitle: nil, art: faceArt, artImage: artImage
         )
         .environment(library)
         .environment(\.colorScheme, .light)
@@ -358,7 +358,15 @@ struct ShareCardView: View {
     private func render() {
         guard let image = CardExport.render(face, scale: max(displayScale, 2)) else { return }
         let content = content
-        export = CardExport(image: image.image, png: image.png, text: SharePolicy.text(for: content), title: "\(content.commonName) · Bird Journal")
+        let lore = library.species(scientificName: sighting.scientificName)?.species.lore
+        let text = [SharePolicy.text(for: content), lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
+        export = CardExport(image: image.image, png: image.png, text: text, title: "\(content.commonName) · Bird Journal")
+    }
+
+    /// The credit of the lore excerpt the face carries (issue #116; design guide page 17: lore licenses and revision
+    /// links travel with shared exports): who wrote it, its sources and license, and the article revision.
+    static func loreCredit(_ lore: PackLore) -> String {
+        (["Lore: \(LoreText.credit(lore))"] + [lore.wikipediaRevision?.absoluteString].compactMap { $0 }).joined(separator: " ")
     }
 }
 

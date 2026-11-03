@@ -1,9 +1,9 @@
 import XCTest
 
-/// Issue #52: the card's two faces and the real flip, with real taps on the seeded journal. The art button marks the
-/// front, the "Encounter story" heading the back, and the Flip control's value names the face that is up. XCUITest's
-/// tree also lists the hidden face (it shows elements SwiftUI hides from VoiceOver), so that only one face reaches
-/// VoiceOver is checked by `CardFlipAccessibilityTests` in the app tests.
+/// Issues #52 and #116: the card's two faces and the real flip, with real taps on the seeded journal. The art button
+/// marks the front, the "Encounter story" heading the back, and the visible Flip control's value names the face that
+/// is up. XCUITest's tree also lists the hidden face (it shows elements SwiftUI hides from VoiceOver), so that only one
+/// face reaches VoiceOver is checked by `CardFlipAccessibilityTests` and `StoryCardAccessibilityTests` in the app tests.
 final class CardFlipUITests: XCTestCase {
     @MainActor
     private func launch(_ screen: String, _ extra: [String] = []) -> XCUIApplication {
@@ -47,6 +47,28 @@ final class CardFlipUITests: XCTestCase {
     }
 
     @MainActor
+    func testTheFrontIsStoryFirstWithAVisibleFlipAction() {
+        let app = launch("card", ["-autoCardSpecies", "Sayornis nigricans"])
+        XCTAssertTrue(flip(app).waitForExistence(timeout: 15), "the card did not open; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(flip(app).isHittable, "the Flip action is visible and in reach")
+        assertShowing(back: false, app)
+        // The Legendary label, the names, the excerpt of the lore (whole sentences), the quiet footer.
+        XCTAssertEqual(app.descendants(matching: .any)["card-heading"].label, "Legendary, your first")
+        XCTAssertTrue(app.descendants(matching: .any)["card-name"].label.hasPrefix("Black Phoebe"))
+        let excerpt = app.staticTexts["card-lore-excerpt"]
+        XCTAssertTrue(excerpt.exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue([".", "!", "?"].contains(String(excerpt.label.last ?? " ")), "the excerpt ends a sentence: \(excerpt.label)")
+        XCTAssertFalse(app.descendants(matching: .any)["card-story-title"].exists, "no story titles in the packs yet: the excerpt leads")
+        XCTAssertTrue(app.staticTexts["card-footer-line"].label.hasSuffix("· Heard"), app.staticTexts["card-footer-line"].label)
+        XCTAssertEqual(app.staticTexts["card-art-credit"].label, "AI illustration")
+
+        flip(app).tap()
+        assertShowing(back: true, app)
+        // The caption written for this sighting is with the encounter on the back now.
+        XCTAssertTrue(app.descendants(matching: .any)["card-caption"].exists, "screen: \(app.debugDescription.prefix(4000))")
+    }
+
+    @MainActor
     func testRapidTapsLandOnOneFace() {
         let app = launch("card")
         XCTAssertTrue(flip(app).waitForExistence(timeout: 15))
@@ -63,8 +85,9 @@ final class CardFlipUITests: XCTestCase {
         let app = launch("card-back")
         XCTAssertTrue(back(app).waitForExistence(timeout: 15), "no back; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["Photo attached"].exists)
+        // The back scrolls inside the card's footprint; the evidence is below the lore and the natural history.
         let view = app.buttons["View original photo"]
-        if !view.isHittable { app.swipeUp() }
+        for _ in 0..<8 where !view.isHittable { app.swipeUp() }
         view.tap()
         XCTAssertTrue(app.navigationBars["Original photo"].waitForExistence(timeout: 5), "the photo did not open; screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Done"].tap()
@@ -117,8 +140,9 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(blackbird.waitForExistence(timeout: 15), "no blackbird card; screen: \(app.debugDescription.prefix(3000))")
         blackbird.tap()
         XCTAssertTrue(flip(app).waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Place not recorded"].exists, "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["Rarity unavailable for this place and season"].exists)
+        XCTAssertTrue(app.staticTexts["card-footer-line"].label.hasPrefix("Place not recorded · "), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(app.staticTexts["card-rarity"].label, "Rarity unavailable for this place and season")
+        XCTAssertFalse(app.staticTexts["card-lore-excerpt"].exists, "no lore, no tale on the front")
         XCTAssertEqual(front(app).label, "Card art: No art yet")
 
         flip(app).tap()

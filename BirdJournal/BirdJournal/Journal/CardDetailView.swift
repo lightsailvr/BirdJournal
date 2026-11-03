@@ -24,9 +24,9 @@ enum CardFlip {
 
 /// One card, opened from the Cards view (issue #52): the labelled Flip control above the card (so it stays in reach of
 /// a card taller than the screen), the persistent two-sided card, and the way to the sighting's full details. The
-/// front is the collectible (the art, the place and species, the rarity, the date and method); the back is the
-/// encounter story (the time and place, Heard or Seen, the note, the original photo, what the art is and where the
-/// rarity came from). Opening a card shows its front.
+/// front tells the story (issue #116: the painting, the names, the lore excerpt and a quiet footer); the back holds
+/// the encounter, the note, the full lore, the natural history, the evidence, the rarity and the art's sources.
+/// Opening a card shows its front.
 ///
 /// Above the card, "3 of 15" with Previous and Next (issue #53): within the gallery's filter and sort when the card
 /// was opened from a gallery, else among all the species' cards newest first. Each opens that card in place, front
@@ -88,7 +88,7 @@ struct CardDetailView: View {
                     .accessibilityIdentifier("card-flip")
                     .accessibilityFocused($flipControlFocused)
                     CollectibleCard(showsBack: showsBack, rotates: !reduceMotion) {
-                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, place: places.cardPlace(for: sighting.location), flip: flip)
+                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, place: places.cardPlace(for: sighting.location), storyTitle: nil, flip: flip)
                     } back: {
                         CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
                     }
@@ -324,20 +324,26 @@ private struct StepperLabelStyle: LabelStyle {
     }
 }
 
-/// Both faces of one card, stacked so the card keeps the taller face's footprint whichever is up. Only the readable
-/// face is exposed to VoiceOver and takes touches.
+/// Both faces of one card, stacked into one footprint: the front's (issue #116). The story-first front sets the card's
+/// size; the back, which holds much more (the full lore, the natural history, the evidence), takes the same size and
+/// scrolls inside it, so the turn keeps a stable footprint and the front has no empty space under its footer. Only the
+/// readable face is exposed to VoiceOver and takes touches.
 struct CollectibleCard<Front: View, Back: View>: View {
     let showsBack: Bool
     let rotates: Bool
     @ViewBuilder var front: Front
     @ViewBuilder var back: Back
+    @State private var frontHeight: CGFloat?
 
     var body: some View {
         let angle = showsBack ? 180.0 : 0
-        ZStack {
+        ZStack(alignment: .top) {
             front
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { frontHeight = $0 }
                 .modifier(FlipFace(angle: angle, isBack: false, isUp: !showsBack, rotates: rotates))
+            // Zero until the front is measured: the back's scroll view would otherwise take its whole content's height.
             back
+                .frame(height: frontHeight ?? 0)
                 .modifier(FlipFace(angle: angle, isBack: true, isUp: showsBack, rotates: rotates))
         }
         .accessibilityElement(children: .contain)
@@ -369,27 +375,14 @@ struct FlipFace: ViewModifier, Animatable {
     }
 }
 
-/// The card's frame: gold foil when Legendary, sage otherwise.
-private struct CardFrame: ViewModifier {
-    let isLegendary: Bool
-    let fill: Color
-
-    func body(content: Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous)
-        content
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(fill, in: shape)
-            .overlay {
-                shape.strokeBorder(isLegendary ? AnyShapeStyle(.legendaryFoil) : AnyShapeStyle(Color.editionSage), lineWidth: isLegendary ? 5 : 2)
-            }
-    }
-}
-
-/// The collectible face: the Legendary label or the edition with the collector number, the art (a tap flips the card),
-/// the place and species, the caption written for this sighting or else the lore's tagline (issue #56), the type line
-/// and stats (issue #55), the rarity for that place and season, and the date and method. The share sheet (issue #66)
-/// draws the same face with the place it may share (a city, a secret spot or none) and the art already loaded, so the
-/// renderer has the pixels when it draws.
+/// The story-first front (issue #116, design guide page 5, the reference card): the Legendary label or the edition, the
+/// bird's name upright and its scientific name in italics, the painting (a tap flips the card) with its compact credit,
+/// then the tale: the story title when the pack has one (#113), and an excerpt of the approved lore in a true italic
+/// serif (`LoreExcerpt`: whole sentences, about 25–40 words). Without a title the excerpt leads; without lore the tale
+/// is left out. Then the quiet footer: the place, the date and Heard or Seen, the rarity in words, and the collector
+/// number. The stats, the type line and the caption are on the back. Nothing is clipped or shrunk: at large text sizes
+/// the card grows. The share sheet (issue #66) draws the same face with the place it may share (a city, a secret spot
+/// or none) and the art already loaded, so the renderer has the pixels when it draws.
 struct CardFront: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
@@ -397,6 +390,9 @@ struct CardFront: View {
     let placement: CardPlacement?
     /// The place line: the card's place on the phone; on a shared face, only what the share may carry.
     let place: String?
+    /// The species' story title, 2–5 words of editorial pack data (#113); nil until the packs carry them, and then the
+    /// excerpt leads. The app never invents one.
+    var storyTitle: String? = nil
     /// The art to draw, in place of what `CardArtView.art` gives; nil draws that.
     var art: CardText.Art? = nil
     /// The art's picture, loaded already (the share's renderer can't wait for it).
@@ -407,11 +403,27 @@ struct CardFront: View {
         let reference = library.species(scientificName: sighting.scientificName)
         let art = art ?? CardArtView.art(for: sighting, library: library, setID: placement?.setID)
         let commonName = library.commonName(for: sighting)
-        VStack(alignment: .leading, spacing: 12) {
+        let excerpt = reference?.species.lore.flatMap { LoreExcerpt.front($0.text) }
+        let heading = CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement)
+        VStack(spacing: 12) {
             CardHeading(isLegendary: isLegendary, placement: placement)
+                .padding(.horizontal, 24)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement).compactMap { $0 }.joined(separator: ", "))
+                .accessibilityLabel(heading.first.flatMap { $0 } ?? "")
                 .accessibilityIdentifier("card-heading")
+            VStack(spacing: 2) {
+                Text(commonName)
+                    .font(CardFont.birdName)
+                    .foregroundStyle(Color.cardInk)
+                Text(sighting.scientificName)
+                    .font(CardFont.scientific)
+                    .foregroundStyle(Color.cardInkSecondary)
+            }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityIdentifier("card-name")
             Button(action: flip) {
                 CardArtView(art: art, commonName: commonName, image: artImage)
             }
@@ -422,63 +434,58 @@ struct CardFront: View {
             if let line = CardText.sceneArtLine(sighting.art.sceneStatus) {
                 Label(line, systemImage: sighting.art.sceneStatus == .failed ? "exclamationmark.circle" : "paintbrush.pointed")
                     .font(JournalFont.supporting)
-                    .foregroundStyle(Color.cardIvory)
+                    .foregroundStyle(Color.cardInk)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(line)
                     .accessibilityIdentifier("card-art-status")
             }
-            VStack(alignment: .leading, spacing: 2) {
-                if let place {
-                    Text(place)
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.cardIvory.opacity(0.85))
+            if storyTitle != nil || excerpt != nil {
+                VStack(spacing: 8) {
+                    if let storyTitle {
+                        Text(storyTitle)
+                            .font(CardFont.storyTitle)
+                            .foregroundStyle(Color.cardInk)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                            .accessibilityIdentifier("card-story-title")
+                        Rectangle()
+                            .fill(isLegendary ? Color.goldInk.opacity(0.6) : Color.cardEdge.opacity(0.35))
+                            .frame(width: 72, height: 1)
+                            .accessibilityHidden(true)
+                    }
+                    if let excerpt {
+                        Text(excerpt)
+                            .font(CardFont.lore)
+                            .lineSpacing(CardFont.loreLeading)
+                            .foregroundStyle(Color.cardInk)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("card-lore-excerpt")
+                    }
                 }
-                Text(commonName)
-                    .font(JournalFont.title)
-                    .foregroundStyle(Color.cardIvory)
-                Text(sighting.scientificName)
-                    .font(JournalFont.scientific)
-                    .foregroundStyle(Color.cardIvory.opacity(0.85))
+                .padding(.top, 2)
             }
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityElement(children: .combine)
-            if let caption = CaptionText.front(caption: sighting.caption, tagline: reference?.species.lore?.tagline) {
-                Text(caption)
-                    .font(JournalFont.supporting.italic())
-                    .foregroundStyle(Color.cardIvory)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel(sighting.caption == nil ? "Tagline: \(caption)" : "Caption: \(caption)")
-                    .accessibilityIdentifier("card-caption")
-            }
-            if let typeLine = reference?.species.typeLine {
-                Text(typeLine.text)
-                    .font(JournalFont.supporting.weight(.semibold))
-                    .foregroundStyle(Color.cardIvory)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel("Type: \(typeLine.groupWord), \(typeLine.familyWord)")
-                    .accessibilityIdentifier("card-type-line")
-            }
-            if let stats = reference?.species.stats.map({ CardStatsText.front($0) }), !stats.isEmpty {
-                FrontStats(stats: stats)
-            }
-            Rectangle().fill(Color.cardIvory.opacity(0.25)).frame(height: 1)
-            Label(CardText.rarityLine(sighting.rarity), systemImage: "binoculars")
-                .font(JournalFont.supporting.weight(.semibold))
-                .foregroundStyle(Color.cardIvory)
-                .fixedSize(horizontal: false, vertical: true)
-            Text("\(sighting.confirmedAt.formatted(date: .long, time: .omitted)) · \(sighting.method.title)")
-                .font(JournalFont.supporting)
-                .foregroundStyle(Color.cardIvory.opacity(0.85))
+            Rectangle().fill(Color.cardEdge.opacity(0.3)).frame(height: 1).accessibilityHidden(true)
+            CardFooter(
+                line: CardFooter.line(place: place, date: sighting.confirmedAt, method: sighting.method),
+                rarity: CardText.rarityLine(sighting.rarity),
+                number: CardHeading.numberText(isLegendary: isLegendary, placement: placement),
+                numberLabel: heading.count > 1 ? heading.last.flatMap { $0 } : nil
+            )
         }
-        .padding(14)
-        .modifier(CardFrame(isLegendary: isLegendary, fill: .cardFace))
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 14)
+        .modifier(CardSurface(isLegendary: isLegendary))
     }
 }
 
-/// The front's wingspan, weight and diet, side by side, or stacked when they don't fit (accessibility text sizes). Each
-/// reads as one VoiceOver element: "Wingspan about 9 inches, estimated from wing length", "Diet: mostly seeds".
-private struct FrontStats: View {
+/// The species' wingspan, weight and diet, side by side, or stacked when they don't fit (accessibility text sizes).
+/// Each reads as one VoiceOver element: "Wingspan about 9 inches, estimated from wing length", "Diet: mostly seeds".
+private struct CardStats: View {
     let stats: [CardStatsText.Stat]
 
     var body: some View {
@@ -495,7 +502,7 @@ private struct FrontStats: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(stat.label)
                     .font(JournalFont.attribution)
-                    .foregroundStyle(Color.cardIvory.opacity(0.85))
+                    .foregroundStyle(Color.cardInkSecondary)
                 HStack(spacing: 4) {
                     if let symbol = stat.symbol {
                         Image(systemName: symbol)
@@ -503,7 +510,7 @@ private struct FrontStats: View {
                     Text(stat.value)
                 }
                 .font(JournalFont.supporting.weight(.semibold))
-                .foregroundStyle(Color.cardIvory)
+                .foregroundStyle(Color.cardInk)
             }
             .fixedSize()
             .accessibilityElement(children: .ignore)
@@ -513,10 +520,13 @@ private struct FrontStats: View {
     }
 }
 
-/// The encounter story: when and where, Heard or Seen (changed here), the note, the original photo, what the art is,
-/// where the rarity came from, the species' lore with its credit (issue #56) and its natural history (issue #55). Its controls act on their own and never
-/// flip the card.
-private struct CardBack: View {
+/// The reverse (design guide pages 7 and 15, "A deeper reverse"): the encounter first (when and where, Heard or Seen,
+/// changed here, and the caption written for this sighting, issue #56), then the birder's note, the species' full lore
+/// with its tagline and credit, its natural history (the type line and stats of #55, then habitat to lifestyle), the
+/// evidence (the original photo), the rarity in words and where it came from, and what the art is with its sources.
+/// The sighting, the species and the evidence stay in separate sections. It scrolls inside the front's footprint
+/// (`CollectibleCard`). Its controls act on their own and never flip the card.
+struct CardBack: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
     @Environment(JournalEdits.self) private var edits
@@ -528,88 +538,131 @@ private struct CardBack: View {
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
         let method = Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Encounter story")
-                .font(JournalFont.section)
-                .foregroundStyle(Color.ink)
-                .accessibilityAddTraits(.isHeader)
-            FactRow(label: "When", value: sighting.confirmedAt.formatted(date: .long, time: .shortened))
-                .padding(.top, 6)
-            RowRule()
-            FactRow(label: "Where", value: places.cardPlace(for: sighting.location))
-            RowRule()
-            Picker("How you met it", selection: method) {
-                ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .padding(.top, 14)
-            Text(sighting.method == .heard ? "Every card starts as Heard. Choose Seen if you saw the bird too." : "You saw this bird.")
-                .font(JournalFont.attribution)
-                .foregroundStyle(Color.inkSecondary)
-                .padding(.top, 6)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Encounter story")
+                    .font(JournalFont.section)
+                    .foregroundStyle(Color.cardInk)
+                    .accessibilityAddTraits(.isHeader)
+                FactRow(label: "When", value: sighting.confirmedAt.formatted(date: .long, time: .shortened))
+                    .padding(.top, 6)
+                RowRule()
+                FactRow(label: "Where", value: places.cardPlace(for: sighting.location))
+                RowRule()
+                Picker("How you met it", selection: method) {
+                    ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .padding(.top, 14)
+                Text(sighting.method == .heard ? "Every card starts as Heard. Choose Seen if you saw the bird too." : "You saw this bird.")
+                    .font(JournalFont.attribution)
+                    .foregroundStyle(Color.cardInkSecondary)
+                    .padding(.top, 6)
+                if let caption = sighting.caption?.text.nilIfEmpty {
+                    Text(caption)
+                        .font(CardFont.lore)
+                        .lineSpacing(CardFont.loreLeading)
+                        .foregroundStyle(Color.cardInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 12)
+                        .accessibilityLabel("Caption: \(caption)")
+                        .accessibilityIdentifier("card-caption")
+                }
 
-            BackSection(title: "Your note") {
-                Text(sighting.note ?? "No note yet. Add one in Sighting details.")
-                    .foregroundStyle(sighting.note == nil ? Color.inkSecondary : Color.ink)
-            }
-            BackSection(title: "Evidence") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(CardText.evidence(sighting))
-                        .foregroundStyle(Color.ink)
-                    if CardText.originalPhotoPath(sighting) != nil {
-                        Button("View original photo", systemImage: "photo", action: showOriginal)
-                            .buttonStyle(.journalOutlined)
-                    }
+                BackSection(title: "Your note") {
+                    Text(sighting.note ?? "No note yet. Add one in Sighting details.")
+                        .foregroundStyle(sighting.note == nil ? Color.cardInkSecondary : Color.cardInk)
                 }
-            }
-            BackSection(title: "Art") {
-                Text(CardArtView.art(for: sighting, library: library, setID: placement?.setID).provenance)
-                    .foregroundStyle(Color.ink)
-            }
-            BackSection(title: "Rarity") {
-                Text(CardText.rarityExplanation(sighting.rarity, commonName: library.commonName(for: sighting), hasLocation: sighting.location != nil))
-                    .foregroundStyle(Color.ink)
-            }
-            BackSection(title: "Lore") {
-                if let lore = reference?.species.lore {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(lore.text)
-                            .foregroundStyle(Color.ink)
-                        Text(LoreText.credit(lore))
-                            .font(JournalFont.attribution)
-                            .foregroundStyle(Color.inkSecondary)
-                        if let revision = lore.wikipediaRevision {
-                            Link("Wikipedia article revision", destination: revision)
+                BackSection(title: "Lore") {
+                    if let lore = reference?.species.lore {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(lore.tagline)
+                                .font(CardFont.lore)
+                                .foregroundStyle(Color.cardInk)
+                                .accessibilityLabel("Tagline: \(lore.tagline)")
+                                .accessibilityIdentifier("card-tagline")
+                            Text(lore.text)
+                                .font(.system(.callout, design: .serif))
+                                .lineSpacing(3)
+                                .foregroundStyle(Color.cardInk)
+                            Text(LoreText.credit(lore))
                                 .font(JournalFont.attribution)
+                                .foregroundStyle(Color.cardInkSecondary)
+                            if let revision = lore.wikipediaRevision {
+                                Link("Wikipedia article revision", destination: revision)
+                                    .font(JournalFont.attribution)
+                                    .foregroundStyle(Color.cardEdge)
+                            }
+                        }
+                        .accessibilityIdentifier("card-lore")
+                    } else {
+                        Text("No lore for this bird in your packs yet.")
+                            .foregroundStyle(Color.cardInkSecondary)
+                    }
+                }
+                BackSection(title: "Natural history") {
+                    if let typeLine = reference?.species.typeLine {
+                        Text(typeLine.text)
+                            .font(JournalFont.supporting.weight(.semibold))
+                            .foregroundStyle(Color.cardInk)
+                            .accessibilityLabel("Type: \(typeLine.groupWord), \(typeLine.familyWord)")
+                            .accessibilityIdentifier("card-type-line")
+                            .padding(.bottom, 6)
+                    }
+                    if let stats = reference?.species.stats {
+                        VStack(alignment: .leading, spacing: 0) {
+                            let front = CardStatsText.front(stats)
+                            if !front.isEmpty {
+                                CardStats(stats: front)
+                                    .padding(.vertical, 6)
+                                RowRule()
+                            }
+                            ForEach(Array(CardStatsText.back(stats).enumerated()), id: \.element.label) { index, stat in
+                                if index > 0 { RowRule() }
+                                FactRow(label: stat.label, value: stat.value)
+                            }
+                            Text(CardStatsText.sources(stats))
+                                .font(JournalFont.attribution)
+                                .foregroundStyle(Color.cardInkSecondary)
+                                .padding(.top, 8)
+                        }
+                        .accessibilityIdentifier("card-natural-history")
+                    } else {
+                        Text("No natural-history stats for this bird in your packs.")
+                            .foregroundStyle(Color.cardInkSecondary)
+                    }
+                }
+                BackSection(title: "Evidence") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(CardText.evidence(sighting))
+                            .foregroundStyle(Color.cardInk)
+                        if CardText.originalPhotoPath(sighting) != nil {
+                            Button("View original photo", systemImage: "photo", action: showOriginal)
+                                .buttonStyle(.journalOutlined)
                         }
                     }
-                    .accessibilityIdentifier("card-lore")
-                } else {
-                    Text("No lore for this bird in your packs yet.")
-                        .foregroundStyle(Color.inkSecondary)
                 }
-            }
-            BackSection(title: "Natural history") {
-                if let stats = reference?.species.stats {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(CardStatsText.back(stats).enumerated()), id: \.element.label) { index, stat in
-                            if index > 0 { RowRule() }
-                            FactRow(label: stat.label, value: stat.value)
-                        }
-                        Text(CardStatsText.sources(stats))
-                            .font(JournalFont.attribution)
-                            .foregroundStyle(Color.inkSecondary)
-                            .padding(.top, 8)
+                BackSection(title: "Rarity") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(CardText.rarityLine(sighting.rarity))
+                            .font(JournalFont.supporting.weight(.semibold))
+                            .foregroundStyle(Color.cardInk)
+                        Text(CardText.rarityExplanation(sighting.rarity, commonName: library.commonName(for: sighting), hasLocation: sighting.location != nil))
+                            .foregroundStyle(Color.cardInk)
                     }
-                    .accessibilityIdentifier("card-natural-history")
-                } else {
-                    Text("No natural-history stats for this bird in your packs.")
-                        .foregroundStyle(Color.inkSecondary)
+                }
+                BackSection(title: "Art and sources") {
+                    Text(CardArtView.art(for: sighting, library: library, setID: placement?.setID).provenance)
+                        .foregroundStyle(Color.cardInk)
                 }
             }
+            .padding(20)
         }
-        .padding(16)
-        .modifier(CardFrame(isLegendary: isLegendary, fill: .raised))
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.visible)
+        .clipShape(RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous))
+        .accessibilityIdentifier("card-back-scroll")
+        .modifier(CardSurface(isLegendary: isLegendary, sprigs: nil))
     }
 }
 
@@ -619,16 +672,17 @@ private struct BackSection<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(JournalFont.rowTitle)
-                .foregroundStyle(Color.ink)
+                .font(JournalFont.heading)
+                .foregroundStyle(Color.cardInk)
                 .accessibilityAddTraits(.isHeader)
             content
                 .font(JournalFont.supporting)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.top, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 20)
     }
 }
 
