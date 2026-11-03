@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The join screen (issue #61), opened by an invite link: sign in if needed, see the circle's name, its size and who
-/// invited, then join. A link to a circle the birder is already in just opens it. Pushed on the Circles tab, so the
+/// The join screen (issue #61), opened by an invite link: sign in if needed, see the Guild's name, emblem, size and
+/// who invited, then join. A link to a Guild the birder is already in just opens it. Pushed on the Guilds tab, so the
 /// back button is the way out.
 struct JoinCircleView: View {
     @Environment(AccountSession.self) private var account
@@ -15,10 +15,10 @@ struct JoinCircleView: View {
     var body: some View {
         List {
             if !circles.isAvailable {
-                Section { Text("Circles aren't available in this build yet.").foregroundStyle(Color.inkSecondary) }
+                Section { Text("Guilds aren't available in this build yet.").foregroundStyle(Color.inkSecondary) }
             } else if !account.isSignedIn {
                 Section {
-                    intro(title: "You're invited to a circle", text: "Sign in with Apple or Google to see the invitation and join. Your journal and cards stay on this iPhone either way.")
+                    intro(title: "You're invited to a Guild", text: "Sign in with Apple or Google to see the invitation and join. Your collection and cards stay on this iPhone either way.")
                 }
                 Section { SignInButtons() }
             } else if let preview {
@@ -33,17 +33,14 @@ struct JoinCircleView: View {
             }
         }
         .paperList()
-        .navigationTitle("Join a circle")
+        .navigationTitle("Join a Guild")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: account.status) { await load() }
     }
 
     private func intro(title: String, text: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: "person.3")
-                .font(.system(size: 34))
-                .foregroundStyle(Color.moss)
-                .accessibilityHidden(true)
+            GuildEmblem(identity: GuildIdentity(circleID: token), size: 56)
             Text(title).font(JournalFont.section)
             Text(text).foregroundStyle(Color.inkSecondary)
         }
@@ -55,6 +52,7 @@ struct JoinCircleView: View {
     private func invitation(_ preview: InvitePreview) -> some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
+                GuildEmblem(identity: GuildIdentity(circleID: preview.circle.id), size: 64)
                 Text(preview.circle.name).font(JournalFont.title)
                 Text(details(preview)).foregroundStyle(Color.inkSecondary)
             }
@@ -63,15 +61,15 @@ struct JoinCircleView: View {
         }
         Section {
             if preview.alreadyMember {
-                Button("Open the circle") { finish(preview.circle.id) }
+                Button("Open the Guild") { finish(preview.circle.id) }
                     .buttonStyle(.journalPrimary)
             } else if preview.circle.memberCount >= 20 {
-                Text("This circle is full: a circle holds 20 birders.").foregroundStyle(Color.inkSecondary)
+                Text("This Guild is full: a Guild holds 20 birders.").foregroundStyle(Color.inkSecondary)
             } else {
                 Button {
                     join()
                 } label: {
-                    if joining { ProgressView() } else { Text("Join circle") }
+                    if joining { ProgressView() } else { Text("Join Guild") }
                 }
                 .buttonStyle(.journalPrimary)
                 .disabled(joining)
@@ -88,7 +86,7 @@ struct JoinCircleView: View {
     private func details(_ preview: InvitePreview) -> String {
         let members = preview.circle.memberCount == 1 ? "1 member" : "\(preview.circle.memberCount) members"
         let from = preview.invitedBy.map { "Invited by \($0) · " } ?? ""
-        if preview.alreadyMember { return "\(from)\(members). You're already in this circle." }
+        if preview.alreadyMember { return "\(from)\(members). You're already in this Guild." }
         return "\(from)\(members). The invitation expires \(preview.expiresAt.formatted(date: .abbreviated, time: .omitted))."
     }
 
@@ -109,13 +107,13 @@ struct JoinCircleView: View {
                 let detail = try await circles.accept(token: token)
                 finish(detail.circle.id)
             } catch {
-                self.error = CircleStore.message(for: error, doing: "join the circle")
+                self.error = CircleStore.message(for: error, doing: "join the Guild")
             }
             joining = false
         }
     }
 
-    /// Replaces the join screen with the circle's page.
+    /// Replaces the join screen with the Guild's page.
     private func finish(_ circleID: String) {
         openCircle(circleID)
     }

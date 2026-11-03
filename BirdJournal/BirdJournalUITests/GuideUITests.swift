@@ -3,6 +3,39 @@ import XCTest
 /// The profile's reference sounds (issue #41): a real tap plays the song, the row turns into its stop control, the
 /// clip plays to its end, and a tap on the playing call stops it.
 final class GuideUITests: XCTestCase {
+    /// The Atlas (issue #118): a set's tile keeps the birder's "species collected" apart from "Ready offline", and the
+    /// profile keeps its full credits a tap away.
+    @MainActor
+    func testTheAtlasKeepsSpeciesCollectedApartFromReadyOffline() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-autoScreen", "guide"]
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars["Atlas"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        let tile = app.buttons["guide-set-us-ca-la"]
+        XCTAssertTrue(tile.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(tile.label.contains("Los Angeles"), tile.label)
+        XCTAssertTrue(tile.label.contains("Citrus edition"), tile.label)
+        XCTAssertTrue(tile.label.contains("Ready offline"), tile.label)
+        XCTAssertTrue(tile.label.contains("0 of 160 species collected"), "nothing collected yet, though the pack is on the phone: \(tile.label)")
+        tile.tap()
+        XCTAssertTrue(app.navigationBars["Los Angeles"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    @MainActor
+    func testTheProfileHasTheTaleAndItsCreditsATapAway() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-autoScreen", "profile"]
+        app.launch()
+
+        let credits = app.buttons["profile-credits"]
+        XCTAssertTrue(app.staticTexts["The tale"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<12 where !(credits.exists && credits.isHittable) { app.swipeUp() }
+        XCTAssertTrue(credits.isHittable, "screen: \(app.debugDescription.prefix(3000))")
+        credits.tap()
+        XCTAssertTrue(app.navigationBars["Sources & credits"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
     @MainActor
     func testSongAndCallPlayFromTheProfile() throws {
         let app = XCUIApplication()

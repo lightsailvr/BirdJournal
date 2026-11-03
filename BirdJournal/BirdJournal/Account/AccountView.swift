@@ -47,7 +47,7 @@ struct AccountView: View {
         .confirmationDialog("Sign out?", isPresented: $confirmingSignOut, titleVisibility: .visible) {
             Button("Sign out", role: .destructive) { account.signOut() }
         } message: {
-            Text("Your journal and cards stay on this iPhone.")
+            Text("Your collection stays on this iPhone.")
         }
         #if DEBUG
         .task {
@@ -93,7 +93,7 @@ struct AccountView: View {
         } header: {
             Text("Signed in")
         } footer: {
-            Text("Your name is what friends will see in your circles.")
+            Text("Your name is what friends will see in your Guilds.")
         }
         if CircleStore.blocksAvailable {
             Section {
@@ -103,7 +103,7 @@ struct AccountView: View {
         Section {
             Button("Sign out", role: .destructive) { confirmingSignOut = true }
         } footer: {
-            Text("Signing out keeps your journal and cards on this iPhone.")
+            Text("Signing out keeps your collection on this iPhone.")
         }
         Section {
             Button(role: .destructive) {
@@ -120,18 +120,18 @@ struct AccountView: View {
             .disabled(account.isDeleting)
             .accessibilityIdentifier("deleteAccount")
         } footer: {
-            Text("Deletes your account and everything Featherguild keeps about it on the server. Your journal stays on this iPhone.")
+            Text("Deletes your account and everything Featherguild keeps about it on the server. Your collection stays on this iPhone.")
         }
     }
 
     /// What deleting takes, in the alert (issue #71).
     static func deletionWarning(apple: Bool) -> String {
-        var text = "This deletes your account, your finds, reactions, shared cards and photos, painted art, and your place in every circle. A circle you started passes to its longest-standing member. This can't be undone. Your journal and cards stay on this iPhone."
+        var text = "This deletes your account, your finds, reactions, shared cards and photos, painted art, and your place in every Guild. A Guild you started passes to its longest-standing member. This can't be undone. Your collection stays on this iPhone."
         if apple { text += " Apple will ask you to confirm once more, so Featherguild can stop using your Apple ID." }
         return text
     }
 
-    static let optionalNote = "An account is optional. Listening, your journal, cards and bird packs all work without one; signing in will let you join circles with friends."
+    static let optionalNote = "An account is optional. Listening, your collection and bird packs all work without one; signing in will let you join Guilds with friends."
 }
 
 /// Sign in with Apple and with Google, as list rows: Settings → Account, the Circles tab and the join screen.

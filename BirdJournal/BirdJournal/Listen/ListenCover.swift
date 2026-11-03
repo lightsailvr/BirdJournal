@@ -85,7 +85,8 @@ struct ListenCoverHeader: View {
 }
 
 /// A set's cover, cropped from the middle to fill: the pack's full cover, or the index's thumbnail before the pack is on
-/// the phone.
+/// the phone. It decodes through the Atlas's `SetCoverImage.load`; the fallback differs from the Atlas's, so it is
+/// drawn by the header.
 private struct SetCoverArt: View {
     let cover: SetCover
     @State private var image: UIImage?
@@ -102,13 +103,7 @@ private struct SetCoverArt: View {
             }
             .clipped()
             .task(id: cover) {
-                switch cover {
-                case let .pack(_, url):
-                    let path = url.path(percentEncoded: false)
-                    image = await Task.detached(priority: .userInitiated) { UIImage(contentsOfFile: path) }.value
-                case let .thumbnail(thumbnail):
-                    image = UIImage(data: thumbnail.thumbnail)
-                }
+                image = await SetCoverImage.load(cover)
             }
     }
 }

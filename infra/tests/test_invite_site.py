@@ -202,6 +202,18 @@ def test_the_site_has_the_privacy_policy_and_terms_and_no_page_points_back_to_gi
         assert "github.io" not in text, name
         assert 'href="/privacy"' in text, name
     privacy = pages["privacy.html"]
-    for subject in ("Circles", "finds", "Notifications", "React", "Goals", "Shared cards", "Painted card art",
+    for subject in ("Guilds", "finds", "Notifications", "React", "Goals", "Shared cards", "Painted card art",
                     "Moderation", "Reports", "Blocks", "Deleting your account", "secret spot"):
         assert subject.lower() in privacy.lower(), subject
+
+
+def test_the_pages_say_guild_never_circle() -> None:
+    """Issue #118: a Circle is a Guild wherever a person reads it; only the app's internal names keep Circle."""
+    from birdjournal_infra.invite_site import SITE_DIRECTORY
+
+    pages = {path.name: path.read_text() for path in SITE_DIRECTORY.glob("*.html")}
+    for name, text in pages.items():
+        assert "circle" not in text.lower(), name
+    invite = pages["invite.html"]
+    assert "<title>Join a Guild on Featherguild</title>" in invite
+    assert "You're invited to a Guild" in invite

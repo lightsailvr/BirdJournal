@@ -2,14 +2,15 @@ import Album
 import Pack
 import SwiftUI
 
-/// A circle's Recent finds (issue #62): friends' sightings, newest first, a page at a time, each with its art, who
-/// found it, Heard or Seen, the city or "a secret spot", and when. "First for the circle" marks the earliest surviving
-/// find of a species, apart from anyone's Legendary, which is the finder's own first. Under each find, its reactions
-/// (issue #64): a friend's find takes a tap on each, the birder's own shows what friends gave.
+/// A Guild's Recent finds (issue #62, led by the artwork since #118): friends' sightings, newest first, a page at a
+/// time, each with who found it, the city or "a secret spot" and when, then the art, the bird and Heard or Seen.
+/// "First for the Guild" marks the earliest surviving find of a species, apart from anyone's Legendary, which is the
+/// finder's own first. Under each find, its reactions (issue #64): a friend's find takes a tap on each, the birder's
+/// own shows what friends gave. No comments.
 struct CircleFeedSection: View {
     @Environment(CircleStore.self) private var circles
     let circleID: String
-    /// Report a friend's find, and block its owner (issue #71): the circle's page presents the sheet and the dialog,
+    /// Report a friend's find, and block its owner (issue #71): the Guild's page presents the sheet and the dialog,
     /// since a sheet hung on a list section never presents.
     var onReport: (FeedItem) -> Void = { _ in }
     var onBlock: (FeedItem.Owner) -> Void = { _ in }
@@ -21,7 +22,7 @@ struct CircleFeedSection: View {
         Section {
             if feed.items.isEmpty {
                 if feed.isLoaded {
-                    Text("No finds yet. Birds your circle adds while sharing show here.")
+                    Text("No finds yet. Birds your Guild adds while sharing show here.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                         .accessibilityIdentifier("feedEmpty")
@@ -32,10 +33,11 @@ struct CircleFeedSection: View {
                 }
             }
             ForEach(feed.items) { item in
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 10) {
                     FindRow(item: item)
                     ReactionBar(item: item) { kind, given in react(kind, given: given, to: item) }
                 }
+                .padding(.vertical, 6)
                 .contextMenu {
                     if !item.isMine {
                         Button("Report this find…", systemImage: "exclamationmark.bubble") { onReport(item) }
@@ -61,6 +63,7 @@ struct CircleFeedSection: View {
         } header: {
             Text("Recent finds")
         }
+        .listRowBackground(Color.raised)
     }
 
     private func react(_ kind: ReactionKind, given: Bool, to item: FeedItem) {
@@ -134,37 +137,59 @@ struct ReactionBar: View {
     }
 }
 
-/// One find: the art, the bird, who found it and how, where and when, and its marks.
+/// One find, artwork first (design guide pages 3 and 13): who found it, where and when, and its marks; then the art;
+/// then the bird and Heard or Seen. VoiceOver reads the bird first.
 struct FindRow: View {
     let item: FeedItem
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                Text(Self.initials(item.owner.name))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.mossText)
+                    .frame(width: 34, height: 34)
+                    .background(Color.moss, in: .circle)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(item.isMine ? "You" : item.owner.name).font(.subheadline.weight(.semibold)).foregroundStyle(Color.ink)
+                    Text(Self.whereAndWhen(item)).font(JournalFont.attribution).foregroundStyle(Color.inkSecondary)
+                }
+                Spacer(minLength: 6)
+            }
+            let marks = Self.marks(item)
+            if !marks.isEmpty {
+                FlowMarks(marks: marks)
+            }
             FindArt(item: item)
-                .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 // A scaled-to-fill picture still takes touches outside its clip.
                 .allowsHitTesting(false)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(item.commonName).font(JournalFont.rowTitle)
-                Text(Self.byline(item)).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
-                Text(Self.whereAndWhen(item)).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
-                let marks = Self.marks(item)
-                if !marks.isEmpty {
-                    HStack(spacing: 6) {
-                        ForEach(marks, id: \.self) { mark in FindMark(title: mark) }
-                    }
-                    .padding(.top, 2)
-                }
-                if let card = item.card {
-                    SharedCardExtras(card: card)
-                }
+            HStack(alignment: .firstTextBaseline) {
+                Text(item.commonName).font(JournalFont.heading).foregroundStyle(Color.ink)
+                Spacer(minLength: 8)
+                Text(item.method.title).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
+            }
+            if let card = item.card {
+                SharedCardExtras(card: card)
             }
         }
-        .padding(.vertical, 2)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Self.spoken(item))
         .accessibilityIdentifier("find-\(item.sightingID)")
+    }
+
+    /// "Black Phoebe. Heard by Maya Ortiz. Pasadena · 2 hours ago. First for the Guild.", then a shared card's caption
+    /// and note.
+    static func spoken(_ item: FeedItem) -> String {
+        var parts = [item.commonName, byline(item), whereAndWhen(item)] + marks(item)
+        if let caption = item.card?.caption { parts.append(caption) }
+        if let note = item.card?.note { parts.append("Note: \(note)") }
+        if item.card?.photo?.url != nil { parts.append("With their photo") }
+        return parts.joined(separator: ". ")
+    }
+
+    static func initials(_ name: String) -> String {
+        name.split(whereSeparator: \.isWhitespace).prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
     }
 
     /// "Heard by Maya Ortiz", "Seen by you".
@@ -179,18 +204,32 @@ struct FindRow: View {
         return "\(place == FindPolicy.secretSpot ? "At a secret spot" : place) · \(when)"
     }
 
-    /// The marks a find wears, in this order: Legendary (the finder's first), First for the circle, and Rare or
+    /// The marks a find wears, in this order: Legendary (the finder's first), First for the Guild, and Rare or
     /// Exceptional. Common and Uncommon aren't marked.
     static func marks(_ item: FeedItem) -> [String] {
         var marks: [String] = []
         if item.legendary { marks.append("Legendary") }
-        if item.circleFirst { marks.append("First for the circle") }
+        if item.circleFirst { marks.append(firstForTheGuild) }
         if let rarity = item.rarity, rarity == .rare || rarity == .exceptional { marks.append(rarity.title) }
         return marks
     }
+
+    static let firstForTheGuild = "First for the Guild"
 }
 
-/// What a card shared by hand to this circle adds (issue #66): its caption, the finder's note and their original
+/// The marks in a row that wraps at large text sizes.
+private struct FlowMarks: View {
+    let marks: [String]
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 6) { ForEach(marks, id: \.self) { FindMark(title: $0) } }
+            VStack(alignment: .leading, spacing: 6) { ForEach(marks, id: \.self) { FindMark(title: $0) } }
+        }
+    }
+}
+
+/// What a card shared by hand to this Guild adds (issue #66): its caption, the finder's note and their original
 /// photo, faces blurred.
 private struct SharedCardExtras: View {
     let card: FeedItem.SharedCard
@@ -221,21 +260,27 @@ private struct SharedCardExtras: View {
     }
 }
 
+/// A find's mark. Legendary keeps the gold, its one job; First for the Guild is an outlined aqua capsule, kept
+/// apart from it; a rarity is just its word.
 private struct FindMark: View {
     let title: String
 
     var body: some View {
+        let legendary = title == "Legendary"
+        let first = title == FindRow.firstForTheGuild
         Text(title)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(title == "Legendary" ? Color.goldInk : Color.moss)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(title == "Legendary" ? Color.goldWash : Color.moss.opacity(0.14), in: .capsule)
+            .foregroundStyle(legendary ? Color.goldInk : first ? Color.moss : Color.inkSecondary)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 3)
+            .background(legendary ? Color.goldWash : Color.clear, in: .capsule)
+            .overlay(Capsule().strokeBorder(first ? Color.moss : legendary ? Color.goldInk.opacity(0.5) : Color.rule, lineWidth: 1))
     }
 }
 
-/// The find's art from the art CDN; until it loads, or when it can't, the species' reference photo from an installed
-/// pack, else a typographic tile naming the bird.
+/// The find's art from the art CDN; until it loads, or when it can't, the species' painting from an installed pack
+/// (the same pack art the find names), else its reference photo, else a typographic tile naming the bird. A pack
+/// painting sits whole on the card's ivory, as on the card: it is painted to its edges.
 private struct FindArt: View {
     @Environment(PackLibrary.self) private var library
     let item: FeedItem
@@ -244,7 +289,7 @@ private struct FindArt: View {
         if let url = item.art?.url {
             AsyncImage(url: url) { phase in
                 if let image = phase.image {
-                    image.resizable().scaledToFill()
+                    if item.art?.kind == "pack" { painting(image) } else { filled(image) }
                 } else {
                     fallback
                 }
@@ -254,19 +299,45 @@ private struct FindArt: View {
         }
     }
 
+    /// A pack painting, whole on the ivory face in a square slot.
+    private func painting(_ image: Image) -> some View {
+        Color.cardFace
+            .aspectRatio(1, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .overlay { image.resizable().scaledToFit().padding(.vertical, 6) }
+    }
+
+    /// A painted scene, the birder's photo art or a reference photo, filling a 4:3 slot.
+    private func filled(_ image: Image) -> some View {
+        Color.raised
+            .aspectRatio(4 / 3, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .overlay { image.resizable().scaledToFill() }
+            .clipped()
+    }
+
     @ViewBuilder private var fallback: some View {
-        if let url = library.thumbnailURL(scientificName: item.scientificName), let image = UIImage(contentsOfFile: url.path) {
-            Image(uiImage: image).resizable().scaledToFill()
+        if let art = library.packArt(scientificName: item.scientificName, setID: nil) {
+            // Decoded off the main actor, feathered into the face as on the card.
+            Color.cardFace
+                .aspectRatio(1, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .overlay { PackImage(url: art.pack.artURL(for: art.art), painting: true).padding(.vertical, 6) }
+        } else if let url = library.thumbnailURL(scientificName: item.scientificName) {
+            PackImage(url: url)
+                .aspectRatio(4 / 3, contentMode: .fit)
+                .frame(maxWidth: .infinity)
         } else {
             ZStack {
                 Color.cardFace
                 Text(item.commonName)
-                    .font(.system(.caption2, design: .serif, weight: .medium))
+                    .font(.system(.title3, design: .serif, weight: .medium))
                     .foregroundStyle(Color.cardIvory)
                     .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.7)
-                    .padding(5)
+                    .padding(12)
             }
+            .aspectRatio(4 / 3, contentMode: .fit)
+            .frame(maxWidth: .infinity)
         }
     }
 }

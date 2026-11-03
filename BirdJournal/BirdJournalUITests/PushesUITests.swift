@@ -17,8 +17,8 @@ final class PushesUITests: XCTestCase {
     }
 
     private func create(_ name: String, in app: XCUIApplication) {
-        app.buttons["New circle"].firstMatch.tap()
-        let field = app.textFields["Circle name"]
+        app.buttons["New Guild"].firstMatch.tap()
+        let field = app.textFields["Guild name"]
         XCTAssertTrue(field.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         field.typeText(name)
         app.buttons["Create"].tap()
@@ -28,46 +28,46 @@ final class PushesUITests: XCTestCase {
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 5), "not listed; screen: \(app.debugDescription.prefix(3000))")
         row.tap()
-        XCTAssertTrue(app.staticTexts["Members · 1 of 20"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     /// The settings are the page's last section, below the feed and the members.
     private func scrollToSettings(_ app: XCUIApplication) {
-        let leave = app.buttons["Leave circle"]
-        for _ in 0..<6 where !(leave.exists && leave.isHittable) { app.collectionViews.firstMatch.swipeUp() }
+        let leave = app.buttons["Leave Guild"]
+        for _ in 0..<24 where !(leave.exists && leave.isHittable) { app.collectionViews.firstMatch.swipeUp() }
     }
 
     @MainActor
     func testTheFirstCircleExplainsPushesOnceAndAllowingThemTurnsThemOn() {
         let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined"])
         app.tabBars.buttons["Guilds"].tap()
-        XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["No Guilds yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         // Opening the tab asks nothing.
         XCTAssertFalse(app.alerts[explanation].waitForExistence(timeout: 2))
 
         create("Backyard Crew", in: app)
         let alert = app.alerts[explanation]
         XCTAssertTrue(alert.waitForExistence(timeout: 5), "no explanation; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(alert.staticTexts.matching(NSPredicate(format: "label CONTAINS 'mute a circle or a friend'")).firstMatch.exists)
+        XCTAssertTrue(alert.staticTexts.matching(NSPredicate(format: "label CONTAINS 'mute a Guild or a friend'")).firstMatch.exists)
         alert.buttons["Turn on notifications"].tap()
 
         open("Backyard Crew", in: app)
         scrollToSettings(app)
-        XCTAssertTrue(app.switches["Mute this circle"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.switches["Mute this Guild"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Turn on notifications"].exists)
         XCTAssertFalse(app.buttons["Open notification settings"].exists)
 
         app.navigationBars.buttons.firstMatch.tap()
         create("Weekday Walkers", in: app)
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Weekday Walkers'")).firstMatch.waitForExistence(timeout: 5))
-        XCTAssertFalse(app.alerts[explanation].waitForExistence(timeout: 3), "asked again at the second circle")
+        XCTAssertFalse(app.alerts[explanation].waitForExistence(timeout: 3), "asked again at the second Guild")
     }
 
     @MainActor
     func testADenialLeavesAWayToSettings() {
         let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined", "-fakePushGrant", "NO"])
         app.tabBars.buttons["Guilds"].tap()
-        XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["No Guilds yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         create("Backyard Crew", in: app)
         let alert = app.alerts[explanation]
         XCTAssertTrue(alert.waitForExistence(timeout: 5), "no explanation; screen: \(app.debugDescription.prefix(3000))")
@@ -83,7 +83,7 @@ final class PushesUITests: XCTestCase {
     func testNotNowLeavesTheChoiceOnTheCirclePage() {
         let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined"])
         app.tabBars.buttons["Guilds"].tap()
-        XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["No Guilds yet"].waitForExistence(timeout: 10))
         create("Backyard Crew", in: app)
         let alert = app.alerts[explanation]
         XCTAssertTrue(alert.waitForExistence(timeout: 5))
@@ -96,13 +96,13 @@ final class PushesUITests: XCTestCase {
     @MainActor
     func testACircleAndAFriendCanBeMuted() {
         let app = launch(["-fakeCircles", "some", "-autoScreen", "circle", "-fakePushPermission", "authorized"])
-        let mute = app.switches["Mute this circle"]
+        let mute = app.switches["Mute this Guild"]
         let list = app.collectionViews.firstMatch
         XCTAssertTrue(list.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        for _ in 0..<6 where !mute.exists { list.swipeUp() }
+        for _ in 0..<24 where !mute.exists { list.swipeUp() }
         XCTAssertTrue(mute.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         mute.switches.firstMatch.tap()
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Muted: this circle'")).firstMatch.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Muted: this Guild'")).firstMatch.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
 
         let maya = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Maya Ortiz'")).firstMatch
         let mayaRow = maya.exists ? maya : app.staticTexts["Maya Ortiz"].firstMatch

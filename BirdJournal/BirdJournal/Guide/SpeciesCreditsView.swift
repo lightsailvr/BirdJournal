@@ -2,7 +2,8 @@ import Pack
 import SwiftUI
 
 /// Every photo of one species with its observer, exact license and links, its reference sounds (issue #41), the text
-/// source, the lore's (issue #56), and the way to the full credits screen (issue #28).
+/// source, the lore's (issue #56), the stats' datasets (issue #55), its pack painting and the set's cover, both AI
+/// illustrations (#118), and the way to the full credits screen (issue #28).
 struct SpeciesCreditsView: View {
     @Environment(PackLibrary.self) private var library
     let scientificName: String
@@ -46,8 +47,27 @@ struct SpeciesCreditsView: View {
                         }
                     }
                 }
+                if let stats = found.species.stats {
+                    Section("Stats") {
+                        Text(CardStatsText.sources(stats))
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                    }
+                }
+                if let art = found.species.packArt {
+                    Section {
+                        Text("AI illustration, not a photograph: painted for the pack (\(art.workflowVersion))\(art.sourcePhotoIDs.isEmpty ? " from a written description" : " from \(art.sourcePhotoIDs.count) of the photos above").")
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                    } header: {
+                        Text("Painting")
+                    }
+                }
                 Section("Pack") {
                     LabeledContent("Bird pack", value: "\(found.pack.info.name), version \(found.pack.info.version)")
+                    if let cover = library.cover(setID: found.pack.info.id) {
+                        LabeledContent("Set cover", value: cover.credit)
+                    }
                     NavigationLink("All sources & credits", value: Route.credits)
                 }
             }

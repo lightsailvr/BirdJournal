@@ -61,15 +61,15 @@ final class CircleStore {
         guard let client, account.isSignedIn else { return }
         if circles.isEmpty { listState = .loading }
         do {
-            circles = try await account.withAccessToken(doing: "load your circles") { try await client.circles(accessToken: $0) }
+            circles = try await account.withAccessToken(doing: "load your Guilds") { try await client.circles(accessToken: $0) }
             listState = .loaded
-            if let mutes = try? await account.withAccessToken(doing: "load your circles", { try await client.mutes(accessToken: $0) }) {
+            if let mutes = try? await account.withAccessToken(doing: "load your Guilds", { try await client.mutes(accessToken: $0) }) {
                 self.mutes = mutes
             }
             await loadBlocks()
         } catch {
             log.error("couldn't load circles: \(String(describing: error))")
-            listState = .failed(Self.message(for: error, doing: "load your circles"))
+            listState = .failed(Self.message(for: error, doing: "load your Guilds"))
         }
     }
 
@@ -283,7 +283,7 @@ final class CircleStore {
     private func call<T>(_ body: (CircleClient, String) async throws -> T) async throws -> T {
         // Only reachable if a screen calls without checking `isAvailable`.
         guard let client else { throw CircleError.server(0) }
-        return try await account.withAccessToken(doing: "reach your circles") { try await body(client, $0) }
+        return try await account.withAccessToken(doing: "reach your Guilds") { try await body(client, $0) }
     }
 
     private func remember(_ detail: CircleDetail) {
@@ -306,16 +306,16 @@ final class CircleStore {
     /// The words for a failure, on the screen where it happened.
     static func message(for error: Error, doing action: String) -> String {
         switch error {
-        case CircleError.full: "This circle is full: a circle holds 20 birders."
+        case CircleError.full: "This Guild is full: a Guild holds 20 birders."
         case CircleError.inviteExpired: "This invitation has expired. Ask your friend for a new one."
-        case CircleError.inviteRevoked: "This invitation no longer works for you. Ask the circle for a new one."
-        case CircleError.notFound: "This circle or invitation isn't there any more."
-        case CircleError.creatorOnly: "Only the circle's creator can remove members."
+        case CircleError.inviteRevoked: "This invitation no longer works for you. Ask the Guild for a new one."
+        case CircleError.notFound: "This Guild or invitation isn't there any more."
+        case CircleError.creatorOnly: "Only the Guild's creator can remove members."
         case CircleError.rejected: "Use a name of up to 40 characters, on one line."
-        case CircleError.goalNotYours: "Only a goal's creator or the circle's creator can delete it, and the monthly goal stays."
+        case CircleError.goalNotYours: "Only a goal's creator or the Guild's creator can delete it, and the monthly goal stays."
         case CircleError.tooManyReports: "You've sent a lot of reports today. Try again tomorrow, or email matt@lightsailvr.com."
         case CircleError.ownAccount: "You can't report or block yourself."
-        case AuthError.sessionExpired: "You've been signed out. Sign in again to use your circles."
+        case AuthError.sessionExpired: "You've been signed out. Sign in again to use your Guilds."
         default: "Couldn't \(action). Check your connection and try again."
         }
     }

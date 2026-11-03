@@ -16,24 +16,22 @@ final class FindsUITests: XCTestCase {
     @MainActor
     func testACirclePageShowsItsRecentFinds() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
-        XCTAssertTrue(app.staticTexts["Recent finds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledTo(app.staticTexts["Recent finds"]), "screen: \(app.debugDescription.prefix(3000))")
 
-        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-'"))
-        // The goal card (issue #65) and the Recent finds | Compare birds picker (#64) sit above the finds, and reactions
-        // made the rows taller: the list builds only the rows on screen, so scroll until it has drawn four of the six.
-        for _ in 0..<6 where !rows.firstMatch.exists { app.swipeUp() }
-        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5), "no finds; screen: \(app.debugDescription.prefix(3000))")
-        for _ in 0..<6 where rows.count < 4 { app.swipeUp() }
-        XCTAssertGreaterThanOrEqual(rows.count, 4)
-        let newest = rows.element(boundBy: 0).label
+        // The Guild's header and goals sit above the finds, and each find leads with its art (issue #118): the list
+        // builds only the rows on screen, so read them while scrolling.
+        let labels = app.feedLabels()
+        XCTAssertGreaterThanOrEqual(labels.count, 4, "\(labels)")
+        let newest = labels[0]
         XCTAssertTrue(newest.contains("California Gnatcatcher"), newest)
         XCTAssertTrue(newest.contains("At a secret spot"), newest)
-        XCTAssertTrue(newest.contains("First for the circle"), newest)
+        XCTAssertTrue(newest.contains("First for the Guild"), newest)
         XCTAssertTrue(newest.contains("Rare"), newest)
-        let oldest = rows.element(boundBy: 3).label
-        XCTAssertTrue(oldest.contains("Seen by Maya Ortiz") && oldest.contains("Legendary") && oldest.contains("First for the circle"), oldest)
-        let later = rows.element(boundBy: 1).label
-        XCTAssertTrue(later.contains("Black Phoebe") && !later.contains("First for the circle"), later)
+        let oldest = labels[3]
+        XCTAssertTrue(oldest.contains("Seen by Maya Ortiz") && oldest.contains("Legendary") && oldest.contains("First for the Guild"), oldest)
+        let later = labels[1]
+        XCTAssertTrue(later.contains("Black Phoebe") && !later.contains("First for the Guild"), later)
     }
 
     @MainActor

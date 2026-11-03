@@ -20,7 +20,7 @@ The user-facing words for three places differ from the internal ones, which code
 | **Atlas**, "Field guide & regional sets" | Field Guide | the tab with every species, the sets and the packs (`Guide/`, `Packs/`) |
 | **Guild** | Circle | the invite-only group (`Circles/`, `Circle*` models, `/v1/circles` routes) |
 
-The tabs still read Journal, Field Guide and Circles until #117 renames them; Circle becomes Guild in copy with #118.
+The tabs still read Journal, Field Guide and Circles until #117 renames them; Circle is Guild in every user-facing string since #118 (pages, invites, pushes, the invite site).
 
 ## Listening
 
@@ -169,7 +169,7 @@ The place a find shows: a city, or "a secret spot" for a threatened species. Nev
 _Avoid_: location (the coordinate on the phone), area
 
 **Circle first**:
-The earliest surviving find of a species in a circle. Separate from any member's Legendary.
+The earliest surviving find of a species in a circle, shown as "First for the Guild". Separate from any member's Legendary.
 _Avoid_: circle legendary, first find
 
 **Goal**:

@@ -193,18 +193,18 @@ struct ShareCardView: View {
     // The circles.
 
     @ViewBuilder private var circlesSection: some View {
-        Text("Your circles")
+        Text("Your Guilds")
             .font(JournalFont.section)
             .foregroundStyle(Color.ink)
             .padding(.top, JournalLayout.sectionGap)
             .accessibilityAddTraits(.isHeader)
         if !account.isSignedIn {
-            Text("Sign in under Settings → Account to share cards with your circles.")
+            Text("Sign in under Settings → Account to share cards with your Guilds.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 8)
         } else if circles.circles.isEmpty {
-            Text(circles.listState == .loading ? "Loading your circles…" : "You're not in a circle yet. Start one in the Circles tab.")
+            Text(circles.listState == .loading ? "Loading your Guilds…" : "You're not in a Guild yet. Start one in the Guilds tab.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 8)
@@ -229,7 +229,7 @@ struct ShareCardView: View {
             .padding(.top, 8)
             Text(originalPhotoPath == nil
                 ? "No original photo with this sighting."
-                : "Faces are blurred and the location and camera details removed before the photo leaves your iPhone. It goes to your circles only, never in the card image.")
+                : "Faces are blurred and the location and camera details removed before the photo leaves your iPhone. It goes to your Guilds only, never in the card image.")
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 4)
@@ -270,9 +270,9 @@ struct ShareCardView: View {
     private var sendTitle: String {
         if sending == .sending { return "Sending…" }
         switch chosenCircles.count {
-        case 0: return "Choose a circle"
-        case 1: return "Send to 1 circle"
-        default: return "Send to \(chosenCircles.count) circles"
+        case 0: return "Choose a Guild"
+        case 1: return "Send to 1 Guild"
+        default: return "Send to \(chosenCircles.count) Guilds"
         }
     }
 
@@ -312,7 +312,7 @@ struct ShareCardView: View {
 
     static func message(for error: Error) -> String {
         switch error {
-        case ShareFailure.findWaiting: "This bird is still on its way to your circles. Try again once you're online."
+        case ShareFailure.findWaiting: "This bird is still on its way to your Guilds. Try again once you're online."
         case ShareFailure.photoUnavailable, is ArtPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
         case CircleError.rejected: "The server turned this card down. Try again without the photo."
         default: CircleStore.message(for: error, doing: "share your card")

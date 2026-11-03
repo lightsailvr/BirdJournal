@@ -1,12 +1,15 @@
 import SwiftUI
 
-/// A circle's page (issue #61): the goal card (issue #65), Recent finds (issue #62) or Compare birds (issue #64),
-/// invite (a link and a QR code), the members, and the settings (leave; the creator removes members).
+/// A Guild's page (issue #61 as a circle's page, reskinned as a Guild in #118): its habitat cover, emblem and members
+/// with the Invite action first, then the shared goals (issue #65), Finds (issue #62) or Compare birds (issue #64), the
+/// birder's own sharing setting kept in view, and, after them, the members and the settings (leave; the creator removes
+/// members). Models, routes and endpoints keep their Circle names.
 struct CirclePageView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(PushCenter.self) private var pushes
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     let id: String
     @State private var inviting = false
     @State private var confirmingLeave = false
@@ -16,6 +19,7 @@ struct CirclePageView: View {
     @State private var blocking: BlockedAccount?
     @State private var error: String?
     @State private var showing: Showing = .finds
+    @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
 
     enum Showing: Hashable {
         case finds
@@ -25,16 +29,27 @@ struct CirclePageView: View {
     private var detail: CircleDetail? { circles.details[id] }
 
     var body: some View {
+        ScrollViewReader { proxy in
+            page
+                #if DEBUG
+                .debugScroll(proxy, to: "guild-feed", when: circles.feeds[id]?.isLoaded == true)
+                #endif
+        }
+    }
+
+    private var page: some View {
         List {
             if let detail {
+                header(detail)
                 CircleGoalsSection(circleID: detail.circle.id, timeZone: detail.circle.timeZone)
                 Section {
                     Picker("Show", selection: $showing) {
-                        Text("Recent finds").tag(Showing.finds)
+                        Text("Finds").tag(Showing.finds)
                         Text("Compare birds").tag(Showing.compare)
                     }
                     .pickerStyle(.segmented)
                     .accessibilityIdentifier("circlePageShowing")
+                    .id("guild-feed")
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
@@ -47,7 +62,7 @@ struct CirclePageView: View {
                     )
                 case .compare: compare(detail)
                 }
-                header(detail)
+                sharing
                 members(detail)
                 settings(detail)
             } else if let error {
@@ -60,14 +75,15 @@ struct CirclePageView: View {
             }
         }
         .paperList()
-        .navigationTitle(detail?.circle.name ?? circles.circles.first { $0.id == id }?.name ?? "Circle")
+        .navigationTitle(detail?.circle.name ?? circles.circles.first { $0.id == id }?.name ?? "Guild")
+        .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         // A notifications explanation that never got on screen gets one more chance (issue #107).
         .task { await pushes.circlesAppeared() }
         .refreshable { await load() }
         .sheet(isPresented: $inviting) { InviteSheet(circleID: id, circleName: detail?.circle.name ?? "") }
-        .confirmationDialog("Leave this circle?", isPresented: $confirmingLeave, titleVisibility: .visible) {
-            Button("Leave circle", role: .destructive) { leave() }
+        .confirmationDialog("Leave this Guild?", isPresented: $confirmingLeave, titleVisibility: .visible) {
+            Button("Leave Guild", role: .destructive) { leave() }
         } message: {
             Text(leaveMessage)
         }
@@ -77,7 +93,7 @@ struct CirclePageView: View {
             titleVisibility: .visible,
             presenting: removing
         ) { member in
-            Button("Remove from circle", role: .destructive) { remove(member) }
+            Button("Remove from Guild", role: .destructive) { remove(member) }
         } message: { _ in
             Text("They can come back only with a new invitation.")
         }
@@ -112,7 +128,7 @@ struct CirclePageView: View {
         #endif
     }
 
-    /// Compare birds: the friends in the circle, each opening the two of you side by side.
+    /// Compare birds: the friends in the Guild, each opening the two of you side by side.
     private func compare(_ detail: CircleDetail) -> some View {
         let friends = detail.members.filter { $0.id != myID(in: detail) }
         return Section {
@@ -134,23 +150,76 @@ struct CirclePageView: View {
                 Text("Each species Heard, Seen or not yet, for you and a friend: plan the next walk.")
             }
         }
+        .listRowBackground(Color.raised)
     }
 
+    /// Belonging first: the habitat cover, the emblem and name, who is in it, and Invite.
     private func header(_ detail: CircleDetail) -> some View {
-        Section {
-            Button {
-                inviting = true
-            } label: {
-                Label("Invite friends", systemImage: "qrcode")
+        let identity = GuildIdentity(circleID: detail.circle.id)
+        let full = detail.circle.memberCount >= 20
+        return Section {
+            VStack(alignment: .leading, spacing: 0) {
+                GuildCover(identity: identity)
+                    .frame(height: 120)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                HStack(alignment: .top, spacing: 14) {
+                    GuildEmblem(identity: identity, size: 72)
+                        .padding(.top, -36)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(detail.circle.name)
+                            .font(JournalFont.title)
+                            .foregroundStyle(Color.ink)
+                            .accessibilityAddTraits(.isHeader)
+                        Text("\(detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members") · Invite-only")
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(.horizontal, 6)
+                AdaptiveRow(stacked: typeSize.stacksRows) {
+                    MemberFaces(members: detail.members, total: detail.circle.memberCount, shown: 5)
+                    if !typeSize.stacksRows { Spacer(minLength: 10) }
+                    Button {
+                        inviting = true
+                    } label: {
+                        Label("Invite friends", systemImage: "qrcode")
+                    }
+                    .buttonStyle(.journalOutlined)
+                    .disabled(full)
+                }
+                .padding(.top, 10)
+                .padding(.horizontal, 6)
+                Text(full
+                     ? "This Guild is full: a Guild holds 20 birders."
+                     : "Anyone in the Guild can invite. Invitations last seven days.")
+                    .font(JournalFont.attribution)
+                    .foregroundStyle(Color.inkSecondary)
+                    .padding(.top, 8)
+                    .padding(.horizontal, 6)
             }
-            .buttonStyle(.journalPrimary)
-            .disabled(detail.circle.memberCount >= 20)
             .listRowBackground(Color.clear)
-        } footer: {
-            Text(detail.circle.memberCount >= 20
-                 ? "This circle is full: a circle holds 20 birders."
-                 : "Anyone in the circle can invite. Invitations last seven days.")
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
         }
+    }
+
+    /// The birder's own sharing, in view on every Guild (design guide page 13): the same setting as Settings → Account.
+    private var sharing: some View {
+        Section {
+            Toggle(isOn: $sharesFinds) {
+                Label("Share my finds automatically", systemImage: sharesFinds ? "person.2.wave.2" : "lock")
+            }
+            .tint(Color.moss)
+            .accessibilityIdentifier("guildShareFindsToggle")
+        } header: {
+            Text("Your sharing")
+        } footer: {
+            Text(sharesFinds
+                 ? "Birds you add reach your Guilds as finds: the bird, Heard or Seen, the city and the time, never the exact spot. Notes and original photos stay on this iPhone unless you share a card with them. Threatened birds show as at a secret spot."
+                 : "You're private: birds you add stay on this iPhone. Share a card by hand to show it here.")
+        }
+        .listRowBackground(Color.raised)
     }
 
     private func members(_ detail: CircleDetail) -> some View {
@@ -188,7 +257,7 @@ struct CirclePageView: View {
                             }
                         }
                         if detail.circle.isCreator, !isMe {
-                            Button("Remove from circle", systemImage: "person.badge.minus", role: .destructive) { removing = member }
+                            Button("Remove from Guild", systemImage: "person.badge.minus", role: .destructive) { removing = member }
                         }
                     }
             }
@@ -197,10 +266,11 @@ struct CirclePageView: View {
         } footer: {
             if detail.members.count > 1 {
                 Text(detail.circle.isCreator
-                     ? "You started this circle: swipe a member to mute or remove them. Touch and hold to report or block."
+                     ? "You started this Guild: swipe a member to mute or remove them. Touch and hold to report or block."
                      : "Swipe a friend to mute their finds' notifications. Touch and hold to report or block.")
             }
         }
+        .listRowBackground(Color.raised)
     }
 
     private func settings(_ detail: CircleDetail) -> some View {
@@ -208,16 +278,17 @@ struct CirclePageView: View {
             if pushes.isAvailable {
                 notifications(detail)
             }
-            Button("Leave circle", role: .destructive) { confirmingLeave = true }
+            Button("Leave Guild", role: .destructive) { confirmingLeave = true }
         } header: {
             Text("Settings")
         } footer: {
             if pushes.isAvailable, pushes.permission == .denied {
                 Text("Notifications are off for Featherguild, so friends' finds arrive only in the feed. Turn them on in Settings → Notifications.")
             } else if circles.mutes.circles.contains(detail.circle.id) {
-                Text("Muted: this circle's finds still show here, without notifications.")
+                Text("Muted: this Guild's finds still show here, without notifications.")
             }
         }
+        .listRowBackground(Color.raised)
     }
 
     /// Mute, and the way back to notifications when they are off (issue #63).
@@ -237,7 +308,7 @@ struct CirclePageView: View {
             get: { circles.mutes.circles.contains(detail.circle.id) },
             set: { muted in setCircleMuted(muted, detail.circle.id) }
         )) {
-            Label("Mute this circle", systemImage: "bell.slash")
+            Label("Mute this Guild", systemImage: "bell.slash")
         }
         .tint(Color.moss)
     }
@@ -248,7 +319,7 @@ struct CirclePageView: View {
                 try await circles.setCircleMuted(muted, circleID: circleID)
                 error = nil
             } catch {
-                self.error = CircleStore.message(for: error, doing: muted ? "mute the circle" : "unmute the circle")
+                self.error = CircleStore.message(for: error, doing: muted ? "mute the Guild" : "unmute the Guild")
             }
         }
     }
@@ -265,7 +336,7 @@ struct CirclePageView: View {
     }
 
     static func blockMessage(_ name: String) -> String {
-        "You won't see \(name)'s finds or reactions, or get notifications about them, in any circle. \(name) isn't told. Unblock in Settings → Account."
+        "You won't see \(name)'s finds or reactions, or get notifications about them, in any Guild. \(name) isn't told. Unblock in Settings → Account."
     }
 
     private func subject(of draft: ReportDraft) -> String {
@@ -300,7 +371,7 @@ struct CirclePageView: View {
     private var leaveMessage: String {
         guard let detail else { return "" }
         if detail.circle.isCreator, detail.members.count > 1 {
-            return "You started this circle. It passes to the member who has been in it longest."
+            return "You started this Guild. It passes to the member who has been in it longest."
         }
         return "You can join again only with a new invitation."
     }
@@ -319,7 +390,7 @@ struct CirclePageView: View {
             await circles.loadFeed(circleID: id)
             await goals
         } catch {
-            self.error = CircleStore.message(for: error, doing: "load the circle")
+            self.error = CircleStore.message(for: error, doing: "load the Guild")
         }
     }
 
@@ -329,7 +400,7 @@ struct CirclePageView: View {
                 try await circles.leave(circleID: id)
                 dismiss()
             } catch {
-                self.error = CircleStore.message(for: error, doing: "leave the circle")
+                self.error = CircleStore.message(for: error, doing: "leave the Guild")
             }
         }
     }
@@ -363,7 +434,7 @@ private struct MemberRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(isMe ? "\(member.name) (you)" : member.name).font(JournalFont.rowTitle)
                 if member.isCreator {
-                    Text("Started the circle").font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
+                    Text("Started the Guild").font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
                 }
             }
             if isMuted || isBlocked {
@@ -417,7 +488,7 @@ struct InviteSheet: View {
                             .foregroundStyle(Color.inkSecondary)
                             .textSelection(.enabled)
                             .multilineTextAlignment(.center)
-                        ShareLink(item: invite.url, subject: Text("Join \(circleName) on Featherguild"), message: Text("Join my circle \(circleName) on Featherguild")) {
+                        ShareLink(item: invite.url, subject: Text("Join \(circleName) on Featherguild"), message: Text("Join my Guild \(circleName) on Featherguild")) {
                             Label("Share link", systemImage: "square.and.arrow.up")
                         }
                         .buttonStyle(.journalPrimary)

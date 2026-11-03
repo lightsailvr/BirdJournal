@@ -52,3 +52,17 @@ screen is in `dark`, `light` and `ax3` (light at accessibility extra large):
 - `card`: a card's page, the tab bar hidden (`-autoScreen card`)
 
 Compare them with pages 3, 4, 6 and 15 of `docs/design/featherguild/`.
+
+`118/` is the evidence for issue #118 (Featherguild slice 3: Guilds and the Atlas), half size from an iPhone 17 Pro
+simulator (iOS 27.2) on Los Angeles v10, reduced to 256 colours, taken by `118/capture.sh`. The Guilds screens use the
+in-memory fake server (`-fakeAccount signedIn -fakeCircles some`); the Atlas reads the live pack index, so the other four
+sets show their index cover thumbnails. Each screen is in `dark`, `light` and `ax3` (light at accessibility extra large):
+- `guilds`: the Guilds list, each card with its habitat cover, emblem, members and this month's goal
+- `guild`, `guild-feed`: Sunday Group's page (cover, emblem, Invite, the goals) and, scrolled, its finds led by the art
+- `atlas`, `atlas-new`: the Atlas with the Los Angeles tile, and "Somewhere new" with the other sets' covers and downloads
+- `pack-states-1` to `-4`: every transfer state with its recovery (`-autoPackStates`, debug only): not on the phone,
+  downloading, installing; ready offline, an update, offline; interrupted, a failed install; low storage
+- `pack`: the Los Angeles pack's page
+- `profile`, `profile-tale`: the Black Phoebe's profile, and scrolled to its tale and stats
+
+Compare them with pages 3–4 (and the rules on 13–14) of `docs/design/featherguild/`.

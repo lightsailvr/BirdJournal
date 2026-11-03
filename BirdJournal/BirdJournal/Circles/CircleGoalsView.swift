@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The goal card on a circle's page (issue #65): this month's goal, sized from the circle's last month, with its
-/// progress in distinct species, then the circle's custom goals (running, coming and just ended), and **New goal**.
-/// A custom goal's creator or the circle's creator swipes it away.
+/// The goal card on a Guild's page (issue #65): this month's goal, sized from the circle's last month, with its
+/// progress in distinct species, then the Guild's custom goals (running, coming and just ended), and **New goal**.
+/// A custom goal's creator or the Guild's creator swipes it away.
 struct CircleGoalsSection: View {
     @Environment(CircleStore.self) private var circles
     let circleID: String
@@ -49,7 +49,7 @@ struct CircleGoalsSection: View {
                 ) { goal in
                     Button("Delete goal", role: .destructive) { delete(goal) }
                 } message: { _ in
-                    Text("It goes for everyone in the circle. The finds stay.")
+                    Text("It goes for everyone in the Guild. The finds stay.")
                 }
                 #if DEBUG
                 .task {
@@ -72,6 +72,7 @@ struct CircleGoalsSection: View {
                 Text("Goals count different species, not repeat cards, among everyone's finds.")
             }
         }
+        .listRowBackground(Color.raised)
     }
 
     private func delete(_ goal: CircleGoal) {
@@ -86,36 +87,43 @@ struct CircleGoalsSection: View {
     }
 }
 
-/// This month's goal: the month, "9 of 14 species", a bar, and the days left or "Reached".
+/// This month's goal, in the lavender of shared goals (design guide pages 3 and 13): the month, a calm headline from
+/// the target ("Fourteen birds, together."), a bar, "9 of 14 species" and "5 still to discover", or that it's reached.
+/// No countdown and no leaderboard; never gold, which is the personal Legendary's.
 struct MonthlyGoalCard: View {
     let goal: CircleGoal
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text(goal.title).font(JournalFont.heading)
+                Text(goal.title.uppercased())
+                    .font(CardFont.edition)
+                    .tracking(CardFont.editionTracking)
                 Spacer()
                 if goal.isReached {
-                    Label("Reached", systemImage: "checkmark.seal.fill")
+                    Label("Reached", systemImage: "checkmark.circle")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.goldInk)
                 }
             }
-            Text(GoalWords.count(goal))
-                .font(.system(.title, design: .serif, weight: .semibold))
-                .foregroundStyle(Color.ink)
-            GoalBar(goal: goal, height: 10)
-            Text(GoalWords.monthlyNote(goal))
-                .font(JournalFont.supporting)
-                .foregroundStyle(Color.inkSecondary)
+            Text(GoalWords.headline(goal))
+                .font(JournalFont.section)
+            GoalBar(goal: goal, height: 8, onLavender: true)
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(GoalWords.count(goal)).font(.subheadline.weight(.semibold))
+                    Spacer(minLength: 8)
+                    Text(GoalWords.monthlyNote(goal)).font(JournalFont.supporting)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(GoalWords.count(goal)).font(.subheadline.weight(.semibold))
+                    Text(GoalWords.monthlyNote(goal)).font(JournalFont.supporting)
+                }
+            }
         }
+        .foregroundStyle(Color.onSharedGoal)
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous)
-                .strokeBorder(goal.isReached ? Color.goldInk.opacity(0.6) : Color.rule, lineWidth: 1)
-        )
+        .background(Color.sharedGoal, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("goal-monthly")
     }
@@ -131,9 +139,14 @@ struct CustomGoalRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(goal.title).font(JournalFont.rowTitle)
                 Spacer()
+                if goal.isReached {
+                    Image(systemName: "checkmark.circle")
+                        .foregroundStyle(Color.moss)
+                        .accessibilityLabel("Reached")
+                }
                 Text(GoalWords.count(goal, short: true))
                     .font(.subheadline.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(goal.isReached ? Color.goldInk : Color.ink)
+                    .foregroundStyle(Color.ink)
             }
             GoalBar(goal: goal, height: 6)
             Text(GoalWords.customNote(goal, timeZone: timeZone))
@@ -147,16 +160,19 @@ struct CustomGoalRow: View {
     }
 }
 
-private struct GoalBar: View {
+/// The progress bar: lavender on the page, or the deep ink of a lavender card on one. Reaching the target fills it;
+/// nothing glints or turns gold.
+struct GoalBar: View {
     let goal: CircleGoal
     let height: CGFloat
+    var onLavender = false
 
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.rule.opacity(0.6))
+                Capsule().fill(onLavender ? Color.onSharedGoal.opacity(0.18) : Color.rule.opacity(0.6))
                 Capsule()
-                    .fill(goal.isReached ? Color.goldInk : Color.moss)
+                    .fill(onLavender ? Color.onSharedGoal : Color.moss)
                     .frame(width: geometry.size.width * GoalWords.fraction(goal))
             }
         }
@@ -165,7 +181,8 @@ private struct GoalBar: View {
     }
 }
 
-/// What the goal card says, apart from the views so the tests read it.
+/// What the goal card says, apart from the views so the tests read it. Goals count distinct species (the server's
+/// `progress`), never repeat cards.
 enum GoalWords {
     static func fraction(_ goal: CircleGoal) -> Double {
         guard goal.target > 0 else { return 0 }
@@ -177,15 +194,33 @@ enum GoalWords {
         short ? "\(goal.progress)/\(goal.target)" : "\(goal.progress) of \(goal.target) species"
     }
 
-    /// "5 more to go · 18 days left", "5 more to go · Last day", or "Reached! …" once the target is met.
-    static func monthlyNote(_ goal: CircleGoal, now: Date = .now) -> String {
-        if goal.isReached { return "Reached! Every new bird this month is a bonus." }
-        let left = goal.target - goal.progress
-        return "\(left) more to go · \(daysLeft(goal, now: now))"
+    /// "Fourteen birds, together.": the target spelled out (in figures past a hundred), the guide's calm headline.
+    static func headline(_ goal: CircleGoal, locale: Locale = Locale(identifier: "en")) -> String {
+        guard goal.target <= 100 else { return "\(goal.target) birds, together." }
+        let words = spelled(goal.target, locale: locale)
+        return "\(words.capitalizedFirst) \(goal.target == 1 ? "bird" : "birds"), together."
     }
 
-    /// "7 Nov · by Maya Ortiz · starts in 5 days", "12 Oct – 9 Nov · by Maya Ortiz · 10 days left", or ending in
-    /// "Reached" or "Ended".
+    private static func spelled(_ number: Int, locale: Locale) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .spellOut
+        formatter.locale = locale
+        return formatter.string(from: number as NSNumber) ?? "\(number)"
+    }
+
+    /// "5 still to discover", or "Reached! …" once the target is met.
+    static func monthlyNote(_ goal: CircleGoal) -> String {
+        if goal.isReached { return "Reached! Every new bird this month is a bonus." }
+        return stillToDiscover(goal)
+    }
+
+    /// "7 still to discover".
+    static func stillToDiscover(_ goal: CircleGoal) -> String {
+        "\(max(0, goal.target - goal.progress)) still to discover"
+    }
+
+    /// "7 Nov · by Maya Ortiz · starts in 5 days", "12 Oct – 9 Nov · by Maya Ortiz · 3 still to discover", or ending in
+    /// "Reached" or "Ended". No countdown while it runs (design guide page 13: calm progress).
     static func customNote(_ goal: CircleGoal, timeZone: String, now: Date = .now) -> String {
         var parts = [days(goal, timeZone: timeZone)]
         if let creator = goal.createdBy { parts.append("by \(creator.name)") }
@@ -195,14 +230,14 @@ enum GoalWords {
             relative.dateTimeStyle = .named
             parts.append("starts \(relative.localizedString(for: goal.startsAt, relativeTo: now))")
         case .active:
-            parts.append(goal.isReached ? "Reached" : daysLeft(goal, now: now))
+            parts.append(goal.isReached ? "Reached" : stillToDiscover(goal))
         case .ended:
             parts.append(goal.isReached ? "Reached" : "Ended")
         }
         return parts.joined(separator: " · ")
     }
 
-    /// "7 Nov", or "12 Oct – 9 Nov", in the circle's zone.
+    /// "7 Nov", or "12 Oct – 9 Nov", in the Guild's zone.
     static func days(_ goal: CircleGoal, timeZone: String) -> String {
         let zone = TimeZone(identifier: timeZone) ?? .current
         let style = Date.FormatStyle(timeZone: zone).day().month(.abbreviated)
@@ -210,19 +245,9 @@ enum GoalWords {
         let first = goal.startsAt.formatted(style)
         return goal.startDate == goal.endDate ? first : "\(first) – \(last.formatted(style))"
     }
-
-    /// "18 days left", "1 day left", "Last day".
-    static func daysLeft(_ goal: CircleGoal, now: Date) -> String {
-        let days = Int((goal.endsAt.timeIntervalSince(now) / 86_400).rounded(.up))
-        switch days {
-        case ...0: return "Ended"
-        case 1: return "Last day"
-        default: return "\(days) days left"
-        }
-    }
 }
 
-/// Makes a custom goal: a title, a target and the days, in the circle's time zone.
+/// Makes a custom goal: a title, a target and the days, in the Guild's time zone.
 struct NewGoalSheet: View {
     @Environment(CircleStore.self) private var circles
     @Environment(\.dismiss) private var dismiss

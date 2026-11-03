@@ -214,7 +214,7 @@ struct CircleStoreTests {
         let store = signedInStore()
         await #expect(throws: CircleError.inviteExpired) { try await store.preview(token: "expired") }
         await #expect(throws: CircleError.full) { try await store.accept(token: "full") }
-        #expect(CircleStore.message(for: CircleError.full, doing: "join") == "This circle is full: a circle holds 20 birders.")
+        #expect(CircleStore.message(for: CircleError.full, doing: "join") == "This Guild is full: a Guild holds 20 birders.")
         #expect(store.circles.isEmpty)
     }
 

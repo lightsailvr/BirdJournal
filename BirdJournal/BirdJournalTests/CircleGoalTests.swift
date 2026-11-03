@@ -94,7 +94,7 @@ struct GoalClientTests {
         await #expect(throws: CircleError.goalNotYours) { try await client.deleteGoal(id: "monthly-2026-11", circleID: "c", accessToken: "t") }
         await #expect(throws: CircleError.rejected) { try await client.createGoal(draft, circleID: "c", accessToken: "t") }
         await #expect(throws: CircleError.notFound) { try await client.goals(circleID: "c", accessToken: "t") }
-        #expect(CircleStore.message(for: CircleError.goalNotYours, doing: "delete") == "Only a goal's creator or the circle's creator can delete it, and the monthly goal stays.")
+        #expect(CircleStore.message(for: CircleError.goalNotYours, doing: "delete") == "Only a goal's creator or the Guild's creator can delete it, and the monthly goal stays.")
     }
 }
 
@@ -108,22 +108,30 @@ struct GoalWordsTests {
         #expect(GoalWords.fraction(goal(progress: 20, target: 14)) == 1)
     }
 
-    @Test("the monthly goal says how many more and how long is left, or that it's reached")
+    @Test("the monthly goal says how many species are still to discover, without a countdown, or that it's reached")
     func monthly() {
-        let now = Date(timeIntervalSince1970: 1_793_692_800) // 3 Nov 2026, 08:00 UTC
         let november = goal(kind: .monthly, progress: 9, target: 14, endsAt: Date(timeIntervalSince1970: 1_796_112_000))
-        #expect(GoalWords.monthlyNote(november, now: now) == "5 more to go · 28 days left")
-        let lastDay = goal(kind: .monthly, progress: 9, target: 14, endsAt: now.addingTimeInterval(3600))
-        #expect(GoalWords.monthlyNote(lastDay, now: now) == "5 more to go · Last day")
-        #expect(GoalWords.monthlyNote(goal(kind: .monthly, progress: 14, target: 14), now: now).hasPrefix("Reached!"))
+        #expect(GoalWords.monthlyNote(november) == "5 still to discover")
+        let lastDay = goal(kind: .monthly, progress: 23, target: 30, endsAt: .now.addingTimeInterval(3600))
+        #expect(GoalWords.monthlyNote(lastDay) == "7 still to discover", "no countdown, even on the last day")
+        #expect(GoalWords.count(lastDay) == "23 of 30 species")
+        #expect(GoalWords.monthlyNote(goal(kind: .monthly, progress: 14, target: 14)).hasPrefix("Reached!"))
+        #expect(GoalWords.monthlyNote(goal(kind: .monthly, progress: 16, target: 14)).hasPrefix("Reached!"))
     }
 
-    @Test("a custom goal names its days in the circle's zone, its maker, and where it stands")
+    @Test("the monthly goal's headline spells its target out, calmly")
+    func headline() {
+        #expect(GoalWords.headline(goal(kind: .monthly, progress: 23, target: 30)) == "Thirty birds, together.")
+        #expect(GoalWords.headline(goal(kind: .monthly, progress: 0, target: 1)) == "One bird, together.")
+        #expect(GoalWords.headline(goal(kind: .monthly, progress: 0, target: 115)) == "115 birds, together.")
+    }
+
+    @Test("a custom goal names its days in the Guild's zone, its maker, and where it stands, without a countdown")
     func custom() {
         let now = Date(timeIntervalSince1970: 1_793_692_800)
         let week = goal(progress: 3, target: 10)
         #expect(GoalWords.days(week, timeZone: "America/Los_Angeles") == "3 Nov – 9 Nov" || GoalWords.days(week, timeZone: "America/Los_Angeles") == "Nov 3 – Nov 9")
-        #expect(GoalWords.customNote(week, timeZone: "America/Los_Angeles", now: now).hasSuffix("by Maya Ortiz · 7 days left"))
+        #expect(GoalWords.customNote(week, timeZone: "America/Los_Angeles", now: now).hasSuffix("by Maya Ortiz · 7 still to discover"))
         let bigDay = goal(start: "2026-11-07", end: "2026-11-07", startsAt: Date(timeIntervalSince1970: 1_794_038_400), endsAt: Date(timeIntervalSince1970: 1_794_124_800))
         #expect(!GoalWords.days(bigDay, timeZone: "America/Los_Angeles").contains("–"), "one day, one date")
         #expect(GoalWords.customNote(goal(progress: 10, target: 10, status: .ended), timeZone: "UTC", now: now).hasSuffix("Reached"))

@@ -153,7 +153,7 @@ def goal_words(
     """A goal reached (issue #65): "Sunday Group reached the November goal" / "Ada found a Black Phoebe, species 15
     of 15 · Legendary · Pasadena". The find's own reasons follow, so one alert says both."""
     goal = completed.goal
-    circle = circle_name or "Your circle"
+    circle = circle_name or "Your Guild"
     name = owner_name or FRIEND_FALLBACK
     title = f"{circle} reached the {goal.title}" if goal.kind is GoalKind.MONTHLY else f"{circle} reached “{goal.title}”"
     _, reasons = notable_words(owner_name, content, first_for)

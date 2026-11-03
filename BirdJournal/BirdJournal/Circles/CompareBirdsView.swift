@@ -84,7 +84,7 @@ struct CompareBirdsView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("compareTally")
                 } footer: {
-                    Text("\(firstName)'s side is what they shared to circles you're both in. Yours is everything on this iPhone.")
+                    Text("\(firstName)'s side is what they shared to Guilds you're both in. Yours is everything on this iPhone.")
                 }
                 if comparison.onlyTheirs.isEmpty, comparison.onlyMine.isEmpty, comparison.both.isEmpty {
                     Section {
