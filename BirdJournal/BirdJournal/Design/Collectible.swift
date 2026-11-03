@@ -131,7 +131,11 @@ struct LegendaryLabel: View {
             .font(compact ? CardFont.editionCompact : CardFont.edition)
             .tracking(compact ? CardFont.editionCompactTracking : CardFont.editionTracking)
             .foregroundStyle(Color.goldInk)
-            .lineLimit(1)
+            // A tile keeps one line (and falls back to "Legendary"); the card's front wraps it at the largest sizes
+            // rather than cutting it to "LEGENDA…" (issue #119).
+            .lineLimit(compact ? 1 : nil)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: !compact)
     }
 }
 

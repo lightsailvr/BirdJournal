@@ -1,7 +1,9 @@
 import SwiftUI
 
 /// The compact listening strip above the tab bar while a run is active and another tab is showing: the state, the
-/// elapsed time and Stop. Tapping the rest of it goes to the Listen tab.
+/// elapsed time and Stop. Tapping the rest of it goes to the Listen tab. Its contents sit on the page colour (issue
+/// #119): the strip is the system's glass, which turns light over the ivory cards even in the dark appearance, where
+/// the ivory inks measured 1.5–2.2:1 on it; on the page they keep the 4.5:1 `TokenPairingTests` measures.
 struct ListeningAccessory: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
@@ -47,6 +49,8 @@ struct ListeningAccessory: View {
             .accessibilityLabel("Stop listening")
         }
         .padding(.horizontal, 14)
+        .frame(maxHeight: .infinity)
+        .background(Color.paper.opacity(0.94), in: Capsule())
     }
 
     private var title: String {

@@ -175,10 +175,13 @@ struct CirclePageView: View {
                         Text(detail.circle.name)
                             .font(JournalFont.title)
                             .foregroundStyle(Color.ink)
+                            .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)
                         Text("\(detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members") · Invite-only")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
+                            // Wraps at the largest sizes instead of "4 members…" (issue #119).
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.top, 8)
                 }

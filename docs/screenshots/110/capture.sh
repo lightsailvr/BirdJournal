@@ -26,6 +26,8 @@ xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --ba
 shot() {  # name seconds flags...
     local name="$1" wait="$2"; shift 2
     xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
+    # A launch straight after a terminated listening run can come up without its flags; let the old process go.
+    sleep 6
     xcrun simctl launch "$udid" "$bundle" "$@" >/dev/null
     sleep "$wait"
     xcrun simctl io "$udid" screenshot "$out/$name.png" >/dev/null 2>&1
@@ -62,9 +64,9 @@ screens() {  # suffix: every reskinned screen
 
 states() {  # suffix: every designed state of page 16
     local s="$1"
-    shot "state-no-cards-$s"               7 "${empty[@]}" -autoScreen journal
     shot "state-no-guilds-$s"              8 -inMemoryAlbum YES -fakeAccount signedIn -fakeCircles empty -autoScreen circles
     shot "state-signed-out-$s"             7 -inMemoryAlbum YES -fakeAccount signedOut -autoScreen circles
+    shot "state-no-cards-$s"               9 "${empty[@]}" -autoScreen journal
     shot "state-offline-guilds-$s"         8 -inMemoryAlbum YES -fakeAccount signedIn -fakeCircles offline -autoScreen circles
     shot "state-offline-atlas-$s"         10 "${seeded[@]}" -packIndexURL http://127.0.0.1:9/index.json -autoScreen guide
     shot "state-offline-pack-$s"           8 "${seeded[@]}" -autoScreen packs -autoPackStates 2

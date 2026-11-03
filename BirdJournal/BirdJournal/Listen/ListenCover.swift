@@ -76,7 +76,8 @@ struct ListenCoverHeader: View {
                     .font(CardFont.credit)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.horizontal, JournalLayout.margin)
-                    .padding(.bottom, 6)
+                    // Clear of the source row, which rises 36 points onto the cover (issue #119: it hid the credit).
+                    .padding(.bottom, 42)
                     .accessibilityHidden(true)
             }
         }

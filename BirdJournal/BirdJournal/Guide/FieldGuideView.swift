@@ -250,6 +250,7 @@ struct ReadyOffline: View {
     var body: some View {
         Label("Ready offline", systemImage: "checkmark.circle.fill")
             .font(JournalFont.supporting.weight(.medium))
+            .fixedSize(horizontal: false, vertical: true)
             .foregroundStyle(Color.moss)
     }
 }
