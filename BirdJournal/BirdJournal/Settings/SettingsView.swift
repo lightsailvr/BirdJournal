@@ -52,7 +52,7 @@ struct SettingsView: View {
             } header: {
                 Text("Glasses")
             } footer: {
-                Text("BirdJournal registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
+                Text("Featherguild registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             }
 
             if AccountSession.isEnabledInThisBuild {
@@ -87,7 +87,7 @@ struct SettingsView: View {
             }
 
             Section("About") {
-                NavigationLink("Support Bird Journal", value: Route.support)
+                NavigationLink("Support Featherguild", value: Route.support)
                 NavigationLink("Sources & credits", value: Route.credits)
                 Link(destination: SiteLinks.privacy) {
                     LabeledContent("Privacy policy") { Image(systemName: "arrow.up.right.square") }
@@ -146,7 +146,7 @@ struct GlassesDeviceRow: View {
             case .deviceUpdateRequired:
                 Button("Update glasses firmware") { Task { await connection.openFirmwareUpdate() } }
             case .sdkUpdateRequired:
-                Text("This BirdJournal build needs a newer toolkit.").font(JournalFont.attribution).foregroundStyle(.red)
+                Text("This Featherguild build needs a newer toolkit.").font(JournalFont.attribution).foregroundStyle(.red)
             default:
                 EmptyView()
             }

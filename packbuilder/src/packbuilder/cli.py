@@ -1,6 +1,8 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
 `packbuilder set <definition-dir>`: builds the pack's set definition into set.json beside pack.json (`sets.py`).
 `packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
+`packbuilder cover <definition-dir>`: paints the set's cover candidates the cover lock lacks and draws their contact sheet (`covers.py`).
+`packbuilder cover-review <definition-dir> --approve <n> | --reject`: records the maintainer's choice of cover in cover.lock.json.
 `packbuilder art-references <definition-dir> --pack <pack-dir> --out <dir>`: exports the art worker's reference birds (`art_references.py`).
 `packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
 `packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore, and of the story titles on
@@ -51,7 +53,8 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--xc-max-requests", type=int, default=xenocanto.DEFAULT_MAX_REQUESTS, help=f"xeno-canto requests after which the run stops; rerun to continue from the cache (default {xenocanto.DEFAULT_MAX_REQUESTS})")
     build.add_argument("--sound-tries", type=int, default=3, help="recordings downloaded per species and kind before the kind is a gap (default 3)")
     build.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints the pack art the lock lacks (default {COMFY}, on the tailnet)")
-    build.add_argument("--no-art", action="store_true", help="skip the pack art (the pack then has none)")
+    build.add_argument("--no-art", action="store_true", help="skip the pack art and the set's cover (the pack then has neither)")
+    build.add_argument("--no-cover", action="store_true", help="skip only the set's cover (the pack then has none)")
     build.add_argument("--art-sheets", type=Path, help="folder for the pack art's contact sheets (default build/pack-art/<pack id>)")
     build.add_argument("--no-lore", action="store_true", help="skip the lore (the pack then has none; the fact sheet still ships)")
     build.add_argument("--regenerate-lore", action="append", default=[], metavar="SPECIES", help="write a species' lore again (species id or common name; repeat; 'all' for every species)")
@@ -89,6 +92,18 @@ def main(argv: list[str] | None = None) -> int:
     art_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a painting: the next build paints it again with new seeds (repeat)")
     art_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on a species' art: its cards fall back to the reference photo (repeat)")
     art_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
+    cover = commands.add_parser("cover", help="paint the set's cover candidates cover.lock.json lacks and draw their contact sheet, without building the pack")
+    cover.add_argument("definition", type=Path, help="folder holding pack.json, set.json and cover.lock.json")
+    cover.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
+    cover.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache; covers go in <cache>/covers (default: packbuilder/cache)")
+    cover.add_argument("--sheets", type=Path, help="folder for the contact sheet (default build/pack-art/<pack id>)")
+    cover_review = commands.add_parser("cover-review", help="record the choice of cover in cover.lock.json; approving writes the index's thumbnail")
+    cover_review.add_argument("definition", type=Path, help="folder holding pack.json and cover.lock.json")
+    cover_review.add_argument("--approve", type=int, metavar="N", help="approve candidate N, numbered as on the contact sheet")
+    cover_review.add_argument("--reject", action="store_true", help="reject the round: the next `cover` or build paints a new one")
+    cover_review.add_argument("--why", help="the reason, kept in the lock with --reject")
+    cover_review.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache holding <cache>/covers (default: packbuilder/cache)")
+    cover_review.add_argument("--sheets", type=Path, help="folder for the redrawn contact sheet (default build/pack-art/<pack id>)")
     references = commands.add_parser("art-references", help="export each species' isolated reference bird for the art worker's scene art (issue #68)")
     references.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and art.lock.json")
     references.add_argument("--pack", type=Path, required=True, help="the built pack (its pack.sqlite gives each species' size)")
@@ -131,6 +146,10 @@ def main(argv: list[str] | None = None) -> int:
         return _art_references(args)
     if args.command == "art-review":
         return _art_review(args)
+    if args.command == "cover":
+        return _cover(args)
+    if args.command == "cover-review":
+        return _cover_review(args)
     if args.command == "lore-review":
         return _lore_review(args)
     if args.command == "lore":
@@ -165,7 +184,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     sounds = None if args.no_sounds else _sound_picker(args, definition)
     artist = None if args.no_art else _artist(args, definition)
-    sheets = args.art_sheets or Path(__file__).resolve().parents[3] / "build" / "pack-art" / definition.id
+    cover_painter = None if args.no_art or args.no_cover else _cover_painter(args, definition, card_set)
+    sheets = args.art_sheets or _art_sheets_path(definition.id)
     lore = None if args.no_lore else _lore_writer(args, definition)
     lore_review = args.lore_review or _lore_review_path(definition.id)
     from packbuilder.lore import InvalidLore, LoreAPIError, LoreBudgetExceeded, MissingAPIKey as MissingLoreKey
@@ -174,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         build_pack(
             definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds,
-            card_set=card_set, joined=joined, artist=artist, art_sheets=sheets, lore=lore, lore_review=lore_review,
+            card_set=card_set, joined=joined, artist=artist, art_sheets=sheets, lore=lore, lore_review=lore_review, cover_painter=cover_painter,
         )
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
@@ -252,6 +272,54 @@ def _artist(args: argparse.Namespace, definition: PackDefinition):
         ComfyClient(args.comfy), pack_id=definition.id, theme=definition.set.edition.theme, lock=ArtLock.load(args.definition / LOCK_FILE),
         cache_dir=args.cache / "art", references=references, settings=settings,
     )
+
+
+def _cover_painter(args: argparse.Namespace, definition: PackDefinition, card_set: dict):
+    """The cover step (issue #114): paints on comfybox, in the set's edition theme, the cover candidates
+    `cover.lock.json` lacks, into the cover cache."""
+    from packbuilder.comfy import ComfyClient
+    from packbuilder.covers import LOCK_FILE, CoverLock, CoverPainter
+
+    theme = (card_set.get("edition") or {}).get("theme")
+    if not theme:
+        raise SystemExit(f"{definition.id}: a cover is painted in the set's edition theme, and set.json has none (or pass --no-cover)")
+    return CoverPainter(ComfyClient(args.comfy), pack_id=definition.id, theme=theme, lock=CoverLock.load(args.definition / LOCK_FILE), cache_dir=args.cache / "covers")
+
+
+def _art_sheets_path(pack_id: str) -> Path:
+    return Path(__file__).resolve().parents[3] / "build" / "pack-art" / pack_id
+
+
+def _cover(args: argparse.Namespace) -> int:
+    """The cover alone: the set checked against its definition, then the cover step and its sheet, as `build` runs them."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    definition = PackDefinition.load(args.definition / "pack.json")
+    card_set = load_set(args.definition / "set.json")
+    check_set(card_set, definition)
+    painter = _cover_painter(args, definition, card_set)
+    cover = painter.paint()
+    sheet = painter.sheet(args.sheets or _art_sheets_path(definition.id), card_set["edition"].get("name", ""))
+    print(f"{definition.id} cover: {cover.review}, {painter.painted} painted; contact sheet {sheet}", file=sys.stderr)
+    return 0 if sheet is not None else 1
+
+
+def _cover_review(args: argparse.Namespace) -> int:
+    from packbuilder.comfy import ComfyClient
+    from packbuilder.covers import LOCK_FILE, CoverLock, CoverPainter, review
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    lock = CoverLock.load(args.definition / LOCK_FILE)
+    try:
+        review(lock, args.cache / "covers", approve=args.approve, reject=args.reject, why=args.why)
+    except ValueError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    # Redraw the sheet so it shows the choice; nothing is painted (the client is never called).
+    painter = CoverPainter(ComfyClient(COMFY), pack_id=definition.id, theme=lock.cover["theme"], lock=lock, cache_dir=args.cache / "covers")
+    sheet = painter.sheet(args.sheets or _art_sheets_path(definition.id), definition.set.edition.name if definition.set else "")
+    chosen = f", candidate {lock.cover['chosen']}; thumbnail {lock.thumbnail_path}" if lock.cover["review"] == "approved" else ""
+    print(f"{lock.path}: {lock.cover['review']}{chosen}; contact sheet {sheet}", file=sys.stderr)
+    return 0
 
 
 def _lore_writer(args: argparse.Namespace, definition: PackDefinition):
@@ -416,11 +484,17 @@ def _set(args: argparse.Namespace) -> int:
 
 
 def _index(args: argparse.Namespace) -> int:
+    from packbuilder.covers import StaleThumbnail
     from packbuilder.index import write_index
 
     repo_root = Path(__file__).resolve().parents[3]
-    index = write_index(repo_root / "packs" / "manifest.json", repo_root / "packbuilder" / "packs", args.out, args.repo)
-    print(f"wrote {args.out} with {len(index['packs'])} packs", file=sys.stderr)
+    try:
+        index = write_index(repo_root / "packs" / "manifest.json", repo_root / "packbuilder" / "packs", args.out, args.repo)
+    except StaleThumbnail as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    covers = sum("cover" in entry for entry in index["packs"])
+    print(f"wrote {args.out} with {len(index['packs'])} packs, {covers} with a cover", file=sys.stderr)
     return 0
 
 

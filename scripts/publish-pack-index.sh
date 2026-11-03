@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Publishes the pack index the phone reads (issue #13): every pack in packs/manifest.json as `PackIndex` in the Swift
 # Pack module decodes it (id, name, version, url, sha256, byteCount, since #28 speciesCount, photoCount and region,
-# since #41 soundCount and schemaVersion, when the manifest has them, and since #54 the set), uploaded as index.json
+# since #41 soundCount and schemaVersion, when the manifest has them, since #54 the set, and since #114 the approved
+# cover's committed thumbnail, packbuilder/packs/<id>/cover-thumbnail.jpg), uploaded as index.json
 # to the rolling `packs` release of this repository (created on first use, replaced on every run). The pack zips stay on their own
 # per-version releases; the index points at them by URL. Run after `gh release create pack-<id>-v<n> ...` so every
 # listed zip exists.

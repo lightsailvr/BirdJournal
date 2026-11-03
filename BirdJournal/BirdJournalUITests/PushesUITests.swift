@@ -76,7 +76,7 @@ final class PushesUITests: XCTestCase {
         open("Backyard Crew", in: app)
         scrollToSettings(app)
         XCTAssertTrue(app.buttons["Open notification settings"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Notifications are off for Bird Journal'")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Notifications are off for Featherguild'")).firstMatch.exists)
     }
 
     @MainActor

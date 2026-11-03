@@ -213,7 +213,7 @@ struct CirclePageView: View {
             Text("Settings")
         } footer: {
             if pushes.isAvailable, pushes.permission == .denied {
-                Text("Notifications are off for Bird Journal, so friends' finds arrive only in the feed. Turn them on in Settings → Notifications.")
+                Text("Notifications are off for Featherguild, so friends' finds arrive only in the feed. Turn them on in Settings → Notifications.")
             } else if circles.mutes.circles.contains(detail.circle.id) {
                 Text("Muted: this circle's finds still show here, without notifications.")
             }
@@ -417,7 +417,7 @@ struct InviteSheet: View {
                             .foregroundStyle(Color.inkSecondary)
                             .textSelection(.enabled)
                             .multilineTextAlignment(.center)
-                        ShareLink(item: invite.url, subject: Text("Join \(circleName) on Bird Journal"), message: Text("Join my circle \(circleName) on Bird Journal")) {
+                        ShareLink(item: invite.url, subject: Text("Join \(circleName) on Featherguild"), message: Text("Join my circle \(circleName) on Featherguild")) {
                             Label("Share link", systemImage: "square.and.arrow.up")
                         }
                         .buttonStyle(.journalPrimary)

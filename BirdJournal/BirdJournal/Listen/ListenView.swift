@@ -157,7 +157,7 @@ private struct ReadyToListenView: View {
         switch connection.registrationState {
         case .registered: break
         case .available:
-            return Blocker(title: "Register with Meta AI", message: "The Meta AI app has to allow BirdJournal on your glasses once. Registration opens Meta AI and comes back here.", action: AnyView(Button("Register") { Task { await connection.register() } }))
+            return Blocker(title: "Register with Meta AI", message: "The Meta AI app has to allow Featherguild on your glasses once. Registration opens Meta AI and comes back here.", action: AnyView(Button("Register") { Task { await connection.register() } }))
         case .registering:
             return Blocker(title: "Registering with Meta AI…", message: "Finish the steps in the Meta AI app.", action: AnyView(EmptyView()))
         case .unavailable:
@@ -166,7 +166,7 @@ private struct ReadyToListenView: View {
             break
         }
         if connection.glassesAppUpdateRequired {
-            return Blocker(title: "Update the glasses app", message: "The Meta app on the glasses is too old for this BirdJournal build.", action: AnyView(Button("Update") { Task { await connection.openGlassesAppUpdate() } }))
+            return Blocker(title: "Update the glasses app", message: "The Meta app on the glasses is too old for this Featherguild build.", action: AnyView(Button("Update") { Task { await connection.openGlassesAppUpdate() } }))
         }
         if connection.devices.isEmpty {
             return Blocker(title: "No glasses linked", message: "Pair your Ray-Ban Display in the Meta AI app, or listen with the iPhone microphone for now.", action: AnyView(Button("Use iPhone microphone") { run.source = .phone }))
@@ -176,9 +176,9 @@ private struct ReadyToListenView: View {
         }
         switch device.state.compatibility {
         case .deviceUpdateRequired:
-            return Blocker(title: "Update the glasses", message: "The glasses firmware is too old for this BirdJournal build.", action: AnyView(Button("Update firmware") { Task { await connection.openFirmwareUpdate() } }))
+            return Blocker(title: "Update the glasses", message: "The glasses firmware is too old for this Featherguild build.", action: AnyView(Button("Update firmware") { Task { await connection.openFirmwareUpdate() } }))
         case .sdkUpdateRequired:
-            return Blocker(title: "BirdJournal needs an update", message: "This build's toolkit is older than the glasses require. Update the app.", action: AnyView(EmptyView()))
+            return Blocker(title: "Featherguild needs an update", message: "This build's toolkit is older than the glasses require. Update the app.", action: AnyView(EmptyView()))
         default:
             return nil
         }

@@ -1,0 +1,28 @@
+{
+  "comment": "The set's cover (issue #114), written by `packbuilder cover` or `packbuilder build` and by `packbuilder cover-review`; review on build/pack-art/<pack id>/cover.jpg. The edition theme, workflow, prompts version and model the round was painted with, each candidate's seed and SHA-256 (the cover cache's file name), and the review: pending, approved (candidate `chosen`, numbered from 1 as on the sheet, ships; `thumbnail` is the index's copy beside this file) or rejected (a new round of seeds next run).",
+  "theme": "cypress swamps, saw palmetto and lagoons in humid pearl morning light",
+  "workflow": "set-cover@1",
+  "prompts": 1,
+  "model": "FLUX.3 Image Klein",
+  "round": 0,
+  "candidates": [
+    {
+      "seed": 2635883173,
+      "sha256": "f3a1fa83503f92cc16da548416d4c2c0f717bb83337d26750b24fd52cefbe80a"
+    },
+    {
+      "seed": 2635883174,
+      "sha256": "a79f8f550a5e4e31351f6b1fd2ee86a323aa9cfc260d9c3b6c801a8101e16a78"
+    },
+    {
+      "seed": 2635883175,
+      "sha256": "03ece74193a344609e78962fa8459587d294ba6b5343316c48b795136073e07a"
+    },
+    {
+      "seed": 2635883176,
+      "sha256": "ecefa5eff1b04c189018287a909fc6d06fdd35c2c3a71886757587300989b596"
+    }
+  ],
+  "review": "pending",
+  "chosen": null
+}
