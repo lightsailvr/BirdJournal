@@ -52,7 +52,7 @@ final class CardsUITests: XCTestCase {
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
 
         // Two cards of the species now; reopening the Legendary one shows the card (issue #52), not the reveal again.
-        app.buttons["Journal"].firstMatch.tap()
+        app.tabBars.buttons["Collection"].tap()
         let cards = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name))
         XCTAssertTrue(legendary.waitForExistence(timeout: 10))
         XCTAssertEqual(cards.count, 2, "one card per add; screen: \(app.debugDescription.prefix(4000))")

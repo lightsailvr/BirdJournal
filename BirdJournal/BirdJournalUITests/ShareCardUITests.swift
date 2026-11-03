@@ -59,7 +59,7 @@ final class ShareCardUITests: XCTestCase {
         XCTAssertTrue(sent.label.contains("Sunday Group"), sent.label)
         app.navigationBars["A story to share"].buttons["Done"].tap()
 
-        app.tabBars.buttons["Circles"].tap()
+        app.tabBars.buttons["Guilds"].tap()
         app.staticTexts["Sunday Group"].firstMatch.tap()
         let mine = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-' AND label CONTAINS 'by you'")).firstMatch
         // The goal card (issue #65) and the Recent finds | Compare birds picker (#64) sit above the feed, which the list

@@ -40,7 +40,7 @@ final class PushesUITests: XCTestCase {
     @MainActor
     func testTheFirstCircleExplainsPushesOnceAndAllowingThemTurnsThemOn() {
         let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined"])
-        app.tabBars.buttons["Circles"].tap()
+        app.tabBars.buttons["Guilds"].tap()
         XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         // Opening the tab asks nothing.
         XCTAssertFalse(app.alerts[explanation].waitForExistence(timeout: 2))
@@ -66,7 +66,7 @@ final class PushesUITests: XCTestCase {
     @MainActor
     func testADenialLeavesAWayToSettings() {
         let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined", "-fakePushGrant", "NO"])
-        app.tabBars.buttons["Circles"].tap()
+        app.tabBars.buttons["Guilds"].tap()
         XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         create("Backyard Crew", in: app)
         let alert = app.alerts[explanation]
@@ -82,7 +82,7 @@ final class PushesUITests: XCTestCase {
     @MainActor
     func testNotNowLeavesTheChoiceOnTheCirclePage() {
         let app = launch(["-fakeCircles", "empty", "-fakePushPermission", "notDetermined"])
-        app.tabBars.buttons["Circles"].tap()
+        app.tabBars.buttons["Guilds"].tap()
         XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10))
         create("Backyard Crew", in: app)
         let alert = app.alerts[explanation]

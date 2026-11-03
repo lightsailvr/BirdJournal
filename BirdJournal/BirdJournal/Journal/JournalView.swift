@@ -78,7 +78,7 @@ struct JournalView: View {
                 .searchable(text: $query, prompt: "Search birds")
             }
         }
-        .navigationTitle("Journal")
+        .navigationTitle("Collection")
         .task(id: sightings.isEmpty) {
             // The sightings the birder had before cards existed become their collection in one moment.
             let intro = CollectionIntro()

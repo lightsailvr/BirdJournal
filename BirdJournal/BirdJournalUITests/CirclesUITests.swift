@@ -17,7 +17,7 @@ final class CirclesUITests: XCTestCase {
     @MainActor
     func testSignedOutTheTabInvitesTheBirderToSignIn() {
         let app = launch(["-fakeAccount", "signedOut", "-fakeCircles", "empty"])
-        app.tabBars.buttons["Circles"].tap()
+        app.tabBars.buttons["Guilds"].tap()
         XCTAssertTrue(app.staticTexts["Bird with your friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.buttons["Sign in with Apple"].exists)
         XCTAssertTrue(app.buttons["Sign in with Google"].exists)
@@ -29,7 +29,7 @@ final class CirclesUITests: XCTestCase {
     @MainActor
     func testCreatingACircleListsIt() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "empty"])
-        app.tabBars.buttons["Circles"].tap()
+        app.tabBars.buttons["Guilds"].tap()
         XCTAssertTrue(app.staticTexts["No circles yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
 
         app.buttons["New circle"].tap()

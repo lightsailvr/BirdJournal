@@ -72,9 +72,9 @@ final class AccountSwitchUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 10), "no tab bar; screen: \(app.debugDescription.prefix(3000))")
         #if DEBUG
-        XCTAssertTrue(app.tabBars.buttons["Circles"].exists, "no Circles tab in a Debug build")
+        XCTAssertTrue(app.tabBars.buttons["Guilds"].exists, "no Guilds tab in a Debug build")
         #else
-        XCTAssertFalse(app.tabBars.buttons["Circles"].exists, "a Circles tab in a Release build")
+        XCTAssertFalse(app.tabBars.buttons["Guilds"].exists, "a Guilds tab in a Release build")
         #endif
     }
 }
