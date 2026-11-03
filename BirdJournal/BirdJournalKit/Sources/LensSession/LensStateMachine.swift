@@ -120,12 +120,12 @@ public struct LensPlayback: Sendable, Hashable {
     public var onPhone: Bool
 }
 
-/// The card an add earned, known once its sighting is written (issue #51): the birder's first of the species, which
-/// is Legendary, or another card of a species already in the collection, with its collector number ("021/160", or
-/// "Uncharted" outside every set, issue #54).
-public enum LensEarnedCard: Sendable, Hashable {
-    case legendary
-    case newCard(collectorNumber: String)
+/// What an add earned, known once its sighting is written (issue #132): a new patch, the species' first sighting in
+/// its placement, with its collector number ("021/160", or "Uncharted" outside every set, issue #54); or another
+/// sighting of a patch the birder has, with the patch's count now.
+public enum LensEarnedPatch: Sendable, Hashable {
+    case newPatch(collectorNumber: String)
+    case seenAgain(count: Int)
 }
 
 /// What the adapter must do after an event, besides rendering the new page.
@@ -186,8 +186,8 @@ public struct LensStateMachine: Sendable, Equatable {
     /// details page ("Add another") saves another sighting; one press that hardware delivers twice, as a click and a
     /// select, is deduplicated by the adapter, which has a clock.
     public private(set) var savedIndices: Set<Int> = []
-    /// Per stack index, the card its latest written add earned; the details page's saved line names it.
-    public private(set) var earnedCards: [Int: LensEarnedCard] = [:]
+    /// Per stack index, what its latest written add earned; the details page's saved line names it.
+    public private(set) var earnedPatches: [Int: LensEarnedPatch] = [:]
     /// The clip playing from a sounds page, nil when none is.
     public private(set) var playing: LensPlayback?
     /// Per stack index, the position in its species' clips of the one the next tap plays (0, the song, when absent).
@@ -239,7 +239,7 @@ public struct LensStateMachine: Sendable, Equatable {
             coveredPage = .list
             pinnedSpecies = nil
             savedIndices = []
-            earnedCards = [:]
+            earnedPatches = [:]
             playing = nil
             nextSounds = [:]
             order = SpeciesListOrder()
@@ -406,12 +406,12 @@ public struct LensStateMachine: Sendable, Equatable {
 
     // MARK: - Cards
 
-    /// The sighting an add of `species` wrote has earned `card`. Returns whether the species is on the stack: a
+    /// The sighting an add of `species` wrote has earned `patch`. Returns whether the species is on the stack: a
     /// write that lands after the stack was replaced (a new session) is dropped.
     @discardableResult
-    public mutating func earned(_ card: LensEarnedCard, for species: Species) -> Bool {
+    public mutating func earned(_ patch: LensEarnedPatch, for species: Species) -> Bool {
         guard let index = stack.candidates.firstIndex(where: { $0.species == species }) else { return false }
-        earnedCards[index] = card
+        earnedPatches[index] = patch
         return true
     }
 
@@ -473,7 +473,7 @@ public struct LensStateMachine: Sendable, Equatable {
     private mutating func save(_ index: Int, photo: Bool) -> LensEffect {
         savedIndices.insert(index)
         // Until this add's sighting is written, the line names no card: not the previous add's.
-        earnedCards[index] = nil
+        earnedPatches[index] = nil
         page = .details(index: index)
         let candidate = stack.candidates[index]
         return photo ? .takePhoto(candidate) : .saveSighting(candidate)

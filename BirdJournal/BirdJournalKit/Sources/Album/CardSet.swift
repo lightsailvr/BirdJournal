@@ -85,7 +85,7 @@ public struct CardSet: Sendable, Hashable, Identifiable {
     public let id: String
     /// "Los Angeles".
     public let name: String
-    /// What cards of the set that are not Legendary show, e.g. "Citrus edition".
+    /// The set's edition, which its patches show, e.g. "Citrus edition".
     public let edition: String
     /// Scientific names in taxonomic order; a species' collector number is its position from 1.
     public let species: [String]
@@ -172,7 +172,7 @@ public enum CardPlacement: Sendable, Hashable {
         return Self.unchartedTitle
     }
 
-    /// What a card that is not Legendary shows above its art: the set's edition, or "Uncharted".
+    /// What a patch shows as its edition: the set's edition, or "Uncharted".
     public var editionLabel: String {
         if case .numbered(_, _, let edition, _, _) = self { return edition }
         return Self.unchartedTitle

@@ -29,7 +29,7 @@ final class FindsUITests: XCTestCase {
         XCTAssertTrue(newest.contains("First for the Guild"), newest)
         XCTAssertTrue(newest.contains("Rare"), newest)
         let oldest = labels[3]
-        XCTAssertTrue(oldest.contains("Seen by Maya Ortiz") && oldest.contains("Legendary") && oldest.contains("First for the Guild"), oldest)
+        XCTAssertTrue(oldest.contains("Seen by Maya Ortiz") && oldest.contains("New patch") && oldest.contains("First for the Guild"), oldest)
         let later = labels[1]
         XCTAssertTrue(later.contains("Black Phoebe") && !later.contains("First for the Guild"), later)
     }

@@ -67,7 +67,7 @@ private struct YourCardsLink: View {
     var body: some View {
         let count = sightings.count { $0.scientificName == scientificName }
         NavigationLink(value: Route.gallery(scientificName: scientificName, commonName: commonName)) {
-            Label(count == 0 ? "Your cards · none yet" : "Your cards · \(count)", systemImage: "rectangle.stack")
+            Label(count == 0 ? "Your sightings · none yet" : "Your sightings · \(count)", systemImage: "rectangle.stack")
         }
         .buttonStyle(.journalOutlined)
         .accessibilityIdentifier("profile-your-cards")

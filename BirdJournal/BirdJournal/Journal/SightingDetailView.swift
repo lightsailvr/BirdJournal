@@ -28,6 +28,19 @@ struct SightingDetailView: View {
         return try? context.fetch(descriptor).first
     }
 
+    /// What removing the sighting does to its patch (issue #132): the last sighting of the bird in its place unpicks
+    /// the patch, and the dialog says so; otherwise the patch keeps the others.
+    private func removalMessage(for sighting: Sighting, commonName: String) -> String {
+        let speciesID = sighting.speciesID
+        let ofSpecies = (try? context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))) ?? []
+        let collection = library.collection(of: ofSpecies)
+        guard collection.isLastSighting(of: sighting.identifier), let patch = collection.patch(of: sighting.identifier) else {
+            return "Its patch keeps your other sightings. You can undo this for a few seconds afterwards."
+        }
+        let place = patch.placement.setID == nil ? "outside every set" : "in \(patch.placement.setName)"
+        return "It's your only \(commonName) sighting \(place), so its patch will be unpicked. You can undo this for a few seconds afterwards."
+    }
+
     var body: some View {
         if let sighting {
             let reference = library.species(scientificName: sighting.scientificName)
@@ -155,13 +168,13 @@ struct SightingDetailView: View {
             .sheet(isPresented: $showingMap) {
                 SightingMapView(focus: sighting)
             }
-            .confirmationDialog("Remove this sighting and its card?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
+            .confirmationDialog("Remove this sighting?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button("Remove", role: .destructive) {
                     edits.remove(sighting, commonName: commonName)
                     dismiss()
                 }
             } message: {
-                Text("You can undo this for a few seconds afterwards.")
+                Text(removalMessage(for: sighting, commonName: commonName))
             }
             .task(id: id) {
                 note = sighting.note ?? ""

@@ -35,7 +35,7 @@ struct CardTextTests {
         let common = RaritySnapshot(occurrence: 0.912, label: .common, calibrationVersion: 1, week: 21)
         let explained = CardText.rarityExplanation(common, commonName: "House Finch", hasLocation: true, locale: Self.english)
         #expect(explained.hasPrefix("Common. The BirdNET geomodel rated the chance of a House Finch here in early June at 0.91 on a scale of 0 to 1, read when you added it."))
-        #expect(explained.hasSuffix("not whether the card is Legendary."))
+        #expect(explained.hasSuffix("not about your patches."))
 
         #expect(CardText.rarityExplanation(nil, commonName: "House Finch", hasLocation: false, locale: Self.english)
             == "Rarity unavailable for this place and season. No location was saved with this sighting, and rarity is never guessed.")

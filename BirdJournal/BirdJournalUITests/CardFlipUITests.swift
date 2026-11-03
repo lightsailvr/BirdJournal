@@ -52,8 +52,10 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(flip(app).waitForExistence(timeout: 15), "the card did not open; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(flip(app).isHittable, "the Flip action is visible and in reach")
         assertShowing(back: false, app)
-        // The Legendary label, the names, the excerpt of the lore (whole sentences), the quiet footer.
-        XCTAssertEqual(app.descendants(matching: .any)["card-heading"].label, "Legendary, your first")
+        // The edition line, the names, the excerpt of the lore (whole sentences), the quiet footer. No Legendary (#132).
+        let heading = app.descendants(matching: .any)["card-heading"].label
+        XCTAssertTrue(heading.hasSuffix("edition") || heading.contains("edition,") || heading == "Uncharted", heading)
+        XCTAssertFalse(heading.contains("Legendary"), heading)
         XCTAssertTrue(app.descendants(matching: .any)["card-name"].label.hasPrefix("Black Phoebe"))
         let excerpt = app.staticTexts["card-lore-excerpt"]
         XCTAssertTrue(excerpt.exists, "screen: \(app.debugDescription.prefix(4000))")
@@ -110,10 +112,11 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(seen.isSelected)
         assertShowing(back: true, app)
 
-        // Back to the Cards view and in again: the card opens front up, reading Seen, and its back still says so.
+        // Back to the Patches view and in again through the House Finch's patch, which opens its latest sighting: the
+        // card opens front up, reading Seen, and its back still says so (issue #132).
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch' AND label CONTAINS 'Seen'")).firstMatch
-        XCTAssertTrue(tile.waitForExistence(timeout: 10), "the card in the collection does not read Seen; screen: \(app.debugDescription.prefix(4000))")
+        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch'")).firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 10), "no House Finch patch in the collection; screen: \(app.debugDescription.prefix(4000))")
         tile.tap()
         assertShowing(back: false, app)
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH '· Seen'")).firstMatch.exists)

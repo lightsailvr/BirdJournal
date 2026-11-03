@@ -45,12 +45,12 @@ final class CollectionUITests: XCTestCase {
         XCTAssertTrue(modes.waitForExistence(timeout: 10))
         XCTAssertTrue(modes.buttons["Sightings"].isSelected, "Collection did not come back on Sightings")
 
-        // Cards again: where the grid was left, not the top.
-        modes.buttons["Cards"].tap()
+        // Patches again: where the grid was left, not the top.
+        modes.buttons["Patches"].tap()
         XCTAssertTrue(blackbird.waitForExistence(timeout: 5))
         let settled = NSPredicate { _, _ in Self.isClearOfBars(blackbird, in: app) }
         wait(for: [expectation(for: settled, evaluatedWith: blackbird)], timeout: 5)
-        XCTAssertEqual(Self.settledMinY(of: blackbird), scrolledTo, accuracy: 12, "Cards did not keep its own scroll position")
+        XCTAssertEqual(Self.settledMinY(of: blackbird), scrolledTo, accuracy: 12, "Patches did not keep its own scroll position")
 
         // The sort, chosen and kept across the tabs: oldest first puts the blackbird at the top, above the newer
         // Black Phoebe.

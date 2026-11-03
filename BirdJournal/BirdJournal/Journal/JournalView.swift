@@ -11,7 +11,8 @@ import SwiftUI
 /// one-time "your collection so far" moment introduces it.
 struct JournalView: View {
     enum Mode: String, CaseIterable, Identifiable {
-        case cards = "Cards"
+        /// The patches (issue #132); the case keeps its name from when they were cards.
+        case cards = "Patches"
         case sightings = "Sightings"
         case species = "Species"
         var id: Self { self }
@@ -112,9 +113,9 @@ struct JournalView: View {
         }
         .navigationTitle("Collection")
         .task(id: sightings.isEmpty) {
-            // The sightings the birder had before cards existed become their collection in one moment.
+            // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()
-            if intro.shouldShow(cardCount: sightings.count) {
+            if intro.shouldShow(patchCount: sightings.count) {
                 showsIntro = true
                 intro.markShown()
             }
@@ -149,7 +150,7 @@ struct JournalView: View {
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("cards-set-progress")
                 }
-                CardsGrid(sightings: shown, collection: collection, sort: state.sort)
+                PatchGrid(sightings: shown, collection: collection, sort: state.sort)
             case .sightings: SightingsByDay(sightings: shown)
             case .species:
                 if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
@@ -157,7 +158,7 @@ struct JournalView: View {
                 }
                 SpeciesRows(entries: Journal.species(shown))
             }
-            Text(state.mode == .cards ? "Every add is a card. Your first of each species is Legendary." : "Your notes, one bird at a time.")
+            Text(state.mode == .cards ? "One patch for every bird, in every place you find it." : "Your notes, one bird at a time.")
                 .multilineTextAlignment(.center)
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
@@ -194,15 +195,15 @@ struct JournalView: View {
     }
 }
 
-/// No cards yet (issue #119, design guide page 16): what a card is, and Start listening as the way to the first one.
+/// No patches yet (issues #119, #132): what a patch is, and Start listening as the way to the first one.
 private struct EmptyJournal: View {
     @Environment(\.openListen) private var openListen
 
     var body: some View {
         PaperPage {
             StateNotice(
-                "No cards yet",
-                message: "Start listening, review the birds you hear and add the ones you recognize. Each one becomes a card in your collection, with the day, the place and a note if you like. Your first of each species is Legendary.",
+                "No patches yet",
+                message: "Start listening, review the birds you hear and add the ones you recognize. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count, with the day, the place and a note if you like.",
                 mark: .drawing
             ) {
                 Button {
@@ -233,9 +234,11 @@ struct NoSearchMatch: View {
     }
 }
 
-/// The Cards view (issue #51): every card newest first (or as `sort` orders them, issue #117), two columns, one at accessibility text sizes, each opening
-/// its card (issue #52). Legendary comes from the whole collection, so a search never changes which card is the first.
-private struct CardsGrid: View {
+/// The Patches view (issue #132, before it the Cards view of #51): one tile per patch, the most recently sewn first (or
+/// as `sort` orders them, issue #117), two columns, one at accessibility text sizes. A tile shows how often the bird
+/// was seen there and opens its latest sighting's card (issue #52) until the patch page (#134). A search keeps the
+/// patches with a matching sighting; the counts come from the whole collection.
+private struct PatchGrid: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let sightings: [Sighting]
     let collection: CardCollection
@@ -244,19 +247,23 @@ private struct CardsGrid: View {
     var body: some View {
         let byIdentifier = Dictionary(sightings.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
         let columns = Array(repeating: GridItem(.flexible(), spacing: JournalLayout.rowGap, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2)
+        let shown = sort.ordered(collection.patches).filter { patch in patch.sightings.contains { byIdentifier[$0.identifier] != nil } }
         LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
-            ForEach(sort.ordered(collection.cards, in: collection).compactMap { byIdentifier[$0.identifier] }) { sighting in
-                NavigationLink(value: Route.card(sighting.persistentModelID)) {
-                    CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier), placement: collection.placement(of: sighting.identifier))
+            ForEach(shown) { patch in
+                // The tile stands for the patch with its latest sighting the search kept.
+                if let sighting = patch.sightings.lazy.compactMap({ byIdentifier[$0.identifier] }).first {
+                    NavigationLink(value: Route.card(sighting.persistentModelID)) {
+                        CardTile(sighting: sighting, placement: patch.placement, patch: patch)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.top, 16)
     }
 }
 
-/// The one-time "your collection so far" moment: what the birder's sightings became, and what Legendary means.
+/// The one-time "your collection so far" moment: what the birder's sightings became, and what a patch is.
 private struct CollectionIntroCard: View {
     let collection: CardCollection
     let dismiss: () -> Void
@@ -269,11 +276,11 @@ private struct CollectionIntroCard: View {
                     .foregroundStyle(Color.ink)
             } icon: {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(Color.goldInk)
+                    .foregroundStyle(Color.moss)
                     .accessibilityHidden(true)
             }
             .accessibilityAddTraits(.isHeader)
-            Text("\(collection.cardsText) of \(collection.speciesCount) species. Every bird you add is a card, and your earliest card of each species is Legendary, with a gold frame.")
+            Text("\(collection.patchesText) of \(collection.speciesCount) species. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)
@@ -282,7 +289,7 @@ private struct CollectionIntroCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.goldWash, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .background(Color.moss.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
     }
 }
 
@@ -439,7 +446,7 @@ struct SetProgressRow: View {
     }
 }
 
-/// The Species list: one row per bird added, with how many cards and when last, each opening its gallery (issue #53).
+/// The Species list: one row per bird added, with how many sightings and when last, each opening its gallery (issue #53).
 private struct SpeciesRows: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -469,7 +476,7 @@ private struct SpeciesRows: View {
                             Text(entry.scientificName)
                                 .font(JournalFont.scientific)
                                 .foregroundStyle(Color.inkSecondary)
-                            Text("\(entry.count) \(entry.count == 1 ? "card" : "cards") · last \(Self.lastSeen(entry.latest.confirmedAt))")
+                            Text("\(entry.count) \(entry.count == 1 ? "sighting" : "sightings") · last \(Self.lastSeen(entry.latest.confirmedAt))")
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }

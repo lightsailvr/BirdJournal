@@ -108,12 +108,11 @@ struct DesignTokenTests {
     @Test("text on the page and on a raised surface is at least 4.5:1")
     func pageText() throws {
         for surface in ["JournalPaper", "JournalRaised"] {
-            for text in ["JournalInk", "JournalInkSecondary", "JournalMoss", "CollectibleGoldInk"] {
+            for text in ["JournalInk", "JournalInkSecondary", "JournalMoss"] {
                 try expect(text, on: surface, atLeast: 4.5)
             }
         }
         try expect("JournalMossText", on: "JournalMoss", atLeast: 4.5)
-        try expect("JournalInk", on: "CollectibleGoldWash", atLeast: 4.5)
         try expect("JournalOnSharedGoal", on: "JournalSharedGoal", atLeast: 4.5)
     }
 
@@ -121,7 +120,7 @@ struct DesignTokenTests {
     func cardFace() throws {
         // The face draws in the light scheme whatever the app's (`CardSurface`).
         let light = Self.variants.filter { $0.name.hasPrefix("light") }
-        for text in ["CollectibleInk", "CollectibleInkSecondary", "CollectibleEdge", "CollectibleGoldInk", "JournalInk", "JournalInkSecondary", "JournalMoss"] {
+        for text in ["CollectibleInk", "CollectibleInkSecondary", "CollectibleEdge", "JournalInk", "JournalInkSecondary", "JournalMoss"] {
             try expect(text, on: "CollectibleFace", atLeast: 4.5, in: light)
         }
         for variant in Self.variants {
@@ -156,7 +155,6 @@ struct DesignTokenTests {
         #expect(try hex("JournalMoss", light) == "#15363A")
         #expect(try hex("JournalSharedGoal", dark) == "#B9BEDD")
         #expect(try hex("JournalSharedGoal", light) == "#E8E6F0")
-        #expect(try hex("CollectibleGoldInk", dark) == "#D3B475")
     }
 }
 
@@ -173,9 +171,9 @@ struct StoryCardAccessibilityTests {
         let edits = JournalEdits(container: album, frames: FrameStore(directory: URL.temporaryDirectory))
         return ScrollView {
             CollectibleCard(showsBack: showsBack, rotates: true) {
-                CardFront(sighting: sighting, isLegendary: true, placement: nil, place: "Griffith Park", storyTitle: storyTitle)
+                CardFront(sighting: sighting, placement: nil, place: "Griffith Park", storyTitle: storyTitle)
             } back: {
-                CardBack(sighting: sighting, isLegendary: true, placement: nil, showOriginal: {})
+                CardBack(sighting: sighting, placement: nil, showOriginal: {})
             }
         }
         .environment(library)

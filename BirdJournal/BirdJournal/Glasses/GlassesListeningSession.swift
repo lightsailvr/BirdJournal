@@ -424,11 +424,12 @@ final class GlassesListeningSession {
         }
     }
 
-    /// Writes a new sighting through the run's ledger, which the phone shares, and tells the lens the card it earned.
+    /// Writes a new sighting through the run's ledger, which the phone shares, and tells the lens what it earned: a new
+    /// patch, or another sighting of one the birder has.
     private func save(_ candidate: Candidate, confirmedAt: Date, frame: Data?) async {
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: listening.coordinate, frame: frame, source: .glasses)
-            lens.earned(addition.isLegendary ? .legendary : .newCard(collectorNumber: addition.placement.collectorNumber), for: candidate.species)
+            lens.earned(addition.sewsPatch ? .newPatch(collectorNumber: addition.placement.collectorNumber) : .seenAgain(count: addition.patchCount), for: candidate.species)
         } catch {
             errorMessage = "Could not save the sighting: \(error.localizedDescription)"
             Self.logger.error("save failed: \(error.localizedDescription, privacy: .public)")

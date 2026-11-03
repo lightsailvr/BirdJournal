@@ -98,7 +98,7 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Collection tab at the top of the Cards view: the Legendary reveal's "See it in my collection" (issue #51).
+    /// Opens the Collection tab at the top of the Patches view: the new-patch reveal's "See it in my collection" (issues #51, #132).
     @Entry var openCollection: @MainActor () -> Void = {}
     /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
@@ -168,7 +168,7 @@ struct RootView: View {
         }
         .tint(Color.moss)
         // Over the tabs and their bars; the run review sheet carries its own, since an add there happens over it.
-        .legendaryReveal()
+        .patchReveal()
         .environment(\.openCollection) {
             collection.mode = .cards
             collection.query = ""

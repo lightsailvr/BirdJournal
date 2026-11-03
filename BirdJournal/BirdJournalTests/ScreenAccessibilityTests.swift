@@ -156,19 +156,20 @@ struct ScreenAccessibilityTests {
         #expect(start < local, "Start listening comes before the local set")
     }
 
-    @Test("Collection: the summary, the modes and the cards, Legendary said in words", arguments: sizes)
+    @Test("Collection: the summary, the modes and the patches, each with how often it was seen", arguments: sizes)
     func collection(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(JournalView(state: CollectionState()), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.contains("House Finch") } && labels.contains("Cards")
+            labels.contains { $0.contains("House Finch") } && labels.contains("Patches")
         }
         Self.expectClean(labels, screen: "Collection")
-        #expect(labels.contains { $0.hasPrefix("6 cards") }, "the summary: \(labels)")
-        for mode in ["Cards", "Sightings", "Species"] {
+        #expect(labels.contains { $0.hasSuffix("· 6 sightings") && $0.contains("patches") }, "the summary: \(labels)")
+        for mode in ["Patches", "Sightings", "Species"] {
             #expect(labels.contains(mode), "\(mode): \(labels)")
         }
         #expect(labels.contains { $0.contains("House Finch") }, "\(labels)")
-        #expect(labels.contains { $0.contains("Legendary") }, "Legendary in words: \(labels)")
+        #expect(labels.contains { $0.contains("seen ") && $0.contains("sewn ") }, "the count in words: \(labels)")
+        #expect(!labels.contains { $0.contains("Legendary") }, "no Legendary: \(labels)")
     }
 
     @Test("A card's page: the front's art, names and tale, and nothing of the back until it is turned", arguments: sizes)
