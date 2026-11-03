@@ -23,11 +23,21 @@ xcrun simctl privacy "$udid" grant microphone "$bundle"
 xcrun simctl location "$udid" set 34.1365,-118.2942
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 2>/dev/null || true
 
+after_run=0
 shot() {  # name seconds flags...
     local name="$1" wait="$2"; shift 2
     xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-    # A launch straight after a terminated listening run can come up without its flags; let the old process go.
-    sleep 6
+    sleep 3
+    # The first launch after a terminated listening run can come up without its flags (seen on iOS 27.2): one throwaway
+    # launch first.
+    if ((after_run)); then
+        xcrun simctl launch "$udid" "$bundle" -inMemoryAlbum YES >/dev/null
+        sleep 4
+        xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
+        sleep 3
+    fi
+    after_run=0
+    [[ " $* " == *" listening "* ]] && after_run=1
     xcrun simctl launch "$udid" "$bundle" "$@" >/dev/null
     sleep "$wait"
     xcrun simctl io "$udid" screenshot "$out/$name.png" >/dev/null 2>&1
