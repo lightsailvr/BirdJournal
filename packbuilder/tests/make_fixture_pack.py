@@ -13,9 +13,10 @@ still open. Since #54 the test pack carries a set (`CARD_SET`): a box around Tes
 it carries `JOINED`: stats and a type line for the phoebe, and the hummingbird as a known gap with a type line and the
 threatened flag from the hand list. Since #57 the Black Phoebe has approved pack art painted from its photo 1 and the
 hummingbird is an art gap. Since #56 both carry a fact sheet (`FACTS`), and the phoebe approved lore (`LORE`) whose
-sources are a dataset and its Wikipedia revision; the hummingbird has none. Since #114 the test pack has an approved
-set cover (`COVER_SEED`, a 1536 x 864 landscape of bands); the Los Angeles form, like every pack built before covers,
-has none. Whichever of two branches that both change this script merges second reruns it for test-pack.zip.
+sources are a dataset and its Wikipedia revision; the hummingbird has none. Since #113 the phoebe's lore carries an
+approved story title; `test-pack-untitled.zip` beside it is the schema-4 pack from before, whose `lore` table has no
+`title` column, kept as written then. Since #114 the test pack has an approved set cover (`COVER_SEED`, a 1536 x 864
+landscape of bands); the Los Angeles form, like every pack built before covers, has none.
 """
 
 from __future__ import annotations
@@ -102,6 +103,7 @@ LORE = {
         ),
         {"text": "Keeper of the low perch.", "facts": ["f2"]},
         tuple(FACTS["sayornis-nigricans"]),
+        title={"text": "The Waterside Sentinel", "facts": ["f2"], "model": "claude-opus-5-5", "prompt_version": 5, "review": "approved"},
     ),
 }
 

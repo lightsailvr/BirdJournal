@@ -3,6 +3,7 @@ rebuild unchanged and makes no request, and lore is written again only on reques
 
 import json
 import sqlite3
+from pathlib import Path
 
 import pytest
 
@@ -12,7 +13,7 @@ from packbuilder.definition import BoundingBox, PackDefinition, SpeciesEntry
 from packbuilder.descriptions import derive
 from packbuilder.factsheet import Fact
 from packbuilder.lore import (
-    PENDING, InvalidLore, LoreLock, LoreWriter, MissingAPIKey, api_key_from_environment, review, review_sheet, validate,
+    PENDING, InvalidLore, LoreLock, LoreWriter, MissingAPIKey, api_key_from_environment, review, review_sheet, validate, validate_title,
 )
 from tests.test_factsheet import EXTRACT, JOINED, REVISION
 
@@ -31,6 +32,7 @@ GOOD = {
         {"text": "So the keeper of the water's edge has built since the first spring, and builds still.", "facts": ["f4"]},
     ],
     "tagline": {"text": "Keeper of the low perch, builder in mud.", "facts": ["f3", "f4"]},
+    "title": {"text": "The Waterside Mason", "facts": ["f4"]},
 }
 
 
@@ -42,7 +44,7 @@ class StubClient:
         self.prompts = []
 
     def complete(self, system, prompt, schema):
-        assert schema is lore_module.SCHEMA and "fact-sheet" in system
+        assert (schema, system) in ((lore_module.SCHEMA, lore_module.SYSTEM), (lore_module.TITLE_SCHEMA, lore_module.TITLE_SYSTEM)) and "fact sheet" in system
         self.prompts.append(prompt)
         reply = self.replies.pop(0)
         return reply if isinstance(reply, str) else json.dumps(reply)
@@ -106,8 +108,10 @@ def test_written_lore_is_locked_pending_with_its_facts(tmp_path):
     assert phoebe.tagline["text"] == "Keeper of the low perch, builder in mud."
     assert phoebe.sources == ["avonet", "birdbase", REVISION]
     entry = json.loads((tmp_path / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
-    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 4
+    assert entry["facts"] == [fact.as_dict() for fact in FACTS] and entry["model"] == "claude-opus-5-5" and entry["prompt_version"] == 5
     assert entry["sentences"][1] == {"text": GOOD["sentences"][1]["text"], "facts": ["f1", "f3"]}
+    assert entry["title"] == {"text": "The Waterside Mason", "facts": ["f4"], "model": "claude-opus-5-5", "prompt_version": 5, "review": PENDING}
+    assert phoebe.title["text"] == "The Waterside Mason" and phoebe.shipped_title is None
 
 
 def test_a_draft_that_fails_its_checks_goes_back_with_what_was_wrong(tmp_path):
@@ -155,14 +159,16 @@ def test_the_run_stops_once_past_its_budget_keeping_what_it_wrote(tmp_path):
 
 
 def test_a_set_may_not_lean_on_one_opening_or_on_ask_why(tmp_path):
-    def opened(text):
-        return {**GOOD, "sentences": [{"text": text, "facts": ["f3"]}, *GOOD["sentences"][1:]]}
-
-    asked = opened("Ask why the dark sentinel keeps its low perch by running water.")
     places = "Beside Under Over Along Near Past Within Below Above Across Around".split()
+    epithets = iter(f"{place}stream {word}" for place, word in zip(places * 2, "Mason Sentinel Keeper Builder Hunter Watcher Weaver Sitter Dancer Singer Waiter Rider Potter Diver".split()))
+
+    def opened(text):
+        return {**GOOD, "sentences": [{"text": text, "facts": ["f3"]}, *GOOD["sentences"][1:]], "title": {"text": next(epithets), "facts": ["f4"]}}
+
+    asked = [opened("Ask why the dark sentinel keeps its low perch by running water.") for _ in range(3)]
     others = [opened(f"{place} the stream the dark sentinel keeps its low perch.") for place in places]
     species = [(f"bird-{n}", f"Bird {n}", f"Avis {n}") for n in range(12)]
-    client = StubClient(*([asked] * 3 + others))
+    client = StubClient(*(asked + others))
     writer(tmp_path, client).write(species, {id: FACTS for id, _, _ in species})
 
     lock = LoreLock.load(tmp_path / "lore.lock.json").species
@@ -209,6 +215,7 @@ WREN_LORE = {
         {"text": "So it goes on, and the world counts it among the birds of least concern.", "facts": ["f4"]},
     ],
     "tagline": {"text": "The small brown keeper of the borrowed hole.", "facts": ["f1"]},
+    "title": {"text": "Keeper of the Borrowed Hole", "facts": ["f1"]},
 }
 REUSE = "It nests in a cavity, an old nest another bird built or a crevice."
 
@@ -363,7 +370,7 @@ def test_a_rebuild_with_a_warm_lock_ships_the_same_fact_sheet_and_lore(tmp_path)
         return db.execute("SELECT rank, text, source FROM fact ORDER BY rank").fetchall(), db.execute("SELECT * FROM lore").fetchall()
 
     # The stub cites the sheet as the builder numbers it: f1 to f6 the article, f7 to f15 the stats.
-    drafted = {**GOOD, "sentences": [{**s, "facts": ["f2"]} for s in GOOD["sentences"]], "tagline": {**GOOD["tagline"], "facts": ["f9"]}}
+    drafted = {**GOOD, "sentences": [{**s, "facts": ["f2"]} for s in GOOD["sentences"]], "tagline": {**GOOD["tagline"], "facts": ["f9"]}, **titled("The Waterside Mason", ("f13",))}
     facts, lore_rows = build(StubClient(drafted), "first")
     assert len(facts) == 15 and facts[6] == (6, "Its wingspan is estimated at about 28 cm from its wing length.", "wingspan")
     assert lore_rows == [], "pending lore does not ship"
@@ -375,7 +382,246 @@ def test_a_rebuild_with_a_warm_lock_ships_the_same_fact_sheet_and_lore(tmp_path)
     locked = (tmp_path / "lore.lock.json").read_bytes()
     facts_again, lore_rows = build(NoRequests(), "second")
     assert facts_again == facts and (tmp_path / "lore.lock.json").read_bytes() == locked
-    assert lore_rows == [("sayornis-nigricans", " ".join(s["text"] for s in GOOD["sentences"]), GOOD["tagline"]["text"], json.dumps([REVISION, "avonet"], separators=(",", ":")))]
+    row = ("sayornis-nigricans", " ".join(s["text"] for s in GOOD["sentences"]), GOOD["tagline"]["text"], json.dumps([REVISION, "avonet"], separators=(",", ":")))
+    assert lore_rows == [(*row, None)], "the lore ships; its title, pending, does not"
     license_text = (tmp_path / "second" / "LICENSE").read_text()
     assert "written from the fact sheet alone by Claude (claude-opus-5-5, Anthropic)" in license_text
-    assert "the lore is\nshared under CC BY-SA 4.0" in license_text
+    assert "the lore is\nshared under CC BY-SA 4.0" in license_text and "story title" not in license_text
+    assert json.loads((tmp_path / "second" / "report.json").read_text())["unreviewed"] == {"lore": [], "titles": ["sayornis-nigricans"]}
+
+    # Approving the title alone ships it with the lore, and its cited fact joins the sources.
+    review(LoreLock.load(tmp_path / "lore.lock.json"), approve_titles=["Black Phoebe"])
+    _, lore_rows = build(NoRequests(), "third")
+    sources = json.dumps([REVISION, "avonet", "birdbase"], separators=(",", ":"))
+    assert lore_rows == [(*row[:3], sources, "The Waterside Mason")]
+    assert "Each story title was written the same way" in (tmp_path / "third" / "LICENSE").read_text()
+    assert json.loads((tmp_path / "third" / "report.json").read_text())["unreviewed"] == {"lore": [], "titles": []}
+
+
+# Story titles (issue #113): 2 to 5 words heading the lore, citing the facts they rest on, never naming the bird, with
+# their own review so lore approved before titles existed is not reopened.
+
+LA = Path(__file__).resolve().parents[1] / "packs" / "us-ca-la"
+LA_SPECIES = [
+    ("sayornis-nigricans", "Black Phoebe", "Sayornis nigricans"),
+    ("haemorhous-mexicanus", "House Finch", "Haemorhous mexicanus"),
+    ("ardea-alba", "Great Egret", "Ardea alba"),
+]
+
+
+def titled(text, facts=("f4",)):
+    return {"title": {"text": text, "facts": list(facts)}}
+
+
+def la_lock(tmp_path):
+    """A copy of the committed Los Angeles lore lock (every entry approved under prompts v4, none titled yet)."""
+    (tmp_path / "lore.lock.json").write_bytes((LA / "lore.lock.json").read_bytes())
+    lock = LoreLock.load(tmp_path / "lore.lock.json")
+    return lock, {species_id: [Fact.from_dict(f) for f in lock.species[species_id]["facts"]] for species_id, _, _ in LA_SPECIES}
+
+
+def without_titles(path):
+    """The lock as the committed Los Angeles lock's text: its titles taken out and its comment from before them."""
+    document = json.loads(Path(path).read_text())
+    for entry in document["species"].values():
+        entry.pop("title", None)
+    document["comment"] = json.loads((LA / "lore.lock.json").read_text())["comment"]
+    return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+
+
+def test_a_title_is_two_to_five_words_citing_facts_on_the_sheet_and_holds_no_number():
+    def check(text, facts=("f4",)):
+        return validate_title({"text": text, "facts": list(facts)}, FACTS, "Black Phoebe", "Sayornis nigricans")
+
+    assert check("The Waterside Mason") == [] and check("Mason") != [] and check("The Mason Who Builds in Mud") != []
+    assert any("the title is 1 words; it must be 2 to 5" in problem for problem in check("Mason"))
+    assert any("the title is 6 words" in problem for problem in check("The Mason Who Builds in Mud"))
+    assert any("the title cites no fact" in problem for problem in check("The Waterside Mason", facts=()))
+    assert any("the title cites facts the sheet lacks: f9" in problem for problem in check("The Waterside Mason", facts=("f4", "f9")))
+    assert any("the title holds a number" in problem for problem in check("Keeper of Three Bridges"))
+    assert any("the title holds a number" in problem for problem in check("The 1000 Gnats"))
+    assert check("The One by the Water") == [], '"one" is left out of the numbers, as for the lore'
+    assert validate_title(None, FACTS, "Black Phoebe", "Sayornis nigricans") == ["there is no title"]
+
+
+@pytest.mark.parametrize("common, scientific, title, named", [
+    ("Black Phoebe", "Sayornis nigricans", "The Black Phoebe's Perch", "phoebe"),
+    ("Black Phoebe", "Sayornis nigricans", "Where Phoebes Wait", "phoebes"),
+    ("Black Phoebe", "Sayornis nigricans", "Sayornis of the Stream", "sayornis"),
+    ("Black Phoebe", "Sayornis nigricans", "The Nigricans Bridge", "nigricans"),
+    ("Anna's Hummingbird", "Calypte anna", "Anna’s Bright Jewel", "anna"),
+    ("Red-tailed Hawk", "Buteo jamaicensis", "The Red-tailed Sentinel", "red-tailed"),
+    ("Great Horned Owl", "Bubo virginianus", "The Owl-eyed Watcher", "owl-eyed"),
+    ("California Scrub-Jay", "Aphelocoma californica", "The Loud Blue Jay", "jay"),
+    ("Mallard", "Anas platyrhynchos", "Mallards of the Pond", "mallards"),
+    ("Great Egret", "Ardea alba", "The Egrets' Tree", "egrets"),
+])
+def test_a_title_may_not_name_the_bird(common, scientific, title, named):
+    problems = validate_title({"text": title, "facts": ["f1"]}, FACTS, common, scientific)
+    assert any(f"the title names the bird ({named})" in problem for problem in problems), problems
+
+
+@pytest.mark.parametrize("common, scientific, title", [
+    ("Black Phoebe", "Sayornis nigricans", "The Waterside Mason"),
+    ("House Finch", "Haemorhous mexicanus", "The Orchard Singer"),
+    ("Great Egret", "Ardea alba", "The White Architect"),
+    ("Acorn Woodpecker", "Melanerpes formicivorus", "The Acorn Keeper"),
+    ("Black Phoebe", "Sayornis nigricans", "The Black Sentinel"),
+])
+def test_a_title_may_keep_a_plain_word_of_the_name(common, scientific, title):
+    """The design guide's proposals pass; a plain word of the name alone ("acorn", "black") does not name the bird."""
+    assert validate_title({"text": title, "facts": ["f1"]}, FACTS, common, scientific) == []
+
+
+def test_new_lore_comes_with_its_title_and_a_bad_title_sends_the_draft_back(tmp_path):
+    client = StubClient({**GOOD, **titled("The Phoebe of the Bridge")}, {**GOOD, **titled("The Waterside Mason", facts=())}, GOOD)
+    lore_writer = writer(tmp_path, client)
+    written = lore_writer.write(PHOEBE, {"sayornis-nigricans": FACTS})
+    assert written["sayornis-nigricans"].title["text"] == "The Waterside Mason"
+    assert "the title names the bird (phoebe)" in client.prompts[1] and "the title cites no fact" in client.prompts[2]
+    assert lore_writer.requests == 3 and lore_writer.title_requests == 0, "the title is written with the lore, in one request"
+    assert "story title" in lore_module.SYSTEM and "Never name the bird" in lore_module.SYSTEM and "Never name the bird" in lore_module.TITLE_SYSTEM
+
+
+def test_titles_for_approved_lore_leave_it_byte_for_byte(tmp_path):
+    lock, sheets = la_lock(tmp_path)
+    before = without_titles(tmp_path / "lore.lock.json")
+    assert before == (LA / "lore.lock.json").read_text(), "the committed lock, byte for byte"
+    client = StubClient(titled("The Waterside Mason"), titled("The Orchard Singer", ("f6",)), titled("The White Architect", ("f3",)))
+    lore_writer = LoreWriter(lock=lock, client_factory=lambda: client, sleep=lambda _: None)
+    written = lore_writer.write(LA_SPECIES, sheets)
+
+    assert lore_writer.requests == lore_writer.title_requests == 3
+    assert [written[i].title["text"] for i, _, _ in LA_SPECIES] == ["The Waterside Mason", "The Orchard Singer", "The White Architect"]
+    assert all(written[i].ships and written[i].title["review"] == PENDING and written[i].shipped_title is None for i, _, _ in LA_SPECIES)
+    assert without_titles(tmp_path / "lore.lock.json") == before, "only the title is added; the lore, tagline, facts and review are as locked"
+    entry = json.loads((tmp_path / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
+    assert entry["prompt_version"] == 4 and entry["title"] == {
+        "text": "The Waterside Mason", "facts": ["f4"], "model": "claude-opus-5-5", "prompt_version": 5, "review": PENDING,
+    }
+    first = client.prompts[0]
+    assert first.startswith("Species: Black Phoebe (Sayornis nigricans)") and "Its tagline: Mud-mason by the water, wagging its fanned tail." in first
+    assert "Its legend, which the title heads:\n" + lore_module._lore_text(lock.species["sayornis-nigricans"]) in first
+
+    again = LoreWriter(lock=LoreLock.load(tmp_path / "lore.lock.json"), client_factory=lambda: NoRequests(), sleep=lambda _: None)
+    titled_lock = (tmp_path / "lore.lock.json").read_bytes()
+    again.write(LA_SPECIES, sheets)
+    assert again.requests == 0 and (tmp_path / "lore.lock.json").read_bytes() == titled_lock, "a titled lock is warm"
+
+
+def test_no_titles_makes_no_title_request(tmp_path):
+    lock, sheets = la_lock(tmp_path)
+    before = (tmp_path / "lore.lock.json").read_bytes()
+    quiet = LoreWriter(lock=lock, client_factory=lambda: NoRequests(), sleep=lambda _: None, titles=False)
+    written = quiet.write(LA_SPECIES, sheets)
+    assert quiet.requests == 0 and all(lore.ships and lore.title is None for lore in written.values())
+    assert (tmp_path / "lore.lock.json").read_bytes() == before
+
+
+def test_a_failed_title_leaves_the_lore_and_no_title(tmp_path):
+    lock, sheets = la_lock(tmp_path)
+    before = (tmp_path / "lore.lock.json").read_bytes()
+    client = StubClient(*[titled("The Black Phoebe")] * 3)
+    written = LoreWriter(lock=lock, client_factory=lambda: client, sleep=lambda _: None).write(LA_SPECIES[:1], sheets)
+    assert written["sayornis-nigricans"].ships and written["sayornis-nigricans"].title is None
+    assert (tmp_path / "lore.lock.json").read_bytes() == before
+
+
+def test_a_set_s_titles_may_not_lean_on_one_opening_or_one_ending(tmp_path):
+    lock = LoreLock(tmp_path / "lore.lock.json", {
+        f"bird-{n}": {
+            "common_name": f"Bird {n}", "model": "claude-opus-5-5", "prompt_version": 4, "facts": [fact.as_dict() for fact in FACTS],
+            "sentences": GOOD["sentences"], "tagline": GOOD["tagline"], "review": "approved",
+        }
+        for n in range(12)
+    })
+    lock.write()
+
+    replies = [
+        "The Night Mason", "The Night Keeper", "The Night Watcher", "Dusk Watcher",  # a third "the night" goes back
+        "Reed Hunter", "Mud Hunter", "Sky Hunter", "Sky Diver",  # a third "hunter" goes back
+        "Bridge Builder", "Stone Sitter", "Gnat Catcher", "Low Percher", "Cliff Dweller", "Stream Singer",
+    ]
+    client = StubClient(*[titled(text) for text in replies])
+    species = [(f"bird-{n}", f"Bird {n}", f"Avis {n}") for n in range(12)]
+    LoreWriter(lock=LoreLock.load(tmp_path / "lore.lock.json"), client_factory=lambda: client, sleep=lambda _: None).write(species, {id: FACTS for id, _, _ in species})
+
+    titles = [entry["title"]["text"] for entry in LoreLock.load(tmp_path / "lore.lock.json").species.values()]
+    assert len(titles) == 12 and "The Night Watcher" not in titles and "Sky Hunter" not in titles
+    assert sum(lore_module.title_opening({"text": t}) == "the night" for t in titles) == 2, "15 % of twelve rounds up to two"
+    assert sum(lore_module.title_ending({"text": t}) == "hunter" for t in titles) == 2
+    assert any('2 titles of this set already begin "the night"' in prompt for prompt in client.prompts)
+    assert any('2 titles of this set already end on "hunter"' in prompt for prompt in client.prompts)
+    assert any("Other titles of this set already begin often with: the night" in prompt for prompt in client.prompts), "the next request is warned first"
+
+
+def run_cli(*argv):
+    from packbuilder.cli import main
+
+    return main([str(arg) for arg in argv])
+
+
+def test_lore_review_approves_or_rejects_a_title_alone(tmp_path):
+    lock, sheets = la_lock(tmp_path)
+    (tmp_path / "pack.json").write_bytes((LA / "pack.json").read_bytes())
+    client = StubClient(titled("The Waterside Mason"), titled("The Orchard Singer", ("f6",)), titled("The White Architect", ("f3",)))
+    LoreWriter(lock=lock, client_factory=lambda: client, sleep=lambda _: None).write(LA_SPECIES, sheets)
+    lore_before = without_titles(tmp_path / "lore.lock.json")
+
+    sheet = tmp_path / "review.md"
+    assert run_cli("lore-review", tmp_path, "--approve-title", "Black Phoebe", "--reject-title", "ardea-alba", "--why", "Too grand.", "--sheet", sheet) == 0
+    species = LoreLock.load(tmp_path / "lore.lock.json").species
+    assert species["sayornis-nigricans"]["title"]["review"] == "approved"
+    assert species["haemorhous-mexicanus"]["title"]["review"] == PENDING
+    assert species["ardea-alba"]["title"] == {**species["ardea-alba"]["title"], "review": "rejected", "why": "Too grand."}
+    assert without_titles(tmp_path / "lore.lock.json") == lore_before, "the lore's review is not reopened"
+
+    text = sheet.read_text()
+    assert "Titles: 1 approved, 1 pending, 1 rejected, 157 not written." in text and "Titles pending: House Finch." in text
+    assert "- Black Phoebe: The Waterside Mason (approved)" in text and "- Allen's Hummingbird: no title" in text
+    assert "## Great Egret (approved)\n\nTitle (rejected): *The White Architect* (f3)\n   - f3: " in text and "   Title rejected: Too grand." in text
+
+    # The rejected title alone is written again, with the reason; the approved one is not touched.
+    client = StubClient(titled("Builder Before the Bride", ("f3",)))
+    written = LoreWriter(lock=LoreLock.load(tmp_path / "lore.lock.json"), client_factory=lambda: client, sleep=lambda _: None).write(LA_SPECIES, sheets)
+    assert len(client.prompts) == 1 and "The maintainer rejected the title 'The White Architect': Too grand." in client.prompts[0]
+    assert written["ardea-alba"].title["review"] == PENDING and written["ardea-alba"].ships
+    assert written["sayornis-nigricans"].shipped_title == "The Waterside Mason" and written["haemorhous-mexicanus"].shipped_title is None
+    assert without_titles(tmp_path / "lore.lock.json") == lore_before
+
+    assert run_cli("lore-review", tmp_path, "--approve-all-titles", "--sheet", sheet) == 0
+    species = LoreLock.load(tmp_path / "lore.lock.json").species
+    assert all(species[i]["title"]["review"] == "approved" for i, _, _ in LA_SPECIES) and "why" not in species["ardea-alba"]["title"]
+    assert without_titles(tmp_path / "lore.lock.json") == lore_before
+    assert run_cli("lore-review", tmp_path, "--approve-title", "Allen's Hummingbird", "--sheet", sheet) == 1, "no title to approve yet"
+
+
+def test_regenerating_a_title_on_request_keeps_the_lore(tmp_path):
+    writer(tmp_path, StubClient(GOOD)).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    review(LoreLock.load(tmp_path / "lore.lock.json"), approve_all=True, approve_all_titles=True)
+    client = StubClient(titled("Keeper of the Low Perch", ("f3",)))
+    written = writer(tmp_path, client, regenerate_titles=frozenset({"sayornis-nigricans"})).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    assert "Its title is 'The Waterside Mason'; write another." in client.prompts[0]
+    assert written["sayornis-nigricans"].review == "approved" and written["sayornis-nigricans"].title["review"] == PENDING
+
+
+def test_a_changed_dataset_fact_the_title_cites_sends_back_the_title_alone(tmp_path, caplog):
+    lore = {**WREN_LORE, "sentences": [{**s, "facts": ["f1"]} for s in WREN_LORE["sentences"]], **titled("Keeper of the Borrowed Nest", ("f3",))}
+    writer(tmp_path, StubClient(lore)).write([WREN], {WREN[0]: WREN_FACTS})
+    review(LoreLock.load(tmp_path / "lore.lock.json"), approve_all=True, approve_all_titles=True)
+
+    fixed = [WREN_FACTS[0], WREN_FACTS[1], Fact("f3", REUSE, "birdbase"), WREN_FACTS[3]]
+    client = StubClient(titled("Tenant of the Old Nest", ("f3",)))
+    written = writer(tmp_path, client).write([WREN], {WREN[0]: fixed})
+    assert "a fact its title cites changed" in caplog.text
+    assert len(client.prompts) == 1 and REUSE in client.prompts[0], "the title is written from the refreshed sheet"
+    assert written[WREN[0]].review == "approved" and written[WREN[0]].title == {**written[WREN[0]].title, "text": "Tenant of the Old Nest", "review": PENDING}
+
+
+def test_a_hand_edited_title_that_fails_its_checks_stops_the_build(tmp_path):
+    writer(tmp_path, StubClient(GOOD)).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    lock = LoreLock.load(tmp_path / "lore.lock.json")
+    lock.species["sayornis-nigricans"]["title"]["text"] = "The Black Phoebe"
+    lock.write()
+    with pytest.raises(InvalidLore, match="locked title fails its checks: the title names the bird \\(phoebe\\)"):
+        writer(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
