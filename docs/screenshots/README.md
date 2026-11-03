@@ -27,3 +27,16 @@ simulator with a simulated Griffith Park fix: the sighting detail with the map c
 (`legendary-card`), an edition card, the newer of the two House Finches, labelled "Citrus edition" (`edition-card`),
 and its back with the Art section naming FLUX.3 Image Klein and the reference photo's photographer (`edition-card-back`).
 Both fronts show the Los Angeles v7 pack art labelled "AI illustration".
+
+`116/` is the evidence for issue #116 (Featherguild slice 1: the tokens and the story-first card), half size from an
+iPhone 17 Pro simulator (iOS 27.2) on Los Angeles v10 (with the story titles) with `-inMemoryAlbum YES -seedJournal YES`, reduced to 256 colours. Each screen is
+in `dark`, `light` and `ax3` (light at accessibility extra large), numbered top to bottom where the screen scrolls:
+- `front-legendary`: the Black Phoebe, the seeded journal's Legendary card with the caption, from `-autoScreen card
+  -autoCardSpecies "Sayornis nigricans"`
+- `front`: the newer of the two House Finches, a Citrus edition card
+- `back`: its back, scrolling inside the card's footprint
+- `grid`: the Cards view
+- `share`: "A story to share" with the rendered card
+- `reveal`: the Legendary reveal
+
+Compare them with page 5 of `docs/design/featherguild/`.
