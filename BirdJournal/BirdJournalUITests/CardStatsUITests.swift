@@ -1,8 +1,8 @@
 import XCTest
 
-/// Issues #55 and #116: the seeded House Finch card carries its type line, stats (in US units on the simulator's en_US
-/// locale, the wingspan predicted) and natural history on the back, the story-first front keeping none of them, and the
-/// Credits name the three datasets. Screenshots of both faces are kept with the result.
+/// Issues #55 and #134: the seeded House Finch's paper card carries its biology (in US units on the simulator's en_US
+/// locale, the wingspan predicted), and the Credits name the three datasets. Screenshots of both faces are kept with the
+/// result. The type line and the fuller natural history are on the bird's profile in the Atlas.
 final class CardStatsUITests: XCTestCase {
     @MainActor
     private func launch(_ screen: String) -> XCUIApplication {
@@ -26,29 +26,21 @@ final class CardStatsUITests: XCTestCase {
     }
 
     @MainActor
-    func testTheBackShowsTheTypeLineStatsAndNaturalHistory() {
+    func testThePaperCardShowsTheBiology() {
         let app = launch("card")
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the card did not open; screen: \(app.debugDescription.prefix(3000))")
-        keepScreenshot("card front, story first")
+        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
+        keepScreenshot("the patch")
 
         app.buttons["card-flip"].tap()
-        XCTAssertTrue(app.staticTexts["Encounter story"].waitForExistence(timeout: 5))
-        let typeLine = element(app, "card-type-line")
-        XCTAssertTrue(typeLine.waitForExistence(timeout: 5), "no type line; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(typeLine.label, "Type: Songbird, Finch")
         let wingspan = element(app, "card-stat-wingspan")
-        XCTAssertTrue(wingspan.exists)
+        XCTAssertTrue(wingspan.waitForExistence(timeout: 5), "no biology; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(wingspan.label.hasPrefix("Wingspan about ") && wingspan.label.hasSuffix("inches, estimated from wing length"), wingspan.label)
         XCTAssertTrue(element(app, "card-stat-weight").label.hasSuffix(" ounces"), element(app, "card-stat-weight").label)
         XCTAssertEqual(element(app, "card-stat-diet").label, "Diet: mostly seeds")
-        let history = element(app, "card-natural-history")
-        for _ in 0..<4 where !history.isHittable { app.swipeUp() }
-        XCTAssertTrue(history.exists)
-        for label in ["Habitat", "Migration", "Nest", "Clutch", "Lifestyle"] {
-            XCTAssertTrue(app.staticTexts[label].exists, "no \(label) on the back")
-        }
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'From AVONET, BIRDBASE and the Avian wingspan database (CC BY 4.0)'")).firstMatch.exists)
-        keepScreenshot("card back with natural history")
+        XCTAssertTrue(element(app, "card-stat-nest").label.hasPrefix("Nest:"), element(app, "card-stat-nest").label)
+        XCTAssertTrue(element(app, "card-stat-clutch").label.hasPrefix("Clutch:"), element(app, "card-stat-clutch").label)
+        XCTAssertTrue(element(app, "card-stat-size").label.hasPrefix("Size:"), element(app, "card-stat-size").label)
+        keepScreenshot("the paper card with its biology")
     }
 
     @MainActor

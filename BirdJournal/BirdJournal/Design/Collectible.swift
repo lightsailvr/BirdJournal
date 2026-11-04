@@ -3,11 +3,10 @@ import NaturalLanguage
 import Pack
 import SwiftUI
 
-/// The collectible cards' tokens (issue #116, Featherguild design guide pages 5–9). A card is an ivory object in both
-/// appearances, the same anatomy on every species: teal ink, a teal outer edge with a fine inner keyline. Since #132
-/// (design guide 2.0) there is no Legendary and no gold: every patch is the one patch, and rarity is said in words. The face
-/// sets its subtree to the light scheme (`CardSurface`), so the system controls on its back draw for ivory and the
-/// page tokens read on it. Pack art keeps its natural colours on it.
+/// The card's tokens and the one sighting's card face (issue #116, Featherguild design guide 1.0 pages 5–9), which only the
+/// share image (until #136) and a sighting's art (until #137) still draw: since #134 what you collect is the patch and its
+/// paper card (`Patch/`), though the ink tokens here are the paper's too. A face is an ivory object in both appearances
+/// and sets its subtree to the light scheme (`CardSurface`). There is no Legendary and no gold since #132.
 extension Color {
     /// The card face: warm ivory, the paper the pack paintings are painted on; fixed in both appearances.
     static let cardFace = Color("CollectibleFace")
@@ -222,145 +221,104 @@ enum LoreExcerpt {
     }
 }
 
-/// One card of the collection as a thumbnail (issues #51 and #116): the set's edition, the name, the painting, the
-/// story title when the pack has one, and the date with Heard or Seen and the collector number. As a patch's tile
-/// (issue #132) its footer says how often the bird was seen there and since when. No paragraph: the tale is read on the
-/// opened card. The art is `CardText.Art`'s, labelled as what it is (issue #57).
-struct CardTile: View {
+/// The share image's face until #136 draws the patch and its paper card: the story-first front (issue #116, design guide page 5, the reference card): the edition, the
+/// bird's name upright and its scientific name in italics, the painting with its compact credit,
+/// then the tale: the story title when the pack has an approved one (#113), and an excerpt of the approved lore in a true italic
+/// serif (`LoreExcerpt`: whole sentences, about 25–40 words). Without a title the excerpt leads; without lore the tale
+/// is left out. Then the quiet footer: the place, the date and Heard or Seen, the rarity in words, and the collector
+/// number. Nothing is clipped or shrunk: at large text sizes
+/// the card grows. The share sheet (issue #66) draws the same face with the place it may share (a city, a secret spot
+/// or none) and the art already loaded, so the renderer has the pixels when it draws.
+struct CardFront: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
     let placement: CardPlacement?
-    /// The patch the tile stands for, nil for one sighting's card.
-    var patch: CardCollection.Patch? = nil
-    /// The story title in place of the pack's (#113, `PackLore.title`); nil reads the pack's.
+    /// The place line: the card's place on the phone; on a shared face, only what the share may carry.
+    let place: String?
+    /// The story title in place of the pack's (#113: `PackLore.title`, 2–5 reviewed words); nil reads the pack's, and
+    /// without one the excerpt leads. The app never invents one.
     var storyTitle: String? = nil
-
-    private var title: String? {
-        storyTitle ?? library.species(scientificName: sighting.scientificName)?.species.lore?.title?.nilIfEmpty
-    }
+    /// The art to draw, in place of what `CardArtView.art` gives; nil draws that.
+    var art: CardText.Art? = nil
+    /// The art's picture, loaded already (the share's renderer can't wait for it).
+    var artImage: UIImage? = nil
 
     var body: some View {
-        let name = library.commonName(for: sighting)
-        VStack(spacing: 6) {
-            CardHeading(placement: placement, compact: true)
-                .padding(.horizontal, 14)
-            Text(name)
-                .font(CardFont.tileName)
-                .foregroundStyle(Color.cardInk)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-            CardArtView(art: CardArtView.art(for: sighting, library: library, setID: placement?.setID), commonName: name)
-            if let title {
-                Text(title)
-                    .font(CardFont.tileStoryTitle)
+        let reference = library.species(scientificName: sighting.scientificName)
+        let art = art ?? CardArtView.art(for: sighting, library: library, setID: placement?.setID)
+        let commonName = library.commonName(for: sighting)
+        let excerpt = reference?.species.lore.flatMap { LoreExcerpt.front($0.text) }
+        let storyTitle = self.storyTitle ?? reference?.species.lore?.title?.nilIfEmpty
+        let heading = CardHeading.accessibilityText(placement: placement)
+        VStack(spacing: 12) {
+            CardHeading(placement: placement)
+                .padding(.horizontal, 24)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(heading.first.flatMap { $0 } ?? "")
+                .accessibilityIdentifier("card-heading")
+            VStack(spacing: 2) {
+                Text(commonName)
+                    .font(CardFont.birdName)
                     .foregroundStyle(Color.cardInk)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(sighting.scientificName)
+                    .font(CardFont.scientific)
+                    .foregroundStyle(Color.cardInkSecondary)
             }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityIdentifier("card-name")
+            CardArtView(art: art, commonName: commonName, image: artImage)
+            if let line = CardText.sceneArtLine(sighting.art.sceneStatus) {
+                Label(line, systemImage: sighting.art.sceneStatus == .failed ? "exclamationmark.circle" : "paintbrush.pointed")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.cardInk)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(line)
+                    .accessibilityIdentifier("card-art-status")
+            }
+            if storyTitle != nil || excerpt != nil {
+                VStack(spacing: 8) {
+                    if let storyTitle {
+                        Text(storyTitle)
+                            .font(CardFont.storyTitle)
+                            .foregroundStyle(Color.cardInk)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                            .accessibilityIdentifier("card-story-title")
+                        Rectangle()
+                            .fill(Color.cardEdge.opacity(0.35))
+                            .frame(width: 72, height: 1)
+                            .accessibilityHidden(true)
+                    }
+                    if let excerpt {
+                        Text(excerpt)
+                            .font(CardFont.lore)
+                            .lineSpacing(CardFont.loreLeading)
+                            .foregroundStyle(Color.cardInk)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("card-lore-excerpt")
+                    }
+                }
+                .padding(.top, 2)
+            }
+            Rectangle().fill(Color.cardEdge.opacity(0.3)).frame(height: 1).accessibilityHidden(true)
             CardFooter(
-                line: patch.map(Self.patchLine) ?? CardFooter.line(place: nil, date: sighting.confirmedAt, method: sighting.method),
-                number: CardHeading.numberText(placement: placement)
+                line: CardFooter.line(place: place, date: sighting.confirmedAt, method: sighting.method),
+                rarity: CardText.rarityLine(sighting.rarity),
+                number: CardHeading.numberText(placement: placement),
+                numberLabel: heading.count > 1 ? heading.last.flatMap { $0 } : nil
             )
         }
-        .modifier(TileFrame())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityText)
-    }
-
-    private var accessibilityText: String {
-        ([library.commonName(for: sighting), title] + CardHeading.accessibilityText(placement: placement) + (patch.map(Self.patchAccessibility) ?? [
-            sighting.confirmedAt.formatted(date: .long, time: .shortened),
-            sighting.method.title,
-        ]) + [
-            CardArtView.art(for: sighting, library: library, setID: placement?.setID).label,
-        ])
-        .compactMap { $0 }
-        .joined(separator: ", ")
-    }
-
-    /// "Seen 8 times · since Sep 14, 2026", or "Seen once · Nov 3, 2026".
-    static func patchLine(_ patch: CardCollection.Patch) -> String {
-        let date = patch.sewn.confirmedAt.formatted(date: .abbreviated, time: .omitted)
-        return patch.count == 1 ? "\(patch.countText) · \(date)" : "\(patch.countText) · since \(date)"
-    }
-
-    /// "seen 8 times, sewn September 14, 2026".
-    static func patchAccessibility(_ patch: CardCollection.Patch) -> [String?] {
-        ["seen \(CardCollection.Patch.times(patch.count))", "sewn \(patch.sewn.confirmedAt.formatted(date: .long, time: .omitted))"]
-    }
-}
-
-/// A grid tile's card surface, with a ring in the primary action's colour around it when it is the card last opened
-/// from a gallery. A gallery's tiles (`isSelected` set) keep room for the ring whether or not it shows, so every tile
-/// is the same size.
-private struct TileFrame: ViewModifier {
-    var isSelected: Bool?
-
-    func body(content: Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous)
-        content
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-            .modifier(CardSurface(sprigs: 16))
-            .padding(isSelected == nil ? 0 : 4)
-            .overlay {
-                if isSelected == true {
-                    RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius + 4, style: .continuous)
-                        .strokeBorder(Color.moss, lineWidth: 3)
-                }
-            }
-            .contentShape(shape)
-    }
-}
-
-/// One tile of a species gallery (issue #53): the set's edition, the art, and what tells two cards of one bird apart: the place, the date and time, Heard or Seen, and the collector number.
-struct GalleryTile: View {
-    @Environment(PackLibrary.self) private var library
-    let sighting: Sighting
-    /// The gallery's place for the card, nil for "Place not recorded".
-    let place: String?
-    let placement: CardPlacement?
-    let isSelected: Bool
-
-    var body: some View {
-        VStack(spacing: 6) {
-            CardHeading(placement: placement, compact: true)
-                .padding(.horizontal, 14)
-            CardArtView(art: CardArtView.art(for: sighting, library: library, setID: placement?.setID), commonName: library.commonName(for: sighting))
-            VStack(alignment: .leading, spacing: 2) {
-                Text(place ?? SpeciesGallery.PlaceFilter.notRecorded.title)
-                    .font(CardFont.tileStoryTitle)
-                    .foregroundStyle(Color.cardInk)
-                Text(sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted))
-                    .font(CardFont.footer)
-                    .foregroundStyle(Color.cardInkSecondary)
-                Text("\(sighting.confirmedAt.formatted(date: .omitted, time: .shortened)) · \(sighting.method.title)")
-                    .font(CardFont.footer)
-                    .foregroundStyle(Color.cardInkSecondary)
-                if let number = CardHeading.numberText(placement: placement) {
-                    Text(number)
-                        .font(CardFont.footer.monospacedDigit())
-                        .foregroundStyle(Color.cardInkSecondary)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-        .modifier(TileFrame(isSelected: isSelected))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityText)
-    }
-
-    private var accessibilityText: String {
-        ([
-            place ?? SpeciesGallery.PlaceFilter.notRecorded.title,
-            sighting.confirmedAt.formatted(date: .long, time: .shortened),
-            sighting.method.title,
-        ] + CardHeading.accessibilityText(placement: placement) + [
-            CardArtView.art(for: sighting, library: library, setID: placement?.setID).label,
-        ])
-        .compactMap { $0 }
-        .joined(separator: ", ")
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 14)
+        .modifier(CardSurface())
     }
 }
 

@@ -41,6 +41,27 @@ struct PackPatchTests {
         #expect(pack.species.allSatisfy { $0.patch == nil })
     }
 
+    @Test("a patch belongs to its edition: only the set's own pack gives it, never another set's patch of the bird")
+    func onlyTheSetsOwnPack() async throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let library = try Fixtures.library(root: root)
+        await library.refreshIndex()
+        await library.download(try #require(library.available.first))
+        let installed = try #require(library.pack(id: "test-pack"))
+        try Self.exec(installed.directory, """
+            CREATE TABLE patch (species_id TEXT PRIMARY KEY, file TEXT NOT NULL, layers_file TEXT NOT NULL, width INTEGER NOT NULL,
+                height INTEGER NOT NULL, ground TEXT NOT NULL, stitch_bounds TEXT NOT NULL, source_photo_ids TEXT NOT NULL, workflow_version TEXT NOT NULL);
+            INSERT INTO patch SELECT id, 'patch/' || id || '.avif', 'patch/' || id || '-layers.avif', 680, 720, '#C4A068', '[0,255]', '[]', 'patch-art@1' FROM species WHERE scientific_name = 'Sayornis nigricans';
+            UPDATE pack SET schema_version = 5;
+            """)
+        let reread = try PackLibrary(bundled: nil, storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: PackIndex.defaultURL)
+        #expect(reread.patch(scientificName: "Sayornis nigricans", setID: "test-pack")?.pack.info.id == "test-pack")
+        #expect(reread.patch(scientificName: "Sayornis nigricans", setID: "us-ca-sd") == nil, "another edition's patch isn't this one")
+        #expect(reread.patch(scientificName: "Sayornis nigricans", setID: nil) == nil, "an Uncharted patch has no painting")
+        #expect(reread.patch(scientificName: "Calypte anna", setID: "test-pack") == nil, "a species with no row")
+    }
+
     static func exec(_ directory: URL, _ sql: String) throws {
         var database: OpaquePointer?
         #expect(sqlite3_open(directory.appending(path: "pack.sqlite").path(percentEncoded: false), &database) == SQLITE_OK)

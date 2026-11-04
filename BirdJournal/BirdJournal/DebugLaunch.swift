@@ -11,14 +11,16 @@ import UIKit
 ///
 /// - `-seedJournal YES` adds a few sightings with generated frames, spread over a kilometre of Griffith Park so the
 ///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
+/// - `-patchLight "x,y"` puts the patches' light somewhere, as a tilt would (issue #134's screenshots; the simulator has
+///   no motion; "l0.5,u0.6" for left and up, since a launch argument can't start with a minus); `-patchLightSweep YES` circles it and logs frame times under the `patch-light` category.
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
-///   the species gallery (issue #53).
+///   the species' patches (issue #134).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Patches view), `sightings`,
 ///   `reveal` (the new-patch reveal of the newest seeded sighting, over the Listen tab; over a phone run with
 ///   `-autoPhoneListening <wav>`; `-autoCardSpecies` picks the species), `card` and `card-back` (the newest
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
-///   `species` or `gallery` (the gallery of the newest card's species), `species-list` (the
+///   `species` or `gallery` (the patches of the newest sighting's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
 ///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
@@ -121,15 +123,17 @@ struct DebugLaunch: ViewModifier {
                 tab = .journal
                 journalMode = .cards
                 let species = defaults.string(forKey: "autoCardSpecies")
-                if let newest = (try? context.fetch(Sighting.newestFirst()))?.first(where: { species == nil || $0.scientificName == species }) {
-                    journalPath.append(Route.card(newest.persistentModelID))
+                let all = (try? context.fetch(Sighting.newestFirst())) ?? []
+                if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
+                    let placement = library.collection(of: all).placement(of: newest.identifier)
+                    journalPath.append(Route.patch(CardCollection.Patch.Key(speciesID: newest.speciesID, setID: placement?.setID)))
                 }
                 if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }
             case "species", "gallery":
                 tab = .journal
                 journalMode = .species
                 if let newest = try? context.fetch(Sighting.newestFirst()).first {
-                    journalPath.append(Route.gallery(scientificName: newest.scientificName, commonName: library.commonName(for: newest)))
+                    journalPath.append(Route.speciesPatches(scientificName: newest.scientificName, commonName: library.commonName(for: newest)))
                 }
             case "species-list":
                 tab = .journal
@@ -340,7 +344,7 @@ enum DebugSeeds {
         try? context.save()
     }
 
-    /// Fifteen House Finch cards over three weeks for the species gallery (issue #53): nine around Griffith Park in Los
+    /// Fifteen House Finch sightings over three weeks for the species' patches (issue #53): nine around Griffith Park in Los
     /// Angeles and six in Balboa Park in San Diego, two of them on one day, some Seen, some with a glasses photo, each
     /// with the rarity the real geomodel gives it: a Los Angeles patch seen nine times and a San Diego one seen six.
     static func seedGallery(context: ModelContext, frames: FrameStore?) {

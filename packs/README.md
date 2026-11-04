@@ -15,8 +15,8 @@ Built species packs, as `scripts/build-pack.sh` writes them from `packbuilder/pa
 Descriptions (`summary`, `field_marks`, `size`, `habitat`) are cut from each species' English Wikipedia article by
 rule (`packbuilder/src/packbuilder/descriptions.py`) or written by hand in the pack's `overrides.json`;
 `description_source` is the permanent link to the article revision the text came from, NULL for hand-written text.
-Schema version 4 (`SpeciesPack.schemaVersion` in the Swift `Pack` module, which still opens schema 2 without sounds and
-schema 3 without a set). `manifest.json` and the published `index.json` carry each pack's `schema_version` /
+Schema version 5 (`SpeciesPack.schemaVersion` in the Swift `Pack` module, which still opens schema 2 without sounds,
+schema 3 without a set and schema 4 without patches). `manifest.json` and the published `index.json` carry each pack's `schema_version` /
 `schemaVersion`, so a build that cannot open a newer schema lists the pack as needing a newer app instead of
 downloading it. Since #54 each index entry also carries the pack's `set` (from `packbuilder/packs/<id>/set.json`), so
 the phone knows every set before downloading its pack.

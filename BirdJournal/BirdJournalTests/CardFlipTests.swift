@@ -14,10 +14,10 @@ struct CardFlipTests {
         for angle in stride(from: 0.0, through: 180, by: 0.5) {
             let front = CardFlip.face(isBack: false, angle: angle, rotates: true)
             let back = CardFlip.face(isBack: true, angle: angle, rotates: true)
-            #expect(front.isVisible != back.isVisible, "angle \(angle)")
+            #expect(front.opacity + back.opacity == 1, "angle \(angle)")
         }
-        #expect(CardFlip.face(isBack: false, angle: 89.5, rotates: true).isVisible)
-        #expect(CardFlip.face(isBack: true, angle: 90, rotates: true).isVisible)
+        #expect(CardFlip.face(isBack: false, angle: 89.5, rotates: true).opacity == 1)
+        #expect(CardFlip.face(isBack: true, angle: 90, rotates: true).opacity == 1)
     }
 
     @Test("each face reads the right way round when it is the one showing")
@@ -28,15 +28,12 @@ struct CardFlipTests {
         #expect(CardFlip.face(isBack: true, angle: 120, rotates: true).degrees == -60)
     }
 
-    @Test("with Reduce Motion nothing turns and the faces switch at once")
+    @Test("with Reduce Motion nothing turns")
     func reduceMotion() {
         for angle in [0.0, 45, 90, 135, 180] {
             #expect(CardFlip.face(isBack: false, angle: angle, rotates: false).degrees == 0)
             #expect(CardFlip.face(isBack: true, angle: angle, rotates: false).degrees == 0)
         }
-        #expect(CardFlip.animation(reduceMotion: true) == nil)
-        #expect(CardFlip.animation(reduceMotion: false) != nil)
-        #expect(CardFlip.duration == 0.48)
     }
 }
 

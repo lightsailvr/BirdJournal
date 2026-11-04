@@ -102,6 +102,13 @@ public final class PackLibrary {
         return nil
     }
 
+    /// A species' patch in one edition (issue #134): only the pack of that set has it, since each edition paints its own
+    /// patch. Nil for a pack not on the phone, a species without an approved patch, and Uncharted.
+    public func patch(scientificName: String, setID: String?) -> (pack: SpeciesPack, patch: PackPatch)? {
+        guard let setID, let pack = pack(id: setID), let patch = pack.species(scientificName: scientificName)?.patch else { return nil }
+        return (pack, patch)
+    }
+
     /// The first pack that has this photo (an iNaturalist photo id; two packs sharing a species share its photos).
     public func photo(id: String) -> (pack: SpeciesPack, photo: PackPhoto)? {
         for pack in packs {

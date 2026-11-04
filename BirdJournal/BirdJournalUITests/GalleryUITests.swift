@@ -1,9 +1,8 @@
 import XCTest
 
-/// Issue #53: a species gallery of fifteen seeded House Finch cards at two places (`-seedGallery`). Real taps filter it
-/// by place, open a card, step through the filtered cards with Next and Previous (each disabled at its end), and come
-/// back to the gallery with the filter and the last card shown as they were left. The place's name comes from reverse
-/// geocoding, or the coordinate offline, so the test picks the place by its count of six.
+/// Issue #134 (guide page 7): a species' patches across editions, with fifteen seeded House Finch sightings at two places
+/// (`-seedGallery`). Real taps open a patch from the species view and the sightings behind them. The second place is San
+/// Diego when the pack index has reached the phone, Uncharted when it hasn't, so the counts are what's checked.
 final class GalleryUITests: XCTestCase {
     @MainActor
     private func launch(_ extra: [String] = []) -> XCUIApplication {
@@ -14,88 +13,41 @@ final class GalleryUITests: XCTestCase {
     }
 
     @MainActor
-    private func tiles(_ app: XCUIApplication) -> XCUIElementQuery { app.buttons.matching(identifier: "gallery-tile") }
-
-    /// Filters the gallery to the place with six cards and returns that place's name.
-    @MainActor
-    private func filterToSixCardPlace(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) -> String {
-        let title = app.staticTexts["gallery-title"]
-        XCTAssertTrue(title.waitForExistence(timeout: 15), "no gallery; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
-        XCTAssertEqual(title.label, "House Finch · 15 sightings · 2 places", file: file, line: line)
-        XCTAssertEqual(app.staticTexts["gallery-count"].label, "15 sightings", file: file, line: line)
-
-        app.buttons["gallery-place"].tap()
-        let place = app.buttons.matching(NSPredicate(format: "label ENDSWITH ' · 6'")).firstMatch
-        XCTAssertTrue(place.waitForExistence(timeout: 5), "no place with six cards; screen: \(app.debugDescription.prefix(4000))", file: file, line: line)
-        let name = String(place.label.dropLast(" · 6".count))
-        place.tap()
-        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 sightings", timeout: 5), "the filter did not apply; screen: \(app.debugDescription.prefix(4000))", file: file, line: line)
-        XCTAssertEqual(app.buttons["gallery-place"].value as? String, name, file: file, line: line)
-        return name
-    }
+    private func patches(_ app: XCUIApplication) -> XCUIElementQuery { app.buttons.matching(identifier: "board-patch") }
 
     @MainActor
-    func testFilterStepThroughCardsAndBackRestoresTheFilterAndTheCard() throws {
+    func testASpeciesShowsItsPatchesAcrossPlacesAndEachOpensItsPage() throws {
         let app = launch()
-        let place = filterToSixCardPlace(app)
-        let tile = tiles(app).firstMatch
-        XCTAssertTrue(tile.waitForExistence(timeout: 5))
-        XCTAssertTrue(tile.label.hasPrefix(place), "the tile names its place first: \(tile.label)")
-        let thirdTile = tiles(app).element(boundBy: 2).label
-        tile.tap()
+        let summary = app.staticTexts["species-summary"]
+        XCTAssertTrue(summary.waitForExistence(timeout: 15), "no species view; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(summary.label.hasPrefix("2 patches · seen 15 times · since "), summary.label)
+        XCTAssertEqual(patches(app).count, 2, "one patch per place; screen: \(app.debugDescription.prefix(4000))")
 
-        let position = app.staticTexts["card-position"]
-        let previous = app.buttons["card-previous"]
-        let next = app.buttons["card-next"]
-        XCTAssertTrue(position.waitForExistence(timeout: 10), "the card did not open; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(position.label, "Card 1 of 6", "the position counts within the filter")
-        XCTAssertFalse(previous.isEnabled, "the first card has no previous")
-        XCTAssertTrue(next.isEnabled)
-
-        next.tap()
-        XCTAssertTrue(position.waitForLabel("Card 2 of 6", timeout: 5), "Next did not step; \(position.label)")
-        previous.tap()
-        XCTAssertTrue(position.waitForLabel("Card 1 of 6", timeout: 5), "Previous did not step back; \(position.label)")
-        for _ in 0..<5 { next.tap() }
-        XCTAssertTrue(position.waitForLabel("Card 6 of 6", timeout: 5))
-        XCTAssertFalse(next.isEnabled, "the last card has no next")
-        XCTAssertTrue(previous.isEnabled)
-        for _ in 0..<3 { previous.tap() }
-        XCTAssertTrue(position.waitForLabel("Card 3 of 6", timeout: 5))
-
-        // A different card opens on its front.
-        app.buttons["card-flip"].tap()
-        XCTAssertEqual(app.buttons["card-flip"].value as? String, "Back")
-        previous.tap()
-        XCTAssertTrue(position.waitForLabel("Card 2 of 6", timeout: 5))
-        XCTAssertEqual(app.buttons["card-flip"].value as? String, "Front", "another card opens front up")
-        next.tap()
-        XCTAssertTrue(position.waitForLabel("Card 3 of 6", timeout: 5))
-
-        // Back: the filter as it was, and the card last shown marked.
+        // Los Angeles, as every label says the bird.
+        let losAngeles = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch, seen 9 times'")).firstMatch
+        XCTAssertTrue(losAngeles.exists, "screen: \(app.debugDescription.prefix(4000))")
+        losAngeles.tap()
+        let turn = app.buttons["card-flip"]
+        XCTAssertTrue(turn.waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.descendants(matching: .any)["patch-count"].label.hasPrefix("Seen 9 times in Los Angeles"))
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 sightings", timeout: 5), "Back lost the filter; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(app.buttons["gallery-place"].value as? String, place)
-        let selected = tiles(app).matching(NSPredicate(format: "isSelected == true"))
-        XCTAssertEqual(selected.count, 1, "one card marked as the last shown")
-        XCTAssertEqual(selected.firstMatch.label, thirdTile, "the card last shown is the third of the filter")
+        XCTAssertTrue(summary.waitForExistence(timeout: 5))
 
-        // All encounters from a card goes back to the same gallery too.
-        tiles(app).firstMatch.tap()
-        let all = app.buttons["card-all-encounters"]
-        XCTAssertTrue(all.waitForExistence(timeout: 10))
-        if !all.isHittable { app.swipeUp() }
+        // Every sighting of the bird.
+        let all = app.buttons["species-all-sightings"]
+        for _ in 0..<4 where !all.isHittable { app.swipeUp() }
+        XCTAssertEqual(all.label, "All 15 sightings")
         all.tap()
-        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 sightings", timeout: 5), "All encounters lost the filter; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars["15 sightings"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(app.state, .runningForeground)
     }
 
     @MainActor
     func testAccessibilityTextSizesShowOneColumn() {
         let app = launch(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"])
-        let tile = tiles(app).firstMatch
-        XCTAssertTrue(tile.waitForExistence(timeout: 15), "no gallery; screen: \(app.debugDescription.prefix(3000))")
+        let patch = patches(app).firstMatch
+        XCTAssertTrue(patch.waitForExistence(timeout: 15), "no species view; screen: \(app.debugDescription.prefix(3000))")
         let window = app.windows.firstMatch.frame
-        XCTAssertGreaterThan(tile.frame.width, window.width * 0.75, "a tile spans the page in one column: \(tile.frame) in \(window)")
+        XCTAssertGreaterThan(patch.frame.width, window.width * 0.75, "a patch spans the page in one column: \(patch.frame) in \(window)")
     }
 }

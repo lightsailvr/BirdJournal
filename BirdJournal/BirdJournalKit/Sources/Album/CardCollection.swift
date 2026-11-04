@@ -60,6 +60,8 @@ public struct CardCollection: Sendable, Equatable {
         public let sightings: [Entry]
 
         public var id: Key { Key(speciesID: speciesID, setID: placement.setID) }
+        /// The scientific name half of the BirdNET label: the key the sets and the packs list.
+        public var scientificName: String { Sighting.scientificName(ofLabel: speciesID) }
         public var count: Int { sightings.count }
         /// The earliest surviving sighting: the one that sewed the patch.
         public var sewn: Entry { sightings[sightings.count - 1] }
@@ -77,6 +79,24 @@ public struct CardCollection: Sendable, Equatable {
         public static func times(_ count: Int) -> String {
             count == 1 ? "once" : "\(count) times"
         }
+
+        /// A species' patches in a line: "2 patches · seen 10 times".
+        public static func speciesSummary(_ patches: [Patch]) -> String {
+            "\(patches.count) \(patches.count == 1 ? "patch" : "patches") · seen \(times(patches.reduce(0) { $0 + $1.count }))"
+        }
+    }
+
+    /// One place on a set's felt board (issue #134): a species in collector-number order, with its patch once sewn; nil
+    /// shows its pattern.
+    public struct BoardEntry: Sendable, Hashable, Identifiable {
+        public let scientificName: String
+        /// The collector number in the set, from 1.
+        public let number: Int
+        /// How many species the set has.
+        public let total: Int
+        public let patch: Patch?
+
+        public var id: String { scientificName }
     }
 
     /// Every sighting, newest first.
@@ -148,6 +168,11 @@ public struct CardCollection: Sendable, Equatable {
         keyBySighting[identifier].flatMap { patchByKey[$0] }
     }
 
+    /// The patch with this species and placement; nil when no sighting has sewn it.
+    public func patch(key: Patch.Key) -> Patch? {
+        patchByKey[key]
+    }
+
     /// Whether the sighting is the one that sewed its patch: the patch's earliest surviving sighting.
     public func sewedItsPatch(_ identifier: UUID) -> Bool {
         patch(of: identifier)?.sewn.identifier == identifier
@@ -171,6 +196,27 @@ public struct CardCollection: Sendable, Equatable {
                 guard case .numbered(_, _, _, let left, _) = lhs.placement, case .numbered(_, _, _, let right, _) = rhs.placement else { return false }
                 return left < right
             }
+    }
+
+    /// The set's felt board (guide page 6): the patches sewn there in collector-number order, then the patterns of the
+    /// birds still to find in collector-number order, so a birder's few patches never wait behind 150 patterns.
+    public func board(of setID: String) -> [BoardEntry] {
+        guard let set = sets.first(where: { $0.id == setID }) else { return [] }
+        let sewn = Dictionary(patches.filter { $0.placement.setID == setID }.map { ($0.scientificName, $0) }, uniquingKeysWith: { first, _ in first })
+        let entries = set.species.enumerated().map { offset, name in
+            BoardEntry(scientificName: name, number: offset + 1, total: set.species.count, patch: sewn[name])
+        }
+        return entries.filter { $0.patch != nil } + entries.filter { $0.patch == nil }
+    }
+
+    /// The patches outside every set, the most recently sewn first.
+    public var unchartedPatches: [Patch] {
+        patches.filter { $0.placement.setID == nil }
+    }
+
+    /// The sets listing this bird where it has no patch yet: the editions still to find, in the order the sets are known.
+    public func setsToFind(scientificName: String) -> [CardSet] {
+        sets.filter { $0.number(of: scientificName) != nil && collectedBySet[$0.id]?.contains(scientificName) != true }
     }
 
     /// One species' patches across its placements, the earliest sewn first.

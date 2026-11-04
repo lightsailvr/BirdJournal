@@ -6,8 +6,10 @@ import SwiftData
 import SwiftUI
 
 /// One sighting in full (issue #28): the glasses snapshot and the reference photo kept apart and labelled, the record
-/// (species, when, roughly where, source), the spot on a map card that opens the full map (issue #44), the birder's
-/// note, the explained match, and the way to the bird's profile, to sharing and to a recoverable removal.
+/// (species, when, roughly where, source), Heard or Seen with the caption written for it, the spot on a map card that
+/// opens the full map (issue #44), the birder's note, the evidence, the sighting's art until #137 retires it, the rarity
+/// in words, the explained match, and the way to the bird's profile, to sharing and to a recoverable removal. Since #134
+/// the paper card holds the species and the patch's history, and each of its sightings opens here.
 struct SightingDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -19,6 +21,7 @@ struct SightingDetailView: View {
     @State private var isSharing = false
     @State private var showingMap = false
     @State private var confirmingRemoval = false
+    @State private var showingOriginal = false
     @FocusState private var editingNote: Bool
 
     /// Fetched, not `model(for:)`: a deleted id would come back as a placeholder that faults on first access.
@@ -98,6 +101,26 @@ struct SightingDetailView: View {
                             .padding(.top, 6)
                     }
 
+                    Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
+                        ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.top, 16)
+                    Text(sighting.method == .heard ? "Every sighting starts as Heard. Choose Seen if you saw the bird too." : "You saw this bird.")
+                        .font(JournalFont.attribution)
+                        .foregroundStyle(Color.inkSecondary)
+                        .padding(.top, 6)
+                    if let caption = sighting.caption?.text.nilIfEmpty {
+                        Text(caption)
+                            .font(CardFont.lore)
+                            .lineSpacing(CardFont.loreLeading)
+                            .foregroundStyle(Color.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 12)
+                            .accessibilityLabel("Caption: \(caption)")
+                            .accessibilityIdentifier("card-caption")
+                    }
+
                     SectionTitle(text: "Your note")
                     TextField("Add a note", text: $note, axis: .vertical)
                         .font(JournalFont.body)
@@ -111,6 +134,20 @@ struct SightingDetailView: View {
                             if !editing { edits.setNote(note, on: sighting) }
                         }
                         .accessibilityLabel("Your note")
+
+                    SectionTitle(text: "Evidence")
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(CardText.evidence(sighting))
+                            .font(JournalFont.body)
+                            .foregroundStyle(Color.ink)
+                        if CardText.originalPhotoPath(sighting) != nil {
+                            Button("View original photo", systemImage: "photo") { showingOriginal = true }
+                                .buttonStyle(.journalOutlined)
+                        }
+                    }
+                    .padding(.top, 12)
+
+                    SightingArtSection(sighting: sighting, setID: library.collection(of: [sighting]).placement(of: sighting.identifier)?.setID)
 
                     if let reference, let photo = reference.species.photos.first {
                         SectionTitle(text: "Reference photo")
@@ -134,6 +171,19 @@ struct SightingDetailView: View {
                         Label("Open in Field Guide", systemImage: "book")
                     }
                     .buttonStyle(.journalOutlined)
+                    .padding(.top, 12)
+
+                    SectionTitle(text: "Rarity")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(CardText.rarityLine(sighting.rarity))
+                            .font(JournalFont.supporting.weight(.semibold))
+                            .foregroundStyle(Color.ink)
+                            .accessibilityIdentifier("card-rarity")
+                        Text(CardText.rarityExplanation(sighting.rarity, commonName: commonName, hasLocation: sighting.location != nil))
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     .padding(.top, 12)
 
                     SectionTitle(text: "Identification")
@@ -167,6 +217,11 @@ struct SightingDetailView: View {
             }
             .sheet(isPresented: $showingMap) {
                 SightingMapView(focus: sighting)
+            }
+            .sheet(isPresented: $showingOriginal) {
+                if let path = CardText.originalPhotoPath(sighting) {
+                    OriginalPhotoView(path: path)
+                }
             }
             .confirmationDialog("Remove this sighting?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button("Remove", role: .destructive) {
@@ -276,5 +331,52 @@ private struct SightingMatchDetails: View {
                 .foregroundStyle(Color.ink)
         }
         .tint(Color.moss)
+    }
+}
+
+/// The original photo, whole and unaltered: evidence kept with the sighting, never art.
+struct OriginalPhotoView: View {
+    @Environment(\.frameStore) private var frameStore
+    @Environment(\.dismiss) private var dismiss
+    let path: String
+    @State private var image: UIImage?
+    @State private var loaded = false
+
+    var body: some View {
+        NavigationStack {
+            PaperPage {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let image {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                            .accessibilityLabel("Original photo")
+                    } else if loaded {
+                        ContentUnavailableView("Photo unavailable", systemImage: "photo", description: Text("The file is no longer on this iPhone."))
+                    } else {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, minHeight: 200)
+                    }
+                    Text("The unaltered photo kept with this sighting: evidence, never art.")
+                        .font(JournalFont.attribution)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+                .padding(.top, 4)
+            }
+            .navigationTitle("Original photo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+            .task(id: path) {
+                if let url = frameStore?.url(for: path) {
+                    image = await Task.detached(priority: .userInitiated) { (try? Data(contentsOf: url)).flatMap(UIImage.init(data:)) }.value
+                }
+                loaded = true
+            }
+        }
     }
 }

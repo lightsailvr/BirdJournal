@@ -76,6 +76,17 @@ _Avoid_: category, class
 The collectible: one per species per placement (a set, or Uncharted), derived from the sightings and never stored. The first surviving sighting of a species in a set sews its patch there; every later sighting there adds to its count; the same species in another set has that set's patch. Deleting the last sighting of a species in a set unpicks the patch. Since 2026-11-03 (#131, design guide 2.0).
 _Avoid_: badge, card (for the collectible), sticker, achievement
 
+**Pattern**:
+A patch before it is sewn: the cord, bare twill and the patch's own stitch lines in blue transfer pen, drawn by the app from the painting's height layer, with no extra painting. An honest outline, not a lock.
+_Avoid_: locked patch, silhouette, ghost
+
+**Board**:
+A set's felt surface in Collection: one place per species in collector-number order, a patch where you've sewn one and its pattern where you haven't. Uncharted has a board of its patches alone.
+_Avoid_: grid, shelf
+
+**Blank**:
+An edition's shape and cord drawn by the app when the phone has no painting of the bird there. It may carry a paper tag with the bird's name. Never an error patch.
+
 **Count**:
 How many surviving sightings a patch has: "Seen 8 times in Los Angeles".
 _Avoid_: duplicates, copies, level
@@ -85,7 +96,7 @@ What the sighting that created a patch did; a patch's sewn date is its earliest 
 _Avoid_: unlocked, earned (for a patch)
 
 **Card**:
-The face of one sighting, shown when a patch or a sighting is opened, and the paper card a patch turns over to (#134). Art, captions and retries never make another.
+The paper card a patch turns over to (#134): its story, the species' biology and your history with the bird there. One per patch, never stored. The share image still draws one sighting's card face until #136. Art, captions and retries never make another.
 _Avoid_: trading card, edition (for the card itself), the collectible (that is the patch)
 
 **Collection**:
@@ -105,23 +116,23 @@ The species of one pack's region, in taxonomic order, which a birder collects to
 _Avoid_: region, collection (for a set), checklist
 
 **Collector number**:
-A species' position in its set, shown as "021/160".
-_Avoid_: card number, No.
+A species' position in its set, shown as "021/160" on its own, and "No. 021" beside a name on a board or a paper card, as design guide 2.0 sets it.
+_Avoid_: card number
 
 **Edition**:
 The regional look of a set, named on its patches and cards, such as "Coastal edition"; since #131 also its patches' shape, cord, twill and stitched motif.
 _Avoid_: variant, version
 
 **Lore**:
-A species' short myth-voiced text built from its fact sheet, written once per pack and reviewed, shown on the card back.
+A species' short myth-voiced text built from its fact sheet, written once per pack and reviewed, shown on the paper card.
 _Avoid_: flavor text, description (the Wikipedia summary), story
 
 **Story title**:
-Two to five words heading a species' lore on the card front, an epithet from what the bird does ("The Waterside Mason"), written and reviewed with the lore; it never names the species.
+Two to five words heading a species' lore on the paper card, an epithet from what the bird does ("The Waterside Mason"), written and reviewed with the lore; it never names the species.
 _Avoid_: name, heading, tagline
 
 **Caption**:
-One line on a card's front written for that sighting on the phone, from the fact sheet and the moment.
+One line written for a sighting on the phone, from the fact sheet and the moment, shown on the sighting's page.
 _Avoid_: flavor text, tagline (the lore's one-line fallback)
 
 ## Art

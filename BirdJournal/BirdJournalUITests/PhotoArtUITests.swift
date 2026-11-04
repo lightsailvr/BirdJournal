@@ -10,9 +10,9 @@ final class PhotoArtUITests: XCTestCase {
     @MainActor
     private func launch(_ extra: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "card", "-fakeAccount", "signedIn"] + extra
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "sighting", "-fakeAccount", "signedIn"] + extra
         app.launch()
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the card did not open; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.navigationBars["House Finch"].waitForExistence(timeout: 15), "the sighting did not open; screen: \(app.debugDescription.prefix(3000))")
         return app
     }
 
@@ -29,12 +29,14 @@ final class PhotoArtUITests: XCTestCase {
     }
 
     @MainActor
-    private func cardArtLabel(_ app: XCUIApplication) -> String { app.buttons["card-art"].label }
+    private func cardArtLabel(_ app: XCUIApplication) -> String { app.descendants(matching: .any)["card-art"].label }
 
     @MainActor
     func testTheGlassesPhotoIsPaintedThenComparedAndApproved() {
         let app = launch(["-fakeArt", "paints"])
-        XCTAssertEqual(cardArtLabel(app), "Card art: AI illustration")
+        // No art of its own yet: the pack's reference photo, labelled as one.
+        for _ in 0..<4 where !element("card-art", app).isHittable { app.swipeUp() }
+        XCTAssertEqual(cardArtLabel(app), "Card art: Reference photo")
 
         tap(app.buttons["card-photo-art"], app)
         tap(app.buttons["photo-art-glasses"], app)
@@ -51,13 +53,12 @@ final class PhotoArtUITests: XCTestCase {
         XCTAssertTrue(app.buttons["photo-art-try-again"].exists)
         tap(app.buttons["photo-art-approve"], app)
 
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["House Finch"].waitForExistence(timeout: 5))
         let embellished = NSPredicate(format: "label == %@", "Card art: AI-embellished from your photo")
-        expectation(for: embellished, evaluatedWith: app.buttons["card-art"])
+        expectation(for: embellished, evaluatedWith: app.descendants(matching: .any)["card-art"])
         waitForExpectations(timeout: 5)
         XCTAssertFalse(app.buttons["card-photo-art-review"].exists)
-        // Still one card.
-        XCTAssertEqual(app.staticTexts["card-position"].label, "Card 1 of 2")
+        // Still one sighting: the patch counts the same two.
     }
 
     @MainActor
@@ -69,7 +70,9 @@ final class PhotoArtUITests: XCTestCase {
         tap(app.buttons["photo-art-keep-original"], app)
         XCTAssertTrue(app.buttons["card-photo-art"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["card-photo-art-review"].exists)
-        XCTAssertEqual(cardArtLabel(app), "Card art: AI illustration")
+        // No art of its own yet: the pack's reference photo, labelled as one.
+        for _ in 0..<4 where !element("card-art", app).isHittable { app.swipeUp() }
+        XCTAssertEqual(cardArtLabel(app), "Card art: Reference photo")
     }
 
     @MainActor
@@ -85,7 +88,7 @@ final class PhotoArtUITests: XCTestCase {
         waitForExpectations(timeout: 10)
         tap(app.buttons["photo-art-approve"], app)
         let embellished = NSPredicate(format: "label == %@", "Card art: AI-embellished from your photo")
-        expectation(for: embellished, evaluatedWith: app.buttons["card-art"])
+        expectation(for: embellished, evaluatedWith: app.descendants(matching: .any)["card-art"])
         waitForExpectations(timeout: 5)
     }
 
@@ -103,8 +106,8 @@ final class PhotoArtUITests: XCTestCase {
     @MainActor
     func testAttachingALibraryPhotoToAHeardCardAsksDidYouSeeIt() {
         let app = launch(["-fakeArt", "pending", "-fakeLibraryPhoto", "YES"])
-        let heard = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "· Heard")).firstMatch
-        XCTAssertTrue(heard.waitForExistence(timeout: 5), "the newest card should start Heard; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons["Heard"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons["Heard"].isSelected, "the newest sighting should start Heard")
 
         tap(app.buttons["card-photo-art"], app)
         tap(app.buttons["photo-art-library"], app)
@@ -113,8 +116,8 @@ final class PhotoArtUITests: XCTestCase {
         XCTAssertTrue(alert.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
         alert.buttons["Yes, I saw it"].tap()
 
-        let seen = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "· Seen")).firstMatch
-        XCTAssertTrue(seen.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
+        expectation(for: NSPredicate(format: "isSelected == true"), evaluatedWith: app.buttons["Seen"])
+        waitForExpectations(timeout: 5)
         // The painting machine is off: the photo waits to be painted, and the encounter is safe.
         XCTAssertEqual(element("card-photo-art-status", app).label, "Your photo is being painted. Your encounter is saved.")
     }
@@ -132,9 +135,9 @@ final class PhotoArtUITests: XCTestCase {
     @MainActor
     func testSignedOutThereIsNoPhotoArtToAskFor() {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "card", "-fakeAccount", "signedOut"]
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "sighting", "-fakeAccount", "signedOut"]
         app.launch()
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.navigationBars["House Finch"].waitForExistence(timeout: 15))
         XCTAssertFalse(app.buttons["card-photo-art"].exists)
     }
 }

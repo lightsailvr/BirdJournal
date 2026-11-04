@@ -1,4 +1,5 @@
 import Album
+import Pack
 import SwiftData
 import SwiftUI
 
@@ -33,6 +34,7 @@ private struct PatchRevealOverlay: ViewModifier {
 /// reopening the patch never shows it again. Slice #135 replaces the card with the stitched patch.
 private struct PatchRevealView: View {
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(PackLibrary.self) private var library
     @Environment(\.modelContext) private var context
     @Environment(\.openCollection) private var openCollection
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -81,8 +83,12 @@ private struct PatchRevealView: View {
                     .accessibilityLabel(reveal.title)
                     .accessibilityAddTraits(.isHeader)
                 if let sighting {
-                    CardTile(sighting: sighting, placement: reveal.addition.placement)
-                        .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : 240)
+                    PatchView(
+                        art: library.patchArt(scientificName: sighting.scientificName, setID: reveal.addition.placement.setID),
+                        edition: PatchEdition.of(setID: reveal.addition.placement.setID), size: .full, tag: library.commonName(for: sighting)
+                    )
+                        .holdsPatchLight()
+                        .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 240)
                         .padding(.vertical, typeSize.isAccessibilitySize ? 0 : 22)
                         .background {
                             if !typeSize.isAccessibilitySize {
