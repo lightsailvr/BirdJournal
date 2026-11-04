@@ -377,7 +377,7 @@ find = {
     "species_id": "sayornis_nigricans", "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe",
     "method": "heard", "place": "Pasadena",
     "found_at": datetime.now(timezone.utc).replace(second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    "legendary": True, "rarity": None, "circle_first": False, "circle_ids": [],
+    "new_patch": True, "edition": None, "rarity": None, "circle_first": False, "circle_ids": [],
 }
 push = Push(kind=PushKind.NOTABLE, title="Bird Journal", body="A test push from the push wizard", data={"find": find})
 print(sender.send(Device(token.lower(), Environment(environment)), push).value)
@@ -394,7 +394,7 @@ PY
 fi
 
 finish
-note "on two devices: a Legendary, Rare or circle-first find on one phone pushes to the other at once; a"
+note "on two devices: a new patch, or a Rare or circle-first find, on one phone pushes to the other at once; a"
 note "burst of ordinary finds arrives as one digest within 15 minutes (two hours after the last push about"
 note "that friend)."
 printf '\n'

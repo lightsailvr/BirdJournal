@@ -74,7 +74,7 @@ final class RunSightings {
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
         if let captioner { Task { await captioner.caption(sighting) } }
         // Until #136 renames the find's flag, it carries "this add sewed a patch", which is what made a find notable.
-        findOutbox?.added(sighting.identifier, isLegendary: recorded.sewsPatch)
+        findOutbox?.added(sighting.identifier, isNewPatch: recorded.sewsPatch)
         artJobs?.requestAfterAdd(sighting)
         return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: recorded.sewsPatch, patchCount: recorded.patchCount, placement: recorded.placement)
     }

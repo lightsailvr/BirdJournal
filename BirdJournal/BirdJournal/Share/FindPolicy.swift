@@ -3,9 +3,9 @@ import Foundation
 
 /// What a sighting sends to the birder's circles as a find (issue #62, spec v2 "Find policy", ADR-0004): pure rules
 /// beside the share policy, tested without the server. A find carries the species, Heard or Seen, a city or "a secret
-/// spot", the time to the minute, the Legendary and rarity flags and the art reference. Never a coordinate, the note,
-/// the caption or a photo of the birder's own: those stay on the phone, unless the birder shares the card by hand and
-/// chooses them (issue #66, `card(for:choices:circleIDs:photoKey:)`).
+/// spot", the time to the minute, whether it sewed a new patch and in which edition (issue #136), the rarity and the art
+/// reference. Never a coordinate, the note, the caption or a photo of the birder's own: those stay on the phone, unless
+/// the birder shares the card by hand and chooses them (issue #66, `card(for:choices:circleIDs:photoKey:)`).
 enum FindPolicy {
     /// The birder's setting, "Share my finds automatically" (on by default).
     enum Sharing: Equatable {
@@ -27,15 +27,20 @@ enum FindPolicy {
         var method: SightingMethod
         var confirmedAt: Date
         var rarity: RarityLabel?
-        /// The add was the birder's first surviving sighting of the species. Frozen at the add: Legendary passing to
-        /// another card later publishes nothing.
-        var isLegendary: Bool
+        /// The add sewed its patch: the birder's first surviving sighting of the species in this edition. Frozen at the
+        /// add: the sewn date passing to another sighting later publishes nothing.
+        var isNewPatch: Bool
+        /// The set the sighting is in, by pack id; nil outside every set.
+        var edition: String? = nil
         /// From the packs; nil when no pack says.
         var isThreatened: Bool?
         /// The city the phone's reverse geocoding named (`PlaceNames`), nil when unknown or the sighting has no fix.
         var placeName: String?
         /// The species' pack art, as the pack names it: the pack's id and the `pack_art` file.
         var packArt: (packID: String, file: String)?
+        /// The patch's painting in this edition, as the pack names it (the `patch` table's file): what a find shows ahead
+        /// of pack art.
+        var patchArt: (packID: String, file: String)? = nil
         /// The server key of the painting the card shows (scene or approved photo art, issue #70), nil when it shows
         /// pack art: `CardArt.shownPaintingKey`.
         var paintedArtKey: String? = nil
@@ -90,7 +95,7 @@ enum FindPolicy {
     /// The find as the API takes it (`PUT /v1/finds/<sighting id>`): every field the server stores, and nothing else.
     struct Find: Codable, Equatable, Sendable {
         struct Art: Codable, Equatable, Sendable {
-            /// `pack`: a pack-art thumbnail on the art CDN; `painted`: the card's painting (issue #70).
+            /// `pack`: a thumbnail on the art CDN of the pack's patch or pack art; `painted`: the card's painting (issue #70).
             var kind: String
             var key: String
             /// With a painting only: the pack art the find shows if the server no longer holds the painting (it was
@@ -116,7 +121,10 @@ enum FindPolicy {
         var place: String?
         /// ISO 8601 in UTC, to the minute: `2026-11-01T08:15:00Z`.
         var foundAt: String
-        var legendary: Bool
+        /// The sighting sewed its patch: what makes a find notable, and what the feed leads with its patch.
+        var newPatch: Bool
+        /// The set the sighting is in, by pack id; nil outside every set.
+        var edition: String?
         var rarity: RarityLabel?
         var threatened: Bool
         var art: Art?
@@ -127,10 +135,11 @@ enum FindPolicy {
             case commonName = "common_name"
             case method, place
             case foundAt = "found_at"
-            case legendary, rarity, threatened, art
+            case newPatch = "new_patch"
+            case edition, rarity, threatened, art
         }
 
-        /// Writes `place`, `rarity` and `art` as null when absent, so a repeated put clears what an earlier one set.
+        /// Writes `place`, `edition`, `rarity` and `art` as null when absent, so a repeated put clears what an earlier one set.
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(speciesID, forKey: .speciesID)
@@ -139,7 +148,13 @@ enum FindPolicy {
             try container.encode(method, forKey: .method)
             try container.encode(place, forKey: .place)
             try container.encode(foundAt, forKey: .foundAt)
-            try container.encode(legendary, forKey: .legendary)
+            if LegacyFindWire.writesOldForm(encoder) {
+                var old = encoder.container(keyedBy: LegacyFindWire.Keys.self)
+                try old.encode(newPatch, forKey: .legendary)
+            } else {
+                try container.encode(newPatch, forKey: .newPatch)
+                try container.encode(edition, forKey: .edition)
+            }
             try container.encode(rarity, forKey: .rarity)
             try container.encode(threatened, forKey: .threatened)
             try container.encode(art, forKey: .art)
@@ -167,16 +182,19 @@ enum FindPolicy {
             method: input.method,
             place: threatened ? secretSpot : cityLabel(input.placeName),
             foundAt: minute(input.confirmedAt),
-            legendary: input.isLegendary,
+            newPatch: input.isNewPatch,
+            edition: input.edition,
             rarity: input.rarity,
             threatened: threatened,
             art: art(for: input)
         )
     }
 
-    /// The card's painting when it shows one the server painted, falling back to its pack art; else the pack art.
+    /// The card's painting when it shows one the server painted, falling back to the patch or pack art; else the patch,
+    /// else the pack art.
     private static func art(for input: Input) -> Find.Art? {
-        let pack = input.packArt.map { Find.Art(kind: "pack", key: packArtKey(packID: $0.packID, file: $0.file)) }
+        let pack = input.patchArt.map { Find.Art(kind: "pack", key: patchArtKey(packID: $0.packID, file: $0.file)) }
+            ?? input.packArt.map { Find.Art(kind: "pack", key: packArtKey(packID: $0.packID, file: $0.file)) }
         guard let painted = input.paintedArtKey else { return pack }
         return Find.Art(kind: "painted", key: painted, fallback: pack.map { Find.Art.Fallback(kind: $0.kind, key: $0.key) })
     }
@@ -213,6 +231,14 @@ enum FindPolicy {
         // The last extension only, as the builder's `PurePosixPath.stem` does.
         let stem = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
         return "packs/\(packID)/\(stem).jpg"
+    }
+
+    /// The patch thumbnail's key on the art CDN, as `packbuilder thumbnails` writes it, cut out on transparency:
+    /// `patch/sayornis-nigricans.avif` in pack `us-ca-la` is `packs/us-ca-la/patch/sayornis-nigricans.png`. Under `packs/`
+    /// with the `pack` kind, so a server from before #136 takes it too.
+    static func patchArtKey(packID: String, file: String) -> String {
+        let stem = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
+        return "packs/\(packID)/patch/\(stem).png"
     }
 
     /// The time to the minute, in UTC.

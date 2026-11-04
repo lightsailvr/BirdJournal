@@ -43,7 +43,7 @@ extension FriendBanners {
         ["kind": "notable", "find": [
             "owner": "developer", "owner_name": "Maya Ortiz", "sighting_id": UUID().uuidString, "species_id": "sayornis_nigricans",
             "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe", "method": "heard", "place": "Pasadena",
-            "found_at": ISO8601DateFormatter().string(from: .now), "legendary": true, "rarity": NSNull(), "circle_first": false,
+            "found_at": ISO8601DateFormatter().string(from: .now), "new_patch": true, "edition": "us-ca-la", "rarity": NSNull(), "circle_first": false,
             "circle_ids": [String](),
         ] as [String: Any]]
     }

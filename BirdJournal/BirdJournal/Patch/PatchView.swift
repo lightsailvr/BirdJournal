@@ -46,7 +46,7 @@ struct PatchView: View {
 }
 
 /// The patch under the shader. The only view reading the light, so a tilt re-runs its shader and not the board's layout.
-private struct LitPatch: View {
+struct LitPatch: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let loaded: PatchTextures.Loaded
@@ -54,9 +54,11 @@ private struct LitPatch: View {
     let isPattern: Bool
     /// Around the patch for its shadow, in points.
     let room: CGFloat
+    /// A light that stays put, for an image rather than a screen (the share image, #136); nil follows the phone's.
+    var fixedLight: SIMD2<Double>? = nil
 
     var body: some View {
-        let light = PatchLight.shown(PatchLight.shared.direction, reduceMotion: PatchMotion.reduces(system: reduceMotion))
+        let light = fixedLight ?? PatchLight.shown(PatchLight.shared.direction, reduceMotion: PatchMotion.reduces(system: reduceMotion))
         let direction = CGPoint(x: light.x, y: light.y)
         let softStrength = PatchMaterial.softShadow(colorScheme)
         let room = room

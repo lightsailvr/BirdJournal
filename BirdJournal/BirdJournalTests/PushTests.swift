@@ -88,12 +88,12 @@ struct PushPayloadTests {
     @Test("a notable push carries the find for the lens banner")
     func notable() throws {
         let userInfo: [AnyHashable: Any] = [
-            "aps": ["content-available": 1, "alert": ["title": "Maya found a Black Phoebe", "body": "Legendary · Pasadena"]],
+            "aps": ["content-available": 1, "alert": ["title": "Maya found a Black Phoebe", "body": "New patch · Pasadena"]],
             "kind": "notable",
             "find": [
                 "owner": "maya", "owner_name": "Maya Ortiz", "sighting_id": "s1", "species_id": "Sayornis nigricans_Black Phoebe",
                 "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe", "method": "heard", "place": "Pasadena",
-                "found_at": "2026-11-01T08:15:00Z", "legendary": true, "rarity": "common", "circle_first": false, "circle_ids": ["c1"],
+                "found_at": "2026-11-01T08:15:00Z", "new_patch": true, "edition": "us-ca-la", "rarity": "common", "circle_first": false, "circle_ids": ["c1"],
             ] as [String: Any],
         ]
         guard case .notable(let find) = try #require(PushMessage(userInfo: userInfo)) else {
@@ -102,9 +102,25 @@ struct PushPayloadTests {
         }
         #expect(find.friendName == "Maya Ortiz")
         #expect(find.commonName == "Black Phoebe")
-        #expect(find.legendary)
+        #expect(find.newPatch)
+        #expect(find.edition == "us-ca-la")
         #expect(find.foundAt == Date(timeIntervalSince1970: 1_793_520_900))
         #expect(PushMessage(userInfo: userInfo)?.circleIDs == ["c1"])
+    }
+
+    @Test("a push from the deployed server's `legendary` reads as a new patch (`LegacyFindWire`, until the deploy)")
+    func notableFromTheOldServer() throws {
+        let userInfo: [AnyHashable: Any] = ["kind": "notable", "find": [
+            "owner": "maya", "owner_name": "Maya Ortiz", "sighting_id": "s1", "species_id": "Sayornis nigricans_Black Phoebe",
+            "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe", "method": "heard", "place": "Pasadena",
+            "found_at": "2026-11-01T08:15:00Z", "legendary": true, "rarity": "common", "circle_first": false, "circle_ids": ["c1"],
+        ] as [String: Any]]
+        guard case .notable(let find) = try #require(PushMessage(userInfo: userInfo)) else {
+            Issue.record("not notable")
+            return
+        }
+        #expect(find.newPatch)
+        #expect(find.edition == nil)
     }
 
     @Test("a digest and a silent refresh are read; anything else is not ours")
@@ -333,13 +349,13 @@ struct PushCenterTests {
         await harness.store.loadFeed(circleID: sunday.id)
         let before = harness.store.feeds[sunday.id]?.items.count ?? 0
         try await harness.client.putFind(
-            FindPolicy.Find(speciesID: "a_b", scientificName: "Genus species", commonName: "Bird", method: .heard, place: nil, foundAt: "2026-11-01T08:00:00Z", legendary: true, rarity: nil, threatened: false, art: nil),
+            FindPolicy.Find(speciesID: "a_b", scientificName: "Genus species", commonName: "Bird", method: .heard, place: nil, foundAt: "2026-11-01T08:00:00Z", newPatch: true, rarity: nil, threatened: false, art: nil),
             sightingID: UUID(), accessToken: "t"
         )
         var stream = harness.pushes.friendFinds().makeAsyncIterator()
         let payload: [AnyHashable: Any] = ["kind": "notable", "find": [
             "owner": "maya", "owner_name": "Maya Ortiz", "sighting_id": "s1", "species_id": "a_b", "scientific_name": "Genus species",
-            "common_name": "Bird", "method": "seen", "place": NSNull(), "found_at": "2026-11-01T08:00:00Z", "legendary": true,
+            "common_name": "Bird", "method": "seen", "place": NSNull(), "found_at": "2026-11-01T08:00:00Z", "new_patch": true, "edition": NSNull(),
             "rarity": NSNull(), "circle_first": true, "circle_ids": [sunday.id],
         ] as [String: Any]]
         await harness.pushes.received(payload)

@@ -24,7 +24,7 @@ private final class Recorder {
 private let itemJSON = """
 {"sighting_id":"6f9619ff-8b86-d011-b42d-00c04fc964ff","species_id":"Sayornis nigricans_Black Phoebe",
  "scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","method":"seen","place":"Pasadena",
- "found_at":"2026-11-01T08:15:00Z","legendary":true,"rarity":"rare",
+ "found_at":"2026-11-01T08:15:00Z","new_patch":true,"edition":"us-ca-sd","rarity":"rare",
  "art":{"kind":"pack","key":"packs/us-ca-la/sayornis-nigricans.jpg","url":"https://d111.cloudfront.net/packs/us-ca-la/sayornis-nigricans.jpg"},
  "owner":{"id":"maya","display_name":"Maya Ortiz"},"circle_first":true,"is_mine":false}
 """
@@ -69,7 +69,8 @@ struct FindClientTests {
         #expect(item.commonName == "Black Phoebe")
         #expect(item.method == .seen)
         #expect(item.rarity == .rare)
-        #expect(item.legendary && item.circleFirst && !item.isMine)
+        #expect(item.newPatch && item.circleFirst && !item.isMine)
+        #expect(item.edition == "us-ca-sd")
         #expect(item.owner.name == "Maya Ortiz")
         #expect(item.art?.url == URL(string: "https://d111.cloudfront.net/packs/us-ca-la/sayornis-nigricans.jpg"))
         #expect(item.foundAt == Date(timeIntervalSince1970: 1_793_520_900))
@@ -78,7 +79,9 @@ struct FindClientTests {
     @Test("a refused find maps to the circle errors the outbox reads")
     func refusals() async {
         let recorder = Recorder()
-        recorder.responses = [http(422, #"{"detail":[{"msg":"place_has_coordinate"}]}"#), http(401, "{}"), http(503, "{}")]
+        // Refused twice: the new form, and the old one tried after it (`LegacyFindWire`).
+        let refusal = http(422, #"{"detail":[{"msg":"place_has_coordinate"}]}"#)
+        recorder.responses = [refusal, refusal, http(401, "{}"), http(503, "{}")]
         let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
         let find = FindPolicy.find(for: FindPolicyTests.input(), sharing: .automatic)!
         await #expect(throws: CircleError.rejected) { try await client.putFind(find, sightingID: UUID(), accessToken: "t") }
@@ -87,12 +90,96 @@ struct FindClientTests {
     }
 }
 
+// Issue #136, until the backend deploy (`LegacyFindWire`): the deployed server refuses `new_patch` (`extra="forbid"`) and
+// only ever sends `legendary`. Delete this suite with the seam.
+@Suite("Finds with a server from before #136")
+struct LegacyFindWireTests {
+    private static let refusedField = http(422, #"{"detail":[{"type":"extra_forbidden","loc":["body","new_patch"],"msg":"Extra inputs are not permitted"}]}"#)
+
+    private static func find() throws -> FindPolicy.Find {
+        var input = FindPolicyTests.input(isNewPatch: true)
+        input.edition = "us-ca-la"
+        return try #require(FindPolicy.find(for: input, sharing: .automatic))
+    }
+
+    private static func json(_ request: URLRequest) throws -> [String: Any] {
+        try #require(try JSONSerialization.jsonObject(with: request.httpBody ?? Data()) as? [String: Any])
+    }
+
+    @Test("a server that takes new_patch hears it, and only once")
+    func newServer() async throws {
+        let recorder = Recorder()
+        recorder.responses = [http(201, "{}")]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        try await client.putFind(try Self.find(), sightingID: UUID(), accessToken: "t")
+        #expect(recorder.requests.count == 1)
+        let body = try Self.json(recorder.requests[0])
+        #expect(body["new_patch"] as? Bool == true && body["edition"] as? String == "us-ca-la" && body["legendary"] == nil)
+    }
+
+    @Test("a server that refuses new_patch gets the old form, and the find stays a new patch")
+    func oldServer() async throws {
+        let recorder = Recorder()
+        recorder.responses = [Self.refusedField, http(201, "{}")]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        try await client.putFind(try Self.find(), sightingID: UUID(), accessToken: "t")
+        #expect(recorder.requests.count == 2)
+        #expect(recorder.requests[0].url == recorder.requests[1].url)
+        let body = try Self.json(recorder.requests[1])
+        #expect(body["legendary"] as? Bool == true)
+        #expect(body["new_patch"] == nil && body["edition"] == nil)
+        // Every other field as before, which the old server's strict body takes.
+        #expect(body.keys.sorted() == ["art", "common_name", "found_at", "legendary", "method", "place", "rarity", "scientific_name", "species_id", "threatened"])
+    }
+
+    @Test("a card shared by hand falls back the same way, its find in the old form")
+    func oldServerCard() async throws {
+        let recorder = Recorder()
+        recorder.responses = [Self.refusedField, http(201, "{}")]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        let card = FindPolicy.card(for: FindPolicyTests.input(isNewPatch: true), choices: .init(), circleIDs: ["c1"], photoKey: nil)
+        try await client.shareCard(card, sightingID: UUID(), accessToken: "t")
+        let find = try #require(try Self.json(recorder.requests[1])["find"] as? [String: Any])
+        #expect(find["legendary"] as? Bool == true && find["new_patch"] == nil)
+    }
+
+    @Test("a repeat in the old form isn't a new patch")
+    func oldServerRepeat() async throws {
+        let recorder = Recorder()
+        recorder.responses = [Self.refusedField, http(201, "{}")]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        let find = try #require(FindPolicy.find(for: FindPolicyTests.input(isNewPatch: false), sharing: .automatic))
+        try await client.putFind(find, sightingID: UUID(), accessToken: "t")
+        #expect(try Self.json(recorder.requests[1])["legendary"] as? Bool == false)
+    }
+
+    @Test("the deployed server's feed item reads as a new patch, its edition from the art key")
+    func oldFeed() async throws {
+        let oldItem = itemJSON.replacingOccurrences(of: #""new_patch":true,"edition":"us-ca-sd""#, with: #""legendary":true"#)
+        #expect(!oldItem.contains("new_patch"))
+        let recorder = Recorder()
+        recorder.responses = [http(200, #"{"items":[\#(oldItem)],"next_cursor":null}"#)]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        let item = try #require(try await client.feed(circleID: "c1", cursor: nil, accessToken: "t").items.first)
+        #expect(item.newPatch)
+        #expect(item.edition == "us-ca-la")
+    }
+
+    @Test("an edition comes only from a pack's key")
+    func editionOfArtKey() {
+        #expect(LegacyFindWire.edition(ofArtKey: "packs/us-ca-la/patch/x.png") == "us-ca-la")
+        #expect(LegacyFindWire.edition(ofArtKey: "packs/us-ca-la/x.jpg") == "us-ca-la")
+        #expect(LegacyFindWire.edition(ofArtKey: "art/sub/x.jpg") == nil)
+        #expect(LegacyFindWire.edition(ofArtKey: nil) == nil)
+    }
+}
+
 @Suite("A feed row")
 struct FindRowTests {
-    static func item(legendary: Bool = false, first: Bool = false, rarity: RarityLabel? = .common, mine: Bool = false, place: String? = "Pasadena") -> FeedItem {
+    static func item(newPatch: Bool = false, first: Bool = false, rarity: RarityLabel? = .common, mine: Bool = false, place: String? = "Pasadena") -> FeedItem {
         FeedItem(
             sightingID: "s", speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", commonName: "Black Phoebe",
-            method: .heard, place: place, foundAt: .now.addingTimeInterval(-7200), legendary: legendary, rarity: rarity, art: nil,
+            method: .heard, place: place, foundAt: .now.addingTimeInterval(-7200), newPatch: newPatch, rarity: rarity, art: nil,
             owner: .init(id: "maya", displayName: "Maya Ortiz"), circleFirst: first, isMine: mine
         )
     }
@@ -110,12 +197,51 @@ struct FindRowTests {
         #expect(!FindRow.whereAndWhen(Self.item(place: nil)).contains("·"))
     }
 
-    @Test("New patch, First for the Guild and Rare or Exceptional are marked; Common and Uncommon aren't")
+    @Test("First for the Guild and Rare or Exceptional are marked; Common and Uncommon aren't; a new patch says so in its headline")
     func marks() {
         #expect(FindRow.marks(Self.item()) == [])
         #expect(FindRow.marks(Self.item(rarity: .uncommon)) == [])
-        #expect(FindRow.marks(Self.item(legendary: true, first: true, rarity: .exceptional)) == ["New patch", "First for the Guild", "Exceptional"])
+        #expect(FindRow.marks(Self.item(newPatch: true, first: true, rarity: .exceptional)) == ["First for the Guild", "Exceptional"])
         #expect(FindRow.marks(Self.item(first: true, rarity: .rare)) == ["First for the Guild", "Rare"])
+    }
+}
+
+extension FindRowTests {
+    @Test("a new patch is led by the patch and says who sewed it")
+    func newPatch() {
+        let item = Self.item(newPatch: true, first: true)
+        #expect(FindRow.isLed(item))
+        #expect(FindRow.headline(item) == "Maya Ortiz sewed a new patch")
+        #expect(FindRow.headline(Self.item(newPatch: true, mine: true)) == "You sewed a new patch")
+        #expect(FindRow.howAndWhere(item).hasPrefix("Heard · Pasadena · "))
+        #expect(FindRow.spoken(item).hasPrefix("Black Phoebe. Heard by Maya Ortiz. Pasadena · "))
+        #expect(FindRow.spoken(item).hasSuffix(". New patch. First for the Guild"))
+    }
+
+    @Test("a repeat is a quieter line, keeping its marks")
+    func seenAgain() {
+        let item = Self.item(first: true)
+        #expect(!FindRow.isLed(item))
+        #expect(FindRow.seenAgainLine(item).hasPrefix("Maya Ortiz heard a Black Phoebe again · Pasadena · "))
+        var seen = Self.item(mine: true, place: nil)
+        seen.method = .seen
+        seen.commonName = "Acorn Woodpecker"
+        #expect(FindRow.seenAgainLine(seen).hasPrefix("You saw an Acorn Woodpecker again · "))
+        #expect(!FindRow.seenAgainLine(seen).contains("· ·"))
+        #expect(FindRow.spoken(item).contains("Heard again by Maya Ortiz"))
+        #expect(!FindRow.spoken(item).contains("New patch"))
+        #expect(FindRow.marks(item) == ["First for the Guild"])
+    }
+
+    @Test("a repeat shared by hand, or showing a painting, keeps the patch-led row")
+    func ledWithoutANewPatch() {
+        var shared = Self.item()
+        shared.card = FeedItem.SharedCard(note: "By the gate.", caption: nil, photo: nil)
+        #expect(FindRow.isLed(shared))
+        #expect(FindRow.headline(shared) == "Maya Ortiz shared a sighting")
+        var painted = Self.item()
+        painted.art = FeedItem.Art(kind: "painted", key: "art/maya/x.jpg", url: nil)
+        #expect(FindRow.isLed(painted))
     }
 }
 

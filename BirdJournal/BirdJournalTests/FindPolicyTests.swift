@@ -4,7 +4,7 @@ import Testing
 @testable import BirdJournal
 
 // Issue #62: what an add sends to the birder's circles. Automatic versus private, the secret spot for a threatened
-// species (and one no pack rates), never a coordinate, and the Legendary and rarity flags. The extras of a card shared
+// species (and one no pack rates), never a coordinate, and the new-patch and rarity flags. The extras of a card shared
 // by hand come with #66.
 @Suite("Find policy")
 struct FindPolicyTests {
@@ -13,12 +13,12 @@ struct FindPolicyTests {
     static let confirmedAt = Date(timeIntervalSince1970: 1_790_000_000)
 
     static func input(
-        isThreatened: Bool? = false, placeName: String? = "Pasadena", isLegendary: Bool = false, rarity: RarityLabel? = .common,
+        isThreatened: Bool? = false, placeName: String? = "Pasadena", isNewPatch: Bool = false, rarity: RarityLabel? = .common,
         method: SightingMethod = .heard, packArt: (packID: String, file: String)? = ("us-ca-la", "art/sayornis-nigricans.avif")
     ) -> FindPolicy.Input {
         FindPolicy.Input(
             identifier: identifier, speciesID: "Sayornis nigricans_Black Phoebe", commonName: "Black Phoebe", method: method,
-            confirmedAt: confirmedAt, rarity: rarity, isLegendary: isLegendary, isThreatened: isThreatened,
+            confirmedAt: confirmedAt, rarity: rarity, isNewPatch: isNewPatch, isThreatened: isThreatened,
             placeName: placeName, packArt: packArt
         )
     }
@@ -34,10 +34,10 @@ struct FindPolicyTests {
 
     @Test("an automatic find carries the species, Heard or Seen, the city, the minute, the flags and the pack art")
     func automaticFind() throws {
-        let find = try #require(FindPolicy.find(for: Self.input(isLegendary: true, rarity: .rare, method: .seen), sharing: .automatic))
+        let find = try #require(FindPolicy.find(for: Self.input(isNewPatch: true, rarity: .rare, method: .seen), sharing: .automatic))
         #expect(find == FindPolicy.Find(
             speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", commonName: "Black Phoebe",
-            method: .seen, place: "Pasadena", foundAt: "2026-09-21T14:13:00Z", legendary: true, rarity: .rare,
+            method: .seen, place: "Pasadena", foundAt: "2026-09-21T14:13:00Z", newPatch: true, edition: nil, rarity: .rare,
             threatened: false, art: .init(kind: "pack", key: "packs/us-ca-la/sayornis-nigricans.jpg")
         ))
     }
@@ -69,7 +69,36 @@ struct FindPolicyTests {
             #expect(!json.contains(word), "\(word) in \(json)")
         }
         let keys = try #require(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any]).keys.sorted()
-        #expect(keys == ["art", "common_name", "found_at", "legendary", "method", "place", "rarity", "scientific_name", "species_id", "threatened"])
+        #expect(keys == ["art", "common_name", "edition", "found_at", "method", "new_patch", "place", "rarity", "scientific_name", "species_id", "threatened"])
+    }
+
+    @Test("a find says whether it sewed a new patch and in which edition, and leads with the patch's art over pack art")
+    func newPatchAndEdition() throws {
+        var input = Self.input(isNewPatch: true)
+        input.edition = "us-ca-la"
+        input.packArt = (packID: "us-ca-la", file: "art/sayornis-nigricans.avif")
+        input.patchArt = (packID: "us-ca-la", file: "patch/sayornis-nigricans.avif")
+        let find = try #require(FindPolicy.find(for: input, sharing: .automatic))
+        #expect(find.newPatch && find.edition == "us-ca-la")
+        #expect(find.art == FindPolicy.Find.Art(kind: "pack", key: "packs/us-ca-la/patch/sayornis-nigricans.png"))
+
+        // Outside every set: no edition, written as null so a repeated put clears it; a pack without patches keeps its art.
+        var uncharted = Self.input(isNewPatch: false)
+        uncharted.packArt = (packID: "us-ca-sd", file: "art/sayornis-nigricans.avif")
+        let plain = try #require(FindPolicy.find(for: uncharted, sharing: .automatic))
+        #expect(plain.art == FindPolicy.Find.Art(kind: "pack", key: "packs/us-ca-sd/sayornis-nigricans.jpg"))
+        let json = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(plain)) as? [String: Any])
+        #expect(json["edition"] is NSNull)
+        #expect(json["new_patch"] as? Bool == false)
+        #expect(json["legendary"] == nil, "nothing writes the old name but the seam")
+    }
+
+    @Test("the patch's key is what the art CDN and the deployed server take")
+    func patchArtKey() {
+        let key = FindPolicy.patchArtKey(packID: "us-ca-la", file: "patch/sayornis-nigricans.avif")
+        #expect(key == "packs/us-ca-la/patch/sayornis-nigricans.png")
+        // backend/.../finds.py, `_ART_KEY`.
+        #expect(key.range(of: #"^(packs|art)/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*\.(jpg|jpeg|png|webp)$"#, options: .regularExpression) != nil)
     }
 
     @Test("the time goes to the minute in UTC, without the seconds")
@@ -81,7 +110,7 @@ struct FindPolicyTests {
     @Test("rarity and art may be absent, and say so as null")
     func absentFields() throws {
         let find = try #require(FindPolicy.find(for: Self.input(rarity: nil, packArt: nil), sharing: .automatic))
-        #expect(find.rarity == nil && find.art == nil && !find.legendary)
+        #expect(find.rarity == nil && find.art == nil && !find.newPatch)
         let object = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(find)) as? [String: Any])
         #expect(object["rarity"] is NSNull)
         #expect(object["art"] is NSNull)
@@ -96,7 +125,7 @@ struct FindPolicyTests {
 
     // Issue #70: the card's painting on the find.
 
-    @Test("a card showing a painting sends it, falling back to its pack art; still ten keys and no coordinate")
+    @Test("a card showing a painting sends it, falling back to its pack art; still eleven keys and no coordinate")
     func paintedArt() throws {
         var input = Self.input(isThreatened: true)
         input.paintedArtKey = "art/fake-sub/abc.jpg"
@@ -107,7 +136,7 @@ struct FindPolicyTests {
         ))
         #expect(find.place == FindPolicy.secretSpot, "the secret spot holds with a painting")
         let json = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(find)) as? [String: Any])
-        #expect(json.keys.count == 10)
+        #expect(json.keys.count == 11)
         let art = try #require(json["art"] as? [String: Any])
         #expect(Set(art.keys) == ["kind", "key", "fallback"])
 

@@ -3,7 +3,7 @@
 When a find is first written (a repeated put sends nothing), every current member of the circles it went to hears of
 it, except its owner, anyone who muted the owner, and anyone who muted every one of those circles they are in:
 
-- A **notable** find (Legendary, the circle's first of the species, Rare or Exceptional rarity, or the find that brings
+- A **notable** find (a new patch, the circle's first of the species, Rare or Exceptional rarity, or the find that brings
   one of the circle's goals to its target, issue #65, once per goal) pushes at once to
   each of the member's phones: an alert plus content-available, carrying the find's summary (`find`), which the lens's
   friend banner (#67) reads.
@@ -122,7 +122,10 @@ def find_summary(find: Find, owner_name: str | None, circle_first_in: list[str],
         "method": content.method.value,
         "place": content.place,
         "found_at": content.found_at.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "legendary": content.legendary,
+        "new_patch": content.new_patch,
+        "edition": content.edition,
+        # Compatibility: a beta phone from before #136 can't decode a push without it. Remove once no such phone is left.
+        "legendary": content.new_patch,
         "rarity": content.rarity.value if content.rarity else None,
         "circle_first": bool(circle_first_in),
         "circle_ids": circle_ids,
@@ -130,11 +133,11 @@ def find_summary(find: Find, owner_name: str | None, circle_first_in: list[str],
 
 
 def notable_words(owner_name: str | None, content: FindContent, first_for: str | None) -> tuple[str, str]:
-    """The alert's title and body: "Maya found a Black Phoebe" / "Legendary · First for Sunday Group · Pasadena"."""
+    """The alert's title and body: "Maya found a Black Phoebe" / "New patch · First for Sunday Group · Pasadena"."""
     name = owner_name or FRIEND_FALLBACK
     reasons: list[str] = []
-    if content.legendary:
-        reasons.append("Legendary")
+    if content.new_patch:
+        reasons.append("New patch")
     if first_for is not None:
         reasons.append(f"First for {first_for}")
     if content.rarity is not None and content.rarity in NOTABLE_RARITIES:
@@ -151,7 +154,7 @@ def goal_words(
     first_for: str | None,
 ) -> tuple[str, str]:
     """A goal reached (issue #65): "Sunday Group reached the November goal" / "Ada found a Black Phoebe, species 15
-    of 15 · Legendary · Pasadena". The find's own reasons follow, so one alert says both."""
+    of 15 · New patch · Pasadena". The find's own reasons follow, so one alert says both."""
     goal = completed.goal
     circle = circle_name or "Your Guild"
     name = owner_name or FRIEND_FALLBACK
@@ -243,7 +246,7 @@ class PushService:
                 continue
             first_in = [circle_id for circle_id in firsts if circle_id in open_circles]
             goals = [goal for goal in completed if goal.goal.circle_id in open_circles]
-            notable = content.legendary or bool(first_in) or content.rarity in NOTABLE_RARITIES or bool(goals)
+            notable = content.new_patch or bool(first_in) or content.rarity in NOTABLE_RARITIES or bool(goals)
             if notable:
                 first_for = circle_names.get(first_in[0]) if first_in else None
                 if goals:

@@ -81,8 +81,8 @@ private final class Harness {
     var now = Date(timeIntervalSince1970: 1_790_000_000)
     /// Sightings that no longer exist: their puts find nothing to send.
     var gone: Set<UUID> = []
-    /// The Legendary flag each payload was built with.
-    var legendaryFlags: [UUID: Bool] = [:]
+    /// The new-patch flag each payload was built with.
+    var newPatchFlags: [UUID: Bool] = [:]
     let fileURL: URL
     private(set) var outbox: FindOutbox!
 
@@ -96,10 +96,10 @@ private final class Harness {
     func makeOutbox() -> FindOutbox {
         FindOutbox(
             account: account, client: client, fileURL: fileURL, sharing: { [unowned self] in sharing },
-            payload: { [unowned self] identifier, legendary in
+            payload: { [unowned self] identifier, newPatch in
                 guard !gone.contains(identifier) else { return nil }
-                legendaryFlags[identifier] = legendary
-                return FindPolicy.find(for: FindPolicyTests.input(isLegendary: legendary), sharing: .automatic)
+                newPatchFlags[identifier] = newPatch
+                return FindPolicy.find(for: FindPolicyTests.input(isNewPatch: newPatch), sharing: .automatic)
             },
             isOnline: { [unowned self] in online },
             now: { [unowned self] in now }
@@ -117,7 +117,7 @@ struct FindOutboxTests {
         let harness = Harness()
         harness.online = false
         let sighting = UUID()
-        harness.outbox.added(sighting, isLegendary: false)
+        harness.outbox.added(sighting, isNewPatch: false)
         await harness.outbox.flush()
         #expect(harness.client.calls.isEmpty)
         #expect(harness.outbox.entries.map(\.operation) == [.put])
@@ -134,7 +134,7 @@ struct FindOutboxTests {
     func deleteAfterPublishing() async {
         let harness = Harness()
         let sighting = UUID()
-        harness.outbox.added(sighting, isLegendary: false)
+        harness.outbox.added(sighting, isNewPatch: false)
         await harness.outbox.flush()
         harness.outbox.removed(sighting)
         await harness.outbox.flush()
@@ -153,14 +153,14 @@ struct FindOutboxTests {
         let harness = Harness()
         harness.online = false
         let before = UUID()
-        harness.outbox.added(before, isLegendary: false)
+        harness.outbox.added(before, isNewPatch: false)
         harness.account.signOut()
         harness.online = true
         await harness.outbox.flush()
         #expect(harness.client.calls.isEmpty, "signed out, nothing goes")
 
         let signedOutAdd = UUID()
-        harness.outbox.added(signedOutAdd, isLegendary: false)
+        harness.outbox.added(signedOutAdd, isNewPatch: false)
         #expect(harness.outbox.entries.map(\.identifier) == [before], "an add while signed out is never published")
 
         await harness.account.signIn(with: .apple)
@@ -174,7 +174,7 @@ struct FindOutboxTests {
         await harness.account.signIn(with: .google)
         harness.online = false
         let theirs = UUID()
-        harness.outbox.added(theirs, isLegendary: false)
+        harness.outbox.added(theirs, isNewPatch: false)
         #expect(harness.outbox.entries.map(\.owner) == ["other-sub"])
 
         let mine = Harness(account: FakeAccount.session(signedIn: true), fileURL: harness.fileURL)
@@ -188,7 +188,7 @@ struct FindOutboxTests {
         let harness = Harness()
         harness.sharing = .private
         let quiet = UUID()
-        harness.outbox.added(quiet, isLegendary: true)
+        harness.outbox.added(quiet, isNewPatch: true)
         harness.sharing = .automatic
         harness.outbox.changed(quiet)
         harness.outbox.removed(quiet)
@@ -202,28 +202,28 @@ struct FindOutboxTests {
         let harness = Harness()
         harness.sharing = .private
         let shared = UUID()
-        harness.outbox.added(shared, isLegendary: false)
-        harness.outbox.sharedByHand(shared, isLegendary: true)
+        harness.outbox.added(shared, isNewPatch: false)
+        harness.outbox.sharedByHand(shared, isNewPatch: true)
         #expect(harness.outbox.entries.isEmpty, "sharing by hand sends on its own; the outbox queues nothing")
-        #expect(harness.outbox.publishedLegendary(shared) == true)
+        #expect(harness.outbox.publishedNewPatch(shared) == true)
         harness.outbox.changed(shared)
         await harness.outbox.flush()
         harness.outbox.removed(shared)
         await harness.outbox.flush()
         #expect(harness.client.calls == ["put \(shared)", "delete \(shared)"])
-        #expect(harness.legendaryFlags[shared] == true)
+        #expect(harness.newPatchFlags[shared] == true)
     }
 
-    @Test("Heard to Seen puts a published find again, with the Legendary flag of its add")
+    @Test("Heard to Seen puts a published find again, with the new-patch flag of its add")
     func repeatedPut() async {
         let harness = Harness()
         let sighting = UUID()
-        harness.outbox.added(sighting, isLegendary: true)
+        harness.outbox.added(sighting, isNewPatch: true)
         await harness.outbox.flush()
         harness.outbox.changed(sighting)
         await harness.outbox.flush()
         #expect(harness.client.calls == ["put \(sighting)", "put \(sighting)"])
-        #expect(harness.legendaryFlags[sighting] == true)
+        #expect(harness.newPatchFlags[sighting] == true)
     }
 
     @Test("a removal undone before it is sent sends only the put")
@@ -231,7 +231,7 @@ struct FindOutboxTests {
         let harness = Harness()
         harness.online = false
         let sighting = UUID()
-        harness.outbox.added(sighting, isLegendary: false)
+        harness.outbox.added(sighting, isNewPatch: false)
         harness.outbox.removed(sighting)
         #expect(harness.outbox.entries.map(\.operation) == [.delete])
         harness.outbox.restored(sighting)
@@ -247,10 +247,10 @@ struct FindOutboxTests {
         let added = UUID()
         let published = UUID()
         harness.online = true
-        harness.outbox.added(published, isLegendary: false)
+        harness.outbox.added(published, isNewPatch: false)
         await harness.outbox.flush()
         harness.online = false
-        harness.outbox.added(added, isLegendary: true)
+        harness.outbox.added(added, isNewPatch: true)
         harness.outbox.removed(published)
 
         harness.relaunch()
@@ -258,7 +258,7 @@ struct FindOutboxTests {
         harness.online = true
         await harness.outbox.flush()
         #expect(harness.client.calls == ["put \(published)", "put \(added)", "delete \(published)"])
-        #expect(harness.legendaryFlags[added] == true)
+        #expect(harness.newPatchFlags[added] == true)
     }
 
     @Test("a failing send retries with backoff; a refused one is dropped")
@@ -266,7 +266,7 @@ struct FindOutboxTests {
         let harness = Harness()
         harness.online = false
         let flaky = UUID()
-        harness.outbox.added(flaky, isLegendary: false)
+        harness.outbox.added(flaky, isNewPatch: false)
         harness.client.failNext = URLError(.timedOut)
         harness.online = true
         await harness.outbox.flush()
@@ -283,7 +283,7 @@ struct FindOutboxTests {
 
         let refused = UUID()
         harness.client.failNext = CircleError.rejected
-        harness.outbox.added(refused, isLegendary: false)
+        harness.outbox.added(refused, isNewPatch: false)
         await harness.outbox.flush()
         #expect(harness.client.calls.last == "failed put \(refused)")
         #expect(harness.outbox.entries.isEmpty, "a find the server refuses never will be taken")
@@ -299,12 +299,42 @@ struct FindOutboxTests {
         #expect(!FindOutbox.isPermanent(URLError(.notConnectedToInternet)))
     }
 
+    @Test("a FindOutbox.json from before the rename keeps its flags and waiting finds, and moves to the new name at once")
+    func oldFileMigrates() async throws {
+        let sewed = UUID(), repeated = UUID()
+        let harness = Harness()
+        harness.online = false
+        let subject = try #require(harness.account.identity.subject)
+        // As a build from before #136 saved it.
+        let old = """
+        {"entries":[{"id":"\(UUID().uuidString)","owner":"\(subject)","identifier":"\(sewed.uuidString)","operation":"put","attempts":0}],
+         "published":[{"owner":"\(subject)","identifier":"\(sewed.uuidString)","isLegendary":true},
+                      {"owner":"\(subject)","identifier":"\(repeated.uuidString)","isLegendary":false}]}
+        """
+        try Data(old.utf8).write(to: harness.fileURL)
+
+        harness.relaunch()
+        #expect(harness.outbox.publishedNewPatch(sewed) == true)
+        #expect(harness.outbox.publishedNewPatch(repeated) == false)
+        #expect(harness.outbox.entries.map(\.identifier) == [sewed])
+
+        let saved = String(decoding: try Data(contentsOf: harness.fileURL), as: UTF8.self)
+        #expect(!saved.contains("isLegendary") && saved.contains("newPatch"), "\(saved)")
+
+        // Relaunched again, from the file as rewritten, and what was waiting goes with its flag.
+        harness.relaunch()
+        harness.online = true
+        await harness.outbox.flush()
+        #expect(harness.newPatchFlags[sewed] == true)
+        #expect(harness.outbox.entries.isEmpty)
+    }
+
     @Test("a put whose sighting is gone is dropped")
     func goneSighting() async {
         let harness = Harness()
         harness.online = false
         let sighting = UUID()
-        harness.outbox.added(sighting, isLegendary: false)
+        harness.outbox.added(sighting, isNewPatch: false)
         harness.gone.insert(sighting)
         harness.online = true
         await harness.outbox.flush()

@@ -39,8 +39,25 @@ final class FindOutbox {
     struct Published: Codable, Hashable, Sendable {
         var owner: String
         var identifier: UUID
-        /// The Legendary flag the find was published with: frozen at the add.
-        var isLegendary: Bool
+        /// Whether the sighting sewed its patch, as the find was published: frozen at the add.
+        var newPatch: Bool
+
+        init(owner: String, identifier: UUID, newPatch: Bool) {
+            self.owner = owner
+            self.identifier = identifier
+            self.newPatch = newPatch
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case owner, identifier, newPatch
+        }
+
+        init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            owner = try values.decode(String.self, forKey: .owner)
+            identifier = try values.decode(UUID.self, forKey: .identifier)
+            newPatch = try LegacyFindWire.newPatchInOutbox(from: decoder)
+        }
     }
 
     private struct Saved: Codable {
@@ -68,7 +85,7 @@ final class FindOutbox {
 
     /// - Parameters:
     ///   - fileURL: where the outbox persists; nil keeps it in memory.
-    ///   - payload: the find of a sighting by identifier, with its frozen Legendary flag; nil when the sighting is
+    ///   - payload: the find of a sighting by identifier, with its frozen new-patch flag; nil when the sighting is
     ///     gone, which drops its put.
     init(
         account: AccountSession, client: CircleClient?, fileURL: URL?, sharing: @escaping () -> FindPolicy.Sharing,
@@ -85,6 +102,8 @@ final class FindOutbox {
         if let fileURL, let data = try? Data(contentsOf: fileURL), let saved = try? JSONDecoder().decode(Saved.self, from: data) {
             entries = saved.entries
             published = saved.published
+            // A file from before #136 moves to the new name at once, so a later build need not read the old one.
+            if LegacyFindWire.outboxNeedsRewrite(data) { save() }
         }
     }
 
@@ -96,18 +115,18 @@ final class FindOutbox {
     // What the journal tells it.
 
     /// A sighting was added. It is published when the birder is signed in and sharing, now or once online.
-    func added(_ identifier: UUID, isLegendary: Bool) {
+    func added(_ identifier: UUID, isNewPatch: Bool) {
         guard client != nil, let owner = signedInOwner,
               FindPolicy.publishesAutomatically(sharing: sharing(), signedIn: true) else { return }
-        published.append(Published(owner: owner, identifier: identifier, isLegendary: isLegendary))
+        published.append(Published(owner: owner, identifier: identifier, newPatch: isNewPatch))
         enqueue(.put, identifier, owner: owner)
     }
 
     /// A card was shared by hand (issue #66): the sighting is now on the server, so a later Heard-to-Seen puts it again
     /// and a removal deletes it, as for an automatic find, whatever the sharing setting.
-    func sharedByHand(_ identifier: UUID, isLegendary: Bool) {
+    func sharedByHand(_ identifier: UUID, isNewPatch: Bool) {
         guard let owner = signedInOwner, !published.contains(where: { $0.owner == owner && $0.identifier == identifier }) else { return }
-        published.append(Published(owner: owner, identifier: identifier, isLegendary: isLegendary))
+        published.append(Published(owner: owner, identifier: identifier, newPatch: isNewPatch))
         save()
     }
 
@@ -116,9 +135,9 @@ final class FindOutbox {
         entries.contains { $0.identifier == identifier && $0.operation == .put && $0.owner == signedInOwner }
     }
 
-    /// The Legendary flag a sighting was published with, frozen at the add; nil when it never was.
-    func publishedLegendary(_ identifier: UUID) -> Bool? {
-        published.last { $0.identifier == identifier && $0.owner == signedInOwner }?.isLegendary
+    /// Whether a sighting was published as a new patch, frozen at the add; nil when it never was published.
+    func publishedNewPatch(_ identifier: UUID) -> Bool? {
+        published.last { $0.identifier == identifier && $0.owner == signedInOwner }?.newPatch
     }
 
     /// A published sighting changed (Heard or Seen, or the art its card shows, issue #70): its find is put again.
@@ -172,8 +191,8 @@ final class FindOutbox {
             do {
                 switch entry.operation {
                 case .put:
-                    let legendary = published.first { $0.owner == owner && $0.identifier == entry.identifier }?.isLegendary ?? false
-                    guard let find = await payload(entry.identifier, legendary) else {
+                    let newPatch = published.first { $0.owner == owner && $0.identifier == entry.identifier }?.newPatch ?? false
+                    guard let find = await payload(entry.identifier, newPatch) else {
                         // The sighting is gone (its delete is queued on its own) or no longer makes a find.
                         finish(entry)
                         continue
@@ -287,8 +306,8 @@ extension FindOutbox {
         let outbox = FindOutbox(
             account: account, client: AccountSession.isEnabledInThisBuild ? client : nil, fileURL: fileURL,
             sharing: { sharingSetting },
-            payload: { identifier, legendary in
-                await find(of: identifier, isLegendary: legendary, album: album, packs: packs, places: places)
+            payload: { identifier, newPatch in
+                await find(of: identifier, isNewPatch: newPatch, album: album, packs: packs, places: places)
             },
             isOnline: { network.isOnline }
         )
@@ -297,33 +316,35 @@ extension FindOutbox {
     }
 
     /// The find of the sighting with `identifier` in the album, through the find policy: its species and card facts
-    /// from the packs, the city the phone names for its place, and its pack art's thumbnail.
-    static func find(of identifier: UUID, isLegendary: Bool, album: ModelContainer, packs: PackLibrary, places: PlaceNames) async -> FindPolicy.Find? {
+    /// from the packs, the city the phone names for its place, its edition and its patch's thumbnail.
+    static func find(of identifier: UUID, isNewPatch: Bool, album: ModelContainer, packs: PackLibrary, places: PlaceNames) async -> FindPolicy.Find? {
         var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })
         descriptor.fetchLimit = 1
         guard let sighting = try? album.mainContext.fetch(descriptor).first else { return nil }
         if packs.species(scientificName: sighting.scientificName)?.species.isThreatened == false, let location = sighting.location {
             await places.resolve(location)
         }
-        let input = input(of: sighting, isLegendary: isLegendary, packs: packs, places: places)
+        let input = input(of: sighting, isNewPatch: isNewPatch, packs: packs, places: places)
         return FindPolicy.find(for: input, sharing: .automatic)
     }
 }
 
 extension FindOutbox {
     /// What the find policy reads about a sighting: its species and card facts from the packs, the city the phone has
-    /// named for its place (only for a species known not to be threatened), and its pack art's thumbnail. The note and
-    /// the caption ride along for a card shared by hand; an automatic find leaves them out.
+    /// named for its place (only for a species known not to be threatened), its edition, and its patch's or else its pack
+    /// art's thumbnail. The note and the caption ride along for a card shared by hand; an automatic find leaves them out.
     @MainActor
-    static func input(of sighting: Sighting, isLegendary: Bool, packs: PackLibrary, places: PlaceNames) -> FindPolicy.Input {
+    static func input(of sighting: Sighting, isNewPatch: Bool, packs: PackLibrary, places: PlaceNames) -> FindPolicy.Input {
         let isThreatened = packs.species(scientificName: sighting.scientificName)?.species.isThreatened
         let placeName = isThreatened == false ? sighting.location.flatMap(places.name(for:)) : nil
         let setID = CardSet.placement(speciesID: sighting.speciesID, at: sighting.location, in: packs.cardSets).setID
         let art = packs.packArt(scientificName: sighting.scientificName, setID: setID)
+        let patch = packs.patch(scientificName: sighting.scientificName, setID: setID)
         return FindPolicy.Input(
             identifier: sighting.identifier, speciesID: sighting.speciesID, commonName: packs.commonName(for: sighting),
-            method: sighting.method, confirmedAt: sighting.confirmedAt, rarity: sighting.rarity?.label, isLegendary: isLegendary,
+            method: sighting.method, confirmedAt: sighting.confirmedAt, rarity: sighting.rarity?.label, isNewPatch: isNewPatch, edition: setID,
             isThreatened: isThreatened, placeName: placeName, packArt: art.map { ($0.pack.info.id, $0.art.file) },
+            patchArt: patch.map { ($0.pack.info.id, $0.patch.file) },
             paintedArtKey: sighting.art.shownPaintingKey, note: sighting.note, caption: sighting.caption?.text
         )
     }

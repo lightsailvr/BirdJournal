@@ -6,5 +6,5 @@ The phone's SwiftData store stays the only full copy of a birder's sightings, no
 
 ## Consequences
 
-- There is no iPad, web or second-phone view of a collection, and Legendary and set progress are computed on the phone.
-- A find carries the facts a circle needs (species, method, place label, time, Legendary and rarity flags, card art) so the server never needs the sighting itself.
+- There is no iPad, web or second-phone view of a collection, and patches and set progress are computed on the phone.
+- A find carries the facts a circle needs (species, method, place label, time, whether it sewed a new patch and in which edition, rarity, art) so the server never needs the sighting itself. Until #136 (2026-11-04) the new-patch flag was the `legendary` flag, retired with Legendary (#131). The edition is the set's pack id, no finer than the pack id the art key already carried.

@@ -120,7 +120,8 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
     var method: SightingMethod
     var place: String?
     var foundAt: Date
-    var legendary: Bool
+    /// The find sewed the finder's patch: the feed leads it with the patch, and a repeat is a quiet line.
+    var newPatch: Bool
     var rarity: RarityLabel?
     var art: Art?
     var owner: Owner
@@ -131,6 +132,9 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
 
     /// What a card shared by hand to this circle adds (issue #66); nil for an automatic find.
     var card: SharedCard? = nil
+
+    /// The set the sighting is in, by pack id; nil outside every set. Whose patch the feed draws.
+    var edition: String? = nil
 
     /// A card shared by hand: the note, the caption and the original photo the owner chose for this circle.
     struct SharedCard: Equatable, Decodable, Sendable {
@@ -153,7 +157,8 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
         case commonName = "common_name"
         case method, place
         case foundAt = "found_at"
-        case legendary, rarity, art, owner
+        case newPatch = "new_patch"
+        case edition, rarity, art, owner
         case circleFirst = "circle_first"
         case isMine = "is_mine"
         case reactions
@@ -219,9 +224,10 @@ extension FeedItem {
         method = try values.decode(SightingMethod.self, forKey: .method)
         place = try values.decodeIfPresent(String.self, forKey: .place)
         foundAt = try values.decode(Date.self, forKey: .foundAt)
-        legendary = try values.decode(Bool.self, forKey: .legendary)
+        newPatch = try LegacyFindWire.newPatch(from: decoder)
         rarity = try values.decodeIfPresent(RarityLabel.self, forKey: .rarity)
         art = try values.decodeIfPresent(Art.self, forKey: .art)
+        edition = try values.decodeIfPresent(String.self, forKey: .edition) ?? LegacyFindWire.edition(ofArtKey: art?.key)
         owner = try values.decode(Owner.self, forKey: .owner)
         circleFirst = try values.decode(Bool.self, forKey: .circleFirst)
         isMine = try values.decode(Bool.self, forKey: .isMine)
@@ -492,7 +498,7 @@ final class HTTPCircleClient: CircleClient {
     }
 
     func putFind(_ find: FindPolicy.Find, sightingID: UUID, accessToken: String) async throws {
-        _ = try await data("PUT", "v1/finds/\(sightingID.uuidString.lowercased())", body: try JSONEncoder().encode(find), accessToken: accessToken)
+        try await putNewFormElseOld(find, "v1/finds/\(sightingID.uuidString.lowercased())", accessToken: accessToken)
     }
 
     func deleteFind(sightingID: UUID, accessToken: String) async throws {
@@ -506,7 +512,7 @@ final class HTTPCircleClient: CircleClient {
     }
 
     func shareCard(_ card: FindPolicy.Card, sightingID: UUID, accessToken: String) async throws {
-        _ = try await data("PUT", "v1/finds/\(sightingID.uuidString.lowercased())/card", body: try JSONEncoder().encode(card), accessToken: accessToken)
+        try await putNewFormElseOld(card, "v1/finds/\(sightingID.uuidString.lowercased())/card", accessToken: accessToken)
     }
 
     func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload {
@@ -581,6 +587,18 @@ final class HTTPCircleClient: CircleClient {
 
     func setBlocked(_ blocked: Bool, accountID: String, accessToken: String) async throws {
         _ = try await data(blocked ? "PUT" : "DELETE", "v1/blocks/\(accountID)", body: nil, accessToken: accessToken)
+    }
+
+    /// A find or a shared card. Compatibility until the backend deploy (`LegacyFindWire`, #136): the deployed server
+    /// refuses `new_patch` before it writes anything, so a refusal is tried once more in the old form. A find it would
+    /// refuse anyway (a coordinate in the place) is refused again, and the outbox drops it as before. Once the server
+    /// speaks `new_patch` the first try goes through.
+    private func putNewFormElseOld(_ body: some Encodable, _ path: String, accessToken: String) async throws {
+        do {
+            _ = try await data("PUT", path, body: try JSONEncoder().encode(body), accessToken: accessToken)
+        } catch CircleError.rejected {
+            _ = try await data("PUT", path, body: try LegacyFindWire.oldFormEncoder().encode(body), accessToken: accessToken)
+        }
     }
 
     private func send<T: Decodable>(_ method: String, _ path: String, body: [String: String]? = nil, query: [URLQueryItem] = [], accessToken: String, as type: T.Type) async throws -> T {

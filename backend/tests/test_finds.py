@@ -39,7 +39,7 @@ def _find(species: dict[str, str] = PHOEBE, **overrides: Any) -> dict[str, Any]:
         "method": "heard",
         "place": "Pasadena",
         "found_at": "2026-11-01T08:15:00Z",
-        "legendary": False,
+        "new_patch": False,
         "rarity": "common",
         "threatened": False,
         "art": {"kind": "pack", "key": "packs/us-ca-la/sayornis-nigricans.jpg"},
@@ -248,18 +248,97 @@ def test_circle_first_passes_on_after_a_delete(client: TestClient, issuer: TestI
     assert [(item["sighting_id"], item["circle_first"]) for item in items] == [(late, True)]
 
 
-def test_circle_first_is_per_circle_and_apart_from_legendary(client: TestClient, issuer: TestIssuer) -> None:
+def test_circle_first_is_per_circle_and_apart_from_a_new_patch(client: TestClient, issuer: TestIssuer) -> None:
     first = _two_friends(client, issuer)
-    _put_ok(client, issuer, "ben", _find(found_at="2026-11-01T07:00:00Z", legendary=True))
+    _put_ok(client, issuer, "ben", _find(found_at="2026-11-01T07:00:00Z", new_patch=True))
     second = _create(client, issuer, sub="ada", name="Family")["id"]
-    mine = _put_ok(client, issuer, "ada", _find(found_at="2026-11-01T08:00:00Z", legendary=False))
+    mine = _put_ok(client, issuer, "ada", _find(found_at="2026-11-01T08:00:00Z", new_patch=False))
 
     in_first = {item["sighting_id"]: item["circle_first"] for item in _feed(client, issuer, first, "ada")["items"]}
     assert in_first[mine] is False
     in_second = _feed(client, issuer, second, "ada")["items"]
-    assert [(item["sighting_id"], item["circle_first"], item["legendary"]) for item in in_second] == [
+    assert [(item["sighting_id"], item["circle_first"], item["new_patch"]) for item in in_second] == [
         (mine, True, False)
     ]
+
+
+def test_a_new_patch_reaches_the_feed_with_its_edition(client: TestClient, issuer: TestIssuer) -> None:
+    circle = _two_friends(client, issuer)
+    sighting, response = _put(client, issuer, "ada", _find(new_patch=True, edition="us-ca-la"))
+    assert response.status_code == 201
+    assert (response.json()["new_patch"], response.json()["edition"]) == (True, "us-ca-la")
+    (item,) = _feed(client, issuer, circle, "ben")["items"]
+    assert (item["sighting_id"], item["new_patch"], item["edition"]) == (sighting, True, "us-ca-la")
+
+
+def test_a_repeat_or_a_find_outside_every_set_says_so(client: TestClient, issuer: TestIssuer) -> None:
+    circle = _two_friends(client, issuer)
+    _put_ok(client, issuer, "ada", _find(new_patch=False, edition="us-ca-la"))
+    _put_ok(client, issuer, "ben", _find(WREN, new_patch=True, edition=None))
+    by_species = {item["scientific_name"]: item for item in _feed(client, issuer, circle, "ada")["items"]}
+    assert (by_species[PHOEBE["scientific_name"]]["new_patch"], by_species[PHOEBE["scientific_name"]]["edition"]) == (False, "us-ca-la")
+    assert (by_species[WREN["scientific_name"]]["new_patch"], by_species[WREN["scientific_name"]]["edition"]) == (True, None)
+
+
+@pytest.mark.parametrize("edition", ["", "US-CA-LA", "us ca la", "us-ca-la#1", "../etc", "x" * 65])
+def test_an_edition_is_a_pack_id(client: TestClient, issuer: TestIssuer, edition: str) -> None:
+    _, response = _put(client, issuer, "ada", _find(edition=edition))
+    assert response.status_code == 422
+
+
+# Until the deploy has settled and every beta phone has updated (the compatibility notes in finds.py and finds_api.py).
+
+
+def test_an_old_clients_legendary_is_a_new_patch(client: TestClient, issuer: TestIssuer) -> None:
+    circle = _two_friends(client, issuer)
+    for legendary in (True, False):
+        body = _find(legendary=legendary, found_at=f"2026-11-01T0{int(legendary)}:00:00Z")
+        del body["new_patch"]
+        sighting, response = _put(client, issuer, "ada", body)
+        assert response.status_code == 201, response.text
+        assert response.json()["new_patch"] is legendary
+        item = next(item for item in _feed(client, issuer, circle, "ben")["items"] if item["sighting_id"] == sighting)
+        assert item["new_patch"] is legendary
+
+
+def test_a_new_clients_feed_still_answers_an_old_client(client: TestClient, issuer: TestIssuer) -> None:
+    """An old phone's `FeedItem` can't decode an item without `legendary`, so a new server keeps sending it."""
+    circle = _two_friends(client, issuer)
+    _, response = _put(client, issuer, "ada", _find(new_patch=True, edition="us-ca-la"))
+    assert response.json()["legendary"] is True
+    (item,) = _feed(client, issuer, circle, "ben")["items"]
+    assert item["legendary"] is True
+
+
+def test_nothing_new_is_stored_under_legendary(client: TestClient, issuer: TestIssuer, table: Any) -> None:
+    circle = _two_friends(client, issuer)
+    sighting = _put_ok(client, issuer, "ada", _find(new_patch=True, edition="us-ca-la"))
+    stored = table.get_item(Key={"pk": "ACCOUNT#ada", "sk": f"FIND#{sighting}"})["Item"]
+    assert stored["new_patch"] is True and stored["edition"] == "us-ca-la" and "legendary" not in stored
+    (item,) = table.query(KeyConditionExpression=Key("pk").eq(f"CIRCLE#{circle}#FEED"))["Items"]
+    assert item["new_patch"] is True and "legendary" not in item
+
+
+def test_a_find_stored_before_the_rename_reads_as_a_new_patch(client: TestClient, issuer: TestIssuer, table: Any) -> None:
+    """Items already in the table keep `legendary` until they are next put."""
+    circle = _two_friends(client, issuer)
+    sighting = _put_ok(client, issuer, "ada", _find(new_patch=True))
+    for key in (
+        {"pk": "ACCOUNT#ada", "sk": f"FIND#{sighting}"},
+        next(
+            {"pk": item["pk"], "sk": item["sk"]}
+            for item in table.query(KeyConditionExpression=Key("pk").eq(f"CIRCLE#{circle}#FEED"))["Items"]
+        ),
+    ):
+        table.update_item(
+            Key=key, UpdateExpression="SET legendary = :true REMOVE new_patch, edition", ExpressionAttributeValues={":true": True}
+        )
+    (item,) = _feed(client, issuer, circle, "ben")["items"]
+    assert (item["new_patch"], item["edition"]) == (True, None)
+    # Put again, it moves to the new attribute.
+    _put_ok(client, issuer, "ada", _find(new_patch=True, method="seen"), sighting_id=sighting)
+    stored = table.get_item(Key={"pk": "ACCOUNT#ada", "sk": f"FIND#{sighting}"})["Item"]
+    assert stored["new_patch"] is True and "legendary" not in stored
 
 
 def test_a_find_older_than_the_first_takes_the_mark(client: TestClient, issuer: TestIssuer) -> None:

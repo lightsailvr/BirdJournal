@@ -79,7 +79,7 @@ struct BirdJournalApp: App {
             await findOutbox.flush()
         }
         art.holdsReceipt = { [weak findOutbox] identifier in findOutbox?.isWaitingToPublish(identifier) ?? false }
-        art.hasFind = { [weak findOutbox] identifier in findOutbox?.publishedLegendary(identifier) != nil }
+        art.hasFind = { [weak findOutbox] identifier in findOutbox?.publishedNewPatch(identifier) != nil }
         _findOutbox = State(initialValue: findOutbox)
         // Pushes (issue #63): permission at the first circle, the token to the account, and a refresh on every push.
         let pushes = PushCenter.forApp(account: account, client: circles.client) { UIApplication.shared.registerForRemoteNotifications() }
