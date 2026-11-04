@@ -218,29 +218,30 @@ struct LensCardRendererTests {
     func savedPages() {
         #expect(Self.render(.species(index: 0), saved: [0, 2]).elements[2] == .status("3 species · 1 of 3 · Added"))
         let details = Self.render(.details(index: 0), saved: [0, 2])
-        #expect(Array(details.elements.suffix(2)) == [.saved("Added to my list", legendary: false), .button(LensCardRenderer.addAnotherButton)], "written, the card not yet known")
+        #expect(Array(details.elements.suffix(2)) == [.saved("Added to my list"), .button(LensCardRenderer.addAnotherButton)], "written, what it earned not yet known")
         #expect(!details.elements.contains(Self.saveButton))
     }
 
-    @Test("once the sighting is written the saved line names the card it earned: the birder's first of the species, or a new card with its number (issues #51, #54)")
-    func earnedCards() {
-        func details(_ index: Int, earned: [Int: LensEarnedCard], profile: @escaping (Species) -> SpeciesProfile? = Self.profile) -> LensCard {
+    @Test("once the sighting is written the saved line names what it earned: a new patch with its number, or seen again with the count (issues #54, #132)")
+    func earnedPatches() {
+        func details(_ index: Int, earned: [Int: LensEarnedPatch], profile: @escaping (Species) -> SpeciesProfile? = Self.profile) -> LensCard {
             LensCardRenderer.render(.details(index: index), stack: Self.stack, order: Self.quietOrder, selection: 0, saved: [index], earned: earned, profile: profile)
         }
-        let first = details(0, earned: [0: .legendary])
-        #expect(Array(first.elements.suffix(2)) == [.saved("Your first Black Phoebe", legendary: true), .button(LensCardRenderer.addAnotherButton)])
-        #expect(details(0, earned: [0: .newCard(collectorNumber: "021/160")]).elements.contains(.saved("New card · 021/160", legendary: false)))
-        #expect(details(1, earned: [0: .legendary, 1: .newCard(collectorNumber: "Uncharted")]).elements.contains(.saved("New card · Uncharted", legendary: false)), "each species' own card")
+        let first = details(0, earned: [0: .newPatch(collectorNumber: "021/160")])
+        #expect(Array(first.elements.suffix(2)) == [.saved("New patch · 021/160"), .button(LensCardRenderer.addAnotherButton)])
+        #expect(details(0, earned: [0: .seenAgain(count: 3)]).elements.contains(.saved("Seen again · 3 times")))
+        #expect(details(0, earned: [0: .newPatch(collectorNumber: "021/160")]).elements.contains(.saved("New patch · 021/160")))
+        #expect(details(1, earned: [0: .seenAgain(count: 2), 1: .newPatch(collectorNumber: "Uncharted")]).elements.contains(.saved("New patch · Uncharted")), "each species' own card")
 
         // The longest line still fits: the field marks give way to it.
         var long = Fakes.phoebeProfile
         long.fieldMarks = Array(repeating: "word", count: 80).joined(separator: " ")
-        let full = details(0, earned: [0: .legendary]) { _ in long }
+        let full = details(0, earned: [0: .newPatch(collectorNumber: "021/160")]) { _ in long }
         #expect(full.wordCount == LensCardRenderer.detailsWordBudget)
-        #expect(full.elements.contains(.saved("Your first Black Phoebe", legendary: true)))
+        #expect(full.elements.contains(.saved("New patch · 021/160")))
         for index in 0..<3 {
-            #expect(details(index, earned: [index: .legendary]).wordCount <= LensCardRenderer.detailsWordBudget)
-            #expect(details(index, earned: [index: .newCard(collectorNumber: "021/160")]).wordCount <= LensCardRenderer.detailsWordBudget)
+            #expect(details(index, earned: [index: .newPatch(collectorNumber: "021/160")]).wordCount <= LensCardRenderer.detailsWordBudget)
+            #expect(details(index, earned: [index: .newPatch(collectorNumber: "021/160")]).wordCount <= LensCardRenderer.detailsWordBudget)
         }
     }
 

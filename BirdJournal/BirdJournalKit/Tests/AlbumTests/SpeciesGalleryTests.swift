@@ -32,10 +32,10 @@ struct SpeciesGalleryTests {
     func header() {
         let gallery = SpeciesGallery(Self.cards)
 
-        #expect(gallery.title(commonName: "House Finch") == "House Finch · 6 cards · 2 places")
+        #expect(gallery.title(commonName: "House Finch") == "House Finch · 6 sightings · 2 places")
         #expect(gallery.firstDiscovery == Self.start.addingTimeInterval(10 * 3600))
-        #expect(SpeciesGallery([Self.card(1, hours: 0, at: Self.sanDiego)]).title(commonName: "House Finch") == "House Finch · 1 card · 1 place")
-        #expect(SpeciesGallery([Self.card(1, hours: 0, at: nil)]).title(commonName: "House Finch") == "House Finch · 1 card", "no place recorded, none counted")
+        #expect(SpeciesGallery([Self.card(1, hours: 0, at: Self.sanDiego)]).title(commonName: "House Finch") == "House Finch · 1 sighting · 1 place")
+        #expect(SpeciesGallery([Self.card(1, hours: 0, at: nil)]).title(commonName: "House Finch") == "House Finch · 1 sighting", "no place recorded, none counted")
         #expect(SpeciesGallery([]).firstDiscovery == nil)
     }
 
@@ -44,10 +44,10 @@ struct SpeciesGalleryTests {
         let gallery = SpeciesGallery(Self.cards, filter: .named(Self.losAngeles))
 
         #expect(Self.ids(gallery.shown) == [6, 3, 1], "newest first by default")
-        #expect(gallery.shownText == "3 of 6 cards")
+        #expect(gallery.shownText == "3 of 6 sightings")
         #expect(gallery.cardCount == 6, "the header still counts every card")
         #expect(Self.ids(SpeciesGallery(Self.cards, filter: .notRecorded).shown) == [4])
-        #expect(SpeciesGallery(Self.cards).shownText == "6 cards", "unfiltered, just the total")
+        #expect(SpeciesGallery(Self.cards).shownText == "6 sightings", "unfiltered, just the total")
     }
 
     @Test("the place picker lists each recorded place with its count, alphabetically, then the cards with no place")
@@ -68,7 +68,7 @@ struct SpeciesGalleryTests {
 
         #expect(gallery.shown.isEmpty)
         #expect(gallery.isFiltered)
-        #expect(gallery.shownText == "0 of 6 cards")
+        #expect(gallery.shownText == "0 of 6 sightings")
         #expect(!SpeciesGallery(Self.cards).isFiltered)
     }
 

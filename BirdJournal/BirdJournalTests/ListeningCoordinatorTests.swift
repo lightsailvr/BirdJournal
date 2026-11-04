@@ -153,7 +153,7 @@ struct ListeningCoordinatorTests {
 
         #expect(again.sightingID != first.sightingID)
         #expect(harness.stored.count == 2)
-        #expect(run.acknowledgment?.text == "A new card for your collection")
+        #expect(run.acknowledgment?.text == "Seen again · 2 times", "no place: the Uncharted patch, seen again")
         #expect(run.sightings.entries.count == 2)
         #expect(run.sightings.count(of: jay.species) == 2)
 
@@ -165,8 +165,8 @@ struct ListeningCoordinatorTests {
         await run.stop()
     }
 
-    @Test("the first add of a species reveals its Legendary card once; a repeat add is a quieter new card; dismissing never loses the sighting; an undo removes the card (issue #51)")
-    func legendaryReveal() async throws {
+    @Test("the first add of a species in a place sews its patch, revealed once; a repeat add is seen again; dismissing never loses the sighting; an undo removes it (issues #51, #132; was #51)")
+    func patchReveal() async throws {
         let harness = try Self.makeHarness()
         let run = harness.run
         await run.start()
@@ -175,23 +175,26 @@ struct ListeningCoordinatorTests {
         let finch = run.candidates[0]
 
         let first = try #require(await run.add(finch))
-        #expect(first.isLegendary)
+        #expect(first.sewsPatch)
+        #expect(first.patchCount == 1)
         let reveal = try #require(run.reveal)
         #expect(reveal.title == "Your first House Finch")
+        #expect(reveal.eyebrow == "New patch · Uncharted")
         #expect(reveal.addition == first)
 
         run.dismissReveal()
         #expect(run.reveal == nil)
         #expect(harness.stored.map(\.identifier) == [first.identifier], "dismissing keeps the sighting")
 
-        // The same species again: a new card, no reveal replayed.
+        // The same species again: seen again, no reveal replayed.
         let again = try #require(await run.add(finch))
-        #expect(!again.isLegendary)
+        #expect(!again.sewsPatch)
+        #expect(again.patchCount == 2)
         #expect(run.reveal == nil)
-        #expect(run.acknowledgment?.text == "A new card for your collection")
+        #expect(run.acknowledgment?.text == "Seen again · 2 times")
         #expect(run.acknowledgment?.undo == again)
 
-        // A first of another species, taken back inside the window: the card and its reveal are gone.
+        // A first of another species, taken back inside the window: the sighting and its reveal are gone.
         let jay = try #require(await run.add(run.candidates[1]))
         #expect(run.reveal?.addition == jay)
         #expect(run.acknowledgment?.text == "Your first Blue Jay")

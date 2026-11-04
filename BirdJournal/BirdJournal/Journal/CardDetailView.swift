@@ -71,7 +71,6 @@ struct CardDetailView: View {
         if let sighting {
             let commonName = library.commonName(for: sighting)
             let collection = library.collection(of: sightings)
-            let isLegendary = collection.isLegendary(sighting.identifier)
             let placement = collection.placement(of: sighting.identifier)
             let gallery = (browse ?? GalleryBrowse(scientificName: sighting.scientificName)).gallery(sightings, places: places)
             PaperPage {
@@ -88,9 +87,9 @@ struct CardDetailView: View {
                     .accessibilityIdentifier("card-flip")
                     .accessibilityFocused($flipControlFocused)
                     CollectibleCard(showsBack: showsBack, rotates: !reduceMotion) {
-                        CardFront(sighting: sighting, isLegendary: isLegendary, placement: placement, place: places.cardPlace(for: sighting.location), flip: flip)
+                        CardFront(sighting: sighting, placement: placement, place: places.cardPlace(for: sighting.location), flip: flip)
                     } back: {
-                        CardBack(sighting: sighting, isLegendary: isLegendary, placement: placement, showOriginal: { showingOriginal = true })
+                        CardBack(sighting: sighting, placement: placement, showOriginal: { showingOriginal = true })
                     }
                     CardArtActions(sighting: sighting)
                     PhotoArtActions(sighting: sighting)
@@ -381,7 +380,7 @@ struct FlipFace: ViewModifier, Animatable {
     }
 }
 
-/// The story-first front (issue #116, design guide page 5, the reference card): the Legendary label or the edition, the
+/// The story-first front (issue #116, design guide page 5, the reference card): the edition, the
 /// bird's name upright and its scientific name in italics, the painting (a tap flips the card) with its compact credit,
 /// then the tale: the story title when the pack has an approved one (#113), and an excerpt of the approved lore in a true italic
 /// serif (`LoreExcerpt`: whole sentences, about 25–40 words). Without a title the excerpt leads; without lore the tale
@@ -392,7 +391,6 @@ struct FlipFace: ViewModifier, Animatable {
 struct CardFront: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
-    let isLegendary: Bool
     let placement: CardPlacement?
     /// The place line: the card's place on the phone; on a shared face, only what the share may carry.
     let place: String?
@@ -411,9 +409,9 @@ struct CardFront: View {
         let commonName = library.commonName(for: sighting)
         let excerpt = reference?.species.lore.flatMap { LoreExcerpt.front($0.text) }
         let storyTitle = self.storyTitle ?? reference?.species.lore?.title?.nilIfEmpty
-        let heading = CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement)
+        let heading = CardHeading.accessibilityText(placement: placement)
         VStack(spacing: 12) {
-            CardHeading(isLegendary: isLegendary, placement: placement)
+            CardHeading(placement: placement)
                 .padding(.horizontal, 24)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(heading.first.flatMap { $0 } ?? "")
@@ -459,7 +457,7 @@ struct CardFront: View {
                             .accessibilityAddTraits(.isHeader)
                             .accessibilityIdentifier("card-story-title")
                         Rectangle()
-                            .fill(isLegendary ? Color.goldInk.opacity(0.6) : Color.cardEdge.opacity(0.35))
+                            .fill(Color.cardEdge.opacity(0.35))
                             .frame(width: 72, height: 1)
                             .accessibilityHidden(true)
                     }
@@ -479,14 +477,14 @@ struct CardFront: View {
             CardFooter(
                 line: CardFooter.line(place: place, date: sighting.confirmedAt, method: sighting.method),
                 rarity: CardText.rarityLine(sighting.rarity),
-                number: CardHeading.numberText(isLegendary: isLegendary, placement: placement),
+                number: CardHeading.numberText(placement: placement),
                 numberLabel: heading.count > 1 ? heading.last.flatMap { $0 } : nil
             )
         }
         .padding(.horizontal, 20)
         .padding(.top, 16)
         .padding(.bottom, 14)
-        .modifier(CardSurface(isLegendary: isLegendary))
+        .modifier(CardSurface())
     }
 }
 
@@ -538,7 +536,6 @@ struct CardBack: View {
     @Environment(PlaceNames.self) private var places
     @Environment(JournalEdits.self) private var edits
     let sighting: Sighting
-    let isLegendary: Bool
     let placement: CardPlacement?
     let showOriginal: () -> Void
 
@@ -669,7 +666,7 @@ struct CardBack: View {
         .scrollIndicators(.visible)
         .clipShape(RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous))
         .accessibilityIdentifier("card-back-scroll")
-        .modifier(CardSurface(isLegendary: isLegendary, sprigs: nil))
+        .modifier(CardSurface(sprigs: nil))
     }
 }
 

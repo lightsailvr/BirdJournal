@@ -18,15 +18,18 @@ final class RunSightings {
         var hasFrame: Bool
     }
 
-    /// What one add did, so it can be undone, and the card it earned.
+    /// What one add did, so it can be undone, and what it earned: a new patch, or another sighting of one.
     struct Addition: Equatable {
         let species: Species
         let sightingID: PersistentIdentifier
         /// The sighting's stable identifier.
         let identifier: UUID
-        /// The add was the birder's first surviving sighting of the species: a Legendary card, revealed once.
-        let isLegendary: Bool
-        /// The card's set and collector number (issue #54).
+        /// The add was the species' first surviving sighting in its placement: it sewed the patch, revealed once
+        /// (issue #132). Otherwise it was seen again.
+        let sewsPatch: Bool
+        /// The patch's sightings after the add.
+        let patchCount: Int
+        /// The set and collector number (issue #54).
         let placement: CardPlacement
     }
 
@@ -70,9 +73,10 @@ final class RunSightings {
         records[sighting.persistentModelID] = sighting
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
         if let captioner { Task { await captioner.caption(sighting) } }
-        findOutbox?.added(sighting.identifier, isLegendary: recorded.isLegendary)
+        // Until #136 renames the find's flag, it carries "this add sewed a patch", which is what made a find notable.
+        findOutbox?.added(sighting.identifier, isLegendary: recorded.sewsPatch)
         artJobs?.requestAfterAdd(sighting)
-        return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, isLegendary: recorded.isLegendary, placement: recorded.placement)
+        return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: recorded.sewsPatch, patchCount: recorded.patchCount, placement: recorded.placement)
     }
 
     /// Takes an addition back: its sighting is deleted with its frame. Nothing happens if it is already gone.

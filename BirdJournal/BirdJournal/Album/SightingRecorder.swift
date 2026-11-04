@@ -15,8 +15,8 @@ final class SightingRecorder {
     let frames: FrameStore
     /// Where a card's rarity is read at the add (issue #52); nil records none, as before rarity existed.
     let rarity: RarityReader?
-    /// The sets the phone knows when an add is written (issue #54), which place its card; none places every card in
-    /// Uncharted.
+    /// The sets the phone knows when an add is written (issue #54), which place its sighting and so its patch; none
+    /// places every sighting in Uncharted.
     var sets: () -> [CardSet] = { [] }
 
     init(container: ModelContainer, frames: FrameStore, rarity: RarityReader? = nil) {
@@ -25,17 +25,21 @@ final class SightingRecorder {
         self.rarity = rarity
     }
 
-    /// One written sighting, whether it earned the Legendary reveal, and its card's set and collector number.
+    /// One written sighting, whether it sewed a patch, its patch's count with it, and its set and collector number.
     struct Recorded {
         let sighting: Sighting
-        /// No other surviving sighting of the species existed when it was written: the card is Legendary.
-        let isLegendary: Bool
+        /// No other surviving sighting of the species was in its placement when it was written: it sewed the species'
+        /// patch there (issue #132). Otherwise it was seen again.
+        let sewsPatch: Bool
+        /// The patch's sightings, this one included.
+        let patchCount: Int
         let placement: CardPlacement
     }
 
     /// Saves one sighting of `candidate`, with the JPEG `frame` captured when it was confirmed, if there was one. The
-    /// sighting is a card from the start (issue #51): a stable identifier, the method Heard and, with a location, the
-    /// rarity snapshot for its place and week (issue #52), placed in its set as the collection will place it (#54).
+    /// sighting is collected from the start (issue #51): a stable identifier, the method Heard and, with a location, the
+    /// rarity snapshot for its place and week (issue #52), placed in its set as the collection will place it (#54),
+    /// and either sewing its species' patch there or adding to it (#132).
     @discardableResult
     func record(
         _ candidate: Candidate,
@@ -47,7 +51,8 @@ final class SightingRecorder {
         let speciesID = candidate.species.birdnetLabel
         let context = container.mainContext
         let surviving = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))
-        let isLegendary = CardCollection(sightings: surviving).addMakesLegendary(speciesID: speciesID)
+        let sets = sets()
+        let existing = CardCollection(sightings: surviving, sets: sets).count(ofSpeciesID: speciesID, at: location)
         let sighting = Sighting(
             speciesID: speciesID,
             confirmedAt: confirmedAt,
@@ -60,7 +65,7 @@ final class SightingRecorder {
         sighting.rarity = raritySnapshot(scientificName: candidate.species.scientificName, location: location, at: confirmedAt)
         context.insert(sighting)
         try context.save()
-        return Recorded(sighting: sighting, isLegendary: isLegendary, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets()))
+        return Recorded(sighting: sighting, sewsPatch: existing == 0, patchCount: existing + 1, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets))
     }
 
     /// Gives each sighting saved before rarity existed its snapshot from its saved coordinate and date, once per album

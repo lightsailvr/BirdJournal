@@ -4,23 +4,18 @@ import Pack
 import SwiftUI
 
 /// The collectible cards' tokens (issue #116, Featherguild design guide pages 5–9). A card is an ivory object in both
-/// appearances, the same anatomy on every species: teal ink, a teal outer edge with a fine inner keyline, and a gold
-/// perimeter only on a Legendary card (the personal first; gold never marks rarity, which is said in words). The face
+/// appearances, the same anatomy on every species: teal ink, a teal outer edge with a fine inner keyline. Since #132
+/// (design guide 2.0) there is no Legendary and no gold: every patch is the one patch, and rarity is said in words. The face
 /// sets its subtree to the light scheme (`CardSurface`), so the system controls on its back draw for ivory and the
 /// page tokens read on it. Pack art keeps its natural colours on it.
 extension Color {
-    /// Legendary text and marks: #7A5A1E on light surfaces and the card face (issue #119 darkened #116's #7F5E20, which
-    /// measured 4.4:1 under the feed's Legendary mark on the gold wash), #D3B475 on the dark page.
-    static let goldInk = Color("CollectibleGoldInk")
-    /// The quiet gold ground of the first-discovery moment.
-    static let goldWash = Color("CollectibleGoldWash")
     /// The card face: warm ivory, the paper the pack paintings are painted on; fixed in both appearances.
     static let cardFace = Color("CollectibleFace")
     /// Text on the card face: deep teal (11:1 on the face).
     static let cardInk = Color("CollectibleInk")
     /// Supporting text on the card face (5.5:1).
     static let cardInkSecondary = Color("CollectibleInkSecondary")
-    /// The outer edge and edition line of a card that is not Legendary.
+    /// The outer edge and the edition line.
     static let cardEdge = Color("CollectibleEdge")
     /// The botanical sprigs in the face's corners: decoration, never information.
     static let cardSprig = Color("CollectibleSprig")
@@ -35,31 +30,18 @@ enum CollectibleLayout {
     /// fills it.
     static let artAspectRatio: CGFloat = 1
     static let artRadius: CGFloat = 8
-    /// The outer edge: gold on a Legendary card, teal otherwise.
-    static func edgeWidth(isLegendary: Bool) -> CGFloat { isLegendary ? 5 : 2.5 }
+    /// The teal outer edge.
+    static let edgeWidth: CGFloat = 2.5
 }
 
-/// The Legendary perimeter: the guide's two golds blended around the card, still (no glint, no motion).
-extension ShapeStyle where Self == AngularGradient {
-    static var legendaryFoil: AngularGradient {
-        AngularGradient(
-            colors: [0xD3B475, 0x9A7432, 0xE2CB91, 0xA9843E, 0xD3B475].map { hex in
-                Color(red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
-            },
-            center: .center
-        )
-    }
-}
-
-/// A card's surface: the ivory face, the outer edge (gold on a Legendary card, teal otherwise), a fine inner keyline,
-/// and, on a front, a sprig in each top corner (drawn on the face, behind the content). Everything inside reads in the light scheme, whatever the app's.
+/// A card's surface: the ivory face, the teal outer edge, a fine inner keyline, and, on a front, a sprig in each top
+/// corner (drawn on the face, behind the content). Everything inside reads in the light scheme, whatever the app's.
 struct CardSurface: ViewModifier {
-    let isLegendary: Bool
     var sprigs: CGFloat? = 22
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: CollectibleLayout.cardRadius, style: .continuous)
-        let edge = CollectibleLayout.edgeWidth(isLegendary: isLegendary)
+        let edge = CollectibleLayout.edgeWidth
         let inset = edge + 3
         content
             .frame(maxWidth: .infinity, alignment: .top)
@@ -77,12 +59,12 @@ struct CardSurface: ViewModifier {
             .background(Color.cardFace, in: shape)
             .overlay {
                 RoundedRectangle(cornerRadius: max(CollectibleLayout.cardRadius - inset, 3), style: .continuous)
-                    .strokeBorder(isLegendary ? Color.goldInk.opacity(0.6) : Color.cardEdge.opacity(0.35), lineWidth: 0.75)
+                    .strokeBorder(Color.cardEdge.opacity(0.35), lineWidth: 0.75)
                     .padding(inset)
                     .accessibilityHidden(true)
             }
             .overlay {
-                shape.strokeBorder(isLegendary ? AnyShapeStyle(.legendaryFoil) : AnyShapeStyle(Color.cardEdge), lineWidth: edge)
+                shape.strokeBorder(Color.cardEdge, lineWidth: edge)
                     .accessibilityHidden(true)
             }
             .environment(\.colorScheme, .light)
@@ -109,53 +91,16 @@ nonisolated struct BotanicalSprig: Shape {
     }
 }
 
-/// "Legendary · Your first" in the guide's gold: the words carry it, never a glint. On a tile too narrow for the whole
-/// line it says "Legendary" (VoiceOver still hears "your first", from the tile's label).
-struct LegendaryLabel: View {
-    var compact = false
-
-    var body: some View {
-        if compact {
-            ViewThatFits(in: .horizontal) {
-                line(CardHeading.legendaryTitle)
-                line("Legendary")
-            }
-        } else {
-            line(CardHeading.legendaryTitle)
-        }
-    }
-
-    private func line(_ text: String) -> some View {
-        Text(text)
-            .textCase(.uppercase)
-            .font(compact ? CardFont.editionCompact : CardFont.edition)
-            .tracking(compact ? CardFont.editionCompactTracking : CardFont.editionTracking)
-            .foregroundStyle(Color.goldInk)
-            // A tile keeps one line (and falls back to "Legendary"); the card's front wraps it at the largest sizes
-            // rather than cutting it to "LEGENDA…" (issue #119).
-            .lineLimit(compact ? 1 : nil)
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: !compact)
-    }
-}
-
-/// The card's top line (issues #54 and #116): "Legendary · Your first" in gold on the birder's first of a species,
-/// else the set's edition ("Citrus edition", or "Uncharted") in teal, in small capitals, centred. The collector number
-/// sits in the footer (`CardFooter`). An Uncharted card has no number; a Legendary one says "Uncharted" where the
-/// number would be, since its label names no set.
+/// The card's top line (issues #54 and #116): the set's edition ("Citrus edition", or "Uncharted") in teal, in small
+/// capitals, centred. The collector number sits in the footer (`CardFooter`); an Uncharted card has none.
 struct CardHeading: View {
-    static let legendaryTitle = "Legendary · Your first"
-
-    let isLegendary: Bool
     /// Nil until the collection has placed the card.
     let placement: CardPlacement?
     var compact = false
 
     var body: some View {
         Group {
-            if isLegendary {
-                LegendaryLabel(compact: compact)
-            } else if let placement {
+            if let placement {
                 Text(placement.editionLabel)
                     .textCase(.uppercase)
                     .font(compact ? CardFont.editionCompact : CardFont.edition)
@@ -167,20 +112,17 @@ struct CardHeading: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    static func numberText(isLegendary: Bool, placement: CardPlacement?) -> String? {
-        guard let placement else { return nil }
-        if case .numbered = placement { return placement.collectorNumber }
-        return isLegendary ? placement.collectorNumber : nil
+    static func numberText(placement: CardPlacement?) -> String? {
+        guard let placement, case .numbered = placement else { return nil }
+        return placement.collectorNumber
     }
 
-    /// The heading for VoiceOver: "Legendary, your first" or the edition, then "number 21 of 160 in Los Angeles", or
-    /// "Uncharted".
-    static func accessibilityText(isLegendary: Bool, placement: CardPlacement?) -> [String?] {
-        let edition = isLegendary ? "Legendary, your first" : placement.map(\.editionLabel)
-        guard let placement else { return [edition] }
+    /// The heading for VoiceOver: the edition, then "number 21 of 160 in Los Angeles"; or "Uncharted".
+    static func accessibilityText(placement: CardPlacement?) -> [String?] {
+        guard let placement else { return [nil] }
         switch placement {
-        case .numbered(_, let setName, _, let number, let total): return [edition, "number \(number) of \(total) in \(setName)"]
-        case .uncharted: return isLegendary ? [edition, CardPlacement.unchartedTitle] : [edition]
+        case .numbered(_, let setName, let edition, let number, let total): return [edition, "number \(number) of \(total) in \(setName)"]
+        case .uncharted: return [CardPlacement.unchartedTitle]
         }
     }
 }
@@ -192,7 +134,7 @@ struct CardFooter: View {
     let line: String
     /// "Common here in mid October", or that there is none; nil on a tile.
     var rarity: String? = nil
-    /// "085/160", or "Uncharted" on a Legendary card outside every set.
+    /// "085/160"; nil outside every set.
     let number: String?
     /// What VoiceOver says for the number.
     var numberLabel: String? = nil
@@ -280,14 +222,16 @@ enum LoreExcerpt {
     }
 }
 
-/// One card of the collection as a thumbnail (issues #51 and #116): the Legendary label or the set's edition, the
-/// name, the painting, the story title when the pack has one, and the date with Heard or Seen and the collector number.
-/// No paragraph: the tale is read on the opened card. The art is `CardText.Art`'s, labelled as what it is (issue #57).
+/// One card of the collection as a thumbnail (issues #51 and #116): the set's edition, the name, the painting, the
+/// story title when the pack has one, and the date with Heard or Seen and the collector number. As a patch's tile
+/// (issue #132) its footer says how often the bird was seen there and since when. No paragraph: the tale is read on the
+/// opened card. The art is `CardText.Art`'s, labelled as what it is (issue #57).
 struct CardTile: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
-    let isLegendary: Bool
     let placement: CardPlacement?
+    /// The patch the tile stands for, nil for one sighting's card.
+    var patch: CardCollection.Patch? = nil
     /// The story title in place of the pack's (#113, `PackLore.title`); nil reads the pack's.
     var storyTitle: String? = nil
 
@@ -298,7 +242,7 @@ struct CardTile: View {
     var body: some View {
         let name = library.commonName(for: sighting)
         VStack(spacing: 6) {
-            CardHeading(isLegendary: isLegendary, placement: placement, compact: true)
+            CardHeading(placement: placement, compact: true)
                 .padding(.horizontal, 14)
             Text(name)
                 .font(CardFont.tileName)
@@ -314,23 +258,35 @@ struct CardTile: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             CardFooter(
-                line: CardFooter.line(place: nil, date: sighting.confirmedAt, method: sighting.method),
-                number: CardHeading.numberText(isLegendary: isLegendary, placement: placement)
+                line: patch.map(Self.patchLine) ?? CardFooter.line(place: nil, date: sighting.confirmedAt, method: sighting.method),
+                number: CardHeading.numberText(placement: placement)
             )
         }
-        .modifier(TileFrame(isLegendary: isLegendary))
+        .modifier(TileFrame())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
     }
 
     private var accessibilityText: String {
-        ([library.commonName(for: sighting), title] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
+        ([library.commonName(for: sighting), title] + CardHeading.accessibilityText(placement: placement) + (patch.map(Self.patchAccessibility) ?? [
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
+        ]) + [
             CardArtView.art(for: sighting, library: library, setID: placement?.setID).label,
         ])
         .compactMap { $0 }
         .joined(separator: ", ")
+    }
+
+    /// "Seen 8 times · since Sep 14, 2026", or "Seen once · Nov 3, 2026".
+    static func patchLine(_ patch: CardCollection.Patch) -> String {
+        let date = patch.sewn.confirmedAt.formatted(date: .abbreviated, time: .omitted)
+        return patch.count == 1 ? "\(patch.countText) · \(date)" : "\(patch.countText) · since \(date)"
+    }
+
+    /// "seen 8 times, sewn September 14, 2026".
+    static func patchAccessibility(_ patch: CardCollection.Patch) -> [String?] {
+        ["seen \(CardCollection.Patch.times(patch.count))", "sewn \(patch.sewn.confirmedAt.formatted(date: .long, time: .omitted))"]
     }
 }
 
@@ -338,7 +294,6 @@ struct CardTile: View {
 /// from a gallery. A gallery's tiles (`isSelected` set) keep room for the ring whether or not it shows, so every tile
 /// is the same size.
 private struct TileFrame: ViewModifier {
-    let isLegendary: Bool
     var isSelected: Bool?
 
     func body(content: Content) -> some View {
@@ -346,7 +301,7 @@ private struct TileFrame: ViewModifier {
         content
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
-            .modifier(CardSurface(isLegendary: isLegendary, sprigs: 16))
+            .modifier(CardSurface(sprigs: 16))
             .padding(isSelected == nil ? 0 : 4)
             .overlay {
                 if isSelected == true {
@@ -358,20 +313,18 @@ private struct TileFrame: ViewModifier {
     }
 }
 
-/// One tile of a species gallery (issue #53): the Legendary label on the birder's first or the set's edition, the art,
-/// and what tells two cards of one bird apart: the place, the date and time, Heard or Seen, and the collector number.
+/// One tile of a species gallery (issue #53): the set's edition, the art, and what tells two cards of one bird apart: the place, the date and time, Heard or Seen, and the collector number.
 struct GalleryTile: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
     /// The gallery's place for the card, nil for "Place not recorded".
     let place: String?
-    let isLegendary: Bool
     let placement: CardPlacement?
     let isSelected: Bool
 
     var body: some View {
         VStack(spacing: 6) {
-            CardHeading(isLegendary: isLegendary, placement: placement, compact: true)
+            CardHeading(placement: placement, compact: true)
                 .padding(.horizontal, 14)
             CardArtView(art: CardArtView.art(for: sighting, library: library, setID: placement?.setID), commonName: library.commonName(for: sighting))
             VStack(alignment: .leading, spacing: 2) {
@@ -384,7 +337,7 @@ struct GalleryTile: View {
                 Text("\(sighting.confirmedAt.formatted(date: .omitted, time: .shortened)) · \(sighting.method.title)")
                     .font(CardFont.footer)
                     .foregroundStyle(Color.cardInkSecondary)
-                if let number = CardHeading.numberText(isLegendary: isLegendary, placement: placement) {
+                if let number = CardHeading.numberText(placement: placement) {
                     Text(number)
                         .font(CardFont.footer.monospacedDigit())
                         .foregroundStyle(Color.cardInkSecondary)
@@ -393,7 +346,7 @@ struct GalleryTile: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
         }
-        .modifier(TileFrame(isLegendary: isLegendary, isSelected: isSelected))
+        .modifier(TileFrame(isSelected: isSelected))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
     }
@@ -403,7 +356,7 @@ struct GalleryTile: View {
             place ?? SpeciesGallery.PlaceFilter.notRecorded.title,
             sighting.confirmedAt.formatted(date: .long, time: .shortened),
             sighting.method.title,
-        ] + CardHeading.accessibilityText(isLegendary: isLegendary, placement: placement) + [
+        ] + CardHeading.accessibilityText(placement: placement) + [
             CardArtView.art(for: sighting, library: library, setID: placement?.setID).label,
         ])
         .compactMap { $0 }

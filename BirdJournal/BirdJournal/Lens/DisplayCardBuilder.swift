@@ -70,9 +70,9 @@ enum DisplayCardBuilder {
                 Button(label: button.label, style: .primary, iconName: .checkmark) { onAction(button.action) }
                     .actionRole(.primary)
             }
-        case .saved(let text, let legendary):
+        case .saved(let text):
             return FlexBox(direction: .row, spacing: 8, crossAlignment: .center) {
-                Icon(name: legendary ? .star : .checkmarkCircle, style: .filled)
+                Icon(name: .checkmarkCircle, style: .filled)
                 Text(text, style: .body)
             }
         case .list(let rows):

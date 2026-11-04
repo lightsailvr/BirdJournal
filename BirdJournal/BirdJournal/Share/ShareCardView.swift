@@ -41,9 +41,10 @@ struct ShareCardView: View {
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "share")
 
     private var collection: CardCollection { library.collection(of: sightings) }
-    private var isLegendary: Bool { collection.isLegendary(sighting.identifier) }
+    /// Whether this sighting sewed its patch: what the find's flag carries until #136 renames it.
+    private var sewedPatch: Bool { collection.sewedItsPatch(sighting.identifier) }
     private var input: FindPolicy.Input {
-        FindOutbox.input(of: sighting, isLegendary: outbox.publishedLegendary(sighting.identifier) ?? isLegendary, packs: library, places: places)
+        FindOutbox.input(of: sighting, isLegendary: outbox.publishedLegendary(sighting.identifier) ?? sewedPatch, packs: library, places: places)
     }
     private var place: String? { FindPolicy.sharedPlace(for: input, choices: choices) }
     private var hasNote: Bool { !(sighting.note ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -78,7 +79,7 @@ struct ShareCardView: View {
 
     private var face: some View {
         CardFront(
-            sighting: sighting, isLegendary: isLegendary, placement: collection.placement(of: sighting.identifier), place: place,
+            sighting: sighting, placement: collection.placement(of: sighting.identifier), place: place,
             art: faceArt, artImage: artImage
         )
         .environment(library)

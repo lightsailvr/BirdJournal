@@ -151,13 +151,13 @@ struct BirdJournalApp: App {
         )
     }
 
-    /// Scene art (issue #68): each add's job carries whether its card is Legendary and its set's edition, read from the
-    /// collection at the moment the job is created.
+    /// Scene art (issue #68): each add's job carries whether it sewed its patch (the field keeps its Legendary name
+    /// until #137 retires scene art) and its set's edition, read from the collection at the moment the job is created.
     private static func makeArtJobs(account: AccountSession, frames: FrameStore, album: ModelContainer, packs: PackLibrary) -> ArtJobs {
         let art = ArtJobs.forApp(account: account, frames: frames, container: album)
         art.cardFacts = { sighting in
             let collection = packs.collection(of: (try? album.mainContext.fetch(FetchDescriptor<Sighting>())) ?? [])
-            return ArtJobs.CardFacts(legendary: collection.isLegendary(sighting.identifier), edition: collection.placement(of: sighting.identifier)?.setID)
+            return ArtJobs.CardFacts(legendary: collection.sewedItsPatch(sighting.identifier), edition: collection.placement(of: sighting.identifier)?.setID)
         }
         return art
     }

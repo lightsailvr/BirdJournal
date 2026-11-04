@@ -21,15 +21,15 @@ final class GalleryUITests: XCTestCase {
     private func filterToSixCardPlace(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) -> String {
         let title = app.staticTexts["gallery-title"]
         XCTAssertTrue(title.waitForExistence(timeout: 15), "no gallery; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
-        XCTAssertEqual(title.label, "House Finch · 15 cards · 2 places", file: file, line: line)
-        XCTAssertEqual(app.staticTexts["gallery-count"].label, "15 cards", file: file, line: line)
+        XCTAssertEqual(title.label, "House Finch · 15 sightings · 2 places", file: file, line: line)
+        XCTAssertEqual(app.staticTexts["gallery-count"].label, "15 sightings", file: file, line: line)
 
         app.buttons["gallery-place"].tap()
         let place = app.buttons.matching(NSPredicate(format: "label ENDSWITH ' · 6'")).firstMatch
         XCTAssertTrue(place.waitForExistence(timeout: 5), "no place with six cards; screen: \(app.debugDescription.prefix(4000))", file: file, line: line)
         let name = String(place.label.dropLast(" · 6".count))
         place.tap()
-        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 cards", timeout: 5), "the filter did not apply; screen: \(app.debugDescription.prefix(4000))", file: file, line: line)
+        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 sightings", timeout: 5), "the filter did not apply; screen: \(app.debugDescription.prefix(4000))", file: file, line: line)
         XCTAssertEqual(app.buttons["gallery-place"].value as? String, name, file: file, line: line)
         return name
     }
@@ -74,7 +74,7 @@ final class GalleryUITests: XCTestCase {
 
         // Back: the filter as it was, and the card last shown marked.
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 cards", timeout: 5), "Back lost the filter; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 sightings", timeout: 5), "Back lost the filter; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(app.buttons["gallery-place"].value as? String, place)
         let selected = tiles(app).matching(NSPredicate(format: "isSelected == true"))
         XCTAssertEqual(selected.count, 1, "one card marked as the last shown")
@@ -86,7 +86,7 @@ final class GalleryUITests: XCTestCase {
         XCTAssertTrue(all.waitForExistence(timeout: 10))
         if !all.isHittable { app.swipeUp() }
         all.tap()
-        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 cards", timeout: 5), "All encounters lost the filter; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["gallery-count"].waitForLabel("6 of 15 sightings", timeout: 5), "All encounters lost the filter; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(app.state, .runningForeground)
     }
 

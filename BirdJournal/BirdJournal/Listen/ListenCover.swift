@@ -183,13 +183,13 @@ struct LocalSetSection: View {
                 LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
                     ForEach(latest) { sighting in
                         NavigationLink(value: Route.card(sighting.persistentModelID)) {
-                            CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier), placement: collection.placement(of: sighting.identifier))
+                            CardTile(sighting: sighting, placement: collection.placement(of: sighting.identifier), patch: collection.patch(of: sighting.identifier))
                         }
                         .buttonStyle(.plain)
                     }
                 }
             } else {
-                Text("Birds you add while listening become cards here, one for every sighting.")
+                Text("Birds you add while listening are sewn as patches here, one for every bird in every place.")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
             }

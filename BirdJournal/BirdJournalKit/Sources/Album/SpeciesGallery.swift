@@ -126,9 +126,9 @@ public struct SpeciesGallery: Sendable, Equatable {
         return named + unplaced
     }
 
-    /// "15 cards", or "6 of 15 cards" under a filter.
+    /// "15 sightings", or "6 of 15 sightings" under a filter.
     public var shownText: String {
-        isFiltered ? "\(shown.count) of \(cardCount) cards" : "\(cardCount) \(cardCount == 1 ? "card" : "cards")"
+        isFiltered ? "\(shown.count) of \(cardCount) sightings" : "\(cardCount) \(cardCount == 1 ? "sighting" : "sightings")"
     }
 
     public var cardCount: Int { cards.count }
@@ -139,9 +139,9 @@ public struct SpeciesGallery: Sendable, Equatable {
     /// When the earliest card was made.
     public var firstDiscovery: Date? { cards.map(\.confirmedAt).min() }
 
-    /// "House Finch · 15 cards · 2 places"; the places are left out when none was recorded.
+    /// "House Finch · 15 sightings · 2 places"; the places are left out when none was recorded.
     public func title(commonName: String) -> String {
-        var parts = [commonName, "\(cardCount) \(cardCount == 1 ? "card" : "cards")"]
+        var parts = [commonName, "\(cardCount) \(cardCount == 1 ? "sighting" : "sightings")"]
         if placeCount > 0 { parts.append("\(placeCount) \(placeCount == 1 ? "place" : "places")") }
         return parts.joined(separator: " · ")
     }

@@ -91,7 +91,7 @@ private struct GalleryContents: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// The species' sightings.
     let ofSpecies: [Sighting]
-    /// The whole collection, which decides the Legendary card.
+    /// The whole collection, which places each card.
     let collection: CardCollection
     let commonName: String
     @Bindable var browse: GalleryBrowse
@@ -160,7 +160,7 @@ private struct GalleryContents: View {
                     if let sighting = byIdentifier[card.identifier] {
                         NavigationLink(value: Route.card(sighting.persistentModelID, browse: browse)) {
                             GalleryTile(
-                                sighting: sighting, place: card.place, isLegendary: collection.isLegendary(card.identifier),
+                                sighting: sighting, place: card.place,
                                 placement: collection.placement(of: card.identifier), isSelected: browse.selected == card.identifier
                             )
                         }
@@ -185,7 +185,7 @@ private struct NoMatches: View {
             Text("No encounters here yet")
                 .font(JournalFont.heading)
                 .foregroundStyle(Color.ink)
-            Text("None of this bird's cards were made at this place.")
+            Text("None of this bird's sightings were made at this place.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
             Button("Clear filters", action: clear)
@@ -211,7 +211,7 @@ private struct NoCardsYet: View {
                 AttributedImage(pack: reference.pack, photo: photo)
                     .padding(.top, 4)
             }
-            Text("No cards of \(commonName) yet")
+            Text("No sightings of \(commonName) yet")
                 .font(JournalFont.section)
                 .foregroundStyle(Color.ink)
                 .padding(.top, 14)
@@ -219,7 +219,7 @@ private struct NoCardsYet: View {
             Text(scientificName)
                 .font(JournalFont.scientific)
                 .foregroundStyle(Color.inkSecondary)
-            Text("Add this bird when you hear it on a run, and every sighting of it becomes a card here.")
+            Text("Add this bird when you hear it on a run. Its first sighting in a place sews its patch there, and every sighting after adds to its count.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 12)

@@ -69,7 +69,7 @@ struct CircleGoalsSection: View {
             Text("Goals")
         } footer: {
             if goals?.contains(where: { $0.kind == .custom }) == true {
-                Text("Goals count different species, not repeat cards, among everyone's finds.")
+                Text("Goals count different species, not repeat sightings, among everyone's finds.")
             }
         }
         .listRowBackground(Color.raised)
@@ -89,7 +89,7 @@ struct CircleGoalsSection: View {
 
 /// This month's goal, in the lavender of shared goals (design guide pages 3 and 13): the month, a calm headline from
 /// the target ("Fourteen birds, together."), a bar, "9 of 14 species" and "5 still to discover", or that it's reached.
-/// No countdown and no leaderboard; never gold, which is the personal Legendary's.
+/// No countdown and no leaderboard, and no gold.
 struct MonthlyGoalCard: View {
     let goal: CircleGoal
 
@@ -283,7 +283,7 @@ struct NewGoalSheet: View {
                 } header: {
                     Text("Target")
                 } footer: {
-                    Text("Different species among everyone's finds; repeat cards count once.")
+                    Text("Different species among everyone's finds; repeat sightings count once.")
                 }
                 Section("Days") {
                     DatePicker("First day", selection: $start, in: Date.now.addingTimeInterval(-365 * 86_400)..., displayedComponents: .date)
