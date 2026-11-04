@@ -9,7 +9,8 @@ import UniformTypeIdentifiers
 
 // Issue #66 and #136 (guide 2.0 page 8): the system share sends the patch on linen with its paper card. The exported image
 // carries its pixels and nothing else (no Exif, GPS or TIFF metadata, checked with ImageIO as the postcard was); the patch
-// is lit by the shader from a fixed upper-left light, whatever the phone's tilt; and the card says only what the share may.
+// is lit by the shader from a fixed upper-left light (a tilt can't reach it: `PatchLightPixelTests`, which owns the shared
+// light); and the card says only what the share may.
 @Suite("Share card", .serialized)
 @MainActor
 struct ShareCardTests {
@@ -87,19 +88,10 @@ struct ShareCardTests {
         #expect(PatchLightPixelTests.meanChange(upperLeft.bytes, lowerRight.bytes) >= 3, "the light has to show in the exported pixels")
     }
 
-    @Test("the image's light is fixed upper-left: the shadow falls lower-right and a tilt changes nothing")
-    func fixedUpperLeftLight() async throws {
-        let (facts, loaded) = try await Self.bundledPatch()
-        let image = PatchShareImage(facts: facts, edition: Self.la, loaded: loaded)
-        PatchLight.shared.restart()
-        let before = try Self.rgba(try #require(CardExport.render(image, scale: 2)).image)
-        defer { PatchLight.shared.restart() }
-        // The first reading is "as held"; the tilt is from there.
-        PatchLight.shared.take(PatchLightTests.gravity())
-        for _ in 0..<120 { PatchLight.shared.take(PatchLightTests.gravity(rightEdgeDown: 30, topEdgeUp: 20)) }
-        #expect(PatchLight.shared.direction != PatchLightModel.rest, "the phone's light did move")
-        let after = try Self.rgba(try #require(CardExport.render(image, scale: 2)).image)
-        #expect(PatchLightPixelTests.meanChange(before.bytes, after.bytes) == 0, "a tilt never reaches the image")
+    @Test("the image's light is upper-left: the shadow falls lower-right")
+    func upperLeftLight() async throws {
+        let (_, loaded) = try await Self.bundledPatch()
+        #expect(PatchShareImage.light == PatchLightModel.rest)
 
         // Just outside the round patch on white: darker to the lower right, where the shadow falls, than the upper left.
         let lit = try Self.rgba(Self.litPatch(loaded, light: PatchShareImage.light))
