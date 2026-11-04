@@ -310,13 +310,37 @@ def _patch_artist(args: argparse.Namespace, definition: PackDefinition):
     """The patch step (#133) for a pack whose edition has a patch in art/patch-prompts.json and whose pack art's lock
     names its reference birds; None otherwise (the pack keeps its pack art until its references exist)."""
     from packbuilder.comfy import ComfyClient
-    from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
-    from packbuilder.patch_art import LOCK_FILE, PatchArtist, PatchLock, PatchPrompts
+    from packbuilder.pack_art import LOCK_FILE as ART_LOCK
+    from packbuilder.patch_art import PatchPrompts
 
     if definition.id not in PatchPrompts.load().editions or not (args.definition / ART_LOCK).exists():
         return None
-    return PatchArtist(ComfyClient(args.comfy), pack_id=definition.id, lock=PatchLock.load(args.definition / LOCK_FILE),
-                       art_lock=ArtLock.load(args.definition / ART_LOCK), cache_dir=args.cache / "art")
+    return _make_patch_artist(args, definition, ComfyClient(args.comfy))
+
+
+def _make_patch_artist(args: argparse.Namespace, definition: PackDefinition, client):
+    """The patch step over the pack's locks, with each species' setting, pinned reference and markings from overrides.json,
+    and the detector found only if a pinned reference has to be isolated."""
+    from packbuilder.definition import load_overrides
+    from packbuilder.detector import BirdDetector, ensure_model
+    from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
+    from packbuilder.patch_art import LOCK_FILE, PatchArtist, PatchLock, PatchPin
+
+    overrides = load_overrides(args.definition / "overrides.json")
+    pins = {
+        entry.id: PatchPin.from_art(data["art"])
+        for entry in definition.species
+        if isinstance(data := overrides.get(entry.scientific_name), dict) and isinstance(data.get("art"), dict)
+    }
+
+    def find_bird(image):
+        detections = BirdDetector(ensure_model(args.cache)).detect(image)
+        if not detections:
+            raise ValueError("no bird detected in the pinned reference photo")
+        return max(detections, key=lambda d: d.score).box
+
+    return PatchArtist(client, pack_id=definition.id, lock=PatchLock.load(args.definition / LOCK_FILE), art_lock=ArtLock.load(args.definition / ART_LOCK),
+                       cache_dir=args.cache / "art", pins=pins, originals=args.cache / "photos" / "original", find_bird=find_bird)
 
 
 def _art_sheets_path(pack_id: str) -> Path:
@@ -326,14 +350,11 @@ def _art_sheets_path(pack_id: str) -> Path:
 def _patches(args: argparse.Namespace) -> int:
     """The patches alone (issue #133): each species painted from the reference bird its pack art was painted from."""
     from packbuilder.comfy import ComfyClient
-    from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
-    from packbuilder.patch_art import LOCK_FILE, PatchArtist, PatchLock
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     definition = PackDefinition.load(args.definition / "pack.json")
     species = [entry.id for entry in definition.species if not args.only or entry.id in args.only]
-    artist = PatchArtist(ComfyClient(args.comfy), pack_id=definition.id, lock=PatchLock.load(args.definition / LOCK_FILE),
-                         art_lock=ArtLock.load(args.definition / ART_LOCK), cache_dir=args.cache / "art")
+    artist = _make_patch_artist(args, definition, ComfyClient(args.comfy))
     patches = artist.paint(species)
     sheets = artist.sheets(species, patches, args.sheets or _art_sheets_path(definition.id) / "patches")
     print(f"{definition.id} patches: {artist.painted} painted; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)

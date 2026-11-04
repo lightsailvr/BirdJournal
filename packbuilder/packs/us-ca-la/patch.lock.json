@@ -1,5 +1,5 @@
 {
-  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json), the workflow and patch prompts versions, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
   "species": {
     "actitis-macularius": {
       "common_name": "Spotted Sandpiper",
@@ -225,57 +225,71 @@
     },
     "anarhynchus-nivosus": {
       "common_name": "Snowy Plover",
-      "seed": 4093719943,
+      "seed": 2198209809,
       "dark": false,
       "measure": {
-        "iou": 0.939,
-        "dE_mean": 13.2,
-        "dE_p95": 21.0,
-        "dL": -6.2,
-        "dC": 6.9,
+        "iou": 0.909,
+        "dE_mean": 12.8,
+        "dE_p95": 21.7,
+        "dL": -5.6,
+        "dC": 5.8,
         "faithful": false
       },
-      "sha256": "58c67ddd19dbdb3e4fb3d712ff00c30461ee8aa017aeeeb063986a6865cc977d",
+      "card_at_edge": 0.0004,
+      "attempts": 1,
+      "sha256": "240e289c2590054f637c58ace7d60185a59389b633b2a744f3d93d312117a662",
       "photos": [
         357592335
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        4093719943
+      ],
+      "why": "a beach bird: on the ground"
     },
     "anas-crecca": {
       "common_name": "Eurasian Teal",
-      "seed": 3453793620,
+      "seed": 3134948802,
       "dark": false,
       "measure": {
-        "iou": 0.875,
-        "dE_mean": 9.6,
-        "dE_p95": 18.8,
-        "dL": -4.2,
-        "dC": 5.1,
+        "iou": 0.949,
+        "dE_mean": 8.9,
+        "dE_p95": 14.8,
+        "dL": -3.0,
+        "dC": 7.1,
         "faithful": true
       },
-      "sha256": "4faeab0df4769b48ab128852ce2194fa2b46f836f61bd5cdafbfedc4baef339b",
+      "card_at_edge": 0.0006,
+      "attempts": 1,
+      "sha256": "88dd573ae4f622f59c0d2617ed36a8cce7372188535df86f9c33d366b9a35766",
       "photos": [
         101505879
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        3453793620
+      ],
+      "why": "needs water"
     },
     "anas-platyrhynchos": {
       "common_name": "Mallard",
@@ -507,30 +521,37 @@
     },
     "aythya-collaris": {
       "common_name": "Ring-necked Duck",
-      "seed": 3819135890,
+      "seed": 2493797124,
       "dark": false,
       "measure": {
-        "iou": 0.691,
-        "dE_mean": 15.2,
-        "dE_p95": 34.3,
-        "dL": -3.2,
-        "dC": 3.1,
+        "iou": 0.754,
+        "dE_mean": 32.6,
+        "dE_p95": 64.2,
+        "dL": 4.1,
+        "dC": 11.4,
         "faithful": false
       },
-      "sha256": "11cc1d000210d52f8a0bafcc2175c74db0826a3669f1cac6213360dd05099d8d",
+      "card_at_edge": 0.0003,
+      "attempts": 1,
+      "sha256": "8c895422deccf7878ce4a2b4d1349a6ef074432e0553cc1a18794d4e56b34584",
       "photos": [
         176873736
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        3819135890
+      ],
+      "why": "a duck: needs water"
     },
     "baeolophus-inornatus": {
       "common_name": "Oak Titmouse",
@@ -675,30 +696,37 @@
     },
     "bucephala-albeola": {
       "common_name": "Bufflehead",
-      "seed": 1827190016,
+      "seed": 468682134,
       "dark": false,
       "measure": {
-        "iou": 0.587,
-        "dE_mean": 42.4,
-        "dE_p95": 79.4,
-        "dL": -16.4,
-        "dC": 0.3,
+        "iou": 0.649,
+        "dE_mean": 41.0,
+        "dE_p95": 74.8,
+        "dL": -15.0,
+        "dC": 3.2,
         "faithful": false
       },
-      "sha256": "d4423525064b7c5a8c65d16d21b36e8e9ae2a5b534bb6464bbe143e41694fcb2",
+      "card_at_edge": 0.0003,
+      "attempts": 1,
+      "sha256": "96a652d395db85949a6f54e57845e483abf95919218c0f192f4d37ae616371b6",
       "photos": [
         603992548
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        1827190016
+      ],
+      "why": "a duck: needs water"
     },
     "buteo-jamaicensis": {
       "common_name": "Red-tailed Hawk",
@@ -1302,57 +1330,73 @@
     },
     "corvus-brachyrhynchos": {
       "common_name": "American Crow",
-      "seed": 1165282571,
+      "seed": 846462365,
       "dark": false,
       "measure": {
-        "iou": 0.911,
-        "dE_mean": 13.9,
-        "dE_p95": 21.6,
-        "dL": 8.2,
-        "dC": 0.2,
+        "iou": 0.899,
+        "dE_mean": 19.9,
+        "dE_p95": 31.8,
+        "dL": -18.0,
+        "dC": -4.7,
         "faithful": false
       },
-      "sha256": "3ff01dbc40eae7f4cfc179ebf1eaa7713a9f21d7cd70c1ad6c6fe2608adb11c4",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "206a1a7af28d97c17e4cd442b39d6ee7d8b72751f1acda60a3687cfa26fd141f",
       "photos": [
         497351689
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white, grey or blue anywhere.",
+      "review": "pending",
+      "rejected_seeds": [
+        1165282571
+      ],
+      "why": "crows are all black"
     },
     "corvus-corax": {
       "common_name": "Northern Raven",
-      "seed": 3281970671,
+      "seed": 3029980537,
       "dark": true,
       "measure": {
-        "iou": 0.958,
-        "dE_mean": 25.7,
-        "dE_p95": 57.3,
-        "dL": 25.0,
-        "dC": 0.8,
-        "faithful": false
+        "iou": 0.904,
+        "dE_mean": 8.6,
+        "dE_p95": 22.0,
+        "dL": 7.2,
+        "dC": -0.2,
+        "faithful": true
       },
-      "sha256": "e4c301cfc2ca151f9e35d14fe1fd408257fc492ae49a9ba7d076a73eb7748108",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "149d28fb860ae8ef2e2159238c8b92f9a120228108735deaca3f0dce0b33f9d7",
       "photos": [
         604259110
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white or grey anywhere.",
+      "review": "pending",
+      "rejected_seeds": [
+        3281970671
+      ],
+      "why": "ravens are all black"
     },
     "cyanocitta-stelleri": {
       "common_name": "Steller's Jay",
@@ -1410,30 +1454,37 @@
     },
     "dryobates-pubescens": {
       "common_name": "Downy Woodpecker",
-      "seed": 2344683641,
+      "seed": 4240849135,
       "dark": false,
       "measure": {
-        "iou": 0.935,
-        "dE_mean": 8.0,
-        "dE_p95": 14.9,
-        "dL": 0.2,
-        "dC": 4.6,
-        "faithful": true
+        "iou": 0.95,
+        "dE_mean": 10.8,
+        "dE_p95": 19.6,
+        "dL": 1.5,
+        "dC": 5.8,
+        "faithful": false
       },
-      "sha256": "10f5ad07d63b4bdcee18268001f3d9234bf6bdd0484414d256850fd0dd0f7ad6",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "bb9194e8840acd03e1818f1676a7cda5830ca7e20bc7285b0cc20700864d9d9a",
       "photos": [
-        105628199
+        169830093
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "pending",
+      "rejected_seeds": [
+        2344683641
+      ],
+      "why": "a woodpecker: on tree bark"
     },
     "egretta-thula": {
       "common_name": "Snowy Egret",
@@ -1572,30 +1623,39 @@
     },
     "fulica-americana": {
       "common_name": "American Coot",
-      "seed": 3884366539,
+      "seed": 159964135,
       "dark": true,
       "measure": {
-        "iou": 0.733,
-        "dE_mean": 30.7,
-        "dE_p95": 67.2,
-        "dL": 18.2,
-        "dC": -2.3,
+        "iou": 0.511,
+        "dE_mean": 23.3,
+        "dE_p95": 42.2,
+        "dL": 5.6,
+        "dC": 2.4,
         "faithful": false
       },
-      "sha256": "90922cba2a599606026eb99fb6471ab988507ced9b7e3e6ce08ba873bb8a4408",
+      "card_at_edge": 0.0018,
+      "attempts": 1,
+      "sha256": "86b40718098e4c5a0fbfff9a136e0b2a0e40ab0fd149ed34fee0f6ab2b83c1f0",
       "photos": [
         597027262
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches.",
+      "review": "pending",
+      "rejected_seeds": [
+        3884366539,
+        2424408670
+      ],
+      "why": "pale chevrons on the body"
     },
     "geococcyx-californianus": {
       "common_name": "Greater Roadrunner",
@@ -1794,30 +1854,37 @@
     },
     "hydroprogne-caspia": {
       "common_name": "Caspian Tern",
-      "seed": 4063728028,
+      "seed": 2234556682,
       "dark": false,
       "measure": {
-        "iou": 0.889,
-        "dE_mean": 14.7,
-        "dE_p95": 21.6,
-        "dL": -5.5,
-        "dC": 6.4,
+        "iou": 0.863,
+        "dE_mean": 12.7,
+        "dE_p95": 22.0,
+        "dL": -1.8,
+        "dC": 2.3,
         "faithful": false
       },
-      "sha256": "3b18468e7a25540ec3cf4bd1005d033bb47260bb82962787a283fb222060bc17",
+      "card_at_edge": 0.0024,
+      "attempts": 1,
+      "sha256": "7878797fb17222782cfb4ef6fdd7b87aba83317787c1a4a4c06d062e9db5075b",
       "photos": [
         72492465
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        4063728028
+      ],
+      "why": "on the ground, not a branch"
     },
     "icterus-bullockii": {
       "common_name": "Bullock's Oriole",
@@ -1875,30 +1942,39 @@
     },
     "junco-hyemalis": {
       "common_name": "Dark-eyed Junco",
-      "seed": 3392305438,
+      "seed": 607918130,
       "dark": false,
       "measure": {
-        "iou": 0.707,
-        "dE_mean": 31.8,
-        "dE_p95": 55.2,
-        "dL": 5.8,
-        "dC": -6.1,
+        "iou": 0.91,
+        "dE_mean": 21.8,
+        "dE_p95": 38.8,
+        "dL": 12.6,
+        "dC": -10.1,
         "faithful": false
       },
-      "sha256": "f0b98890143185f7409caf9bd7179300b6cdf680aef9cbfa2a84a1dcc9191d84",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "9551a26441fb614e62a8a43112e86214b6a6624c5d06231da08f6822de7d5198",
       "photos": [
         740001274
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The hood, back, shoulders and wings are all one slate blue-grey, with no brown or tan on the back or shoulders; only the belly is pale.",
+      "review": "pending",
+      "rejected_seeds": [
+        3392305438,
+        3174386056
+      ],
+      "why": "the back and shoulder are still tan; they should be blue"
     },
     "lanius-ludovicianus": {
       "common_name": "Loggerhead Shrike",
@@ -1983,30 +2059,38 @@
     },
     "larus-heermanni": {
       "common_name": "Heermann's Gull",
-      "seed": 3881104573,
-      "dark": true,
+      "seed": 2421408811,
+      "dark": false,
       "measure": {
-        "iou": 0.598,
-        "dE_mean": 31.0,
-        "dE_p95": 61.9,
-        "dL": 29.5,
-        "dC": 2.8,
-        "faithful": false
+        "iou": 0.908,
+        "dE_mean": 8.8,
+        "dE_p95": 19.3,
+        "dL": 6.3,
+        "dC": 1.0,
+        "faithful": true
       },
-      "sha256": "99204aa9bd7c54901204519b308b06ff147535409a22633bdfefdc6fb61b7c25",
+      "card_at_edge": 0.0028,
+      "attempts": 1,
+      "sha256": "7850baa2980571d9c5c98756cbc1438e0d9d8d3b6dd5130aa478d819774b6a5c",
       "photos": [
-        639682377
+        572948025
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The head and chest are light grey, the wings a darker grey, and the bill is red with a black tip.",
+      "review": "pending",
+      "rejected_seeds": [
+        3881104573
+      ],
+      "why": "bad reference: light grey chest, darker grey wings, black-tipped bill"
     },
     "larus-occidentalis": {
       "common_name": "Western Gull",
@@ -2151,57 +2235,72 @@
     },
     "lophodytes-cucullatus": {
       "common_name": "Hooded Merganser",
-      "seed": 1854773118,
+      "seed": 428517352,
       "dark": false,
       "measure": {
-        "iou": 0.77,
-        "dE_mean": 20.2,
-        "dE_p95": 49.5,
-        "dL": -3.0,
-        "dC": 2.4,
+        "iou": 0.626,
+        "dE_mean": 39.7,
+        "dE_p95": 73.1,
+        "dL": -21.5,
+        "dC": 4.4,
         "faithful": false
       },
-      "sha256": "eb68d9d011cb72cc7156d1b4206dc32c879b34072e9dfa322f20f0eee80e66b9",
+      "card_at_edge": 0.0013,
+      "attempts": 1,
+      "sha256": "08ea6b8f17bb623dcb799df801e0671d9c36e38bdc10b498b4d61ceb5e7a7986",
       "photos": [
-        175110432
+        340591597
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        1854773118
+      ],
+      "why": "a duck: needs water and a better reference"
     },
     "mareca-americana": {
       "common_name": "American Wigeon",
-      "seed": 3234981677,
+      "seed": 3084310459,
       "dark": false,
       "measure": {
-        "iou": 0.506,
-        "dE_mean": 24.6,
-        "dE_p95": 42.6,
-        "dL": 9.4,
-        "dC": 1.1,
+        "iou": 0.814,
+        "dE_mean": 29.9,
+        "dE_p95": 50.5,
+        "dL": -2.4,
+        "dC": 10.4,
         "faithful": false
       },
-      "sha256": "706d70f4c3e4ffc12392daac114978d9c6f9537f129bd66057126fd81f007438",
+      "card_at_edge": 0.0012,
+      "attempts": 1,
+      "sha256": "746fac8a0d9fbbbb2eff3a3347eb1bdcc1876c5e6d15e643e747520168666c97",
       "photos": [
-        342127424
+        344944792
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The band sweeping back from the eye and the patch on the wing are iridescent green thread, not white.",
+      "review": "pending",
+      "rejected_seeds": [
+        3234981677
+      ],
+      "why": "a duck: green where the white is, and on water"
     },
     "mareca-strepera": {
       "common_name": "Gadwall",
@@ -2313,30 +2412,39 @@
     },
     "melanitta-perspicillata": {
       "common_name": "Surf Scoter",
-      "seed": 360727255,
+      "seed": 4220396539,
       "dark": true,
       "measure": {
-        "iou": 0.67,
-        "dE_mean": 25.8,
-        "dE_p95": 71.6,
-        "dL": 22.9,
-        "dC": 1.6,
+        "iou": 0.647,
+        "dE_mean": 15.7,
+        "dE_p95": 46.8,
+        "dL": 12.1,
+        "dC": 5.5,
         "faithful": false
       },
-      "sha256": "2bfe0db1101b51048382aa3c09992a63705b97bd0465b62182cf2381332b0b9f",
+      "card_at_edge": 0.0028,
+      "attempts": 1,
+      "sha256": "71c8bb73ae0de2d1d3fbf459b601dd2599b9988e311520428fc1b6db57c425f9",
       "photos": [
         593312066
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole body and wings are solid black, with no white or cream on them; the only white is on the forehead and the nape.",
+      "review": "pending",
+      "rejected_seeds": [
+        360727255,
+        1653043777
+      ],
+      "why": "a cream patch on the back; the bird is all black"
     },
     "melospiza-lincolnii": {
       "common_name": "Lincoln's Sparrow",
@@ -2724,30 +2832,37 @@
     },
     "passerina-amoena": {
       "common_name": "Lazuli Bunting",
-      "seed": 355349683,
+      "seed": 1646855205,
       "dark": false,
       "measure": {
-        "iou": 0.895,
-        "dE_mean": 9.8,
-        "dE_p95": 18.0,
-        "dL": -4.4,
-        "dC": -0.1,
-        "faithful": true
+        "iou": 0.723,
+        "dE_mean": 18.4,
+        "dE_p95": 35.9,
+        "dL": -7.7,
+        "dC": -0.5,
+        "faithful": false
       },
-      "sha256": "0867d0be263f9dca64e2ddea8b664264a10cf0d72c7de2e71128d45f669feb2e",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "258547062836c189713de9fad908849dd88e540b7f63c50f28064dc8080ddc2c",
       "photos": [
         189925731
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "perch",
+      "review": "pending",
+      "rejected_seeds": [
+        355349683
+      ],
+      "why": "needs a branch"
     },
     "patagioenas-fasciata": {
       "common_name": "Band-tailed Pigeon",
@@ -3075,57 +3190,71 @@
     },
     "podiceps-nigricollis": {
       "common_name": "Black-necked Grebe",
-      "seed": 3453302653,
+      "seed": 3134326763,
       "dark": false,
       "measure": {
-        "iou": 0.881,
-        "dE_mean": 9.8,
-        "dE_p95": 19.5,
-        "dL": -4.0,
-        "dC": 1.3,
-        "faithful": true
+        "iou": 0.923,
+        "dE_mean": 15.2,
+        "dE_p95": 29.2,
+        "dL": -4.7,
+        "dC": 7.4,
+        "faithful": false
       },
-      "sha256": "6dcb4d7892b81495c78f2cf0c9ef3dcbbc6f18478af5dc872ff0f69fb5679571",
+      "card_at_edge": 0.0066,
+      "attempts": 1,
+      "sha256": "ec2133131d6363be048a923d557d43b8c56b0532d5f628fcc8e67e7a14281d0a",
       "photos": [
         118363170
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        3453302653
+      ],
+      "why": "water-based: needs water"
     },
     "podilymbus-podiceps": {
       "common_name": "Pied-billed Grebe",
-      "seed": 2315589384,
+      "seed": 4244776862,
       "dark": false,
       "measure": {
-        "iou": 0.935,
-        "dE_mean": 6.5,
-        "dE_p95": 12.8,
-        "dL": -4.4,
-        "dC": 3.5,
-        "faithful": true
+        "iou": 0.96,
+        "dE_mean": 12.6,
+        "dE_p95": 21.2,
+        "dL": -11.6,
+        "dC": 3.9,
+        "faithful": false
       },
-      "sha256": "8b05088df59c3819da325ca1750c8dc5f1359e330627862ed941b2277f078830",
+      "card_at_edge": 0.0109,
+      "attempts": 1,
+      "sha256": "e3124ad6838816ee8e105924557b468650900ecce5dd91d236cc62c47188e2fa",
       "photos": [
         414242221
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        2315589384
+      ],
+      "why": "seen in water, not on a branch"
     },
     "poecile-gambeli": {
       "common_name": "Mountain Chickadee",
@@ -3345,36 +3474,39 @@
     },
     "sayornis-nigricans": {
       "common_name": "Black Phoebe",
-      "seed": 3386090340,
+      "seed": 1356526298,
       "dark": true,
       "measure": {
-        "iou": 0.845,
-        "dE_mean": 20.7,
-        "dE_p95": 44.1,
-        "dL": 15.9,
-        "dC": 5.1,
+        "iou": 0.88,
+        "dE_mean": 13.8,
+        "dE_p95": 44.8,
+        "dL": 1.4,
+        "dC": -2.3,
         "faithful": false
       },
-      "card_at_edge": 0.0012,
+      "card_at_edge": 0.0,
       "attempts": 2,
-      "sha256": "4d1cb9fb052ff875eca3c525729e94c50b9fd2b33153e4e3bd69dc6230fb2c97",
+      "sha256": "73ceee62c432ee08b620b2656de1ecf714c706bd5aa7c3090253a457d1d2362c",
       "photos": [
         636417717
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white.",
       "review": "pending",
       "rejected_seeds": [
-        3201602549
+        3201602549,
+        3386090340
       ],
-      "why": "a corner of the card peeled into the cut"
+      "why": "needs to be darker"
     },
     "sayornis-saya": {
       "common_name": "Say's Phoebe",
@@ -3606,30 +3738,37 @@
     },
     "spatula-clypeata": {
       "common_name": "Northern Shoveler",
-      "seed": 1441113407,
+      "seed": 585274793,
       "dark": false,
       "measure": {
-        "iou": 0.627,
-        "dE_mean": 22.1,
-        "dE_p95": 52.7,
-        "dL": 0.4,
-        "dC": 2.8,
+        "iou": 0.639,
+        "dE_mean": 28.1,
+        "dE_p95": 60.4,
+        "dL": -0.6,
+        "dC": -0.7,
         "faithful": false
       },
-      "sha256": "c2c94c6228a19dc485d94ba2497058e913be153d00b8b5bda8a2dff74786d4a6",
+      "card_at_edge": 0.0005,
+      "attempts": 1,
+      "sha256": "6cf9432c44066e99d698a8239b33620e31afab31ef58c23a740fbdd7f2827116",
       "photos": [
         227536108
       ],
       "isolate_seed": 50,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        1441113407
+      ],
+      "why": "a duck: needs water"
     },
     "spatula-cyanoptera": {
       "common_name": "Cinnamon Teal",
@@ -3660,30 +3799,37 @@
     },
     "spatula-discors": {
       "common_name": "Blue-winged Teal",
-      "seed": 2229752531,
+      "seed": 4091568709,
       "dark": false,
       "measure": {
-        "iou": 0.786,
-        "dE_mean": 10.1,
-        "dE_p95": 22.7,
-        "dL": -7.7,
-        "dC": 2.8,
+        "iou": 0.922,
+        "dE_mean": 11.2,
+        "dE_p95": 22.0,
+        "dL": -9.8,
+        "dC": 3.0,
         "faithful": false
       },
-      "sha256": "dc1e6d79cbf6ffa6b7a4a8e984034a869721994b5229b41d6e13b2f2b6b7fb09",
+      "card_at_edge": 0.002,
+      "attempts": 1,
+      "sha256": "d46c823bf6f83e2efba1bb788db95ef9cb0ec9ba6d94890f57614e83a159f3a6",
       "photos": [
         444126513
       ],
       "isolate_seed": 50,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        2229752531
+      ],
+      "why": "a duck: needs water"
     },
     "spinus-psaltria": {
       "common_name": "Lesser Goldfinch",

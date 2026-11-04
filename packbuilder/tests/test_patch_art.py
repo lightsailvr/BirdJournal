@@ -11,8 +11,9 @@ from PIL import Image, ImageDraw
 
 from packbuilder.comfy import ComfyClient
 from packbuilder.pack_art import ArtLock
-from packbuilder.patch_art import CORD_DEPTH, SIZE, PatchArtist, PatchLock, PatchPrompts, _isolate_prompt, cut_from_card, is_dark, layers, review
-from tests.comfy_stub import bird_on, serve
+from packbuilder.geometry import Box
+from packbuilder.patch_art import CORD_DEPTH, SIZE, PatchArtist, PatchLock, PatchPin, PatchPrompts, _isolate_prompt, cut_from_card, is_dark, layers, review
+from tests.comfy_stub import BACKGROUND, bird_on, serve
 
 FINCH, RAVEN = "haemorhous-mexicanus", "corvus-corax"
 
@@ -46,6 +47,46 @@ def artist(tmp_path, comfy, prompts=None) -> PatchArtist:
                        art_lock=pack_art_lock(tmp_path, cache), cache_dir=cache, **({"prompts": prompts} if prompts else {}))
 
 
+def test_a_species_stands_where_it_lives_with_the_markings_it_was_given(tmp_path, comfy):
+    painter = artist(tmp_path, comfy)
+    painter.pins = {FINCH: PatchPin(setting="water", markings="The head is solid black and the bill is white.")}
+    painter.paint([FINCH])
+    prompt = comfy.paintings[0].prompt
+    assert "swims on calm water" in prompt and "no branch" in prompt and "perches" not in prompt
+    assert "The head is solid black and the bill is white." in prompt
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert entry["setting"] == "water" and entry["markings"] == "The head is solid black and the bill is white."
+
+
+def test_every_setting_a_pack_can_pin_has_its_words():
+    prompts = PatchPrompts.load()
+    for kind in ("perch", "trunk", "ground", "rock", "shore", "wade", "water", "flight"):
+        assert prompts.settings[kind] in prompts.render(prompts.editions["us-ca-la"], False, kind)
+    assert PatchPin.from_art({"setting": "water", "patch": {"reference": 7, "markings": "Black."}}) == PatchPin("water", 7, "Black.")
+    assert PatchPin.from_art({}) == PatchPin("perch", None, None)
+
+
+def test_a_pinned_reference_is_isolated_from_its_original_and_cached(tmp_path, comfy):
+    originals = tmp_path / "originals"
+    originals.mkdir()
+    photo = Image.new("RGB", (1200, 1600), BACKGROUND)
+    bird_on(photo, box=(0.3, 0.25, 0.7, 0.75))
+    photo.save(originals / "77.jpg", quality=95)
+    painter = artist(tmp_path, comfy)
+    painter.pins = {FINCH: PatchPin(reference=77)}
+    painter.originals, painter.find_bird = originals, lambda image: Box(0.3, 0.25, 0.7, 0.75)
+    patches = painter.paint([FINCH])
+    assert patches[FINCH].photos == (77,)
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert entry["photos"] == [77] and entry["review"] == "pending"
+    painted = len(comfy.paintings)
+
+    again = artist(tmp_path, comfy)
+    again.pins = {FINCH: PatchPin(reference=77)}
+    again.paint([FINCH])
+    assert len(comfy.paintings) == painted, "warm: the isolation is cached and nothing is painted"
+
+
 def test_each_species_is_painted_from_its_pack_art_reference_in_its_editions_patch_and_locked(tmp_path, comfy):
     patches = artist(tmp_path, comfy).paint([FINCH])
 
@@ -75,9 +116,15 @@ def test_a_warm_lock_paints_nothing_and_a_new_edition_or_prompts_paint_again(tmp
     assert len(comfy.paintings) == 1, "warm: nothing painted"
 
     base = PatchPrompts.load()
-    changed = PatchPrompts(base.version + 1, base.template, base.dark, base.dark_lightness, base.editions)
+    changed = PatchPrompts(base.version + 1, base.template, base.dark, base.dark_lightness, base.editions, base.settings)
     artist(tmp_path, comfy, prompts=changed).paint([FINCH])
-    assert len(comfy.paintings) == 2, "new prompts: painted again"
+    assert len(comfy.paintings) == 1, "new prompts leave a reviewed patch alone: the review is the costly part"
+
+    lock = PatchLock.load(tmp_path / "patch.lock.json")
+    review(lock, reject=[FINCH])
+    artist(tmp_path, comfy, prompts=changed).paint([FINCH])
+    assert len(comfy.paintings) == 2
+    assert PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]["prompts"] == changed.version, "a rejected patch takes the current templates"
 
 
 def test_a_rejected_patch_is_painted_again_with_the_next_seed_and_approval_ships_it(tmp_path, comfy):

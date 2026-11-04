@@ -3,7 +3,9 @@ in the app. Each set's patch has its own shape, cord, twill and stitched motif (
 
 A patch is painted on comfybox with the committed `patch-art` workflow from the species' reference bird isolated on
 white, the same bird its pack art was painted from: the pack-art lock (`art.lock.json`) names its photo and isolation
-seed, and the isolated bird is in the art cache (`packbuilder.pack_art`). The painting lies flat on white card under
+seed, and the isolated bird is in the art cache (`packbuilder.pack_art`). `overrides.json` can pin another of the pack's
+photos (`art.patch.reference`, isolated here when the cache lacks it) and give the plumage facts the thread keeps getting
+wrong (`art.patch.markings`); the bird stands where it lives (`art.setting`). The painting lies flat on white card under
 even light, so the app does the lighting; the step cuts the patch from the card (`cut_from_card`: every edition's shape
 is convex) and measures the bird inside it against its reference (`measure`). The measure ranks and flags, it doesn't
 decide: in the samples thread colour moved a good House Finch about as far from its photo (ΔE ~20) as a failed Black
@@ -12,8 +14,9 @@ with the next seed. There is no colour fit: the bird's mask inside a patch can t
 would recolour them.
 
 `patch.lock.json` beside the pack definition pins each species' patch: its reference photo, isolation seed, workflow,
-prompts version and edition, its seed, the cut patch's SHA-256 (its file in `<cache>/patches/`), the measure and the
-review (pending, approved, rejected or gap, as for pack art). `layers` turns an approved patch into what the app lights
+prompts version, setting, markings and edition, its seed, the cut patch's SHA-256 (its file in `<cache>/patches/`), the measure and the
+review (pending, approved, rejected or gap, as for pack art). A new reference, workflow or edition paints a patch again;
+new prompts don't, since the review is the costly part: a rejected patch takes the current templates. `layers` turns an approved patch into what the app lights
 and animates: the colour on transparency, a height map, the cord's mask and the stitch order.
 """
 
@@ -26,16 +29,19 @@ import logging
 import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
 from scipy.spatial import ConvexHull
 
-from packbuilder.art import ART_DIR, Workflow
+from packbuilder.art import ART_DIR, Workflow, reference_crop
 from packbuilder.comfy import ComfyClient, PaintingFailed
 from packbuilder.contact_sheets import grid
+from packbuilder.crops import upright
 from packbuilder.fidelity import lab, measure as measure_bird
+from packbuilder.geometry import Box
 from packbuilder.painting import ISOLATE_SEED, Painter, png
 from packbuilder.pack_art import APPROVED, GAP, PENDING, REJECTED, UNPAINTED, ArtLock
 
@@ -52,6 +58,24 @@ PEEL_ATTEMPTS = 3
 CORD_DEPTH = 25.0
 """How far the merrowed cord runs in from the patch's edge at `SIZE`: measured on every edition's samples, the cord
 ends in a dark groove about 25 px in, whatever the shape."""
+
+
+DEFAULT_SETTING = "perch"
+
+
+@dataclass(frozen=True)
+class PatchPin:
+    """What `overrides.json` says of one species' patch: its setting (`art.setting`), the pack photo to paint from instead
+    of its pack art's (`art.patch.reference`), and the plumage facts to state (`art.patch.markings`)."""
+
+    setting: str = DEFAULT_SETTING
+    reference: int | None = None
+    markings: str | None = None
+
+    @classmethod
+    def from_art(cls, art: dict) -> "PatchPin":
+        patch = art.get("patch") or {}
+        return cls(art.get("setting") or DEFAULT_SETTING, patch.get("reference"), patch.get("markings"))
 
 
 @dataclass(frozen=True)
@@ -74,15 +98,17 @@ class PatchPrompts:
     dark: str
     dark_lightness: float
     editions: dict[str, PatchSpec]
+    settings: dict[str, str]
 
     @classmethod
     def load(cls, path: Path = ART_DIR / "patch-prompts.json") -> "PatchPrompts":
         data = json.loads(Path(path).read_text())
         return cls(data["version"], data["template"], data["dark"], data["dark_lightness"],
-                   {pack: PatchSpec(**spec) for pack, spec in data["editions"].items()})
+                   {pack: PatchSpec(**spec) for pack, spec in data["editions"].items()}, data["settings"])
 
-    def render(self, spec: PatchSpec, dark: bool) -> str:
-        return self.template.format(shape=spec.shape, cord=spec.cord, twill=spec.twill, motif=spec.motif, dark=self.dark if dark else "")
+    def render(self, spec: PatchSpec, dark: bool, setting: str = DEFAULT_SETTING, markings: str | None = None) -> str:
+        return self.template.format(shape=spec.shape, cord=spec.cord, twill=spec.twill, motif=spec.motif, dark=self.dark if dark else "",
+                                    setting=self.settings[setting], markings=f" {markings}" if markings else "")
 
 
 @dataclass(frozen=True)
@@ -110,8 +136,8 @@ class PatchLock(ArtLock):
 
     COMMENT = (
         "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in "
-        "build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json), the workflow and patch "
-        "prompts versions, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its "
+        "build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the "
+        "workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its "
         "reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next "
         "seed by the next run) or gap (no patch; why)."
     )
@@ -137,6 +163,11 @@ class PatchArtist:
     art_lock: ArtLock
     cache_dir: Path
     prompts: PatchPrompts = field(default_factory=PatchPrompts.load)
+    pins: dict[str, PatchPin] = field(default_factory=dict)
+    originals: Path | None = None
+    """The downloaded originals (`<photo id>.jpg`), which a pinned reference is isolated from when the cache lacks it."""
+    find_bird: Callable[[Image.Image], Box] | None = None
+    """The bird's box in an original, for that isolation."""
 
     def __post_init__(self):
         self.cache_dir = Path(self.cache_dir)
@@ -161,24 +192,58 @@ class PatchArtist:
     def reference(self, species_id: str) -> Reference:
         """The isolated bird the species' pack art was painted from. Raises KeyError when the pack art has none."""
         art = self.art_lock.species[species_id]
+        pinned = self.pins.get(species_id, PatchPin()).reference
+        if pinned is not None:
+            return self._isolated(pinned)
         if not art.get("photos"):
             raise KeyError(f"{species_id}: its pack art was painted from text; a patch needs a reference bird")
         photo_id, seed = art["photos"][0], art.get("isolate_seed") or ISOLATE_SEED
+        found = self._cached_isolations(photo_id)
+        if seed in found:
+            return Reference(photo_id, seed, Image.open(found[seed]).convert("RGB"))
+        raise KeyError(f"{species_id}: no isolated bird for photo {photo_id} seed {seed} in {self.cache_dir / 'isolated'}; run the pack build to make it")
+
+    def _cached_isolations(self, photo_id: int) -> dict[int, Path]:
+        """The photo's isolated birds by the seed each was kept with. The cache is keyed by the isolation's first seed;
+        the lock keeps the seed of the attempt that was kept (49 and its retries, 59 and its after a rejection), which
+        the cached isolation's info records."""
         isolate = hashlib.sha256(_isolate_prompt().encode()).hexdigest()[:10]
-        # The cache is keyed by the isolation's first seed; the lock keeps the seed of the attempt that was kept (49
-        # and its retries, 59 and its retries after a rejection), which the cached isolation's info records.
         suffix = f"-{self.painter.isolate_workflow.tag}-i{isolate}"
-        for info in sorted((self.cache_dir / "isolated").glob(f"{photo_id}-s*{suffix}.json")):
-            if json.loads(info.read_text()).get("seed") == seed and info.with_suffix(".png").exists():
-                return Reference(photo_id, seed, Image.open(info.with_suffix(".png")).convert("RGB"))
-        path = self.cache_dir / "isolated" / f"{photo_id}-s{seed}{suffix}.png"
-        if not path.exists():
-            raise KeyError(f"{species_id}: no isolated bird for photo {photo_id} seed {seed} in {path.parent}; run the pack build to make it")
-        return Reference(photo_id, seed, Image.open(path).convert("RGB"))
+        found = {}
+        for image in sorted((self.cache_dir / "isolated").glob(f"{photo_id}-s*{suffix}.png")):
+            info = image.with_suffix(".json")
+            # Without its info, the seed in its name: an isolation kept on its first attempt.
+            seed = json.loads(info.read_text())["seed"] if info.exists() else int(image.name.split("-s", 1)[1].split("-", 1)[0])
+            found[seed] = image
+        return found
+
+    def _isolated(self, photo_id: int) -> Reference:
+        """A pinned photo's isolated bird, from the cache or isolated now from its original, as pack art does."""
+        found = self._cached_isolations(photo_id)
+        if found:
+            seed = min(found)
+            return Reference(photo_id, seed, Image.open(found[seed]).convert("RGB"))
+        original = self.originals / f"{photo_id}.jpg" if self.originals is not None else None
+        if original is None or not original.exists() or self.find_bird is None:
+            raise KeyError(f"photo {photo_id}: no isolated bird in the cache and no original to isolate it from")
+        with Image.open(original) as opened:
+            image = upright(opened).convert("RGB")
+        crop = reference_crop(image, self.find_bird(image))
+        from packbuilder.art import ArtPrompts
+
+        prompt = ArtPrompts.load().isolate
+        isolation = self.painter.isolate(crop, self.painter.mask(crop), prompt, str(photo_id), seed=ISOLATE_SEED)
+        key = f"{photo_id}-s{ISOLATE_SEED}-{self.painter.isolate_workflow.tag}-i{hashlib.sha256(prompt.encode()).hexdigest()[:10]}"
+        path = self.cache_dir / "isolated" / f"{key}.png"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        isolation.image.save(path)
+        path.with_suffix(".json").write_text(json.dumps({"seed": isolation.attempt.seed, "attempts": isolation.attempts, "fitted": isolation.attempt.after.as_dict()}) + "\n")
+        log.info("  photo %d: isolated, seed %d", photo_id, isolation.attempt.seed)
+        return Reference(photo_id, isolation.attempt.seed, isolation.image.convert("RGB"))
 
     def _inputs(self, reference: Reference) -> dict:
-        return {"photos": [reference.photo_id], "isolate_seed": reference.isolate_seed, "workflow": self.workflow.tag,
-                "prompts": self.prompts.version, "edition": self.spec.as_dict()}
+        """What a reviewed patch is painted again for. The prompts aren't among them: see the module."""
+        return {"photos": [reference.photo_id], "isolate_seed": reference.isolate_seed, "workflow": self.workflow.tag, "edition": self.spec.as_dict()}
 
     def _species(self, species_id: str, number: int, total: int) -> Patch:
         entry = self.lock.species.get(species_id)
@@ -194,8 +259,12 @@ class PatchArtist:
         if same and entry["review"] in (PENDING, APPROVED):
             seed = entry["seed"]  # the locked patch isn't cached: paint it again from its seed
         common = self.art_lock.species[species_id].get("common_name", species_id)
-        fresh = self._render(reference, seed, f"{species_id}", common)
+        pin = self.pins.get(species_id, PatchPin())
+        fresh = self._render(reference, seed, f"{species_id}", common, pin)
         fresh.update(inputs)
+        fresh.update({"prompts": self.prompts.version, "setting": pin.setting})
+        if pin.markings:
+            fresh["markings"] = pin.markings
         if same and entry["review"] == APPROVED and fresh["sha256"] == entry["sha256"]:
             fresh["review"] = APPROVED
         else:
@@ -210,11 +279,11 @@ class PatchArtist:
                  " (dark clause)" if fresh["dark"] else "")
         return Patch(species_id, fresh["review"], self._file(fresh["sha256"]), tuple(fresh["photos"]))
 
-    def _render(self, reference: Reference, seed: int, name: str, common_name: str) -> dict:
+    def _render(self, reference: Reference, seed: int, name: str, common_name: str, pin: PatchPin = PatchPin()) -> dict:
         """Paints the patch with `seed`, then the next seeds while a corner of the card peels into the cut, at most
         `PEEL_ATTEMPTS` times, keeping the cleanest; then measures its bird."""
         dark = is_dark(reference.image, self.prompts.dark_lightness)
-        prompt = self.prompts.render(self.spec, dark)
+        prompt = self.prompts.render(self.spec, dark, pin.setting, pin.markings)
         best = None
         for attempt in range(PEEL_ATTEMPTS):
             painting = self.client.paint(self.workflow, images=[(f"patch-bird-{reference.photo_id}.png", png(reference.image))], prompt=prompt, seed=seed + attempt)
