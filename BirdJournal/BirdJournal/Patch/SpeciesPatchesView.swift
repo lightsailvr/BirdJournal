@@ -3,8 +3,8 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// One bird's patches across places (issue #134, guide page 7): each edition's patch with its count, on felt, and the
-/// editions still to find as patterns. Reached from the Species list and the Atlas profile.
+/// One bird's patches across places (issue #134, guide page 7): each edition's patch with its count, on felt. A place you
+/// haven't found it has no patch. Reached from the Species list and the Atlas profile.
 struct SpeciesPatchesView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
@@ -26,20 +26,13 @@ struct SpeciesPatchesView: View {
                     NoPatchesYet(scientificName: scientificName, commonName: name)
                         .padding(.horizontal, JournalLayout.margin)
                 } else {
-                    FeltBoard {
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 18) {
-                            ForEach(patches) { patch in
-                                SewnPatchTile(patch: patch, name: patch.placement.editionLabel, line: "\(patch.placement.setName) · seen \(patch.count)×", spokenName: name)
-                            }
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 18) {
+                        ForEach(patches) { patch in
+                            SewnPatchTile(patch: patch, name: patch.placement.editionLabel, line: "\(patch.placement.setName) · seen \(patch.count)×", spokenName: name)
                         }
                     }
-                    .padding(.top, 14)
-                }
-                let toFind = collection.setsToFind(scientificName: scientificName)
-                if !toFind.isEmpty {
-                    StillToFind(scientificName: scientificName, sets: toFind)
-                        .padding(.horizontal, JournalLayout.margin)
-                        .padding(.top, JournalLayout.sectionGap - 8)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 18)
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     if let latest = ofSpecies.first {
@@ -63,7 +56,9 @@ struct SpeciesPatchesView: View {
             }
             .padding(.bottom, JournalLayout.sectionGap)
         }
-        .background(Color.paper)
+        .background {
+            if patches.isEmpty { Color.paper.ignoresSafeArea() } else { BoardMaterial().ignoresSafeArea() }
+        }
         .holdsPatchLight()
         .navigationTitle(name)
         .navigationBarTitleDisplayMode(.inline)
@@ -90,42 +85,6 @@ struct SpeciesPatchesView: View {
             }
         }
         .padding(.top, 4)
-    }
-}
-
-/// The editions still to find: each set's pattern of the bird, or its blank where the set's pack isn't on the phone.
-private struct StillToFind: View {
-    @Environment(PackLibrary.self) private var library
-    @Environment(\.dynamicTypeSize) private var typeSize
-    let scientificName: String
-    let sets: [CardSet]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Still to find in")
-                .textCase(.uppercase)
-                .font(CardFont.editionCompact)
-                .tracking(CardFont.editionCompactTracking)
-                .foregroundStyle(Color.inkSecondary)
-                .accessibilityAddTraits(.isHeader)
-            LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize), spacing: 14) {
-                ForEach(sets) { set in
-                    VStack(spacing: 4) {
-                        PatchView(art: library.patchArt(scientificName: scientificName, setID: set.id), edition: PatchEdition.of(setID: set.id), face: .pattern)
-                            .frame(maxWidth: 88)
-                        Text(set.name)
-                            .font(.caption)
-                            .foregroundStyle(Color.ink)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(set.name), \(set.edition), not yet found")
-                    .accessibilityIdentifier("species-to-find")
-                }
-            }
-        }
     }
 }
 

@@ -12,6 +12,7 @@ struct SetView: View {
     @Environment(PackLibrary.self) private var library
     @Query private var sightings: [Sighting]
     let id: String
+    @State private var query = ""
 
     var body: some View {
         if let set = library.sets.first(where: { $0.id == id }) {
@@ -20,16 +21,23 @@ struct SetView: View {
             let progress = collection.progress(of: set.id)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    SetTile(set: set, progress: progress, opensSet: false)
-                        .padding(.top, 4)
-                    if library.pack(id: set.id) == nil {
+                    if query.isEmpty {
+                        SetTile(set: set, progress: progress, opensSet: false)
+                            .padding(.top, 4)
+                    }
+                    if query.isEmpty, library.pack(id: set.id) == nil {
                         Text("This pack isn't on your iPhone yet: downloading it adds photos, sounds and field notes, not birds. Cards you add in its region count toward the set either way.")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 8)
                     }
+                    let shown = Array(set.species.enumerated()).filter { NameSearch.matches(query: query, in: [$0.element.commonName, $0.element.scientificName]) }
+                    if shown.isEmpty {
+                        NoSearchMatch(query: query) { query = "" }
+                            .padding(.top, 12)
+                    }
                     VStack(spacing: 0) {
-                        ForEach(Array(set.species.enumerated()), id: \.element.scientificName) { offset, species in
+                        ForEach(shown, id: \.element.scientificName) { offset, species in
                             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: species.commonName)) {
                                 SetSpeciesRow(
                                     number: CardPlacement.paddedNumber(offset + 1, of: set.species.count), species: species,
@@ -47,6 +55,7 @@ struct SetView: View {
             }
             .background(Color.paper)
             .navigationTitle(set.name)
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search \(set.name) birds")
         } else {
             ContentUnavailableView("Set not found", systemImage: "square.stack.3d.down.right", description: Text("The pack index no longer lists this set."))
                 .background(Color.paper)

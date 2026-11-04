@@ -1,8 +1,8 @@
 import XCTest
 
-/// Issues #117 and #134: the board opens on the set you're in, your patches first and then the patterns; a patch's page hides
+/// Issues #117 and #134: the board opens on the set you're in and shows only your patches; a patch's page hides
 /// the tab bar; and coming back to Collection finds its mode, its board and each mode's scroll position as they were left.
-/// Real taps on the seeded journal: three birds in Los Angeles, and two outside every set.
+/// Real taps on the seeded journal: three birds in Los Angeles, and two outside every set (`-seedBoard`: 30, enough to scroll).
 final class CollectionUITests: XCTestCase {
     @MainActor
     private func launch(_ extra: [String] = []) -> XCUIApplication {
@@ -13,20 +13,15 @@ final class CollectionUITests: XCTestCase {
     }
 
     @MainActor
-    func testTheBoardShowsYourPatchesThenThePatternsEachInCollectorOrder() throws {
+    func testTheBoardShowsOnlyYourPatchesInCollectorOrder() throws {
         let app = launch()
         let sewn = app.buttons.matching(identifier: "board-patch")
         XCTAssertTrue(sewn.firstMatch.waitForExistence(timeout: 15), "no patches on the board; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(sewn.count, 3, "the three birds found in Los Angeles; screen: \(app.debugDescription.prefix(4000))")
-        let numbers = sewn.allElementsBoundByIndex.map(\.label)
-        XCTAssertTrue(numbers.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 2 times") }, "\(numbers)")
-        let first = app.buttons.matching(identifier: "board-pattern").firstMatch
-        XCTAssertTrue(first.waitForExistence(timeout: 15), "no board; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(first.label.hasPrefix("Canada Goose, number 1 of 160, not yet found"), first.label)
-
-        // A pattern is a way to the bird's profile in the Atlas.
-        first.tap()
-        XCTAssertTrue(app.buttons["profile-your-cards"].waitForExistence(timeout: 10), "the profile did not open; screen: \(app.debugDescription.prefix(3000))")
+        let names = sewn.allElementsBoundByIndex.map { $0.label.split(separator: ",").first.map(String.init) ?? "" }
+        XCTAssertEqual(names, ["Mourning Dove", "Black Phoebe", "House Finch"], "collector order")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS 'not yet found'")).firstMatch.exists, "a bird you haven't found has no patch")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Canada Goose'")).firstMatch.exists)
     }
 
     @MainActor
@@ -34,43 +29,37 @@ final class CollectionUITests: XCTestCase {
         let app = launch(["-autoQuery", "House Finch"])
         let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch, seen 2 times'")).firstMatch
         XCTAssertTrue(finch.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Canada Goose'")).firstMatch.exists, "the search kept only the match")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch.exists, "the search kept only the match")
     }
 
     @MainActor
-    func testASearchWithNoMatchSaysSo() throws {
-        let app = launch(["-autoQuery", "Dodo"])
+    func testASearchForABirdYouHaventFoundSaysSo() throws {
+        let app = launch(["-autoQuery", "Canada Goose"])
         XCTAssertTrue(app.descendants(matching: .any)["no-search-match"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor
     func testAPatchPageHidesTheTabBarAndCollectionComesBackAsLeft() throws {
-        let app = launch()
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES"])
         let collectionTab = app.tabBars.buttons["Collection"]
         XCTAssertTrue(collectionTab.waitForExistence(timeout: 15), "no Collection tab; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(collectionTab.isSelected)
         XCTAssertTrue(app.navigationBars["Collection"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 10), "no board; screen: \(app.debugDescription.prefix(3000))")
 
-        // A patch's page: it gets the whole height, no tab bar over it. Back: the tab bar returns.
-        let dove = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove, Citrus edition patch'")).firstMatch
-        XCTAssertTrue(dove.waitForExistence(timeout: 10), "no dove patch; screen: \(app.debugDescription.prefix(3000))")
-        dove.tap()
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
+        // Down the board to a patch clear of the floating tab bar; its page has no tab bar, and back finds the board where
+        // it was.
+        for _ in 0..<2 { app.swipeUp() }
+        let tiles = app.buttons.matching(identifier: "board-patch").allElementsBoundByIndex
+        let shown = try XCTUnwrap(tiles.first { Self.isClearOfBars($0, in: app) }, "no patch in view; screen: \(app.debugDescription.prefix(3000))")
+        let tile = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
+        let scrolledTo = Self.settledMinY(of: tile)
+        tile.tap()
+        XCTAssertTrue(app.buttons["card-flip"].firstMatch.waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.tabBars.firstMatch.exists && collectionTab.isHittable, "the tab bar shows on a patch's page")
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(collectionTab.waitForExistence(timeout: 10))
         XCTAssertTrue(collectionTab.isHittable, "no tab bar after closing the patch")
-
-        // Down the board among the patterns, to one clear of the floating tab bar; its bird's page and back: the board is
-        // where it was.
-        for _ in 0..<3 { app.swipeUp() }
-        let patterns = app.buttons.matching(identifier: "board-pattern").allElementsBoundByIndex
-        let shown = try XCTUnwrap(patterns.first { Self.isClearOfBars($0, in: app) }, "no pattern in view; screen: \(app.debugDescription.prefix(3000))")
-        let tile = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
-        let scrolledTo = Self.settledMinY(of: tile)
-        tile.tap()
-        XCTAssertTrue(app.buttons["profile-your-cards"].waitForExistence(timeout: 10))
-        app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(tile.waitForExistence(timeout: 5))
         XCTAssertEqual(Self.settledMinY(of: tile), scrolledTo, accuracy: 4, "the board did not keep its scroll position")
 
@@ -91,10 +80,14 @@ final class CollectionUITests: XCTestCase {
         let settled = NSPredicate { _, _ in Self.isClearOfBars(tile, in: app) }
         wait(for: [expectation(for: settled, evaluatedWith: tile)], timeout: 5)
         XCTAssertEqual(Self.settledMinY(of: tile), scrolledTo, accuracy: 12, "Patches did not keep its own scroll position")
+    }
 
-        // Another board, chosen and kept across the tabs.
+    @MainActor
+    func testAnotherBoardIsChosenAndKeptAcrossTheTabs() throws {
+        let app = launch()
+        let collectionTab = app.tabBars.buttons["Collection"]
         let boards = app.navigationBars["Collection"].buttons["Board"]
-        XCTAssertTrue(boards.waitForExistence(timeout: 5), "no board menu; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(boards.waitForExistence(timeout: 15), "no board menu; screen: \(app.debugDescription.prefix(3000))")
         boards.tap()
         let uncharted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch
         XCTAssertTrue(uncharted.waitForExistence(timeout: 5), "no board list; screen: \(app.debugDescription.prefix(3000))")

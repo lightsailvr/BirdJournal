@@ -9,6 +9,9 @@ using namespace metal;
 // patch hasn't been sewn: the cord stays, and bare twill takes the rest, with the patch's own stitch lines (where the
 // painting's colour changes) drawn on it in transfer pen.
 
+// How far the light is from straight overhead when it rests upper-left, in the units of `light`: where the shadow's offset is
+// the guide's 9 pt, so it lengthens as the phone tilts away from the light and shortens as it tilts toward it.
+constant float restingLight = 0.77;
 // The shadow (guide page 16), in points for a patch at full size. Its strength comes from `softStrength`.
 constant float softOffset = 9.0;
 constant float softBlur = 10.0;
@@ -50,7 +53,7 @@ static float paintedEdge(SwiftUI::Layer layer, float2 point, float radius) {
     // Both parts scale with the patch, so a thumbnail's shadow doesn't reach its neighbour.
     half4 shadow = half4(0);
     if (colour.a < 0.995) {
-        float2 away = -light * softOffset * scale / max(length(light), 0.001);
+        float2 away = -light * softOffset * scale / restingLight;
         float soft = blurredCoverage(layer, position - away, softBlur * scale) * softStrength;
         float contact = blurredCoverage(layer, position + light * contactOffset * scale, contactBlur * scale) * min(softStrength * 1.32, contactStrengthLimit);
         float alpha = 1.0 - (1.0 - soft) * (1.0 - contact);
@@ -88,19 +91,22 @@ static float paintedEdge(SwiftUI::Layer layer, float2 point, float radius) {
         dy *= cord;
     }
 
-    // Diffuse: 1 for a flat patch with the light at rest, darker turned away, a little lighter turned toward.
+    // Diffuse: the whole patch brightens as it faces the light and dims as it turns away, 1 for a flat patch with the light
+    // at rest. Dividing by the light's angle here once kept flat thread the same at every tilt, which looked like no motion.
     float3 normal = normalize(float3(-dx * 1.6, -dy * 1.6, 1.0));
     float3 toLight = normalize(float3(light.x, light.y, 1.0));
-    float flat_ = toLight.z;
-    float diffuse = 0.34 + 0.70 * dot(normal, toLight) / flat_;
+    float diffuse = 1.6 * dot(normal, toLight) - 0.27;
 
-    // The sheen: a broad highlight on the thread, tighter and stronger on the raised cord.
+    // The sheen: a broad highlight that travels across the patch with the light, picked out by the thread's relief, and
+    // strongest on the raised cord. Neutral: the gold is retired.
+    float2 fromSpot = (uv - 0.5) - light * 0.6;
+    float spot = exp(-dot(fromSpot, fromSpot) / (2.0 * 0.27 * 0.27));
     float3 halfway = normalize(toLight + float3(0, 0, 1));
     float facing = max(dot(normal, halfway), 0.0);
-    float threadSheen = pow(facing, 22.0) * 0.10 * (1.0 - cord);
-    float cordSheen = pow(facing, 9.0) * 0.13 * cord;
+    float threadSheen = spot * 0.27 * (0.45 + 0.55 * pow(facing, 8.0)) * (1.0 - cord);
+    float cordSheen = spot * 0.18 * pow(facing, 4.0) * cord;
 
-    half3 lit = base * half(clamp(diffuse, 0.5, 1.28)) + half3(half(threadSheen + cordSheen)) * half3(1.0, 0.98, 0.94);
+    half3 lit = base * half(clamp(diffuse, 0.5, 1.28)) + half3(half(threadSheen + cordSheen)) * half3(1.0, 1.0, 0.98);
     half3 premultiplied = min(lit, half3(1.0)) * colour.a;
     return half4(premultiplied + shadow.rgb * (1.0 - colour.a), colour.a + shadow.a * (1.0 - colour.a));
 }

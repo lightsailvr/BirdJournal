@@ -267,7 +267,6 @@ struct PatchWordsTests {
         let spoken = PatchText.spoken(try Self.patch(count: 8, at: griffith), name: "House Finch")
         #expect(spoken.hasPrefix("House Finch, Citrus edition patch, seen 8 times, sewn "), "\(spoken)")
         #expect(PatchText.spoken(try Self.patch(count: 1, at: nil), name: "House Finch").hasPrefix("House Finch, Uncharted patch, seen once, sewn "))
-        #expect(PatchText.spokenPattern(name: "Oak Titmouse", number: 9, total: 160) == "Oak Titmouse, number 9 of 160, not yet found")
     }
 
     @Test("a tile's line carries the number and the count; Uncharted has no number")
@@ -275,7 +274,6 @@ struct PatchWordsTests {
         let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
         #expect(PatchText.tileLine(try Self.patch(count: 8, at: griffith)) == "No. 002 · seen 8×")
         #expect(PatchText.tileLine(try Self.patch(count: 3, at: nil)) == "seen 3×")
-        #expect(PatchText.patternLine(number: 9, total: 160) == "No. 009")
         #expect(PatchText.editionLine(try Self.patch(count: 1, at: griffith).placement) == "Citrus edition · No. 002")
         #expect(PatchText.editionLine(.uncharted) == "Uncharted")
     }

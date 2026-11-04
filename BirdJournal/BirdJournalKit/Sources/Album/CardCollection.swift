@@ -86,19 +86,6 @@ public struct CardCollection: Sendable, Equatable {
         }
     }
 
-    /// One place on a set's felt board (issue #134): a species in collector-number order, with its patch once sewn; nil
-    /// shows its pattern.
-    public struct BoardEntry: Sendable, Hashable, Identifiable {
-        public let scientificName: String
-        /// The collector number in the set, from 1.
-        public let number: Int
-        /// How many species the set has.
-        public let total: Int
-        public let patch: Patch?
-
-        public var id: String { scientificName }
-    }
-
     /// Every sighting, newest first.
     public let cards: [Entry]
     /// Every patch, the most recently sewn first.
@@ -198,25 +185,15 @@ public struct CardCollection: Sendable, Equatable {
             }
     }
 
-    /// The set's felt board (guide page 6): the patches sewn there in collector-number order, then the patterns of the
-    /// birds still to find in collector-number order, so a birder's few patches never wait behind 150 patterns.
-    public func board(of setID: String) -> [BoardEntry] {
-        guard let set = sets.first(where: { $0.id == setID }) else { return [] }
-        let sewn = Dictionary(patches.filter { $0.placement.setID == setID }.map { ($0.scientificName, $0) }, uniquingKeysWith: { first, _ in first })
-        let entries = set.species.enumerated().map { offset, name in
-            BoardEntry(scientificName: name, number: offset + 1, total: set.species.count, patch: sewn[name])
-        }
-        return entries.filter { $0.patch != nil } + entries.filter { $0.patch == nil }
-    }
-
     /// The patches outside every set, the most recently sewn first.
     public var unchartedPatches: [Patch] {
         patches.filter { $0.placement.setID == nil }
     }
 
-    /// The sets listing this bird where it has no patch yet: the editions still to find, in the order the sets are known.
-    public func setsToFind(scientificName: String) -> [CardSet] {
-        sets.filter { $0.number(of: scientificName) != nil && collectedBySet[$0.id]?.contains(scientificName) != true }
+    /// Every patch in the order a page swipes through them: each set as the phone knows them, in collector-number order,
+    /// then the patches outside every set.
+    public var browsingOrder: [Patch] {
+        sets.flatMap { patches(in: $0.id) } + unchartedPatches
     }
 
     /// One species' patches across its placements, the earliest sewn first.
@@ -230,7 +207,7 @@ public struct CardCollection: Sendable, Equatable {
         return SetProgress(setID: set.id, name: set.name, collected: collectedBySet[setID]?.count ?? 0, total: set.species.count)
     }
 
-    /// The scientific names of the set's species that have a patch in it: the rest show as patterns.
+    /// The scientific names of the set's species that have a patch in it.
     public func collected(in setID: String) -> Set<String> {
         collectedBySet[setID] ?? []
     }

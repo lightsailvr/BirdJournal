@@ -169,7 +169,7 @@ struct ScreenAccessibilityTests {
         }
         #expect(labels.contains { $0.contains("House Finch") }, "\(labels)")
         #expect(labels.contains { $0.contains("edition patch, seen ") && $0.contains(", sewn ") }, "a patch in words: \(labels)")
-        #expect(labels.contains { $0.contains(", not yet found") }, "the patterns: \(labels)")
+        #expect(!labels.contains { $0.contains("not yet found") }, "a bird you haven't found has no patch: \(labels)")
         #expect(!labels.contains { $0.contains("Legendary") }, "no Legendary: \(labels)")
     }
 

@@ -22,6 +22,7 @@ final class GalleryUITests: XCTestCase {
         XCTAssertTrue(summary.waitForExistence(timeout: 15), "no species view; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(summary.label.hasPrefix("2 patches · seen 15 times · since "), summary.label)
         XCTAssertEqual(patches(app).count, 2, "one patch per place; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.descendants(matching: .any)["species-to-find"].exists, "a place you haven't found the bird has no patch")
 
         // Los Angeles, as every label says the bird.
         let losAngeles = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch, seen 9 times'")).firstMatch

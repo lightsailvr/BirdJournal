@@ -28,7 +28,7 @@ struct PatchView: View {
             .aspectRatio(edition.aspect, contentMode: .fit)
             .overlay {
                 if let loaded {
-                    LitPatch(loaded: loaded, ground: patternGround, isPattern: face == .pattern, room: size == .thumbnail ? 12 : 26)
+                    LitPatch(loaded: loaded, ground: patternGround, isPattern: face == .pattern, room: size == .thumbnail ? 14 : 34)
                 } else {
                     PatchBlank(edition: edition, tag: art == nil ? tag : nil)
                 }

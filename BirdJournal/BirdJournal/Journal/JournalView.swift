@@ -58,7 +58,9 @@ struct JournalView: View {
                             }
                             .pickerStyle(.segmented)
                             .padding(.vertical, 8)
-                            .background(Color.paper)
+                            .background {
+                                if state.mode == .cards { BoardMaterial() } else { Color.paper }
+                            }
                             .accessibilityIdentifier("collection-mode")
                         }
                     }
@@ -87,7 +89,9 @@ struct JournalView: View {
                     state.offsets[.cards] = 0
                     restore(0)
                 }
-                .background(Color.paper)
+                .background {
+                    if state.mode == .cards { BoardMaterial().ignoresSafeArea() } else { Color.paper.ignoresSafeArea() }
+                }
                 .searchable(text: $state.query, prompt: "Search birds")
                 #if DEBUG
                 .task {
@@ -96,16 +100,13 @@ struct JournalView: View {
                 }
                 #endif
                 .toolbar {
-                    if state.mode == .cards, state.query.isEmpty {
+                    if state.mode == .cards, state.query.isEmpty, boards(collection).count > 1 {
                         ToolbarItem(placement: .topBarTrailing) {
                             let shown = shownBoard(collection)
                             Menu {
                                 Picker("Board", selection: Binding(get: { shown }, set: { state.board = $0 })) {
-                                    ForEach(library.sets) { set in
-                                        Text("\(set.name) · \(collection.progress(of: set.id).collected) of \(set.species.count)").tag(BoardChoice.set(id: set.id))
-                                    }
-                                    if !collection.unchartedPatches.isEmpty {
-                                        Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedPatches.count)").tag(BoardChoice.uncharted)
+                                    ForEach(boards(collection), id: \.self) { board in
+                                        Text(boardMenuTitle(board, collection)).tag(board)
                                     }
                                 }
                             } label: {
@@ -167,7 +168,7 @@ struct JournalView: View {
         }
     }
 
-    /// The Patches mode: the chosen set's felt board under its progress, or, while searching, every board's matches.
+    /// The Patches mode: the chosen board's patches under its progress, or, while searching, the matches on every board.
     @ViewBuilder
     private func patches(_ collection: CardCollection) -> some View {
         if state.query.isEmpty {
@@ -179,17 +180,14 @@ struct JournalView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("cards-set-progress")
-                    PatchBoard(set: set, entries: collection.board(of: set.id))
-                        .padding(.horizontal, -JournalLayout.margin)
-                        .padding(.top, 4)
+                    PatchBoard(patches: collection.patches(in: set.id))
                 }
             case .uncharted:
                 Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedPatches.count) outside every set")
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
                     .padding(.vertical, 12)
-                UnchartedBoard(patches: collection.unchartedPatches)
-                    .padding(.horizontal, -JournalLayout.margin)
+                PatchBoard(patches: collection.unchartedPatches)
             }
         } else {
             searchResults(collection)
@@ -202,55 +200,53 @@ struct JournalView: View {
             .padding(.top, 28)
     }
 
-    /// A search reads every board, so a bird found in another place is still found.
+    /// A search reads every board, so a patch sewn in another place is still found.
     @ViewBuilder
     private func searchResults(_ collection: CardCollection) -> some View {
-        let boards = library.sets.compactMap { set -> (set: PackSet, entries: [CardCollection.BoardEntry])? in
-            let names = Dictionary(set.species.map { ($0.scientificName, $0.commonName) }, uniquingKeysWith: { first, _ in first })
-            let kept = collection.board(of: set.id).filter { Journal.matches(query: state.query, commonName: names[$0.scientificName] ?? "", scientificName: $0.scientificName) }
-            return kept.isEmpty ? nil : (set, kept)
+        let groups = boards(collection).compactMap { board -> (board: BoardChoice, patches: [CardCollection.Patch])? in
+            let all: [CardCollection.Patch]
+            switch board {
+            case .set(let id): all = collection.patches(in: id)
+            case .uncharted: all = collection.unchartedPatches
+            }
+            let kept = all.filter { Journal.matches(query: state.query, commonName: PatchText.name(of: $0, library: library), scientificName: $0.scientificName) }
+            return kept.isEmpty ? nil : (board, kept)
         }
-        let uncharted = collection.unchartedPatches.filter {
-            Journal.matches(query: state.query, commonName: PatchText.name(of: $0, library: library), scientificName: $0.scientificName)
-        }
-        if boards.isEmpty, uncharted.isEmpty {
-            NoSearchMatch(query: state.query) { state.query = "" }
+        if groups.isEmpty {
+            NoSearchMatch(query: state.query, searches: "Search your patches by a bird's common or scientific name.") { state.query = "" }
                 .padding(.top, 24)
         } else {
-            ForEach(boards, id: \.set.id) { board in
-                Text("\(board.set.name) · \(board.set.edition.name)")
+            ForEach(groups, id: \.board) { group in
+                Text(boardTitle(group.board))
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
                     .padding(.vertical, 10)
                     .accessibilityAddTraits(.isHeader)
-                PatchBoard(set: board.set, entries: board.entries)
-                    .padding(.horizontal, -JournalLayout.margin)
-            }
-            if !uncharted.isEmpty {
-                Text(CardPlacement.unchartedTitle)
-                    .font(JournalFont.rowTitle)
-                    .foregroundStyle(Color.ink)
-                    .padding(.vertical, 10)
-                    .accessibilityAddTraits(.isHeader)
-                UnchartedBoard(patches: uncharted)
-                    .padding(.horizontal, -JournalLayout.margin)
+                PatchBoard(patches: group.patches)
             }
         }
     }
 
-    /// The board to show: the one chosen, else the place of the newest sighting (the set you're in, guide page 6), else the
-    /// local set.
+    /// The boards with a patch on them: there's nothing to show on any other.
+    private func boards(_ collection: CardCollection) -> [BoardChoice] {
+        library.sets.filter { collection.progress(of: $0.id).collected > 0 }.map { BoardChoice.set(id: $0.id) }
+            + (collection.unchartedPatches.isEmpty ? [] : [.uncharted])
+    }
+
+    /// The board to show: the one chosen while it still has a patch, else the place of the newest sighting (the set you're
+    /// in, guide page 6).
     private func shownBoard(_ collection: CardCollection) -> BoardChoice {
-        if let board = state.board {
-            switch board {
-            case .set(let id) where library.sets.contains(where: { $0.id == id }): return board
-            case .uncharted where !collection.unchartedPatches.isEmpty: return board
-            default: break
-            }
+        let boards = boards(collection)
+        if let board = state.board, boards.contains(board) { return board }
+        if let newest = sightings.first, let setID = collection.placement(of: newest.identifier)?.setID { return .set(id: setID) }
+        return boards.first ?? .uncharted
+    }
+
+    private func boardMenuTitle(_ board: BoardChoice, _ collection: CardCollection) -> String {
+        switch board {
+        case .set(let id): "\(boardTitle(board)) · \(collection.progress(of: id).collected)"
+        case .uncharted: "\(boardTitle(board)) · \(collection.unchartedPatches.count)"
         }
-        if let newest = sightings.first, collection.placement(of: newest.identifier)?.setID == nil { return .uncharted }
-        if let local = LocalSet.find(library: library, collection: collection, newest: sightings.first) { return .set(id: local.set.id) }
-        return .uncharted
     }
 
     private func boardTitle(_ board: BoardChoice) -> String {

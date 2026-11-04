@@ -167,6 +167,64 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertFalse(app.buttons["View original photo"].exists, "no original, no entry")
     }
 
+    @MainActor
+    func testSwipingMovesThroughEveryPatchAndLandsOnItsFace() {
+        let app = launch("card")
+        XCTAssertTrue(face(app).waitForExistence(timeout: 15), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
+        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "dove, phoebe, finch, then the two Uncharted; screen: \(app.debugDescription.prefix(3000))")
+
+        // From the patch: the next patch, the first Uncharted.
+        app.swipeLeft()
+        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5), "the swipe did not move on; screen: \(app.debugDescription.prefix(3000))")
+        assertShowing(card: false, app)
+
+        // From its card: back to the finch, on the finch's face.
+        turn(app).tap()
+        assertShowing(card: true, app)
+        app.swipeRight()
+        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "the swipe from the card did not move; screen: \(app.debugDescription.prefix(3000))")
+        assertShowing(card: false, app)
+        XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
+
+        // And coming back to the one turned over, it's the patch again.
+        app.swipeLeft()
+        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5))
+        assertShowing(card: false, app)
+    }
+
+    @MainActor
+    func testOnItsSideThePatchIsLeftAndItsCardRightWithNothingToTurn() throws {
+        let app = launch("card")
+        XCTAssertTrue(face(app).waitForExistence(timeout: 15), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+
+        let all = app.buttons["card-all-sightings"]
+        let patch = app.descendants(matching: .any)["patch-face"].firstMatch
+        let predicate = NSPredicate { _, _ in patch.exists && all.exists && all.isHittable && patch.frame.maxX <= all.frame.minX + 20 }
+        wait(for: [expectation(for: predicate, evaluatedWith: patch)], timeout: 10)
+        XCTAssertLessThan(patch.frame.midX, all.frame.midX, "the patch on the left, its card on the right")
+        XCTAssertFalse(turn(app).exists, "both faces show, so nothing turns")
+        XCTAssertTrue(app.descendants(matching: .any)["card-back-scroll"].firstMatch.exists, "the card scrolls")
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        shot.name = "patch-sideways"
+        shot.lifetime = .keepAlways
+        add(shot)
+
+        // A swipe moves on from the patch, and from over the card, whose own scrolling is vertical.
+        patch.swipeLeft()
+        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5), "the swipe from the patch; screen: \(app.debugDescription.prefix(3000))")
+        let cards = app.descendants(matching: .any).matching(identifier: "card-back-scroll").allElementsBoundByIndex
+        let card = try XCTUnwrap(cards.first { $0.isHittable }, "no card in reach; screen: \(app.debugDescription.prefix(3000))")
+        card.swipeRight()
+        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "the swipe from over the card; screen: \(app.debugDescription.prefix(3000))")
+
+        // And the page comes back upright with its Turn over.
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertTrue(turn(app).waitForExistence(timeout: 10))
+    }
+
     /// What the card's back used to hold about one sighting now lives on the sighting (issue #134).
     @MainActor
     func testHeardIsTheDefaultAndSeenPersists() {

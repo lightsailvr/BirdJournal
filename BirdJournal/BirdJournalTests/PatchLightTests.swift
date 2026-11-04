@@ -1,6 +1,9 @@
 import Foundation
+import Pack
 import simd
+import SwiftUI
 import Testing
+import UIKit
 @testable import BirdJournal
 
 // Issue #134 (guide page 13): the patch's light comes from the phone's tilt, smoothed and clamped to ±35°. It moves only
@@ -113,6 +116,19 @@ struct PatchLightTests {
         #expect(light.direction == PatchLightModel.rest)
     }
 
+    @Test("sideways, gravity is read in the screen's axes, so the edge you lower is the one on the screen")
+    func sideways() {
+        // Flat, with the device's bottom edge lowered: gravity runs toward it, y negative in the device's axes.
+        let bottomDown = SIMD3<Double>(0, -0.5, -0.87)
+        // Home on the right: the device's bottom is the screen's right.
+        #expect(PatchLightModel.gravity(bottomDown, showing: .landscapeRight).x > 0)
+        #expect(PatchLightModel.gravity(bottomDown, showing: .landscapeRight).y == 0)
+        // Home on the left: the device's bottom is the screen's left.
+        #expect(PatchLightModel.gravity(bottomDown, showing: .landscapeLeft).x < 0)
+        #expect(PatchLightModel.gravity(bottomDown, showing: .portrait) == bottomDown)
+        #expect(PatchLightModel.gravity(bottomDown, showing: .portrait).z == PatchLightModel.gravity(bottomDown, showing: .landscapeLeft).z)
+    }
+
     @Test("Reduce Motion fixes the light upper-left whatever the phone does")
     func reduceMotion() {
         #expect(PatchLight.shown(PatchLightModel.rest + .init(0.4, 0.4), reduceMotion: true) == PatchLightModel.rest)
@@ -136,5 +152,67 @@ struct PatchFlipTimingTests {
         }
         #expect(CardFlip.face(isBack: false, angle: 0, rotates: false).opacity == 1)
         #expect(CardFlip.face(isBack: true, angle: 180, rotates: false).opacity == 1)
+    }
+}
+
+// The maintainer's phone (issue #134): the light followed the tilt in numbers, and nothing visibly changed on screen. So
+// this goes from gravity to pixels: a hand's ordinary tilt has to change what the patch looks like.
+@Suite("Patch light on screen", .serialized)
+@MainActor
+struct PatchLightPixelTests {
+    /// How far apart two renders are, as the mean change per colour channel out of 255, over the patch.
+    static func meanChange(_ first: [UInt8], _ second: [UInt8]) -> Double {
+        let total = zip(first, second).reduce(0) { $0 + abs(Int($1.0) - Int($1.1)) }
+        return Double(total) / Double(max(first.count, 1))
+    }
+
+    static func pixels(of view: UIView) -> [UInt8] {
+        let size = view.bounds.size
+        let renderer = UIGraphicsImageRenderer(size: size, format: { let format = UIGraphicsImageRendererFormat(); format.scale = 1; return format }())
+        let image = renderer.image { _ in view.drawHierarchy(in: view.bounds, afterScreenUpdates: true) }
+        guard let cg = image.cgImage else { return [] }
+        var bytes = [UInt8](repeating: 0, count: cg.width * cg.height * 4)
+        let context = CGContext(data: &bytes, width: cg.width, height: cg.height, bitsPerComponent: 8, bytesPerRow: cg.width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        context?.draw(cg, in: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
+        return bytes
+    }
+
+    @Test("a ten-degree tilt visibly changes the lit patch, whichever way, and a still phone changes nothing")
+    func tenDegrees() async throws {
+        let pack = try SpeciesPack.bundled()
+        let patch = try #require(pack.species(scientificName: "Haemorhous mexicanus")?.patch)
+        let art = PatchArt(colour: pack.patchURL(for: patch), layers: pack.patchLayersURL(for: patch), ground: patch.ground)
+        _ = await PatchTextures.load(art, size: .full)
+
+        let host = UIHostingController(rootView: PatchView(art: art, edition: PatchEdition.of(setID: "us-ca-la"), size: .full).frame(width: 300, height: 300).background(Color.black))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = try UIWindow(windowScene: #require(scene))
+        window.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        window.rootViewController = host
+        window.isHidden = false
+        defer { window.isHidden = true; PatchLight.shared.restart() }
+
+        let light = PatchLight.shared
+        func settle(rightEdgeDown: Double = 0, topEdgeUp: Double = 0) async throws -> [UInt8] {
+            for _ in 0..<120 { light.take(PatchLightTests.gravity(rightEdgeDown: rightEdgeDown, topEdgeUp: topEdgeUp)) }
+            try await Task.sleep(for: .milliseconds(500))
+            return Self.pixels(of: host.view)
+        }
+
+        light.restart()
+        let rest = try await settle()
+        let still = try await settle()
+        #expect(Self.meanChange(rest, still) < 0.1, "a still phone changes nothing")
+
+        let measured = [
+            ("right edge down", try await settle(rightEdgeDown: 10)),
+            ("right edge up", try await settle(rightEdgeDown: -10)),
+            ("top edge up", try await settle(topEdgeUp: 10)),
+            ("top edge down", try await settle(topEdgeUp: -10)),
+        ].map { ($0.0, Self.meanChange(rest, $0.1)) }
+        print("patch light change at 10 degrees:", measured)
+        for (tilt, change) in measured {
+            #expect(change >= 3, "\(tilt) by 10° changed the patch by only \(change) of 255 per channel")
+        }
     }
 }

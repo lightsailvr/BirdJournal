@@ -13,6 +13,7 @@ import UIKit
 ///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
 /// - `-patchLight "x,y"` puts the patches' light somewhere, as a tilt would (issue #134's screenshots; the simulator has
 ///   no motion; "l0.5,u0.6" for left and up, since a launch argument can't start with a minus); `-patchLightSweep YES` circles it and logs frame times under the `patch-light` category.
+/// - `-seedBoard YES` adds one sighting each of the bundled pack's first 30 birds in Griffith Park: a board that scrolls.
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
 ///   the species' patches (issue #134).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
@@ -71,6 +72,7 @@ struct DebugLaunch: ViewModifier {
             let defaults = UserDefaults.standard
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
+            if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
             if let mode = defaults.string(forKey: "autoArt") { DebugSeeds.setArt(mode, context: context, frames: frameStore) }
             if let id = defaults.string(forKey: "autoDownloadPack") {
                 tab = .guide
@@ -366,6 +368,15 @@ enum DebugSeeds {
             )
             sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: location, at: sighting.confirmedAt)
             context.insert(sighting)
+        }
+        try? context.save()
+    }
+
+    /// One sighting of each of the bundled pack's first 30 birds, a minute apart.
+    static func seedBoard(context: ModelContext) {
+        let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        for (index, species) in ((try? SpeciesPack.bundled().species) ?? []).prefix(30).enumerated() {
+            context.insert(Sighting(speciesID: species.birdnetLabel, confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
         }
         try? context.save()
     }
