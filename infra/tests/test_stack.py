@@ -24,8 +24,6 @@ UNTAGGABLE_TYPES = {
     "AWS::CloudFront::OriginAccessControl",
     "AWS::Lambda::LayerVersion",
     "Custom::CDKBucketDeployment",
-    # Scene art (issue #68): the queues' policies (enforce_ssl's Deny).
-    "AWS::SQS::QueuePolicy",
 }
 
 

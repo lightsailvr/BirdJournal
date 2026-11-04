@@ -49,12 +49,10 @@ def test_the_api_sends_only_as_the_report_address_or_its_domain(template: Templa
 def test_the_api_reads_pictures_for_moderation_and_nothing_wider(template: Template) -> None:
     grants = _grants(template)
     assert grants["rekognition:DetectModerationLabels"] == ['"*"']
-    uploads, _ = _named(template, "AWS::S3::Bucket", "ArtJobsUploads")
     art, _ = _named(template, "AWS::S3::Bucket", "ArtCdnBucket")
     reads = grants["s3:GetObject"]
-    assert any(uploads in r and "/uploads/*" in r for r in reads)
-    assert any(art in r and "/art/*" in r for r in reads)
-    assert all("/uploads/*" in r or "/art/*" in r or "/photos/*" in r for r in reads)
+    assert any(art in r and "/photos/*" in r for r in reads)
+    assert all("/photos/*" in r for r in reads)
 
 
 def test_the_api_deletes_cognito_users_of_its_own_pool_and_reads_the_apple_key(template: Template) -> None:

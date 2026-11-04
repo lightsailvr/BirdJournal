@@ -56,10 +56,10 @@ class ArtBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: ArtKind
-    # The object's key on the art CDN: packs/<pack id>/<file>.jpg for pack art, art/<sub>/<unguessable>.jpg for a
-    # painting (#70).
+    # The object's key on the art CDN: packs/<pack id>/patch/<file>.png for a patch's thumbnail,
+    # art/<sub>/<unguessable>.jpg for a painting (retired by #137; a phone from before it may still send one).
     key: str
-    # With painted art only: the pack art to show if the server no longer holds the painting (#70).
+    # With painted art only: the pack art to show unless the find already shows the painting (#70, #137).
     fallback: FallbackBody | None = None
 
     def reference(self) -> ArtReference:
@@ -369,7 +369,7 @@ def put_find(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from None
     find, created = finds.put(subject, _sighting_id(sighting_id), content, art_fallback=fallback)
     if created:
-        # Pushes (issue #63) for a new find only; a repeated put (Heard to Seen, painted art ready, #70) sends nothing.
+        # Pushes (issue #63) for a new find only; a repeated put (Heard to Seen) sends nothing.
         # A failure here never fails the put.
         try:
             pushes.find_added(find)

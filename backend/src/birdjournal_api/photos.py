@@ -1,9 +1,9 @@
 """Original photos on shared cards (issue #66, spec v2 "Shared card", ADR-0004): the phone blurs the faces and strips
-the metadata (`ArtPhoto.prepare`), asks for an upload URL, PUTs the JPEG straight to the art CDN's bucket, and names
+the metadata (`SharedPhoto.prepare`), asks for an upload URL, PUTs the JPEG straight to the art CDN's bucket, and names
 the key in the card it shares. The photo is then shown in the circles the card went to, and only there.
 
 Keys are `photos/<sub>/<unguessable>.jpg` in the art CDN's bucket (#68's ArtCdn, no bucket of its own): nothing lists
-the bucket, so the URL is the only way to the picture, as for painted art.
+the bucket, so the URL is the only way to the picture.
 
 The upload is a presigned POST whose policy caps the size (`content-length-range`, at most 5 MB), fixes the content
 type and the key, and tags the object `pending=true`. The bucket's lifecycle rule expires

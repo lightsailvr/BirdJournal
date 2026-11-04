@@ -6,7 +6,6 @@ from constructs import Construct
 
 from birdjournal_infra.api import Api
 from birdjournal_infra.art import ArtCdn
-from birdjournal_infra.art_jobs import ArtJobs
 from birdjournal_infra.shared_photos import SharedPhotos
 from birdjournal_infra.auth import Auth
 from birdjournal_infra.budget import Budget
@@ -37,9 +36,8 @@ class BirdJournalStack(Stack):
             certificate_arn=config.invite_certificate_arn,
             app_ids=list(config.ios_app_ids),
         )
-        # The one art CDN (#68): painted art now, pack-art thumbnails for finds (#62) later.
+        # The one art CDN (#68): finds' patch thumbnails (#62, #136), and the paintings left from before #137.
         self.art = ArtCdn(self, "ArtCdn")
-        art_jobs = ArtJobs(self, "ArtJobs", cdn=self.art)
         # Shared cards' original photos (#66), under photos/ in the same bucket.
         shared_photos = SharedPhotos(self, "SharedPhotos", cdn=self.art)
         api = Api(
@@ -51,13 +49,8 @@ class BirdJournalStack(Stack):
                 "COGNITO_ISSUER": auth.issuer,
                 "COGNITO_CLIENT_IDS": auth.app_client.user_pool_client_id,
                 "INVITE_BASE_URL": invites.url,
-                "UPLOAD_BUCKET": art_jobs.uploads.bucket_name,
                 "ART_BUCKET": self.art.bucket.bucket_name,
                 "ART_CDN_BASE_URL": self.art.url,
-                "ART_QUEUE_URL": art_jobs.queue.queue_url,
-                "ART_WORKER_TOKEN_SECRET": art_jobs.worker_token.secret_arn,
-                "ART_AUTO_PAINT": config.art_auto_paint,
-                "ART_DAILY_ALLOWANCE": str(config.art_daily_allowance),
                 "APNS_SECRET_NAME": config.apns_secret_name,
                 "APNS_TOPIC": config.apns_topic,
                 # Reports, moderation and account deletion (#71).
@@ -68,14 +61,13 @@ class BirdJournalStack(Stack):
             },
         )
         data.table.grant_read_write_data(api.function)
-        art_jobs.grant_api(api.function)
+        self.art.grant_delete_paintings(api.function)
         shared_photos.grant_api(api.function)
         Pushes(self, "Pushes", function=api.function, apns_secret_name=config.apns_secret_name)
         GoalRollover(self, "GoalRollover", function=api.function)
         Safety(
             self, "Safety", function=api.function, report_email=config.report_email, user_pool=auth.user_pool,
-            apple_sign_in_secret_name=config.apple_sign_in_secret_name, upload_bucket=art_jobs.uploads,
-            art_bucket=self.art.bucket,
+            apple_sign_in_secret_name=config.apple_sign_in_secret_name,
         )
         Budget(self, "Budget", monthly_usd=config.monthly_budget_usd, email=config.budget_alert_email)
 
@@ -93,12 +85,8 @@ class BirdJournalStack(Stack):
             "InviteBaseUrl": invites.url,
             # The art CDN's host (#68; finds' thumbnails, #62, use it too).
             "ArtCdnDomain": self.art.domain,
-            # What the art wizard installs on comfybox for the worker.
-            "ArtQueueUrl": art_jobs.queue.queue_url,
-            "ArtUploadBucket": art_jobs.uploads.bucket_name,
+            # Where scripts/publish-pack-thumbnails.sh uploads.
             "ArtBucket": self.art.bucket.bucket_name,
-            "ArtWorkerUser": art_jobs.worker.user_name,
-            "ArtWorkerTokenSecret": art_jobs.worker_token.secret_arn,
         }
         for name, value in outputs.items():
             CfnOutput(self, name, value=value)

@@ -24,8 +24,8 @@ full account, is finished by the phone calling again with the same access token)
 7. **Devices** (#63), with the token pointers.
 8. **Other members' items naming it**: their mutes and blocks of it and their last-push times about it, for everyone
    who ever shared a circle with it.
-9. **Art jobs** (#68, #69): the waiting upload and the painting, whatever their state; a message still on the queue
-   finds no job and is dropped by the worker.
+9. **Art jobs** left from before #137 (`painted.py`): the painting each names, unless it already went, whatever the
+   job's state.
 10. **Reports** it filed or that name it (#71).
 11. **Everything left under `ACCOUNT#<sub>`**: the profile, mutes, blocks, the painting and report day counters,
     push times, past-circle and invite copies.
@@ -59,10 +59,10 @@ from typing import Any, Protocol
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
-from birdjournal_api.art import ArtStorage
 from birdjournal_api.circles import CircleStore, NotFound
 from birdjournal_api.devices import DeviceStore
 from birdjournal_api.finds import FindStore, REACTIONS_PK, reaction_push_key
+from birdjournal_api.painted import ArtStorage
 from birdjournal_api.pushes import DIGEST_PK
 from birdjournal_api.safety import REPORTS_PK
 
@@ -208,11 +208,10 @@ class AccountDeleter:
         for device in self._devices.devices_of(subject):
             self._devices.unregister(subject, device.token)
 
-        # 9. Art jobs.
+        # 9. Art jobs left from before #137.
         jobs = self._query(account, "ARTJOB#")
         if self._art is not None:
             for job in jobs:
-                self._art.delete_upload(str(job["input_key"]))
                 if "art_deleted_at" not in job:
                     self._art.delete_art(str(job["output_key"]))
 
