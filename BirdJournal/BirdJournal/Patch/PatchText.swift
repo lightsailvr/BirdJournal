@@ -11,20 +11,10 @@ enum PatchText {
         return "\(name), \(patch.placement.editionLabel) patch, seen \(CardCollection.Patch.times(patch.count)), sewn \(sewn)"
     }
 
-    /// "Northern Mockingbird, number 9 of 160, not yet found".
-    static func spokenPattern(name: String, number: Int, total: Int) -> String {
-        "\(name), number \(number) of \(total), not yet found"
-    }
-
     /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set.
     static func tileLine(_ patch: CardCollection.Patch) -> String {
         guard case .numbered(_, _, _, let number, let total) = patch.placement else { return "seen \(patch.count)×" }
         return "No. \(CardPlacement.paddedNumber(number, of: total)) · seen \(patch.count)×"
-    }
-
-    /// A pattern's line under the name: "No. 009".
-    static func patternLine(number: Int, total: Int) -> String {
-        "No. \(CardPlacement.paddedNumber(number, of: total))"
     }
 
     /// Under the patch on its page: "Seen 8 times in Los Angeles · sewn Sep 14".

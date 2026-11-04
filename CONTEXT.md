@@ -77,11 +77,11 @@ The collectible: one per species per placement (a set, or Uncharted), derived fr
 _Avoid_: badge, card (for the collectible), sticker, achievement
 
 **Pattern**:
-A patch before it is sewn: the cord, bare twill and the patch's own stitch lines in blue transfer pen, drawn by the app from the painting's height layer, with no extra painting. An honest outline, not a lock.
+A patch before it is stitched: the cord, bare twill and the patch's own stitch lines in blue transfer pen, drawn by the app. Only where a patch is being sewn (#135): a bird you haven't found has no patch, and no pattern, on any board.
 _Avoid_: locked patch, silhouette, ghost
 
 **Board**:
-A set's felt surface in Collection: one place per species in collector-number order, a patch where you've sewn one and its pattern where you haven't. Uncharted has a board of its patches alone.
+Your patches in one place in Collection, on felt across the whole sheet, in collector-number order; Uncharted has one too. A bird you haven't found isn't on it.
 _Avoid_: grid, shelf
 
 **Blank**:

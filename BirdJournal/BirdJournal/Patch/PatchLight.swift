@@ -4,6 +4,7 @@ import Observation
 import OSLog
 import QuartzCore
 import simd
+import UIKit
 
 /// Where a patch's light is (issue #134, guide page 13), from gravity in the device's frame: pure, so its feel is tested
 /// without a phone. The first reading is "as held" and puts the light at its resting place, upper-left. Tilting from
@@ -16,8 +17,8 @@ import simd
 nonisolated struct PatchLightModel: Sendable {
     /// Upper-left, in the screen's axes (y runs down), where z is 1: where the light rests, and stays under Reduce Motion.
     static let rest = SIMD2<Double>(-0.46, -0.62)
-    /// How far the full 35° moves it from `rest`.
-    static let reach = 0.62
+    /// How far the full 35° moves it from `rest`: far enough that a hand's ordinary 10° shows (`PatchLightPixelTests`).
+    static let reach = 1.1
     static let clampDegrees = 35.0
     /// Each reading's share of the smoothed tilt: about 100 ms to follow at 60 Hz.
     static let smoothing = 0.16
@@ -66,6 +67,21 @@ nonisolated struct PatchLightModel: Sendable {
     }
 }
 
+extension PatchLightModel {
+    /// Gravity in the axes of the screen as it's showing, so "upper-left" stays upper-left when the phone turns sideways.
+    /// Core Motion's axes are the portrait device's: x to its right edge, y to its top.
+    static func gravity(_ device: SIMD3<Double>, showing orientation: UIInterfaceOrientation) -> SIMD3<Double> {
+        switch orientation {
+        // The device's top points left of the screen.
+        case .landscapeRight: SIMD3(-device.y, device.x, device.z)
+        // The device's top points right of the screen.
+        case .landscapeLeft: SIMD3(device.y, -device.x, device.z)
+        case .portraitUpsideDown: SIMD3(-device.x, -device.y, device.z)
+        default: device
+        }
+    }
+}
+
 /// The one light every patch on screen is lit by (guide page 18: one light uniform): the phone only has one attitude.
 /// Runs Core Motion while a lit surface holds it.
 @MainActor @Observable
@@ -76,6 +92,7 @@ final class PatchLight {
 
     @ObservationIgnored private var model = PatchLightModel()
     @ObservationIgnored private var holders = 0
+    @ObservationIgnored private var orientation = UIInterfaceOrientation.portrait
     @ObservationIgnored private let motion = CMMotionManager()
     #if DEBUG
     @ObservationIgnored private var sweep: PatchLightSweep?
@@ -111,7 +128,7 @@ final class PatchLight {
         motion.startDeviceMotionUpdates(to: .main) { [weak self] reading, _ in
             guard let gravity = reading?.gravity else { return }
             let vector = SIMD3(gravity.x, gravity.y, gravity.z)
-            MainActor.assumeIsolated { self?.take(vector) }
+            MainActor.assumeIsolated { self?.read(device: vector) }
         }
     }
 
@@ -125,6 +142,16 @@ final class PatchLight {
     func restart() {
         model.reset()
         direction = model.direction
+    }
+
+    /// One reading from the device. A turn of the screen starts again from upper-left: the old "as held" was in other axes.
+    private func read(device gravity: SIMD3<Double>) {
+        let showing = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.effectiveGeometry.interfaceOrientation ?? .portrait
+        if showing != orientation {
+            orientation = showing
+            restart()
+        }
+        take(PatchLightModel.gravity(gravity, showing: showing))
     }
 
     func take(_ gravity: SIMD3<Double>) {

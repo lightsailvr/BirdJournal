@@ -41,7 +41,15 @@ struct BoardMaterial: View {
     }
 }
 
-/// A felt board: its contents on the material, inside a quiet inner keyline, bleeding to the page's edges.
+extension View {
+    /// The material behind a whole sheet of patches, reaching under the bars (issue #134: only behind the patches, it stopped
+    /// short of the page's edges and looked pasted on).
+    func patchSheetBackground() -> some View {
+        background { BoardMaterial().ignoresSafeArea() }
+    }
+}
+
+/// A small panel of patches on a page that isn't theirs: the material inside a quiet inner keyline.
 struct FeltBoard<Content: View>: View {
     @ViewBuilder var content: Content
 

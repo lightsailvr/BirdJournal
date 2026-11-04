@@ -14,7 +14,7 @@ enum Route: Hashable {
     case patch(CardCollection.Patch.Key)
     /// A patch's sightings, or every sighting of the species.
     case sightings(SightingsScope)
-    /// One species' patches across places, and the editions still to find (issue #134).
+    /// One species' patches across places (issue #134).
     case speciesPatches(scientificName: String, commonName: String)
     /// One set's species in collector order, silhouettes for the uncollected (issue #54).
     case set(id: String)

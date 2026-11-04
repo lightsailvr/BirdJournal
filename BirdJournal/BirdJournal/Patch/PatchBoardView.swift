@@ -21,55 +21,20 @@ enum PatchBoardLayout {
     }
 }
 
-/// One set's felt board (issue #134, guide page 6): your patches in collector-number order, each with its count, then the
-/// patterns of the birds still to find. A patch opens its page; a pattern, the bird's profile.
+/// A board's patches in collector-number order, each with its count (issue #134, guide page 6). Only what you've sewn: a
+/// bird you haven't found has no patch at all, as the maintainer decided on the phone. The sheet behind it is the material.
 struct PatchBoard: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
-    let set: PackSet
-    /// Every place on the board, or the ones a search kept.
-    let entries: [CardCollection.BoardEntry]
-
-    var body: some View {
-        FeltBoard {
-            LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize), spacing: 18) {
-                ForEach(entries) { entry in
-                    let name = set.species.first { $0.scientificName == entry.scientificName }?.commonName ?? entry.scientificName
-                    if let patch = entry.patch {
-                        SewnPatchTile(patch: patch, name: name)
-                    } else {
-                        NavigationLink(value: Route.species(scientificName: entry.scientificName, commonName: name)) {
-                            PatchTile(
-                                art: library.patchArt(scientificName: entry.scientificName, setID: set.id), edition: PatchEdition.of(setID: set.id), face: .pattern,
-                                name: name, line: PatchText.patternLine(number: entry.number, total: entry.total),
-                                spoken: PatchText.spokenPattern(name: name, number: entry.number, total: entry.total)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityHint("Opens its page in the Atlas.")
-                        .accessibilityIdentifier("board-pattern")
-                    }
-                }
-            }
-        }
-        .holdsPatchLight()
-    }
-}
-
-/// The patches outside every set, on their own board.
-struct UnchartedBoard: View {
-    @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(PackLibrary.self) private var library
     let patches: [CardCollection.Patch]
 
     var body: some View {
-        FeltBoard {
-            LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize), spacing: 18) {
-                ForEach(patches) { patch in
-                    SewnPatchTile(patch: patch, name: PatchText.name(of: patch, library: library))
-                }
+        LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize), spacing: 18) {
+            ForEach(patches) { patch in
+                SewnPatchTile(patch: patch, name: PatchText.name(of: patch, library: library))
             }
         }
+        .padding(.vertical, 14)
         .holdsPatchLight()
     }
 }
