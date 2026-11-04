@@ -1055,7 +1055,12 @@
  },
  "Pelecanus erythrorhynchos": {
   "art": {
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "reference": 340865450,
+    "_why": "the pack art reference wears a numbered wildlife wing tag, which the thread copied",
+    "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange."
+   }
   }
  },
  "Streptopelia decaocto": {

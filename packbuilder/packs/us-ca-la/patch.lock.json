@@ -3,84 +3,105 @@
   "species": {
     "actitis-macularius": {
       "common_name": "Spotted Sandpiper",
-      "seed": 1662006134,
+      "seed": 337052640,
       "dark": false,
       "measure": {
-        "iou": 0.687,
-        "dE_mean": 19.0,
-        "dE_p95": 35.4,
-        "dL": 4.5,
-        "dC": 10.8,
+        "iou": 0.683,
+        "dE_mean": 32.4,
+        "dE_p95": 56.7,
+        "dL": 7.7,
+        "dC": 14.9,
         "faithful": false
       },
-      "sha256": "52dd014c923943ec649ed6db1e47656674ef15a93ab6ac1af4479201c2b6752a",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d0127cc9bfd4cbdac44a8f94aa28b98088ea883aa340ef8ffd3397c8b04d42f8",
       "photos": [
         462069561
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "rock",
+      "review": "pending",
+      "rejected_seeds": [
+        1662006134
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "aechmophorus-occidentalis": {
       "common_name": "Western Grebe",
-      "seed": 1382642136,
+      "seed": 627982670,
       "dark": false,
       "measure": {
-        "iou": 0.74,
-        "dE_mean": 10.1,
-        "dE_p95": 30.3,
-        "dL": 4.5,
-        "dC": 2.1,
+        "iou": 0.801,
+        "dE_mean": 12.7,
+        "dE_p95": 26.1,
+        "dL": 4.7,
+        "dC": 7.2,
         "faithful": false
       },
-      "sha256": "ab01c781f9fe2a39b2445a9b46b8d98b9a606924f8dd4601f1f90657cbebe201",
+      "card_at_edge": 0.0018,
+      "attempts": 1,
+      "sha256": "6493e04d92173ae99cdd919f6f7d156bbaa670754a0f643a1d378aa4c417fca5",
       "photos": [
         593312044
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        1382642136
+      ],
+      "why": "needs water"
     },
     "aeronautes-saxatalis": {
       "common_name": "White-throated Swift",
-      "seed": 3480304684,
+      "seed": 3094744250,
       "dark": true,
       "measure": {
-        "iou": 0.619,
-        "dE_mean": 31.9,
-        "dE_p95": 55.8,
-        "dL": 12.0,
-        "dC": 15.4,
+        "iou": 0.435,
+        "dE_mean": 28.8,
+        "dE_p95": 55.2,
+        "dL": 12.7,
+        "dC": 11.3,
         "faithful": false
       },
-      "sha256": "14bae930073d33c24d1a986763be22bf4e8579bd4dfb918e15728a79fe1edcaa",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dcc5f28caa094b25df2b4570cb4ad61fa6443936877ae9af141f04ed7b94c9aa",
       "photos": [
         148948986
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "flight",
+      "review": "pending",
+      "rejected_seeds": [
+        3480304684
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "agelaius-phoeniceus": {
       "common_name": "Red-winged Blackbird",
@@ -107,7 +128,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aimophila-ruficeps": {
       "common_name": "Rufous-crowned Sparrow",
@@ -136,7 +157,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         453058574
       ],
@@ -144,30 +165,37 @@
     },
     "alopochen-aegyptiaca": {
       "common_name": "Egyptian Goose",
-      "seed": 277728592,
+      "seed": 1737162182,
       "dark": false,
       "measure": {
-        "iou": 0.766,
-        "dE_mean": 15.1,
-        "dE_p95": 22.2,
-        "dL": -2.0,
-        "dC": 0.4,
+        "iou": 0.932,
+        "dE_mean": 12.9,
+        "dE_p95": 18.8,
+        "dL": -2.1,
+        "dC": -1.2,
         "faithful": false
       },
-      "sha256": "05f87275bb7ff0411c4823201e029d05cab6411da30d25537be83ce03cc24dc3",
+      "card_at_edge": 0.0007,
+      "attempts": 1,
+      "sha256": "ed2db08ca899f8268059a8e1bcf6592381da8d3e1a67007df5f6258836d96709",
       "photos": [
         578296243
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        277728592
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "amazona-oratrix": {
       "common_name": "Yellow-headed Amazon",
@@ -194,7 +222,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "amazona-viridigenalis": {
       "common_name": "Red-crowned Amazon",
@@ -221,7 +249,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anarhynchus-nivosus": {
       "common_name": "Snowy Plover",
@@ -251,7 +279,7 @@
       },
       "prompts": 2,
       "setting": "shore",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         4093719943
       ],
@@ -285,7 +313,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3453793620
       ],
@@ -293,57 +321,71 @@
     },
     "anas-platyrhynchos": {
       "common_name": "Mallard",
-      "seed": 2980345444,
+      "seed": 3332589298,
       "dark": false,
       "measure": {
-        "iou": 0.952,
-        "dE_mean": 7.7,
-        "dE_p95": 15.6,
-        "dL": -6.1,
-        "dC": 1.4,
+        "iou": 0.937,
+        "dE_mean": 8.8,
+        "dE_p95": 18.7,
+        "dL": -6.6,
+        "dC": 0.8,
         "faithful": true
       },
-      "sha256": "4a062a691f2bb0aa82c7fcdd3e0fb555d7be71c1d7e2e47465b9cc2d2677242d",
+      "card_at_edge": 0.0012,
+      "attempts": 1,
+      "sha256": "b6ce139e580b08f4f9d3786b3ab12efa8ea5442d8f722c9a7a0184baeedc186b",
       "photos": [
         689499146
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        2980345444
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "anthus-rubescens": {
       "common_name": "American Pipit",
-      "seed": 111249407,
+      "seed": 1906751337,
       "dark": false,
       "measure": {
-        "iou": 0.87,
-        "dE_mean": 10.7,
-        "dE_p95": 19.0,
-        "dL": -6.3,
-        "dC": 1.5,
+        "iou": 0.91,
+        "dE_mean": 18.1,
+        "dE_p95": 24.0,
+        "dL": -10.5,
+        "dC": 7.6,
         "faithful": false
       },
-      "sha256": "7ca3d3c7f0a84f6daf65c31496da802f130ac427c932926a8b8eb3b9730e5004",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "667caa3331bdfbd6f06076382f8e6e79363f2de26b860bf18bc9d653b0b99485",
       "photos": [
         179887871
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        111249407
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "aphelocoma-californica": {
       "common_name": "California Scrub Jay",
@@ -370,7 +412,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aratinga-nenday": {
       "common_name": "Nanday Parakeet",
@@ -399,7 +441,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         415727611
       ],
@@ -432,7 +474,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1781978935
       ],
@@ -440,57 +482,71 @@
     },
     "ardea-alba": {
       "common_name": "Great Egret",
-      "seed": 459078368,
+      "seed": 1817954934,
       "dark": false,
       "measure": {
-        "iou": 0.624,
-        "dE_mean": 16.4,
-        "dE_p95": 29.6,
-        "dL": -14.6,
-        "dC": 1.2,
+        "iou": 0.495,
+        "dE_mean": 19.1,
+        "dE_p95": 32.3,
+        "dL": -17.1,
+        "dC": 4.4,
         "faithful": false
       },
-      "sha256": "b6655cf89cf38c672ef72c5f4f306cf3fdc1d22f12c43c80b6672fec84c77a7a",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "0a7c3e0b3bbbd008184821790ffc6b20aaf963370cbc3a125fc0e2b502fd0400",
       "photos": [
         469358926
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        459078368
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "ardea-herodias": {
       "common_name": "Great Blue Heron",
-      "seed": 485436356,
+      "seed": 1810373458,
       "dark": false,
       "measure": {
-        "iou": 0.911,
-        "dE_mean": 13.4,
-        "dE_p95": 20.8,
-        "dL": -8.8,
-        "dC": -6.0,
+        "iou": 0.784,
+        "dE_mean": 14.1,
+        "dE_p95": 22.5,
+        "dL": -5.6,
+        "dC": -7.5,
         "faithful": false
       },
-      "sha256": "51ea161383592166965dae1292a05148731662badfd384b36171d691a95a1b30",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "2cae418bc18c628c0fd5641d603a6e6634c7b8bd9ab8f6902500c9230bb1afed",
       "photos": [
         613538389
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        485436356
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "astur-cooperii": {
       "common_name": "Cooper's Hawk",
@@ -517,7 +573,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aythya-collaris": {
       "common_name": "Ring-necked Duck",
@@ -547,7 +603,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3819135890
       ],
@@ -578,7 +634,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bombycilla-cedrorum": {
       "common_name": "Cedar Waxwing",
@@ -605,34 +661,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "branta-canadensis": {
       "common_name": "Canada Goose",
-      "seed": 3313573699,
+      "seed": 2995138517,
       "dark": true,
       "measure": {
-        "iou": 0.902,
-        "dE_mean": 25.3,
-        "dE_p95": 41.5,
-        "dL": 23.1,
-        "dC": 4.1,
+        "iou": 0.896,
+        "dE_mean": 25.5,
+        "dE_p95": 42.2,
+        "dL": 23.5,
+        "dC": 5.4,
         "faithful": false
       },
-      "sha256": "7e106e93f0670eb63834f010b33a620b3093a52ace8beafd2f11e37a00b6b9dd",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "3e77235ccb99c414f1eb71d15701926e085675481d32eb82823b8a77bc1c880e",
       "photos": [
         634048653
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        3313573699
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "brotogeris-chiriri": {
       "common_name": "Yellow-chevroned Parakeet",
@@ -661,7 +724,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3846952290
       ],
@@ -692,7 +755,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bucephala-albeola": {
       "common_name": "Bufflehead",
@@ -722,7 +785,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1827190016
       ],
@@ -753,7 +816,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "buteo-lineatus": {
       "common_name": "Red-shouldered Hawk",
@@ -780,142 +843,177 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "butorides-virescens": {
       "common_name": "Green Heron",
-      "seed": 130262133,
+      "seed": 1891931363,
       "dark": false,
       "measure": {
-        "iou": 0.891,
-        "dE_mean": 11.9,
-        "dE_p95": 21.1,
-        "dL": -10.1,
-        "dC": -2.8,
+        "iou": 0.821,
+        "dE_mean": 14.1,
+        "dE_p95": 25.5,
+        "dL": -11.6,
+        "dC": -3.6,
         "faithful": false
       },
-      "sha256": "148919e8833b68042d45222ccd67f91474fb25f8ba8f5f45bb8933b4d76bc0dc",
+      "card_at_edge": 0.01,
+      "attempts": 1,
+      "sha256": "ac9ba088db4a8be9edbd90e62dee897ec036e1e3e1c9cc79467fa900779300eb",
       "photos": [
         554765103
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        130262133
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "cairina-moschata": {
       "common_name": "Muscovy Duck",
-      "seed": 2364277557,
+      "seed": 4226495395,
       "dark": false,
       "measure": {
-        "iou": 0.966,
-        "dE_mean": 7.3,
-        "dE_p95": 15.4,
-        "dL": -1.2,
-        "dC": 4.2,
+        "iou": 0.948,
+        "dE_mean": 6.9,
+        "dE_p95": 15.6,
+        "dL": -1.4,
+        "dC": 2.8,
         "faithful": true
       },
-      "sha256": "a9593c25a4508df8082fb22b73076e78b51623aac02b576c8c7ab02636b5d85d",
+      "card_at_edge": 0.0004,
+      "attempts": 1,
+      "sha256": "7e63e71ce9cb660c6b21a9171f449874467a10e1acbb52e9f3825b762cf8727c",
       "photos": [
         570864575
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        2364277557
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "calidris-alba": {
       "common_name": "Sanderling",
-      "seed": 4193525303,
+      "seed": 2398301857,
       "dark": false,
       "measure": {
-        "iou": 0.916,
-        "dE_mean": 13.0,
-        "dE_p95": 24.8,
-        "dL": 1.9,
-        "dC": 9.6,
-        "faithful": false
+        "iou": 0.93,
+        "dE_mean": 9.2,
+        "dE_p95": 16.8,
+        "dL": 1.5,
+        "dC": 6.2,
+        "faithful": true
       },
-      "sha256": "ce66974c60726ffbf6a29f777843bc66edced64d32245a3c979e082e66cdb5b3",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "7334fbf81694dbf6df4fb6e2e9159e8b89f5ec05607aa761919820df557d75e4",
       "photos": [
         354867752
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        4193525303
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "calidris-mauri": {
       "common_name": "Western Sandpiper",
-      "seed": 3170838800,
+      "seed": 3422034310,
       "dark": false,
       "measure": {
-        "iou": 0.906,
-        "dE_mean": 13.1,
-        "dE_p95": 24.1,
-        "dL": -0.6,
-        "dC": 6.6,
+        "iou": 0.907,
+        "dE_mean": 15.1,
+        "dE_p95": 21.7,
+        "dL": -12.3,
+        "dC": 6.9,
         "faithful": false
       },
-      "sha256": "01fcd75563b42d5ab404014f0fda393dc93d0e56c7ac1a69d944958ca0057ce3",
+      "card_at_edge": 0.0024,
+      "attempts": 1,
+      "sha256": "11a15cfdacd1f06efe7a1a04464929887256f9c06cee5666bb774b4a849103e2",
       "photos": [
         155736188
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        3170838800
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "calidris-minutilla": {
       "common_name": "Least Sandpiper",
-      "seed": 140862027,
+      "seed": 2137150173,
       "dark": false,
       "measure": {
-        "iou": 0.957,
-        "dE_mean": 8.3,
-        "dE_p95": 14.1,
-        "dL": -5.5,
-        "dC": 5.6,
+        "iou": 0.923,
+        "dE_mean": 6.3,
+        "dE_p95": 12.8,
+        "dL": -4.2,
+        "dC": 3.9,
         "faithful": true
       },
-      "sha256": "58b42221b3e041fbcec13c5600990d87ef9ecfd966567419d7e9d668e5e1a256",
+      "card_at_edge": 0.0003,
+      "attempts": 1,
+      "sha256": "0579c82281a24315e536d59d446cb1aa456b6d3d284ac15a76a81e30e81b57c9",
       "photos": [
         155699097
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        140862027
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "callipepla-californica": {
       "common_name": "California Quail",
@@ -942,7 +1040,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calypte-anna": {
       "common_name": "Anna's Hummingbird",
@@ -969,7 +1067,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "campylorhynchus-brunneicapillus": {
       "common_name": "Cactus Wren",
@@ -996,7 +1094,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cardellina-pusilla": {
       "common_name": "Wilson's Warbler",
@@ -1025,7 +1123,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         843577714
       ],
@@ -1056,34 +1154,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catharus-guttatus": {
       "common_name": "Hermit Thrush",
-      "seed": 2068249474,
+      "seed": 205638420,
       "dark": false,
       "measure": {
-        "iou": 0.843,
-        "dE_mean": 14.4,
-        "dE_p95": 29.4,
-        "dL": 8.3,
-        "dC": 3.1,
+        "iou": 0.922,
+        "dE_mean": 11.2,
+        "dE_p95": 20.4,
+        "dL": 6.9,
+        "dC": 3.2,
         "faithful": false
       },
-      "sha256": "99f8405e5efe441f6c9baa06aede4ffe44c3a827dac5db18c717f99ca8071ca7",
+      "card_at_edge": 0.001,
+      "attempts": 1,
+      "sha256": "4adf615fc24cb9ea6e918aaf5346546dfc082097f80d78f23e3ae9e6068fcf27",
       "photos": [
         262701129
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        2068249474
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "catharus-ustulatus": {
       "common_name": "Swainson's Thrush",
@@ -1110,34 +1215,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catherpes-mexicanus": {
       "common_name": "Canyon Wren",
-      "seed": 1849216802,
+      "seed": 423624628,
       "dark": false,
       "measure": {
-        "iou": 0.892,
-        "dE_mean": 10.8,
-        "dE_p95": 19.7,
-        "dL": 2.9,
-        "dC": 5.7,
-        "faithful": false
+        "iou": 0.923,
+        "dE_mean": 7.8,
+        "dE_p95": 16.1,
+        "dL": -1.3,
+        "dC": 4.4,
+        "faithful": true
       },
-      "sha256": "0c6bbf7f2b026da01677e459f6d3f62e7d98067fdbed1db98bbc8465531b9b20",
+      "card_at_edge": 0.0038,
+      "attempts": 1,
+      "sha256": "37d2bb8944e43be8c6cf866ad5c2d6a534da231d6cd1cbe7b80d33a46fc2926b",
       "photos": [
         334250292
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "rock",
+      "review": "pending",
+      "rejected_seeds": [
+        1849216802
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "chamaea-fasciata": {
       "common_name": "Wrentit",
@@ -1164,34 +1276,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "charadrius-vociferus": {
       "common_name": "Killdeer",
-      "seed": 3726605002,
+      "seed": 2836941404,
       "dark": false,
       "measure": {
-        "iou": 0.924,
-        "dE_mean": 10.7,
-        "dE_p95": 20.3,
-        "dL": 8.0,
-        "dC": 3.0,
-        "faithful": false
+        "iou": 0.881,
+        "dE_mean": 6.7,
+        "dE_p95": 14.4,
+        "dL": 2.2,
+        "dC": 3.1,
+        "faithful": true
       },
-      "sha256": "e556661ce005125eb9508ece790daebc5e5fca05a23af4a4f5dd34834c07f926",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "51083664c614a0e76593a1f328088d401ae461f253a4780c145653a5f127585b",
       "photos": [
         277638149
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        3726605002
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "chondestes-grammacus": {
       "common_name": "Lark Sparrow",
@@ -1218,7 +1337,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "colaptes-auratus": {
       "common_name": "Northern Flicker",
@@ -1245,34 +1364,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "columba-livia": {
       "common_name": "Rock Dove",
-      "seed": 3426444653,
+      "seed": 3141293563,
       "dark": false,
       "measure": {
-        "iou": 0.93,
-        "dE_mean": 9.5,
-        "dE_p95": 21.0,
-        "dL": 5.1,
-        "dC": -2.1,
+        "iou": 0.916,
+        "dE_mean": 10.0,
+        "dE_p95": 22.0,
+        "dL": 5.7,
+        "dC": -1.7,
         "faithful": true
       },
-      "sha256": "4c9d594797167034d43cbdf9c26527713df9171dc82701d6d1dd5288797e7484",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "626f0327a37c4d5f139245f74b42c617f8a6fcdcddfbc6de92725a39c8e81386",
       "photos": [
         568859959
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        3426444653
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "contopus-sordidulus": {
       "common_name": "Western Wood Pewee",
@@ -1299,7 +1425,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corthylio-calendula": {
       "common_name": "Ruby-crowned Kinglet",
@@ -1326,7 +1452,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corvus-brachyrhynchos": {
       "common_name": "American Crow",
@@ -1357,7 +1483,7 @@
       "prompts": 2,
       "setting": "ground",
       "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white, grey or blue anywhere.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1165282571
       ],
@@ -1392,7 +1518,7 @@
       "prompts": 2,
       "setting": "ground",
       "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white or grey anywhere.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3281970671
       ],
@@ -1400,30 +1526,37 @@
     },
     "cyanocitta-stelleri": {
       "common_name": "Steller's Jay",
-      "seed": 591091710,
+      "seed": 1413244776,
       "dark": false,
       "measure": {
-        "iou": 0.779,
-        "dE_mean": 12.6,
-        "dE_p95": 23.8,
-        "dL": 3.9,
-        "dC": -0.5,
+        "iou": 0.881,
+        "dE_mean": 14.6,
+        "dE_p95": 22.1,
+        "dL": -0.2,
+        "dC": 0.3,
         "faithful": false
       },
-      "sha256": "65990616eea9dbf82b2173b1c1aeb460b0e42304464cb52f692c4484ccf47338",
+      "card_at_edge": 0.001,
+      "attempts": 1,
+      "sha256": "801f07f0a33cd968cb0d7b036e091c6f7d212f49f5a2c32394e0176c266d350e",
       "photos": [
         51260557
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        591091710
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "dryobates-nuttallii": {
       "common_name": "Nuttall's Woodpecker",
@@ -1450,7 +1583,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "dryobates-pubescens": {
       "common_name": "Downy Woodpecker",
@@ -1480,7 +1613,7 @@
       },
       "prompts": 2,
       "setting": "trunk",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         2344683641
       ],
@@ -1488,30 +1621,37 @@
     },
     "egretta-thula": {
       "common_name": "Snowy Egret",
-      "seed": 1875191222,
+      "seed": 415372576,
       "dark": false,
       "measure": {
-        "iou": 0.884,
-        "dE_mean": 24.9,
-        "dE_p95": 36.3,
-        "dL": -22.8,
-        "dC": 8.2,
+        "iou": 0.481,
+        "dE_mean": 24.8,
+        "dE_p95": 42.8,
+        "dL": -23.0,
+        "dC": 6.6,
         "faithful": false
       },
-      "sha256": "b5682b6c763dfab95e987c84da092a0d231c8864c644fb2866d845a7e843ca0a",
+      "card_at_edge": 0.0003,
+      "attempts": 1,
+      "sha256": "df6e83e6f71adf599c68f5a93db592c33a81be8515e3ab1b72331a4cb5147a0b",
       "photos": [
         588919285
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "wade",
+      "review": "pending",
+      "rejected_seeds": [
+        1875191222
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "empidonax-difficilis": {
       "common_name": "Western Flycatcher",
@@ -1538,34 +1678,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "euphagus-cyanocephalus": {
       "common_name": "Brewer's Blackbird",
-      "seed": 529240393,
+      "seed": 1754046943,
       "dark": false,
       "measure": {
-        "iou": 0.962,
-        "dE_mean": 4.4,
-        "dE_p95": 9.6,
-        "dL": 1.6,
-        "dC": -0.1,
+        "iou": 0.934,
+        "dE_mean": 5.2,
+        "dE_p95": 11.1,
+        "dL": -0.1,
+        "dC": -1.0,
         "faithful": true
       },
-      "sha256": "698af9b2293ef3e81af30c3959a0eebb1f6782fc1ee18456a0712ee5bf464c05",
+      "card_at_edge": 0.0006,
+      "attempts": 1,
+      "sha256": "17e2d26b0f8a98a79f6ac4770e60809fd7b55a4d42745d7ff9a9a3d7bff6ae0a",
       "photos": [
         362428535
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        529240393
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "falco-peregrinus": {
       "common_name": "Peregrine Falcon",
@@ -1592,7 +1739,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "falco-sparverius": {
       "common_name": "American Kestrel",
@@ -1619,7 +1766,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "fulica-americana": {
       "common_name": "American Coot",
@@ -1650,7 +1797,7 @@
       "prompts": 2,
       "setting": "water",
       "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3884366539,
         2424408670
@@ -1682,7 +1829,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "geothlypis-trichas": {
       "common_name": "Common Yellowthroat",
@@ -1711,7 +1858,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3031493247
       ],
@@ -1719,30 +1866,37 @@
     },
     "haematopus-bachmani": {
       "common_name": "Black Oystercatcher",
-      "seed": 4111186725,
+      "seed": 2181860275,
       "dark": false,
       "measure": {
-        "iou": 0.944,
-        "dE_mean": 20.3,
-        "dE_p95": 33.1,
-        "dL": -18.1,
-        "dC": 5.0,
+        "iou": 0.801,
+        "dE_mean": 15.7,
+        "dE_p95": 27.4,
+        "dL": -10.4,
+        "dC": 6.9,
         "faithful": false
       },
-      "sha256": "1fa1c0a7c407d77e6b6fdd44814dfe269af2c338042020117a66c33360cab9a4",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "07a90f58b527105ceb0f09189b8d52ac2113d837ad20631f22d34acd444249fe",
       "photos": [
         127561861
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "rock",
+      "review": "pending",
+      "rejected_seeds": [
+        4111186725
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "haemorhous-mexicanus": {
       "common_name": "House Finch",
@@ -1769,7 +1923,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haliaeetus-leucocephalus": {
       "common_name": "Bald Eagle",
@@ -1796,34 +1950,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "himantopus-mexicanus": {
       "common_name": "Black-necked Stilt",
-      "seed": 2127628237,
+      "seed": 165033819,
       "dark": false,
       "measure": {
-        "iou": 0.841,
-        "dE_mean": 10.1,
-        "dE_p95": 21.2,
-        "dL": -3.8,
-        "dC": 4.7,
+        "iou": 0.788,
+        "dE_mean": 12.2,
+        "dE_p95": 22.6,
+        "dL": -7.0,
+        "dC": 5.2,
         "faithful": false
       },
-      "sha256": "af4f0be6ba3cc34f771c7a351a73e76ef295a783cdfc1b268d0512e48e345660",
+      "card_at_edge": 0.0005,
+      "attempts": 1,
+      "sha256": "fa16c773e62828f391f83834524cb5c56c47545aeed3b3b2810d6b2d6d327ecd",
       "photos": [
         460820478
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "wade",
+      "review": "pending",
+      "rejected_seeds": [
+        2127628237
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "hirundo-rustica": {
       "common_name": "Barn Swallow",
@@ -1850,7 +2011,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "hydroprogne-caspia": {
       "common_name": "Caspian Tern",
@@ -1880,7 +2041,7 @@
       },
       "prompts": 2,
       "setting": "shore",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         4063728028
       ],
@@ -1911,7 +2072,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "icterus-cucullatus": {
       "common_name": "Hooded Oriole",
@@ -1938,7 +2099,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "junco-hyemalis": {
       "common_name": "Dark-eyed Junco",
@@ -1969,7 +2130,7 @@
       "prompts": 2,
       "setting": "perch",
       "markings": "The hood, back, shoulders and wings are all one slate blue-grey, with no brown or tan on the back or shoulders; only the belly is pale.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3392305438,
         3174386056
@@ -1978,84 +2139,105 @@
     },
     "lanius-ludovicianus": {
       "common_name": "Loggerhead Shrike",
-      "seed": 1662378122,
+      "seed": 336777244,
       "dark": false,
       "measure": {
-        "iou": 0.906,
-        "dE_mean": 7.4,
-        "dE_p95": 15.6,
-        "dL": 1.4,
-        "dC": 4.5,
+        "iou": 0.947,
+        "dE_mean": 7.0,
+        "dE_p95": 14.9,
+        "dL": 1.0,
+        "dC": 2.4,
         "faithful": true
       },
-      "sha256": "326e1466ed1c4a6e6855d98c3708ace9160a8afd3e64069f05d6018b772ea261",
+      "card_at_edge": 0.0004,
+      "attempts": 1,
+      "sha256": "17f611c29228e0a5d4f515a15ba2128ba07793c43a073835c0bc09dcc7790c0e",
       "photos": [
         454561513
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        1662378122
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "larus-californicus": {
       "common_name": "California Gull",
-      "seed": 393105145,
+      "seed": 1617526383,
       "dark": false,
       "measure": {
-        "iou": 0.866,
-        "dE_mean": 14.5,
-        "dE_p95": 30.8,
-        "dL": -11.8,
-        "dC": 4.8,
+        "iou": 0.921,
+        "dE_mean": 19.3,
+        "dE_p95": 30.9,
+        "dL": -14.1,
+        "dC": 10.4,
         "faithful": false
       },
-      "sha256": "a785b61240680f5e64f1201c14dd91a075cc777e299457bfe39dc1a29c76229d",
+      "card_at_edge": 0.0043,
+      "attempts": 1,
+      "sha256": "3b28cb5b3377de375a1edcba2f418a71024ec9e5c2cf9e1b855274d3d532057c",
       "photos": [
         454544999
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        393105145
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "larus-delawarensis": {
       "common_name": "Ring-billed Gull",
-      "seed": 1381140991,
+      "seed": 626375017,
       "dark": false,
       "measure": {
-        "iou": 0.919,
-        "dE_mean": 13.0,
-        "dE_p95": 22.7,
-        "dL": 8.2,
-        "dC": 3.5,
+        "iou": 0.865,
+        "dE_mean": 11.1,
+        "dE_p95": 21.6,
+        "dL": 5.2,
+        "dC": 2.7,
         "faithful": false
       },
-      "sha256": "deef350674dbb76e71d94e08dc1f91cda2eb24148db4746b14c6682cb4e4b2b7",
+      "card_at_edge": 0.0004,
+      "attempts": 1,
+      "sha256": "20431a88d8c7443ec5e2daaa3e628d0b22247fe1d78359679dd36e9f11f197e5",
       "photos": [
         355357677
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        1381140991
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "larus-heermanni": {
       "common_name": "Heermann's Gull",
@@ -2086,7 +2268,7 @@
       "prompts": 2,
       "setting": "shore",
       "markings": "The head and chest are light grey, the wings a darker grey, and the bill is red with a black tip.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3881104573
       ],
@@ -2094,57 +2276,71 @@
     },
     "larus-occidentalis": {
       "common_name": "Western Gull",
-      "seed": 1447680236,
+      "seed": 558819450,
       "dark": false,
       "measure": {
-        "iou": 0.884,
-        "dE_mean": 17.1,
-        "dE_p95": 28.5,
-        "dL": -14.4,
-        "dC": 4.6,
+        "iou": 0.87,
+        "dE_mean": 23.6,
+        "dE_p95": 37.8,
+        "dL": -18.5,
+        "dC": 9.2,
         "faithful": false
       },
-      "sha256": "d33d800ccccc7eddd6183fdbab0c2b7bb2ec779fbbafd6cc33cc4b1676033bb7",
+      "card_at_edge": 0.0011,
+      "attempts": 1,
+      "sha256": "b41872e256e3693ba11ec5e7d3556a91e8c81b592466f0b1c2fb9d0942239e42",
       "photos": [
         658626211
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "rock",
+      "review": "pending",
+      "rejected_seeds": [
+        1447680236
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "larus-smithsonianus": {
       "common_name": "American Herring Gull",
-      "seed": 366677127,
+      "seed": 1658600465,
       "dark": false,
       "measure": {
-        "iou": 0.946,
-        "dE_mean": 14.4,
-        "dE_p95": 19.3,
-        "dL": -10.3,
-        "dC": 9.8,
+        "iou": 0.915,
+        "dE_mean": 14.3,
+        "dE_p95": 22.7,
+        "dL": -11.7,
+        "dC": 7.2,
         "faithful": false
       },
-      "sha256": "9add97208ca4fd5e1fe4b3df824c41e8669e4797ada6cca81e0de0823b0aa673",
+      "card_at_edge": 0.0025,
+      "attempts": 1,
+      "sha256": "b51e8c1ea654c0b8ac87f2821fea5c94de48886f2553d7391fb36212a5a3c7e5",
       "photos": [
         251279386
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        366677127
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "leiothlypis-celata": {
       "common_name": "Orange-crowned Warbler",
@@ -2171,34 +2367,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "limosa-fedoa": {
       "common_name": "Marbled Godwit",
-      "seed": 884544216,
+      "seed": 1136534094,
       "dark": false,
       "measure": {
-        "iou": 0.871,
-        "dE_mean": 6.3,
-        "dE_p95": 13.7,
-        "dL": -2.6,
-        "dC": 4.2,
+        "iou": 0.916,
+        "dE_mean": 5.2,
+        "dE_p95": 9.8,
+        "dL": -1.8,
+        "dC": 3.8,
         "faithful": true
       },
-      "sha256": "5447e17fb7c6ed4c2b36a585d02b743017a0c09bdd7d31adc0d94fda5c58986b",
+      "card_at_edge": 0.0061,
+      "attempts": 1,
+      "sha256": "581e5e70d190fc0daf5f1bcca93090ddd3cf8ce0b2a61acbbbd0fc5f9cb8e922",
       "photos": [
         360168301
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "wade",
+      "review": "pending",
+      "rejected_seeds": [
+        884544216
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "lonchura-punctulata": {
       "common_name": "Scaly-breasted Munia",
@@ -2227,7 +2430,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1771097889
       ],
@@ -2261,7 +2464,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1854773118
       ],
@@ -2296,7 +2499,7 @@
       "prompts": 2,
       "setting": "water",
       "markings": "The band sweeping back from the eye and the patch on the wing are iridescent green thread, not white.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3234981677
       ],
@@ -2304,30 +2507,37 @@
     },
     "mareca-strepera": {
       "common_name": "Gadwall",
-      "seed": 1728446335,
+      "seed": 268619753,
       "dark": false,
       "measure": {
-        "iou": 0.917,
-        "dE_mean": 5.8,
-        "dE_p95": 13.3,
-        "dL": -0.0,
-        "dC": 3.5,
+        "iou": 0.959,
+        "dE_mean": 5.0,
+        "dE_p95": 11.7,
+        "dL": -1.0,
+        "dC": 2.2,
         "faithful": true
       },
-      "sha256": "8241624c706d2fb17ac0bb81d5f14cff46919024f02c36b5d09f12f6d068a00d",
+      "card_at_edge": 0.001,
+      "attempts": 1,
+      "sha256": "87754af54cbb9b4914a5f44270edac81dc9a12a1b42176d56641c4fbbf2cb6c1",
       "photos": [
         227535929
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        1728446335
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "megaceryle-alcyon": {
       "common_name": "Belted Kingfisher",
@@ -2354,7 +2564,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "megascops-kennicottii": {
       "common_name": "Western Screech Owl",
@@ -2381,34 +2591,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melanerpes-formicivorus": {
       "common_name": "Acorn Woodpecker",
-      "seed": 2581826720,
+      "seed": 4007967798,
       "dark": false,
       "measure": {
-        "iou": 0.938,
-        "dE_mean": 8.0,
-        "dE_p95": 18.8,
-        "dL": 0.4,
-        "dC": 2.1,
-        "faithful": true
+        "iou": 0.855,
+        "dE_mean": 14.4,
+        "dE_p95": 38.3,
+        "dL": -1.8,
+        "dC": 2.0,
+        "faithful": false
       },
-      "sha256": "394773d7ba26ddf8563a06a7361dd1b23cc5efd0c7ad6d5e874e9fffe541f407",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "9136ed15d92ce4b341505bf301835556ad707bd98ebf4945f736c376d092502a",
       "photos": [
         705003277
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "pending",
+      "rejected_seeds": [
+        2581826720
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "melanitta-perspicillata": {
       "common_name": "Surf Scoter",
@@ -2439,7 +2656,7 @@
       "prompts": 2,
       "setting": "water",
       "markings": "The whole body and wings are solid black, with no white or cream on them; the only white is on the forehead and the nape.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         360727255,
         1653043777
@@ -2471,34 +2688,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melospiza-melodia": {
       "common_name": "Song Sparrow",
-      "seed": 3473373828,
+      "seed": 3087026706,
       "dark": false,
       "measure": {
-        "iou": 0.938,
-        "dE_mean": 8.5,
-        "dE_p95": 16.2,
-        "dL": -4.5,
-        "dC": 4.5,
+        "iou": 0.928,
+        "dE_mean": 9.0,
+        "dE_p95": 18.3,
+        "dL": -0.9,
+        "dC": 5.1,
         "faithful": true
       },
-      "sha256": "5439f2c3ce23861972dd36c9d037c613ad0fad4fbf2d19e74bcede7552ccf0f3",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "d6f7c2026cb83f27cd6e22292a07c58ea16415c45dd77dac5d37e5349ec16160",
       "photos": [
         573624499
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        3473373828
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "melozone-crissalis": {
       "common_name": "California Towhee",
@@ -2525,7 +2749,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "mimus-polyglottos": {
       "common_name": "Northern Mockingbird",
@@ -2552,34 +2776,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "molothrus-ater": {
       "common_name": "Brown-headed Cowbird",
-      "seed": 693121190,
+      "seed": 1582759984,
       "dark": true,
       "measure": {
-        "iou": 0.841,
-        "dE_mean": 9.4,
-        "dE_p95": 25.8,
-        "dL": 0.0,
-        "dC": 0.9,
-        "faithful": true
+        "iou": 0.782,
+        "dE_mean": 11.8,
+        "dE_p95": 27.2,
+        "dL": 2.8,
+        "dC": 1.6,
+        "faithful": false
       },
-      "sha256": "3d4cd76397e8fcf352031f2336e8e25215a925b0589610513b761d11e0773788",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dfb19b884f653c1f973dc4bca05d231c5226864784bcb0463bd3f25cce97620d",
       "photos": [
         129501932
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        693121190
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "myiarchus-cinerascens": {
       "common_name": "Ash-throated Flycatcher",
@@ -2606,169 +2837,211 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "nannopterum-auritum": {
       "common_name": "Double-crested Cormorant",
-      "seed": 2922119795,
+      "seed": 3643486949,
       "dark": false,
       "measure": {
-        "iou": 0.898,
-        "dE_mean": 6.2,
-        "dE_p95": 13.1,
-        "dL": 3.8,
-        "dC": 1.4,
+        "iou": 0.895,
+        "dE_mean": 6.7,
+        "dE_p95": 12.2,
+        "dL": 1.5,
+        "dC": 3.8,
         "faithful": true
       },
-      "sha256": "566d5c8921041852cc42cba7904ea7b1e59dbc32fe5a6dc34e8dfb67ac4c6e88",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "67638a647922f29a95a8d2fe4d1f088210de0d3e68bb0f08738e7f2cae690417",
       "photos": [
         615582387
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        2922119795
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "numenius-hudsonicus": {
       "common_name": "Hudsonian Whimbrel",
-      "seed": 1539417841,
+      "seed": 751212135,
       "dark": false,
       "measure": {
-        "iou": 0.885,
-        "dE_mean": 13.2,
-        "dE_p95": 20.5,
-        "dL": -10.4,
-        "dC": 7.0,
+        "iou": 0.792,
+        "dE_mean": 10.6,
+        "dE_p95": 21.1,
+        "dL": -7.8,
+        "dC": 5.7,
         "faithful": false
       },
-      "sha256": "4b6991c9ad65870a38501a09f2719f2fae8caff46a2ec386474eda106415f8d8",
+      "card_at_edge": 0.0012,
+      "attempts": 1,
+      "sha256": "3eebc7f1b9a17850ee7d55377a123238d83761170d3f95cd5690c420683420cf",
       "photos": [
         608718632
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        1539417841
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "nyctanassa-violacea": {
       "common_name": "Yellow-crowned Night Heron",
-      "seed": 1351871664,
+      "seed": 664067110,
       "dark": false,
       "measure": {
-        "iou": 0.857,
-        "dE_mean": 9.8,
-        "dE_p95": 19.2,
+        "iou": 0.747,
+        "dE_mean": 9.0,
+        "dE_p95": 15.7,
         "dL": -4.2,
         "dC": 1.2,
         "faithful": true
       },
-      "sha256": "b7857bbfa5fba7113bdbc037bbf236a1ea258ec814fea15e56cb497b1872e9a8",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "64025536cd367b2cabbcb4a01444f4c16a2759eff34b755a02163faba8af806e",
       "photos": [
         395401394
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "rock",
+      "review": "pending",
+      "rejected_seeds": [
+        1351871664
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "nycticorax-nycticorax": {
       "common_name": "Black-crowned Night Heron",
-      "seed": 2163221088,
+      "seed": 4160164598,
       "dark": false,
       "measure": {
-        "iou": 0.408,
-        "dE_mean": 10.1,
-        "dE_p95": 25.1,
-        "dL": 0.0,
-        "dC": 3.7,
-        "faithful": false
+        "iou": 0.861,
+        "dE_mean": 9.8,
+        "dE_p95": 20.0,
+        "dL": -3.4,
+        "dC": 6.2,
+        "faithful": true
       },
-      "sha256": "ab084540c3b5dc1653d45109ffd9e37c82feeae26d0e10bc911581bd43c5bcb8",
+      "card_at_edge": 0.0024,
+      "attempts": 1,
+      "sha256": "d5908e69a787c8acf0ef1951bc087e121ccc5a295c56f811a945f2c880403f1b",
       "photos": [
         504130111
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        2163221088
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "oxyura-jamaicensis": {
       "common_name": "Ruddy Duck",
-      "seed": 3013039020,
+      "seed": 3297796923,
       "dark": true,
       "measure": {
-        "iou": 0.861,
-        "dE_mean": 12.5,
-        "dE_p95": 28.7,
-        "dL": 0.7,
-        "dC": -2.9,
-        "faithful": false
+        "iou": 0.907,
+        "dE_mean": 6.7,
+        "dE_p95": 16.7,
+        "dL": 0.9,
+        "dC": 0.9,
+        "faithful": true
       },
-      "sha256": "237bc5ca3088c01cd09617751fa7670454465396a7e46374b4903d56ff32a5d5",
+      "card_at_edge": 0.0017,
+      "attempts": 2,
+      "sha256": "1132d40c135841a6b3d4653844d9891c1302af68d11c620817270e0ee803d59a",
       "photos": [
         196036954
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        3013039020
+      ],
+      "why": "needs water"
     },
     "pandion-haliaetus": {
       "common_name": "Osprey",
-      "seed": 177763482,
+      "seed": 2107589644,
       "dark": false,
       "measure": {
-        "iou": 0.945,
-        "dE_mean": 11.2,
-        "dE_p95": 19.4,
-        "dL": 5.5,
-        "dC": 5.0,
+        "iou": 0.931,
+        "dE_mean": 12.1,
+        "dE_p95": 18.4,
+        "dL": 3.1,
+        "dC": 6.9,
         "faithful": false
       },
-      "sha256": "360884631333a1f91dfdfdfcfd244d20c68fbf3132e0463a45762a04df6c342a",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "e7f9e3ddffa6a5a810be47a2ba83e3462ac72d57b1b68eb69aa08173996c4f0a",
       "photos": [
         603488181
       ],
       "isolate_seed": 50,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "flight",
+      "review": "pending",
+      "rejected_seeds": [
+        177763482
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "passer-domesticus": {
       "common_name": "House Sparrow",
@@ -2797,7 +3070,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         2915168311
       ],
@@ -2805,30 +3078,37 @@
     },
     "passerculus-sandwichensis": {
       "common_name": "Savannah Sparrow",
-      "seed": 2283055700,
+      "seed": 4279474883,
       "dark": false,
       "measure": {
-        "iou": 0.928,
-        "dE_mean": 8.3,
-        "dE_p95": 15.2,
-        "dL": -6.0,
-        "dC": 4.3,
+        "iou": 0.897,
+        "dE_mean": 7.8,
+        "dE_p95": 14.0,
+        "dL": -6.3,
+        "dC": 2.9,
         "faithful": true
       },
-      "sha256": "23ffc0785862e9041a6a1eea386b1d53e64dd4a26034a195f6c7f011865795e4",
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "3ef03bce7df827a0e2944584c8d508443cf51ae5bd4ab152f0107abcb252f632",
       "photos": [
         106336564
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "rock",
+      "review": "pending",
+      "rejected_seeds": [
+        2283055700
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "passerina-amoena": {
       "common_name": "Lazuli Bunting",
@@ -2858,7 +3138,7 @@
       },
       "prompts": 2,
       "setting": "perch",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         355349683
       ],
@@ -2889,88 +3169,112 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pavo-cristatus": {
       "common_name": "Indian Peafowl",
-      "seed": 3625914549,
+      "seed": 2937593891,
       "dark": true,
       "measure": {
-        "iou": 0.86,
-        "dE_mean": 8.3,
-        "dE_p95": 13.9,
-        "dL": 2.5,
-        "dC": 0.9,
-        "faithful": true
+        "iou": 0.898,
+        "dE_mean": 11.8,
+        "dE_p95": 18.5,
+        "dL": 5.4,
+        "dC": 0.3,
+        "faithful": false
       },
-      "sha256": "ccb33eb5a22f9ead3f873298fab87b4ed0439184e0df438bbcc1700d515f9f66",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bae946d95dd6da30a9774324308bbadf42196576b5f94f6d8fa303ff6eaa90c9",
       "photos": [
         437503733
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        3625914549
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "pelecanus-erythrorhynchos": {
       "common_name": "American White Pelican",
-      "seed": 1548485171,
+      "seed": 3309654921,
       "dark": false,
       "measure": {
-        "iou": 0.686,
-        "dE_mean": 26.9,
-        "dE_p95": 53.2,
-        "dL": -5.2,
-        "dC": 7.5,
+        "iou": 0.72,
+        "dE_mean": 19.4,
+        "dE_p95": 33.1,
+        "dL": -2.3,
+        "dC": 5.4,
         "faithful": false
       },
-      "sha256": "b1639c33f010eaffec97f7f4476dc16a0482606ac69b60185c02b86fd862b979",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "170a623316d23591ce7efc7675feadb56d2e36e37bfd8e326bcaf6b8da2b856e",
       "photos": [
-        185274990
+        340865450
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange.",
+      "review": "pending",
+      "rejected_seeds": [
+        1548485171,
+        726348453,
+        2990695199
+      ],
+      "why": "the new reference came out grey; the bird is white"
     },
     "pelecanus-occidentalis": {
       "common_name": "Brown Pelican",
-      "seed": 526094398,
+      "seed": 1750900904,
       "dark": false,
       "measure": {
-        "iou": 0.884,
-        "dE_mean": 14.9,
-        "dE_p95": 26.3,
-        "dL": 13.4,
-        "dC": 2.0,
+        "iou": 0.53,
+        "dE_mean": 26.0,
+        "dE_p95": 53.1,
+        "dL": 17.2,
+        "dC": 12.5,
         "faithful": false
       },
-      "sha256": "eb6f13ce231b67d47cfc81e6dcf4756be3a3ab1abb35c5c8c0da629153b91e22",
+      "card_at_edge": 0.0011,
+      "attempts": 1,
+      "sha256": "0a04c41532ba9a70b01a4e23e39f3bdd45d52c6dd76387df6632e3bcaa191c13",
       "photos": [
         593312023
       ],
       "isolate_seed": 60,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "rock",
+      "review": "pending",
+      "rejected_seeds": [
+        526094398
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "petrochelidon-pyrrhonota": {
       "common_name": "American Cliff Swallow",
@@ -2997,7 +3301,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "phainopepla-nitens": {
       "common_name": "Phainopepla",
@@ -3024,34 +3328,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "phalaenoptilus-nuttallii": {
       "common_name": "Common Poorwill",
-      "seed": 1581879884,
+      "seed": 693019354,
       "dark": false,
       "measure": {
         "iou": 0.893,
-        "dE_mean": 9.1,
-        "dE_p95": 16.8,
-        "dL": -7.1,
-        "dC": 0.6,
-        "faithful": true
+        "dE_mean": 10.7,
+        "dE_p95": 15.0,
+        "dL": -8.5,
+        "dC": 1.3,
+        "faithful": false
       },
-      "sha256": "498622003b40e611da018085d3a9bca20702a805977e3bfa7e417cb4b04deb23",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "b9a57558735a9eae33de0a4507e1f144beec8de666d6153e7976defa8670693e",
       "photos": [
         27035889
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        1581879884
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "pheucticus-melanocephalus": {
       "common_name": "Black-headed Grosbeak",
@@ -3078,7 +3389,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pipilo-maculatus": {
       "common_name": "Spotted Towhee",
@@ -3105,7 +3416,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "piranga-ludoviciana": {
       "common_name": "Western Tanager",
@@ -3132,61 +3443,75 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "plegadis-chihi": {
       "common_name": "White-faced Ibis",
-      "seed": 4152457449,
+      "seed": 2156284031,
       "dark": false,
       "measure": {
-        "iou": 0.425,
-        "dE_mean": 22.8,
-        "dE_p95": 41.4,
-        "dL": -10.8,
-        "dC": 6.8,
+        "iou": 0.931,
+        "dE_mean": 14.6,
+        "dE_p95": 25.8,
+        "dL": -13.3,
+        "dC": 2.1,
         "faithful": false
       },
-      "sha256": "0380c07543c82b724579bfd3e7b3a0dbad33183514c60e2c4510d63d222cc802",
+      "card_at_edge": 0.0007,
+      "attempts": 1,
+      "sha256": "0c5bd663a249f0b1a68e05bcebca31d104dafa5a92e6dd7ed6590f16c27c7c9b",
       "photos": [
         346321106
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "wade",
+      "review": "pending",
+      "rejected_seeds": [
+        4152457449
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "pluvialis-squatarola": {
       "common_name": "Grey Plover",
-      "seed": 1021978843,
+      "seed": 1273829453,
       "dark": false,
       "measure": {
-        "iou": 0.878,
-        "dE_mean": 10.6,
-        "dE_p95": 17.4,
-        "dL": -6.3,
-        "dC": 7.1,
-        "faithful": false
+        "iou": 0.919,
+        "dE_mean": 9.8,
+        "dE_p95": 17.6,
+        "dL": -5.1,
+        "dC": 7.2,
+        "faithful": true
       },
-      "sha256": "7f4666ec2f60af63f4508a006b31a1c3d4f34d299041a0dc61ad3d94fe40ca1c",
+      "card_at_edge": 0.0005,
+      "attempts": 1,
+      "sha256": "bcc85684a63e18008a1c2f96e9b91a7220d0c890c70842f6a035240ab0cc6d9a",
       "photos": [
         603766626
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "wade",
+      "review": "pending",
+      "rejected_seeds": [
+        1021978843
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "podiceps-nigricollis": {
       "common_name": "Black-necked Grebe",
@@ -3216,7 +3541,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3453302653
       ],
@@ -3250,7 +3575,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         2315589384
       ],
@@ -3281,7 +3606,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "polioptila-caerulea": {
       "common_name": "Blue-grey Gnatcatcher",
@@ -3308,7 +3633,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "polioptila-californica": {
       "common_name": "California Gnatcatcher",
@@ -3335,7 +3660,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "psaltriparus-minimus": {
       "common_name": "American Bushtit",
@@ -3362,7 +3687,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "psittacara-mitratus": {
       "common_name": "Mitred Parakeet",
@@ -3389,7 +3714,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pycnonotus-jocosus": {
       "common_name": "Red-whiskered Bulbul",
@@ -3416,7 +3741,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pyrocephalus-rubinus": {
       "common_name": "Scarlet Flycatcher",
@@ -3443,34 +3768,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "quiscalus-mexicanus": {
       "common_name": "Great-tailed Grackle",
-      "seed": 2327719,
+      "seed": 1998894129,
       "dark": true,
       "measure": {
-        "iou": 0.868,
-        "dE_mean": 11.3,
-        "dE_p95": 28.3,
-        "dL": 6.1,
-        "dC": -1.4,
-        "faithful": false
+        "iou": 0.866,
+        "dE_mean": 8.2,
+        "dE_p95": 20.4,
+        "dL": 0.5,
+        "dC": -0.4,
+        "faithful": true
       },
-      "sha256": "89d0c213b9348d71565a5a2aa6c8b471880410beaf294f2b557a6ae406d14b88",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "3d82730e12bf322893dab510e4582deabe78d93cda676ee59b733dc5a9912c79",
       "photos": [
         428630110
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        2327719
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "sayornis-nigricans": {
       "common_name": "Black Phoebe",
@@ -3501,7 +3833,7 @@
       "prompts": 2,
       "setting": "perch",
       "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white.",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3201602549,
         3386090340
@@ -3535,7 +3867,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1936015686
       ],
@@ -3566,7 +3898,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-aestiva": {
       "common_name": "American Yellow Warbler",
@@ -3593,34 +3925,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-coronata": {
       "common_name": "Myrtle Warbler",
-      "seed": 2122500180,
+      "seed": 159774914,
       "dark": false,
       "measure": {
-        "iou": 0.909,
-        "dE_mean": 10.6,
-        "dE_p95": 19.1,
-        "dL": 6.9,
-        "dC": 4.3,
+        "iou": 0.908,
+        "dE_mean": 14.3,
+        "dE_p95": 20.9,
+        "dL": 10.6,
+        "dC": 8.0,
         "faithful": false
       },
-      "sha256": "cbe0eace54f4297e927197ca4c51733cc3b6c7bba7f90e5a4ddd94a88fab7a01",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bb518390264e85c1bb79ad30d93a91aa26a5db9c2142feb0210ca2547ae8040a",
       "photos": [
         616227519
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        2122500180
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "setophaga-nigrescens": {
       "common_name": "Black-throated Grey Warbler",
@@ -3647,7 +3986,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-townsendi": {
       "common_name": "Townsend's Warbler",
@@ -3676,7 +4015,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         3035273725
       ],
@@ -3707,7 +4046,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sitta-carolinensis": {
       "common_name": "White-breasted Nuthatch",
@@ -3734,7 +4073,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spatula-clypeata": {
       "common_name": "Northern Shoveler",
@@ -3764,7 +4103,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1441113407
       ],
@@ -3772,30 +4111,37 @@
     },
     "spatula-cyanoptera": {
       "common_name": "Cinnamon Teal",
-      "seed": 3554439810,
+      "seed": 2765832724,
       "dark": false,
       "measure": {
-        "iou": 0.934,
-        "dE_mean": 18.2,
-        "dE_p95": 26.2,
-        "dL": -16.0,
-        "dC": 6.0,
+        "iou": 0.945,
+        "dE_mean": 18.0,
+        "dE_p95": 25.5,
+        "dL": -14.2,
+        "dC": 8.9,
         "faithful": false
       },
-      "sha256": "389bb5a11d7aada70c1a3d81a64399f13bb4a62cdac3157acee062736872504c",
+      "card_at_edge": 0.0009,
+      "attempts": 1,
+      "sha256": "37d1d970dbd710ffe1888a80347811c8a9461528ed60bc2114554923dd893e9e",
       "photos": [
         93140720
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        3554439810
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "spatula-discors": {
       "common_name": "Blue-winged Teal",
@@ -3825,7 +4171,7 @@
       },
       "prompts": 2,
       "setting": "water",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         2229752531
       ],
@@ -3856,7 +4202,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spinus-tristis": {
       "common_name": "American Goldfinch",
@@ -3883,34 +4229,41 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spizella-passerina": {
       "common_name": "Chipping Sparrow",
-      "seed": 566244644,
+      "seed": 1455883698,
       "dark": false,
       "measure": {
-        "iou": 0.921,
-        "dE_mean": 9.6,
-        "dE_p95": 17.6,
-        "dL": -5.0,
-        "dC": 6.0,
-        "faithful": true
+        "iou": 0.814,
+        "dE_mean": 10.1,
+        "dE_p95": 19.2,
+        "dL": 1.3,
+        "dC": 4.4,
+        "faithful": false
       },
-      "sha256": "061e9c12312a67a4347a9010591513c23c5fd7d3a1d270f19504b7cb5de4e3c1",
+      "card_at_edge": 0.0001,
+      "attempts": 1,
+      "sha256": "57bedfffca7989fa1587dbe18850f4fb22ec77f7ff90e896d6303dba986278ed",
       "photos": [
         176335061
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        566244644
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "stelgidopteryx-serripennis": {
       "common_name": "Northern Rough-winged Swallow",
@@ -3939,7 +4292,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         2231337504
       ],
@@ -3947,57 +4300,71 @@
     },
     "streptopelia-decaocto": {
       "common_name": "Eurasian Collared Dove",
-      "seed": 4198085685,
+      "seed": 2369684643,
       "dark": false,
       "measure": {
-        "iou": 0.852,
-        "dE_mean": 22.5,
-        "dE_p95": 36.6,
-        "dL": -13.6,
-        "dC": 8.6,
+        "iou": 0.776,
+        "dE_mean": 23.3,
+        "dE_p95": 34.0,
+        "dL": -17.2,
+        "dC": 6.5,
         "faithful": false
       },
-      "sha256": "5c8cfbfb57ae661e9f473277e64ebcf4281fd3dc13e460ed38230dc47e8f4a92",
+      "card_at_edge": 0.0012,
+      "attempts": 1,
+      "sha256": "91b7d1030674d19dcd53fc61d6181d9bcb77b0b4afbd17338468038417e55b64",
       "photos": [
         246504775
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        4198085685
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "sturnella-neglecta": {
       "common_name": "Western Meadowlark",
-      "seed": 1475597015,
+      "seed": 552919617,
       "dark": false,
       "measure": {
-        "iou": 0.882,
-        "dE_mean": 13.3,
-        "dE_p95": 34.0,
-        "dL": -6.6,
-        "dC": 5.0,
-        "faithful": false
+        "iou": 0.956,
+        "dE_mean": 8.7,
+        "dE_p95": 18.0,
+        "dL": -4.1,
+        "dC": 3.8,
+        "faithful": true
       },
-      "sha256": "02644b9b466868cb78a74069e1519e9adf92a84aca4dc6ee2be56fec78b36efa",
+      "card_at_edge": 0.0006,
+      "attempts": 1,
+      "sha256": "96d0b0b54c31667f5f76cdc587e3166c67c8c40cb28b32b6d25682d411198bce",
       "photos": [
         106237602
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        1475597015
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "sturnus-vulgaris": {
       "common_name": "Common Starling",
@@ -4024,169 +4391,211 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "thalasseus-elegans": {
       "common_name": "Elegant Tern",
-      "seed": 3377096038,
+      "seed": 3192739312,
       "dark": false,
       "measure": {
-        "iou": 0.796,
-        "dE_mean": 23.4,
-        "dE_p95": 41.2,
-        "dL": -18.7,
-        "dC": 8.3,
+        "iou": 0.613,
+        "dE_mean": 34.6,
+        "dE_p95": 60.9,
+        "dL": -27.6,
+        "dC": 13.6,
         "faithful": false
       },
-      "sha256": "5aa82fd61003feecd78a7eb2d632685bb7bd939144a0af8fc8acfc09358ad8db",
+      "card_at_edge": 0.0013,
+      "attempts": 1,
+      "sha256": "b5ea36aff9387faf6db850d670044c2a3dcca3f96dcd6d74158007e711a3db52",
       "photos": [
         117732234
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "wade",
+      "review": "pending",
+      "rejected_seeds": [
+        3377096038
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "thalasseus-maximus": {
       "common_name": "Royal Tern",
-      "seed": 2052249001,
+      "seed": 223733055,
       "dark": false,
       "measure": {
-        "iou": 0.88,
-        "dE_mean": 7.7,
-        "dE_p95": 18.1,
-        "dL": -2.3,
-        "dC": -2.1,
-        "faithful": true
+        "iou": 0.895,
+        "dE_mean": 11.2,
+        "dE_p95": 21.1,
+        "dL": -0.3,
+        "dC": -2.8,
+        "faithful": false
       },
-      "sha256": "6dc9654ace462e1b0843f34f9026e2b52c645583cfc35f0b46acbb9a75d77f49",
+      "card_at_edge": 0.0041,
+      "attempts": 1,
+      "sha256": "adbb761abc39f71ade27d3176fe024680808c4a6ae96f9804d83e8e43068660c",
       "photos": [
         450168467
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        2052249001
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "thryomanes-bewickii": {
       "common_name": "Bewick's Wren",
-      "seed": 1847906494,
+      "seed": 421781544,
       "dark": false,
       "measure": {
-        "iou": 0.935,
-        "dE_mean": 19.4,
-        "dE_p95": 25.0,
-        "dL": -7.3,
-        "dC": 10.8,
+        "iou": 0.911,
+        "dE_mean": 13.5,
+        "dE_p95": 20.2,
+        "dL": -2.4,
+        "dC": 6.5,
         "faithful": false
       },
-      "sha256": "c06b787a88a2897ec2ce2acfc98f4e7c3bc6707f89cfb771859d56bb062966ae",
+      "card_at_edge": 0.0003,
+      "attempts": 1,
+      "sha256": "2f4babebeb4a7bffee634c0199239c86741f8c3ffef029db06d2b3685d74d642",
       "photos": [
         467071257
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        1847906494
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "toxostoma-redivivum": {
       "common_name": "California Thrasher",
-      "seed": 481589230,
+      "seed": 1806911352,
       "dark": false,
       "measure": {
-        "iou": 0.813,
-        "dE_mean": 11.6,
-        "dE_p95": 21.2,
-        "dL": -5.3,
-        "dC": -3.2,
+        "iou": 0.728,
+        "dE_mean": 13.6,
+        "dE_p95": 26.6,
+        "dL": -2.9,
+        "dC": -2.3,
         "faithful": false
       },
-      "sha256": "d0b2688a1ea3115833c9abc7bbee4b8167026cf96fa942f9235b1b82cc079d09",
+      "card_at_edge": 0.0005,
+      "attempts": 1,
+      "sha256": "de6947db27377ff55b7fcf950dbc2d1a9786d86208fda57d60dea16ba4937f21",
       "photos": [
         489597169
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        481589230
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "tringa-melanoleuca": {
       "common_name": "Greater Yellowlegs",
-      "seed": 2020016457,
+      "seed": 257962463,
       "dark": false,
       "measure": {
-        "iou": 0.929,
-        "dE_mean": 10.3,
-        "dE_p95": 17.9,
-        "dL": -6.5,
-        "dC": 1.6,
+        "iou": 0.908,
+        "dE_mean": 12.3,
+        "dE_p95": 17.8,
+        "dL": -2.9,
+        "dC": 5.8,
         "faithful": false
       },
-      "sha256": "7cbfdba49b52a6a85782b4cf3b0aa64b0516ae96baa612adbb1d5ed27a373d14",
+      "card_at_edge": 0.0004,
+      "attempts": 1,
+      "sha256": "aaa0f3ebaa0b55ebf760c0dcd7f7324748c206432fcb51e78b8ab8137b872b82",
       "photos": [
         104430031
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "wade",
+      "review": "pending",
+      "rejected_seeds": [
+        2020016457
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "tringa-semipalmata": {
       "common_name": "Willet",
-      "seed": 3053924271,
+      "seed": 3238010681,
       "dark": false,
       "measure": {
-        "iou": 0.88,
-        "dE_mean": 12.0,
-        "dE_p95": 17.6,
-        "dL": 0.3,
-        "dC": 10.0,
+        "iou": 0.901,
+        "dE_mean": 12.1,
+        "dE_p95": 18.0,
+        "dL": 3.1,
+        "dC": 9.9,
         "faithful": false
       },
-      "sha256": "424728636d60f343aa4b13a5ded19da662930fc11d7fcdff0be82ac00701d70d",
+      "card_at_edge": 0.0002,
+      "attempts": 1,
+      "sha256": "82abc337912a7c9bc5f92912f64205b7c077ed3dce26676e7e5b8f05ce8f1e00",
       "photos": [
         630634221
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "shore",
+      "review": "pending",
+      "rejected_seeds": [
+        3053924271
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "troglodytes-aedon": {
       "common_name": "Northern House Wren",
@@ -4213,7 +4622,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "turdus-migratorius": {
       "common_name": "American Robin",
@@ -4240,7 +4649,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyrannus-verticalis": {
       "common_name": "Western Kingbird",
@@ -4267,7 +4676,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyrannus-vociferans": {
       "common_name": "Cassin's Kingbird",
@@ -4294,7 +4703,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyto-furcata": {
       "common_name": "American Barn Owl",
@@ -4321,61 +4730,75 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "urile-penicillatus": {
       "common_name": "Brandt's Cormorant",
-      "seed": 3277915029,
+      "seed": 3026596611,
       "dark": false,
       "measure": {
-        "iou": 0.862,
-        "dE_mean": 9.5,
-        "dE_p95": 18.2,
-        "dL": 1.3,
-        "dC": 1.6,
-        "faithful": true
+        "iou": 0.689,
+        "dE_mean": 20.1,
+        "dE_p95": 39.2,
+        "dL": 1.5,
+        "dC": 8.3,
+        "faithful": false
       },
-      "sha256": "8c0447f38c386d9a6e3b89eab0f7c9561a1bedd91b19fa1a879bc576c937fbcd",
+      "card_at_edge": 0.0014,
+      "attempts": 1,
+      "sha256": "c1eff17b71812962e83a2535fea4101d6b94f31365be8f783b3cf6a89b53fcc3",
       "photos": [
         630638859
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "water",
+      "review": "pending",
+      "rejected_seeds": [
+        3277915029
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "vidua-macroura": {
       "common_name": "Pin-tailed Whydah",
-      "seed": 3183842567,
+      "seed": 3401754001,
       "dark": false,
       "measure": {
-        "iou": 0.934,
-        "dE_mean": 6.4,
-        "dE_p95": 13.2,
-        "dL": -3.7,
-        "dC": -3.0,
+        "iou": 0.965,
+        "dE_mean": 6.3,
+        "dE_p95": 14.2,
+        "dL": -3.0,
+        "dC": -0.2,
         "faithful": true
       },
-      "sha256": "efae8f2134d9280215ec71363a1f7852745fb7d0e694371938e0e3178d6afb49",
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "74b50bf90eb4ab6dd36ea543db79586168b485425e14c741ec80c1d293be3c14",
       "photos": [
         109160133
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        3183842567
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "vireo-bellii": {
       "common_name": "Bell's Vireo",
@@ -4402,7 +4825,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-gilvus": {
       "common_name": "Warbling Vireo",
@@ -4429,7 +4852,7 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-huttoni": {
       "common_name": "Hutton's Vireo",
@@ -4456,88 +4879,109 @@
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "review": "approved"
     },
     "zenaida-macroura": {
       "common_name": "Mourning Dove",
-      "seed": 1139967966,
+      "seed": 888518472,
       "dark": false,
       "measure": {
-        "iou": 0.936,
-        "dE_mean": 6.4,
-        "dE_p95": 11.0,
-        "dL": -0.4,
-        "dC": 4.4,
+        "iou": 0.891,
+        "dE_mean": 9.1,
+        "dE_p95": 15.9,
+        "dL": -1.0,
+        "dC": 6.6,
         "faithful": true
       },
-      "sha256": "45f04c15c0f86494745ce9b1e078ccd7b3cbab08ce2b67e755913227aa64ed1b",
+      "card_at_edge": 0.0004,
+      "attempts": 1,
+      "sha256": "f8d23bd00c54e4ceed6947cb39b43a7f4d5db0003ccb5e8cc0c3b10efd56a89c",
       "photos": [
         658085144
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        1139967966
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "zonotrichia-atricapilla": {
       "common_name": "Golden-crowned Sparrow",
-      "seed": 1482135478,
+      "seed": 793814816,
       "dark": false,
       "measure": {
-        "iou": 0.887,
-        "dE_mean": 8.9,
-        "dE_p95": 20.0,
-        "dL": -6.4,
-        "dC": 3.8,
-        "faithful": true
+        "iou": 0.883,
+        "dE_mean": 11.5,
+        "dE_p95": 23.2,
+        "dL": -5.7,
+        "dC": 7.9,
+        "faithful": false
       },
-      "sha256": "149a0607d47db14cf9cf796ec42b5b4c8008f882586db39710fb98ae9ce34636",
+      "card_at_edge": 0.0003,
+      "attempts": 1,
+      "sha256": "e9b12656334f025a06817ea743afc3e3bf074f62d2587240c324bf454379f8ec",
       "photos": [
         261560260
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        1482135478
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     },
     "zonotrichia-leucophrys": {
       "common_name": "White-crowned Sparrow",
-      "seed": 1081628630,
+      "seed": 931096384,
       "dark": false,
       "measure": {
-        "iou": 0.958,
-        "dE_mean": 11.7,
-        "dE_p95": 20.6,
-        "dL": -8.9,
-        "dC": 6.0,
+        "iou": 0.839,
+        "dE_mean": 12.5,
+        "dE_p95": 21.0,
+        "dL": -4.3,
+        "dC": 8.6,
         "faithful": false
       },
-      "sha256": "483fc13e4e70d617d910bf1e1e38478828c94843d1e7d1c2df8f6a85203f2820",
+      "card_at_edge": 0.0004,
+      "attempts": 1,
+      "sha256": "d60aab38d3d341b7d283d0e3db1a822a498dbab0d3231b81202c329b95120686",
       "photos": [
         624286978
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
-      "prompts": 1,
       "edition": {
         "shape": "a perfect circle",
         "cord": "olive-green",
         "twill": "tan cotton twill",
         "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
       },
-      "review": "pending"
+      "prompts": 2,
+      "setting": "ground",
+      "review": "pending",
+      "rejected_seeds": [
+        1081628630
+      ],
+      "why": "painted under the branch prompt; it should stand where it lives"
     }
   }
 }
