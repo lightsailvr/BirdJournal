@@ -72,13 +72,23 @@ nonisolated struct StitchTimeline: Sendable {
     }
 }
 
-/// Whether an add gets the stitch-in at all.
+/// How the pages after an add move.
 nonisolated enum StitchCeremony {
     /// Reduce Motion has no stitching (guide page 14). Nor does VoiceOver: nothing in it can be spoken, so it would be four
-    /// seconds of waiting on a page that says nothing new, and the finished page says it all at once. Without a painting on
-    /// the phone there's nothing to stitch.
+    /// seconds of waiting on a page that says nothing new, and the finished page says it all at once. A count that's going
+    /// to tick is the same.
+    static func isStill(reduceMotion: Bool, voiceOver: Bool) -> Bool {
+        reduceMotion || voiceOver
+    }
+
+    /// Without a painting on the phone there's nothing to stitch either.
     static func stitches(reduceMotion: Bool, voiceOver: Bool, hasArt: Bool) -> Bool {
-        hasArt && !reduceMotion && !voiceOver
+        hasArt && !isStill(reduceMotion: reduceMotion, voiceOver: voiceOver)
+    }
+
+    /// The count a seen-again page shows: the one before until it ticks; on a still page, the new one at once.
+    static func shownCount(of count: Int, hasTicked: Bool, isStill: Bool) -> Int {
+        hasTicked || isStill ? count : max(count - 1, 0)
     }
 }
 
@@ -119,6 +129,9 @@ extension StitchThread {
               let colourData = colour.dataProvider?.data, let layersData = layers.dataProvider?.data,
               let colourBytes = CFDataGetBytePtr(colourData), let layerBytes = CFDataGetBytePtr(layersData)
         else { return [] }
+        // The byte pointers are only good while these live, and the optimizer may otherwise let them go after the last line
+        // that names them.
+        defer { withExtendedLifetime((colourData, layersData)) {} }
         let bands = bounds.count - 1
         var bandOfOrder = [Int](repeating: 0, count: 256)
         for order in 0..<256 { bandOfOrder[order] = min(bounds.lastIndex { $0 <= order } ?? 0, bands - 1) }

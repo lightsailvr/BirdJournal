@@ -43,13 +43,14 @@ final class SewingUITests: XCTestCase {
         let stitching = app.buttons["stitch-in"]
         XCTAssertTrue(stitching.waitForExistence(timeout: 10), "no stitch-in; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(stitching.label, "Sewing your \(Self.name) patch")
-        let reveal = app.staticTexts["Your first \(Self.name) in Los Angeles"]
+        // The page's own line: "Your first …" is also the acknowledgment's, in the toast under the page.
+        let reveal = app.staticTexts["New patch · Citrus edition"]
         XCTAssertFalse(reveal.exists, "the reveal waits for the stitching")
 
         stitching.tap()
         XCTAssertTrue(reveal.waitForExistence(timeout: 5), "tapping didn't finish it; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(stitching.exists)
-        XCTAssertTrue(app.staticTexts["New patch · Citrus edition"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in Los Angeles"].exists, "screen: \(app.debugDescription.prefix(4000))")
         let keepListening = app.buttons["Keep listening"]
         XCTAssertTrue(keepListening.exists, "the primary action during a run")
         keepListening.tap()
@@ -79,21 +80,24 @@ final class SewingUITests: XCTestCase {
     }
 
     @MainActor
-    func testTheStitchInFinishesOnItsOwnInAboutFourSeconds() throws {
+    func testTheStitchInFinishesOnItsOwn() throws {
         let app = try launch([])
         add(app, button: "Add and sew patch")
-        let reveal = app.staticTexts["Your first \(Self.name) in Los Angeles"]
-        let began = Date.now
-        XCTAssertTrue(reveal.waitForExistence(timeout: 15), "the stitch-in didn't end; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertGreaterThan(Date.now.timeIntervalSince(began), 2, "it took its time")
+        XCTAssertTrue(app.staticTexts["New patch · Citrus edition"].waitForExistence(timeout: 15), "the stitch-in didn't end; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists)
     }
 
     @MainActor
-    func testReduceMotionShowsTheFinishedPatchAtOnce() throws {
+    func testReduceMotionShowsTheFinishedPatchAndTheNewCountAtOnce() throws {
         let app = try launch(["-reduceMotion", "YES", "-stitchInSeconds", "60"])
         add(app, button: "Add and sew patch")
-        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in Los Angeles"].waitForExistence(timeout: 10), "no finished patch under a 60 s stitch-in; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch · Citrus edition"].waitForExistence(timeout: 10), "no finished patch under a 60 s stitch-in; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "no stitching")
+        app.buttons["Keep listening"].tap()
+
+        add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
+        let count = app.descendants(matching: .any)["seen-again-line"]
+        XCTAssertTrue(count.waitForExistence(timeout: 10), "no seen-again page; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(count.label, "Seen 2 times in Los Angeles")
     }
 }

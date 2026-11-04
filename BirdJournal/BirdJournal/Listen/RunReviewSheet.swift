@@ -63,6 +63,8 @@ struct RunReviewSheet: View {
             }
         }
         .patchReveal()
+        // Dragged away from under the page, it would have to start again over the tabs; Keep listening closes it first.
+        .interactiveDismissDisabled(run.reveal != nil)
         // See it in my collection from a reveal over this sheet: the review closes, as Done does, so the collection shows.
         .environment(\.openCollection) {
             dismiss()

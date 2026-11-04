@@ -165,6 +165,20 @@ struct ListeningCoordinatorTests {
         await run.stop()
     }
 
+    @Test("a run ending under a stitch-in doesn't start it again over the review: the page picks up as finished (issue #135)")
+    func runEndsUnderTheCeremony() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        _ = try #require(await run.add(run.candidates[0]))
+        #expect(run.reveal?.hasPlayed == false)
+        await run.stop()
+        #expect(run.isReviewing)
+        #expect(run.reveal?.hasPlayed == true)
+    }
+
     @Test("the first add of a species in a place sews its patch, revealed once with its sighting already saved; a repeat add is seen again; dismissing never loses the sighting; an undo removes it (issues #51, #132, #135)")
     func patchReveal() async throws {
         let harness = try Self.makeHarness()
@@ -181,12 +195,19 @@ struct ListeningCoordinatorTests {
         #expect(reveal.title == "Your first House Finch")
         #expect(reveal.eyebrow == "New patch · Uncharted")
         #expect(reveal.addition == first)
-        #expect(!reveal.isSewn, "the stitch-in is still to come")
+        #expect(!reveal.hasPlayed, "the stitch-in is still to come")
         #expect(harness.stored.map(\.identifier) == [first.identifier], "saved before the ceremony starts")
 
-        run.finishSewing()
-        #expect(run.reveal?.isSewn == true, "it stays sewn: the page never stitches it twice")
+        let window = try #require(run.acknowledgment)
+        run.finishCeremony()
+        #expect(run.reveal?.hasPlayed == true, "it stays played: the page never stitches it twice")
         #expect(run.reveal?.addition == first)
+        let reopened = try #require(run.acknowledgment)
+        #expect(reopened.id != window.id, "Undo's window starts again as the page starts offering it")
+        #expect(reopened.undo == first)
+        #expect(reopened.text == window.text)
+        run.finishCeremony()
+        #expect(run.acknowledgment?.id == reopened.id, "only once")
 
         run.dismissReveal()
         #expect(run.reveal == nil)
@@ -199,7 +220,8 @@ struct ListeningCoordinatorTests {
         let seen = try #require(run.reveal)
         #expect(seen.addition == again)
         #expect(seen.eyebrow == "Seen again · Uncharted")
-        #expect(seen.countLine == "times, Uncharted")
+        #expect(seen.countLine(2) == "times, Uncharted")
+        #expect(seen.countLine(1) == "time, Uncharted", "the moment before it ticks from 1 to 2")
         #expect(run.acknowledgment?.text == "Seen again · 2 times")
         #expect(run.acknowledgment?.undo == again)
         run.dismissReveal()

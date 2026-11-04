@@ -95,6 +95,16 @@ struct StitchInTests {
         #expect(ThreadName.of(red: red, green: green, blue: blue) == name)
     }
 
+    @Test("the count on a seen-again page goes 7 to 8 when it ticks; on a still page it's 8 at once")
+    func countTicks() {
+        #expect(StitchCeremony.shownCount(of: 8, hasTicked: false, isStill: false) == 7)
+        #expect(StitchCeremony.shownCount(of: 8, hasTicked: true, isStill: false) == 8)
+        #expect(StitchCeremony.shownCount(of: 8, hasTicked: false, isStill: true) == 8, "Reduce Motion and VoiceOver")
+        #expect(StitchCeremony.isStill(reduceMotion: true, voiceOver: false))
+        #expect(StitchCeremony.isStill(reduceMotion: false, voiceOver: true))
+        #expect(!StitchCeremony.isStill(reduceMotion: false, voiceOver: false))
+    }
+
     @Test("only a stitch-in with motion, without VoiceOver and with a painting")
     func whoGetsIt() {
         #expect(StitchCeremony.stitches(reduceMotion: false, voiceOver: false, hasArt: true))
@@ -290,7 +300,7 @@ struct SewingCeremonyAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn ") }, "the patch in words: \(labels)")
         #expect(labels.contains("Done"), "no run: back to where the add was: \(labels)")
         #expect(labels.contains("Share this patch"), "\(labels)")
-        #expect(harness.run.reveal?.isSewn == true, "decided once: it won't start stitching if VoiceOver goes off under the page")
+        #expect(harness.run.reveal?.hasPlayed == true, "decided once: it won't start stitching if VoiceOver goes off under the page")
     }
 
     @Test("the stitch-in, if VoiceOver does land on it, is one element that says what's happening, and activating it finishes it")
@@ -318,7 +328,7 @@ struct SewingCeremonyAccessibilityTests {
             #expect(element.accessibilityTraits.contains(.button))
             #expect(element.accessibilityValue?.isEmpty == false, "the thread it's on: \(String(describing: element.accessibilityValue))")
             #expect(element.accessibilityActivate())
-            #expect(harness.run.reveal?.isSewn == true, "the page shows the finished patch from here")
+            #expect(harness.run.reveal?.hasPlayed == true, "the page shows the finished patch from here")
             for _ in 0..<60 {
                 try await Task.sleep(for: .milliseconds(250))
                 labels = ScreenAccessibilityTests.spoken(host.view)

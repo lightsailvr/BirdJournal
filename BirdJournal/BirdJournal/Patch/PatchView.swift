@@ -17,17 +17,18 @@ struct PatchView: View {
     let size: PatchTextures.Size
     /// The name on a blank's paper tag.
     let tag: String?
-    /// What's already decoded shows at once: a patch taking over from the stitch-in, or scrolled back to, doesn't flash its
-    /// blank for a frame.
+    /// What's already decoded shows at once: a patch scrolled back to doesn't flash its blank for a frame.
     @State private var loaded: PatchTextures.Loaded?
 
-    init(art: PatchArt?, edition: PatchEdition, face: Face = .sewn, size: PatchTextures.Size = .thumbnail, tag: String? = nil) {
+    /// - Parameter decoded: the pictures, for a surface that has them to hand: a stitch-in redraws this every frame, and the
+    ///   cache may let go of them during it.
+    init(art: PatchArt?, edition: PatchEdition, face: Face = .sewn, size: PatchTextures.Size = .thumbnail, tag: String? = nil, decoded: PatchTextures.Loaded? = nil) {
         self.art = art
         self.edition = edition
         self.face = face
         self.size = size
         self.tag = tag
-        _loaded = State(initialValue: art.flatMap { PatchTextures.cached($0, size: size) })
+        _loaded = State(initialValue: decoded ?? art.flatMap { PatchTextures.cached($0, size: size) })
     }
 
     private var sewnTo: Float {

@@ -93,9 +93,10 @@ final class ListeningCoordinator {
     struct Reveal: Identifiable, Equatable {
         let addition: RunSightings.Addition
         let commonName: String
-        /// The stitch-in has finished or been tapped through. Kept here, not in the view: when a run ends under it the page
-        /// moves from over the tabs to over the review, and that shouldn't sew the patch a second time.
-        var isSewn = false
+        /// Its one moment is over: the stitch-in finished or was tapped through, or the count ticked. Kept here, not in the
+        /// view: when a run ends under it the page moves from over the tabs to over the review, and that shouldn't play it a
+        /// second time.
+        var hasPlayed = false
 
         var id: UUID { addition.identifier }
         /// "Your first House Finch in Los Angeles"; outside every set, "Your first House Finch".
@@ -104,10 +105,15 @@ final class ListeningCoordinator {
         }
         /// "New patch · Citrus edition", or "Seen again · Uncharted".
         var eyebrow: String { "\(addition.sewsPatch ? "New patch" : "Seen again") · \(addition.placement.editionLabel)" }
-        /// Beside the count: "times in Los Angeles", or "times, Uncharted" outside every set.
-        var countLine: String {
-            addition.placement.setID == nil ? "times, \(CardPlacement.unchartedTitle)" : "times in \(addition.placement.setName)"
+        /// Beside the count as it shows: "times in Los Angeles", or "time, Uncharted" outside every set.
+        func countLine(_ count: Int) -> String {
+            let times = count == 1 ? "time" : "times"
+            return addition.placement.setID == nil ? "\(times), \(CardPlacement.unchartedTitle)" : "\(times) in \(addition.placement.setName)"
         }
+    }
+
+    private static func acknowledgmentText(_ reveal: Reveal) -> String {
+        reveal.addition.sewsPatch ? reveal.title : seenAgainText(reveal.addition)
     }
 
     /// The acknowledgment of an add that joined a patch the birder has: "Seen again · 8 times in Los Angeles".
@@ -285,6 +291,8 @@ final class ListeningCoordinator {
         lastEnd = lastEnd ?? .stopped
         listOrder = currentOrder()
         isReviewing = !candidates.isEmpty
+        // The page moves to over the review: it picks up as finished rather than starting again.
+        if isReviewing { finishCeremony() }
     }
 
     /// Clears the last run's species from the screen.
@@ -310,7 +318,7 @@ final class ListeningCoordinator {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone)
             let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
             self.reveal = reveal
-            acknowledge(addition.sewsPatch ? reveal.title : Self.seenAgainText(addition), undo: addition)
+            acknowledge(Self.acknowledgmentText(reveal), undo: addition)
             return addition
         } catch {
             Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
@@ -327,9 +335,14 @@ final class ListeningCoordinator {
     }
     #endif
 
-    /// The stitch-in ended, or was tapped through: from here the page shows the finished patch.
-    func finishSewing() {
-        reveal?.isSewn = true
+    /// The page's moment is over: from here it shows the finished patch or the new count. Undo's window starts again, since
+    /// the page only offers Undo from here, and the stitch-in would otherwise have used most of it up.
+    func finishCeremony() {
+        guard let reveal, !reveal.hasPlayed else { return }
+        self.reveal?.hasPlayed = true
+        if sightings.entries.contains(where: { $0.id == reveal.addition.sightingID }) {
+            acknowledge(Self.acknowledgmentText(reveal), undo: reveal.addition)
+        }
     }
 
     /// Closes the reveal; the sighting was saved before it opened.

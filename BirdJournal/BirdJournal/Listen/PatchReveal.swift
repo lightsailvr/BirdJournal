@@ -77,6 +77,23 @@ private extension View {
     }
 }
 
+private extension ListeningCoordinator.Reveal {
+    var edition: PatchEdition { PatchEdition.of(setID: addition.placement.setID) }
+
+    func art(in library: PackLibrary) -> PatchArt? {
+        library.patchArt(scientificName: addition.species.scientificName, setID: addition.placement.setID)
+    }
+}
+
+/// "Your sighting is already saved.": true from before the first thing on any of these pages.
+private struct SavedNote: View {
+    var body: some View {
+        Text("Your sighting is already saved.")
+            .font(JournalFont.attribution)
+            .foregroundStyle(Color.ink)
+    }
+}
+
 /// The way back to the run; once it has ended (a reveal over the run's review), back to the review.
 private struct KeepListeningButton: View {
     @Environment(ListeningCoordinator.self) private var run
@@ -116,30 +133,28 @@ private struct NewPatchReveal: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
     let reveal: ListeningCoordinator.Reveal
-    /// The patch decoded, held here so the cache can't let go of it mid-stitch, and the clock over its threads.
-    @State private var prepared: (loaded: PatchTextures.Loaded, timeline: StitchTimeline)?
+    /// The patch decoded and the clock over its threads. Once it's here, the stitch-in is on, whatever the settings do.
+    @State private var prepared: (art: PatchArt, loaded: PatchTextures.Loaded, timeline: StitchTimeline)?
 
-    private var art: PatchArt? {
-        library.patchArt(scientificName: reveal.addition.species.scientificName, setID: reveal.addition.placement.setID)
-    }
+    private var art: PatchArt? { reveal.art(in: library) }
 
     private var stitches: Bool {
-        !reveal.isSewn && StitchCeremony.stitches(
+        StitchCeremony.stitches(
             reduceMotion: PatchMotion.reduces(system: systemReduceMotion), voiceOver: PatchMotion.voiceOver(system: systemVoiceOver), hasArt: art != nil
         )
     }
 
     var body: some View {
         Group {
-            if stitches {
-                if let prepared {
-                    SewingPage(reveal: reveal, art: art, timeline: prepared.timeline)
-                } else {
-                    // A moment, while the patch decodes: its cloth.
-                    SewingPage(reveal: reveal, art: nil, timeline: StitchTimeline(threads: []))
-                }
+            if reveal.hasPlayed {
+                NewPatchPage(reveal: reveal, art: art, decoded: prepared?.loaded)
+            } else if let prepared {
+                SewingPage(reveal: reveal, art: prepared.art, decoded: prepared.loaded, timeline: prepared.timeline)
+            } else if stitches {
+                // A moment, while the patch decodes: its cloth.
+                SewingPage(reveal: reveal, art: nil, decoded: nil, timeline: StitchTimeline(threads: []))
             } else {
-                NewPatchPage(reveal: reveal, art: art)
+                NewPatchPage(reveal: reveal, art: art, decoded: nil)
             }
         }
         .patchSheetBackground()
@@ -151,8 +166,9 @@ private struct NewPatchReveal: View {
     /// Decodes the patch and reads its threads. Decided once, on opening: no stitching now is none later, whatever the
     /// settings do while the page is up, and a patch that can't be read goes straight to its finished page.
     private func prepare() async {
+        guard !reveal.hasPlayed else { return }
         guard stitches, let art else {
-            run.finishSewing()
+            run.finishCeremony()
             return
         }
         let loaded = await PatchTextures.load(art, size: .full)
@@ -160,10 +176,10 @@ private struct NewPatchReveal: View {
         let threads = if let loaded { await PatchTextures.threads(of: loaded, art: art) } else { [StitchThread]() }
         guard !Task.isCancelled else { return }
         guard let loaded, !threads.isEmpty else {
-            run.finishSewing()
+            run.finishCeremony()
             return
         }
-        prepared = (loaded, Self.timeline(threads))
+        prepared = (art, loaded, Self.timeline(threads))
     }
 
     private static func timeline(_ threads: [StitchThread]) -> StitchTimeline {
@@ -185,6 +201,7 @@ private struct SewingPage: View {
     let reveal: ListeningCoordinator.Reveal
     /// Nil while it decodes: the bare cloth, and the clock hasn't started.
     let art: PatchArt?
+    let decoded: PatchTextures.Loaded?
     let timeline: StitchTimeline
     @State private var startedAt = Date.now
     @State private var thread: Int?
@@ -192,7 +209,6 @@ private struct SewingPage: View {
     @State private var frameLog: PatchFrameLog?
     #endif
 
-    private var edition: PatchEdition { PatchEdition.of(setID: reveal.addition.placement.setID) }
     private var caption: String { timeline.caption(for: thread) }
 
     private var swatch: Color {
@@ -217,9 +233,7 @@ private struct SewingPage: View {
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.ink)
                 }
-                Text("Your sighting is already saved.")
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.ink)
+                SavedNote()
             }
             .multilineTextAlignment(.center)
             .revealMargins()
@@ -247,19 +261,19 @@ private struct SewingPage: View {
             // times are measured with `-stitchInSweep YES`.
             TimelineView(.animation) { context in
                 let frame = timeline.frame(at: context.date.timeIntervalSince(startedAt))
-                PatchView(art: art, edition: edition, face: .stitching(sewnTo: frame.sewnTo), size: .full)
+                PatchView(art: art, edition: reveal.edition, face: .stitching(sewnTo: frame.sewnTo), size: .full, decoded: decoded)
                     .onChange(of: frame.thread) { _, now in thread = now }
                     .onChange(of: frame.isDone) { _, done in if done { finish() } }
             }
         } else {
             Color.clear
-                .aspectRatio(edition.aspect, contentMode: .fit)
-                .overlay { PatchOutline(shape: edition.shape).fill(edition.twill) }
+                .aspectRatio(reveal.edition.aspect, contentMode: .fit)
+                .overlay { PatchOutline(shape: reveal.edition.shape).fill(reveal.edition.twill) }
         }
     }
 
     private func finish() {
-        withAnimation(.easeInOut(duration: 0.3)) { run.finishSewing() }
+        withAnimation(.easeInOut(duration: 0.3)) { run.finishCeremony() }
     }
 }
 
@@ -271,6 +285,7 @@ private struct NewPatchPage: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let reveal: ListeningCoordinator.Reveal
     let art: PatchArt?
+    let decoded: PatchTextures.Loaded?
     @State private var sharing: Sighting?
     /// Set once on appearing: the haptic's trigger.
     @State private var appeared = false
@@ -288,7 +303,7 @@ private struct NewPatchPage: View {
         ScrollView {
             VStack(spacing: 18) {
                 RevealHeading(eyebrow: reveal.eyebrow, name: reveal.commonName, line: PatchText.revealNumberLine(reveal.addition.placement))
-                PatchView(art: art, edition: PatchEdition.of(setID: reveal.addition.placement.setID), size: .full, tag: reveal.commonName)
+                PatchView(art: art, edition: reveal.edition, size: .full, tag: reveal.commonName, decoded: decoded)
                     .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 280)
                     .padding(.vertical, 8)
                     .accessibilityElement(children: .ignore)
@@ -319,9 +334,7 @@ private struct NewPatchPage: View {
                     .foregroundStyle(Color.ink)
                     .frame(minHeight: 44)
                     RevealUndoButton(reveal: reveal)
-                    Text("Your sighting is already saved.")
-                        .font(JournalFont.attribution)
-                        .foregroundStyle(Color.ink)
+                    SavedNote()
                 }
             }
             .revealMargins()
@@ -343,20 +356,25 @@ private struct SeenAgainReveal: View {
     @Environment(PlaceNames.self) private var places
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
+    @Environment(ListeningCoordinator.self) private var run
     @Environment(\.dynamicTypeSize) private var typeSize
     @Query(Sighting.newestFirst()) private var allSightings: [Sighting]
     let reveal: ListeningCoordinator.Reveal
+    /// Its haptic's trigger.
     @State private var ticked = false
 
     private static let latestShown = 3
+    /// Long enough for the review sheet to have finished closing, so the tick is seen and felt on this page.
+    private static let tickDelay = Duration.milliseconds(600)
 
     private var isStill: Bool {
-        PatchMotion.reduces(system: systemReduceMotion) || PatchMotion.voiceOver(system: systemVoiceOver)
+        StitchCeremony.isStill(reduceMotion: PatchMotion.reduces(system: systemReduceMotion), voiceOver: PatchMotion.voiceOver(system: systemVoiceOver))
     }
 
     private var count: Int { reveal.addition.patchCount }
-    private var shownCount: Int { ticked || isStill ? count : max(count - 1, 0) }
-    private var lifted: Bool { ticked || isStill }
+    private var hasTicked: Bool { reveal.hasPlayed || ticked }
+    private var shownCount: Int { StitchCeremony.shownCount(of: count, hasTicked: hasTicked, isStill: isStill) }
+    private var lifted: Bool { hasTicked || isStill }
 
     var body: some View {
         let patch = library.collection(of: allSightings).patch(of: reveal.addition.identifier)
@@ -365,8 +383,7 @@ private struct SeenAgainReveal: View {
             VStack(spacing: 18) {
                 RevealHeading(eyebrow: reveal.eyebrow, name: reveal.commonName)
                 PatchView(
-                    art: library.patchArt(scientificName: reveal.addition.species.scientificName, setID: reveal.addition.placement.setID),
-                    edition: PatchEdition.of(setID: reveal.addition.placement.setID), size: .full, tag: reveal.commonName
+                    art: reveal.art(in: library), edition: reveal.edition, size: .full, tag: reveal.commonName
                 )
                 .frame(maxWidth: typeSize.isAccessibilitySize ? 160 : 200)
                 .scaleEffect(lifted ? 1 : 0.92)
@@ -381,7 +398,7 @@ private struct SeenAgainReveal: View {
                         .monospacedDigit()
                         .contentTransition(.numericText(value: Double(shownCount)))
                         .accessibilityIdentifier("seen-again-count")
-                    Text(reveal.countLine)
+                    Text(reveal.countLine(shownCount))
                         .font(JournalFont.supporting)
                 }
                 .foregroundStyle(Color.ink)
@@ -425,8 +442,15 @@ private struct SeenAgainReveal: View {
         // A light, optional haptic as the count changes: the system's haptics setting turns it off.
         .sensoryFeedback(.impact(weight: .light), trigger: ticked)
         .task {
-            if !isStill { try? await Task.sleep(for: .milliseconds(350)) }
-            withAnimation(isStill ? nil : .spring(duration: 0.45)) { ticked = true }
+            guard !reveal.hasPlayed else { return }
+            if !isStill {
+                try? await Task.sleep(for: Self.tickDelay)
+                guard !Task.isCancelled else { return }
+            }
+            withAnimation(isStill ? nil : .spring(duration: 0.45)) {
+                ticked = true
+                run.finishCeremony()
+            }
         }
         .task(id: latest.compactMap(\.location).count) {
             for sighting in latest {
