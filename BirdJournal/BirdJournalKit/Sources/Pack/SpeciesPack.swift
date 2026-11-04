@@ -11,7 +11,8 @@ public struct SpeciesPack: Sendable, Hashable {
     /// #54) the set definition and the tables for stats, the fact sheet, lore, pack art, the threatened flag and the
     /// family, which stay empty until the tickets that fill them (an empty table means "not available yet"); issue #55
     /// fills the stats, the threatened flag and the family, issue #57 the pack art and issue #56 the fact sheet and the lore.
-    public static let schemaVersion = 4
+    /// Schema 5 (issue #133) added the `patch` table and the `patch/` folder: one embroidered patch per species.
+    public static let schemaVersion = 5
     /// The schemas this reader opens: a schema-2 pack downloaded before #41 still reads, without sounds; a schema-3
     /// pack without its set.
     public static let supportedSchemaVersions = 2...schemaVersion
@@ -72,6 +73,16 @@ public struct SpeciesPack: Sendable, Hashable {
         directory.appending(path: art.file)
     }
 
+    /// The patch's colour on transparency (AVIF).
+    public func patchURL(for patch: PackPatch) -> URL {
+        directory.appending(path: patch.file)
+    }
+
+    /// The patch's layers (AVIF at half size): its height in red, its cord in green, its stitch order in blue.
+    public func patchLayersURL(for patch: PackPatch) -> URL {
+        directory.appending(path: patch.layersFile)
+    }
+
     /// The set's cover on disk, when the pack has one.
     public var coverURL: URL? {
         cover.map { directory.appending(path: $0.file) }
@@ -123,6 +134,9 @@ public struct PackSpecies: Sendable, Hashable, Identifiable {
     /// The card art every card of the species shows until it has its own (issue #57); nil for a pack before it or a
     /// species the maintainer listed as an art gap.
     public let packArt: PackArt?
+    /// The species' embroidered patch in this pack's edition (issue #133); nil for a pack before schema 5 or a species
+    /// without an approved patch.
+    public var patch: PackPatch? = nil
     /// The card stats (issue #55); nil for a pack before schema 4 or one built without them, and for a species the
     /// datasets lack (a known gap of the pack build, listed in its `report.json`).
     public var stats: PackStats? = nil
@@ -195,6 +209,39 @@ public struct PackPhoto: Sendable, Hashable, Identifiable {
         case "CC BY-NC": URL(string: "https://creativecommons.org/licenses/by-nc/4.0/")
         default: nil
         }
+    }
+}
+
+/// One `patch` row (issue #133, of #131): the species' embroidered patch in the pack's edition, an AI illustration
+/// (ADR-0007) reviewed before the pack shipped, with what the app lights and stitches it from.
+public struct PackPatch: Sendable, Hashable {
+    public let speciesID: String
+    /// The colour on transparency, e.g. `patch/haemorhous-mexicanus.avif`, `width` × `height` (720 on its longest side).
+    public let file: String
+    /// The layers at half size: height (thread relief and the raised cord) in red, the cord's mask in green, the stitch
+    /// order (0...255, one thread colour at a time, the cord last) in blue.
+    public let layersFile: String
+    public let width: Int
+    public let height: Int
+    /// The bare twill's colour, "#RRGGBB": what an unstitched pattern shows.
+    public let ground: String
+    /// Where each stitch layer starts on the order's 0...255, the last being 255.
+    public let stitchBounds: [Int]
+    /// The iNaturalist ids of the pack photos its reference bird came from.
+    public let sourcePhotoIDs: [Int]
+    /// The workflow and prompts versions, e.g. "patch-art@1 patch-prompts@1".
+    public let workflowVersion: String
+
+    public init(speciesID: String, file: String, layersFile: String, width: Int, height: Int, ground: String, stitchBounds: [Int], sourcePhotoIDs: [Int], workflowVersion: String) {
+        self.speciesID = speciesID
+        self.file = file
+        self.layersFile = layersFile
+        self.width = width
+        self.height = height
+        self.ground = ground
+        self.stitchBounds = stitchBounds
+        self.sourcePhotoIDs = sourcePhotoIDs
+        self.workflowVersion = workflowVersion
     }
 }
 
@@ -398,6 +445,10 @@ extension SpeciesPack {
                 species[index].lore = lore[id]
             }
         }
+        if info.schemaVersion >= 5 {
+            let patches = try readPatches(database)
+            for index in species.indices { species[index].patch = patches[species[index].id] }
+        }
         let cover = info.schemaVersion >= 4 ? try readCover(database) : nil
         return SpeciesPack(info: info, directory: directory, species: species, set: set, cover: cover)
     }
@@ -467,6 +518,21 @@ extension SpeciesPack {
                   let sourcePhotoIDs = try? JSONDecoder().decode([Int].self, from: Data(ids.utf8)), let workflow = row.text(3)
             else { throw PackError.malformedRow(table: "pack_art") }
             return PackArt(speciesID: speciesID, file: file, sourcePhotoIDs: sourcePhotoIDs, workflowVersion: workflow)
+        }
+        return Dictionary(rows.map { ($0.speciesID, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Each species' `patch` row, by species id.
+    private static func readPatches(_ database: SQLiteDatabase) throws -> [String: PackPatch] {
+        let sql = "SELECT species_id, file, layers_file, width, height, ground, stitch_bounds, source_photo_ids, workflow_version FROM patch"
+        let rows = try database.rows(sql) { row in
+            guard let speciesID = row.text(0), let file = row.text(1), let layers = row.text(2), let width = row.int(3), let height = row.int(4),
+                  let ground = row.text(5), let bounds = row.text(6), let ids = row.text(7), let workflow = row.text(8),
+                  let stitchBounds = try? JSONDecoder().decode([Int].self, from: Data(bounds.utf8)),
+                  let sourcePhotoIDs = try? JSONDecoder().decode([Int].self, from: Data(ids.utf8))
+            else { throw PackError.malformedRow(table: "patch") }
+            return PackPatch(speciesID: speciesID, file: file, layersFile: layers, width: width, height: height, ground: ground,
+                             stitchBounds: stitchBounds, sourcePhotoIDs: sourcePhotoIDs, workflowVersion: workflow)
         }
         return Dictionary(rows.map { ($0.speciesID, $0) }, uniquingKeysWith: { first, _ in first })
     }

@@ -104,6 +104,19 @@ def main(argv: list[str] | None = None) -> int:
     cover_review.add_argument("--why", help="the reason, kept in the lock with --reject")
     cover_review.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache holding <cache>/covers (default: packbuilder/cache)")
     cover_review.add_argument("--sheets", type=Path, help="folder for the redrawn contact sheet (default build/pack-art/<pack id>)")
+    patches = commands.add_parser("patches", help="paint the embroidered patches patch.lock.json lacks and draw their contact sheets, without building the pack (issue #133)")
+    patches.add_argument("definition", type=Path, help="folder holding pack.json, art.lock.json (the reference birds) and patch.lock.json")
+    patches.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
+    patches.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the art cache: isolated birds in <cache>/art/isolated, patches written to <cache>/art/patches (default: packbuilder/cache)")
+    patches.add_argument("--sheets", type=Path, help="folder for the contact sheets (default build/pack-art/<pack id>/patches)")
+    patches.add_argument("--only", action="append", default=[], metavar="SPECIES", help="only these species ids (repeat), for a trial")
+    patch_review = commands.add_parser("patch-review", help="record the maintainer's review of the patches in patch.lock.json")
+    patch_review.add_argument("definition", type=Path, help="folder holding pack.json and patch.lock.json")
+    patch_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve a patch (species id or common name; repeat)")
+    patch_review.add_argument("--approve-all", action="store_true", help="approve every patch still pending")
+    patch_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a patch: the next `patches` run paints it again with the next seed (repeat)")
+    patch_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on a species' patch (repeat)")
+    patch_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
     references = commands.add_parser("art-references", help="export each species' isolated reference bird for the art worker's scene art (issue #68)")
     references.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and art.lock.json")
     references.add_argument("--pack", type=Path, required=True, help="the built pack (its pack.sqlite gives each species' size)")
@@ -146,6 +159,10 @@ def main(argv: list[str] | None = None) -> int:
         return _art_references(args)
     if args.command == "art-review":
         return _art_review(args)
+    if args.command == "patches":
+        return _patches(args)
+    if args.command == "patch-review":
+        return _patch_review(args)
     if args.command == "cover":
         return _cover(args)
     if args.command == "cover-review":
@@ -183,7 +200,9 @@ def main(argv: list[str] | None = None) -> int:
         archive_path=args.zip, built_at=args.built_at, download_workers=args.workers, photo_licenses=args.photo_licenses,
     )
     sounds = None if args.no_sounds else _sound_picker(args, definition)
-    artist = None if args.no_art else _artist(args, definition)
+    patch_artist = None if args.no_art else _patch_artist(args, definition)
+    # A pack with patches (#133) has no pack art: its references come from the pack art's lock, painted before.
+    artist = None if args.no_art or patch_artist is not None else _artist(args, definition)
     cover_painter = None if args.no_art or args.no_cover else _cover_painter(args, definition, card_set)
     sheets = args.art_sheets or _art_sheets_path(definition.id)
     lore = None if args.no_lore else _lore_writer(args, definition)
@@ -195,6 +214,7 @@ def main(argv: list[str] | None = None) -> int:
         build_pack(
             definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds,
             card_set=card_set, joined=joined, artist=artist, art_sheets=sheets, lore=lore, lore_review=lore_review, cover_painter=cover_painter,
+            patch_artist=patch_artist,
         )
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
@@ -286,8 +306,73 @@ def _cover_painter(args: argparse.Namespace, definition: PackDefinition, card_se
     return CoverPainter(ComfyClient(args.comfy), pack_id=definition.id, theme=theme, lock=CoverLock.load(args.definition / LOCK_FILE), cache_dir=args.cache / "covers")
 
 
+def _patch_artist(args: argparse.Namespace, definition: PackDefinition):
+    """The patch step (#133) for a pack whose edition has a patch in art/patch-prompts.json and whose pack art's lock
+    names its reference birds; None otherwise (the pack keeps its pack art until its references exist)."""
+    from packbuilder.comfy import ComfyClient
+    from packbuilder.pack_art import LOCK_FILE as ART_LOCK
+    from packbuilder.patch_art import PatchPrompts
+
+    if definition.id not in PatchPrompts.load().editions or not (args.definition / ART_LOCK).exists():
+        return None
+    return _make_patch_artist(args, definition, ComfyClient(args.comfy))
+
+
+def _make_patch_artist(args: argparse.Namespace, definition: PackDefinition, client):
+    """The patch step over the pack's locks, with each species' setting, pinned reference and markings from overrides.json,
+    and the detector found only if a pinned reference has to be isolated."""
+    from packbuilder.definition import load_overrides
+    from packbuilder.detector import BirdDetector, ensure_model
+    from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
+    from packbuilder.patch_art import LOCK_FILE, PatchArtist, PatchLock, PatchPin
+
+    overrides = load_overrides(args.definition / "overrides.json")
+    pins = {
+        entry.id: PatchPin.from_art(data["art"])
+        for entry in definition.species
+        if isinstance(data := overrides.get(entry.scientific_name), dict) and isinstance(data.get("art"), dict)
+    }
+
+    def find_bird(image):
+        detections = BirdDetector(ensure_model(args.cache)).detect(image)
+        if not detections:
+            raise ValueError("no bird detected in the pinned reference photo")
+        return max(detections, key=lambda d: d.score).box
+
+    return PatchArtist(client, pack_id=definition.id, lock=PatchLock.load(args.definition / LOCK_FILE), art_lock=ArtLock.load(args.definition / ART_LOCK),
+                       cache_dir=args.cache / "art", pins=pins, originals=args.cache / "photos" / "original", find_bird=find_bird)
+
+
 def _art_sheets_path(pack_id: str) -> Path:
     return Path(__file__).resolve().parents[3] / "build" / "pack-art" / pack_id
+
+
+def _patches(args: argparse.Namespace) -> int:
+    """The patches alone (issue #133): each species painted from the reference bird its pack art was painted from."""
+    from packbuilder.comfy import ComfyClient
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    definition = PackDefinition.load(args.definition / "pack.json")
+    species = [entry.id for entry in definition.species if not args.only or entry.id in args.only]
+    artist = _make_patch_artist(args, definition, ComfyClient(args.comfy))
+    patches = artist.paint(species)
+    sheets = artist.sheets(species, patches, args.sheets or _art_sheets_path(definition.id) / "patches")
+    print(f"{definition.id} patches: {artist.painted} painted; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)
+    return 0
+
+
+def _patch_review(args: argparse.Namespace) -> int:
+    from packbuilder.patch_art import LOCK_FILE, PatchLock, review
+
+    lock = PatchLock.load(args.definition / LOCK_FILE)
+    try:
+        review(lock, approve=args.approve, reject=args.reject, gap=args.gap, approve_all=args.approve_all, why=args.why)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    counts = {state: sum(entry["review"] == state for entry in lock.species.values()) for state in ("approved", "pending", "rejected", "gap")}
+    print(f"{lock.path}: " + ", ".join(f"{count} {state}" for state, count in counts.items()), file=sys.stderr)
+    return 0
 
 
 def _cover(args: argparse.Namespace) -> int:
