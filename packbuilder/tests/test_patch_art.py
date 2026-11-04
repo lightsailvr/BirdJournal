@@ -137,3 +137,26 @@ def test_layers_give_the_app_its_height_cord_and_stitch_order(tmp_path, comfy):
     assert list(made.bounds) == sorted(made.bounds) and made.bounds[0] == 0 and made.bounds[-1] == 255
     assert np.asarray(made.colour).shape[:2] == height.shape
     assert CORD_DEPTH == 25.0
+
+
+def test_a_patch_with_a_peeled_corner_is_painted_again_with_the_next_seed(tmp_path, comfy, monkeypatch):
+    import packbuilder.patch_art as patch_art
+
+    measured = iter([0.2, 0.001])
+    monkeypatch.setattr(patch_art, "peeled", lambda cut: next(measured))
+    artist(tmp_path, comfy).paint([FINCH])
+    seeds = [job.seed for job in comfy.paintings]
+    assert len(seeds) == 2 and seeds[1] == seeds[0] + 1
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert entry["seed"] == seeds[1] and entry["attempts"] == 2 and entry["card_at_edge"] == 0.001
+
+
+def test_peeled_measures_bare_card_in_the_patchs_edge():
+    from packbuilder.patch_art import peeled
+
+    clean = Image.new("RGBA", (400, 400), (0, 0, 0, 0))
+    ImageDraw.Draw(clean).ellipse((0, 0, 399, 399), fill=(110, 118, 46, 255))
+    assert peeled(clean) < 0.001
+    curled = clean.copy()
+    ImageDraw.Draw(curled).polygon([(40, 300), (140, 400), (40, 400)], fill=(240, 239, 236, 255))
+    assert peeled(curled) > 0.015

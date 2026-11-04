@@ -44,6 +44,11 @@ log = logging.getLogger("packbuilder.patch_art")
 LOCK_FILE = "patch.lock.json"
 SIZE = 720
 """The cut patch's longest side."""
+PEEL_LIMIT = 0.015
+"""The share of the patch's outer band (45 px at `SIZE`) that may be bare card: above it, a corner of the card has peeled up
+into the cut (FLUX.3 sometimes paints a lifted corner, about one patch in fifteen on the Los Angeles run), and the patch
+is painted again with the next seed."""
+PEEL_ATTEMPTS = 3
 CORD_DEPTH = 25.0
 """How far the merrowed cord runs in from the patch's edge at `SIZE`: measured on every edition's samples, the cord
 ends in a dark groove about 25 px in, whatever the shape."""
@@ -206,13 +211,23 @@ class PatchArtist:
         return Patch(species_id, fresh["review"], self._file(fresh["sha256"]), tuple(fresh["photos"]))
 
     def _render(self, reference: Reference, seed: int, name: str, common_name: str) -> dict:
+        """Paints the patch with `seed`, then the next seeds while a corner of the card peels into the cut, at most
+        `PEEL_ATTEMPTS` times, keeping the cleanest; then measures its bird."""
         dark = is_dark(reference.image, self.prompts.dark_lightness)
         prompt = self.prompts.render(self.spec, dark)
-        painting = self.client.paint(self.workflow, images=[(f"patch-bird-{reference.photo_id}.png", png(reference.image))], prompt=prompt, seed=seed)
-        raw = Image.open(io.BytesIO(painting.image)).convert("RGB")
-        self.painted += 1
-        cut = cut_from_card(raw)
-        result = {"common_name": common_name, "seed": seed, "dark": dark, "measure": None}
+        best = None
+        for attempt in range(PEEL_ATTEMPTS):
+            painting = self.client.paint(self.workflow, images=[(f"patch-bird-{reference.photo_id}.png", png(reference.image))], prompt=prompt, seed=seed + attempt)
+            raw = Image.open(io.BytesIO(painting.image)).convert("RGB")
+            self.painted += 1
+            cut = cut_from_card(raw)
+            card = peeled(cut)
+            if best is None or card < best[0]:
+                best = (card, seed + attempt, raw, cut, attempt + 1)
+            if card <= PEEL_LIMIT:
+                break
+        card, seed, raw, cut, attempts = best
+        result = {"common_name": common_name, "seed": seed, "dark": dark, "measure": None, "card_at_edge": round(card, 4), "attempts": attempts}
         try:
             interior_image = interior(cut)
             bird = self.painter.mask(interior_image, None)
@@ -254,6 +269,8 @@ class PatchArtist:
                 bird = None
             measured = entry.get("measure")
             line = f"dE {measured['dE_mean']:.1f} iou {measured['iou']:.2f}" if measured else "not measured"
+            if entry.get("card_at_edge", 0) > PEEL_LIMIT:
+                line += " · CARD AT EDGE"
             state = (patch.review if patch else UNPAINTED).upper()
             picture = _on_card(patch.file) if patch and patch.file and patch.file.exists() else None
             cells.append(((bird, f"{number:03d} {common}\nreference"), (picture, f"{state}{' · dark clause' if entry.get('dark') else ''}\n{line}")))
@@ -284,6 +301,15 @@ def _on_card(path: Path, size: tuple[int, int] = (576, 768)) -> Image.Image:
     patch.thumbnail(size)
     card = Image.new("RGBA", patch.size, (150, 150, 150, 255))
     return Image.alpha_composite(card, patch).convert("RGB")
+
+
+def peeled(patch: Image.Image) -> float:
+    """The share of the cut patch's outer band (45 px in) that is bare card, light and unsaturated: a peeled corner."""
+    rgba = np.asarray(patch.convert("RGBA")).astype(float)
+    rgb, inside = rgba[..., :3], rgba[..., 3] > 128
+    band = inside & (ndimage.distance_transform_edt(inside) < 45)
+    card = (rgb.mean(-1) > 200) & ((rgb.max(-1) - rgb.min(-1)) < 28)
+    return float((card & band).sum() / max(band.sum(), 1))
 
 
 def is_dark(bird_on_white: Image.Image, threshold: float) -> bool:
