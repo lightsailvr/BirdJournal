@@ -56,6 +56,10 @@ into the cut (FLUX.3 sometimes paints a lifted corner, about one patch in fiftee
 is painted again with the next seed."""
 PEEL_ATTEMPTS = 3
 CORD_DEPTH = 25.0
+# How deep a rim of card can reach, and how much of a patch it can be (the Los Angeles patches' run from 2% to 7%).
+RIM_DEPTH = 60
+RIM_MINIMUM = 0.015
+RIM_LIMIT = 0.12
 """How far the merrowed cord runs in from the patch's edge at `SIZE`: measured on every edition's samples, the cord
 ends in a dark groove about 25 px in, whatever the shape."""
 
@@ -427,6 +431,48 @@ def cut_from_card(painting: Image.Image) -> Image.Image:
     ys, xs = np.nonzero(alpha > 0.1)
     pad = 6
     cut = cut.crop((max(xs.min() - pad, 0), max(ys.min() - pad, 0), min(xs.max() + pad, width), min(ys.max() + pad, height)))
+    scale = SIZE / max(cut.size)
+    return cut.resize((round(cut.width * scale), round(cut.height * scale)), Image.LANCZOS)
+
+
+def trim_rim(patch: Image.Image) -> Image.Image:
+    """The cut patch without the pale crescent `cut_from_card` can leave along one side: the card under its soft shadow,
+    which is why it never showed on the white review sheets, and on felt reads as a paper disc under the patch. It grows
+    in from the edge through what is smooth and unsaturated, so a stitched cord stops it however pale its thread: thread
+    has grain, shadow has none. The convex hull of the rest is the patch, as in the cut. A patch it would take less than
+    `RIM_MINIMUM` or more than `RIM_LIMIT` of comes back whole: it has no rim, or that isn't one. Cropped to the result and
+    scaled to `SIZE` again."""
+    rgba = np.asarray(patch.convert("RGBA")).astype(float)
+    rgb, alpha = rgba[..., :3], rgba[..., 3]
+    inside = alpha > 128
+    saturation = rgb.max(-1) - rgb.min(-1)
+    dist = ndimage.distance_transform_edt(inside)
+    outermost = inside & (dist <= 2)
+    # What's under the transparency is no part of the grain: outside takes the nearest pixel of the patch.
+    nearest = ndimage.distance_transform_edt(~inside, return_distances=False, return_indices=True)
+    lightness = rgb.mean(-1)[nearest[0], nearest[1]]
+    grain = ndimage.maximum_filter(np.abs(lightness - ndimage.gaussian_filter(lightness, 1.5)), 3)
+    smooth = inside & (saturation < 40) & (grain < 9) & (lightness > 85)
+    rim = ndimage.binary_propagation(outermost, mask=smooth | outermost) & (dist <= RIM_DEPTH)
+    keep = ndimage.binary_opening(inside & ~rim, iterations=5)
+    labels, count = ndimage.label(keep)
+    if count == 0:
+        return patch
+    if count > 1:
+        keep = labels == (np.argmax(ndimage.sum(keep, labels, range(1, count + 1))) + 1)
+    ys, xs = np.nonzero(ndimage.binary_erosion(keep) ^ keep)
+    hull = np.column_stack([xs, ys])
+    hull = hull[ConvexHull(hull).vertices]
+    outline = Image.new("L", patch.size, 0)
+    ImageDraw.Draw(outline).polygon([tuple(p) for p in hull], fill=255)
+    shape = np.asarray(outline) > 0
+    if not RIM_MINIMUM * inside.sum() < (inside & ~shape).sum() < RIM_LIMIT * inside.sum():
+        return patch
+    trimmed_alpha = np.clip(ndimage.gaussian_filter(shape.astype(float), 0.9) * 1.4 - 0.2, 0, 1) * alpha
+    cut = Image.fromarray(np.dstack([rgb, trimmed_alpha]).astype(np.uint8), "RGBA")
+    ys, xs = np.nonzero(trimmed_alpha > 25)
+    pad = 4
+    cut = cut.crop((max(xs.min() - pad, 0), max(ys.min() - pad, 0), min(xs.max() + pad, patch.width), min(ys.max() + pad, patch.height)))
     scale = SIZE / max(cut.size)
     return cut.resize((round(cut.width * scale), round(cut.height * scale)), Image.LANCZOS)
 

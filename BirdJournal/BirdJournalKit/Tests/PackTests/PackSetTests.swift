@@ -45,7 +45,7 @@ struct PackSetTests {
     @Test("every species in the bundled Los Angeles pack has a set position")
     func bundledPackSet() throws {
         let pack = try SpeciesPack.bundled()
-        #expect(pack.info.schemaVersion == 4)
+        #expect(pack.info.schemaVersion >= 4)
         let set = try #require(pack.set, "the bundled pack has no set")
         #expect(set.id == PackIndex.bundledPackID && set.name == pack.info.name)
         #expect(set.edition.name.hasSuffix("edition"))

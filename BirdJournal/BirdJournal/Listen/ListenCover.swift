@@ -140,6 +140,7 @@ private struct EditionFallback: View {
 /// collected (distinct species, page 12), and the way to the set's page.
 struct LocalSetSection: View {
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(PackLibrary.self) private var library
     let local: LocalSet
     let collection: CardCollection
     let sightings: [Sighting]
@@ -180,14 +181,17 @@ struct LocalSetSection: View {
             let latest = latestCards
             if !latest.isEmpty {
                 let columns = Array(repeating: GridItem(.flexible(), spacing: JournalLayout.rowGap, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2)
-                LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
-                    ForEach(latest) { sighting in
-                        NavigationLink(value: Route.card(sighting.persistentModelID)) {
-                            CardTile(sighting: sighting, placement: collection.placement(of: sighting.identifier), patch: collection.patch(of: sighting.identifier))
+                FeltBoard {
+                    LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
+                        ForEach(latest) { sighting in
+                            if let patch = collection.patch(of: sighting.identifier) {
+                                SewnPatchTile(patch: patch, name: PatchText.name(of: patch, library: library))
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                .holdsPatchLight()
             } else {
                 Text("Birds you add while listening are sewn as patches here, one for every bird in every place.")
                     .font(JournalFont.supporting)

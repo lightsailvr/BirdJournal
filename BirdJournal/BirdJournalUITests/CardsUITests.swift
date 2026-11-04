@@ -56,13 +56,13 @@ final class CardsUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Seen again · 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
 
-        // Still one patch of the species, seen twice; reopening it shows the card (issue #52), not the reveal again.
+        // Still one patch of the species, seen twice; reopening it shows its page (issue #134), not the reveal again.
         app.tabBars.buttons["Collection"].tap()
         let twice = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS 'seen 2 times'", name)).firstMatch
         XCTAssertTrue(twice.waitForExistence(timeout: 10), "no patch of \(name) seen twice; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).count, 1, "one patch, not one per add; screen: \(app.debugDescription.prefix(4000))")
         twice.tap()
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the card did not open; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.waitForExistence(timeout: 2), "reopening a patch never replays the reveal")
         XCTAssertEqual(app.state, .runningForeground)
     }

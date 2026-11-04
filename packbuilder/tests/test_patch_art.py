@@ -6,13 +6,14 @@ import hashlib
 import json
 
 import numpy as np
+from scipy import ndimage
 import pytest
 from PIL import Image, ImageDraw
 
 from packbuilder.comfy import ComfyClient
 from packbuilder.pack_art import ArtLock
 from packbuilder.geometry import Box
-from packbuilder.patch_art import CORD_DEPTH, SIZE, PatchArtist, PatchLock, PatchPin, PatchPrompts, _isolate_prompt, cut_from_card, is_dark, layers, review
+from packbuilder.patch_art import CORD_DEPTH, SIZE, PatchArtist, PatchLock, PatchPin, PatchPrompts, _isolate_prompt, cut_from_card, is_dark, layers, trim_rim, review
 from tests.comfy_stub import BACKGROUND, bird_on, serve
 
 FINCH, RAVEN = "haemorhous-mexicanus", "corvus-corax"
@@ -179,6 +180,54 @@ def test_the_patch_is_cut_from_its_card_without_its_shadow():
     assert abs(width - height) < 12, "round, not stretched by its shadow"
     with pytest.raises(ValueError):
         cut_from_card(Image.new("RGB", (400, 400), (244, 243, 240)))
+
+
+def _patch_with_rim(rim: int = 30, cord_rgb: tuple[int, int, int] = (92, 96, 34)) -> Image.Image:
+    """A round stitched patch, lying on the pale smooth crescent the cut keeps: card under its soft shadow."""
+    size = 720
+    rows, cols = np.mgrid[0:size, 0:size]
+    radius = (size - rim * 2) / 2
+    centre = size / 2 - rim / 2
+    patch = np.hypot(cols - centre, rows - centre) <= radius
+    # The hull: the patch and its crescent to the lower right.
+    outer = patch | (np.hypot(cols - centre - rim, rows - centre - rim) <= radius)
+    rng = np.random.default_rng(1)
+    grain = rng.integers(-34, 34, (size, size))
+    rgb = np.zeros((size, size, 3), float)
+    rgb[outer & ~patch] = (170, 158, 150)
+    rim_fade = np.clip((np.hypot(cols - centre, rows - centre) - radius) / max(rim, 1), 0, 1)
+    rgb[outer & ~patch] += (rim_fade[outer & ~patch] * 40)[:, None]
+    in_cord = patch & (np.hypot(cols - centre, rows - centre) > radius - 25)
+    rgb[in_cord] = np.array(cord_rgb) + grain[in_cord][:, None]
+    rgb[patch & ~in_cord] = np.array([196, 160, 104]) + grain[patch & ~in_cord][:, None]
+    rgba = np.dstack([np.clip(rgb, 0, 255), outer * 255.0])
+    return Image.fromarray(rgba.astype(np.uint8), "RGBA")
+
+
+def test_trimming_takes_the_pale_crescent_and_keeps_the_stitched_patch():
+    trimmed = trim_rim(_patch_with_rim())
+    assert max(trimmed.size) == SIZE
+    alpha = np.asarray(trimmed)[..., 3]
+    ys, xs = np.nonzero(alpha > 128)
+    width, height = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
+    assert abs(width - height) <= 8, "a round patch stays round once its crescent has gone"
+    rgb = np.asarray(trimmed).astype(float)[..., :3]
+    pale = (alpha > 128) & (rgb.mean(-1) > 140) & ((rgb.max(-1) - rgb.min(-1)) < 30)
+    assert pale.sum() < 0.01 * (alpha > 128).sum(), "none of the pale crescent is left"
+
+
+def test_trimming_leaves_a_patch_without_a_rim_about_as_it_was():
+    plain = _patch_with_rim(rim=0)
+    before = (np.asarray(plain)[..., 3] > 128).sum()
+    trimmed = trim_rim(plain)
+    after = (np.asarray(trimmed)[..., 3] > 128).sum()
+    assert after > before * 0.93, "the cord isn't eaten"
+
+
+def test_trimming_keeps_a_pale_silver_cord_because_it_is_stitched():
+    silver = trim_rim(_patch_with_rim(rim=0, cord_rgb=(168, 172, 176)))
+    alpha = np.asarray(silver)[..., 3] > 128
+    assert alpha.sum() > 0.9 * np.pi * (SIZE / 2) ** 2, "a pale cord's grain isn't the smooth shadow"
 
 
 def test_layers_give_the_app_its_height_cord_and_stitch_order(tmp_path, comfy):

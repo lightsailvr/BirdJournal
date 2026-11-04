@@ -480,10 +480,10 @@ def _license_text(
 
 def _write_patch(out_dir: Path, result: SpeciesResult, patch: Patch, versions: str) -> tuple:
     """One approved patch's colour and layers in `patch/`, and its row."""
-    from packbuilder.patch_art import layers
+    from packbuilder.patch_art import layers, trim_rim
 
     with Image.open(patch.file) as opened:
-        made = layers(opened)
+        made = layers(trim_rim(opened))
     folder = out_dir / "patch"
     folder.mkdir(exist_ok=True)
     colour, layered = f"patch/{result.entry.id}.avif", f"patch/{result.entry.id}-layers.avif"

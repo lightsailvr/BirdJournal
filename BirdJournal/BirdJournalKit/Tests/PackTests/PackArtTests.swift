@@ -37,8 +37,8 @@ struct PackArtTests {
         await library.download(try #require(library.available.first))
 
         #expect(library.packArt(scientificName: "Sayornis nigricans", setID: "test-pack")?.pack.info.id == "test-pack")
-        #expect(library.packArt(scientificName: "Sayornis nigricans", setID: nil)?.pack.info.id == PackIndex.bundledPackID)
-        #expect(library.packArt(scientificName: "Calypte anna", setID: "test-pack")?.pack.info.id == PackIndex.bundledPackID, "the test pack's gap")
+        #expect(library.packArt(scientificName: "Sayornis nigricans", setID: nil)?.pack.info.id == "test-pack", "the first pack that has art")
+        #expect(library.packArt(scientificName: "Calypte anna", setID: "test-pack") == nil, "the test pack's gap, and the bundled pack ships patches instead (#133)")
         #expect(library.packArt(scientificName: "Turdus merula", setID: nil) == nil)
     }
 
@@ -50,40 +50,44 @@ struct PackArtTests {
         #expect(pack.species.allSatisfy { $0.packArt == nil })
     }
 
-    @Test("every Los Angeles species has pack art on disk, painted from one of its own photos, or is a listed gap")
-    func bundledArt() throws {
+    @Test("every Los Angeles species has its patch and layers on disk, painted from one of its own photos, or is a listed gap; no pack art ships beside them")
+    func bundledPatches() throws {
         let pack = try SpeciesPack.bundled()
-        let gaps = try Self.artGaps(in: pack)
+        let gaps = try Self.patchGaps(in: pack)
         for species in pack.species {
-            guard let art = species.packArt else {
-                #expect(gaps.contains(species.id), "\(species.commonName) has no pack art and is not a listed gap")
+            #expect(species.packArt == nil, "\(species.commonName) still has pack art, which patches replaced (#133)")
+            guard let patch = species.patch else {
+                #expect(gaps.contains(species.id), "\(species.commonName) has no patch and is not a listed gap")
                 continue
             }
-            #expect(!gaps.contains(species.id), "\(species.commonName) is a listed gap but has art")
-            #expect(Self.pixelSize(of: pack.artURL(for: art)) == CGSize(width: 864, height: 1152), "\(art.file)")
-            let photos = pack.sourcePhotos(of: art)
-            #expect(photos.count == art.sourcePhotoIDs.count, "\(species.commonName) was painted from a photo the pack doesn't have")
-            #expect(photos.allSatisfy { $0.speciesID == species.id })
+            #expect(!gaps.contains(species.id), "\(species.commonName) is a listed gap but has a patch")
+            let size = try #require(Self.pixelSize(of: pack.patchURL(for: patch)), "\(patch.file)")
+            #expect(size == CGSize(width: patch.width, height: patch.height), "\(patch.file)")
+            #expect(max(size.width, size.height) == 720, "\(patch.file)")
+            let layers = try #require(Self.pixelSize(of: pack.patchLayersURL(for: patch)), "\(patch.layersFile)")
+            #expect(abs(layers.width - size.width / 2) <= 1 && abs(layers.height - size.height / 2) <= 1, "\(patch.layersFile)")
+            let photos = patch.sourcePhotoIDs.compactMap { id in species.photos.first { $0.inatPhotoID == id } }
+            #expect(photos.count == patch.sourcePhotoIDs.count, "\(species.commonName) was painted from a photo the pack doesn't have")
             for photo in photos {
-                #expect(pack.info.licenseText.contains("\(species.commonName): painted from photo \(photo.inatPhotoID)"), "\(species.commonName)'s art credit")
+                #expect(pack.info.licenseText.contains("\(species.commonName): painted from photo \(photo.inatPhotoID)"), "\(species.commonName)'s patch credit")
             }
         }
-        #expect(pack.species.filter { $0.packArt != nil }.count + gaps.count == pack.species.count)
+        #expect(pack.species.filter { $0.patch != nil }.count + gaps.count == pack.species.count)
     }
 
-    @Test("the bundled pack, art and all, stays inside the 200 MB budget")
+    @Test("the bundled pack, patches and all, stays inside the 200 MB budget")
     func bundledSize() throws {
         let pack = try SpeciesPack.bundled()
         let bytes = try Self.bytes(in: pack.directory)
-        let art = try Self.bytes(in: pack.directory.appending(path: "art"))
-        print("bundled pack \(pack.info.id) v\(pack.info.version): \(bytes / 1_000_000) MB on disk, \(art / 1_000_000) MB of it pack art, budget \(Self.budgetBytes / 1_000_000) MB")
+        let patches = try Self.bytes(in: pack.directory.appending(path: "patch"))
+        print("bundled pack \(pack.info.id) v\(pack.info.version): \(bytes / 1_000_000) MB on disk, \(patches / 1_000_000) MB of it patches, budget \(Self.budgetBytes / 1_000_000) MB")
         #expect(bytes <= Self.budgetBytes, "\(bytes) bytes")
     }
 
-    private static func artGaps(in pack: SpeciesPack) throws -> Set<String> {
+    private static func patchGaps(in pack: SpeciesPack) throws -> Set<String> {
         let data = try Data(contentsOf: pack.directory.appending(path: "report.json"))
         let report = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        return Set((report?["gaps"] as? [String: [String]])?["art"] ?? [])
+        return Set((report?["gaps"] as? [String: [String]])?["patches"] ?? [])
     }
 
     private static func bytes(in folder: URL) throws -> Int {

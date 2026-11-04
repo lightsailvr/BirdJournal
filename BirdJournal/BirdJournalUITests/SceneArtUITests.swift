@@ -12,9 +12,10 @@ final class SceneArtUITests: XCTestCase {
     @MainActor
     private func launch(_ extra: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "card"] + extra
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "sighting"] + extra
         app.launch()
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the card did not open; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.navigationBars["House Finch"].waitForExistence(timeout: 15), "the sighting did not open; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<4 where !app.descendants(matching: .any)["card-art"].isHittable { app.swipeUp() }
         return app
     }
 
@@ -31,7 +32,7 @@ final class SceneArtUITests: XCTestCase {
     @MainActor
     func testAPaintedCardOffersTryAgainAndUsePackArtAndTheLastArtStaysWhilePending() {
         let app = launch(["-autoArt", "ready", "-fakeAccount", "signedIn", "-fakeArt", "pending"])
-        XCTAssertEqual(app.buttons["card-art"].label, "Card art: AI illustration")
+        XCTAssertEqual(app.descendants(matching: .any)["card-art"].label, "Card art: AI illustration")
         XCTAssertFalse(status(app).exists)
 
         tap(app.buttons["card-art-use-pack"], app)
@@ -43,7 +44,7 @@ final class SceneArtUITests: XCTestCase {
         tap(app.buttons["card-art-try-again"], app)
         XCTAssertTrue(status(app).waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(status(app).label, Self.pendingLine)
-        XCTAssertEqual(app.buttons["card-art"].label, "Card art: AI illustration")
+        XCTAssertEqual(app.descendants(matching: .any)["card-art"].label, "Card art: AI illustration")
         XCTAssertFalse(app.buttons["card-art-try-again"].exists, "no second job while one is pending")
     }
 
@@ -56,9 +57,7 @@ final class SceneArtUITests: XCTestCase {
         tap(app.buttons["card-art-retry"], app)
         XCTAssertTrue(app.buttons["card-art-try-again"].waitForExistence(timeout: 15), "the retry did not paint; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(status(app).exists)
-        XCTAssertEqual(app.buttons["card-art"].label, "Card art: AI illustration")
-        // Still one card: the stepper over the House Finch's cards counts the same two.
-        XCTAssertEqual(app.staticTexts["card-position"].label, "Card 1 of 2")
+        XCTAssertEqual(app.descendants(matching: .any)["card-art"].label, "Card art: AI illustration")
     }
 
     @MainActor
@@ -87,7 +86,6 @@ final class SceneArtUITests: XCTestCase {
         XCTAssertTrue(app.buttons["card-art-try-again"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
         expectation(for: NSPredicate(format: "label == %@", "4 left today"), evaluatedWith: allowance)
         waitForExpectations(timeout: 10)
-        XCTAssertEqual(app.staticTexts["card-position"].label, "Card 1 of 2")
     }
 
     @MainActor
