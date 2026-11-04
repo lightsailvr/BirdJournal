@@ -153,9 +153,11 @@ struct LegacyFindWireTests {
         #expect(try Self.json(recorder.requests[1])["legendary"] as? Bool == false)
     }
 
-    @Test("the deployed server's feed item reads as a new patch, its edition from the art key")
+    @Test("the deployed server's feed item reads as a new patch, its edition from its patch's art key")
     func oldFeed() async throws {
-        let oldItem = itemJSON.replacingOccurrences(of: #""new_patch":true,"edition":"us-ca-sd""#, with: #""legendary":true"#)
+        let oldItem = itemJSON
+            .replacingOccurrences(of: #""new_patch":true,"edition":"us-ca-sd""#, with: #""legendary":true"#)
+            .replacingOccurrences(of: "packs/us-ca-la/sayornis-nigricans.jpg", with: "packs/us-ca-la/patch/sayornis-nigricans.png")
         #expect(!oldItem.contains("new_patch"))
         let recorder = Recorder()
         recorder.responses = [http(200, #"{"items":[\#(oldItem)],"next_cursor":null}"#)]
@@ -165,10 +167,10 @@ struct LegacyFindWireTests {
         #expect(item.edition == "us-ca-la")
     }
 
-    @Test("an edition comes only from a pack's key")
+    @Test("an edition comes only from a patch's key: pack art can be another set's, even for a find outside every set")
     func editionOfArtKey() {
         #expect(LegacyFindWire.edition(ofArtKey: "packs/us-ca-la/patch/x.png") == "us-ca-la")
-        #expect(LegacyFindWire.edition(ofArtKey: "packs/us-ca-la/x.jpg") == "us-ca-la")
+        #expect(LegacyFindWire.edition(ofArtKey: "packs/us-ca-la/x.jpg") == nil)
         #expect(LegacyFindWire.edition(ofArtKey: "art/sub/x.jpg") == nil)
         #expect(LegacyFindWire.edition(ofArtKey: nil) == nil)
     }
@@ -233,7 +235,7 @@ extension FindRowTests {
         #expect(FindRow.marks(item) == ["First for the Guild"])
     }
 
-    @Test("a repeat shared by hand, or showing a painting, keeps the patch-led row")
+    @Test("a repeat shared by hand keeps the patch-led row; an automatic repeat showing a painting stays a quiet line")
     func ledWithoutANewPatch() {
         var shared = Self.item()
         shared.card = FeedItem.SharedCard(note: "By the gate.", caption: nil, photo: nil)
@@ -241,7 +243,7 @@ extension FindRowTests {
         #expect(FindRow.headline(shared) == "Maya Ortiz shared a sighting")
         var painted = Self.item()
         painted.art = FeedItem.Art(kind: "painted", key: "art/maya/x.jpg", url: nil)
-        #expect(FindRow.isLed(painted))
+        #expect(!FindRow.isLed(painted), "nobody shared it, so it can't say they did")
     }
 }
 

@@ -21,7 +21,7 @@ struct PatchShareImage: View {
         var credits: String?
     }
 
-    /// The patch's width on the image, in points: 1080 px at `CardExport.imageScale`.
+    /// The patch's longest side on the image, in points: 1080 px at `CardExport.imageScale`, from the pack's 720 px painting.
     static let patchWidth: CGFloat = 240
     /// Upper-left, where the light rests on a phone and stays under Reduce Motion.
     static let light = PatchLightModel.rest
@@ -69,6 +69,7 @@ struct PatchShareImage: View {
                 .foregroundStyle(Color.cardInk)
             if let title = facts.storyTitle {
                 Text(title)
+                    // In italic under the name, as guide page 8 sets it on this card.
                     .font(.system(.subheadline, design: .serif).italic())
                     .foregroundStyle(Color.cardInk)
             }
@@ -81,6 +82,7 @@ struct PatchShareImage: View {
                 .foregroundStyle(Color.cardInkSecondary)
             if let credits = facts.credits {
                 Text(credits)
+                    // Fixed: this is a picture at a fixed type size, and 8 pt comes to 36 px on it.
                     .font(.system(size: 8))
                     .foregroundStyle(Color.cardInkSecondary)
                     .padding(.top, 2)

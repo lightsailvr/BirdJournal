@@ -228,17 +228,19 @@ enum FindPolicy {
     /// The pack-art thumbnail's key on the art CDN, as the pack publish step uploads it (`packbuilder thumbnails`):
     /// `art/sayornis-nigricans.avif` in pack `us-ca-la` is `packs/us-ca-la/sayornis-nigricans.jpg`.
     static func packArtKey(packID: String, file: String) -> String {
-        // The last extension only, as the builder's `PurePosixPath.stem` does.
-        let stem = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
-        return "packs/\(packID)/\(stem).jpg"
+        "packs/\(packID)/\(stem(of: file)).jpg"
     }
 
     /// The patch thumbnail's key on the art CDN, as `packbuilder thumbnails` writes it, cut out on transparency:
     /// `patch/sayornis-nigricans.avif` in pack `us-ca-la` is `packs/us-ca-la/patch/sayornis-nigricans.png`. Under `packs/`
     /// with the `pack` kind, so a server from before #136 takes it too.
     static func patchArtKey(packID: String, file: String) -> String {
-        let stem = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
-        return "packs/\(packID)/patch/\(stem).png"
+        "packs/\(packID)/patch/\(stem(of: file)).png"
+    }
+
+    /// The file's name without its last extension only, as the builder's `PurePosixPath.stem` does.
+    private static func stem(of file: String) -> String {
+        ((file as NSString).lastPathComponent as NSString).deletingPathExtension
     }
 
     /// The time to the minute, in UTC.

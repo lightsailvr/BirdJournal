@@ -177,11 +177,12 @@ struct FindRow: View {
         }
     }
 
-    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago".
+    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago", and a painting if the find shows one (until #137).
     private var seenAgain: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(Self.seenAgainLine(item)).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
             marks
+            FindArt(item: item)
         }
     }
 
@@ -192,10 +193,9 @@ struct FindRow: View {
         }
     }
 
-    /// Whether the patch leads the row: a new patch, a card the finder chose to share, or a painting the find shows (until
-    /// #137 takes painted art off finds). Anything else is a repeat sighting.
+    /// Whether the patch leads the row: a new patch, or a card the finder chose to share. Anything else is a repeat sighting.
     static func isLed(_ item: FeedItem) -> Bool {
-        item.newPatch || item.card != nil || item.art?.kind == "painted"
+        item.newPatch || item.card != nil
     }
 
     /// "Black Phoebe. Heard by Maya Ortiz. Pasadena · 2 hours ago. New patch. First for the Guild.", then a shared card's
@@ -228,10 +228,14 @@ struct FindRow: View {
         item.isMine ? "you" : item.owner.name
     }
 
+    /// The finder at the start of a sentence.
+    private static func subject(_ item: FeedItem) -> String {
+        item.isMine ? "You" : item.owner.name
+    }
+
     /// "Maya Ortiz sewed a new patch", "You sewed a new patch"; "Maya Ortiz shared a sighting" for a repeat shared by hand.
     static func headline(_ item: FeedItem) -> String {
-        let who = item.isMine ? "You" : item.owner.name
-        return item.newPatch ? "\(who) sewed a new patch" : "\(who) shared a sighting"
+        "\(subject(item)) \(item.newPatch ? "sewed a new patch" : "shared a sighting")"
     }
 
     /// "Heard · Pasadena · 2 hours ago".
@@ -242,8 +246,7 @@ struct FindRow: View {
     /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago", "You saw an Acorn Woodpecker again · 2 hours ago".
     static func seenAgainLine(_ item: FeedItem) -> String {
         let verb = item.method == .seen ? "saw" : "heard"
-        let article = item.commonName.first.map { "AEIOU".contains($0) } == true ? "an" : "a"
-        return "\(item.isMine ? "You" : item.owner.name) \(verb) \(article) \(item.commonName) again · \(whereAndWhen(item))"
+        return "\(subject(item)) \(verb) \(CardText.article(for: item.commonName)) \(item.commonName) again · \(whereAndWhen(item))"
     }
 
     /// "Pasadena · 2 hours ago", or the time alone without a place.

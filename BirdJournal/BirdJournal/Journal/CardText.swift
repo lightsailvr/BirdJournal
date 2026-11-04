@@ -136,7 +136,7 @@ enum CardText {
         return "\(left) left today"
     }
 
-    private static func article(for name: String) -> String {
+    static func article(for name: String) -> String {
         name.first.map { "AEIOU".contains($0) } == true ? "an" : "a"
     }
 }

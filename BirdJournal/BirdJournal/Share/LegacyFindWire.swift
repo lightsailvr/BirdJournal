@@ -47,11 +47,12 @@ enum LegacyFindWire {
         data.range(of: Data(Keys.isLegendary.rawValue.utf8)) != nil
     }
 
-    /// The edition of a find from a server that doesn't send one: the deployed server stores no edition, but the find's
-    /// pack-art key names the pack, `packs/us-ca-la/…`.
+    /// The edition of a find from a server that doesn't send one: the deployed server stores no edition, but a patch's
+    /// art key names its pack, `packs/us-ca-la/patch/…`. Only a patch's: pack art can come from any pack that has the bird,
+    /// even for a find outside every set, and that would draw an edition the bird wasn't found in.
     static func edition(ofArtKey key: String?) -> String? {
         let parts = key?.split(separator: "/") ?? []
-        guard parts.count >= 3, parts[0] == "packs" else { return nil }
+        guard parts.count == 4, parts[0] == "packs", parts[2] == "patch" else { return nil }
         return String(parts[1])
     }
 }

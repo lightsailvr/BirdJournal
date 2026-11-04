@@ -15,8 +15,6 @@ extension Color {
     static let cardInkSecondary = Color("CollectibleInkSecondary")
     /// The outer edge and the edition line.
     static let cardEdge = Color("CollectibleEdge")
-    /// Text on the card face, under its name from before #116, for screens not yet reskinned (the circle feed, #118).
-    static var cardIvory: Color { cardInk }
 }
 
 enum CollectibleLayout {

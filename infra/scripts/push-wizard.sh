@@ -377,7 +377,8 @@ find = {
     "species_id": "sayornis_nigricans", "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe",
     "method": "heard", "place": "Pasadena",
     "found_at": datetime.now(timezone.utc).replace(second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    "new_patch": True, "edition": None, "rarity": None, "circle_first": False, "circle_ids": [],
+    # `legendary` as the server's own push still sends it, for a phone from before #136.
+    "new_patch": True, "edition": None, "legendary": True, "rarity": None, "circle_first": False, "circle_ids": [],
 }
 push = Push(kind=PushKind.NOTABLE, title="Bird Journal", body="A test push from the push wizard", data={"find": find})
 print(sender.send(Device(token.lower(), Environment(environment)), push).value)

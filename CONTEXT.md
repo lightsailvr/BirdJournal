@@ -176,7 +176,7 @@ Anyone who shares at least one circle with you.
 _Avoid_: follower, contact, connection
 
 **Find**:
-What a circle sees of a member's sighting: species, method, place label, time and card art. Sent automatically unless the member is private.
+What a circle sees of a member's sighting: species, method, place label, time, whether it sewed a new patch and in which edition, and art. Sent automatically unless the member is private.
 _Avoid_: post, activity, share
 
 **Shared card**:

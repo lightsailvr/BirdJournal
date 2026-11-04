@@ -26,7 +26,7 @@ struct ShareCardView: View {
     let sighting: Sighting
     @State private var choices = FindPolicy.Choices()
     @State private var chosenCircles: Set<String> = []
-    @State private var patch = PatchLoad.loading
+    @State private var patchLoad = PatchLoad.loading
     @State private var export: CardExport?
     @State private var sending = SendState.idle
 
@@ -59,10 +59,10 @@ struct ShareCardView: View {
 
     private var setID: String? { collection.placement(of: sighting.identifier)?.setID }
     private var patchArt: PatchArt? { library.patchArt(scientificName: sighting.scientificName, setID: setID) }
-    /// The species in the pack of the sighting's set, whose patch this is; else the first pack that has it.
-    private var species: (pack: SpeciesPack, species: PackSpecies)? {
-        setID.flatMap(library.pack(id:)).flatMap { pack in pack.species(scientificName: sighting.scientificName).map { (pack, $0) } }
-            ?? library.species(scientificName: sighting.scientificName)
+    /// The species in the pack of the sighting's set, whose patch this is; else in the first pack that has it.
+    private var species: PackSpecies? {
+        setID.flatMap(library.pack(id:))?.species(scientificName: sighting.scientificName)
+            ?? library.species(scientificName: sighting.scientificName)?.species
     }
 
     /// The share policy's content for the system share: the city (or secret spot) chosen and the note when chosen. No
@@ -75,19 +75,19 @@ struct ShareCardView: View {
     }
 
     private var photoCredits: [String] {
-        guard let species = species?.species, let patch = species.patch, patchArt != nil else { return [] }
+        guard let species, let patch = species.patch, patchArt != nil else { return [] }
         return PatchShareImage.Facts.credits(of: patch, in: species)
     }
 
     private var facts: PatchShareImage.Facts {
         PatchShareImage.Facts(
             sighting: sighting, name: library.commonName(for: sighting), placement: collection.placement(of: sighting.identifier), place: place,
-            lore: species?.species.lore, hasPainting: patchArt != nil, photoCredits: photoCredits
+            lore: species?.lore, hasPainting: patchArt != nil, photoCredits: photoCredits
         )
     }
 
     private var loaded: PatchTextures.Loaded? {
-        if case .ready(let loaded) = patch { loaded } else { nil }
+        if case .ready(let loaded) = patchLoad { loaded } else { nil }
     }
 
     var body: some View {
@@ -186,11 +186,11 @@ struct ShareCardView: View {
                 .background(.bar)
             }
             .task(id: patchArt) {
-                patch = .loading
+                patchLoad = .loading
                 if let patchArt {
-                    patch = .ready(await PatchTextures.load(patchArt, size: .full))
+                    patchLoad = .ready(await PatchTextures.load(patchArt, size: .full))
                 } else {
-                    patch = .ready(nil)
+                    patchLoad = .ready(nil)
                 }
             }
             .task(id: ExportKey(choices: choices, place: place, isReady: isReady, hasPatch: loaded != nil)) { render() }
@@ -347,7 +347,7 @@ struct ShareCardView: View {
     }
 
     private var isReady: Bool {
-        if case .ready = patch { true } else { false }
+        if case .ready = patchLoad { true } else { false }
     }
 
     /// What the image and its text depend on; the city can arrive after the sheet opens.
@@ -365,7 +365,7 @@ struct ShareCardView: View {
         let image = PatchShareImage(facts: facts, edition: PatchEdition.of(setID: setID), loaded: loaded)
         guard let rendered = CardExport.render(image, scale: CardExport.imageScale) else { return }
         let content = content
-        let lore = species?.species.lore
+        let lore = species?.lore
         let credits = photoCredits.isEmpty ? nil : "Patch: AI illustration from a reference photo (\(photoCredits.joined(separator: "; ")))"
         let text = [SharePolicy.text(for: content), credits, lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
         export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName) · Featherguild")
@@ -400,8 +400,8 @@ struct CardExport: Transferable {
 
     /// The view drawn 360 points wide, and its PNG.
     @MainActor
-    static func render(_ face: some View, scale: CGFloat) -> (image: UIImage, png: Data)? {
-        let renderer = ImageRenderer(content: face.frame(width: 360))
+    static func render(_ view: some View, scale: CGFloat) -> (image: UIImage, png: Data)? {
+        let renderer = ImageRenderer(content: view.frame(width: 360))
         renderer.scale = scale
         renderer.proposedSize = ProposedViewSize(width: 360, height: nil)
         guard let image = renderer.uiImage, let cgImage = image.cgImage, let png = png(cgImage) else { return nil }
