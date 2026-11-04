@@ -28,6 +28,10 @@ from PIL import Image, ImageDraw
 
 BACKGROUND = (70, 110, 80)
 """The background of the stub's reference photos: a green the cut-out leaves out."""
+PATCH_TWILL = (196, 160, 104)
+"""The ground of the stub's patches (issue #133): a tan the cut-out leaves out, as BiRefNet leaves out the twill around
+the bird once the cord is cut away."""
+PATCH_CORD = (110, 118, 46)
 
 
 @dataclass
@@ -79,7 +83,7 @@ class StubComfy:
         if job.kind == "cutout":
             image = np.asarray(Image.open(io.BytesIO(job.images[0])).convert("RGB")).astype(int)
             white = np.all(image > 235, axis=-1)
-            background = np.all(np.abs(image - BACKGROUND) < 12, axis=-1)
+            background = np.all(np.abs(image - BACKGROUND) < 12, axis=-1) | np.all(np.abs(image - PATCH_TWILL) < 12, axis=-1)
             cutout = Image.fromarray(image.astype(np.uint8)).convert("RGBA")
             cutout.putalpha(Image.fromarray(((~white & ~background) * 255).astype(np.uint8)))
             return png(cutout)
@@ -87,6 +91,8 @@ class StubComfy:
         size = (canvas["width"], canvas["height"])
         if job.filename_prefix == "birdjournal/set-cover":
             return png(landscape(size, job.seed + self.cover_drift))
+        if job.filename_prefix == "birdjournal/patch-art":
+            return png(patch_on_card(size, Image.open(io.BytesIO(job.images[0])).convert("RGB")))
         if job.kind == "text":
             return png(bird_on(Image.new("RGB", size, "white")))
         image = np.asarray(Image.open(io.BytesIO(job.images[0])).convert("RGB")).copy()
@@ -110,6 +116,26 @@ def bird_on(image: Image.Image, box=(0.3, 0.3, 0.7, 0.75), colours=((180, 60, 40
     draw.ellipse((x0, y0 + (y1 - y0) * 0.35, x1, y1), fill=colours[1])
     draw.ellipse((x0 + (x1 - x0) * 0.2, y0, x1 - (x1 - x0) * 0.2, y0 + (y1 - y0) * 0.5), fill=colours[0])
     return image
+
+
+def patch_on_card(size: tuple[int, int], bird: Image.Image) -> Image.Image:
+    """A round patch on white card with a faint shadow: a cord, the tan twill, and the reference's bird (its non-white
+    pixels) in the middle."""
+    width, height = size
+    card = Image.new("RGB", size, (244, 243, 240))
+    draw = ImageDraw.Draw(card)
+    r = int(min(width, height) * 0.4)
+    cx, cy = width // 2, height // 2
+    draw.ellipse((cx - r + 8, cy - r + 10, cx + r + 8, cy + r + 10), fill=(225, 224, 221))  # the shadow
+    draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=PATCH_CORD)
+    inner = int(r * 0.92)
+    draw.ellipse((cx - inner, cy - inner, cx + inner, cy + inner), fill=PATCH_TWILL)
+    small = bird.copy()
+    small.thumbnail((int(r * 1.1), int(r * 1.1)))
+    pixels = np.asarray(small).astype(int)
+    keep = Image.fromarray((~np.all(pixels > 235, axis=-1) * 255).astype(np.uint8))
+    card.paste(small, (cx - small.width // 2, cy - small.height // 2), keep)
+    return card
 
 
 def landscape(size: tuple[int, int], seed: int) -> Image.Image:

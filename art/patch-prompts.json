@@ -1,0 +1,39 @@
+{
+ "version": 1,
+ "comment": "Patch art (issue #133, of #131, design guide 2.0): one embroidered merit-badge-style patch per species per edition, painted by FLUX.3 Image Klein from the species' reference bird isolated on white (<ref_image_0>), lying flat on white card under even, diffuse light so the app does the lighting. FLUX.3 reads a caption of the finished picture. No template names the species: the reference is the identity. `editions` holds each set's patch: its shape, the merrowed cord's colour, the twill ground and the stitched motif, by pack id (the edition's look; its name and theme stay in the pack's set). `dark` is added for a reference bird whose median lightness (L*) is under `dark_lightness`: in the samples thread lightened dark birds and invented pale patterns (a black phoebe, a cedar waxwing), while the same words for every bird blackened a House Finch's blue-grey belly. Kept apart from prompts.json so a patch change never repaints pack art. Bump the version when a template, an edition or the clause changes.",
+ "template": "A product photograph of an embroidered merit badge shaped like {shape}, photographed from directly above, lying flat in the middle of plain white card under soft, even, diffuse light, with only a faint shadow. The badge is {twill} finished with a thick raised merrowed border of overlocked {cord} thread all the way around its edge. On it is embroidered the bird from <ref_image_0>, exactly as it appears there: the same pose and angle, the same feather pattern, colours and markings, the same bill, eye, legs and proportions, and the same sex and age (a dull female or young bird stays dull), nothing added and nothing taken away, rendered entirely in thread.{dark} Only the bird comes from <ref_image_0>, none of the branches, leaves or background around it. Its feathers are laid in dense long-and-short satin stitches whose direction follows each feather tract, the thread colours matched to the bird's own, and its eye is a tiny glossy black satin dot with one white highlight stitch. It perches on a small embroidered branch. Behind it, inside the badge, a few simple fill-stitched shapes suggest {motif}. Every thread is visible: the soft sheen of rayon, the raised stitches, the woven twill between them. The whole badge is in the frame with a margin of white card all around it, in sharp focus. No text, letters, numbers or logos anywhere. No other birds, animals or people.",
+ "dark": " Where the bird is black or nearly black in <ref_image_0> it is stitched in black thread, and its white and pale parts in white or pale thread, with the same contrast as the reference.",
+ "dark_lightness": 22,
+ "editions": {
+  "us-ca-la": {
+   "shape": "a perfect circle",
+   "cord": "olive-green",
+   "twill": "tan cotton twill",
+   "motif": "a few glossy citrus leaves, and low chaparral hills under a warm golden sky"
+  },
+  "us-ca-sd": {
+   "shape": "an upright oval",
+   "cord": "deep sea-blue",
+   "twill": "pale sky-blue cotton twill",
+   "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+  },
+  "us-ca-bay": {
+   "shape": "a hexagon with a flat top and a flat bottom",
+   "cord": "silver-grey",
+   "twill": "cool pale grey cotton twill",
+   "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+  },
+  "us-ca-desert": {
+   "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+   "cord": "terracotta-rose",
+   "twill": "warm sand-coloured cotton twill",
+   "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+  },
+  "us-fl-orlando": {
+   "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+   "cord": "deep teal",
+   "twill": "pearl-white cotton twill",
+   "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+  }
+ }
+}

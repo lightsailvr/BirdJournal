@@ -70,7 +70,7 @@ def test_pack_output(tmp_path):
 
     info = db.execute("SELECT * FROM pack").fetchone()
     assert info["id"] == "test-pack" and info["version"] == 1 and info["built_at"] == "2026-09-27T00:00:00Z"
-    assert info["schema_version"] == 4
+    assert info["schema_version"] == 5
 
     license_text = (out / "LICENSE").read_text()
     for photo in photos:
@@ -253,3 +253,52 @@ def test_approved_pack_art_goes_in_the_pack_with_its_source_photo_and_the_rest_i
     assert report["species"]["sayornis-nigricans"]["art"] == {"review": "approved", "photos": [2]}
     assert report["gaps"]["art"] == ["calypte-anna"]
     assert report["unreviewed"] == {"art": ["psaltriparus-minimus"]}
+
+
+def test_approved_patches_go_in_the_pack_with_their_layers_and_replace_the_pack_art(tmp_path):
+    """Issue #133: an approved patch ships as its colour on transparency and its half-size layers (height, cord and stitch
+    order), with its size, ground and stitch layers in the `patch` table and its source photo credited; a build with
+    patches writes no pack art; a pending patch is listed as unreviewed, a gap as a gap."""
+    from PIL import ImageDraw
+
+    from packbuilder.pack_art import Artwork
+    from packbuilder.patch_art import Patch
+
+    pack = definition()
+    results = [result_for(pack.species[0], [1, 2], tmp_path), result_for(pack.species[1], [3], tmp_path)]
+    cut = Image.new("RGBA", (680, 720), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(cut)
+    draw.ellipse((0, 20, 680, 700), fill=(110, 118, 46, 255))
+    draw.ellipse((26, 46, 654, 674), fill=(196, 160, 104, 255))
+    draw.ellipse((240, 260, 440, 480), fill=(60, 40, 30, 255))
+    patch_file = tmp_path / "patch.png"
+    cut.save(patch_file)
+    painting = tmp_path / "painting.png"
+    Image.new("RGB", (864, 1152), (200, 180, 150)).save(painting)
+    patches = {
+        "sayornis-nigricans": Patch("sayornis-nigricans", "approved", patch_file, (2,)),
+        "calypte-anna": Patch("calypte-anna", "pending", patch_file, (3,)),
+    }
+    art = {"sayornis-nigricans": Artwork("sayornis-nigricans", "approved", painting, (2,), "pack-art@3", True)}
+
+    written = write_pack(pack, results, tmp_path / "out", built_at="2026-11-03T00:00:00Z", art=art, patches=patches, patch_versions="patch-art@1 patch-prompts@1")
+
+    db = sqlite3.connect(written.database)
+    assert db.execute("SELECT schema_version FROM pack").fetchone() == (5,)
+    rows = db.execute("SELECT species_id, file, layers_file, width, height, ground, stitch_bounds, source_photo_ids, workflow_version FROM patch").fetchall()
+    assert len(rows) == 1
+    species_id, file, layers_file, width, height, ground, bounds, photos, versions = rows[0]
+    assert (species_id, file, layers_file, width, height) == ("sayornis-nigricans", "patch/sayornis-nigricans.avif", "patch/sayornis-nigricans-layers.avif", 680, 720)
+    assert ground.startswith("#") and len(ground) == 7 and photos == "[2]" and versions == "patch-art@1 patch-prompts@1"
+    assert json.loads(bounds)[0] == 0 and json.loads(bounds)[-1] == 255
+    with Image.open(tmp_path / "out" / file) as image:
+        assert (image.format, image.size, image.mode) == ("AVIF", (680, 720), "RGBA")
+    with Image.open(tmp_path / "out" / layers_file) as image:
+        assert (image.format, image.size) == ("AVIF", (340, 360))
+    assert db.execute("SELECT count(*) FROM pack_art").fetchone() == (0,), "patches replace the pack art"
+    assert not (tmp_path / "out" / "art").exists() or not any((tmp_path / "out" / "art").iterdir())
+
+    license_text = (tmp_path / "out" / "LICENSE").read_text()
+    assert "Patch art" in license_text and "Black Phoebe: painted from photo 2, © Jane Birder, some rights reserved (CC BY-SA)" in license_text
+    report = json.loads((tmp_path / "out" / "report.json").read_text())
+    assert report["unreviewed"]["patches"] == ["calypte-anna"] and report["gaps"]["patches"] == []

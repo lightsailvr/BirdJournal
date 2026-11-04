@@ -16,7 +16,8 @@ struct SpeciesPackTests {
     func bundledPack() throws {
         let pack = try SpeciesPack.bundled()
         #expect(pack.info.id == PackIndex.bundledPackID)
-        #expect(pack.info.schemaVersion == SpeciesPack.schemaVersion)
+        // The bundled pack moves to schema 5, with patches, alongside the app that draws them (#134).
+        #expect(SpeciesPack.supportedSchemaVersions.contains(pack.info.schemaVersion))
         #expect((140...170).contains(pack.species.count), "\(pack.species.count) species")
         #expect(pack.species.first?.scientificName == "Buteo jamaicensis")
         #expect(pack.species(scientificName: "Calypte anna")?.commonName == "Anna's Hummingbird")

@@ -24,7 +24,7 @@ struct PackSetTests {
             #expect(pack.species.count == 2, "\(resource)")
             #expect((pack.set != nil) == (schema >= 4), "\(resource)")
         }
-        #expect(SpeciesPack.supportedSchemaVersions == 2...4)
+        #expect(SpeciesPack.supportedSchemaVersions == 2...5)
     }
 
     @Test("a schema-4 pack's set has its edition, its regions and its species in taxonomic order")
