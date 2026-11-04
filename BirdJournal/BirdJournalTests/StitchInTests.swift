@@ -114,10 +114,9 @@ struct StitchInTests {
     }
 }
 
-// A visual effect needs a test on pixels (issue #134's lesson): `sewnTo` going in is not the patch coming out.
-@Suite("Stitch-in on screen", .serialized)
-@MainActor
-struct StitchInPixelTests {
+// A visual effect needs a test on pixels (issue #134's lesson): `sewnTo` going in is not the patch coming out. In the light's
+// own serialized suite: every patch reads the one shared light, so two suites rendering side by side move each other's.
+extension PatchLightPixelTests {
     /// The House Finch, decoded, with its threads.
     static func finch() async throws -> (art: PatchArt, loaded: PatchTextures.Loaded, threads: [StitchThread], bounds: [Int]) {
         let pack = try SpeciesPack.bundled()
@@ -154,7 +153,7 @@ struct StitchInPixelTests {
         try await Task.sleep(for: .milliseconds(400))
         // A window on a scene needn't keep the frame it's given, so the width comes from what was drawn.
         width?.pointee = Int(host.view.bounds.width)
-        return PatchLightPixelTests.pixels(of: host.view)
+        return Self.pixels(of: host.view)
     }
 
     @Test("stitching lays the bird's thread by the pack's order: a third of the way along shows the order's share of the patch, and all of it is the sewn patch")
@@ -166,9 +165,9 @@ struct StitchInPixelTests {
 
         let bare = try await Self.rendered(patch(.stitching(sewnTo: -0.02)))
         let sewn = try await Self.rendered(patch(.sewn))
-        #expect(PatchLightPixelTests.meanChange(bare, sewn) > 8, "the bare twill isn't the patch")
+        #expect(Self.meanChange(bare, sewn) > 8, "the bare twill isn't the patch")
         let done = try await Self.rendered(patch(.stitching(sewnTo: StitchTimeline.allSewn)))
-        #expect(PatchLightPixelTests.meanChange(done, sewn) < 0.1, "all sewn is the sewn patch, with no seam when the reveal takes over")
+        #expect(Self.meanChange(done, sewn) < 0.1, "all sewn is the sewn patch, with no seam when the reveal takes over")
 
         // A band of the order, against the fraction of the patch's own pixels at or below it. If the shader read the
         // order through a colour conversion, the share on screen would be far from the share in the file.
