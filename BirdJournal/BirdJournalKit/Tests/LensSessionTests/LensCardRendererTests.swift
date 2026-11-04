@@ -222,26 +222,24 @@ struct LensCardRendererTests {
         #expect(!details.elements.contains(Self.saveButton))
     }
 
-    @Test("once the sighting is written the saved line names what it earned: a new patch with its number, or seen again with the count (issues #54, #132)")
+    @Test("once the sighting is written the saved line names what it earned: a new patch, sewn, or seen again with the count (issues #132, #135)")
     func earnedPatches() {
         func details(_ index: Int, earned: [Int: LensEarnedPatch], profile: @escaping (Species) -> SpeciesProfile? = Self.profile) -> LensCard {
             LensCardRenderer.render(.details(index: index), stack: Self.stack, order: Self.quietOrder, selection: 0, saved: [index], earned: earned, profile: profile)
         }
-        let first = details(0, earned: [0: .newPatch(collectorNumber: "021/160")])
-        #expect(Array(first.elements.suffix(2)) == [.saved("New patch · 021/160"), .button(LensCardRenderer.addAnotherButton)])
+        let first = details(0, earned: [0: .newPatch])
+        #expect(Array(first.elements.suffix(2)) == [.saved("New patch · sewn"), .button(LensCardRenderer.addAnotherButton)])
         #expect(details(0, earned: [0: .seenAgain(count: 3)]).elements.contains(.saved("Seen again · 3 times")))
-        #expect(details(0, earned: [0: .newPatch(collectorNumber: "021/160")]).elements.contains(.saved("New patch · 021/160")))
-        #expect(details(1, earned: [0: .seenAgain(count: 2), 1: .newPatch(collectorNumber: "Uncharted")]).elements.contains(.saved("New patch · Uncharted")), "each species' own card")
+        #expect(details(1, earned: [0: .seenAgain(count: 2), 1: .newPatch]).elements.contains(.saved("New patch · sewn")), "each species' own card")
 
         // The longest line still fits: the field marks give way to it.
         var long = Fakes.phoebeProfile
         long.fieldMarks = Array(repeating: "word", count: 80).joined(separator: " ")
-        let full = details(0, earned: [0: .newPatch(collectorNumber: "021/160")]) { _ in long }
+        let full = details(0, earned: [0: .newPatch]) { _ in long }
         #expect(full.wordCount == LensCardRenderer.detailsWordBudget)
-        #expect(full.elements.contains(.saved("New patch · 021/160")))
+        #expect(full.elements.contains(.saved("New patch · sewn")))
         for index in 0..<3 {
-            #expect(details(index, earned: [index: .newPatch(collectorNumber: "021/160")]).wordCount <= LensCardRenderer.detailsWordBudget)
-            #expect(details(index, earned: [index: .newPatch(collectorNumber: "021/160")]).wordCount <= LensCardRenderer.detailsWordBudget)
+            #expect(details(index, earned: [index: .newPatch]).wordCount <= LensCardRenderer.detailsWordBudget)
         }
     }
 

@@ -165,7 +165,7 @@ struct ListeningCoordinatorTests {
         await run.stop()
     }
 
-    @Test("the first add of a species in a place sews its patch, revealed once; a repeat add is seen again; dismissing never loses the sighting; an undo removes it (issues #51, #132; was #51)")
+    @Test("the first add of a species in a place sews its patch, revealed once with its sighting already saved; a repeat add is seen again; dismissing never loses the sighting; an undo removes it (issues #51, #132, #135)")
     func patchReveal() async throws {
         let harness = try Self.makeHarness()
         let run = harness.run
@@ -181,18 +181,29 @@ struct ListeningCoordinatorTests {
         #expect(reveal.title == "Your first House Finch")
         #expect(reveal.eyebrow == "New patch · Uncharted")
         #expect(reveal.addition == first)
+        #expect(!reveal.isSewn, "the stitch-in is still to come")
+        #expect(harness.stored.map(\.identifier) == [first.identifier], "saved before the ceremony starts")
+
+        run.finishSewing()
+        #expect(run.reveal?.isSewn == true, "it stays sewn: the page never stitches it twice")
+        #expect(run.reveal?.addition == first)
 
         run.dismissReveal()
         #expect(run.reveal == nil)
         #expect(harness.stored.map(\.identifier) == [first.identifier], "dismissing keeps the sighting")
 
-        // The same species again: seen again, no reveal replayed.
+        // The same species again: seen again, its count, and nothing to stitch.
         let again = try #require(await run.add(finch))
         #expect(!again.sewsPatch)
         #expect(again.patchCount == 2)
-        #expect(run.reveal == nil)
+        let seen = try #require(run.reveal)
+        #expect(seen.addition == again)
+        #expect(seen.eyebrow == "Seen again · Uncharted")
+        #expect(seen.countLine == "times, Uncharted")
         #expect(run.acknowledgment?.text == "Seen again · 2 times")
         #expect(run.acknowledgment?.undo == again)
+        run.dismissReveal()
+        #expect(run.acknowledgment?.undo == again, "the undo outlives the page, for its window")
 
         // A first of another species, taken back inside the window: the sighting and its reveal are gone.
         let jay = try #require(await run.add(run.candidates[1]))

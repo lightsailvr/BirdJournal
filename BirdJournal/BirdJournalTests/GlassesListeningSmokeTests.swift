@@ -61,8 +61,8 @@ extension MockDeviceKitTests {
                 input.navRight()
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
                 #expect(run.lens.page == .details(index: 0))
-                // The birder's first House Finch with no place: the saved line names its new Uncharted patch (issue #132).
-                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New patch · Uncharted")) }
+                // The birder's first House Finch with no place: the saved line names its new patch (issues #132, #135).
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New patch · sewn")) }
                 #expect(run.lens.card.wordCount <= LensCardRenderer.detailsWordBudget)
 
                 let sightings = try album.mainContext.fetch(FetchDescriptor<Sighting>())

@@ -19,7 +19,8 @@ import UIKit
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Patches view), `sightings`,
 ///   `reveal` (the new-patch reveal of the newest seeded sighting, over the Listen tab; over a phone run with
-///   `-autoPhoneListening <wav>`; `-autoCardSpecies` picks the species), `card` and `card-back` (the newest
+///   `-autoPhoneListening <wav>`; `-autoCardSpecies` picks the species), `seen-again` (the same, as a repeat add, the
+///   count going from 7 to 8), `card` and `card-back` (the newest
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the patches of the newest sighting's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
@@ -41,12 +42,14 @@ import UIKit
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
-/// - `-reduceMotion YES` makes the card flip switch faces as with the system's Reduce Motion, which a UI test cannot
-///   turn on.
+/// - `-reduceMotion YES` makes the card flip switch faces and the stitch-in not happen, as with the system's Reduce
+///   Motion, which a UI test cannot turn on. `-voiceOverPath YES` skips the stitch-in as VoiceOver does (issue #135).
+/// - `-stitchInSeconds <n>` makes the stitch-in that long, so a UI test or a screenshot can catch it part way;
+///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).
 /// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
-///   prompting, for the UI tests.
+///   prompting, for the UI tests; `griffith` answers with a fix in Griffith Park.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
 ///   opens; `-fakeGlasses unregistered|noneLinked|notConnected` gives the Listen page those glasses states;
 ///   `-fakeCircles offline` makes the Guilds unreachable; `-autoScrollTo guild-settings` scrolls a Guild's page to its
@@ -109,7 +112,7 @@ struct DebugLaunch: ViewModifier {
             case "sightings":
                 tab = .journal
                 journalMode = .sightings
-            case "reveal":
+            case "reveal", "seen-again":
                 tab = .listen
                 // With `-autoPhoneListening`, over a run, as after a real add (issue #117's screenshots).
                 if defaults.string(forKey: "autoPhoneListening") != nil {
@@ -119,7 +122,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted)
+                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted, seenAgain: screen == "seen-again" ? 8 : nil)
                 }
             case "card", "card-back":
                 tab = .journal
@@ -232,6 +235,17 @@ struct DeniedLocationProvider: LocationProvider {
     func fixes() -> AsyncStream<LocationFix> {
         AsyncStream { continuation in
             continuation.yield(.denied)
+            continuation.finish()
+        }
+    }
+}
+
+/// Stands in for Core Location with a fix in Griffith Park (`-autoLocation griffith`, issue #135): a run in the Los Angeles
+/// set, so an add there sews a patch with a painting, with no permission prompt for a UI test to answer.
+struct GriffithParkLocationProvider: LocationProvider {
+    func fixes() -> AsyncStream<LocationFix> {
+        AsyncStream { continuation in
+            continuation.yield(.fix(latitude: 34.1365, longitude: -118.2942, accuracy: 10, at: .now))
             continuation.finish()
         }
     }

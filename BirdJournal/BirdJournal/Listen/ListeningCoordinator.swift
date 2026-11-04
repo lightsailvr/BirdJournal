@@ -86,20 +86,28 @@ final class ListeningCoordinator {
         let undo: RunSightings.Addition?
     }
 
-    /// The new-patch reveal after an add that sewed a patch: the species' first surviving sighting in its placement
-    /// (issue #132, before it the Legendary reveal of #51). An event of the add, not of the patch: it shows once, and
+    /// What the phone shows over everything after an add (issues #132, #135; before them the Legendary reveal of #51): the
+    /// stitch-in and the new patch when the add sewed one, the species' first surviving sighting in its placement; the patch
+    /// lifting and its count ticking when it's seen again. An event of the add, not of the patch: it shows once, and
     /// reopening the patch never shows it again.
     struct Reveal: Identifiable, Equatable {
         let addition: RunSightings.Addition
         let commonName: String
+        /// The stitch-in has finished or been tapped through. Kept here, not in the view: when a run ends under it the page
+        /// moves from over the tabs to over the review, and that shouldn't sew the patch a second time.
+        var isSewn = false
 
         var id: UUID { addition.identifier }
         /// "Your first House Finch in Los Angeles"; outside every set, "Your first House Finch".
         var title: String {
             addition.placement.setID == nil ? "Your first \(commonName)" : "Your first \(commonName) in \(addition.placement.setName)"
         }
-        /// "New patch · Citrus edition", or "New patch · Uncharted".
-        var eyebrow: String { "New patch · \(addition.placement.editionLabel)" }
+        /// "New patch · Citrus edition", or "Seen again · Uncharted".
+        var eyebrow: String { "\(addition.sewsPatch ? "New patch" : "Seen again") · \(addition.placement.editionLabel)" }
+        /// Beside the count: "times in Los Angeles", or "times, Uncharted" outside every set.
+        var countLine: String {
+            addition.placement.setID == nil ? "times, \(CardPlacement.unchartedTitle)" : "times in \(addition.placement.setName)"
+        }
     }
 
     /// The acknowledgment of an add that joined a patch the birder has: "Seen again · 8 times in Los Angeles".
@@ -123,7 +131,7 @@ final class ListeningCoordinator {
     /// the waveform while the run is active, and settled with nothing calling once it ends.
     private(set) var listOrder = SpeciesListOrder()
     private(set) var acknowledgment: Acknowledgment?
-    /// The new-patch reveal showing, until the birder dismisses it or undoes the add.
+    /// The page showing after an add, until the birder dismisses it or undoes the add.
     private(set) var reveal: Reveal?
     /// Set when a run that heard something ends, until the review is dismissed.
     var isReviewing = false
@@ -292,20 +300,17 @@ final class ListeningCoordinator {
 
     /// Writes `candidate` to the journal with the location the run has and, on the glasses, the frame from this
     /// moment; acknowledges with an undo. Every add is a new sighting, even of a species already added this run; the
-    /// first in a placement sews the species' patch there and is revealed, and the rest add to its count.
+    /// first in a placement sews the species' patch there, and the rest add to its count. Either way the sighting is
+    /// saved before anything shows.
     @discardableResult
     func add(_ candidate: Candidate) async -> RunSightings.Addition? {
         let confirmedAt = Date.now
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone)
-            if addition.sewsPatch {
-                let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
-                self.reveal = reveal
-                acknowledge(reveal.title, undo: addition)
-            } else {
-                acknowledge(Self.seenAgainText(addition), undo: addition)
-            }
+            let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
+            self.reveal = reveal
+            acknowledge(addition.sewsPatch ? reveal.title : Self.seenAgainText(addition), undo: addition)
             return addition
         } catch {
             Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
@@ -315,12 +320,17 @@ final class ListeningCoordinator {
     }
 
     #if DEBUG
-    /// The reveal for a seeded sighting, for `-autoScreen reveal`; there is no add to undo.
-    func showRevealForScreenshot(of sighting: Sighting, placement: CardPlacement = .uncharted) {
+    /// The reveal for a seeded sighting, for `-autoScreen reveal` and `seen-again`; there is no add to undo.
+    func showRevealForScreenshot(of sighting: Sighting, placement: CardPlacement = .uncharted, seenAgain count: Int? = nil) {
         let species = Species(index: 0, scientificName: sighting.scientificName, commonName: sighting.commonName, taxonomicClass: "Aves")
-        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: true, patchCount: 1, placement: placement), commonName: sighting.commonName)
+        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: count == nil, patchCount: count ?? 1, placement: placement), commonName: sighting.commonName)
     }
     #endif
+
+    /// The stitch-in ended, or was tapped through: from here the page shows the finished patch.
+    func finishSewing() {
+        reveal?.isSewn = true
+    }
 
     /// Closes the reveal; the sighting was saved before it opened.
     func dismissReveal() {

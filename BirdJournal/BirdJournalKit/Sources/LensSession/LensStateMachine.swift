@@ -120,11 +120,10 @@ public struct LensPlayback: Sendable, Hashable {
     public var onPhone: Bool
 }
 
-/// What an add earned, known once its sighting is written (issue #132): a new patch, the species' first sighting in
-/// its placement, with its collector number ("021/160", or "Uncharted" outside every set, issue #54); or another
-/// sighting of a patch the birder has, with the patch's count now.
+/// What an add earned, known once its sighting is written (issues #132, #135): a new patch, the species' first sighting
+/// in its placement; or another sighting of a patch the birder has, with the patch's count now.
 public enum LensEarnedPatch: Sendable, Hashable {
-    case newPatch(collectorNumber: String)
+    case newPatch
     case seenAgain(count: Int)
 }
 

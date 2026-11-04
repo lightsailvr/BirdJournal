@@ -150,11 +150,11 @@ struct PaperCardView: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text(sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted)).fixedSize()
                             Spacer(minLength: 8)
-                            Text(rowPlace(sighting)).multilineTextAlignment(.trailing).lineLimit(1)
+                            Text(places.methodAndPlace(of: sighting)).multilineTextAlignment(.trailing).lineLimit(1)
                         }
                         VStack(alignment: .leading, spacing: 1) {
                             Text(sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted))
-                            Text(rowPlace(sighting)).fixedSize(horizontal: false, vertical: true)
+                            Text(places.methodAndPlace(of: sighting)).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     .font(.caption)
@@ -162,7 +162,7 @@ struct PaperCardView: View {
                     .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
                     .contentShape(Rectangle())
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(sighting.confirmedAt.formatted(date: .long, time: .omitted)), \(rowPlace(sighting))")
+                    .accessibilityLabel("\(sighting.confirmedAt.formatted(date: .long, time: .omitted)), \(places.methodAndPlace(of: sighting))")
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Opens this sighting.")
@@ -181,11 +181,6 @@ struct PaperCardView: View {
         let sewn = patch.sewn.confirmedAt.formatted(date: .abbreviated, time: .omitted)
         let here = patch.placement.setID == nil ? "" : " in \(patch.placement.setName)"
         return "\(patch.count == 1 ? "sighting" : "sightings") here · sewn \(sewn)\(here)"
-    }
-
-    /// "Heard · Altadena": Heard or Seen, and a city-level place.
-    private func rowPlace(_ sighting: Sighting) -> String {
-        "\(sighting.method.title) · \(places.cardPlace(for: sighting.location))"
     }
 
     @ViewBuilder private func moreLore(_ lore: PackLore) -> some View {

@@ -326,25 +326,25 @@ struct LensStateMachineTests {
         _ = machine.apply(.tap)
         #expect(machine.earnedPatches.isEmpty, "the sighting is not written yet")
 
-        let onStack = machine.earned(.newPatch(collectorNumber: "087/160"), for: Fakes.finch)
+        let onStack = machine.earned(.newPatch, for: Fakes.finch)
         #expect(onStack)
-        #expect(machine.earnedPatches == [1: .newPatch(collectorNumber: "087/160")])
+        #expect(machine.earnedPatches == [1: .newPatch])
         #expect(machine.page == .details(index: 1), "no page of its own")
 
         _ = machine.apply(.tap)
         _ = machine.apply(.swipeDown)
         #expect(machine.earnedPatches.isEmpty, "Add another: nothing named until its own sighting is written")
-        machine.earned(.newPatch(collectorNumber: "021/160"), for: Fakes.finch)
-        #expect(machine.earnedPatches == [1: .newPatch(collectorNumber: "021/160")])
-        let offStack = machine.earned(.newPatch(collectorNumber: "Uncharted"), for: Species(index: 9, scientificName: "Avis ignota", commonName: "Unknown", taxonomicClass: "Aves"))
+        machine.earned(.seenAgain(count: 2), for: Fakes.finch)
+        #expect(machine.earnedPatches == [1: .seenAgain(count: 2)])
+        let offStack = machine.earned(.newPatch, for: Species(index: 9, scientificName: "Avis ignota", commonName: "Unknown", taxonomicClass: "Aves"))
         #expect(!offStack, "a species not on the stack")
-        #expect(machine.earnedPatches == [1: .newPatch(collectorNumber: "021/160")])
+        #expect(machine.earnedPatches == [1: .seenAgain(count: 2)])
 
         machine.update(with: CandidateStack(candidates: [Fakes.candidate(Fakes.towhee)]), at: Fakes.quiet)
         #expect(machine.earnedPatches.isEmpty)
     }
 
-    @Test("after an add the details page's saved line names the new patch's collector number or Uncharted, or the count of a patch seen again (issues #54, #132)")
+    @Test("after an add the details page's saved line names the new patch, sewn, or the count of a patch seen again (issues #132, #135)")
     func numberedSavedLine() {
         var machine = Self.machine(on: .viewfinder(index: 1))
         #expect(machine.apply(.tap) == .takePhoto(Fakes.candidate(Fakes.finch)))
@@ -356,14 +356,9 @@ struct LensStateMachineTests {
         }
         #expect(savedLine() == [.saved("Added to my list")], "until the sighting is written")
 
-        machine.earned(.newPatch(collectorNumber: "021/160"), for: Fakes.finch)
+        machine.earned(.newPatch, for: Fakes.finch)
         #expect(machine.page == .details(index: 1))
-        #expect(savedLine() == [.saved("New patch · 021/160")])
-
-        _ = machine.apply(.tap)
-        _ = machine.apply(.swipeDown)
-        machine.earned(.newPatch(collectorNumber: "Uncharted"), for: Fakes.finch)
-        #expect(savedLine() == [.saved("New patch · Uncharted")], "a sighting outside every set")
+        #expect(savedLine() == [.saved("New patch · sewn")])
 
         _ = machine.apply(.tap)
         _ = machine.apply(.swipeDown)

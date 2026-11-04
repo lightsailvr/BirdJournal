@@ -7,8 +7,30 @@ import Pack
 enum PatchText {
     /// "House Finch, Citrus edition patch, seen 8 times, sewn September 14, 2026"; "House Finch, Uncharted patch, …".
     static func spoken(_ patch: CardCollection.Patch, name: String) -> String {
-        let sewn = patch.sewn.confirmedAt.formatted(date: .long, time: .omitted)
-        return "\(name), \(patch.placement.editionLabel) patch, seen \(CardCollection.Patch.times(patch.count)), sewn \(sewn)"
+        spoken(name: name, edition: patch.placement.editionLabel, count: patch.count, sewn: patch.sewn.confirmedAt)
+    }
+
+    /// The same sentence for a patch that isn't read from the collection: the one just sewn.
+    static func spoken(name: String, edition: String, count: Int, sewn: Date) -> String {
+        "\(name), \(edition) patch, seen \(CardCollection.Patch.times(count)), sewn \(sewn.formatted(date: .long, time: .omitted))"
+    }
+
+    /// Under the name on the reveal: "No. 019 of 160 · Los Angeles"; nil outside every set.
+    static func revealNumberLine(_ placement: CardPlacement) -> String? {
+        guard case .numbered(_, let setName, _, let number, let total) = placement else { return nil }
+        return "No. \(CardPlacement.paddedNumber(number, of: total)) of \(total) · \(setName)"
+    }
+
+    /// A latest sighting's date on the seen-again page: "Today · 8:03 AM", else "Oct 30".
+    static func latestDate(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
+        if calendar.isDate(date, inSameDayAs: now) { return "Today · \(date.formatted(date: .omitted, time: .shortened))" }
+        return date.formatted(.dateTime.month(.abbreviated).day())
+    }
+
+    /// Under the latest sightings: "+ 5 earlier · Sewn Sep 14", or "Sewn Sep 14" when they were all shown.
+    static func earlierLine(_ patch: CardCollection.Patch, shown: Int) -> String {
+        let sewn = "Sewn \(patch.sewn.confirmedAt.formatted(.dateTime.month(.abbreviated).day()))"
+        return patch.count > shown ? "+ \(patch.count - shown) earlier · \(sewn)" : sewn
     }
 
     /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set.

@@ -221,7 +221,11 @@ struct BirdJournalApp: App {
         #if DEBUG
         if let path = UserDefaults.standard.string(forKey: "autoPhoneListening"), path.hasSuffix(".wav") {
             // Paced like a microphone, so the Listen tab's live state can be seen and screenshotted on the simulator.
-            let location: any LocationProvider = UserDefaults.standard.string(forKey: "autoLocation") == "denied" ? DeniedLocationProvider() : CoreLocationProvider()
+            let location: any LocationProvider = switch UserDefaults.standard.string(forKey: "autoLocation") {
+            case "denied": DeniedLocationProvider()
+            case "griffith": GriffithParkLocationProvider()
+            default: CoreLocationProvider()
+            }
             return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) }, location: location, suppression: suppression)
         }
         #endif

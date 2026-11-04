@@ -170,8 +170,9 @@ struct RootView: View {
             ListeningAccessory { tab = .listen }
         }
         .tint(Color.moss)
-        // Over the tabs and their bars; the run review sheet carries its own, since an add there happens over it.
-        .patchReveal()
+        // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
+        // it's up this one waits: two pages would sew the patch twice, each with its own haptics.
+        .patchReveal(isCovered: run.isReviewing)
         .environment(\.openCollection) {
             collection.mode = .cards
             collection.query = ""
