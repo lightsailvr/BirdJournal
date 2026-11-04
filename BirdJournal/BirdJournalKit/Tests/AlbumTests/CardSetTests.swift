@@ -129,7 +129,7 @@ struct CardSetTests {
         #expect(CardCollection(entries, sets: [Self.losAngeles, Self.sanDiego]).placement(of: Self.uuid(1))?.collectorNumber == "140/159")
     }
 
-    @Test("a card that is not Legendary shows its set's edition, an Uncharted one says so, and a Legendary one shows none")
+    @Test("every patch shows its set's edition, and an Uncharted one says so")
     func editionLabel() {
         let collection = CardCollection(
             [
@@ -139,10 +139,10 @@ struct CardSetTests {
             ],
             sets: Self.sets
         )
-        #expect(collection.editionLabel(of: Self.uuid(1)) == nil, "Legendary")
+        #expect(collection.editionLabel(of: Self.uuid(1)) == "Citrus edition", "the sighting that sewed the patch")
         #expect(collection.editionLabel(of: Self.uuid(2)) == "Citrus edition")
         #expect(collection.editionLabel(of: Self.uuid(3)) == "Uncharted")
-        #expect(collection.placement(of: Self.uuid(1))?.collectorNumber == "021/160", "a Legendary card keeps its number")
+        #expect(collection.placement(of: Self.uuid(1))?.collectorNumber == "021/160")
     }
 
     @Test("an add is placed before its sighting exists, as the collection will place it")

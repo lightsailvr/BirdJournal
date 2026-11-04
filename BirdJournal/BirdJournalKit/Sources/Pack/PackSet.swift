@@ -6,7 +6,7 @@ import Foundation
 /// before its pack is downloaded.
 public struct PackSet: Codable, Sendable, Hashable, Identifiable {
     public struct Edition: Codable, Sendable, Hashable {
-        /// On cards that are not Legendary, e.g. "Citrus edition".
+        /// What the set's patches show as their edition, e.g. "Citrus edition".
         public let name: String
         /// What the set's pack art is painted with.
         public let theme: String

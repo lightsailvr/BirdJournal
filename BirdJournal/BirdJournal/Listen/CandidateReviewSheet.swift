@@ -1,8 +1,11 @@
+import Album
 import Identification
 import Pack
+import SwiftData
 import SwiftUI
 
-/// Reviewing a candidate (issue #28): the bird's profile with the match details, and the explicit Add to collection.
+/// Reviewing a candidate (issue #28): the bird's profile with the match details, and the explicit add: "Add and sew
+/// patch" when the bird is new to the place, else "Add sighting" (issue #132).
 /// A detection is not an observation until the birder says so here (or on the lens).
 struct CandidateReviewSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -25,9 +28,16 @@ struct CandidateReviewSheet: View {
 /// review, presented as a sheet from the live list.
 struct CandidateReviewView: View {
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(PackLibrary.self) private var library
     @Environment(\.dismiss) private var dismiss
     let candidate: Candidate
     @State private var isAdding = false
+    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+
+    /// The sightings of the bird in the patch an add here would join; 0 when the add would sew a new patch.
+    private var seenHere: Int {
+        library.collection(of: sightings).count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)
+    }
 
     var body: some View {
             BirdProfileView(
@@ -38,8 +48,7 @@ struct CandidateReviewView: View {
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 8) {
                     if run.isAdded(candidate) {
-                        let count = run.sightings.count(of: candidate.species)
-                        Label(count > 1 ? "Added to your collection · \(count) cards" : "Added to your collection", systemImage: "checkmark.circle.fill")
+                        Label("Added · seen \(CardCollection.Patch.times(seenHere)) here", systemImage: "checkmark.circle.fill")
                             .font(JournalFont.supporting.weight(.medium))
                             .foregroundStyle(Color.moss)
                         Button(isAdding ? "Adding…" : "Add another sighting") { add() }
@@ -49,12 +58,12 @@ struct CandidateReviewView: View {
                         Button {
                             add()
                         } label: {
-                            Label(isAdding ? "Adding…" : "Add to collection", systemImage: "plus")
+                            Label(isAdding ? "Adding…" : seenHere == 0 ? "Add and sew patch" : "Add sighting", systemImage: "plus")
                         }
                         .buttonStyle(.journalPrimary)
                         .disabled(isAdding)
                         // Heard is the default; Seen is a deliberate change on the card's back (#52).
-                        Text("Added as Heard. You can mark it Seen on the card.")
+                        Text(seenHere == 0 ? "New to you here. Added as Heard; you can mark it Seen on the card." : "Seen \(CardCollection.Patch.times(seenHere)) here. Added as Heard; you can mark it Seen on the card.")
                             .font(JournalFont.attribution)
                             .foregroundStyle(Color.inkSecondary)
                             .multilineTextAlignment(.center)

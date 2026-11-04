@@ -22,7 +22,7 @@ struct ShareCardTests {
         #expect(try ArtPhotoTests.properties(tagged)[kCGImagePropertyGPSDictionary] != nil, "the source does carry GPS")
         let art = try #require(UIImage(data: tagged))
         let face = CardFront(
-            sighting: Self.sighting, isLegendary: true, placement: nil, place: "Los Angeles",
+            sighting: Self.sighting, placement: nil, place: "Los Angeles",
             art: .packArt(URL(fileURLWithPath: "/nonexistent.avif"), credit: nil), artImage: art
         )
         .environment(PackLibrary.forApp())

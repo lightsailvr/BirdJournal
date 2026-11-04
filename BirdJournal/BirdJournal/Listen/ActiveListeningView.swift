@@ -1,6 +1,7 @@
 import Album
 import Identification
 import Pack
+import SwiftData
 import SwiftUI
 
 /// The run under way (issue #28): the source with its state, the elapsed time, a modest waveform, the species heard
@@ -9,7 +10,10 @@ import SwiftUI
 /// page 11): the list gets the room.
 struct ActiveListeningView: View {
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(PackLibrary.self) private var library
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// For each row's "new here" or "seen 7 times" (issue #132).
+    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
 
     var body: some View {
         PaperPage {
@@ -72,13 +76,14 @@ struct ActiveListeningView: View {
                 } else {
                     // Once a second while listening, so "Heard just now" ages and a calling marker lapses on time;
                     // rows move with the order (issue #42), animated unless motion is reduced.
+                    let collection = library.collection(of: sightings)
                     TimelineView(.periodic(from: .now, by: run.state.isActive ? 1 : 3_600)) { context in
                         let ordered = run.orderedCandidates
                         let calling = run.callingSpecies
                         VStack(spacing: 0) {
                             ForEach(Array(ordered.enumerated()), id: \.element.id) { position, candidate in
                                 let isCalling = calling.contains(candidate.species)
-                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: isCalling, startedAt: run.startedAt, now: context.date, position: position) {
+                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: isCalling, startedAt: run.startedAt, now: context.date, position: position, seenHere: collection.count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)) {
                                     run.reviewing = candidate
                                 }
                                 .padding(.horizontal, 10)
@@ -331,6 +336,9 @@ struct CandidateRow: View {
     var now: Date = .now
     /// The row's position in the list, for the UI tests.
     var position: Int?
+    /// How many sightings of the bird are in the patch an add here would join, 0 when it would sew a new one; nil
+    /// says nothing (issue #132).
+    var seenHere: Int? = nil
     let review: () -> Void
 
     var body: some View {
@@ -367,7 +375,7 @@ struct CandidateRow: View {
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         } else {
-                            Text(Self.heardText(candidate, startedAt: startedAt, now: now))
+                            Text([Self.heardText(candidate, startedAt: startedAt, now: now), seenHere.map(Self.seenText)].compactMap { $0 }.joined(separator: " · "))
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }
@@ -393,6 +401,11 @@ struct CandidateRow: View {
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .onTapGesture(perform: review)
+    }
+
+    /// "new here" when an add would sew the bird's patch, else "seen 7 times".
+    static func seenText(_ count: Int) -> String {
+        count == 0 ? "new here" : "seen \(CardCollection.Patch.times(count))"
     }
 
     /// "Heard just now" within the last minute, else minutes ago, from the run's own clock.

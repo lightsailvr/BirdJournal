@@ -1,4 +1,7 @@
+import Album
 import Identification
+import Pack
+import SwiftData
 import SwiftUI
 
 /// The calm review after a run ends (issue #28): every species heard, what was added, and Review for the rest. In
@@ -7,7 +10,9 @@ struct RunReviewSheet: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openCollection) private var openCollection
+    @Environment(PackLibrary.self) private var library
     @State private var reviewing: Candidate?
+    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
 
     var body: some View {
         NavigationStack {
@@ -23,9 +28,10 @@ struct RunReviewSheet: View {
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 4)
                     }
+                    let collection = library.collection(of: sightings)
                     VStack(spacing: 0) {
                         ForEach(run.orderedCandidates) { candidate in
-                            CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), startedAt: run.startedAt) {
+                            CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), startedAt: run.startedAt, seenHere: collection.count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)) {
                                 reviewing = candidate
                             }
                             RowRule()
@@ -56,7 +62,7 @@ struct RunReviewSheet: View {
                 }
             }
         }
-        .legendaryReveal()
+        .patchReveal()
         // See it in my collection from a reveal over this sheet: the review closes, as Done does, so the collection shows.
         .environment(\.openCollection) {
             dismiss()

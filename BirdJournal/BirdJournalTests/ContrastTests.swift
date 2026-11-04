@@ -19,12 +19,9 @@ struct TokenPairingTests {
         ("JournalInkSecondary", "JournalPaper"), ("JournalInkSecondary", "JournalRaised"),
         ("JournalMoss", "JournalPaper"), ("JournalMoss", "JournalRaised"),
         ("AccentColor", "JournalPaper"), ("AccentColor", "JournalRaised"),
-        ("CollectibleGoldInk", "JournalPaper"), ("CollectibleGoldInk", "JournalRaised"),
         ("JournalAlert", "JournalPaper"), ("JournalAlert", "JournalRaised"),
         // A primary action's label.
         ("JournalMossText", "JournalMoss"),
-        // The gold wash: the collection intro (ink, its Got it in moss), the feed's Legendary mark (gold).
-        ("JournalInk", "CollectibleGoldWash"), ("JournalMoss", "CollectibleGoldWash"), ("CollectibleGoldInk", "CollectibleGoldWash"),
         // Shared goals: everything on the lavender is `onSharedGoal`.
         ("JournalOnSharedGoal", "JournalSharedGoal"),
     ]

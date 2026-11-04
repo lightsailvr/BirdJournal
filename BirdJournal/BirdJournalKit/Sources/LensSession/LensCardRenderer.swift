@@ -34,7 +34,7 @@ public enum LensCardRenderer {
 
     public static func render(
         _ page: LensPage, stack: CandidateStack, order: SpeciesListOrder, selection: Int, saved: Set<Int>,
-        playing: LensPlayback? = nil, nextSounds: [Int: Int] = [:], earned: [Int: LensEarnedCard] = [:], profile: (Species) -> SpeciesProfile?
+        playing: LensPlayback? = nil, nextSounds: [Int: Int] = [:], earned: [Int: LensEarnedPatch] = [:], profile: (Species) -> SpeciesProfile?
     ) -> LensCard {
         switch page {
         case .list:
@@ -163,11 +163,11 @@ public enum LensCardRenderer {
         return LensCard(screenfuls: [elements])
     }
 
-    static func savedLine(_ candidate: Candidate, earned: LensEarnedCard?) -> LensElement {
+    static func savedLine(_ candidate: Candidate, earned: LensEarnedPatch?) -> LensElement {
         switch earned {
-        case .legendary: .saved("Your first \(candidate.species.commonName)", legendary: true)
-        case .newCard(let number): .saved("New card · \(number)", legendary: false)
-        case nil: .saved("Added to my list", legendary: false)
+        case .newPatch(let number): .saved("New patch · \(number)")
+        case .seenAgain(let count): .saved("Seen again · \(count) \(count == 1 ? "time" : "times")")
+        case nil: .saved("Added to my list")
         }
     }
 
@@ -186,10 +186,10 @@ public enum LensCardRenderer {
         LensCard(screenfuls: [[.status("A friend's find"), .heading(banner.text), .meta("Tap or swipe right to close")]])
     }
 
-    /// A saved species shows what its latest add earned ("Your first House Finch" for a Legendary card, else "New
-    /// card · 021/160" or "New card · Uncharted"; "Added to my list" until the sighting is written) and "Add another",
-    /// which adds a new one.
-    static func details(_ candidate: Candidate, isSaved: Bool, earned: LensEarnedCard? = nil, calling: String?, profile: SpeciesProfile?) -> LensCard {
+    /// A saved species shows what its latest add earned ("New patch · 021/160" or "New patch · Uncharted" for the
+    /// species' first sighting in its placement, else "Seen again · 8 times"; "Added to my list" until the sighting is
+    /// written) and "Add another", which adds a new one.
+    static func details(_ candidate: Candidate, isSaved: Bool, earned: LensEarnedPatch? = nil, calling: String?, profile: SpeciesProfile?) -> LensCard {
         // The fixed lines first, then the field marks take what is left of the budget.
         var fixed: [LensElement] = []
         if let profile {

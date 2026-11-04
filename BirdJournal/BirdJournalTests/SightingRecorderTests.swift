@@ -163,14 +163,18 @@ struct SightingRecorderSetTests {
 
         let beforeSets = try ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: start, location: SightingRecorderTests.losFeliz, frame: nil, source: .glasses)
         #expect(beforeSets.placement == .uncharted)
+        #expect(beforeSets.sewsPatch)
 
         fixture.recorder.sets = { [Self.losAngeles] }
         let numbered = try ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: start.addingTimeInterval(60), location: SightingRecorderTests.losFeliz, frame: nil, source: .glasses)
         #expect(numbered.placement.collectorNumber == "002/002")
-        #expect(!numbered.isLegendary)
+        #expect(!numbered.sewsPatch, "the set, once known, pulls the earlier Los Feliz sighting into its patch: seen again")
+        #expect(numbered.patchCount == 2)
 
         let nowhere = try ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: start.addingTimeInterval(120), location: nil, frame: nil, source: .glasses)
         #expect(nowhere.placement == .uncharted)
+        #expect(nowhere.sewsPatch, "no location: the bird's first Uncharted sighting sews that patch")
+        #expect(nowhere.patchCount == 1)
     }
 }
 

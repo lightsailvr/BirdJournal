@@ -2,8 +2,8 @@ import SwiftUI
 
 /// A Guild's look (issue #118, design guide page 13): a simple nature-derived emblem and a habitat cover, both chosen
 /// from the circle's ID so every member sees the same ones and nothing new is stored or sent. Emblems are identity, not
-/// ranks or purchases: one mark on a calm disc in aqua or a muted local colour, never gold (gold has one job, the
-/// personal-first Legendary). The habitat cover is a designed `LandscapeArt`, illustrative, never a place.
+/// ranks or purchases: one mark on a calm disc in aqua or a muted local colour, never gold (there is none since
+/// #132). The habitat cover is a designed `LandscapeArt`, illustrative, never a place.
 struct GuildIdentity: Equatable {
     /// One emblem tone: the deep disc and the light mark on it, the same in both appearances.
     struct Tone: Equatable {

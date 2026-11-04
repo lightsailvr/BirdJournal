@@ -5,8 +5,8 @@ import UIKit
 /// Deep teal and warm ivory: a teal page with ivory ink in the dark appearance, an ivory page with teal ink in the light
 /// one, each with an Increase Contrast variant, all from the asset catalog so the system picks the variant. The guide's
 /// values are starting tokens; the secondary ink, the rules and the text on an action are derived here, and
-/// `DesignTokenTests` measures every text pairing in all four variants. Gold has one job, the personal-first Legendary
-/// (`Color.goldInk`, in `Collectible.swift`); shared goals take the lavender accent; bird art keeps its own colours.
+/// `DesignTokenTests` measures every text pairing in all four variants. There is no gold since #132 (design guide 2.0
+/// retired Legendary); shared goals take the lavender accent; bird art keeps its own colours.
 extension Color {
     /// The page: #10292D dark, #F4F2E9 light.
     static let paper = Color("JournalPaper")
