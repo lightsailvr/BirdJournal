@@ -64,6 +64,7 @@ def test_every_setting_a_pack_can_pin_has_its_words():
         assert prompts.settings[kind] in prompts.render(prompts.editions["us-ca-la"], False, kind)
     assert PatchPin.from_art({"setting": "water", "patch": {"reference": 7, "markings": "Black."}}) == PatchPin("water", 7, "Black.")
     assert PatchPin.from_art({}) == PatchPin("perch", None, None)
+    assert PatchPin.from_art({"patch": {"reference": 7, "box": [0.1, 0.2, 0.3, 0.4]}}).box == (0.1, 0.2, 0.3, 0.4)
 
 
 def test_a_pinned_reference_is_isolated_from_its_original_and_cached(tmp_path, comfy):
@@ -71,12 +72,21 @@ def test_a_pinned_reference_is_isolated_from_its_original_and_cached(tmp_path, c
     originals.mkdir()
     photo = Image.new("RGB", (1200, 1600), BACKGROUND)
     bird_on(photo, box=(0.3, 0.25, 0.7, 0.75))
-    photo.save(originals / "77.jpg", quality=95)
+    photo.save(originals / "77.jpeg", "JPEG", quality=95)  # iNaturalist's extension: .jpg, .jpeg or .png
     painter = artist(tmp_path, comfy)
     painter.pins = {FINCH: PatchPin(reference=77)}
     painter.originals, painter.find_bird = originals, lambda image: Box(0.3, 0.25, 0.7, 0.75)
     patches = painter.paint([FINCH])
     assert patches[FINCH].photos == (77,)
+
+    # A bird the detector can't see takes the box the pin gives.
+    (originals / "78.jpeg").write_bytes((originals / "77.jpeg").read_bytes())
+    def blind(image):
+        raise ValueError("no bird detected")
+    boxed = artist(tmp_path, comfy)
+    boxed.pins = {RAVEN: PatchPin(reference=78, box=(0.3, 0.25, 0.7, 0.75))}
+    boxed.originals, boxed.find_bird = originals, blind
+    assert boxed.paint([RAVEN])[RAVEN].photos == (78,)
     entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
     assert entry["photos"] == [77] and entry["review"] == "pending"
     painted = len(comfy.paintings)

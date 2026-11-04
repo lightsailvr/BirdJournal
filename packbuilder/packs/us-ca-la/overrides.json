@@ -422,7 +422,11 @@
   ],
   "_why": "open-license review (#50): out 204573102: nestling behind sticks",
   "art": {
-   "setting": "rock"
+   "setting": "rock",
+   "patch": {
+    "reference": 461778080,
+    "markings": "The body and back are a smooth grey-blue, with a black scaled pattern on the wings; there is no purple or brown."
+   }
   }
  },
  "Brotogeris chiriri": {
@@ -648,7 +652,12 @@
   ],
   "_why": "open-license review (#50): out 739638372: underexposed, in shadow",
   "art": {
-   "setting": "ground"
+   "setting": "ground",
+   "patch": {
+    "reference": 446193801,
+    "markings": "The whole bird is iridescent black from head to tail, with a purple-blue sheen on the head and upper body; there is no brown, white or cream anywhere.",
+    "_why": "the pack art reference is a brown female"
+   }
   }
  },
  "Thryomanes bewickii": {
@@ -694,7 +703,18 @@
   ],
   "_why": "open-license review (#50): in 27578347: missed by the detector; roosting on mulch; in 27035889: missed by the detector; roosting on gravel; in 360352886: missed by the detector; on a trail at night",
   "art": {
-   "setting": "ground"
+   "setting": "ground",
+   "patch": {
+    "reference": 27578347,
+    "box": [
+     0.28,
+     0.43,
+     0.91,
+     0.72
+    ],
+    "markings": "It crouches flat, its legs hidden beneath it, and its plumage is finely patterned in grey and black above.",
+    "_why": "the detector cannot see it on the bark mulch, so the box is by hand"
+   }
   }
  },
  "Megascops kennicottii": {
@@ -876,7 +896,11 @@
    "_why": "two birds in the reference, two in the painting; one bird, well lit",
    "setting": "rock",
    "length_cm": 44,
-   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides",
+   "patch": {
+    "reference": 260950245,
+    "markings": "The whole body, wings and head are very dark blackish thread, with no tan or light brown; the long bill is orange-red, the iris bright yellow with a red eye-ring."
+   }
   }
  },
  "Campylorhynchus brunneicapillus": {
@@ -1185,7 +1209,10 @@
  },
  "Urile penicillatus": {
   "art": {
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "markings": "The whole bird is very dark, nearly black, from head to tail, with no brown and no white or pale patches on the belly."
+   }
   }
  },
  "Lophodytes cucullatus": {

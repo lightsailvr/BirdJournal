@@ -1866,21 +1866,21 @@
     },
     "haematopus-bachmani": {
       "common_name": "Black Oystercatcher",
-      "seed": 2181860275,
+      "seed": 453368329,
       "dark": false,
       "measure": {
-        "iou": 0.801,
-        "dE_mean": 15.7,
-        "dE_p95": 27.4,
-        "dL": -10.4,
-        "dC": 6.9,
+        "iou": 0.929,
+        "dE_mean": 17.3,
+        "dE_p95": 39.3,
+        "dL": -14.7,
+        "dC": -2.3,
         "faithful": false
       },
-      "card_at_edge": 0.0001,
+      "card_at_edge": 0.0005,
       "attempts": 1,
-      "sha256": "07a90f58b527105ceb0f09189b8d52ac2113d837ad20631f22d34acd444249fe",
+      "sha256": "3de13345523b56ef4424b3875d742e5f4d90f2931cd0df2c1966ede6f0360fbf",
       "photos": [
-        127561861
+        260950245
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
@@ -1892,11 +1892,13 @@
       },
       "prompts": 2,
       "setting": "rock",
+      "markings": "The whole body, wings and head are very dark blackish thread, with no tan or light brown; the long bill is orange-red, the iris bright yellow with a red eye-ring.",
       "review": "pending",
       "rejected_seeds": [
-        4111186725
+        4111186725,
+        2181860275
       ],
-      "why": "painted under the branch prompt; it should stand where it lives"
+      "why": "too bright: should be blackish"
     },
     "haemorhous-mexicanus": {
       "common_name": "House Finch",
@@ -2909,21 +2911,21 @@
     },
     "nyctanassa-violacea": {
       "common_name": "Yellow-crowned Night Heron",
-      "seed": 664067110,
+      "seed": 3197996444,
       "dark": false,
       "measure": {
-        "iou": 0.747,
-        "dE_mean": 9.0,
-        "dE_p95": 15.7,
-        "dL": -4.2,
-        "dC": 1.2,
-        "faithful": true
+        "iou": 0.891,
+        "dE_mean": 13.1,
+        "dE_p95": 20.8,
+        "dL": -6.9,
+        "dC": -7.7,
+        "faithful": false
       },
-      "card_at_edge": 0.0002,
+      "card_at_edge": 0.001,
       "attempts": 1,
-      "sha256": "64025536cd367b2cabbcb4a01444f4c16a2759eff34b755a02163faba8af806e",
+      "sha256": "4c33c3814623b9400613dabf9dcf67bd8803e09a4e24710a14eb0088c2d80246",
       "photos": [
-        395401394
+        461778080
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
@@ -2935,11 +2937,13 @@
       },
       "prompts": 2,
       "setting": "rock",
+      "markings": "The body and back are a smooth grey-blue, with a black scaled pattern on the wings; there is no purple or brown.",
       "review": "pending",
       "rejected_seeds": [
-        1351871664
+        1351871664,
+        664067110
       ],
-      "why": "painted under the branch prompt; it should stand where it lives"
+      "why": "use a clearer reference"
     },
     "nycticorax-nycticorax": {
       "common_name": "Black-crowned Night Heron",
@@ -3332,21 +3336,21 @@
     },
     "phalaenoptilus-nuttallii": {
       "common_name": "Common Poorwill",
-      "seed": 693019354,
+      "seed": 2957505376,
       "dark": false,
       "measure": {
-        "iou": 0.893,
-        "dE_mean": 10.7,
-        "dE_p95": 15.0,
-        "dL": -8.5,
-        "dC": 1.3,
+        "iou": 0.874,
+        "dE_mean": 11.0,
+        "dE_p95": 21.0,
+        "dL": 3.6,
+        "dC": -5.9,
         "faithful": false
       },
       "card_at_edge": 0.0001,
       "attempts": 1,
-      "sha256": "b9a57558735a9eae33de0a4507e1f144beec8de666d6153e7976defa8670693e",
+      "sha256": "088f14380526a2752d227e81a22486158a8a9f766d7fa15fee63f06b69975149",
       "photos": [
-        27035889
+        27578347
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
@@ -3358,11 +3362,13 @@
       },
       "prompts": 2,
       "setting": "ground",
+      "markings": "It crouches flat, its legs hidden beneath it, and its plumage is finely patterned in grey and black above.",
       "review": "pending",
       "rejected_seeds": [
-        1581879884
+        1581879884,
+        693019354
       ],
-      "why": "painted under the branch prompt; it should stand where it lives"
+      "why": "use a different reference"
     },
     "pheucticus-melanocephalus": {
       "common_name": "Black-headed Grosbeak",
@@ -3772,21 +3778,21 @@
     },
     "quiscalus-mexicanus": {
       "common_name": "Great-tailed Grackle",
-      "seed": 1998894129,
+      "seed": 3995985291,
       "dark": true,
       "measure": {
-        "iou": 0.866,
-        "dE_mean": 8.2,
-        "dE_p95": 20.4,
-        "dL": 0.5,
-        "dC": -0.4,
+        "iou": 0.919,
+        "dE_mean": 6.3,
+        "dE_p95": 15.9,
+        "dL": -2.1,
+        "dC": 3.5,
         "faithful": true
       },
-      "card_at_edge": 0.0001,
+      "card_at_edge": 0.0006,
       "attempts": 1,
-      "sha256": "3d82730e12bf322893dab510e4582deabe78d93cda676ee59b733dc5a9912c79",
+      "sha256": "908c99625afcb44cda52de33079b58f7a847b5ccb10055237cacc8e680464f02",
       "photos": [
-        428630110
+        446193801
       ],
       "isolate_seed": 49,
       "workflow": "patch-art@1",
@@ -3798,11 +3804,13 @@
       },
       "prompts": 2,
       "setting": "ground",
+      "markings": "The whole bird is iridescent black from head to tail, with a purple-blue sheen on the head and upper body; there is no brown, white or cream anywhere.",
       "review": "pending",
       "rejected_seeds": [
-        2327719
+        2327719,
+        1998894129
       ],
-      "why": "painted under the branch prompt; it should stand where it lives"
+      "why": "bad reference: should be all black"
     },
     "sayornis-nigricans": {
       "common_name": "Black Phoebe",
@@ -4734,19 +4742,19 @@
     },
     "urile-penicillatus": {
       "common_name": "Brandt's Cormorant",
-      "seed": 3026596611,
+      "seed": 762274489,
       "dark": false,
       "measure": {
-        "iou": 0.689,
-        "dE_mean": 20.1,
-        "dE_p95": 39.2,
-        "dL": 1.5,
-        "dC": 8.3,
+        "iou": 0.812,
+        "dE_mean": 22.6,
+        "dE_p95": 38.9,
+        "dL": -19.7,
+        "dC": -0.4,
         "faithful": false
       },
-      "card_at_edge": 0.0014,
+      "card_at_edge": 0.0003,
       "attempts": 1,
-      "sha256": "c1eff17b71812962e83a2535fea4101d6b94f31365be8f783b3cf6a89b53fcc3",
+      "sha256": "0a178ade21b6638eed77e3bb6e46113d44a53ef821eba9603dea06b2074164c4",
       "photos": [
         630638859
       ],
@@ -4760,11 +4768,13 @@
       },
       "prompts": 2,
       "setting": "water",
+      "markings": "The whole bird is very dark, nearly black, from head to tail, with no brown and no white or pale patches on the belly.",
       "review": "pending",
       "rejected_seeds": [
-        3277915029
+        3277915029,
+        3026596611
       ],
-      "why": "painted under the branch prompt; it should stand where it lives"
+      "why": "too bright"
     },
     "vidua-macroura": {
       "common_name": "Pin-tailed Whydah",
@@ -4943,7 +4953,7 @@
       },
       "prompts": 2,
       "setting": "ground",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1482135478
       ],
@@ -4977,7 +4987,7 @@
       },
       "prompts": 2,
       "setting": "ground",
-      "review": "pending",
+      "review": "approved",
       "rejected_seeds": [
         1081628630
       ],

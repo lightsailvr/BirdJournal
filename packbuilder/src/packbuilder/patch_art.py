@@ -71,11 +71,15 @@ class PatchPin:
     setting: str = DEFAULT_SETTING
     reference: int | None = None
     markings: str | None = None
+    box: tuple[float, float, float, float] | None = None
+    """The bird in the pinned photo as fractions of its width and height (x0, y0, x1, y1), for a bird the detector can't
+    see: a poorwill on bark mulch."""
 
     @classmethod
     def from_art(cls, art: dict) -> "PatchPin":
         patch = art.get("patch") or {}
-        return cls(art.get("setting") or DEFAULT_SETTING, patch.get("reference"), patch.get("markings"))
+        box = patch.get("box")
+        return cls(art.get("setting") or DEFAULT_SETTING, patch.get("reference"), patch.get("markings"), tuple(box) if box else None)
 
 
 @dataclass(frozen=True)
@@ -165,7 +169,7 @@ class PatchArtist:
     prompts: PatchPrompts = field(default_factory=PatchPrompts.load)
     pins: dict[str, PatchPin] = field(default_factory=dict)
     originals: Path | None = None
-    """The downloaded originals (`<photo id>.jpg`), which a pinned reference is isolated from when the cache lacks it."""
+    """The downloaded originals (`<photo id>.<extension>`), which a pinned reference is isolated from when the cache lacks it."""
     find_bird: Callable[[Image.Image], Box] | None = None
     """The bird's box in an original, for that isolation."""
 
@@ -194,7 +198,7 @@ class PatchArtist:
         art = self.art_lock.species[species_id]
         pinned = self.pins.get(species_id, PatchPin()).reference
         if pinned is not None:
-            return self._isolated(pinned)
+            return self._isolated(pinned, self.pins[species_id].box)
         if not art.get("photos"):
             raise KeyError(f"{species_id}: its pack art was painted from text; a patch needs a reference bird")
         photo_id, seed = art["photos"][0], art.get("isolate_seed") or ISOLATE_SEED
@@ -217,18 +221,19 @@ class PatchArtist:
             found[seed] = image
         return found
 
-    def _isolated(self, photo_id: int) -> Reference:
+    def _isolated(self, photo_id: int, box: tuple[float, float, float, float] | None = None) -> Reference:
         """A pinned photo's isolated bird, from the cache or isolated now from its original, as pack art does."""
         found = self._cached_isolations(photo_id)
         if found:
             seed = min(found)
             return Reference(photo_id, seed, Image.open(found[seed]).convert("RGB"))
-        original = self.originals / f"{photo_id}.jpg" if self.originals is not None else None
-        if original is None or not original.exists() or self.find_bird is None:
+        # The originals keep the extension iNaturalist gave them: .jpg, .jpeg, .png.
+        original = next(iter(sorted(self.originals.glob(f"{photo_id}.*"))), None) if self.originals is not None else None
+        if original is None or (self.find_bird is None and box is None):
             raise KeyError(f"photo {photo_id}: no isolated bird in the cache and no original to isolate it from")
         with Image.open(original) as opened:
             image = upright(opened).convert("RGB")
-        crop = reference_crop(image, self.find_bird(image))
+        crop = reference_crop(image, Box(*box) if box else self.find_bird(image))
         from packbuilder.art import ArtPrompts
 
         prompt = ArtPrompts.load().isolate
@@ -334,7 +339,7 @@ class PatchArtist:
             try:
                 bird = self.reference(species_id).image.copy()
                 bird.thumbnail((576, 768))
-            except KeyError:
+            except (KeyError, ValueError):  # one species' missing reference never stops the sheets
                 bird = None
             measured = entry.get("measure")
             line = f"dE {measured['dE_mean']:.1f} iou {measured['iou']:.2f}" if measured else "not measured"
