@@ -1,3 +1,4 @@
+import Accelerate
 import Observation
 import Foundation
 import Pack
@@ -162,9 +163,18 @@ struct PatchFlipTimingTests {
 @MainActor
 struct PatchLightPixelTests {
     /// How far apart two renders are, as the mean change per colour channel out of 255, over the patch.
+    /// vDSP, in pieces: a Swift loop over a render's bytes held the main actor for seconds in a debug build, and every other
+    /// test on it that waits by the clock timed out.
     static func meanChange(_ first: [UInt8], _ second: [UInt8]) -> Double {
-        let total = zip(first, second).reduce(0) { $0 + abs(Int($1.0) - Int($1.1)) }
-        return Double(total) / Double(max(first.count, 1))
+        var total = 0.0
+        let piece = 1 << 20
+        for start in stride(from: 0, to: min(first.count, second.count), by: piece) {
+            let end = min(start + piece, first.count, second.count)
+            let a = vDSP.integerToFloatingPoint(first[start..<end], floatingPointType: Float.self)
+            let b = vDSP.integerToFloatingPoint(second[start..<end], floatingPointType: Float.self)
+            total += Double(vDSP.sum(vDSP.absolute(vDSP.subtract(a, b))))
+        }
+        return total / Double(max(first.count, 1))
     }
 
     static func pixels(of view: UIView) -> [UInt8] {

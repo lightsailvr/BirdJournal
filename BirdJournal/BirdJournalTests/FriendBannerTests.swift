@@ -54,8 +54,9 @@ struct FriendBannerTests {
         #expect(lens.machine.heldBanner == nil)
     }
 
+    /// Long, since it only bounds a failure: other tests' pixel work and start-up hold the main actor this test polls on for seconds at a time.
     private func waitUntil(_ condition: () -> Bool) async throws {
-        let deadline = ContinuousClock.now + .seconds(2)
+        let deadline = ContinuousClock.now + .seconds(30)
         while !condition() {
             guard ContinuousClock.now < deadline else { Issue.record("timed out"); return }
             try await Task.sleep(for: .milliseconds(10))
