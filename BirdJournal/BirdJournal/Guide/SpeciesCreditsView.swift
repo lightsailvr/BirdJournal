@@ -69,15 +69,6 @@ struct SpeciesCreditsView: View {
                         Text("Patch")
                     }
                 }
-                if let art = found.species.packArt {
-                    Section {
-                        Text("AI illustration, not a photograph: painted for the pack (\(art.workflowVersion))\(art.sourcePhotoIDs.isEmpty ? " from a written description" : " from \(art.sourcePhotoIDs.count) of the photos above").")
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
-                    } header: {
-                        Text("Painting")
-                    }
-                }
                 Section("Pack") {
                     LabeledContent("Bird pack", value: "\(found.pack.info.name), version \(found.pack.info.version)")
                     if let cover = library.cover(setID: found.pack.info.id) {

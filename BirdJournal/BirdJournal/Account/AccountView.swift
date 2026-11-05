@@ -128,7 +128,7 @@ struct AccountView: View {
 
     /// What deleting takes, in the alert (issue #71).
     static func deletionWarning(apple: Bool) -> String {
-        var text = "This deletes your account, your finds, reactions, shared cards and photos, painted art, and your place in every Guild. A Guild you started passes to its longest-standing member. This can't be undone. Your collection stays on this iPhone."
+        var text = "This deletes your account, your finds, reactions, shared cards and photos, and your place in every Guild. A Guild you started passes to its longest-standing member. This can't be undone. Your collection stays on this iPhone."
         if apple { text += " Apple will ask you to confirm once more, so Featherguild can stop using your Apple ID." }
         return text
     }

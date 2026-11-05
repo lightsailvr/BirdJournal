@@ -228,7 +228,7 @@ watercolours often end in.
 
 ## Patches
 
-Since design guide 2.0 (#131) the collectible is an embroidered patch, one per species per edition, and the patch is the only painting in the app; the pack art above is being retired (#137). `packbuilder patches` (issue #133) paints them; `packbuilder build` runs the same step in place of the pack art for a pack whose edition has a patch in `art/patch-prompts.json` and whose `art.lock.json` names its reference birds (Los Angeles, for now; the other packs keep pack art until their references are isolated, #58).
+Since design guide 2.0 (#131) the collectible is an embroidered patch, one per species per edition, and the patch is the only painting in the app; the app no longer shows the pack art above (#137), and only the packs not yet rebuilt with patches (#58) still carry it. `packbuilder patches` (issue #133) paints them; `packbuilder build` runs the same step in place of the pack art for a pack whose edition has a patch in `art/patch-prompts.json` and whose `art.lock.json` names its reference birds (Los Angeles, for now; the other packs keep pack art until their references are isolated, #58).
 
 ```sh
 cd packbuilder

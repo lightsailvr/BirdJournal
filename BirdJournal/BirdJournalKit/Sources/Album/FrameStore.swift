@@ -25,15 +25,6 @@ public struct FrameStore: Sendable {
         return path
     }
 
-    /// Writes any file under a fresh name with `pathExtension` (an attached library photo may be HEIC, kept as it came)
-    /// and returns its path.
-    public func write(_ data: Data, pathExtension: String) throws -> String {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let path = "\(UUID().uuidString).\(pathExtension)"
-        try data.write(to: url(for: path), options: .atomic)
-        return path
-    }
-
     /// Where a sighting's frame is on disk.
     public func url(for frameImagePath: String) -> URL {
         directory.appending(path: frameImagePath)

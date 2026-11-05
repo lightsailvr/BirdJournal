@@ -5,10 +5,10 @@ import Testing
 import UniformTypeIdentifiers
 @testable import BirdJournal
 
-// Issue #68: the art-job photo leaves the phone with every face blurred and no metadata. The fixture is NASA's public
+// Issue #66: a shared card's original photo leaves the phone with every face blurred and no metadata. The fixture is NASA's public
 // domain portrait of Sally K. Ride (S84-37256; fixtures/README.md, "The face-blur fixture").
-@Suite("Art photo: faces blurred, metadata stripped", .serialized)
-struct ArtPhotoTests {
+@Suite("Shared photo: faces blurred, metadata stripped", .serialized)
+struct SharedPhotoTests {
     static func fixture() throws -> Data {
         let url = try #require(
             Bundle.allBundles.lazy.compactMap { $0.url(forResource: "face-portrait", withExtension: "jpg") }.first,
@@ -48,17 +48,17 @@ struct ArtPhotoTests {
     @Test("Vision finds the fixture's face, and none is left after the blur")
     func facesAreBlurred() throws {
         let original = try Self.fixture()
-        #expect(try ArtPhoto.faceBoxes(in: Self.picture(original)).count == 1)
-        let prepared = try ArtPhoto.prepare(jpeg: original)
+        #expect(try SharedPhoto.faceBoxes(in: Self.picture(original)).count == 1)
+        let prepared = try SharedPhoto.prepare(jpeg: original)
         #expect(prepared.faces == 1)
-        #expect(try ArtPhoto.faceBoxes(in: Self.picture(prepared.jpeg)).isEmpty)
+        #expect(try SharedPhoto.faceBoxes(in: Self.picture(prepared.jpeg)).isEmpty)
     }
 
     @Test("The blur changes the face and leaves the rest of the picture alone")
     func onlyTheFaceChanges() throws {
         let original = try Self.picture(Self.fixture())
-        let face = try #require(try ArtPhoto.faceBoxes(in: original).first)
-        let prepared = try Self.picture(ArtPhoto.prepare(jpeg: Self.fixture()).jpeg)
+        let face = try #require(try SharedPhoto.faceBoxes(in: original).first)
+        let prepared = try Self.picture(SharedPhoto.prepare(jpeg: Self.fixture()).jpeg)
         #expect(prepared.extent.size == original.extent.size)
         // Inside the face the detail is gone; a corner far from it (the backdrop) is as it was, give or take the JPEG.
         #expect(Self.difference(original, prepared, in: face.insetBy(dx: face.width * 0.2, dy: face.height * 0.2)) > 12)
@@ -70,7 +70,7 @@ struct ArtPhotoTests {
         let tagged = try Self.withMetadata(Self.fixture())
         let before = try Self.properties(tagged)
         #expect(before[kCGImagePropertyGPSDictionary] != nil)
-        let after = try Self.properties(ArtPhoto.prepare(jpeg: tagged).jpeg)
+        let after = try Self.properties(SharedPhoto.prepare(jpeg: tagged).jpeg)
         #expect(after[kCGImagePropertyGPSDictionary] == nil)
         let tiff = after[kCGImagePropertyTIFFDictionary] as? [CFString: Any] ?? [:]
         #expect(tiff[kCGImagePropertyTIFFMake] == nil && tiff[kCGImagePropertyTIFFModel] == nil)
@@ -79,10 +79,10 @@ struct ArtPhotoTests {
         #expect((after[kCGImagePropertyOrientation] as? UInt32 ?? 1) == 1)
     }
 
-    @Test("A photo tagged as turned is written upright, so the painting isn't sideways")
+    @Test("A photo tagged as turned is written upright, so it isn't sideways in the circle")
     func orientationIsBakedIn() throws {
         let turned = try Self.withMetadata(Self.fixture(), orientation: .right)
-        let prepared = try ArtPhoto.prepare(jpeg: turned)
+        let prepared = try SharedPhoto.prepare(jpeg: turned)
         let size = try Self.picture(prepared.jpeg).extent.size
         // The 576 × 720 portrait shown turned a quarter is 720 wide.
         #expect(size == CGSize(width: 720, height: 576))
@@ -92,30 +92,14 @@ struct ArtPhotoTests {
     @Test("A picture without a face goes through unblurred")
     func noFace() throws {
         let plain = CIImage(color: CIColor(red: 0.4, green: 0.55, blue: 0.35)).cropped(to: CGRect(x: 0, y: 0, width: 300, height: 400))
-        let jpeg = try ArtPhoto.encode(plain)
-        let prepared = try ArtPhoto.prepare(jpeg: jpeg)
+        let jpeg = try SharedPhoto.encode(plain)
+        let prepared = try SharedPhoto.prepare(jpeg: jpeg)
         #expect(prepared.faces == 0)
-    }
-
-    @Test("A large library photo leaves scaled down, still with its face blurred and as a JPEG (issue #69)")
-    func libraryPhotoScaledDown() throws {
-        let original = try Self.picture(try Self.fixture())
-        let side = max(original.extent.width, original.extent.height)
-        let limit = (side / 2).rounded(.down)
-        let prepared = try ArtPhoto.prepare(jpeg: try Self.fixture(), maxSide: limit)
-        let picture = try Self.picture(prepared.jpeg)
-        #expect(max(picture.extent.width, picture.extent.height) <= limit)
-        #expect(max(picture.extent.width, picture.extent.height) >= limit - 1)
-        #expect(prepared.faces == 1)
-        #expect(try ArtPhoto.faceBoxes(in: picture).isEmpty)
-        // Smaller than the limit: untouched in size.
-        let small = try Self.picture(try ArtPhoto.prepare(jpeg: try Self.fixture(), maxSide: side * 2).jpeg)
-        #expect(small.extent.size == original.extent.size)
     }
 
     @Test("Bytes that aren't a picture are refused")
     func unreadable() {
-        #expect(throws: ArtPhoto.Failure.unreadable) { try ArtPhoto.prepare(jpeg: Data("not a jpeg".utf8)) }
+        #expect(throws: SharedPhoto.Failure.unreadable) { try SharedPhoto.prepare(jpeg: Data("not a jpeg".utf8)) }
     }
 
     /// The mean absolute difference of two pictures over a rectangle, on a 0–255 scale.

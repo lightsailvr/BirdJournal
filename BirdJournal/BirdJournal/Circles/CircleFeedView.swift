@@ -170,19 +170,17 @@ struct FindRow: View {
                 }
                 Spacer(minLength: 0)
             }
-            FindArt(item: item)
             if let card = item.card {
                 SharedCardExtras(card: card)
             }
         }
     }
 
-    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago", and a painting if the find shows one (until #137).
+    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago".
     private var seenAgain: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(Self.seenAgainLine(item)).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
             marks
-            FindArt(item: item)
         }
     }
 
@@ -328,8 +326,8 @@ private struct FindMark: View {
 }
 
 /// What leads a find (guide 2.0 page 8): the finder's patch in its edition, lit like every other. A phone without that
-/// edition's pack shows the patch's thumbnail from the art CDN, then an installed pack's painting of the bird while packs
-/// without patches remain (#58), then the edition's blank. Never another edition's patch.
+/// edition's pack shows the patch's thumbnail from the art CDN, then the edition's blank: a pack without patches (#58), a
+/// stored find naming a watercolour's thumbnail or a painting (both retired by #137). Never another edition's patch.
 private struct FindPatch: View {
     @Environment(PackLibrary.self) private var library
     let item: FeedItem
@@ -340,7 +338,7 @@ private struct FindPatch: View {
         Group {
             if let art = library.patchArt(scientificName: item.scientificName, setID: item.edition) {
                 PatchView(art: art, edition: PatchEdition.of(setID: item.edition))
-            } else if item.art?.kind == "pack", let url = item.art?.url {
+            } else if let url = item.art?.patchThumbnailURL {
                 AsyncImage(url: url) { phase in
                     if let image = phase.image { image.resizable().scaledToFit() } else { fallback }
                 }
@@ -355,32 +353,7 @@ private struct FindPatch: View {
     }
 
     @ViewBuilder private var fallback: some View {
-        if let art = library.packArt(scientificName: item.scientificName, setID: item.edition) {
-            PackImage(url: art.pack.artURL(for: art.art), painting: true)
-        } else {
-            let edition = PatchEdition.of(setID: item.edition)
-            PatchBlank(edition: edition).aspectRatio(edition.aspect, contentMode: .fit)
-        }
-    }
-}
-
-/// A painting the find shows, filling a 4:3 slot under the row. Only while finds carry painted art: #137 takes this away.
-private struct FindArt: View {
-    let item: FeedItem
-
-    var body: some View {
-        if item.art?.kind == "painted", let url = item.art?.url {
-            Color.raised
-                .aspectRatio(4 / 3, contentMode: .fit)
-                .frame(maxWidth: .infinity)
-                .overlay {
-                    AsyncImage(url: url) { phase in
-                        if let image = phase.image { image.resizable().scaledToFill() }
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                // A scaled-to-fill picture still takes touches outside its clip.
-                .allowsHitTesting(false)
-        }
+        let edition = PatchEdition.of(setID: item.edition)
+        PatchBlank(edition: edition).aspectRatio(edition.aspect, contentMode: .fit)
     }
 }

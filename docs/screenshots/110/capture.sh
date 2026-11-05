@@ -82,8 +82,6 @@ states() {  # suffix: every designed state of page 16
     shot "state-offline-pack-$s"           8 "${seeded[@]}" -autoScreen packs -autoPackStates 2
     shot "state-no-location-listen-$s"    16 "${seeded[@]}" "${run[@]}" -autoLocation denied -autoScreen listening
     shot "state-no-location-rarity-$s"     9 "${seeded[@]}" -autoScreen card -autoCardSpecies "Turdus merula"
-    shot "state-art-pending-$s"            9 "${seeded[@]}" -autoArt pending -autoScreen card
-    shot "state-art-failed-$s"             9 "${seeded[@]}" -autoArt failed -autoScreen card
     shot "state-search-collection-$s"      9 "${seeded[@]}" -autoScreen cards -autoQuery kiwi
     shot "state-search-atlas-$s"          10 "${seeded[@]}" -autoScreen guide -autoQuery kiwi
     shot "state-denied-notifications-$s"  10 "${guilds[@]}" -fakePushPermission denied -autoScreen circle -autoScrollTo guild-settings

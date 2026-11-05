@@ -22,8 +22,6 @@ struct BirdJournalApp: App {
     @State private var journalEdits: JournalEdits
     @State private var account: AccountSession
     @State private var circles: CircleStore
-    @State private var art: ArtJobs
-    @Environment(\.scenePhase) private var scenePhase
     @State private var findOutbox: FindOutbox
     @State private var pushes: PushCenter
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
@@ -65,21 +63,9 @@ struct BirdJournalApp: App {
         _account = State(initialValue: account)
         let circles = CircleStore.forApp(account: account)
         _circles = State(initialValue: circles)
-        let art = Self.makeArtJobs(account: account, frames: frames, album: album, packs: packs)
-        sightings.artJobs = art
-        _art = State(initialValue: art)
         // Finds (issue #62): adds made while signed in and sharing reach the birder's circles.
         let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
         sightings.findOutbox = findOutbox
-        // Painted art in finds (issue #70): the find follows the card's art, and a painting is acknowledged only once
-        // the find's put has gone, so the server never deletes one its find is about to show.
-        art.artChanged = { [weak findOutbox] identifier in
-            guard let findOutbox else { return }
-            findOutbox.changed(identifier)
-            await findOutbox.flush()
-        }
-        art.holdsReceipt = { [weak findOutbox] identifier in findOutbox?.isWaitingToPublish(identifier) ?? false }
-        art.hasFind = { [weak findOutbox] identifier in findOutbox?.publishedNewPatch(identifier) != nil }
         _findOutbox = State(initialValue: findOutbox)
         // Pushes (issue #63): permission at the first circle, the token to the account, and a refresh on every push.
         let pushes = PushCenter.forApp(account: account, client: circles.client) { UIApplication.shared.registerForRemoteNotifications() }
@@ -149,17 +135,6 @@ struct BirdJournalApp: App {
                 return places.name(for: coordinate)
             }
         )
-    }
-
-    /// Scene art (issue #68): each add's job carries whether it sewed its patch (the field keeps its Legendary name
-    /// until #137 retires scene art) and its set's edition, read from the collection at the moment the job is created.
-    private static func makeArtJobs(account: AccountSession, frames: FrameStore, album: ModelContainer, packs: PackLibrary) -> ArtJobs {
-        let art = ArtJobs.forApp(account: account, frames: frames, container: album)
-        art.cardFacts = { sighting in
-            let collection = packs.collection(of: (try? album.mainContext.fetch(FetchDescriptor<Sighting>())) ?? [])
-            return ArtJobs.CardFacts(legendary: collection.sewedItsPatch(sighting.identifier), edition: collection.placement(of: sighting.identifier)?.setID)
-        }
-        return art
     }
 
     /// Sightings saved before rarity existed get theirs once (issue #52), after launch and with the geomodel read off
@@ -256,17 +231,11 @@ struct BirdJournalApp: App {
             .environment(journalEdits)
             .environment(account)
             .environment(circles)
-            .environment(art)
             .environment(findOutbox)
             .environment(pushes)
             .environment(places)
             .environment(packs)
             .environment(\.frameStore, frames)
-            // Art jobs are polled on launch and whenever the app comes back (issue #68).
-            .task { await art.refresh() }
-            .onChange(of: scenePhase) { _, phase in
-                if phase == .active { Task { await art.refresh() } }
-            }
             .onOpenURL { url in
                 // An invite link (issue #61) arrives here as a universal link; everything else is the toolkit's.
                 if let token = InviteLink.token(from: url) {

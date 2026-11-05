@@ -331,21 +331,18 @@ extension FindOutbox {
 
 extension FindOutbox {
     /// What the find policy reads about a sighting: its species and card facts from the packs, the city the phone has
-    /// named for its place (only for a species known not to be threatened), its edition, and its patch's or else its pack
-    /// art's thumbnail. The note and the caption ride along for a card shared by hand; an automatic find leaves them out.
+    /// named for its place (only for a species known not to be threatened), its edition, and its patch's thumbnail. The note and the caption ride along for a card shared by hand; an automatic find leaves them out.
     @MainActor
     static func input(of sighting: Sighting, isNewPatch: Bool, packs: PackLibrary, places: PlaceNames) -> FindPolicy.Input {
         let isThreatened = packs.species(scientificName: sighting.scientificName)?.species.isThreatened
         let placeName = isThreatened == false ? sighting.location.flatMap(places.name(for:)) : nil
         let setID = CardSet.placement(speciesID: sighting.speciesID, at: sighting.location, in: packs.cardSets).setID
-        let art = packs.packArt(scientificName: sighting.scientificName, setID: setID)
         let patch = packs.patch(scientificName: sighting.scientificName, setID: setID)
         return FindPolicy.Input(
             identifier: sighting.identifier, speciesID: sighting.speciesID, commonName: packs.commonName(for: sighting),
             method: sighting.method, confirmedAt: sighting.confirmedAt, rarity: sighting.rarity?.label, isNewPatch: isNewPatch, edition: setID,
-            isThreatened: isThreatened, placeName: placeName, packArt: art.map { ($0.pack.info.id, $0.art.file) },
-            patchArt: patch.map { ($0.pack.info.id, $0.patch.file) },
-            paintedArtKey: sighting.art.shownPaintingKey, note: sighting.note, caption: sighting.caption?.text
+            isThreatened: isThreatened, placeName: placeName, patchArt: patch.map { ($0.pack.info.id, $0.patch.file) },
+            note: sighting.note, caption: sighting.caption?.text
         )
     }
 }

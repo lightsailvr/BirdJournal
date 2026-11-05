@@ -7,7 +7,7 @@ import SwiftUI
 
 /// One sighting in full (issue #28): the glasses snapshot and the reference photo kept apart and labelled, the record
 /// (species, when, roughly where, source), Heard or Seen with the caption written for it, the spot on a map card that
-/// opens the full map (issue #44), the birder's note, the evidence, the sighting's art until #137 retires it, the rarity
+/// opens the full map (issue #44), the birder's note, the evidence, the rarity
 /// in words, the explained match, and the way to the bird's profile, to sharing and to a recoverable removal. Since #134
 /// the paper card holds the species and the patch's history, and each of its sightings opens here.
 struct SightingDetailView: View {
@@ -146,8 +146,6 @@ struct SightingDetailView: View {
                         }
                     }
                     .padding(.top, 12)
-
-                    SightingArtSection(sighting: sighting, setID: library.collection(of: [sighting]).placement(of: sighting.identifier)?.setID)
 
                     if let reference, let photo = reference.species.photos.first {
                         SectionTitle(text: "Reference photo")
