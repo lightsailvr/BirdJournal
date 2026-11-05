@@ -120,12 +120,13 @@ struct BirdJournalApp: App {
         var inMemory = false
         #if DEBUG
         inMemory = UserDefaults.standard.bool(forKey: "inMemoryAlbum")
-        if let name = UserDefaults.standard.string(forKey: "albumFile"),
-           let album = try? AlbumSchema.makeContainer(at: URL.temporaryDirectory.appending(path: "\(name).store")) {
-            return album
-        }
         #endif
         do {
+            #if DEBUG
+            if let name = UserDefaults.standard.string(forKey: "albumFile") {
+                return try AlbumSchema.makeContainer(at: URL.temporaryDirectory.appending(path: "\(name).store"))
+            }
+            #endif
             return try AlbumSchema.makeContainer(inMemory: inMemory)
         } catch {
             fatalError("album store unavailable: \(error)")
@@ -204,29 +205,24 @@ struct BirdJournalApp: App {
     /// The whole loop on the glasses (issue #9), writing sightings to the album through the run ledger the phone's
     /// adds share (issue #28), and reporting the audio level for the waveform.
     private static func makeGlassesListeningSession(connection: GlassesConnection, recorder: SightingRecorder, sightings: RunSightings, packs: PackLibrary, levels: LevelSink, suppression: AudioSuppression) -> GlassesListeningSession {
+        var makeSource: (DeviceSession) -> any FrameKeepingAudioSource = { session in
+            GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100, onLevel: { levels.level = $0 })
+        }
+        var location: any LocationProvider = CoreLocationProvider()
         #if DEBUG
         // `-autoGlassesListening <wav>` with `-autoScreen glasses-run`: the mock injects no audio, so the file stands in for
         // the stream. Everything else is the real run on Mock Device Kit.
         if let path = UserDefaults.standard.string(forKey: "autoGlassesListening"), path.hasSuffix(".wav") {
-            return GlassesListeningSession(
-                connection: connection,
-                recorder: recorder,
-                sightings: sightings,
-                makeSource: { _ in PacedGlassesAudioSource(url: URL(fileURLWithPath: path)) },
-                location: debugLocationProvider(),
-                profile: { packs.profile(for: $0) },
-                image: { packs.image(for: $0) },
-                suppression: suppression
-            )
+            makeSource = { _ in PacedGlassesAudioSource(url: URL(fileURLWithPath: path)) }
+            location = debugLocationProvider()
         }
         #endif
         return GlassesListeningSession(
             connection: connection,
             recorder: recorder,
             sightings: sightings,
-            makeSource: { session in
-                GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100, onLevel: { levels.level = $0 })
-            },
+            makeSource: makeSource,
+            location: location,
             profile: { packs.profile(for: $0) },
             image: { packs.image(for: $0) },
             suppression: suppression

@@ -95,7 +95,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
         Chrome; `startTestServer(portFilePath:)` on a system-assigned port plus `MWDATMockDeviceTestClient` for XCUITest
         to drive the mock from the test process. **We** start it only from the DEBUG `pairMockGlasses()` (same order;
         `unpairMockGlasses()` now also awaits `unpairDevice`). The unit suites start it only when asked
-        (`BIRDJOURNAL_MOCK_PREVIEW_PORT`); `BirdJournalUITests` does not use the mock.
+        (`BIRDJOURNAL_MOCK_PREVIEW_PORT`). In `BirdJournalUITests` only `SewingUITests`' glasses runs use the mock, inside the
+        app (`-autoScreen glasses-run`, its inputs from the app's own `MockLensAdds`), each launch on a port of its own.
 - [x] **Found in #82 (toolkit bug, worked around): the mock link wedges.** When a mock device is torn down and the next one
       paired while the old link's stream I/O is still closing, a toolkit thread (`MWDATCore`, one run-loop thread for the
       whole process) spins at 100% CPU in a single run-loop block calling `CFReadStreamRead` on a bound stream pair, and

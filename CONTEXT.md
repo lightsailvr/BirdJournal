@@ -81,7 +81,7 @@ A patch before it is stitched: bare twill, out to the edge since the cord comes 
 _Avoid_: locked patch, silhouette, ghost
 
 **Stitch-in**:
-The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It happens once, on the add; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its patch lifts and its count ticks.
+The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It plays once, on the phone: at the add, or for an add on the lens, when the run is over and the app is next in front; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its count ticks in the acknowledgment, with nothing to tap.
 _Avoid_: animation, unlock
 
 **Board**:

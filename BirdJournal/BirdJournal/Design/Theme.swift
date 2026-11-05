@@ -225,13 +225,13 @@ struct ErrorNotice<Action: View>: View {
 }
 
 /// A brief acknowledgment at the bottom of a screen ("Added to your journal") with an optional Undo, shown for a few
-/// seconds. The screen that shows it picks the transition: a slide, or a fade under Reduce Motion. With `before` it says
+/// seconds. The screen that shows it picks the transition: a slide, or a fade under Reduce Motion. With `ticksFrom` it says
 /// that first and ticks over to `text` with a haptic (a repeat add's count, 7 → 8); under Reduce Motion or VoiceOver it's
-/// simply `text`, with the haptic, and VoiceOver only ever reads `text`.
+/// simply `text`, with the haptic.
 struct Toast: View {
     let text: String
     var undo: (() -> Void)?
-    var before: String?
+    var ticksFrom: String?
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
     @State private var ticked = false
@@ -244,7 +244,7 @@ struct Toast: View {
     }
 
     private var shown: String {
-        if let before, !ticked, !isStill { before } else { text }
+        if let ticksFrom, !ticked, !isStill { ticksFrom } else { text }
     }
 
     var body: some View {
@@ -254,9 +254,7 @@ struct Toast: View {
             Text(shown)
                 .font(JournalFont.supporting.weight(.medium))
                 .foregroundStyle(Color.ink)
-                .monospacedDigit()
                 .contentTransition(.numericText())
-                .accessibilityLabel(text)
             if let undo {
                 Spacer(minLength: 8)
                 Button("Undo", action: undo)
@@ -273,7 +271,7 @@ struct Toast: View {
         // A light, optional haptic as the count changes: the system's haptics setting turns it off.
         .sensoryFeedback(.impact(weight: .light), trigger: ticked)
         .task {
-            guard before != nil else { return }
+            guard ticksFrom != nil else { return }
             if !isStill {
                 try? await Task.sleep(for: Self.tickDelay)
                 guard !Task.isCancelled else { return }

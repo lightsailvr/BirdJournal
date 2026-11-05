@@ -84,7 +84,7 @@ final class ListeningCoordinator {
         let id = UUID()
         let text: String
         /// What it says first, for a moment, before it ticks over to `text` with a haptic: a repeat add's count going 7 → 8.
-        var before: String? = nil
+        var ticksFrom: String? = nil
         let undo: RunSightings.Addition?
     }
 
@@ -109,7 +109,8 @@ final class ListeningCoordinator {
         var eyebrow: String { "New patch · \(addition.placement.editionLabel)" }
     }
 
-    /// What a repeat add says: "Seen again · 8 times in Los Angeles", or "Seen again · 8 times" outside every set.
+    /// What a repeat add says: "Seen again · 8 times in Los Angeles", or "Seen again · 8 times" outside every set. In digits
+    /// even for 1, unlike `Patch.times`'s "once": it's what the count ticks up from.
     private static func seenAgainText(_ placement: CardPlacement, count: Int) -> String {
         let times = "\(count) \(count == 1 ? "time" : "times")"
         return placement.setID == nil ? "Seen again · \(times)" : "Seen again · \(times) in \(placement.setName)"
@@ -330,7 +331,7 @@ final class ListeningCoordinator {
             } else {
                 acknowledge(
                     Self.seenAgainText(addition.placement, count: addition.patchCount),
-                    before: Self.seenAgainText(addition.placement, count: addition.patchCount - 1),
+                    ticksFrom: Self.seenAgainText(addition.placement, count: addition.patchCount - 1),
                     undo: addition
                 )
             }
@@ -410,8 +411,8 @@ final class ListeningCoordinator {
         }
     }
 
-    private func acknowledge(_ text: String, before: String? = nil, undo: RunSightings.Addition?) {
-        let acknowledgment = Acknowledgment(text: text, before: before, undo: undo)
+    private func acknowledge(_ text: String, ticksFrom: String? = nil, undo: RunSightings.Addition?) {
+        let acknowledgment = Acknowledgment(text: text, ticksFrom: ticksFrom, undo: undo)
         self.acknowledgment = acknowledgment
         acknowledgmentTask?.cancel()
         acknowledgmentTask = Task { [weak self] in

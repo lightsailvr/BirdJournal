@@ -203,7 +203,7 @@ struct ListeningCoordinatorTests {
         let reveal = try #require(run.reveal)
         #expect(reveal.title == "Your first House Finch")
         #expect(reveal.eyebrow == "New patch · Uncharted")
-        #expect(run.acknowledgment?.before == nil, "a new patch has no count to tick")
+        #expect(run.acknowledgment?.ticksFrom == nil, "a new patch has no count to tick")
         #expect(reveal.addition == first)
         #expect(!reveal.hasPlayed, "the stitch-in is still to come")
         #expect(harness.stored.map(\.identifier) == [first.identifier], "saved before the ceremony starts")
@@ -230,7 +230,7 @@ struct ListeningCoordinatorTests {
         #expect(run.reveal == nil, "a repeat add opens no page")
         #expect(harness.stored.count == 2, "and the sighting is saved")
         #expect(run.acknowledgment?.text == "Seen again · 2 times")
-        #expect(run.acknowledgment?.before == "Seen again · 1 time", "what it says before it ticks")
+        #expect(run.acknowledgment?.ticksFrom == "Seen again · 1 time", "what it says before it ticks")
         #expect(run.acknowledgment?.undo == again)
 
         // A first of another species, taken back inside the window: the sighting and its reveal are gone.

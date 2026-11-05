@@ -6,18 +6,22 @@ import XCTest
 final class SewingUITests: XCTestCase {
     private static let name = "House Finch"
 
-    @MainActor
-    private func launch(_ extra: [String]) throws -> XCUIApplication {
+    private static func clip() throws -> String {
         let clip = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "fixtures/clips/birdnet-example-soundscape.wav")
-        guard FileManager.default.fileExists(atPath: clip.path(percentEncoded: false)) else {
-            throw XCTSkip("no example soundscape at \(clip.path(percentEncoded: false))")
-        }
+            .path(percentEncoded: false)
+        guard FileManager.default.fileExists(atPath: clip) else { throw XCTSkip("no example soundscape at \(clip)") }
+        return clip
+    }
+
+    @MainActor
+    private func launch(_ extra: [String]) throws -> XCUIApplication {
+        let clip = try Self.clip()
         let app = XCUIApplication()
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES",
-            "-autoPhoneListening", clip.path(percentEncoded: false), "-autoLocation", "griffith", "-autoScreen", "listening",
+            "-autoPhoneListening", clip, "-autoLocation", "griffith", "-autoScreen", "listening",
         ] + extra
         app.launch()
         return app
@@ -114,16 +118,11 @@ final class SewingUITests: XCTestCase {
 
     @MainActor
     private func launchGlassesRun(adding birds: String, album: String, extra: [String] = []) throws -> XCUIApplication {
-        let clip = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appending(path: "fixtures/clips/birdnet-example-soundscape.wav")
-        guard FileManager.default.fileExists(atPath: clip.path(percentEncoded: false)) else {
-            throw XCTSkip("no example soundscape at \(clip.path(percentEncoded: false))")
-        }
+        let clip = try Self.clip()
         let app = XCUIApplication()
         app.launchArguments = [
-            "-albumFile", album, "-collectionIntroShown", "YES", "-mockPreviewPort", "9135",
-            "-autoGlassesListening", clip.path(percentEncoded: false), "-autoLocation", "griffith", "-autoScreen", "glasses-run", "-autoLensAdd", birds,
+            "-albumFile", album, "-collectionIntroShown", "YES", "-mockPreviewPort", "\(Int.random(in: 20_000...60_000))",  // the port is the Mac's, and agents test side by side
+            "-autoGlassesListening", clip, "-autoLocation", "griffith", "-autoScreen", "glasses-run", "-autoLensAdd", birds,
         ] + extra
         app.launch()
         return app
@@ -141,7 +140,7 @@ final class SewingUITests: XCTestCase {
 
     @MainActor
     private func waitForLensAdd(of bird: String, _ app: XCUIApplication) {
-        XCTAssertTrue(app.buttons["Added. Review \(bird)"].waitForExistence(timeout: 180), "the lens didn't add \(bird); screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons["Added. Review \(bird)"].waitForExistence(timeout: 120), "the lens didn't add \(bird); screen: \(app.debugDescription.prefix(4000))")
     }
 
     /// A new album for each test: a bird already in it wouldn't sew anything.
@@ -220,6 +219,17 @@ final class SewingUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Skip the rest · 1 more"].exists)
         app.buttons["Done"].firstMatch.tap()
         XCTAssertFalse(app.staticTexts["New patch · Citrus edition"].waitForExistence(timeout: 2), "nothing more; screen: \(app.debugDescription.prefix(4000))")
+    }
+
+    @MainActor
+    func testStoppingFromAnotherTabStillPlaysTheCeremony() throws {
+        let app = try launchGlassesRun(adding: Self.name, album: Self.album(), extra: ["-reduceMotion", "YES"])
+        waitForLensAdd(of: Self.name, app)
+        app.tabBars.buttons["Collection"].tap()
+        let stop = app.buttons["Stop listening"]
+        XCTAssertTrue(stop.waitForExistence(timeout: 10), "no listening strip; screen: \(app.debugDescription.prefix(4000))")
+        stop.tap()
+        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in Los Angeles"].waitForExistence(timeout: 15), "the ceremony didn't play; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor
