@@ -202,7 +202,7 @@ def test_the_site_has_the_privacy_policy_and_terms_and_no_page_points_back_to_gi
         assert "github.io" not in text, name
         assert 'href="/privacy"' in text, name
     privacy = pages["privacy.html"]
-    for subject in ("Guilds", "finds", "Notifications", "React", "Goals", "Shared cards", "Paintings from earlier versions",
+    for subject in ("Guilds", "finds", "Notifications", "React", "Goals", "Shared cards",
                     "Moderation", "Reports", "Blocks", "Deleting your account", "secret spot"):
         assert subject.lower() in privacy.lower(), subject
 

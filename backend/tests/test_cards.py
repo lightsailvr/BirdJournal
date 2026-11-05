@@ -132,6 +132,31 @@ def test_the_city_off_ignores_a_place_that_came_anyway(cards: TestClient, issuer
     assert _item(cards, issuer, sunday, "ben", sighting)["place"] is None  # type: ignore[index]
 
 
+def test_a_threatened_or_city_off_find_names_its_region_and_nothing_finer(
+    cards: TestClient, issuer: TestIssuer, table: Any
+) -> None:
+    """Decided 2026-11-04 (#136): the edition and the patch's shape may name a metro-sized region; the exact place may
+    not reach the server or the feed. Nothing but the label could carry one: a coordinate is refused (`test_finds.py`)."""
+    sunday, _ = _circles(cards, issuer)
+    patch = {"kind": "pack", "key": "packs/us-ca-la/patch/sayornis-nigricans.png"}
+    threatened = _put_ok(cards, issuer, "ada", _find(threatened=True, place="Palos Verdes Estates", edition="us-ca-la", art=patch))
+    city_off = _share_ok(
+        cards, issuer, [sunday], include_place=False, find=_find(place="Pasadena", edition="us-ca-la", art=patch, found_at="2026-11-01T09:00:00Z"),
+    )
+
+    shown = {sighting: _item(cards, issuer, sunday, "ben", sighting) for sighting in (threatened, city_off)}
+    assert shown[threatened]["place"] == "a secret spot"  # type: ignore[index]
+    assert shown[city_off]["place"] is None  # type: ignore[index]
+    for item in shown.values():
+        assert item["edition"] == "us-ca-la"  # type: ignore[index]
+        assert item["art"]["key"] == patch["key"]  # type: ignore[index]
+    stored = str(table.scan()["Items"])
+    assert threatened in stored and city_off in stored
+    assert "Palos Verdes" not in stored and "Pasadena" not in stored
+    for word in ("latitude", "longitude", "coordinate", "accuracy"):
+        assert word not in stored
+
+
 def test_a_later_put_keeps_the_extras_and_the_hidden_place(cards: TestClient, issuer: TestIssuer) -> None:
     sunday, _ = _circles(cards, issuer)
     sighting = _share_ok(cards, issuer, [sunday], include_place=False, note="Quiet morning", find=_find(place=None))

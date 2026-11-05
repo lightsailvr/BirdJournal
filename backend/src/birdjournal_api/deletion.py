@@ -9,8 +9,7 @@ full account, is finished by the phone calling again with the same access token)
    is refused rather than writing the account back. Only a retried deletion gets through. Then, before any circle
    changes, **other members' items naming it** (step 8 below), since the circles they are found through go in step 5.
 1. **Finds** (`FindStore.delete`, #62): their feed items and species entries in every circle, shared cards and their
-   photos (#66), reactions on them with each reactor's copy and the reaction-push items (#64), and the painting a find
-   showed (#70).
+   photos (#66), and reactions on them with each reactor's copy and the reaction-push items (#64).
 2. **Reactions it gave** on others' finds (its `REACTION#` copies, #64), with the find-side items, and its name taken
    out of the owners' collapsed reaction alerts (`REACTIONPUSH#…` `shown`) and waiting reaction buffers.
 3. **Digest buffers** it is in, as recipient or friend (#63).
@@ -24,11 +23,9 @@ full account, is finished by the phone calling again with the same access token)
 7. **Devices** (#63), with the token pointers.
 8. **Other members' items naming it**: their mutes and blocks of it and their last-push times about it, for everyone
    who ever shared a circle with it.
-9. **Art jobs** left from before #137 (`painted.py`): the painting each names, unless it already went, whatever the
-   job's state.
-10. **Reports** it filed or that name it (#71).
-11. **Everything left under `ACCOUNT#<sub>`**: the profile, mutes, blocks, the painting and report day counters,
-    push times, past-circle and invite copies.
+9. **Reports** it filed or that name it (#71).
+10. **Everything left under `ACCOUNT#<sub>`**: the profile, mutes, blocks, the report day counters, push times,
+    past-circle and invite copies.
 
 Then the Apple token is revoked (best effort, below) and the Cognito user deleted, last, so a retry still has a valid
 token until the very end. A photo uploaded for a card that was never sent is not known to the server (no listing of
@@ -62,7 +59,6 @@ from botocore.exceptions import ClientError
 from birdjournal_api.circles import CircleStore, NotFound
 from birdjournal_api.devices import DeviceStore
 from birdjournal_api.finds import FindStore, REACTIONS_PK, reaction_push_key
-from birdjournal_api.painted import ArtStorage
 from birdjournal_api.pushes import DIGEST_PK
 from birdjournal_api.safety import REPORTS_PK
 
@@ -97,21 +93,19 @@ class DeletionReport:
     reactions: int = 0
     circles_left: int = 0
     circles_deleted: int = 0
-    art_jobs: int = 0
     apple_revoked: bool = False
 
 
 class AccountDeleter:
     def __init__(
         self, table: Any, circles: CircleStore, finds: FindStore, devices: DeviceStore, *,
-        art_storage: ArtStorage | None, users: UserDirectory, apple: AppleTokens | None,
+        users: UserDirectory, apple: AppleTokens | None,
         clock: Callable[[], datetime],
     ) -> None:
         self._table = table
         self._circles = circles
         self._finds = finds
         self._devices = devices
-        self._art = art_storage
         self._users = users
         self._apple = apple
         self._clock = clock
@@ -208,19 +202,12 @@ class AccountDeleter:
         for device in self._devices.devices_of(subject):
             self._devices.unregister(subject, device.token)
 
-        # 9. Art jobs left from before #137.
-        jobs = self._query(account, "ARTJOB#")
-        if self._art is not None:
-            for job in jobs:
-                if "art_deleted_at" not in job:
-                    self._art.delete_art(str(job["output_key"]))
-
-        # 10. Reports.
+        # 9. Reports.
         for report in self._partition(REPORTS_PK):
             if subject in (report.get("reporter"), report.get("account")):
                 self._table.delete_item(Key={"pk": report["pk"], "sk": report["sk"]})
 
-        # 11. The rest of the account's partition, the profile last.
+        # 10. The rest of the account's partition, the profile last.
         rest = [{"pk": item["pk"], "sk": item["sk"]} for item in self._query(account, None)]
         with self._table.batch_writer(overwrite_by_pkeys=["pk", "sk"]) as batch:
             for key in rest:
@@ -236,12 +223,12 @@ class AccountDeleter:
                 log.exception("revoking the Sign in with Apple token failed")
         self._users.delete_user(username)
         log.info(
-            "account deleted: %d finds, %d reactions, %d circles left, %d deleted, %d art jobs, apple %s",
-            len(find_ids), len(given), left, deleted, len(jobs), revoked,
+            "account deleted: %d finds, %d reactions, %d circles left, %d deleted, apple %s",
+            len(find_ids), len(given), left, deleted, revoked,
         )
         return DeletionReport(
             finds=len(find_ids), reactions=len(given), circles_left=left, circles_deleted=deleted,
-            art_jobs=len(jobs), apple_revoked=revoked,
+            apple_revoked=revoked,
         )
 
     def _remove_from_set(self, key: dict[str, str], attribute: str, values: set[str]) -> None:

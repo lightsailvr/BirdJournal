@@ -37,7 +37,6 @@ from birdjournal_api.devices import DeviceStore, MuteStore
 from birdjournal_api.finds_api import router as finds_router
 from birdjournal_api.goals import GoalStore
 from birdjournal_api.goals_api import router as goals_router
-from birdjournal_api.painted import ArtStorage, S3ArtStorage
 from birdjournal_api.photos import PhotoStore, S3PhotoStore
 from birdjournal_api.pushes import PushSender, PushService
 from birdjournal_api.pushes_api import router as pushes_router
@@ -82,7 +81,6 @@ def create_app(
     *,
     signing_key: SigningKeyResolver | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
-    art_storage: ArtStorage | None = None,
     photos: PhotoStore | None = None,
     push_sender: PushSender | None = None,
     mailer: Mailer | None = None,
@@ -106,9 +104,6 @@ def create_app(
         photos = S3PhotoStore(boto3.client("s3", region_name=settings.region), settings.art_bucket)
     app.state.photos = photos
     app.state.clock = clock
-    # The paintings left from before #137 (`painted.py`): deleted with the find that shows them or the account.
-    if art_storage is None and settings.art_bucket:
-        art_storage = S3ArtStorage(boto3.client("s3", region_name=settings.region), art_bucket=settings.art_bucket)
     table = dynamodb.Table(settings.table_name)
     # Rekognition (#71), behind the switch: never called while it is off.
     if moderator is None and settings.moderation:
@@ -118,7 +113,7 @@ def create_app(
     )
     app.state.moderation = moderation
     app.state.finds = FindStore(
-        dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, art_storage, moderation
+        dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, moderation
     )
     app.state.devices = DeviceStore(table, clock)
     app.state.mutes = MuteStore(table, clock)
@@ -151,7 +146,7 @@ def create_app(
             post=lambda url, **kwargs: httpx2.post(url, timeout=5, **kwargs),
         )
     app.state.deleter = AccountDeleter(
-        table, app.state.circles, app.state.finds, app.state.devices, art_storage=art_storage, users=users, apple=apple,
+        table, app.state.circles, app.state.finds, app.state.devices, users=users, apple=apple,
         clock=clock,
     )
     app.include_router(safety_router)

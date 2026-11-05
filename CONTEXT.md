@@ -137,7 +137,7 @@ _Avoid_: flavor text, tagline (the lore's one-line fallback)
 
 ## Art
 
-The patch is the only painting (decided 2026-11-03, built in #137). Original photos stay as evidence.
+The patch is the only painting (decided 2026-11-03, built in #137). Original photos stay as evidence: the glasses photo from the add, or one the birder attaches from the library.
 
 **Pack art**:
 Was a watercolour of a species shipped with its pack and shown on its card. The app no longer shows it; a pack not yet rebuilt with patches (#58) still carries it, unused, and shows the edition's blank patch.

@@ -14,7 +14,7 @@ class Settings:
     dynamodb_endpoint: str | None = None
     # Where invite links point (issue #61): `<invite_base_url>/i/<token>`, served by the invite site's CloudFront.
     invite_base_url: str = "https://birdquest.matthewcelia.com"
-    # The art CDN's bucket: shared cards' photos (issue #66), and the paintings left from before #137 (`painted.py`).
+    # The art CDN's bucket: shared cards' photos (issue #66).
     art_bucket: str | None = None
     # The art CDN (issue #62, the ArtCdn construct): feed items' art URLs are `<art_cdn_base_url>/<key>`. None before
     # the stack has one; the feed then gives keys without URLs.

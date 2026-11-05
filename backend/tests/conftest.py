@@ -85,21 +85,6 @@ def settings(table_name: str, dynamodb_endpoint: str) -> Settings:
     )
 
 
-class FakeArtStorage:
-    """The art bucket in memory: tests put the paintings left from before #137 (`tests/test_painted_art.py`)."""
-
-    def __init__(self) -> None:
-        self.art: dict[str, bytes] = {}
-
-    def delete_art(self, key: str) -> None:
-        self.art.pop(key, None)
-
-
-@pytest.fixture
-def art_storage() -> FakeArtStorage:
-    return FakeArtStorage()
-
-
 class Clock:
     """The time the API stamps on what it writes; tests move it by hand."""
 
@@ -215,7 +200,6 @@ def client(
     settings: Settings,
     issuer: TestIssuer,
     clock: Clock,
-    art_storage: FakeArtStorage,
     apns: FakeApns,
     mailer: FakeMailer,
     moderator: FakeModerator,
@@ -226,7 +210,6 @@ def client(
         settings,
         signing_key=issuer.signing_key,
         clock=clock,
-        art_storage=art_storage,
         push_sender=apns,
         mailer=mailer,
         moderator=moderator,

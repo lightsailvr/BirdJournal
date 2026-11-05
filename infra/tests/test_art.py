@@ -85,7 +85,6 @@ def test_the_api_has_no_setting_for_the_pipeline(template: Template) -> None:
     assert {"ART_BUCKET", "ART_CDN_BASE_URL"} <= set(variables)
 
 
-def test_the_api_may_delete_paintings_and_not_read_them(template: Template) -> None:
+def test_the_api_has_no_access_to_the_retired_paintings_prefix(template: Template) -> None:
     role = _api_function(template)["Properties"]["Role"]["Fn::GetAtt"][0]
-    on_paintings = [s for s in _policy_statements(template, role=role) if "/art/*" in str(s["Resource"])]
-    assert [_actions(s) for s in on_paintings] == [["s3:DeleteObject"]]
+    assert [s for s in _policy_statements(template, role=role) if "/art/*" in str(s["Resource"])] == []

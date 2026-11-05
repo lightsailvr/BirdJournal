@@ -16,7 +16,6 @@ from tests.conftest import (
     Clock,
     FakeApns,
     FakeApple,
-    FakeArtStorage,
     FakeMailer,
     FakeModerator,
     FakeUsers,
@@ -34,10 +33,10 @@ def photos() -> MemoryPhotoStore:
     return MemoryPhotoStore()
 
 
-def _app(settings: Settings, issuer: TestIssuer, clock: Clock, art_storage: FakeArtStorage, moderator: FakeModerator,
+def _app(settings: Settings, issuer: TestIssuer, clock: Clock, moderator: FakeModerator,
          photos: MemoryPhotoStore, **kwargs: Any) -> Any:
     return create_app(
-        settings, signing_key=issuer.signing_key, clock=clock, art_storage=art_storage,
+        settings, signing_key=issuer.signing_key, clock=clock,
         push_sender=FakeApns(), mailer=FakeMailer(), moderator=moderator,
         users=FakeUsers(), apple=FakeApple(), photos=photos, **kwargs,
     )
@@ -45,21 +44,21 @@ def _app(settings: Settings, issuer: TestIssuer, clock: Clock, art_storage: Fake
 
 @pytest.fixture
 def moderated(
-    settings: Settings, issuer: TestIssuer, clock: Clock, art_storage: FakeArtStorage, moderator: FakeModerator,
+    settings: Settings, issuer: TestIssuer, clock: Clock, moderator: FakeModerator,
     photos: MemoryPhotoStore,
 ) -> Iterator[TestClient]:
     on = replace(settings, moderation=True, art_bucket="birdjournal-art")
-    with TestClient(_app(on, issuer, clock, art_storage, moderator, photos)) as client:
+    with TestClient(_app(on, issuer, clock, moderator, photos)) as client:
         yield client
 
 
 @pytest.fixture
 def unmoderated(
-    settings: Settings, issuer: TestIssuer, clock: Clock, art_storage: FakeArtStorage, moderator: FakeModerator,
+    settings: Settings, issuer: TestIssuer, clock: Clock, moderator: FakeModerator,
     photos: MemoryPhotoStore,
 ) -> Iterator[TestClient]:
     off = replace(settings, art_bucket="birdjournal-art")
-    with TestClient(_app(off, issuer, clock, art_storage, moderator, photos)) as client:
+    with TestClient(_app(off, issuer, clock, moderator, photos)) as client:
         yield client
 
 
@@ -102,7 +101,7 @@ def test_a_clean_shared_photo_reaches_the_circle(
 
 
 def test_with_the_switch_off_nothing_is_checked(
-    unmoderated: TestClient, issuer: TestIssuer, art_storage: FakeArtStorage, moderator: FakeModerator,
+    unmoderated: TestClient, issuer: TestIssuer, moderator: FakeModerator,
     photos: MemoryPhotoStore,
 ) -> None:
     moderator.flagged = {"anything": EXPLICIT}

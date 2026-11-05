@@ -16,7 +16,6 @@ from tests.conftest import (
     Clock,
     FakeApns,
     FakeApple,
-    FakeArtStorage,
     FakeMailer,
     FakeModerator,
     FakeUsers,
@@ -25,7 +24,6 @@ from tests.photos import MemoryPhotoStore
 from tests.test_circles import _create, _invite, _join
 from tests.test_finds import GNATCATCHER, PHOEBE, WREN, _feed, _feed_ids, _find, _put_ok
 from tests.test_goals import _goal_ok, _goals
-from tests.test_painted_art import store_job, store_painting
 from tests.test_pushes import _register
 from tests.tokens import TestIssuer
 
@@ -43,12 +41,12 @@ def photos() -> MemoryPhotoStore:
 
 @pytest.fixture
 def full(
-    settings: Settings, issuer: TestIssuer, clock: Clock, art_storage: FakeArtStorage, apns: FakeApns,
+    settings: Settings, issuer: TestIssuer, clock: Clock, apns: FakeApns,
     mailer: FakeMailer, moderator: FakeModerator, users: FakeUsers, apple: FakeApple, photos: MemoryPhotoStore,
 ) -> Iterator[TestClient]:
-    """The whole API: leftover paintings, shared photos, pushes, reports."""
+    """The whole API: shared photos, pushes, reports."""
     app = create_app(
-        settings, signing_key=issuer.signing_key, clock=clock, art_storage=art_storage,
+        settings, signing_key=issuer.signing_key, clock=clock,
         push_sender=apns, mailer=mailer, moderator=moderator, users=users, apple=apple,
         photos=photos,
     )
@@ -87,11 +85,11 @@ def _scan(table: Any) -> list[dict[str, Any]]:
 
 @pytest.fixture
 def busy(
-    full: TestClient, issuer: TestIssuer, table: Any, art_storage: FakeArtStorage, photos: MemoryPhotoStore, clock: Clock
+    full: TestClient, issuer: TestIssuer, table: Any, photos: MemoryPhotoStore, clock: Clock
 ) -> dict[str, Any]:
     """Ada with something of everything: circles she made (one shared, one alone), one of Bo's she is in and one of
-    Cy's she left; finds automatic, shared by hand with a photo, and painted; reactions both ways; pushes, mutes,
-    blocks, digests, goals, invites, art jobs and reports."""
+    Cy's she left; finds automatic and shared by hand with a photo; reactions both ways; pushes, mutes,
+    blocks, digests, goals, invites and reports."""
     c = full
     for sub, name in ((ADA, "Ada Lovelace"), ("bo", "Bo"), ("cy", "Cy")):
         assert c.patch("/v1/account", headers=_h(issuer, sub), json={"display_name": name}).status_code == 200
@@ -113,8 +111,8 @@ def busy(
     # Phones.
     for sub, phone in ((ADA, ADA_PHONE), ("bo", BO_PHONE), ("cy", CY_PHONE)):
         assert _register(c, issuer, sub, phone).status_code == 204
-    # Finds by Ada: automatic (a Gnatcatcher that completes Bo's goal), ordinary (buffered in Bo's digest), shared by
-    # hand with a photo, and one showing a painting.
+    # Finds by Ada: automatic (a Gnatcatcher that completes Bo's goal), ordinary (buffered in Bo's digest), and shared by
+    # hand with a photo.
     gnat = _put_ok(c, issuer, ADA, _find(GNATCATCHER, found_at="2026-11-01T08:00:00Z"))
     _put_ok(c, issuer, "cy", _find(WREN, found_at="2026-10-01T08:00:00Z"))
     ordinary = _put_ok(c, issuer, ADA, _find(WREN, found_at="2026-11-01T08:20:00Z"))
@@ -127,11 +125,6 @@ def busy(
         json={"find": _find(PHOEBE), "circle_ids": [sunday], "note": "Hi", "photo": {"key": photo_key}},
     )
     assert shared.status_code == 201, shared.text
-    # From before #137: a find showing a painting, a painting only a job item names, and a job whose painting went.
-    painted_sighting = _put_ok(c, issuer, ADA, _find(PHOEBE, found_at="2026-11-01T07:00:00Z"))
-    painting = store_painting(table, art_storage, painted_sighting, sub=ADA)
-    job_painting = store_job(table, art_storage, sub=ADA)
-    gone_painting = store_job(table, art_storage, sub=ADA, deleted=True)
     # Reactions both ways: Bo on Ada's, Ada on Bo's (twice in the window, so one waits in a buffer).
     bos = _put_ok(c, issuer, "bo", _find(PHOEBE, found_at="2026-11-01T06:00:00Z"))
     assert c.put(f"/v1/finds/{ADA}/{gnat}/reactions/lovely", headers=_h(issuer, "bo")).status_code == 200
@@ -159,14 +152,14 @@ def busy(
     )
     assert about.status_code == 201
     return {
-        "sunday": sunday, "solo": solo, "ridge": ridge, "old": old, "photo": photo_key, "painting": painting,
-        "job_painting": job_painting, "gone_painting": gone_painting, "bos": bos, "ordinary": ordinary, "adas_goal": adas_goal["id"], "bos_goal": bos_goal["id"],
+        "sunday": sunday, "solo": solo, "ridge": ridge, "old": old, "photo": photo_key,
+        "bos": bos, "ordinary": ordinary, "adas_goal": adas_goal["id"], "bos_goal": bos_goal["id"],
     }
 
 
 def test_deleting_an_account_leaves_nothing_behind(
     full: TestClient, issuer: TestIssuer, table: Any, busy: dict[str, Any], users: FakeUsers, apple: FakeApple,
-    art_storage: FakeArtStorage, photos: MemoryPhotoStore,
+    photos: MemoryPhotoStore,
 ) -> None:
     before = [item for item in _scan(table) if _mentions(item, ADA)]
     # The fixture really did leave Ada all over the table.
@@ -178,9 +171,7 @@ def test_deleting_an_account_leaves_nothing_behind(
     # The Cognito user, by its username, and Apple's token.
     assert users.deleted == [f"signinwithapple_{ADA}"]
     assert apple.revoked == ["c0de"]
-    # Her paintings, the find's and the job's, and her shared photo are gone from the bucket.
-    assert busy["painting"] not in art_storage.art and busy["job_painting"] not in art_storage.art
-    assert not [key for key in art_storage.art if ADA in key]
+    # Her shared photo is gone from the bucket.
     assert busy["photo"] in photos.deleted and busy["photo"] not in photos.objects
 
 

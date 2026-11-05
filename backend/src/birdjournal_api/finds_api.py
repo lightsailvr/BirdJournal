@@ -45,32 +45,16 @@ def _utc(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
-class FallbackBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    kind: ArtKind
-    key: str
-
-
 class ArtBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: ArtKind
-    # The object's key on the art CDN: packs/<pack id>/patch/<file>.png for a patch's thumbnail,
-    # art/<sub>/<unguessable>.jpg for a painting (retired by #137; a phone from before it may still send one).
+    # The object's key on the art CDN: packs/<pack id>/patch/<file>.png for a patch's thumbnail. A phone from before #136
+    # sends the watercolour's, packs/<pack id>/<file>.jpg.
     key: str
-    # With painted art only: the pack art to show unless the find already shows the painting (#70, #137).
-    fallback: FallbackBody | None = None
 
     def reference(self) -> ArtReference:
         return clean_art(self.kind, self.key)
-
-    def fallback_reference(self) -> ArtReference | None:
-        if self.fallback is None:
-            return None
-        if self.kind is not ArtKind.PAINTED or self.fallback.kind is not ArtKind.PACK:
-            raise ValueError("Only painted art falls back, and only to pack art")
-        return clean_art(self.fallback.kind, self.fallback.key)
 
 
 class FindBody(BaseModel):
@@ -127,9 +111,6 @@ class FindBody(BaseModel):
             art=self.art.reference() if self.art is not None else None,
             edition=self.edition,
         )
-
-    def art_fallback(self) -> ArtReference | None:
-        return self.art.fallback_reference() if self.art is not None else None
 
 
 class ArtResponse(BaseModel):
@@ -364,10 +345,9 @@ def put_find(
 ) -> FindResponse:
     try:
         content = body.content()
-        fallback = body.art_fallback()
     except ValueError as error:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from None
-    find, created = finds.put(subject, _sighting_id(sighting_id), content, art_fallback=fallback)
+    find, created = finds.put(subject, _sighting_id(sighting_id), content)
     if created:
         # Pushes (issue #63) for a new find only; a repeated put (Heard to Seen) sends nothing.
         # A failure here never fails the put.
@@ -397,7 +377,7 @@ def share_card(
     try:
         find, created = finds.share(
             subject, _sighting_id(sighting_id), body.find.content(), body.circle_ids, body.extras(),
-            include_place=body.include_place, art_fallback=body.find.art_fallback(),
+            include_place=body.include_place,
         )
     except NotFound:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "not_found") from None

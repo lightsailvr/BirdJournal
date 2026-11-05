@@ -289,6 +289,24 @@ def test_an_edition_is_a_pack_id(client: TestClient, issuer: TestIssuer, edition
 # Until the deploy has settled and every beta phone has updated (the compatibility notes in finds.py and finds_api.py).
 
 
+def test_a_phone_from_before_136_is_taken_as_it_sends_a_find(client: TestClient, issuer: TestIssuer) -> None:
+    """Exactly what `FindPolicy.Find` encodes on `dev` before #136 and #137: `legendary`, no `new_patch` or `edition`, a
+    watercolour's thumbnail with no `fallback` (it is only sent beside a painting), and nulls for what is absent. Its outbox
+    treats a 422 as final and drops the find."""
+    with_art = {
+        **PHOEBE, "method": "heard", "place": "Pasadena", "found_at": "2026-11-01T08:15:00Z", "legendary": True,
+        "rarity": "common", "threatened": False, "art": {"kind": "pack", "key": "packs/us-ca-la/sayornis-nigricans.jpg"},
+    }
+    _, response = _put(client, issuer, "ada", with_art)
+    assert response.status_code == 201, response.text
+    assert response.json()["art"]["kind"] == "pack"
+    assert response.json()["new_patch"] is True
+    bare = {**with_art, "place": None, "rarity": None, "art": None, "legendary": False, "found_at": "2026-11-01T09:15:00Z"}
+    _, response = _put(client, issuer, "ada", bare)
+    assert response.status_code == 201, response.text
+    assert response.json()["art"] is None
+
+
 def test_an_old_clients_legendary_is_a_new_patch(client: TestClient, issuer: TestIssuer) -> None:
     circle = _two_friends(client, issuer)
     for legendary in (True, False):
@@ -484,14 +502,16 @@ def test_the_time_is_kept_to_the_minute_in_utc(client: TestClient, issuer: TestI
     "art",
     [
         {"kind": "pack", "key": "art/ada/x.jpg"},
+        {"kind": "painted", "key": "art/ada/x.jpg"},
         {"kind": "painted", "key": "packs/us-ca-la/x.jpg"},
+        {"kind": "pack", "key": "packs/us-ca-la/x.jpg", "fallback": {"kind": "pack", "key": "packs/us-ca-la/y.jpg"}},
         {"kind": "pack", "key": "packs/../secrets.jpg"},
         {"kind": "pack", "key": "https://example.com/x.jpg"},
         {"kind": "pack", "key": "packs/us-ca-la/x.gif"},
         {"kind": "sticker", "key": "packs/us-ca-la/x.jpg"},
     ],
 )
-def test_art_must_be_an_art_cdn_key_of_its_kind(client: TestClient, issuer: TestIssuer, art: dict[str, str]) -> None:
+def test_art_must_be_an_art_cdn_key_of_its_kind(client: TestClient, issuer: TestIssuer, art: dict[str, Any]) -> None:
     _, response = _put(client, issuer, "ada", _find(art=art))
     assert response.status_code == 422
 

@@ -36,7 +36,7 @@ class BirdJournalStack(Stack):
             certificate_arn=config.invite_certificate_arn,
             app_ids=list(config.ios_app_ids),
         )
-        # The one art CDN (#68): finds' patch thumbnails (#62, #136), and the paintings left from before #137.
+        # The one art CDN (#68): finds' patch thumbnails (#62, #136).
         self.art = ArtCdn(self, "ArtCdn")
         # Shared cards' original photos (#66), under photos/ in the same bucket.
         shared_photos = SharedPhotos(self, "SharedPhotos", cdn=self.art)
@@ -61,7 +61,6 @@ class BirdJournalStack(Stack):
             },
         )
         data.table.grant_read_write_data(api.function)
-        self.art.grant_delete_paintings(api.function)
         shared_photos.grant_api(api.function)
         Pushes(self, "Pushes", function=api.function, apns_secret_name=config.apns_secret_name)
         GoalRollover(self, "GoalRollover", function=api.function)

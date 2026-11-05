@@ -16,7 +16,7 @@ def test_unshared_photos_expire_after_a_day_and_nothing_else_does(template: Temp
     assert rule["ExpirationInDays"] == 1
     assert rule["Prefix"] == "photos/"
     assert rule["TagFilters"] == [{"Key": "pending", "Value": "true"}]
-    # Still Retain: a shared photo is the birder's, like the painted art beside it.
+    # Still Retain: a shared photo is the birder's.
     assert bucket["DeletionPolicy"] == "Retain"
 
 
