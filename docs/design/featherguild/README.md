@@ -1,6 +1,6 @@
 # Featherguild design guide 1.0
 
-The approved direction for the phone UI (November 1, 2026), implemented by #110 and its sub-issues. It supersedes the field-journal palette of [bird-collection/](../bird-collection/) (style guide 0.2). That guide's collection rules still hold where this one doesn't replace them.
+The approved direction for the phone UI (November 1, 2026), implemented by #110 and its sub-issues. **Superseded where they differ by [guide 2.0](../featherguild-2/) (November 3, 2026)**, which replaces the card with an embroidered patch and retires Legendary (#131). It supersedes the field-journal palette of [bird-collection/](../bird-collection/) (style guide 0.2). That guide's collection rules still hold where this one doesn't replace them.
 
 **The name.** The guide was drawn up under the working name "Bird Quest", which was dropped on 2026-11-02 because two App Store bird apps and a UK trademark application already use it. Read every "Bird Quest" in these files as **Featherguild**.
 

@@ -160,18 +160,34 @@ final class PatchLight {
 }
 
 #if DEBUG
-/// Circles the light around where it rests at the display's rate and logs how long frames took, every two seconds.
+/// Circles the light around where it rests at the display's rate.
 @MainActor
-private final class PatchLightSweep: NSObject {
-    private static let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "patch-light")
-    private let move: (SIMD2<Double>) -> Void
+private final class PatchLightSweep {
+    private let frames: PatchFrameLog
+
+    init(move: @escaping (SIMD2<Double>) -> Void) {
+        frames = PatchFrameLog(category: "patch-light") { elapsed in
+            let angle = elapsed * 1.5
+            move(PatchLightModel.rest + SIMD2(cos(angle), sin(angle)) * PatchLightModel.reach)
+        }
+    }
+}
+
+/// Runs a display link at the display's fastest rate and logs how long frames took, every 240 of them: how a moving patch's
+/// frame budget (guide page 18) is measured, on the simulator or a phone.
+@MainActor
+final class PatchFrameLog: NSObject {
+    private let log: Logger
+    private let onFrame: (CFTimeInterval) -> Void
     private var link: CADisplayLink?
     private var start: CFTimeInterval?
     private var last: CFTimeInterval?
     private var durations: [CFTimeInterval] = []
 
-    init(move: @escaping (SIMD2<Double>) -> Void) {
-        self.move = move
+    /// - Parameter onFrame: called each frame with the seconds since the first.
+    init(category: String, onFrame: @escaping (CFTimeInterval) -> Void = { _ in }) {
+        log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: category)
+        self.onFrame = onFrame
         super.init()
         let link = CADisplayLink(target: self, selector: #selector(tick))
         link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
@@ -183,8 +199,7 @@ private final class PatchLightSweep: NSObject {
         let now = link.timestamp
         let begun = start ?? now
         start = begun
-        let angle = (now - begun) * 1.5
-        move(PatchLightModel.rest + SIMD2(cos(angle), sin(angle)) * PatchLightModel.reach)
+        onFrame(now - begun)
         if let last { durations.append(now - last) }
         last = now
         guard durations.count >= 240 else { return }
@@ -192,8 +207,14 @@ private final class PatchLightSweep: NSObject {
         let budget = link.targetTimestamp - link.timestamp
         let over = sorted.filter { $0 > budget * 1.5 }.count
         let (median, p95, worst) = (sorted[sorted.count / 2] * 1000, sorted[sorted.count * 95 / 100] * 1000, (sorted.last ?? 0) * 1000)
-        Self.log.notice("frames \(sorted.count) median \(median, format: .fixed(precision: 1)) ms p95 \(p95, format: .fixed(precision: 1)) ms worst \(worst, format: .fixed(precision: 1)) ms; over 1.5x budget: \(over)")
+        log.notice("frames \(sorted.count) median \(median, format: .fixed(precision: 1)) ms p95 \(p95, format: .fixed(precision: 1)) ms worst \(worst, format: .fixed(precision: 1)) ms; over 1.5x budget: \(over)")
         durations.removeAll(keepingCapacity: true)
+    }
+
+    /// Ends the log. A display link holds its target, so nothing ends it for you.
+    func stop() {
+        link?.invalidate()
+        link = nil
     }
 }
 #endif

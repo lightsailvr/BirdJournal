@@ -165,7 +165,7 @@ public enum LensCardRenderer {
 
     static func savedLine(_ candidate: Candidate, earned: LensEarnedPatch?) -> LensElement {
         switch earned {
-        case .newPatch(let number): .saved("New patch · \(number)")
+        case .newPatch: .saved("New patch · sewn")
         case .seenAgain(let count): .saved("Seen again · \(count) \(count == 1 ? "time" : "times")")
         case nil: .saved("Added to my list")
         }
@@ -186,9 +186,10 @@ public enum LensCardRenderer {
         LensCard(screenfuls: [[.status("A friend's find"), .heading(banner.text), .meta("Tap or swipe right to close")]])
     }
 
-    /// A saved species shows what its latest add earned ("New patch · 021/160" or "New patch · Uncharted" for the
-    /// species' first sighting in its placement, else "Seen again · 8 times"; "Added to my list" until the sighting is
-    /// written) and "Add another", which adds a new one.
+    /// A saved species shows what its latest add earned ("New patch · sewn" for the species' first sighting in its
+    /// placement, else "Seen again · 8 times"; "Added to my list" until the sighting is written) and "Add another", which
+    /// adds a new one. Text only: whether the lens shows a small patch image too is still the maintainer's to decide
+    /// (guide page 20).
     static func details(_ candidate: Candidate, isSaved: Bool, earned: LensEarnedPatch? = nil, calling: String?, profile: SpeciesProfile?) -> LensCard {
         // The fixed lines first, then the field marks take what is left of the budget.
         var fixed: [LensElement] = []

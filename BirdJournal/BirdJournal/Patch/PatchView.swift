@@ -1,24 +1,44 @@
 import SwiftUI
 
 /// One patch as an object (issue #134, guide pages 9 and 13): its painting, lit by the phone's tilt with a shadow opposite
-/// the light, or its pattern, the same patch unsewn. Without a painting on the phone it's the edition's blank (guide page
-/// 15), with a paper tag naming the bird when `tag` says so. A decoration: whoever shows it says what it is to VoiceOver.
+/// the light, or the same patch part way through being sewn (issue #135). Without a painting on the phone it's the edition's
+/// blank (guide page 15), with a paper tag naming the bird when `tag` says so. A decoration: whoever shows it says what it is
+/// to VoiceOver.
 struct PatchView: View {
-    enum Face {
-        case sewn, pattern
+    enum Face: Equatable {
+        case sewn
+        /// Thread laid along the stitch order as far as `sewnTo` (`StitchTimeline`); bare twill and transfer pen beyond it.
+        case stitching(sewnTo: Float)
     }
 
     let art: PatchArt?
     let edition: PatchEdition
-    var face: Face = .sewn
-    var size: PatchTextures.Size = .thumbnail
+    let face: Face
+    let size: PatchTextures.Size
     /// The name on a blank's paper tag.
-    var tag: String? = nil
+    let tag: String?
+    /// What's already decoded shows at once: a patch scrolled back to doesn't flash its blank for a frame.
     @State private var loaded: PatchTextures.Loaded?
 
-    /// The edition's one twill, so a board's patterns read as a set; a pack's own measured ground (it varies with what
-    /// was painted beside the cord) only for a set the app doesn't know yet.
-    private var patternGround: Color {
+    /// - Parameter decoded: the pictures, for a surface that has them to hand: a stitch-in redraws this every frame, and the
+    ///   cache may let go of them during it.
+    init(art: PatchArt?, edition: PatchEdition, face: Face = .sewn, size: PatchTextures.Size = .thumbnail, tag: String? = nil, decoded: PatchTextures.Loaded? = nil) {
+        self.art = art
+        self.edition = edition
+        self.face = face
+        self.size = size
+        self.tag = tag
+        _loaded = State(initialValue: decoded ?? art.flatMap { PatchTextures.cached($0, size: size) })
+    }
+
+    private var sewnTo: Float {
+        if case .stitching(let sewnTo) = face { return sewnTo }
+        return StitchTimeline.allSewn
+    }
+
+    /// The edition's one twill, so every stitch-in in a set starts from the same cloth; a pack's own measured ground (it
+    /// varies with what was painted beside the cord) only for a set the app doesn't know yet.
+    private var twill: Color {
         if edition == PatchEdition.of(setID: nil), let ground = art.flatMap({ Color(hexString: $0.ground) }) { return ground }
         return edition.twill
     }
@@ -28,7 +48,7 @@ struct PatchView: View {
             .aspectRatio(edition.aspect, contentMode: .fit)
             .overlay {
                 if let loaded {
-                    LitPatch(loaded: loaded, ground: patternGround, isPattern: face == .pattern, room: size == .thumbnail ? 14 : 34)
+                    LitPatch(loaded: loaded, ground: twill, sewnTo: sewnTo, room: size == .thumbnail ? 14 : 34)
                 } else {
                     PatchBlank(edition: edition, tag: art == nil ? tag : nil)
                 }
@@ -51,7 +71,8 @@ struct LitPatch: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let loaded: PatchTextures.Loaded
     let ground: Color
-    let isPattern: Bool
+    /// How far along the stitch order the thread is laid.
+    let sewnTo: Float
     /// Around the patch for its shadow, in points.
     let room: CGFloat
     /// A light that stays put, for an image rather than a screen (the share image, #136); nil follows the phone's.
@@ -61,8 +82,7 @@ struct LitPatch: View {
         let light = fixedLight ?? PatchLight.shown(PatchLight.shared.direction, reduceMotion: PatchMotion.reduces(system: reduceMotion))
         let direction = CGPoint(x: light.x, y: light.y)
         let softStrength = PatchMaterial.softShadow(colorScheme)
-        let room = room
-        let pattern: Float = isPattern ? 1 : 0
+        let (room, sewnTo) = (room, sewnTo)
         let (layers, texel, ground) = (loaded.layers, loaded.texel, ground)
         loaded.colour
             .resizable()
@@ -76,7 +96,7 @@ struct LitPatch: View {
                         .float2(texel),
                         .float(max(min(face.width / 300, 1), 0.28)),
                         .float(softStrength),
-                        .float(pattern),
+                        .float(sewnTo),
                         .color(ground),
                         .color(PatchMaterial.transferPen),
                         .image(layers)
@@ -137,6 +157,14 @@ enum PatchMotion {
     static func reduces(system: Bool) -> Bool {
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "reduceMotion") { return true }
+        #endif
+        return system
+    }
+
+    /// VoiceOver, with the same kind of flag for its path through the ceremony (issue #135).
+    static func voiceOver(system: Bool) -> Bool {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "voiceOverPath") { return true }
         #endif
         return system
     }

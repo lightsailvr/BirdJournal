@@ -61,8 +61,8 @@ extension MockDeviceKitTests {
                 input.navRight()
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
                 #expect(run.lens.page == .details(index: 0))
-                // The birder's first House Finch with no place: the saved line names its new Uncharted patch (issue #132).
-                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New patch · Uncharted")) }
+                // The birder's first House Finch with no place: the saved line names its new patch (issues #132, #135).
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New patch · sewn")) }
                 #expect(run.lens.card.wordCount <= LensCardRenderer.detailsWordBudget)
 
                 let sightings = try album.mainContext.fetch(FetchDescriptor<Sighting>())
@@ -108,6 +108,62 @@ extension MockDeviceKitTests {
                 #expect(source.isStopped)
                 #expect(run.sessionState == .stopped)
                 #expect(run.errorMessage == nil)
+            }
+        }
+
+        @Test("a patch sewn on the lens waits for the run to end, and Back on the lens ending it is enough; a repeat from the lens waits for nothing (the maintainer, 2026-11-04)")
+        func lensAddWaitsForTheEnd() async throws {
+            try await withMockDisplay { glasses in
+                let connection = GlassesConnection()
+                try await waitUntil { connection.connectedDevice != nil }
+                let source = ManualAudioSource()
+                let album = try AlbumSchema.makeContainer(inMemory: true)
+                let recorder = SightingRecorder(container: album, frames: FrameStore(directory: Self.temporaryFrames()))
+                let sightings = RunSightings(recorder: recorder)
+                let glassesRun = GlassesListeningSession(
+                    recorder: recorder,
+                    sightings: sightings,
+                    loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
+                    makeSource: { _ in source },
+                    location: ScriptedLocationProvider([ListeningSessionTests.newYork]),
+                    profile: FakeLensStack.profile(for:),
+                    image: FakeLensStack.image(for:)
+                )
+                let run = ListeningCoordinator(phone: ListeningSession(), glasses: glassesRun, sightings: sightings, levels: LevelSink(), defaultSource: .glasses, defaults: UserDefaults(suiteName: "lens-ceremony-\(UUID().uuidString)")!)
+
+                await run.start()
+                try #require(run.state == .listening, "\(run.errorMessage ?? "no error")")
+                try await waitUntil { glassesRun.lens.inputsState == .active }
+                source.feed(seconds: 4.5)
+                try await waitUntil { glassesRun.lens.stack.count == 2 }
+
+                let input = glasses.services.input
+                try await openSpecies(0, on: glassesRun.lens, glasses: glasses)
+                input.navDown()
+                try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.page == .details(index: 0) }
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.page == .viewfinder(index: 0) }
+                input.navRight()
+                try await waitUntil(timeout: .seconds(2)) { run.sightings.entries.count == 1 }
+                try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.card.elements.contains(.saved("New patch · sewn")) }
+                #expect(!run.hasCeremonyWaiting)
+                #expect(run.reveal == nil, "text on the lens, nothing on the phone")
+
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.page == .viewfinder(index: 0) }
+                input.navRight()
+                try await waitUntil(timeout: .seconds(2)) { run.sightings.entries.count == 2 }
+                try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.card.elements.contains(.saved("Seen again · 2 times")) }
+
+                input.back()
+                try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.page == .list }
+                input.back()
+                try await waitUntil(timeout: .seconds(5)) { run.state == .ended(.endedByGlasses) }
+                #expect(run.hasCeremonyWaiting)
+                run.showNextCeremony()
+                #expect(run.reveal?.commonName == "House Finch")
+                run.finishCeremony()
+                #expect(run.waitingCeremonies == 0, "the repeat added nothing to the queue")
             }
         }
 

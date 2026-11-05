@@ -77,8 +77,12 @@ The collectible: one per species per placement (a set, or Uncharted), derived fr
 _Avoid_: badge, card (for the collectible), sticker, achievement
 
 **Pattern**:
-A patch before it is stitched: the cord, bare twill and the patch's own stitch lines in blue transfer pen, drawn by the app. Only where a patch is being sewn (#135): a bird you haven't found has no patch, and no pattern, on any board.
+A patch before it is stitched: bare twill, out to the edge since the cord comes last, and the patch's own stitch lines in blue transfer pen, drawn by the app. Only where a patch is being sewn (#135): a bird you haven't found has no patch, and no pattern, on any board.
 _Avoid_: locked patch, silhouette, ghost
+
+**Stitch-in**:
+The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It plays once, on the phone: at the add, or for an add on the lens, when the run is over and the app is next in front; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its count ticks in the acknowledgment, with nothing to tap.
+_Avoid_: animation, unlock
 
 **Board**:
 Your patches in one place in Collection, on felt across the whole sheet, in collector-number order; Uncharted has one too. A bird you haven't found isn't on it.

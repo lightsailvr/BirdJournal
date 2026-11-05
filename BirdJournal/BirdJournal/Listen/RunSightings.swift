@@ -78,6 +78,18 @@ final class RunSightings {
         return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: recorded.sewsPatch, patchCount: recorded.patchCount, placement: recorded.placement)
     }
 
+    /// The add of the sighting `identifier` as the album has it now, if that sighting is still the one that sewed its patch;
+    /// nil once it's been deleted. What a ceremony that waited for the run to end shows, perhaps a launch or two later.
+    func sewnAddition(of identifier: UUID) -> Addition? {
+        let context = recorder.container.mainContext
+        guard let sighting = try? context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })).first else { return nil }
+        let speciesID = sighting.speciesID
+        let ofSpecies = (try? context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))) ?? [sighting]
+        guard let patch = CardCollection(sightings: ofSpecies, sets: recorder.sets()).patch(of: identifier), patch.sewn.identifier == identifier else { return nil }
+        let species = Species(index: 0, scientificName: sighting.scientificName, commonName: sighting.commonName, taxonomicClass: "Aves")
+        return Addition(species: species, sightingID: sighting.persistentModelID, identifier: identifier, sewsPatch: true, patchCount: patch.count, placement: patch.placement)
+    }
+
     /// Takes an addition back: its sighting is deleted with its frame. Nothing happens if it is already gone.
     func undo(_ addition: Addition) throws {
         guard let sighting = records[addition.sightingID] else { return }
