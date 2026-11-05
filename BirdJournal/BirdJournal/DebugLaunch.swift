@@ -2,9 +2,13 @@
 import Album
 import Foundation
 import Identification
+import LensSession
+import MWDATCore
+import MWDATInputs
 import Pack
 import SwiftData
 import SwiftUI
+import Synchronization
 import UIKit
 
 /// Launch flags for simulator screenshots and checks (issue #28), read once when the root appears:
@@ -19,8 +23,7 @@ import UIKit
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Patches view), `sightings`,
 ///   `reveal` (the new-patch reveal of the newest seeded sighting, over the Listen tab; over a phone run with
-///   `-autoPhoneListening <wav>`; `-autoCardSpecies` picks the species), `seen-again` (the same, as a repeat add, the
-///   count going from 7 to 8), `card` and `card-back` (the newest
+///   `-autoPhoneListening <wav>`; `-autoCardSpecies` picks the species), `card` and `card-back` (the newest
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the patches of the newest sighting's species), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
@@ -54,6 +57,10 @@ import UIKit
 ///   opens; `-fakeGlasses unregistered|noneLinked|notConnected` gives the Listen page those glasses states;
 ///   `-fakeCircles offline` makes the Guilds unreachable; `-autoScrollTo guild-settings` scrolls a Guild's page to its
 ///   settings (issue #119's screenshots of the states).
+/// - `-autoScreen glasses-run` with `-autoGlassesListening <wav>` pairs the mock glasses and starts a real glasses run on the
+///   Listen tab, the file standing in for the stream; `-autoLensAdd "House Finch,Dark-eyed Junco"` adds those birds on the
+///   lens with mock inputs as they're heard, and `-autoLensBackInBackground YES` ends the run from the lens when the app
+///   goes to the background (issue #135). `-albumFile <name>` keeps the album in a file of its own, for relaunching over it.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -62,6 +69,8 @@ struct DebugLaunch: ViewModifier {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
     @Environment(CircleStore.self) private var circles
+    @Environment(GlassesConnection.self) private var connection
+    @Environment(\.scenePhase) private var scenePhase
     @Binding var tab: RootView.Tab
     @Binding var journalMode: JournalView.Mode
     @Binding var listenPath: NavigationPath
@@ -71,7 +80,10 @@ struct DebugLaunch: ViewModifier {
     @Binding var showingDeveloper: Bool
 
     func body(content: Content) -> some View {
-        content.task {
+        content.onChange(of: scenePhase) { _, phase in
+            if phase == .background, UserDefaults.standard.bool(forKey: "autoLensBackInBackground") { connection.injectMockInput(.back) }
+        }
+        .task {
             let defaults = UserDefaults.standard
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
@@ -106,13 +118,27 @@ struct DebugLaunch: ViewModifier {
                     }
                     run.reviewing = run.candidates.first { library.species(scientificName: $0.species.scientificName) != nil } ?? run.candidates.first
                 }
+            case "glasses-run":
+                tab = .listen
+                connection.pairMockGlasses()
+                for _ in 0..<100 where connection.connectedDevice == nil {
+                    try? await Task.sleep(for: .milliseconds(100))
+                }
+                run.source = .glasses
+                await run.start()
+                // This launch's choice, not one for the simulator's next UI test to find remembered.
+                defaults.removeObject(forKey: ListeningCoordinator.sourceKey)
+                let lens = MockLensAdds(lens: run.glasses.lens, connection: connection, sightings: run.sightings)
+                for name in (defaults.string(forKey: "autoLensAdd") ?? "").split(separator: ",") {
+                    await lens.add(String(name))
+                }
             case "journal", "cards":
                 tab = .journal
                 journalMode = .cards
             case "sightings":
                 tab = .journal
                 journalMode = .sightings
-            case "reveal", "seen-again":
+            case "reveal":
                 tab = .listen
                 // With `-autoPhoneListening`, over a run, as after a real add (issue #117's screenshots).
                 if defaults.string(forKey: "autoPhoneListening") != nil {
@@ -122,7 +148,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted, seenAgain: screen == "seen-again" ? 8 : nil)
+                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted)
                 }
             case "card", "card-back":
                 tab = .journal
@@ -255,6 +281,7 @@ struct GriffithParkLocationProvider: LocationProvider {
 /// instead of ending in a second.
 final class PacedAudioSource: AudioSource {
     private let base: any AudioSource
+    private let endPacing = Mutex<(@Sendable () -> Void)?>(nil)
 
     init(_ base: any AudioSource) {
         self.base = base
@@ -272,11 +299,84 @@ final class PacedAudioSource: AudioSource {
             continuation.finish()
         }
         continuation.onTermination = { _ in forwarding.cancel() }
+        endPacing.withLock {
+            $0 = {
+                forwarding.cancel()
+                continuation.finish()
+            }
+        }
         return paced
     }
 
+    /// Stops at once, as a microphone does, not after what the file has already handed over has played out.
     func stop() async {
         await base.stop()
+        endPacing.withLock { $0 }?()
+    }
+}
+
+/// A glasses run's stream for the simulator, where the mock injects no audio: a file at a microphone's pace, and no camera.
+final class PacedGlassesAudioSource: FrameKeepingAudioSource {
+    private let base: PacedAudioSource
+
+    init(url: URL) {
+        base = PacedAudioSource(WAVFileAudioSource(url: url))
+    }
+
+    var latestFrame: CameraFrame? { nil }
+    func start() async throws -> AsyncStream<AudioChunk> { try await base.start() }
+    func stop() async { await base.stop() }
+    func capturePhoto() async -> Data? { nil }
+    func ensureStreaming(_ reason: String) async {}
+    func suspend() async {}
+    func resume(on session: DeviceSession) async throws {}
+}
+
+/// Adds birds on the lens through Mock Device Kit's inputs, as a wearer would: down the list to the bird, onto its page, down
+/// to its details, Add to my list, and a swipe off the viewfinder, which adds it without a photo; then back to the list.
+struct MockLensAdds {
+    let lens: GlassesLensSession
+    let connection: GlassesConnection
+    let sightings: RunSightings
+
+    func add(_ name: String) async {
+        func candidateIndex() -> Int? { lens.stack.candidates.firstIndex { $0.species.commonName == name } }
+        guard await wait(seconds: 120, until: { lens.inputsState == .active && candidateIndex() != nil }) else { return }
+        // A new bird or a call can move the list between inputs: if the wrong bird opens, back and again.
+        for _ in 0..<5 {
+            guard let index = candidateIndex() else { return }
+            for _ in 0..<lens.stack.count where lens.machine.selection != index {
+                let (position, target) = (lens.machine.order.position(of: lens.machine.selection) ?? 0, lens.machine.order.position(of: index) ?? 0)
+                let before = lens.inputRecords.count
+                connection.injectMockInput(target > position ? .navDown : .navUp)
+                _ = await wait(seconds: 1) { lens.inputRecords.count > before }
+            }
+            connection.injectMockInput(.navLeft)
+            _ = await wait(seconds: 2) { lens.page != .list }
+            if lens.page == .species(index: index) { break }
+            connection.injectMockInput(.back)
+            _ = await wait(seconds: 2) { lens.page == .list }
+        }
+        guard let index = candidateIndex(), lens.page == .species(index: index) else { return }
+        let saved = sightings.entries.count
+        connection.injectMockInput(.navDown)
+        _ = await wait(seconds: 2) { lens.page == .details(index: index) }
+        connection.injectMockInput(.select)
+        _ = await wait(seconds: 2) { lens.page == .viewfinder(index: index) }
+        connection.injectMockInput(.navRight)
+        _ = await wait(seconds: 5) { sightings.entries.count > saved }
+        _ = await wait(seconds: 2) { lens.page == .details(index: index) }
+        connection.injectMockInput(.back)
+        _ = await wait(seconds: 2) { lens.page == .list }
+    }
+
+    private func wait(seconds: Double, until condition: () -> Bool) async -> Bool {
+        let deadline = ContinuousClock.now + .seconds(seconds)
+        while !condition() {
+            guard ContinuousClock.now < deadline else { return false }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        return true
     }
 }
 

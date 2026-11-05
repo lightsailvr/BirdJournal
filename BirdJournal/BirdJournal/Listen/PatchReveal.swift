@@ -5,7 +5,7 @@ import SwiftData
 import SwiftUI
 
 extension View {
-    /// Shows the page after an add over this screen, bars included, while there is one (issues #51, #132, #135).
+    /// Shows the page after an add that sewed a patch over this screen, bars included, while there is one (issues #51, #132, #135).
     /// - Parameter isCovered: another surface carries its own over this one: this one waits, rather than playing unseen.
     func patchReveal(isCovered: Bool = false) -> some View {
         modifier(PatchRevealOverlay(isCovered: isCovered))
@@ -22,15 +22,9 @@ private struct PatchRevealOverlay: ViewModifier {
         content
             .overlay {
                 if let reveal = run.reveal, !isCovered {
-                    Group {
-                        if reveal.addition.sewsPatch {
-                            NewPatchReveal(reveal: reveal)
-                        } else {
-                            SeenAgainReveal(reveal: reveal)
-                        }
-                    }
-                    .id(reveal.id)
-                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
+                    NewPatchReveal(reveal: reveal)
+                        .id(reveal.id)
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
                 }
             }
             .animation(reduceMotion ? .easeInOut(duration: 0.15) : .spring(duration: 0.45), value: run.reveal?.id)
@@ -85,7 +79,7 @@ private extension ListeningCoordinator.Reveal {
     }
 }
 
-/// "Your sighting is already saved.": true from before the first thing on any of these pages.
+/// "Your sighting is already saved.": true from before the first thing on these pages.
 private struct SavedNote: View {
     var body: some View {
         Text("Your sighting is already saved.")
@@ -94,12 +88,17 @@ private struct SavedNote: View {
     }
 }
 
-/// The way back to the run; once it has ended (a reveal over the run's review), back to the review.
+/// The way back to the run; once it has ended (a reveal over the run's review), back to the review; with more patches from
+/// a glasses run waiting, on to the next.
 private struct KeepListeningButton: View {
     @Environment(ListeningCoordinator.self) private var run
 
+    private var title: String {
+        if run.waitingCeremonies > 0 { "Next patch" } else if run.state.isActive { "Keep listening" } else { "Done" }
+    }
+
     var body: some View {
-        Button(run.state.isActive ? "Keep listening" : "Done") {
+        Button(title) {
             run.dismissReveal()
         }
         .buttonStyle(.journalPrimary)
@@ -126,7 +125,8 @@ private struct RevealUndoButton: View {
 /// stitch-in, then the finished patch on felt with "New patch · Citrus edition" and "Your first Acorn Woodpecker in Los
 /// Angeles." Under Reduce Motion or VoiceOver, or without a painting on the phone, it's straight to the finished patch. The
 /// sighting was written before this opened, so closing it or a failed share loses nothing. It belongs to the add: it's never
-/// replayed, and reopening the patch never shows it.
+/// replayed, and reopening the patch never shows it. An add on the phone opens it there and then; one on the lens, when the
+/// run is over and the app next in front.
 private struct NewPatchReveal: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
@@ -326,9 +326,16 @@ private struct NewPatchPage: View {
                         }
                         .buttonStyle(.journalOutlined)
                     }
-                    Button("See it in my collection") {
-                        run.dismissReveal()
-                        openCollection()
+                    // A long glasses run can sew a dozen. Going to the collection waits for the last of them.
+                    Group {
+                        if run.waitingCeremonies > 0 {
+                            Button("Skip the rest · \(run.waitingCeremonies) more") { run.skipCeremonies() }
+                        } else {
+                            Button("See it in my collection") {
+                                run.dismissReveal()
+                                openCollection()
+                            }
+                        }
                     }
                     .font(JournalFont.supporting.weight(.semibold))
                     .foregroundStyle(Color.ink)
@@ -345,117 +352,6 @@ private struct NewPatchPage: View {
         .onAppear { appeared = true }
         .sheet(item: $sharing) { sighting in
             ShareCardView(sighting: sighting)
-        }
-    }
-}
-
-/// An add of a bird the birder already has here (issue #135, guide page 5): nothing new is sewn. The patch lifts, the count
-/// ticks up with a haptic, and the latest sightings show. Under Reduce Motion or VoiceOver the count is simply the new one.
-private struct SeenAgainReveal: View {
-    @Environment(PackLibrary.self) private var library
-    @Environment(PlaceNames.self) private var places
-    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
-    @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
-    @Environment(ListeningCoordinator.self) private var run
-    @Environment(\.dynamicTypeSize) private var typeSize
-    @Query(Sighting.newestFirst()) private var allSightings: [Sighting]
-    let reveal: ListeningCoordinator.Reveal
-    /// Its haptic's trigger.
-    @State private var ticked = false
-
-    private static let latestShown = 3
-    /// Long enough for the review sheet to have finished closing, so the tick is seen and felt on this page.
-    private static let tickDelay = Duration.milliseconds(600)
-
-    private var isStill: Bool {
-        StitchCeremony.isStill(reduceMotion: PatchMotion.reduces(system: systemReduceMotion), voiceOver: PatchMotion.voiceOver(system: systemVoiceOver))
-    }
-
-    private var count: Int { reveal.addition.patchCount }
-    private var hasTicked: Bool { reveal.hasPlayed || ticked }
-    private var shownCount: Int { StitchCeremony.shownCount(of: count, hasTicked: hasTicked, isStill: isStill) }
-    private var lifted: Bool { hasTicked || isStill }
-
-    var body: some View {
-        let patch = library.collection(of: allSightings).patch(of: reveal.addition.identifier)
-        let latest = (patch?.ownSightings(among: allSightings) ?? []).prefix(Self.latestShown)
-        ScrollView {
-            VStack(spacing: 18) {
-                RevealHeading(eyebrow: reveal.eyebrow, name: reveal.commonName)
-                PatchView(
-                    art: reveal.art(in: library), edition: reveal.edition, size: .full, tag: reveal.commonName
-                )
-                .frame(maxWidth: typeSize.isAccessibilitySize ? 160 : 200)
-                .scaleEffect(lifted ? 1 : 0.92)
-                .offset(y: lifted ? 0 : 10)
-                .padding(.vertical, 8)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(patch.map { PatchText.spoken($0, name: reveal.commonName) } ?? reveal.commonName)
-                .accessibilityIdentifier("revealed-patch")
-                HStack(alignment: .center, spacing: 10) {
-                    Text(shownCount, format: .number)
-                        .font(.system(.largeTitle, design: .serif, weight: .semibold))
-                        .monospacedDigit()
-                        .contentTransition(.numericText(value: Double(shownCount)))
-                        .accessibilityIdentifier("seen-again-count")
-                    Text(reveal.countLine(shownCount))
-                        .font(JournalFont.supporting)
-                }
-                .foregroundStyle(Color.ink)
-                // The final count whatever the digits are doing: it's what's true.
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Seen \(CardCollection.Patch.times(count))\(reveal.addition.placement.setID == nil ? "" : " in \(reveal.addition.placement.setName)")")
-                .accessibilityIdentifier("seen-again-line")
-                VStack(spacing: 0) {
-                    ForEach(latest) { sighting in
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(PatchText.latestDate(sighting.confirmedAt))
-                            Spacer(minLength: 8)
-                            Text(places.methodAndPlace(of: sighting))
-                                .multilineTextAlignment(.trailing)
-                        }
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.ink)
-                        .frame(minHeight: 36)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("seen-again-sighting")
-                        Divider().overlay(Color.rule).accessibilityHidden(true)
-                    }
-                    if let patch {
-                        Text(PatchText.earlierLine(patch, shown: Self.latestShown))
-                            .font(JournalFont.attribution)
-                            .foregroundStyle(Color.ink)
-                            .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
-                    }
-                }
-                VStack(spacing: 10) {
-                    KeepListeningButton()
-                    RevealUndoButton(reveal: reveal)
-                }
-            }
-            .revealMargins()
-        }
-        .scrollBounceBehavior(.basedOnSize)
-        .patchSheetBackground()
-        .holdsPatchLight()
-        .accessibilityAddTraits(.isModal)
-        // A light, optional haptic as the count changes: the system's haptics setting turns it off.
-        .sensoryFeedback(.impact(weight: .light), trigger: ticked)
-        .task {
-            guard !reveal.hasPlayed else { return }
-            if !isStill {
-                try? await Task.sleep(for: Self.tickDelay)
-                guard !Task.isCancelled else { return }
-            }
-            withAnimation(isStill ? nil : .spring(duration: 0.45)) {
-                ticked = true
-                run.finishCeremony()
-            }
-        }
-        .task(id: latest.compactMap(\.location).count) {
-            for sighting in latest {
-                if let location = sighting.location { await places.resolve(location) }
-            }
         }
     }
 }

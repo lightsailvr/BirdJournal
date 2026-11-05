@@ -88,6 +88,8 @@ final class GlassesListeningSession {
     var errorMessage: String?
     /// Sightings written this run, in save order.
     var saved: [SavedSighting] { sightings.entries }
+    /// Hears the identifier of each sighting that sewed a patch from the lens: its ceremony is for the phone, once the run is over.
+    @ObservationIgnored var onPatchSewn: ((UUID) -> Void)?
 
     /// Engine, location and the live list.
     let listening: ListeningSession
@@ -426,10 +428,11 @@ final class GlassesListeningSession {
 
     /// Writes a new sighting through the run's ledger, which the phone shares, and tells the lens what it earned: a new
     /// patch, or another sighting of one the birder has.
-    private func save(_ candidate: Candidate, confirmedAt: Date, frame: Data?) async {
+    func save(_ candidate: Candidate, confirmedAt: Date, frame: Data?) async {
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: listening.coordinate, frame: frame, source: .glasses)
             lens.earned(addition.sewsPatch ? .newPatch : .seenAgain(count: addition.patchCount), for: candidate.species)
+            if addition.sewsPatch { onPatchSewn?(addition.identifier) }
         } catch {
             errorMessage = "Could not save the sighting: \(error.localizedDescription)"
             Self.logger.error("save failed: \(error.localizedDescription, privacy: .public)")

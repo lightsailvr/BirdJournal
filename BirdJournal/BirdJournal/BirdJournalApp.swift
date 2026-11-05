@@ -114,11 +114,16 @@ struct BirdJournalApp: App {
 
     /// The album on disk. Failing to open it is a broken install, not a field condition, so it traps like the
     /// `.modelContainer(for:)` modifier it replaces did, rather than silently saving sightings to memory. In debug
-    /// builds `-inMemoryAlbum YES` keeps the album in memory, so screenshot runs can seed it without leaving a trace.
+    /// builds `-inMemoryAlbum YES` keeps the album in memory, so screenshot runs can seed it without leaving a trace, and
+    /// `-albumFile <name>` keeps it in a file of its own in tmp, so a UI test can relaunch over the same album.
     private static func makeAlbum() -> ModelContainer {
         var inMemory = false
         #if DEBUG
         inMemory = UserDefaults.standard.bool(forKey: "inMemoryAlbum")
+        if let name = UserDefaults.standard.string(forKey: "albumFile"),
+           let album = try? AlbumSchema.makeContainer(at: URL.temporaryDirectory.appending(path: "\(name).store")) {
+            return album
+        }
         #endif
         do {
             return try AlbumSchema.makeContainer(inMemory: inMemory)
@@ -166,7 +171,7 @@ struct BirdJournalApp: App {
     /// the main actor. The debug in-memory album is skipped: it would mark the album on disk as done.
     private static func backfillRarity(_ recorder: SightingRecorder) {
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "inMemoryAlbum") { return }
+        if UserDefaults.standard.bool(forKey: "inMemoryAlbum") || UserDefaults.standard.string(forKey: "albumFile") != nil { return }
         #endif
         Task { await recorder.backfillRarity() }
     }
@@ -199,7 +204,23 @@ struct BirdJournalApp: App {
     /// The whole loop on the glasses (issue #9), writing sightings to the album through the run ledger the phone's
     /// adds share (issue #28), and reporting the audio level for the waveform.
     private static func makeGlassesListeningSession(connection: GlassesConnection, recorder: SightingRecorder, sightings: RunSightings, packs: PackLibrary, levels: LevelSink, suppression: AudioSuppression) -> GlassesListeningSession {
-        GlassesListeningSession(
+        #if DEBUG
+        // `-autoGlassesListening <wav>` with `-autoScreen glasses-run`: the mock injects no audio, so the file stands in for
+        // the stream. Everything else is the real run on Mock Device Kit.
+        if let path = UserDefaults.standard.string(forKey: "autoGlassesListening"), path.hasSuffix(".wav") {
+            return GlassesListeningSession(
+                connection: connection,
+                recorder: recorder,
+                sightings: sightings,
+                makeSource: { _ in PacedGlassesAudioSource(url: URL(fileURLWithPath: path)) },
+                location: debugLocationProvider(),
+                profile: { packs.profile(for: $0) },
+                image: { packs.image(for: $0) },
+                suppression: suppression
+            )
+        }
+        #endif
+        return GlassesListeningSession(
             connection: connection,
             recorder: recorder,
             sightings: sightings,
@@ -221,16 +242,22 @@ struct BirdJournalApp: App {
         #if DEBUG
         if let path = UserDefaults.standard.string(forKey: "autoPhoneListening"), path.hasSuffix(".wav") {
             // Paced like a microphone, so the Listen tab's live state can be seen and screenshotted on the simulator.
-            let location: any LocationProvider = switch UserDefaults.standard.string(forKey: "autoLocation") {
-            case "denied": DeniedLocationProvider()
-            case "griffith": GriffithParkLocationProvider()
-            default: CoreLocationProvider()
-            }
-            return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) }, location: location, suppression: suppression)
+            return ListeningSession(makeSource: { MeteredAudioSource(PacedAudioSource(WAVFileAudioSource(url: URL(fileURLWithPath: path))), onLevel: meter) }, location: debugLocationProvider(), suppression: suppression)
         }
         #endif
         return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) }, suppression: suppression)
     }
+
+    #if DEBUG
+    /// `-autoLocation denied|griffith` answers without a permission prompt a UI test couldn't answer.
+    private static func debugLocationProvider() -> any LocationProvider {
+        switch UserDefaults.standard.string(forKey: "autoLocation") {
+        case "denied": DeniedLocationProvider()
+        case "griffith": GriffithParkLocationProvider()
+        default: CoreLocationProvider()
+        }
+    }
+    #endif
 
     var body: some Scene {
         WindowGroup {
@@ -249,7 +276,7 @@ struct BirdJournalApp: App {
 
     /// The app with its shared objects, under the launch splash.
     private var root: some View {
-        RootView()
+        RootView(isUnderSplash: showingSplash)
             .environment(connection)
             .environment(spike)
             .environment(lens)

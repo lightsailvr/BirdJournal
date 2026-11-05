@@ -95,11 +95,8 @@ struct StitchInTests {
         #expect(ThreadName.of(red: red, green: green, blue: blue) == name)
     }
 
-    @Test("the count on a seen-again page goes 7 to 8 when it ticks; on a still page it's 8 at once")
-    func countTicks() {
-        #expect(StitchCeremony.shownCount(of: 8, hasTicked: false, isStill: false) == 7)
-        #expect(StitchCeremony.shownCount(of: 8, hasTicked: true, isStill: false) == 8)
-        #expect(StitchCeremony.shownCount(of: 8, hasTicked: false, isStill: true) == 8, "Reduce Motion and VoiceOver")
+    @Test("still means Reduce Motion or VoiceOver")
+    func isStill() {
         #expect(StitchCeremony.isStill(reduceMotion: true, voiceOver: false))
         #expect(StitchCeremony.isStill(reduceMotion: false, voiceOver: true))
         #expect(!StitchCeremony.isStill(reduceMotion: false, voiceOver: false))
@@ -267,14 +264,14 @@ extension PatchLightPixelTests {
 @MainActor
 struct SewingCeremonyAccessibilityTests {
     /// The run, showing a page for the seeded Black Phoebe in Los Angeles.
-    static func harness(seenAgain count: Int? = nil) throws -> ScreenAccessibilityTests.Harness {
+    static func harness() throws -> ScreenAccessibilityTests.Harness {
         let harness = try ScreenAccessibilityTests.Harness()
         let context = harness.album.mainContext
         let all = try context.fetch(Sighting.newestFirst())
         let phoebe = try #require(all.first { $0.scientificName == "Sayornis nigricans" })
         let placement = try #require(harness.library.collection(of: all).placement(of: phoebe.identifier))
         #expect(placement.setID != nil, "in the Los Angeles set")
-        harness.run.showRevealForScreenshot(of: phoebe, placement: placement, seenAgain: count)
+        harness.run.showRevealForScreenshot(of: phoebe, placement: placement)
         return harness
     }
 
@@ -300,6 +297,28 @@ struct SewingCeremonyAccessibilityTests {
         #expect(labels.contains("Done"), "no run: back to where the add was: \(labels)")
         #expect(labels.contains("Share this patch"), "\(labels)")
         #expect(harness.run.reveal?.hasPlayed == true, "decided once: it won't start stitching if VoiceOver goes off under the page")
+    }
+
+    @Test("patches waiting after a glasses run: the way on and the way out read as such, and no Undo so long after the add", arguments: ScreenAccessibilityTests.sizes)
+    func voiceOverQueue(typeSize: DynamicTypeSize) async throws {
+        let harness = try ScreenAccessibilityTests.Harness()
+        let all = try harness.album.mainContext.fetch(Sighting.newestFirst())
+        let phoebe = try #require(all.first { $0.scientificName == "Sayornis nigricans" })
+        let dove = try #require(all.first { $0.scientificName == "Zenaida macroura" })
+        harness.run.glasses.onPatchSewn?(phoebe.identifier)
+        harness.run.glasses.onPatchSewn?(dove.identifier)
+        harness.run.showNextCeremony()
+        let labels = try await Self.withFlag("voiceOverPath", true) {
+            try await ScreenAccessibilityTests.walk(Color.clear.patchReveal(), harness: harness, typeSize: typeSize) { labels in
+                labels.contains("Next patch")
+            }
+        }
+        ScreenAccessibilityTests.expectClean(labels, screen: "New patch, more waiting")
+        #expect(labels.contains { $0.hasPrefix("Your first Black Phoebe") }, "\(labels)")
+        #expect(labels.contains("Next patch"), "\(labels)")
+        #expect(labels.contains("Skip the rest · 1 more"), "\(labels)")
+        #expect(!labels.contains("See it in my collection"), "\(labels)")
+        #expect(!labels.contains("Undo adding Black Phoebe"), "\(labels)")
     }
 
     @Test("the stitch-in, if VoiceOver does land on it, is one element that says what's happening, and activating it finishes it")
@@ -338,25 +357,6 @@ struct SewingCeremonyAccessibilityTests {
         }
     }
 
-    @Test("seen again: the patch and its true count in words at once, the latest sightings and the way back", arguments: ScreenAccessibilityTests.sizes)
-    func seenAgain(typeSize: DynamicTypeSize) async throws {
-        let harness = try Self.harness(seenAgain: 8)
-        let labels = try await Self.withFlag("voiceOverPath", true) {
-            try await ScreenAccessibilityTests.walk(Color.clear.patchReveal(), harness: harness, typeSize: typeSize) { labels in
-                labels.contains("Done") && labels.contains { $0.hasPrefix("Black Phoebe, ") }
-            }
-        }
-        ScreenAccessibilityTests.expectClean(labels, screen: "Seen again")
-        #expect(labels.contains("Seen again · Citrus edition"), "\(labels)")
-        #expect(labels.contains("Seen 8 times in Los Angeles"), "the final count, not a digit going by: \(labels)")
-        #expect(!labels.contains("8") && !labels.contains("7"), "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen ") }, "\(labels)")
-        #expect(labels.contains { $0.contains("Heard") || $0.contains("Seen ·") }, "a latest sighting: \(labels)")
-        #expect(labels.contains { $0.hasPrefix("Sewn ") || $0.contains("earlier") }, "\(labels)")
-        #expect(labels.contains("Done"), "\(labels)")
-        #expect(!labels.contains { $0.hasPrefix("Sewing") }, "\(labels)")
-    }
-
     private static func element(in object: Any, labelled label: String) -> NSObject? {
         guard let object = object as? NSObject, !object.accessibilityElementsHidden else { return nil }
         if object.isAccessibilityElement { return object.accessibilityLabel == label ? object : nil }
@@ -379,28 +379,5 @@ struct RevealWordsTests {
     func numberLine() {
         #expect(PatchText.revealNumberLine(Self.placement) == "No. 019 of 160 · Los Angeles")
         #expect(PatchText.revealNumberLine(.uncharted) == nil)
-    }
-
-    @Test("a latest sighting today has its time; before today, its date")
-    func latestDate() throws {
-        let calendar = Calendar(identifier: .gregorian)
-        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 4, hour: 12)))
-        let morning = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 4, hour: 8, minute: 3)))
-        let october = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 30, hour: 8)))
-        #expect(PatchText.latestDate(morning, now: now, calendar: calendar).hasPrefix("Today · "))
-        #expect(PatchText.latestDate(morning, now: now, calendar: calendar).contains("8:03"))
-        #expect(PatchText.latestDate(october, now: now, calendar: calendar) == october.formatted(.dateTime.month(.abbreviated).day()))
-    }
-
-    @Test("under the latest sightings: how many earlier and when it was sewn, or only when it was sewn")
-    func earlier() throws {
-        let sewn = Date(timeIntervalSince1970: 1_789_000_000)
-        func patch(_ count: Int) throws -> CardCollection.Patch {
-            let entries = (0..<count).map { CardCollection.Entry(identifier: UUID(), speciesID: "A b_C", confirmedAt: sewn.addingTimeInterval(Double($0) * 86_400)) }
-            return try #require(CardCollection(entries).patches.first)
-        }
-        let date = sewn.formatted(.dateTime.month(.abbreviated).day())
-        #expect(try PatchText.earlierLine(patch(8), shown: 3) == "+ 5 earlier · Sewn \(date)")
-        #expect(try PatchText.earlierLine(patch(3), shown: 3) == "Sewn \(date)")
     }
 }

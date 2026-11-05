@@ -57,7 +57,8 @@ struct RunReviewSheet: View {
             .appDestinations()
             .safeAreaInset(edge: .bottom) {
                 if let acknowledgment = run.acknowledgment {
-                    Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } })
+                    Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } }, before: acknowledgment.before)
+                        .id(acknowledgment.id)
                         .padding(.bottom, 8)
                 }
             }
