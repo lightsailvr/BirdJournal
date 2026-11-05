@@ -89,7 +89,10 @@ Your patches in one place in Collection, on felt across the whole sheet, in coll
 _Avoid_: grid, shelf
 
 **Blank**:
-An edition's shape and cord drawn by the app when the phone has no painting of the bird there. It may carry a paper tag with the bird's name. Never an error patch.
+An edition's shape and cord drawn by the app when the phone has no painting of a bird you did find there: its name on a paper tag, or "Being sewn" while its pack downloads. Uncharted's is the plain canvas round. Never an error patch, and never shown for a bird you haven't found (#138).
+
+**Not yet found**:
+A bird in a set with no patch of yours there. It has no patch or pattern anywhere: only a silhouette row on the set's page in the Atlas, with its number and name, and its own no-sightings page. Not a state of any board.
 
 **Count**:
 How many surviving sightings a patch has: "Seen 8 times in Los Angeles".

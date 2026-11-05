@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// One patch as an object (issue #134, guide pages 9 and 13): its painting, lit by the phone's tilt with a shadow opposite
-/// the light, or the same patch part way through being sewn (issue #135). Without a painting on the phone it's the edition's
-/// blank (guide page 15), with a paper tag naming the bird when `tag` says so. A decoration: whoever shows it says what it is
-/// to VoiceOver.
+/// the light, or the same patch part way through being sewn (issue #135). Without a painting it's the edition's blank (guide
+/// page 15): the bird's name on a paper tag when `tag` says so, whether the painting isn't on the phone or wouldn't decode, or
+/// "Being sewn" while it's on its way. A decoration: whoever shows it says what it is to VoiceOver.
 struct PatchView: View {
     enum Face: Equatable {
         case sewn
@@ -17,8 +17,12 @@ struct PatchView: View {
     let size: PatchTextures.Size
     /// The name on a blank's paper tag.
     let tag: String?
+    /// The painting is on its way (`PatchArtState.beingSewn`); it fills in when it arrives.
+    let beingSewn: Bool
     /// What's already decoded shows at once: a patch scrolled back to doesn't flash its blank for a frame.
     @State private var loaded: PatchTextures.Loaded?
+    /// `art` couldn't be read. A file that won't decode is a missing painting, not a patch left loading.
+    @State private var failed = false
 
     /// - Parameter decoded: the pictures, for a surface that has them to hand: a stitch-in redraws this every frame, and the
     ///   cache may let go of them during it.
@@ -28,7 +32,19 @@ struct PatchView: View {
         self.face = face
         self.size = size
         self.tag = tag
+        beingSewn = false
         _loaded = State(initialValue: decoded ?? art.flatMap { PatchTextures.cached($0, size: size) })
+    }
+
+    /// A found bird's patch, however its painting stands: `tag` is its name, for the blank's paper tag.
+    init(state: PatchArtState, edition: PatchEdition, size: PatchTextures.Size = .thumbnail, tag: String, decoded: PatchTextures.Loaded? = nil) {
+        art = state.art
+        self.edition = edition
+        face = .sewn
+        self.size = size
+        self.tag = tag
+        beingSewn = state == .beingSewn
+        _loaded = State(initialValue: decoded ?? state.art.flatMap { PatchTextures.cached($0, size: size) })
     }
 
     private var sewnTo: Float {
@@ -50,17 +66,21 @@ struct PatchView: View {
                 if let loaded {
                     LitPatch(loaded: loaded, ground: twill, sewnTo: sewnTo, room: size == .thumbnail ? 14 : 34)
                 } else {
-                    PatchBlank(edition: edition, tag: art == nil ? tag : nil)
+                    PatchBlank(edition: edition, tag: art == nil || failed ? tag : nil, beingSewn: beingSewn)
                 }
             }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
             .task(id: art) {
+                failed = false
                 guard let art else {
                     loaded = nil
                     return
                 }
-                loaded = await PatchTextures.load(art, size: size)
+                let decoded = await PatchTextures.load(art, size: size)
+                guard !Task.isCancelled else { return }
+                loaded = decoded
+                failed = decoded == nil
             }
     }
 }
@@ -106,12 +126,16 @@ private struct LitPatch: View {
     }
 }
 
-/// An edition's blank: the bare twill in its shape with its cord (guide page 15), and the bird's name on a paper tag when
-/// the bird's painting isn't on the phone. Never an error patch.
+/// An edition's blank: the bare cloth in its shape with its cord (guide page 15). A paper tag is tied through a slot in it,
+/// with the bird's name when the bird's painting isn't on the phone, or "Being sewn" while it's on its way. Never an error
+/// patch.
 struct PatchBlank: View {
     @Environment(\.colorScheme) private var colorScheme
     let edition: PatchEdition
     var tag: String? = nil
+    var beingSewn = false
+
+    private var words: String? { beingSewn ? "Being sewn" : tag }
 
     var body: some View {
         GeometryReader { proxy in
@@ -119,34 +143,83 @@ struct PatchBlank: View {
             PatchOutline(shape: edition.shape)
                 .fill(edition.twill)
                 .overlay {
+                    PatchCloth(isCanvas: edition.isCanvas)
+                        .clipShape(PatchOutline(shape: edition.shape))
+                }
+                .overlay {
                     PatchOutline(shape: edition.shape)
                         .stroke(edition.cord, lineWidth: cord)
                 }
                 .shadow(color: .black.opacity(Double(PatchMaterial.softShadow(colorScheme))), radius: 5, x: 3, y: 5)
-                .overlay(alignment: .bottom) {
-                    if let tag {
-                        PaperTag(text: tag)
-                            .padding(.bottom, proxy.size.height * 0.12)
+                .overlay {
+                    if let words {
+                        TiedTag(text: words, size: proxy.size)
                     }
                 }
         }
     }
 }
 
-/// The small paper tag on a blank: the species' name in live type, never stitched.
-private struct PaperTag: View {
-    let text: String
+/// The blank's cloth: a twill's diagonal rib, or Uncharted's plain canvas weave. Printed under the cord, quiet enough that it
+/// reads as cloth and nothing else.
+private struct PatchCloth: View {
+    let isCanvas: Bool
 
     var body: some View {
-        Text(text)
-            .font(CardFont.tileStoryTitle)
-            .foregroundStyle(Color.cardInk)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.cardStock, in: RoundedRectangle(cornerRadius: 3))
-            .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 2)
-            .padding(.horizontal, 12)
+        Canvas { context, size in
+            var lines = Path()
+            if isCanvas {
+                for x in stride(from: 0, through: size.width, by: 2.5) {
+                    lines.move(to: CGPoint(x: x, y: 0))
+                    lines.addLine(to: CGPoint(x: x, y: size.height))
+                }
+                for y in stride(from: 0, through: size.height, by: 2.5) {
+                    lines.move(to: CGPoint(x: 0, y: y))
+                    lines.addLine(to: CGPoint(x: size.width, y: y))
+                }
+            } else {
+                for x in stride(from: -size.height, through: size.width, by: 3) {
+                    lines.move(to: CGPoint(x: x, y: size.height))
+                    lines.addLine(to: CGPoint(x: x + size.height, y: 0))
+                }
+            }
+            context.stroke(lines, with: .color(.black.opacity(isCanvas ? 0.07 : 0.09)), lineWidth: 0.75)
+        }
+    }
+}
+
+/// A small paper tag in live type, tied on through a slot near the top of the blank: never stitched. The same words are in
+/// type beside the patch wherever one shows, and those grow with Dynamic Type, so the tag stops growing before it outgrows
+/// the patch.
+private struct TiedTag: View {
+    let text: String
+    let size: CGSize
+
+    private var isSmall: Bool { size.width < 200 }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(Color.black.opacity(0.5))
+                .frame(width: max(size.width * 0.12, 10), height: max(size.height * 0.022, 3))
+            Rectangle()
+                .fill(Color.cardEdge)
+                .frame(width: 1, height: size.height * 0.1)
+            Text(text)
+                .font(isSmall ? .system(.caption2, design: .serif, weight: .semibold) : CardFont.tileStoryTitle)
+                .dynamicTypeSize(...(isSmall ? DynamicTypeSize.large : .xxLarge))
+                .foregroundStyle(Color.cardInk)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .minimumScaleFactor(0.85)
+                .padding(.horizontal, isSmall ? 6 : 12)
+                .padding(.vertical, isSmall ? 3 : 6)
+                .background(Color.cardStock, in: RoundedRectangle(cornerRadius: 3))
+                .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 2)
+        }
+        .padding(.top, size.height * 0.1)
+        .padding(.horizontal, size.width * 0.1)
+        .frame(width: size.width, height: size.height, alignment: .top)
     }
 }
 

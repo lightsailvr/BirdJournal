@@ -47,7 +47,8 @@ struct JournalView: View {
                     LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                         Text(state.mode == .cards ? collection.summary : Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
                             .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
+                            .foregroundStyle(state.mode == .cards ? Color.ink : Color.inkSecondary)
+                            .boardLabel(isOnBoard: state.mode == .cards)
                             .padding(.top, 2)
                             .padding(.bottom, 10)
                         Section {
@@ -97,6 +98,8 @@ struct JournalView: View {
                 .task {
                     // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
                     if let text = UserDefaults.standard.string(forKey: "autoQuery") { state.query = text }
+                    // Issue #138's: `-autoBoard uncharted` opens the Uncharted board.
+                    if UserDefaults.standard.string(forKey: "autoBoard") == "uncharted" { state.board = .uncharted }
                 }
                 #endif
                 .toolbar {
@@ -176,7 +179,8 @@ struct JournalView: View {
             case .set(let id):
                 if let set = library.sets.first(where: { $0.id == id }) {
                     NavigationLink(value: Route.set(id: set.id)) {
-                        SetProgressRow(progress: collection.progress(of: set.id), detail: set.edition.name)
+                        SetProgressRow(progress: collection.progress(of: set.id), detail: set.edition.name, detailInk: .ink)
+                            .boardLabel(horizontal: 10, vertical: 2)
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("cards-set-progress")
@@ -186,6 +190,7 @@ struct JournalView: View {
                 Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedPatches.count) outside every set")
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
+                    .boardLabel()
                     .padding(.vertical, 12)
                 PatchBoard(patches: collection.unchartedPatches)
             }
@@ -195,7 +200,8 @@ struct JournalView: View {
         Text("One patch for every bird, in every place you find it.")
             .multilineTextAlignment(.center)
             .font(JournalFont.supporting)
-            .foregroundStyle(Color.inkSecondary)
+            .foregroundStyle(Color.ink)
+            .boardLabel()
             .frame(maxWidth: .infinity)
             .padding(.top, 28)
     }
@@ -213,13 +219,15 @@ struct JournalView: View {
             return kept.isEmpty ? nil : (board, kept)
         }
         if groups.isEmpty {
-            NoSearchMatch(query: state.query, searches: "Search your patches by a bird's common or scientific name.") { state.query = "" }
+            NoSearchMatch(query: state.query, searches: "Search your patches by a bird's common or scientific name.", messageInk: .ink) { state.query = "" }
+                .boardLabel(horizontal: 16, vertical: 4)
                 .padding(.top, 24)
         } else {
             ForEach(groups, id: \.board) { group in
                 Text(boardTitle(group.board))
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
+                    .boardLabel()
                     .padding(.vertical, 10)
                     .accessibilityAddTraits(.isHeader)
                 PatchBoard(patches: group.patches)
@@ -284,27 +292,46 @@ struct JournalView: View {
     }
 }
 
-/// No patches yet (issues #119, #132): what a patch is, and Start listening as the way to the first one.
+/// An empty collection (issues #119, #132, #138): the bare felt and "Your first patch is a bird away." It shows no patterns
+/// and no blank, since a bird you haven't found has no patch (DECISIONS.md, issue #138). Start listening is the way to the
+/// first patch, and the Atlas is where the birds still to find are.
 private struct EmptyJournal: View {
     @Environment(\.openListen) private var openListen
+    @Environment(\.openAtlas) private var openAtlas
 
     var body: some View {
-        PaperPage {
+        ScrollView {
             StateNotice(
-                "No patches yet",
-                message: "Start listening, review the birds you hear and add the ones you recognize. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count, with the day, the place and a note if you like.",
-                mark: .drawing
+                "Your first patch is a bird away.",
+                message: "Start listening, review the birds you hear and add the ones you recognize. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count.",
+                mark: .drawing,
+                messageInk: .ink
             ) {
-                Button {
-                    openListen()
-                } label: {
-                    Label("Start listening", systemImage: "waveform")
+                VStack(spacing: 10) {
+                    Button {
+                        openListen()
+                    } label: {
+                        Label("Start listening", systemImage: "waveform")
+                    }
+                    .buttonStyle(.journalPrimary)
+                    .accessibilityHint("Opens the Listen tab")
+                    .accessibilityIdentifier("empty-start-listening")
+                    Button {
+                        openAtlas()
+                    } label: {
+                        Label("See the birds to find", systemImage: "book")
+                    }
+                    .buttonStyle(.journalOutlined)
+                    .accessibilityHint("Opens the Atlas")
+                    .accessibilityIdentifier("empty-open-atlas")
                 }
-                .buttonStyle(.journalPrimary)
-                .accessibilityHint("Opens the Listen tab")
             }
+            .boardLabel(horizontal: 16, vertical: 4)
+            .padding(.horizontal, JournalLayout.margin)
             .padding(.top, 12)
+            .padding(.bottom, JournalLayout.sectionGap)
         }
+        .patchSheetBackground()
     }
 }
 
@@ -312,10 +339,11 @@ private struct EmptyJournal: View {
 struct NoSearchMatch: View {
     let query: String
     var searches = "Search by a bird's common or scientific name."
+    var messageInk: Color = .inkSecondary
     let clear: () -> Void
 
     var body: some View {
-        StateNotice("No birds match “\(query)”", message: searches, mark: .symbol("magnifyingglass")) {
+        StateNotice("No birds match “\(query)”", message: searches, mark: .symbol("magnifyingglass"), messageInk: messageInk) {
             Button("Clear search", action: clear)
                 .buttonStyle(.journalOutlined)
         }
@@ -350,6 +378,7 @@ private struct CollectionIntroCard: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.moss.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .boardLabel(horizontal: 0, vertical: 0)
     }
 }
 
@@ -479,6 +508,8 @@ private struct SetProgressList: View {
 struct SetProgressRow: View {
     let progress: SetProgress
     var detail: String?
+    /// The quieter words: on a material they stay in the full ink (`TokenPairingTests`).
+    var detailInk: Color = .inkSecondary
 
     var body: some View {
         HStack(spacing: 12) {
@@ -489,7 +520,7 @@ struct SetProgressRow: View {
                 if let detail {
                     Text(detail)
                         .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
+                        .foregroundStyle(detailInk)
                 }
                 ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
                     .tint(Color.moss)
@@ -497,7 +528,7 @@ struct SetProgressRow: View {
             }
             Image(systemName: "chevron.right")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.inkSecondary)
+                .foregroundStyle(detailInk)
         }
         .padding(.vertical, 12)
         .contentShape(Rectangle())

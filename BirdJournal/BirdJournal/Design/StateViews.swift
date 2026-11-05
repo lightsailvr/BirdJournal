@@ -14,12 +14,15 @@ struct StateNotice<Actions: View>: View {
     let title: String
     let message: String
     var mark: Mark?
+    /// The message's colour: on a material it stays in the full ink (`TokenPairingTests`).
+    var messageInk: Color
     @ViewBuilder var actions: Actions
 
-    init(_ title: String, message: String, mark: Mark? = nil, @ViewBuilder actions: () -> Actions = { EmptyView() }) {
+    init(_ title: String, message: String, mark: Mark? = nil, messageInk: Color = .inkSecondary, @ViewBuilder actions: () -> Actions = { EmptyView() }) {
         self.title = title
         self.message = message
         self.mark = mark
+        self.messageInk = messageInk
         self.actions = actions()
     }
 
@@ -47,7 +50,7 @@ struct StateNotice<Actions: View>: View {
                 .accessibilityAddTraits(.isHeader)
             Text(message)
                 .font(JournalFont.body)
-                .foregroundStyle(Color.inkSecondary)
+                .foregroundStyle(messageInk)
                 .fixedSize(horizontal: false, vertical: true)
             actions
                 .padding(.top, 6)

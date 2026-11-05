@@ -38,7 +38,8 @@ struct SpeciesPatchesView: View {
                     if let latest = ofSpecies.first {
                         Text("Most recent: \(SpeciesRowsText.lastSeen(latest.confirmedAt))\(latest.location.flatMap(places.name(for:)).map { ", \($0)" } ?? "")")
                             .font(JournalFont.attribution)
-                            .foregroundStyle(Color.inkSecondary)
+                            .foregroundStyle(Color.ink)
+                            .boardLabel()
                             .accessibilityIdentifier("species-latest")
                         NavigationLink(value: Route.sightings(.species(speciesID: latest.speciesID))) {
                             Label("All \(PatchText.sightings(ofSpecies.count))", systemImage: "list.bullet")
@@ -75,20 +76,23 @@ struct SpeciesPatchesView: View {
                 .accessibilityAddTraits(.isHeader)
             Text(scientificName)
                 .font(JournalFont.scientific)
-                .foregroundStyle(Color.inkSecondary)
+                .foregroundStyle(Color.ink)
             if let first = patches.map(\.sewn.confirmedAt).min() {
                 Text("\(CardCollection.Patch.speciesSummary(patches)) · since \(first.formatted(.dateTime.month(.abbreviated).day()))")
                     .font(JournalFont.supporting)
-                    .foregroundStyle(Color.inkSecondary)
+                    .foregroundStyle(Color.ink)
                     .padding(.top, 4)
                     .accessibilityIdentifier("species-summary")
             }
         }
+        .boardLabel(horizontal: 12, vertical: 8, isOnBoard: !patches.isEmpty)
         .padding(.top, 4)
     }
 }
 
-/// A species with no sightings: its guide photo and names, and the way to Listen.
+/// A species with no sightings, not yet found (guide page 15, without the pattern: see DECISIONS.md, issue #138): its guide
+/// photo and names, its number in each set that lists it, and the way to Listen. The page's "Open in Field Guide" is the path
+/// to its Atlas profile.
 private struct NoPatchesYet: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.openListen) private var openListen
@@ -107,6 +111,14 @@ private struct NoPatchesYet: View {
                 .foregroundStyle(Color.ink)
                 .padding(.top, 14)
                 .accessibilityAddTraits(.isHeader)
+            ForEach(PatchText.setNumbers(of: scientificName, in: library.sets), id: \.self) { number in
+                Text(number.text)
+                    .font(JournalFont.supporting.monospacedDigit())
+                    .foregroundStyle(Color.inkSecondary)
+                    .padding(.top, 2)
+                    .accessibilityLabel(number.spoken)
+                    .accessibilityIdentifier("species-set-number")
+            }
             Text("Add this bird when you hear it on a run. Its first sighting in a place sews its patch there, and every sighting after adds to its count.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.inkSecondary)

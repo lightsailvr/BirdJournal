@@ -41,7 +41,28 @@ struct BoardMaterial: View {
     }
 }
 
+/// Words on the board: straight on the material, or on a solid surface under Increase Contrast (guide page 14). A view that's
+/// on the material only some of the time says so with `isOnBoard`, and elsewhere stays where it was.
+struct BoardLabel: ViewModifier {
+    @Environment(\.colorSchemeContrast) private var contrast
+    var horizontal: CGFloat = 6
+    var vertical: CGFloat = 3
+    var isOnBoard = true
+
+    func body(content: Content) -> some View {
+        let increased = isOnBoard && contrast == .increased
+        content
+            .padding(.horizontal, increased ? horizontal : 0)
+            .padding(.vertical, increased ? vertical : 0)
+            .background(increased ? Color.paper : Color.clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+}
+
 extension View {
+    func boardLabel(horizontal: CGFloat = 6, vertical: CGFloat = 3, isOnBoard: Bool = true) -> some View {
+        modifier(BoardLabel(horizontal: horizontal, vertical: vertical, isOnBoard: isOnBoard))
+    }
+
     /// The material behind a whole sheet of patches, reaching under the bars (issue #134: only behind the patches, it stopped
     /// short of the page's edges and looked pasted on).
     func patchSheetBackground() -> some View {

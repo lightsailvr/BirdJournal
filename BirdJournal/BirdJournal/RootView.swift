@@ -105,6 +105,8 @@ extension EnvironmentValues {
     @Entry var openCollection: @MainActor () -> Void = {}
     /// Opens the Listen tab: a species with no sightings yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
+    /// Opens the Atlas tab: an empty collection's birds to find (issue #138).
+    @Entry var openAtlas: @MainActor () -> Void = {}
     /// Opens a circle's page on the Guilds tab: the join screen once joined (issue #61).
     @Entry var openCircle: @MainActor (String) -> Void = { _ in }
 }
@@ -181,6 +183,7 @@ struct RootView: View {
             tab = .journal
         }
         .environment(\.openListen) { tab = .listen }
+        .environment(\.openAtlas) { tab = .guide }
         .environment(\.openCircle) { circleID in
             tab = .circles
             circlesPath = NavigationPath()

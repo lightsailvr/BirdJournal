@@ -22,7 +22,7 @@ import UIKit
 ///   `-autoPhoneListening <wav>`; `-autoCardSpecies` picks the species), `seen-again` (the same, as a repeat add, the
 ///   count going from 7 to 8), `card` and `card-back` (the newest
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
-///   `species` or `gallery` (the patches of the newest sighting's species), `species-list` (the
+///   `species` or `gallery` (the patches of the newest sighting's species, or `-autoCardSpecies`'s, found or not), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
 ///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
@@ -50,6 +50,8 @@ import UIKit
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
 ///   prompting, for the UI tests; `griffith` answers with a fix in Griffith Park.
+/// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
+///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
 ///   opens; `-fakeGlasses unregistered|noneLinked|notConnected` gives the Listen page those glasses states;
 ///   `-fakeCircles offline` makes the Guilds unreachable; `-autoScrollTo guild-settings` scrolls a Guild's page to its
@@ -137,7 +139,10 @@ struct DebugLaunch: ViewModifier {
             case "species", "gallery":
                 tab = .journal
                 journalMode = .species
-                if let newest = try? context.fetch(Sighting.newestFirst()).first {
+                // `-autoCardSpecies` opens that bird's page, found or not (issue #138's not-yet-found state).
+                if let species = defaults.string(forKey: "autoCardSpecies") {
+                    journalPath.append(Route.speciesPatches(scientificName: species, commonName: library.species(scientificName: species)?.species.commonName ?? species))
+                } else if let newest = try? context.fetch(Sighting.newestFirst()).first {
                     journalPath.append(Route.speciesPatches(scientificName: newest.scientificName, commonName: library.commonName(for: newest)))
                 }
             case "species-list":

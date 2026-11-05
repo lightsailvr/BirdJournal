@@ -23,6 +23,9 @@ struct PatchEdition: Equatable {
         }
     }
 
+    /// The plain natural canvas of Uncharted (guide page 15), which has a weave rather than a twill's rib.
+    var isCanvas: Bool { self == .of(setID: nil) }
+
     /// The edition of a set by its pack id; Uncharted (nil) and any set without its own is the plain canvas round.
     static func of(setID: String?) -> PatchEdition {
         switch setID {

@@ -1,3 +1,4 @@
+import Observation
 import Foundation
 import Pack
 import simd
@@ -175,6 +176,66 @@ struct PatchLightPixelTests {
         let context = CGContext(data: &bytes, width: cg.width, height: cg.height, bitsPerComponent: 8, bytesPerRow: cg.width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         context?.draw(cg, in: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
         return bytes
+    }
+
+    /// A patch's blank, its painting arriving: what `PatchArtState` going from being sewn to painted does on screen.
+    @MainActor @Observable
+    final class Arriving {
+        var art: PatchArt?
+    }
+
+    @Test("a blank being sewn fills in with the painting when it arrives")
+    func beingSewnFillsIn() async throws {
+        let pack = try SpeciesPack.bundled()
+        let patch = try #require(pack.species(scientificName: "Haemorhous mexicanus")?.patch)
+        let art = PatchArt(colour: pack.patchURL(for: patch), layers: pack.patchLayersURL(for: patch), ground: patch.ground)
+        let arriving = Arriving()
+
+        struct Slot: View {
+            let arriving: Arriving
+            var body: some View {
+                PatchView(state: arriving.art.map(PatchArtState.painted) ?? .beingSewn, edition: PatchEdition.of(setID: "us-ca-la"), size: .full, tag: "House Finch")
+                    .frame(width: 300, height: 300)
+                    .background(Color.black)
+            }
+        }
+        let host = UIHostingController(rootView: Slot(arriving: arriving))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = try UIWindow(windowScene: #require(scene))
+        window.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        window.rootViewController = host
+        window.isHidden = false
+        defer { window.isHidden = true }
+
+        try await Task.sleep(for: .milliseconds(400))
+        let blank = Self.pixels(of: host.view)
+        arriving.art = art
+        var filled = blank
+        for _ in 0..<40 where Self.meanChange(blank, filled) < 5 {
+            try await Task.sleep(for: .milliseconds(250))
+            filled = Self.pixels(of: host.view)
+        }
+        #expect(Self.meanChange(blank, filled) >= 5, "the blank stayed: \(Self.meanChange(blank, filled))")
+    }
+
+    @Test("a painting that won't decode shows the same blank and paper tag as one that isn't there")
+    func unreadablePaintingIsTagged() async throws {
+        func render(_ art: PatchArt?) async throws -> [UInt8] {
+            let host = UIHostingController(rootView: PatchView(art: art, edition: PatchEdition.of(setID: "us-ca-la"), size: .full, tag: "House Finch").frame(width: 300, height: 300).background(Color.black))
+            let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+            let window = try UIWindow(windowScene: #require(scene))
+            window.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+            window.rootViewController = host
+            window.isHidden = false
+            defer { window.isHidden = true }
+            try await Task.sleep(for: .seconds(1))
+            return Self.pixels(of: host.view)
+        }
+        let missing = URL(filePath: "/nowhere/patch-\(UUID().uuidString).avif")
+        let unreadable = try await render(PatchArt(colour: missing, layers: missing, ground: "#C4A068"))
+        let tagged = try await render(nil)
+        #expect(tagged.contains { $0 > 0 }, "nothing rendered")
+        #expect(Self.meanChange(unreadable, tagged) < 0.01, "they differ by \(Self.meanChange(unreadable, tagged))")
     }
 
     @Test("a ten-degree tilt visibly changes the lit patch, whichever way, and a still phone changes nothing")
