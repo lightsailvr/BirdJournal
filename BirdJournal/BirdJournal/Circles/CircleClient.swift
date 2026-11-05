@@ -113,7 +113,7 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
         var url: URL?
 
         /// The URL when this is a patch's thumbnail (`packs/<pack id>/patch/…`). A stored find may name a watercolour's
-        /// thumbnail or a painting instead, and neither is drawn since #137.
+        /// thumbnail instead, which isn't drawn since #137.
         var patchThumbnailURL: URL? {
             kind == "pack" && FindPolicy.isPatchArtKey(key) ? url : nil
         }

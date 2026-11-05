@@ -327,7 +327,7 @@ private struct FindMark: View {
 
 /// What leads a find (guide 2.0 page 8): the finder's patch in its edition, lit like every other. A phone without that
 /// edition's pack shows the patch's thumbnail from the art CDN, then the edition's blank: a pack without patches (#58), a
-/// stored find naming a watercolour's thumbnail or a painting (both retired by #137). Never another edition's patch.
+/// stored find naming a watercolour's thumbnail (retired by #137). Never another edition's patch.
 private struct FindPatch: View {
     @Environment(PackLibrary.self) private var library
     let item: FeedItem

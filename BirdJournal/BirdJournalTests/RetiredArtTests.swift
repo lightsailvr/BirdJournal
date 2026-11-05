@@ -54,7 +54,6 @@ struct RetiredArtTests {
         let url = URL(string: "https://art.example/x")!
         #expect(FeedItem.Art(kind: "pack", key: "packs/us-ca-la/patch/sayornis-nigricans.png", url: url).patchThumbnailURL == url)
         #expect(FeedItem.Art(kind: "pack", key: "packs/us-ca-la/sayornis-nigricans.jpg", url: url).patchThumbnailURL == nil, "a watercolour's")
-        #expect(FeedItem.Art(kind: "painted", key: "art/maya/x.jpg", url: url).patchThumbnailURL == nil, "a painting")
         #expect(FeedItem.Art(kind: "pack", key: "packs/us-ca-la/patch/x.png", url: nil).patchThumbnailURL == nil, "no CDN yet")
     }
 }

@@ -72,6 +72,25 @@ struct FindPolicyTests {
         #expect(keys == ["art", "common_name", "edition", "found_at", "method", "new_patch", "place", "rarity", "scientific_name", "species_id", "threatened"])
     }
 
+    @Test("a threatened or city-off find names its region by edition and patch, and nothing finer (decided 2026-11-04)")
+    func regionAndNothingFiner() throws {
+        var input = Self.input(isThreatened: true, placeName: "Palos Verdes Estates")
+        input.edition = "us-ca-la"
+        let threatened = try #require(FindPolicy.find(for: input, sharing: .automatic))
+        input.isThreatened = false
+        let cityOff = FindPolicy.card(for: input, choices: .init(includeCity: false), circleIDs: ["c"], photoKey: nil)
+        #expect(!cityOff.includePlace)
+        for (find, place) in [(threatened, "a secret spot"), (cityOff.find, nil)] as [(FindPolicy.Find, String?)] {
+            #expect(find.place == place)
+            #expect(find.edition == "us-ca-la")
+            #expect(find.art?.key == "packs/us-ca-la/patch/sayornis-nigricans.png")
+            let json = String(decoding: try JSONEncoder().encode(find), as: UTF8.self)
+            for word in ["Palos Verdes", "latitude", "longitude", "coordinate", "accuracy", "34."] {
+                #expect(!json.contains(word), "\(word) in \(json)")
+            }
+        }
+    }
+
     @Test("a find says whether it sewed a new patch and in which edition, and shows the patch's art")
     func newPatchAndEdition() throws {
         var input = Self.input(isNewPatch: true)

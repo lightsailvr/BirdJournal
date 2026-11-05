@@ -235,15 +235,13 @@ extension FindRowTests {
         #expect(FindRow.marks(item) == ["First for the Guild"])
     }
 
-    @Test("a repeat shared by hand keeps the patch-led row; an automatic repeat stored with a painting stays a quiet line")
+    @Test("a repeat shared by hand keeps the patch-led row; an automatic repeat stays a quiet line")
     func ledWithoutANewPatch() {
         var shared = Self.item()
         shared.card = FeedItem.SharedCard(note: "By the gate.", caption: nil, photo: nil)
         #expect(FindRow.isLed(shared))
         #expect(FindRow.headline(shared) == "Maya Ortiz shared a sighting")
-        var painted = Self.item()
-        painted.art = FeedItem.Art(kind: "painted", key: "art/maya/x.jpg", url: nil)
-        #expect(!FindRow.isLed(painted), "nobody shared it, so it can't say they did")
+        #expect(!FindRow.isLed(Self.item()), "nobody shared it, so it can't say they did")
     }
 }
 
