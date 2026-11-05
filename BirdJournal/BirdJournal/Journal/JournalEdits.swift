@@ -6,10 +6,10 @@ import OSLog
 import SwiftData
 import UniformTypeIdentifiers
 
-/// Edits to the journal from the phone (issue #28): a note on a sighting, Heard or Seen (issue #52), the birder's own photo
-/// (issue #137), and a removal that can be taken back for a few seconds. A removed sighting's record is kept here with its files on disk until the
-/// window closes; Undo puts it back as a new record with the same fields, its identifier included, so the same card
-/// returns (issue #51).
+/// Edits to the journal from the phone (issue #28): a note on a sighting, Heard or Seen (issue #52), the birder's own
+/// photo (issue #137), and a removal that can be taken back for a few seconds. A removed sighting's record is kept here
+/// with its files on disk until the window closes; Undo puts it back as a new record with the same fields, its identifier
+/// included, so the same card returns (issue #51).
 @MainActor
 @Observable
 final class JournalEdits {

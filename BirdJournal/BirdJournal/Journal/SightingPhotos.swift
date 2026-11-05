@@ -43,6 +43,7 @@ struct SightingPhotos: View {
         }
         .task(id: pickerItem) {
             guard let pickerItem else { return }
+            failure = nil
             let data = try? await pickerItem.loadTransferable(type: Data.self)
             guard !Task.isCancelled else { return }
             attach(data)
@@ -64,7 +65,6 @@ struct SightingPhotos: View {
         do {
             guard let data else { throw JournalEdits.AttachFailure.unreadable }
             try edits.attachPhoto(data, to: sighting)
-            failure = nil
         } catch JournalEdits.AttachFailure.unreadable {
             failure = "That photo couldn't be read. Try another."
         } catch {
