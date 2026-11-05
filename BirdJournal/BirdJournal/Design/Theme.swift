@@ -225,18 +225,36 @@ struct ErrorNotice<Action: View>: View {
 }
 
 /// A brief acknowledgment at the bottom of a screen ("Added to your journal") with an optional Undo, shown for a few
-/// seconds. The screen that shows it picks the transition: a slide, or a fade under Reduce Motion.
+/// seconds. The screen that shows it picks the transition: a slide, or a fade under Reduce Motion. With `ticksFrom` it says
+/// that first and ticks over to `text` with a haptic (a repeat add's count, 7 → 8); under Reduce Motion or VoiceOver it's
+/// simply `text`, with the haptic.
 struct Toast: View {
     let text: String
     var undo: (() -> Void)?
+    var ticksFrom: String?
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
+    @State private var ticked = false
+
+    /// Long enough for a review sheet to have finished closing, so the tick is seen.
+    private static let tickDelay = Duration.milliseconds(600)
+
+    private var isStill: Bool {
+        StitchCeremony.isStill(reduceMotion: PatchMotion.reduces(system: systemReduceMotion), voiceOver: PatchMotion.voiceOver(system: systemVoiceOver))
+    }
+
+    private var shown: String {
+        if let ticksFrom, !ticked, !isStill { ticksFrom } else { text }
+    }
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(Color.moss)
-            Text(text)
+            Text(shown)
                 .font(JournalFont.supporting.weight(.medium))
                 .foregroundStyle(Color.ink)
+                .contentTransition(.numericText())
             if let undo {
                 Spacer(minLength: 8)
                 Button("Undo", action: undo)
@@ -250,6 +268,16 @@ struct Toast: View {
         .overlay(Capsule().strokeBorder(Color.rule, lineWidth: 1))
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
+        // A light, optional haptic as the count changes: the system's haptics setting turns it off.
+        .sensoryFeedback(.impact(weight: .light), trigger: ticked)
+        .task {
+            guard ticksFrom != nil else { return }
+            if !isStill {
+                try? await Task.sleep(for: Self.tickDelay)
+                guard !Task.isCancelled else { return }
+            }
+            withAnimation(isStill ? nil : .spring(duration: 0.45)) { ticked = true }
+        }
     }
 }
 

@@ -36,8 +36,10 @@ struct ListenView: View {
             RunReviewSheet()
         }
         .safeAreaInset(edge: .bottom) {
-            if let acknowledgment = run.acknowledgment {
-                Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } })
+            // Over the review, the sheet has its own: two would each tick, with two haptics.
+            if let acknowledgment = run.acknowledgment, !run.isReviewing {
+                Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } }, ticksFrom: acknowledgment.ticksFrom)
+                    .id(acknowledgment.id)
                     .padding(.bottom, 8)
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }

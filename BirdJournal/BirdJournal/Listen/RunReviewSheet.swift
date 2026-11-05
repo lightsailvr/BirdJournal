@@ -57,12 +57,15 @@ struct RunReviewSheet: View {
             .appDestinations()
             .safeAreaInset(edge: .bottom) {
                 if let acknowledgment = run.acknowledgment {
-                    Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } })
+                    Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } }, ticksFrom: acknowledgment.ticksFrom)
+                        .id(acknowledgment.id)
                         .padding(.bottom, 8)
                 }
             }
         }
         .patchReveal()
+        // Dragged away from under the page, it would have to start again over the tabs; Keep listening closes it first.
+        .interactiveDismissDisabled(run.reveal != nil)
         // See it in my collection from a reveal over this sheet: the review closes, as Done does, so the collection shows.
         .environment(\.openCollection) {
             dismiss()
