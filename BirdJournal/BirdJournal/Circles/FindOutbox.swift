@@ -331,7 +331,8 @@ extension FindOutbox {
 
 extension FindOutbox {
     /// What the find policy reads about a sighting: its species and card facts from the packs, the city the phone has
-    /// named for its place (only for a species known not to be threatened), its edition, and its patch's thumbnail. The note and the caption ride along for a card shared by hand; an automatic find leaves them out.
+    /// named for its place (only for a species known not to be threatened), its edition, and its patch's thumbnail. The
+    /// note and the caption ride along for a card shared by hand; an automatic find leaves them out.
     @MainActor
     static func input(of sighting: Sighting, isNewPatch: Bool, packs: PackLibrary, places: PlaceNames) -> FindPolicy.Input {
         let isThreatened = packs.species(scientificName: sighting.scientificName)?.species.isThreatened

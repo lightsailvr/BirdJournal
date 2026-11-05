@@ -27,9 +27,9 @@ def _circle(client: TestClient, issuer: TestIssuer) -> str:
     return circle
 
 
-def store_painting(table: Any, storage: FakeArtStorage, sighting: str, sub: str = "ada") -> str:
+def store_painting(table: Any, storage: FakeArtStorage, sighting: str, sub: str = "ada", *, painted_for: str | None = None) -> str:
     """Turns the stored find and its feed items into what #70 left: a find showing a painting on the art CDN. Its key."""
-    key = f"art/{sub}/{uuid4().hex}.jpg"
+    key = f"art/{painted_for or sub}/{uuid4().hex}.jpg"
     storage.art[key] = b"painting"
     items = table.scan()["Items"]
     mine = [item for item in items if str(item["sk"]).endswith(sighting)]
@@ -223,6 +223,20 @@ def test_deleting_the_find_deletes_its_painting(
     key = store_painting(table, art_storage, sighting)
     assert client.delete(f"/v1/finds/{sighting}", headers=issuer.headers(sub="ada")).status_code == 204
     assert key not in art_storage.art
+
+
+def test_a_find_stored_with_another_accounts_painting_never_deletes_it(
+    client: TestClient, issuer: TestIssuer, table: Any, art_storage: FakeArtStorage
+) -> None:
+    """Before #70 a find could name any `art/` key, so a stored one may name someone else's."""
+    sighting = _put_ok(client, issuer, "ada", _find(art=PACK))
+    bens = store_painting(table, art_storage, sighting, painted_for="ben")
+    _put_ok(client, issuer, "ada", _find(art=PACK), sighting)
+    assert bens in art_storage.art
+    second = _put_ok(client, issuer, "ada", _find(art=PACK))
+    store = store_painting(table, art_storage, second, painted_for="ben")
+    assert client.delete(f"/v1/finds/{second}", headers=issuer.headers(sub="ada")).status_code == 204
+    assert store in art_storage.art
 
 
 def test_a_shared_card_with_new_art_deletes_the_painting(

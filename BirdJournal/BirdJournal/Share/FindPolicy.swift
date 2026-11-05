@@ -204,6 +204,12 @@ enum FindPolicy {
         "packs/\(packID)/patch/\(stem(of: file)).png"
     }
 
+    /// Whether a key from the server is laid out as `patchArtKey` writes it. A stored find may name a watercolour's
+    /// thumbnail (`packs/<pack id>/<species>.jpg`) instead.
+    static func isPatchArtKey(_ key: String) -> Bool {
+        key.split(separator: "/").dropFirst(2).first == "patch"
+    }
+
     /// The file's name without its last extension only, as the builder's `PurePosixPath.stem` does.
     private static func stem(of file: String) -> String {
         ((file as NSString).lastPathComponent as NSString).deletingPathExtension

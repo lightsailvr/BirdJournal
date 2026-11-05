@@ -277,7 +277,7 @@ class FindStore:
             created_at=created_at, updated_at=now,
         )
         self._write(find, self._shares(owner, sighting_id) if existing is not None else {})
-        self._let_go(existing, content)
+        self._delete_replaced_painting(owner, existing, content)
         return find, existing is None
 
     def share(
@@ -352,7 +352,7 @@ class FindStore:
             for key in replaced:
                 if key is not None and key not in still_shown:
                     photos.delete(key)
-        self._let_go(existing, content)
+        self._delete_replaced_painting(owner, existing, content)
         return find, existing is None
 
     def delete(self, owner: str, sighting_id: str) -> None:
@@ -369,7 +369,7 @@ class FindStore:
             content = _content(existing)
             self._delete_items(_item_keys(owner, sighting_id, content, list(existing.get("circle_ids", []))))
             # Its painting goes with it (#70), before the find: a delete cut short is retried while the find names it.
-            self._let_go(existing, None)
+            self._delete_replaced_painting(owner, existing, None)
         reactions = self._query_keys(Key("pk").eq(_reactions_pk(owner, sighting_id)))
         # Each reaction's copy under its reactor (issue #64), the find's reaction push time and any waiting push.
         by_reactor = [
@@ -411,12 +411,15 @@ class FindStore:
             snapshot.update(_extras_attributes(share.extras))
         return snapshot
 
-    def _let_go(self, existing: dict[str, Any] | None, content: FindContent | None) -> None:
-        """Deletes the painting the find showed before, once it shows something else (or, with no content, is deleted)."""
+    def _delete_replaced_painting(self, owner: str, existing: dict[str, Any] | None, content: FindContent | None) -> None:
+        """Deletes the owner's painting the find showed before, once it shows something else (or, with no content, is
+        deleted). Only the owner's: a find stored before #70 could name any `art/` key."""
         if existing is None or self._art_storage is None:
             return
         previous = _content(existing).art
-        if previous is not None and previous.kind is ArtKind.PAINTED and (content is None or previous != content.art):
+        if previous is None or previous.kind is not ArtKind.PAINTED or not previous.key.startswith(f"art/{owner}/"):
+            return
+        if content is None or previous != content.art:
             self._art_storage.delete_art(previous.key)
 
     def feed(

@@ -146,7 +146,7 @@ Was a watercolour of a species shipped with its pack and shown on its card. The 
 Was the species painted into the original photo from the glasses at the add. Retired; nothing paints it. A stored sighting keeps its art state, unread.
 
 **Photo art**:
-Was the birder's own photo of the bird embellished into card art. Retired with scene art.
+Was the birder's own photo of the bird embellished by AI for its card. Retired with scene art.
 
 **Art job**:
 Was one request to paint scene art or photo art. Retired, with the server's allowance and auto-paint rule.
@@ -217,5 +217,5 @@ A notable find shown on the lens while the birder is on a run.
 _Avoid_: lens notification
 
 **Tip**:
-A voluntary in-app payment that unlocks nothing and helps cover hosting and painting.
+A voluntary in-app payment that unlocks nothing and helps keep the server running.
 _Avoid_: donation, purchase, subscription

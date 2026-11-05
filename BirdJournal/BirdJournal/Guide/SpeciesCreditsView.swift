@@ -2,7 +2,7 @@ import Pack
 import SwiftUI
 
 /// Every photo of one species with its observer, exact license and links, its reference sounds (issue #41), the text
-/// source, the lore's (issue #56), the stats' datasets (issue #55), its pack painting and the set's cover, both AI
+/// source, the lore's (issue #56), the stats' datasets (issue #55), its patch and the set's cover, both AI
 /// illustrations (#118), and the way to the full credits screen (issue #28).
 struct SpeciesCreditsView: View {
     @Environment(PackLibrary.self) private var library
