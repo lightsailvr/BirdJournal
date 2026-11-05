@@ -76,7 +76,7 @@ nonisolated struct StitchTimeline: Sendable {
 nonisolated enum StitchCeremony {
     /// Reduce Motion has no stitching (guide page 14). Nor does VoiceOver: nothing in it can be spoken, so it would be four
     /// seconds of waiting on a page that says nothing new, and the finished page says it all at once. A count that's going
-    /// to tick is the same.
+    /// to tick says its new number at once too.
     static func isStill(reduceMotion: Bool, voiceOver: Bool) -> Bool {
         reduceMotion || voiceOver
     }
@@ -84,11 +84,6 @@ nonisolated enum StitchCeremony {
     /// Without a painting on the phone there's nothing to stitch either.
     static func stitches(reduceMotion: Bool, voiceOver: Bool, hasArt: Bool) -> Bool {
         hasArt && !isStill(reduceMotion: reduceMotion, voiceOver: voiceOver)
-    }
-
-    /// The count a seen-again page shows: the one before until it ticks; on a still page, the new one at once.
-    static func shownCount(of count: Int, hasTicked: Bool, isStill: Bool) -> Int {
-        hasTicked || isStill ? count : max(count - 1, 0)
     }
 }
 

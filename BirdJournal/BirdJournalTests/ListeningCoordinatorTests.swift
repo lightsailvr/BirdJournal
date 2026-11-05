@@ -21,8 +21,17 @@ struct ListeningCoordinatorTests {
         let location: ScriptedLocationProvider
         /// The geo prior the recorder reads rarity from (issue #52).
         let rarityPrior: ScriptedOccurrence
+        let defaults: UserDefaults
 
         var stored: [Sighting] { (try? album.mainContext.fetch(Sighting.newestFirst())) ?? [] }
+
+        /// The app killed and started again: a new coordinator over what's on disk, the album and the defaults.
+        func relaunched() -> ListeningCoordinator {
+            let sightings = RunSightings(recorder: self.sightings.recorder)
+            let phone = ListeningSession(loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, makeSource: { ManualAudioSource() }, location: ScriptedLocationProvider([.denied]))
+            let glasses = GlassesListeningSession(recorder: sightings.recorder, sightings: sightings, loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, location: ScriptedLocationProvider([.denied]))
+            return ListeningCoordinator(phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: defaults)
+        }
     }
 
     static func makeHarness() throws -> Harness {
@@ -41,7 +50,7 @@ struct ListeningCoordinatorTests {
         let glasses = GlassesListeningSession(recorder: recorder, sightings: sightings, loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, location: ScriptedLocationProvider([.denied]))
         let defaults = UserDefaults(suiteName: "coordinator-tests-\(UUID().uuidString)")!
         let run = ListeningCoordinator(phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: defaults)
-        return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings, location: location, rarityPrior: rarityPrior)
+        return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings, location: location, rarityPrior: rarityPrior, defaults: defaults)
     }
 
     @Test("an add records the latest fix of the run, not the one Start took (issue #44)")
@@ -179,7 +188,7 @@ struct ListeningCoordinatorTests {
         #expect(run.reveal?.hasPlayed == true)
     }
 
-    @Test("the first add of a species in a place sews its patch, revealed once with its sighting already saved; a repeat add is seen again; dismissing never loses the sighting; an undo removes it (issues #51, #132, #135)")
+    @Test("the first add of a species in a place sews its patch, revealed once with its sighting already saved; a repeat add only ticks its count; dismissing never loses the sighting; an undo removes it (issues #51, #132, #135)")
     func patchReveal() async throws {
         let harness = try Self.makeHarness()
         let run = harness.run
@@ -194,6 +203,7 @@ struct ListeningCoordinatorTests {
         let reveal = try #require(run.reveal)
         #expect(reveal.title == "Your first House Finch")
         #expect(reveal.eyebrow == "New patch · Uncharted")
+        #expect(run.acknowledgment?.ticksFrom == nil, "a new patch has no count to tick")
         #expect(reveal.addition == first)
         #expect(!reveal.hasPlayed, "the stitch-in is still to come")
         #expect(harness.stored.map(\.identifier) == [first.identifier], "saved before the ceremony starts")
@@ -213,19 +223,15 @@ struct ListeningCoordinatorTests {
         #expect(run.reveal == nil)
         #expect(harness.stored.map(\.identifier) == [first.identifier], "dismissing keeps the sighting")
 
-        // The same species again: seen again, its count, and nothing to stitch.
+        // The same species again: its count, and nothing that covers the screen or asks for a tap (the maintainer, 2026-11-04).
         let again = try #require(await run.add(finch))
         #expect(!again.sewsPatch)
         #expect(again.patchCount == 2)
-        let seen = try #require(run.reveal)
-        #expect(seen.addition == again)
-        #expect(seen.eyebrow == "Seen again · Uncharted")
-        #expect(seen.countLine(2) == "times, Uncharted")
-        #expect(seen.countLine(1) == "time, Uncharted", "the moment before it ticks from 1 to 2")
+        #expect(run.reveal == nil, "a repeat add opens no page")
+        #expect(harness.stored.count == 2, "and the sighting is saved")
         #expect(run.acknowledgment?.text == "Seen again · 2 times")
+        #expect(run.acknowledgment?.ticksFrom == "Seen again · 1 time", "what it says before it ticks")
         #expect(run.acknowledgment?.undo == again)
-        run.dismissReveal()
-        #expect(run.acknowledgment?.undo == again, "the undo outlives the page, for its window")
 
         // A first of another species, taken back inside the window: the sighting and its reveal are gone.
         let jay = try #require(await run.add(run.candidates[1]))
@@ -237,6 +243,150 @@ struct ListeningCoordinatorTests {
         #expect(harness.stored.count == 2)
 
         await run.stop()
+    }
+
+    // The glasses are about hearing and capturing; the celebration happens on the phone once the run is over (the maintainer,
+    // 2026-11-04). The lens's save is called directly here; `MockDeviceKitTests` goes through its real inputs.
+
+    /// A run with both birds heard, ready for the lens to add them.
+    private func heardBoth(_ harness: Harness) async throws -> (finch: Candidate, jay: Candidate) {
+        await harness.run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { harness.run.candidates.count == 2 }
+        return (harness.run.candidates[0], harness.run.candidates[1])
+    }
+
+    @Test("a patch sewn from the glasses plays nothing mid-run, and only once the run is over, in the order sewn; a repeat from the glasses plays nothing")
+    func ceremonyWaitsForTheRunToEnd() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        let (finch, jay) = try await heardBoth(harness)
+
+        await run.glasses.save(jay, confirmedAt: .now, frame: nil)
+        await run.glasses.save(jay, confirmedAt: .now, frame: nil)
+        await run.glasses.save(finch, confirmedAt: .now, frame: nil)
+        #expect(harness.stored.count == 3)
+        #expect(!run.hasCeremonyWaiting, "nothing plays on the phone mid-run")
+        run.showNextCeremony()
+        #expect(run.reveal == nil)
+        #expect(run.acknowledgment == nil, "and no toast: the lens said it")
+
+        await run.stop()
+        #expect(run.hasCeremonyWaiting)
+        run.showNextCeremony()
+        let first = try #require(run.reveal)
+        #expect(first.commonName == "Blue Jay", "the order sewn")
+        #expect(first.addition.patchCount == 2, "as the album has it now")
+        #expect(first.eyebrow == "New patch · Uncharted")
+        #expect(!first.hasPlayed)
+        #expect(!run.hasCeremonyWaiting, "one at a time")
+
+        run.finishCeremony()
+        #expect(run.acknowledgment == nil, "no Undo long after the add: the sighting's page can delete it")
+        #expect(run.waitingCeremonies == 1, "the finch's")
+        run.dismissReveal()
+        #expect(run.reveal?.commonName == "House Finch", "Next moves straight on")
+        run.finishCeremony()
+        #expect(run.waitingCeremonies == 0)
+        run.dismissReveal()
+        #expect(run.reveal == nil)
+        #expect(!run.hasCeremonyWaiting)
+    }
+
+    @Test("a ceremony waits through the app being killed, plays once, and doesn't play again after the next launch")
+    func ceremonySurvivesAKill() async throws {
+        let harness = try Self.makeHarness()
+        let (finch, _) = try await heardBoth(harness)
+        await harness.run.glasses.save(finch, confirmedAt: .now, frame: nil)
+
+        // Killed mid-run.
+        let next = harness.relaunched()
+        #expect(next.state == .idle)
+        #expect(next.hasCeremonyWaiting)
+        next.showNextCeremony()
+        #expect(next.reveal?.commonName == "House Finch")
+
+        // Killed part way through the stitch-in, which never played to its end: it's still owed.
+        let third = harness.relaunched()
+        #expect(third.hasCeremonyWaiting)
+        third.showNextCeremony()
+        third.finishCeremony()
+        #expect(third.reveal?.hasPlayed == true)
+
+        // Killed on the finished page.
+        let fourth = harness.relaunched()
+        #expect(!fourth.hasCeremonyWaiting, "plays once")
+        fourth.showNextCeremony()
+        #expect(fourth.reveal == nil)
+    }
+
+    @Test("a sighting deleted while its ceremony waited is skipped, and the next one plays")
+    func ceremonyOfADeletedSighting() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        let (finch, jay) = try await heardBoth(harness)
+        await run.glasses.save(finch, confirmedAt: .now, frame: nil)
+        await run.glasses.save(jay, confirmedAt: .now, frame: nil)
+        await run.stop()
+
+        let deleted = try #require(harness.stored.first { $0.commonName == "House Finch" })
+        try harness.sightings.recorder.delete(deleted)
+        run.showNextCeremony()
+        #expect(run.reveal?.commonName == "Blue Jay")
+        run.finishCeremony()
+        #expect(run.waitingCeremonies == 0, "the deleted one is gone from the queue too")
+    }
+
+    @Test("skipping the rest ends the queue for good, and what it skipped stays in the album")
+    func skipTheRest() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        let (finch, jay) = try await heardBoth(harness)
+        await run.glasses.save(finch, confirmedAt: .now, frame: nil)
+        await run.glasses.save(jay, confirmedAt: .now, frame: nil)
+        await run.stop()
+        run.showNextCeremony()
+        run.finishCeremony()
+        #expect(run.waitingCeremonies == 1)
+
+        run.skipCeremonies()
+        #expect(run.reveal == nil)
+        #expect(!run.hasCeremonyWaiting)
+        #expect(!harness.relaunched().hasCeremonyWaiting, "not after a launch either")
+        #expect(harness.stored.count == 2)
+    }
+
+    @Test("a phone add during a run keeps its own ceremony and its Keep listening; the lens's still wait for the end")
+    func phoneAddDuringARun() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        let (finch, jay) = try await heardBoth(harness)
+        await run.glasses.save(finch, confirmedAt: .now, frame: nil)
+
+        _ = try #require(await run.add(jay))
+        #expect(run.reveal?.commonName == "Blue Jay")
+        run.finishCeremony()
+        #expect(run.acknowledgment?.undo != nil, "a phone add's Undo stays")
+        #expect(run.waitingCeremonies == 0, "the run isn't over: this page says Keep listening")
+        run.dismissReveal()
+        #expect(run.reveal == nil, "nothing mid-run")
+
+        await run.stop()
+        run.showNextCeremony()
+        #expect(run.reveal?.commonName == "House Finch")
+    }
+
+    @Test("a candidate's sheet up holds the next ceremony back: it would play under the sheet")
+    func candidateSheetHoldsItBack() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        let (finch, jay) = try await heardBoth(harness)
+        await run.glasses.save(finch, confirmedAt: .now, frame: nil)
+        run.reviewing = jay
+        await run.stop()
+        #expect(!run.hasCeremonyWaiting)
+        run.reviewing = nil
+        #expect(run.hasCeremonyWaiting)
     }
 
     @Test("Stop keeps the species heard for the review, adding from the review still works, and Done clears the run")

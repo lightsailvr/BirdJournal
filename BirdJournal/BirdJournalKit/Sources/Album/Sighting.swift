@@ -97,7 +97,7 @@ public enum AlbumSchemaV3: VersionedSchema {
 
     @Model
     public final class Sighting {
-        /// Stable across launches, backups and edits; what art jobs, finds and the collection's tie-break refer to.
+        /// Stable across launches, backups and edits; what finds and the collection's tie-break refer to.
         /// A sighting migrated from schema 2 gets a fresh one in the migration stage.
         public var identifier: UUID = UUID()
         /// BirdNET label, e.g. "Sayornis nigricans_Black Phoebe". Names and photos come from the species pack.
@@ -115,8 +115,8 @@ public enum AlbumSchemaV3: VersionedSchema {
         /// location.
         public var rarity: RaritySnapshot?
         public var caption: CardCaption?
-        /// The card art's state as JSON, so the art pipeline can grow without another schema version; read through
-        /// `art`.
+        /// Scene and photo art as JSON (issues #68 to #70, retired by #137). Nothing writes it for a new sighting, but
+        /// stored sightings keep what they have: read through `art`, and no schema version was needed to retire it.
         public var artState: Data?
         /// Original photos the birder attached, relative to the `FrameStore`, oldest first. Evidence, never art.
         public var attachedPhotoPaths: [String] = []
@@ -143,8 +143,8 @@ public enum AlbumSchemaV3: VersionedSchema {
             self.method = method
         }
 
-        /// The card's art: what has been painted or attached, and the art job under way. Empty until the art
-        /// pipeline writes it; the card shows pack art (or the reference photo) meanwhile.
+        /// What a stored sighting's art state says: the only use left is its files, which go with it (`filePaths`).
+        /// Art that can't be read is treated as none, so a sighting always opens.
         public var art: CardArt {
             get { artState.flatMap { try? JSONDecoder().decode(CardArt.self, from: $0) } ?? CardArt() }
             set { artState = newValue == CardArt() ? nil : try? JSONEncoder().encode(newValue) }
@@ -205,9 +205,8 @@ public struct CardCaption: Codable, Sendable, Equatable {
     }
 }
 
-/// A card's art beyond the pack's: the scene and photo art with their states, whether the birder chose pack art over
-/// scene art, and the art jobs under way. Scene and photo art have a job each (issue #69), so asking for photo art never
-/// loses track of a scene painting still on its way.
+/// A stored sighting's scene and photo art with their states, as issues #68 to #70 wrote them. Retired by #137: nothing shows
+/// or changes it. Kept only to read what is stored, so these types say what the JSON holds and nothing more.
 public struct CardArt: Codable, Sendable, Equatable {
     /// "Use pack art": scene art stays on file but the card shows the pack's.
     public var prefersPackArt: Bool
@@ -235,7 +234,7 @@ public struct CardArt: Codable, Sendable, Equatable {
     }
 }
 
-/// One painted image of a card, relative to the `FrameStore` once it is on the phone.
+/// One painted image of a card, relative to the `FrameStore`.
 public struct ArtImage: Codable, Sendable, Equatable {
     public enum State: String, Codable, Sendable {
         /// Painted, waiting for the birder's approval (photo art only).
@@ -261,7 +260,7 @@ public struct ArtImage: Codable, Sendable, Equatable {
     }
 }
 
-/// One request to paint art for a card. A retry is a new job for the same sighting.
+/// A stored request to paint art for a card. Nothing acts on it since #137.
 public struct ArtJob: Codable, Sendable, Equatable {
     public enum Kind: String, Codable, Sendable {
         case scene

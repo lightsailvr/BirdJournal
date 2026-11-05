@@ -1,7 +1,7 @@
 [project]
 name = "birdjournal-api"
 version = "0.1.0"
-description = "BirdJournal API: accounts (and later circles, finds and art jobs) on Lambda and DynamoDB"
+description = "BirdJournal API: accounts, circles and finds on Lambda and DynamoDB"
 authors = [
     { name = "Matthew Celia", email = "matt@lightsailvr.com" }
 ]

@@ -219,8 +219,6 @@ final class AccountSession {
             return try await call(try await renew().accessToken)
         } catch CircleError.unauthorized {
             return try await call(try await renew().accessToken)
-        } catch ArtClientError.unauthorized {
-            return try await call(try await renew().accessToken)
         }
     }
 

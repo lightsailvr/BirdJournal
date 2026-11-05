@@ -38,8 +38,3 @@ infra/.pytest_cache/
 infra/cdk.out/
 infra/node_modules/
 
-# Art worker (artworker/): environment, the content filter model (scripts/download-filter.sh), pytest state.
-artworker/.venv/
-artworker/models/
-artworker/.pytest_cache/
-artworker/**/__pycache__/

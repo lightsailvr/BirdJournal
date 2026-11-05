@@ -83,43 +83,37 @@ final class ListeningCoordinator {
     struct Acknowledgment: Identifiable, Equatable {
         let id = UUID()
         let text: String
+        /// What it says first, for a moment, before it ticks over to `text` with a haptic: a repeat add's count going 7 → 8.
+        var ticksFrom: String? = nil
         let undo: RunSightings.Addition?
     }
 
-    /// What the phone shows over everything after an add (issues #132, #135; before them the Legendary reveal of #51): the
-    /// stitch-in and the new patch when the add sewed one, the species' first surviving sighting in its placement; the patch
-    /// lifting and its count ticking when it's seen again. An event of the add, not of the patch: it shows once, and
-    /// reopening the patch never shows it again.
+    /// What the phone shows over everything after an add that sewed a patch (issues #132, #135; before them the Legendary
+    /// reveal of #51): the stitch-in and the new patch, the species' first surviving sighting in its placement. An event of
+    /// the add, not of the patch: it shows once, and reopening the patch never shows it again.
     struct Reveal: Identifiable, Equatable {
         let addition: RunSightings.Addition
         let commonName: String
-        /// Its one moment is over: the stitch-in finished or was tapped through, or the count ticked. Kept here, not in the
-        /// view: when a run ends under it the page moves from over the tabs to over the review, and that shouldn't play it a
-        /// second time.
+        /// Its one moment is over: the stitch-in finished or was tapped through. Kept here, not in the view: when a run ends
+        /// under it the page moves from over the tabs to over the review, and that shouldn't play it a second time.
         var hasPlayed = false
+        /// A patch the lens sewed, its ceremony held until the run was over: minutes or days after the add, so no Undo.
+        var isFromGlasses = false
 
         var id: UUID { addition.identifier }
         /// "Your first House Finch in Los Angeles"; outside every set, "Your first House Finch".
         var title: String {
             addition.placement.setID == nil ? "Your first \(commonName)" : "Your first \(commonName) in \(addition.placement.setName)"
         }
-        /// "New patch · Citrus edition", or "Seen again · Uncharted".
-        var eyebrow: String { "\(addition.sewsPatch ? "New patch" : "Seen again") · \(addition.placement.editionLabel)" }
-        /// Beside the count as it shows: "times in Los Angeles", or "time, Uncharted" outside every set.
-        func countLine(_ count: Int) -> String {
-            let times = count == 1 ? "time" : "times"
-            return addition.placement.setID == nil ? "\(times), \(CardPlacement.unchartedTitle)" : "\(times) in \(addition.placement.setName)"
-        }
+        /// "New patch · Citrus edition".
+        var eyebrow: String { "New patch · \(addition.placement.editionLabel)" }
     }
 
-    private static func acknowledgmentText(_ reveal: Reveal) -> String {
-        reveal.addition.sewsPatch ? reveal.title : seenAgainText(reveal.addition)
-    }
-
-    /// The acknowledgment of an add that joined a patch the birder has: "Seen again · 8 times in Los Angeles".
-    static func seenAgainText(_ addition: RunSightings.Addition) -> String {
-        let times = CardCollection.Patch.times(addition.patchCount)
-        return addition.placement.setID == nil ? "Seen again · \(times)" : "Seen again · \(times) in \(addition.placement.setName)"
+    /// What a repeat add says: "Seen again · 8 times in Los Angeles", or "Seen again · 8 times" outside every set. In digits
+    /// even for 1, unlike `Patch.times`'s "once": it's what the count ticks up from.
+    private static func seenAgainText(_ placement: CardPlacement, count: Int) -> String {
+        let times = "\(count) \(count == 1 ? "time" : "times")"
+        return placement.setID == nil ? "Seen again · \(times)" : "Seen again · \(times) in \(placement.setName)"
     }
 
     static let waveformLength = 40
@@ -137,8 +131,15 @@ final class ListeningCoordinator {
     /// the waveform while the run is active, and settled with nothing calling once it ends.
     private(set) var listOrder = SpeciesListOrder()
     private(set) var acknowledgment: Acknowledgment?
-    /// The page showing after an add, until the birder dismisses it or undoes the add.
+    /// The page showing after an add that sewed a patch, until the birder dismisses it or undoes the add.
     private(set) var reveal: Reveal?
+    /// The sightings whose patches the lens sewed, in the order sewn, each until its ceremony has played: the glasses are
+    /// for hearing and capturing, and the celebration is on the phone once the run is over (the maintainer, 2026-11-04). The
+    /// run often ends with the phone in a pocket and the app can be killed before it's next in front, so this outlives the
+    /// app, in the defaults: identifiers only, since the album has the rest and a sighting deleted meanwhile is skipped.
+    private(set) var pendingCeremonies: [UUID] {
+        didSet { defaults.set(pendingCeremonies.map(\.uuidString), forKey: Self.pendingCeremoniesKey) }
+    }
     /// Set when a run that heard something ends, until the review is dismissed.
     var isReviewing = false
     /// The candidate the birder is reviewing, nil when none.
@@ -154,7 +155,10 @@ final class ListeningCoordinator {
     @ObservationIgnored private var hasRun = false
     @ObservationIgnored private var waveformTask: Task<Void, Never>?
     @ObservationIgnored private var acknowledgmentTask: Task<Void, Never>?
-    private static let sourceKey = "listeningSource"
+    /// From Stop until the run's end has been dealt with, so a ceremony starts over the review rather than just before it.
+    private var isEnding = false
+    static let sourceKey = "listeningSource"
+    private static let pendingCeremoniesKey = "pendingPatchCeremonies"
 
     /// - Parameters:
     ///   - defaultSource: the source for a phone that has not chosen one: the glasses when a pair is linked.
@@ -165,6 +169,8 @@ final class ListeningCoordinator {
         self.levels = levels
         self.defaults = defaults
         source = defaults.string(forKey: Self.sourceKey).flatMap(Source.init(rawValue:)) ?? defaultSource
+        pendingCeremonies = defaults.stringArray(forKey: Self.pendingCeremoniesKey)?.compactMap(UUID.init(uuidString:)) ?? []
+        glasses.onPatchSewn = { [weak self] identifier in self?.pendingCeremonies.append(identifier) }
     }
 
     // MARK: - What the screens read
@@ -282,6 +288,8 @@ final class ListeningCoordinator {
     /// Ends the run; the species heard stay for the review.
     func stop() async {
         guard state.isActive else { return }
+        isEnding = true
+        defer { isEnding = false }
         stopWaveform()
         switch runSource {
         case .phone: await phone.stop()
@@ -308,17 +316,25 @@ final class ListeningCoordinator {
 
     /// Writes `candidate` to the journal with the location the run has and, on the glasses, the frame from this
     /// moment; acknowledges with an undo. Every add is a new sighting, even of a species already added this run; the
-    /// first in a placement sews the species' patch there, and the rest add to its count. Either way the sighting is
-    /// saved before anything shows.
+    /// first in a placement sews the species' patch there and opens its ceremony, and the rest tick its count in the
+    /// acknowledgment, with nothing to tap (the maintainer, 2026-11-04). Either way the sighting is saved before anything shows.
     @discardableResult
     func add(_ candidate: Candidate) async -> RunSightings.Addition? {
         let confirmedAt = Date.now
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone)
-            let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
-            self.reveal = reveal
-            acknowledge(Self.acknowledgmentText(reveal), undo: addition)
+            if addition.sewsPatch {
+                let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
+                self.reveal = reveal
+                acknowledge(reveal.title, undo: addition)
+            } else {
+                acknowledge(
+                    Self.seenAgainText(addition.placement, count: addition.patchCount),
+                    ticksFrom: Self.seenAgainText(addition.placement, count: addition.patchCount - 1),
+                    undo: addition
+                )
+            }
             return addition
         } catch {
             Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
@@ -328,25 +344,59 @@ final class ListeningCoordinator {
     }
 
     #if DEBUG
-    /// The reveal for a seeded sighting, for `-autoScreen reveal` and `seen-again`; there is no add to undo.
-    func showRevealForScreenshot(of sighting: Sighting, placement: CardPlacement = .uncharted, seenAgain count: Int? = nil) {
+    /// The reveal for a seeded sighting, for `-autoScreen reveal`; there is no add to undo.
+    func showRevealForScreenshot(of sighting: Sighting, placement: CardPlacement = .uncharted) {
         let species = Species(index: 0, scientificName: sighting.scientificName, commonName: sighting.commonName, taxonomicClass: "Aves")
-        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: count == nil, patchCount: count ?? 1, placement: placement), commonName: sighting.commonName)
+        reveal = Reveal(addition: RunSightings.Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: true, patchCount: 1, placement: placement), commonName: sighting.commonName)
     }
     #endif
 
-    /// The page's moment is over: from here it shows the finished patch or the new count. Undo's window starts again, since
-    /// the page only offers Undo from here, and the stitch-in would otherwise have used most of it up.
+    /// The page's moment is over: from here it shows the finished patch. Undo's window starts again, since the page only
+    /// offers Undo from here, and the stitch-in would otherwise have used most of it up.
     func finishCeremony() {
         guard let reveal, !reveal.hasPlayed else { return }
         self.reveal?.hasPlayed = true
-        if sightings.entries.contains(where: { $0.id == reveal.addition.sightingID }) {
-            acknowledge(Self.acknowledgmentText(reveal), undo: reveal.addition)
+        if reveal.isFromGlasses {
+            // Only now: killed part way through the stitch-in, it hasn't played.
+            pendingCeremonies.removeAll { $0 == reveal.addition.identifier }
+        } else if sightings.entries.contains(where: { $0.id == reveal.addition.sightingID }) {
+            acknowledge(reveal.title, undo: reveal.addition)
         }
     }
 
-    /// Closes the reveal; the sighting was saved before it opened.
+    /// Closes the reveal, and shows the next waiting ceremony if there is one; the sighting was saved before it opened.
     func dismissReveal() {
+        reveal = nil
+        showNextCeremony()
+    }
+
+    // MARK: - Ceremonies after a glasses run
+
+    /// A ceremony is waiting and could start: the run is over and nothing is showing, or about to, that it would play under.
+    /// The screen brings the other half, whether the app is in front.
+    var hasCeremonyWaiting: Bool {
+        !pendingCeremonies.isEmpty && reveal == nil && reviewing == nil && !isEnding && !state.isActive
+    }
+
+    /// How many more ceremonies follow the finished page showing; none while a run is on, when they aren't offered yet.
+    var waitingCeremonies: Int {
+        state.isActive ? 0 : pendingCeremonies.count
+    }
+
+    /// Shows the first waiting ceremony whose sighting is still in the album, and forgets those that aren't.
+    func showNextCeremony() {
+        while hasCeremonyWaiting, let identifier = pendingCeremonies.first {
+            if let addition = sightings.sewnAddition(of: identifier) {
+                reveal = Reveal(addition: addition, commonName: addition.species.commonName, isFromGlasses: true)
+            } else {
+                pendingCeremonies.removeFirst()
+            }
+        }
+    }
+
+    /// Closes the page and lets every waiting ceremony go. The patches are sewn all the same.
+    func skipCeremonies() {
+        pendingCeremonies = []
         reveal = nil
     }
 
@@ -361,8 +411,8 @@ final class ListeningCoordinator {
         }
     }
 
-    private func acknowledge(_ text: String, undo: RunSightings.Addition?) {
-        let acknowledgment = Acknowledgment(text: text, undo: undo)
+    private func acknowledge(_ text: String, ticksFrom: String? = nil, undo: RunSightings.Addition?) {
+        let acknowledgment = Acknowledgment(text: text, ticksFrom: ticksFrom, undo: undo)
         self.acknowledgment = acknowledgment
         acknowledgmentTask?.cancel()
         acknowledgmentTask = Task { [weak self] in

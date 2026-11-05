@@ -1,6 +1,6 @@
 # Card art is painted by FLUX.3 Image Klein under the FLUX Kommunity License
 
-Status: accepted, 2026-10-19. Supersedes ADR-0003's choice of model (Qwen-Image-Edit-2511); the rest of ADR-0003 stands.
+Status: accepted, 2026-10-19. Supersedes ADR-0003's choice of model (Qwen-Image-Edit-2511). The model still paints the patches, reviewed by the maintainer before a pack ships. Scene art, photo art and the art worker ended with #137 (2026-11-04), so the conditions below about them no longer apply.
 
 The #49 bake-off settled on FLUX.3 Image Klein, which Black Forest Labs released on 2026-10-15: the distilled 5.6B checkpoint in int8, on comfybox, painting a natural-history watercolour of a bird taken from a real photo. The maintainer picked its look over every Qwen-Image-Edit-2511 and FLUX.2 [klein] 4B round. It keeps the bird's pattern without inventing marks, and it paints a card in 10–17 s at full quality, against Qwen's 207 s, so the art worker's daily allowance can grow.
 

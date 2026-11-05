@@ -2,6 +2,8 @@
 
 Status: ready-for-agent · issue #48 · 2026-10-13 · Synthesized from the collectible-cards style guide v0.2 and four grill rounds. Vocabulary follows `CONTEXT.md`; decisions that are hard to reverse are ADR-0001 to ADR-0006 in `docs/adr/`; `DECISIONS.md` wins where they disagree with this spec.
 
+> **Superseded in part (2026-11-04).** Design guide 2.0 and issue #131 retired Legendary, the gold frame and the cards: the collectible is now an embroidered patch, one per species per edition (`CONTEXT.md`, `DECISIONS.md`, "Patches slice 1" and on). Read "Legendary" and "card" below as history, except where this spec has been updated. Finds, pushes and sharing were updated by #136.
+
 ## Problem Statement
 
 The journal is a tidy list of sightings, and it is tired. Adding a bird ends in a row of text and a snapshot, and nothing makes me want to go out and find the next one, or find the same bird again somewhere new. Birding with friends is half the fun, but the app is solitary: my friends never learn what I heard this morning, and I only hear about their finds if they text me. I also want the app to stay free, because it is built on open data and open models and I don't want to sell other people's photos and recordings, but painting art and running a server cost money.
@@ -105,7 +107,7 @@ With an optional account (Apple or Google), I join small invite-only circles. My
 78. As a member, I want my notes and original photos never sent automatically, so that private things stay private.
 79. As a member, I want deleting a sighting to remove its find from my circles, so that corrections reach my friends.
 80. As a member, I want a circle feed of recent finds with each friend's card art, so that I can enjoy what my friends found.
-81. As a member, I want "First for the circle" on the earliest find of a species in a circle, separate from anyone's Legendary, so that shared discoveries get their own celebration.
+81. As a member, I want "First for the circle" on the earliest find of a species in a circle, separate from anyone's new patch, so that shared discoveries get their own celebration.
 82. As a member, I want to react to a find with a few fixed reactions such as "Lovely find", so that I can cheer friends on.
 83. As a member, I want to compare my birds with a friend's (Heard, Seen or not yet found for each species), so that we can plan the next walk.
 84. As a member, I want an automatic monthly goal sized from our circle's history, so that the circle always has something to chase.
@@ -116,7 +118,7 @@ With an optional account (Apple or Google), I join small invite-only circles. My
 89. As a member, I want circles capped at 20 people, so that a circle stays a small group of friends.
 
 ### Notifications
-90. As a member, I want a push when a friend finds a Legendary, a circle first or a Rare or Exceptional bird, or completes a goal, so that I hear about the finds that matter.
+90. As a member, I want a push when a friend sews a new patch, finds a circle first or a Rare or Exceptional bird, or completes a goal, so that I hear about the finds that matter.
 91. As a member, I want a friend's other finds bundled into one digest at most every two hours ("Maya found 6 birds in Pasadena"), so that a busy walk doesn't flood my phone.
 92. As a member, I want a push when someone reacts to my find, so that I know my friends noticed.
 93. As a member, I want to mute a circle or a friend, so that I control the noise.
@@ -266,6 +268,7 @@ With an optional account (Apple or Google), I join small invite-only circles. My
   - A repeated put (method changed, art ready) updates the find and its feed items and sends no new push.
   - Delete removes the find, its feed items and its reactions.
   - Only sightings added while signed in and sharing are published automatically; older ones can be shared by hand.
+- **The feed** (guide 2.0 page 8): a new patch is led by the member's patch in its edition; a repeat sighting is a quieter "saw a House Finch again" line. "First for the Guild" stays a small label on either.
 - **Circle first**: computed at read time from the earliest surviving feed item of a species in a circle. The push decision uses "no earlier surviving item" at write time.
 - **Goals**:
   - The automatic monthly goal is created by a scheduled job at the start of each month in the circle's time zone, which is set from the creator's device at creation. Its target is the larger of 5 and 115% of the distinct species found in the circle last month, rounded, and 10 in a circle's first month.
@@ -274,7 +277,7 @@ With an optional account (Apple or Google), I join small invite-only circles. My
 - **Compare**: the friend's species with their best method (Seen beats Heard) from feed items in circles shared with the requester; the phone merges in its own collection.
 - **Push**:
   - APNs over HTTP/2 with a token key from Secrets Manager.
-  - Notable finds (Legendary, circle first, Rare or Exceptional, goal completed) push at once with an alert plus content-available, carrying a find summary for the friend banner.
+  - Notable finds (a new patch, circle first, Rare or Exceptional, goal completed) push at once with an alert ("New patch · Pasadena") plus content-available, carrying a find summary for the friend banner.
   - Other finds go to a digest buffer per recipient and friend. A scheduled job flushes it every 15 minutes, but only when two hours have passed since that recipient's last push about that friend. The digest reads "Maya found 6 birds in Pasadena", using the most common place label.
   - Reactions push to the find's owner, collapsed per find within 10 minutes.
   - Mutes (per circle, per friend) and blocks suppress pushes and hide content. The owner is never pushed about their own finds.
@@ -289,9 +292,9 @@ With an optional account (Apple or Google), I join small invite-only circles. My
   - Private means nothing unless the card is shared by hand.
   - The place label is a city or "a secret spot", never a coordinate.
   - The note and original photo are included only in a hand-shared card where chosen.
-  - The payload always carries the species, method, time to the minute, Legendary and rarity flags, and the art reference (a pack-art thumbnail or the painted art's key).
-- **Outbox**: pending find puts and deletes are persisted on the phone and retried with backoff while signed in and online. Deleting a sighting queues the delete; Legendary passing to another card publishes nothing.
-- **Shared card**: the style guide's "A story to share" preview sheet: choose circles, include the note, include the original photo (off by default), include the city (on by default; off gives no place). The existing system share renders the card face instead of the postcard, under the same share policy rules.
+  - The payload always carries the species, method, time to the minute, `new_patch` and the edition (the set's pack id; none outside every set), the rarity, and the art reference (the patch's thumbnail, a pack-art thumbnail for a set without patches, or the painted art's key).
+- **Outbox**: pending find puts and deletes are persisted on the phone and retried with backoff while signed in and online. Deleting a sighting queues the delete; a patch's sewn date passing to another sighting publishes nothing.
+- **Shared card**: the style guide's "A story to share" preview sheet: choose circles, include the note, include the original photo (off by default), include the city (on by default; off gives no place). The existing system share renders the patch on linen with its paper card's front, lit from a fixed upper-left light (guide 2.0 page 8), instead of the postcard, under the same share policy rules.
 - **Circle tab**:
   - signed-out invitation to sign in
   - circle list

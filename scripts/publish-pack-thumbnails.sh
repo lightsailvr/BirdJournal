@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Uploads a built pack's pack-art thumbnails to the art CDN (issue #62), so a friend's phone shows any find's pack art
-# without that pack: `packbuilder thumbnails` writes one small JPEG per painting into build/pack-thumbnails/<id>/, and
-# they go to the art bucket (the BirdJournal stack's ArtBucket output) under packs/<id>/<species id>.jpg, the key the
-# phone's find policy sends. Part of publishing a pack (packs/README.md, "Publishing a new build"), after the release
+# Uploads a built pack's thumbnails to the art CDN (issues #62 and #136), so a friend's phone shows any find's patch or
+# pack art without that pack: `packbuilder thumbnails` writes one small image per painting into
+# build/pack-thumbnails/<id>/, and they go to the art bucket (the BirdJournal stack's ArtBucket output) under
+# packs/<id>/patch/<species id>.png for a patch and packs/<id>/<species id>.jpg for pack art, the keys the phone's find
+# policy sends. Part of publishing a pack (packs/README.md, "Publishing a new build"), after the release
 # and before or after the index. Needs the deployed stack and the shared account's profile (lsvr-admin); nothing is
 # deleted, so finds of a species a later version drops keep their picture.
 #
@@ -35,4 +36,6 @@ bucket="$(aws cloudformation describe-stacks --profile "$profile" --region "$reg
 # A day in caches, so a repainted species reaches old finds by the next day.
 aws s3 sync "$out_dir" "s3://$bucket/packs/$pack_id/" --profile "$profile" --region "$region" \
     --exclude "*" --include "*.jpg" --content-type image/jpeg --cache-control "public, max-age=86400"
-echo "uploaded $(find "$out_dir" -name '*.jpg' | wc -l | tr -d ' ') thumbnails to s3://$bucket/packs/$pack_id/"
+aws s3 sync "$out_dir" "s3://$bucket/packs/$pack_id/" --profile "$profile" --region "$region" \
+    --exclude "*" --include "*.png" --content-type image/png --cache-control "public, max-age=86400"
+echo "uploaded $(find "$out_dir" \( -name '*.jpg' -o -name '*.png' \) | wc -l | tr -d ' ') thumbnails to s3://$bucket/packs/$pack_id/"

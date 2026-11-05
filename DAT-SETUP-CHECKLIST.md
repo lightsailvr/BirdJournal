@@ -95,7 +95,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
         Chrome; `startTestServer(portFilePath:)` on a system-assigned port plus `MWDATMockDeviceTestClient` for XCUITest
         to drive the mock from the test process. **We** start it only from the DEBUG `pairMockGlasses()` (same order;
         `unpairMockGlasses()` now also awaits `unpairDevice`). The unit suites start it only when asked
-        (`BIRDJOURNAL_MOCK_PREVIEW_PORT`); `BirdJournalUITests` does not use the mock.
+        (`BIRDJOURNAL_MOCK_PREVIEW_PORT`). In `BirdJournalUITests` only `SewingUITests`' glasses runs use the mock, inside the
+        app (`-autoScreen glasses-run`, its inputs from the app's own `MockLensAdds`), each launch on a port of its own.
 - [x] **Found in #82 (toolkit bug, worked around): the mock link wedges.** When a mock device is torn down and the next one
       paired while the old link's stream I/O is still closing, a toolkit thread (`MWDATCore`, one run-loop thread for the
       whole process) spins at 100% CPU in a single run-loop block calling `CFReadStreamRead` on a bound stream pair, and
@@ -228,7 +229,7 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
      glasses", sit on the species list, lock the phone and pocket it. Then either run `WIZARD_FROM=5
      infra/scripts/push-wizard.sh` and send the test push to this phone's token (Settings → Developer → Push token; the
      test push carries a find, so it makes the banner), or have a second account in a shared circle add a species it has
-     never added (a Legendary, so notable). Note the time the push is sent and the time the banner appears on the lens.
+     never added (a new patch, so notable). Note the time the push is sent and the time the banner appears on the lens.
      Repeat three times, once after 10+ minutes locked. Record in DECISIONS.md, "Friend banner on the lens": every delay,
      any push that never made a banner, and whether the phone's own notification arrived meanwhile (iOS can throttle
      background pushes; the banner needs the app to wake for `content-available`).

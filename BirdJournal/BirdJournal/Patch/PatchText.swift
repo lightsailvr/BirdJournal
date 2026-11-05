@@ -52,18 +52,6 @@ enum PatchText {
         return numberLine(number, of: total, in: setName)
     }
 
-    /// A latest sighting's date on the seen-again page: "Today · 8:03 AM", else "Oct 30".
-    static func latestDate(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
-        if calendar.isDate(date, inSameDayAs: now) { return "Today · \(date.formatted(date: .omitted, time: .shortened))" }
-        return date.formatted(.dateTime.month(.abbreviated).day())
-    }
-
-    /// Under the latest sightings: "+ 5 earlier · Sewn Sep 14", or "Sewn Sep 14" when they were all shown.
-    static func earlierLine(_ patch: CardCollection.Patch, shown: Int) -> String {
-        let sewn = "Sewn \(patch.sewn.confirmedAt.formatted(.dateTime.month(.abbreviated).day()))"
-        return patch.count > shown ? "+ \(patch.count - shown) earlier · \(sewn)" : sewn
-    }
-
     /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set.
     static func tileLine(_ patch: CardCollection.Patch) -> String {
         guard case .numbered(_, _, _, let number, let total) = patch.placement else { return "seen \(patch.count)×" }

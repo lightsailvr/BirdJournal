@@ -12,7 +12,7 @@ struct FriendBannerTests {
     static func find(ownerName: String?, method: String = "heard", place: String? = "Pasadena") -> FriendFind {
         FriendFind(
             owner: "maya", ownerName: ownerName, sightingID: "s1", speciesID: "sayornis_nigricans", scientificName: "Sayornis nigricans",
-            commonName: "Black Phoebe", method: method, place: place, foundAt: .now, legendary: true, rarity: nil, circleFirst: false,
+            commonName: "Black Phoebe", method: method, place: place, foundAt: .now, newPatch: true, rarity: nil, circleFirst: false,
             circleIDs: []
         )
     }

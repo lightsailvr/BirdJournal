@@ -4,12 +4,9 @@ from aws_cdk import aws_cloudfront_origins as origins
 from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
-# The bucket's prefixes. Keep the names: #62 (finds) builds on them.
-PAINTED_PREFIX = "art/"
-"""Painted scene and photo art (#68, #69): art/<sub>/<unguessable>.jpg, written by the art worker, downloaded by the
-phone and deleted once it has it, unless a find shows it (ADR-0004)."""
+# The bucket's prefix for what the pack publish step uploads. Keep the name: #62 (finds) builds on it.
 PACK_THUMBNAILS_PREFIX = "packs/"
-"""Small pack-art thumbnails (#62, #70), so a friend's phone can show any find's pack art without that pack."""
+"""Small patch thumbnails (#62, #136), so a friend's phone can show any find's patch without that pack."""
 
 
 class ArtCdn(Construct):
@@ -17,7 +14,7 @@ class ArtCdn(Construct):
     CloudFront's own domain (no certificate, no DNS). Nothing lists the bucket and every key is unguessable, so a URL
     is the only way to a picture; the phone and the circle feed fetch by URL.
 
-    The bucket is Retain like the other user data: painted art is a birder's, and a destroyed stack shouldn't take
+    The bucket is Retain like the other user data: shared photos are a birder's, and a destroyed stack shouldn't take
     the pictures a find still shows.
     """
 

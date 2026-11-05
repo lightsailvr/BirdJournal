@@ -51,7 +51,7 @@ _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fall
 ## Packs
 
 **Pack**:
-A downloadable bundle for one region: species, photos, reference sounds, descriptions, stats, lore and pack art.
+A downloadable bundle for one region: species, photos, reference sounds, descriptions, stats, lore and patches.
 _Avoid_: region pack, bundle, dataset
 
 **Reference sound**:
@@ -81,7 +81,7 @@ A patch before it is stitched: bare twill, out to the edge since the cord comes 
 _Avoid_: locked patch, silhouette, ghost
 
 **Stitch-in**:
-The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It happens once, on the add; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its patch lifts and its count ticks.
+The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It plays once, on the phone: at the add, or for an add on the lens, when the run is over and the app is next in front; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its count ticks in the acknowledgment, with nothing to tap.
 _Avoid_: animation, unlock
 
 **Board**:
@@ -103,7 +103,7 @@ What the sighting that created a patch did; a patch's sewn date is its earliest 
 _Avoid_: unlocked, earned (for a patch)
 
 **Card**:
-The paper card a patch turns over to (#134): its story, the species' biology and your history with the bird there. One per patch, never stored. The share image still draws one sighting's card face until #136. Art, captions and retries never make another.
+The paper card a patch turns over to (#134): its story, the species' biology and your history with the bird there. One per patch, never stored. The share image draws its front, on linen beneath the patch (#136). Art, captions and retries never make another.
 _Avoid_: trading card, edition (for the card itself), the collectible (that is the patch)
 
 **Collection**:
@@ -111,7 +111,7 @@ All of one birder's patches, and the sightings behind them.
 _Avoid_: deck, album, life list
 
 **Legendary** (retired 2026-11-03, #131):
-Was the status of a birder's earliest surviving card of a species, with a gold frame. Retired with the gold: every patch is the one patch for its bird and place. The finds' `legendary` flag carries "sewed a patch" until #136 renames it.
+Was the status of a birder's earliest surviving card of a species, with a gold frame. Retired with the gold: every patch is the one patch for its bird and place. A find says `new_patch` since #136; the old name lives on only in the compatibility seam for the server deployed before it, and in the art job until #137.
 _Avoid_: in copy
 
 **Rarity**:
@@ -144,34 +144,27 @@ _Avoid_: flavor text, tagline (the lore's one-line fallback)
 
 ## Art
 
-**Card art**:
-The picture on a card's front: pack art, scene art or photo art.
-_Avoid_: image, illustration (in domain language)
+The patch is the only painting (decided 2026-11-03, built in #137). Original photos stay as evidence: the glasses photo from the add, or one the birder attaches from the library.
 
 **Pack art**:
-A painted image of a species in its set's edition theme, shipped with the pack and shown the moment a card exists.
-_Avoid_: stock art, default art, placeholder
+Was a watercolour of a species shipped with its pack and shown on its card. The app no longer shows it; a pack not yet rebuilt with patches (#58) still carries it, unused, and shows the edition's blank patch.
 
 **Scene art**:
-The species painted into the original photo from the glasses at the add. Applied automatically when ready.
-_Avoid_: local edition, composite
+Was the species painted into the original photo from the glasses at the add. Retired; nothing paints it. A stored sighting keeps its art state, unread.
 
 **Photo art**:
-The birder's own photo of the bird embellished into card art, applied only after the birder approves a preview.
-_Avoid_: filter, enhanced photo
+Was the birder's own photo of the bird embellished by AI for its card. Retired with scene art.
 
 **Art job**:
-One request to paint scene art or photo art for an existing card. A retry is a new art job for the same card.
-_Avoid_: render, generation, task
+Was one request to paint scene art or photo art. Retired, with the server's allowance and auto-paint rule.
 
 **Art worker**:
-The program on the home GPU box that takes art jobs from the queue and paints them.
-_Avoid_: comfybox (the host's name), painter, renderer
+Was the program on the home GPU box that took art jobs from the queue. Retired. Patches are painted on the same box, by the pack builder.
 
 ## Circles
 
 **Account**:
-A birder's optional sign-in identity, through Apple or Google, needed only for circles and art jobs.
+A birder's optional sign-in identity, through Apple or Google, needed only for circles.
 _Avoid_: user, profile, login
 
 **Circle**:
@@ -183,7 +176,7 @@ Anyone who shares at least one circle with you.
 _Avoid_: follower, contact, connection
 
 **Find**:
-What a circle sees of a member's sighting: species, method, place label, time and card art. Sent automatically unless the member is private.
+What a circle sees of a member's sighting: species, method, place label, time, whether it sewed a new patch and in which edition, and art. Sent automatically unless the member is private.
 _Avoid_: post, activity, share
 
 **Shared card**:
@@ -199,7 +192,7 @@ The place a find shows: a city, or "a secret spot" for a threatened species. Nev
 _Avoid_: location (the coordinate on the phone), area
 
 **Circle first**:
-The earliest surviving find of a species in a circle, shown as "First for the Guild". Separate from any member's Legendary.
+The earliest surviving find of a species in a circle, shown as "First for the Guild". Separate from any member's new patch.
 _Avoid_: circle legendary, first find
 
 **Goal**:
@@ -215,7 +208,7 @@ You and a friend side by side, each species Heard, Seen or not yet: the friend's
 _Avoid_: leaderboard, ranking, life list comparison
 
 **Notable find**:
-A find that sends its own push: a Legendary, a circle first, Rare or Exceptional rarity, or one that completes a goal.
+A find that sends its own push: a new patch, a circle first, Rare or Exceptional rarity, or one that completes a goal.
 _Avoid_: highlight, alert
 
 **Digest**:
@@ -231,5 +224,5 @@ A notable find shown on the lens while the birder is on a run.
 _Avoid_: lens notification
 
 **Tip**:
-A voluntary in-app payment that unlocks nothing and helps cover hosting and painting.
+A voluntary in-app payment that unlocks nothing and helps keep the server running.
 _Avoid_: donation, purchase, subscription

@@ -30,7 +30,6 @@ struct ScreenAccessibilityTests {
         let run: ListeningCoordinator
         let connection: GlassesConnection
         let sounds: ReferenceSounds
-        let art: ArtJobs
         let outbox: FindOutbox
         let pushes: PushCenter
         let places = PlaceNames()
@@ -59,7 +58,6 @@ struct ScreenAccessibilityTests {
             let glasses = GlassesListeningSession(recorder: recorder, sightings: sightings, loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, location: ScriptedLocationProvider([.denied]))
             run = ListeningCoordinator(phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: UserDefaults(suiteName: "screen-ax-\(UUID().uuidString)")!)
             sounds = ReferenceSounds(player: MockSoundPlayer(), session: SpyPlaybackSession(), suppression: AudioSuppression(), phoneRunHoldsSession: { false })
-            art = ArtJobs(account: account, client: nil, frames: frames, container: album)
             outbox = FindOutbox(account: account, client: client, fileURL: nil, sharing: { .automatic }, payload: { _, _ in nil })
             pushes = PushCenter(account: account, client: client, authorizer: FakeNotificationAuthorizer(permission: .authorized), defaults: UserDefaults(suiteName: "screen-ax-push-\(UUID().uuidString)")!, registerForRemoteNotifications: {})
             if seeded { DebugSeeds.seedJournal(context: album.mainContext, frames: frames) }
@@ -78,7 +76,6 @@ struct ScreenAccessibilityTests {
             .environment(edits)
             .environment(account)
             .environment(circles)
-            .environment(art)
             .environment(outbox)
             .environment(pushes)
             .environment(places)

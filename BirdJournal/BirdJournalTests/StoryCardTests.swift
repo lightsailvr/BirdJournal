@@ -118,7 +118,7 @@ struct DesignTokenTests {
 
     @Test("the card face reads the same in both appearances and its text is at least 4.5:1")
     func cardFace() throws {
-        // The face draws in the light scheme whatever the app's (`CardSurface`).
+        // Card ink reads in the light scheme whatever the app's (`CardStockSurface`).
         let light = Self.variants.filter { $0.name.hasPrefix("light") }
         for text in ["CollectibleInk", "CollectibleInkSecondary", "CollectibleEdge", "JournalInk", "JournalInkSecondary", "JournalMoss"] {
             try expect(text, on: "CollectibleFace", atLeast: 4.5, in: light)

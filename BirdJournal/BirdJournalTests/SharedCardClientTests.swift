@@ -75,7 +75,7 @@ struct SharedCardClientTests {
         let item = """
         {"sighting_id":"6f9619ff-8b86-d011-b42d-00c04fc964ff","species_id":"Sayornis nigricans_Black Phoebe",
          "scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","method":"seen","place":null,
-         "found_at":"2026-11-01T08:15:00Z","legendary":false,"rarity":"common","art":null,
+         "found_at":"2026-11-01T08:15:00Z","new_patch":false,"rarity":"common","art":null,
          "owner":{"id":"maya","display_name":"Maya Ortiz"},"circle_first":false,"is_mine":false
         """
         recorder.responses = [http(200, #"{"items":[\#(item),"card":{"note":"By the creek","caption":"A small black flame","photo":{"key":"photos/maya/p.jpg","url":"https://d111.cloudfront.net/photos/maya/p.jpg"}}},\#(item),"card":null}],"next_cursor":null}"#)]

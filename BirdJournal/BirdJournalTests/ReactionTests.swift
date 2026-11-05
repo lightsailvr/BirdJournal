@@ -50,7 +50,7 @@ struct ReactionClientTests {
         decoder.dateDecodingStrategy = .iso8601
         let base = """
         "sighting_id":"s","species_id":"Sayornis nigricans_Black Phoebe","scientific_name":"Sayornis nigricans",
-        "common_name":"Black Phoebe","method":"heard","found_at":"2026-11-01T08:15:00Z","legendary":false,
+        "common_name":"Black Phoebe","method":"heard","found_at":"2026-11-01T08:15:00Z","new_patch":false,
         "owner":{"id":"maya","display_name":"Maya Ortiz"},"circle_first":false,"is_mine":false
         """
         let with = try decoder.decode(FeedItem.self, from: Data(#"{\#(base),"reactions":[{"kind":"jealous","count":3,"mine":true},{"kind":"wave","count":9,"mine":false}]}"#.utf8))

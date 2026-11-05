@@ -35,7 +35,7 @@
       "internalID" : "0D05A69D-FECB-4E15-9518-5B68D581AA47",
       "localizations" : [
         {
-          "description" : "A tip toward the server and the painting machine.",
+          "description" : "A tip toward the server.",
           "displayName" : "Suet cake",
           "locale" : "en_US"
         }
@@ -50,7 +50,7 @@
       "internalID" : "7549F9DD-C8BA-4699-83A0-B6F4976C6813",
       "localizations" : [
         {
-          "description" : "A generous tip that keeps the cards painted.",
+          "description" : "A generous tip that keeps the server running.",
           "displayName" : "Bird feeder",
           "locale" : "en_US"
         }

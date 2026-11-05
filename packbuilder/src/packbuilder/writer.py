@@ -46,7 +46,7 @@ PATCH_LAYERS_QUALITY = 80
 SCHEMA_VERSION = 5
 """5 (issue #133) added the `patch` table and the `patch/` folder, one embroidered patch per species: a schema-4 reader
 cannot read patches, so the bundled pack moves to schema 5 with the app that draws them (#134). A build with patches
-writes no pack art (its table stays, empty, until #137 drops it). Before it: """
+writes no pack art (its table stays, empty, until a later pack schema drops it; the app stopped reading it in #137, and #58 rebuilds the other packs). Before it: """
 """3 (issue #41) added the `sound` table and the `sounds/` folder; a schema-2 reader cannot open the pack. 4 (issue #54)
 added every table the collectible cards read at once: the set definition, filled since #54, and the stats, fact sheet,
 lore, pack art, threatened flag and family, which stay empty (meaning "not available yet") until the tickets that fill

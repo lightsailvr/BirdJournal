@@ -238,6 +238,23 @@ struct PatchLightPixelTests {
         #expect(Self.meanChange(unreadable, tagged) < 0.01, "they differ by \(Self.meanChange(unreadable, tagged))")
     }
 
+    /// Here because it moves `PatchLight.shared`: this suite is serialized, and the global must not move under the test below.
+    @Test("a tilt never reaches the share image, whose light is fixed (#136)")
+    func theShareImageIgnoresATilt() async throws {
+        let (facts, loaded) = try await ShareCardTests.bundledPatch()
+        let image = PatchShareImage(facts: facts, edition: ShareCardTests.la, loaded: loaded)
+        let light = PatchLight.shared
+        light.restart()
+        defer { light.restart() }
+        let before = try ShareCardTests.rgba(try #require(CardExport.render(image, scale: 2)).image)
+        // The first reading is "as held"; the tilt is from there.
+        light.take(PatchLightTests.gravity())
+        for _ in 0..<120 { light.take(PatchLightTests.gravity(rightEdgeDown: 30, topEdgeUp: 20)) }
+        #expect(light.direction != PatchLightModel.rest, "the phone's light did move")
+        let after = try ShareCardTests.rgba(try #require(CardExport.render(image, scale: 2)).image)
+        #expect(Self.meanChange(before.bytes, after.bytes) == 0)
+    }
+
     @Test("a ten-degree tilt visibly changes the lit patch, whichever way, and a still phone changes nothing")
     func tenDegrees() async throws {
         let pack = try SpeciesPack.bundled()

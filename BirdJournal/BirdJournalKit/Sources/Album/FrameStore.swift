@@ -19,10 +19,7 @@ public struct FrameStore: Sendable {
     /// Writes one JPEG under a fresh name and returns the path to store on the sighting. The folder is created on
     /// first use.
     public func write(jpeg data: Data) throws -> String {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let path = "\(UUID().uuidString).jpg"
-        try data.write(to: url(for: path), options: .atomic)
-        return path
+        try write(data, pathExtension: "jpg")
     }
 
     /// Writes any file under a fresh name with `pathExtension` (an attached library photo may be HEIC, kept as it came)

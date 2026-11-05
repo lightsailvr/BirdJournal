@@ -7,16 +7,15 @@ import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// "A story to share" (issue #66, spec v2 "Shared card"): the card's face as it will be sent, what it carries, and
-/// where it goes. The birder chooses the note (off), the city (on; off sends no place) and, for their circles, the
-/// original photo (off; faces blurred and metadata stripped on the phone, `ArtPhoto.prepare`) and the circles. **Send**
-/// shares the card by hand: the only way a private birder's sighting reaches a circle. **Share card image…** is the
-/// system share: the card face as a fresh PNG (no metadata but its pixels) with its text, under the share policy's
-/// rules (the city only when chosen and never a coordinate, the note only when chosen, a pack photo only when its
-/// license allows, with its credit).
+/// "A story to share" (issue #66, spec v2 "Shared card"; guide 2.0 page 8): the patch on linen with its paper card as it
+/// will be sent, what it carries, and where it goes. The birder chooses the note (off), the city (on; off sends no place)
+/// and, for their circles, the original photo (off; faces blurred and metadata stripped on the phone,
+/// `SharedPhoto.prepare`) and the circles. **Send** shares the card by hand: the only way a private birder's sighting reaches
+/// a circle. **Share card image…** is the system share: the composed image (`PatchShareImage`) as a fresh PNG (no metadata
+/// but its pixels) with its text, under the share policy's rules (the city only when chosen and never a coordinate, the
+/// note only when chosen).
 struct ShareCardView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.displayScale) private var displayScale
     @Environment(\.frameStore) private var frameStore
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
@@ -27,9 +26,16 @@ struct ShareCardView: View {
     let sighting: Sighting
     @State private var choices = FindPolicy.Choices()
     @State private var chosenCircles: Set<String> = []
-    @State private var artImage: UIImage?
+    @State private var patchLoad = PatchLoad.loading
     @State private var export: CardExport?
     @State private var sending = SendState.idle
+
+    /// The patch's textures for the image: the renderer draws what it's given at once.
+    private enum PatchLoad {
+        case loading
+        /// Nil when the phone has no painting of this patch, or it couldn't be decoded: the image shows the blank.
+        case ready(PatchTextures.Loaded?)
+    }
 
     enum SendState: Equatable {
         case idle
@@ -41,49 +47,47 @@ struct ShareCardView: View {
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "share")
 
     private var collection: CardCollection { library.collection(of: sightings) }
-    /// Whether this sighting sewed its patch: what the find's flag carries until #136 renames it.
+    /// Whether this sighting sewed its patch.
     private var sewedPatch: Bool { collection.sewedItsPatch(sighting.identifier) }
     private var input: FindPolicy.Input {
-        FindOutbox.input(of: sighting, isLegendary: outbox.publishedLegendary(sighting.identifier) ?? sewedPatch, packs: library, places: places)
+        FindOutbox.input(of: sighting, isNewPatch: outbox.publishedNewPatch(sighting.identifier) ?? sewedPatch, packs: library, places: places)
     }
     private var place: String? { FindPolicy.sharedPlace(for: input, choices: choices) }
     private var hasNote: Bool { !(sighting.note ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     private var originalPhotoPath: String? { CardText.originalPhotoPath(sighting) }
     private var showsCircles: Bool { AccountSession.isEnabledInThisBuild && circles.isAvailable }
 
-    /// The share policy's content for the system share: the city (or secret spot) chosen, the note when chosen, and
-    /// whether the species' pack photo may travel, with its credit. Never the glasses snapshot: the card face is the
-    /// picture now.
+    private var setID: String? { collection.placement(of: sighting.identifier)?.setID }
+    private var patchArt: PatchArt? { library.patchArt(scientificName: sighting.scientificName, setID: setID) }
+    /// The species in the pack of the sighting's set, whose patch this is; else in the first pack that has it.
+    private var species: PackSpecies? {
+        setID.flatMap(library.pack(id:))?.species(scientificName: sighting.scientificName)
+            ?? library.species(scientificName: sighting.scientificName)?.species
+    }
+
+    /// The share policy's content for the system share: the city (or secret spot) chosen and the note when chosen. No
+    /// picture of its own: the composed image is the picture.
     private var content: SharePolicy.Content {
         var policy = SharePolicy.Choices()
         policy.includeNote = choices.includeNote
         policy.useSnapshot = false
-        return SharePolicy.content(
-            for: sighting, commonName: library.commonName(for: sighting),
-            reference: library.species(scientificName: sighting.scientificName)?.species.photos.first,
-            area: place, choices: policy
+        return SharePolicy.content(for: sighting, commonName: library.commonName(for: sighting), reference: nil, area: place, choices: policy)
+    }
+
+    private var photoCredits: [String] {
+        guard let species, let patch = species.patch, patchArt != nil else { return [] }
+        return PatchShareImage.Facts.credits(of: patch, in: species)
+    }
+
+    private var facts: PatchShareImage.Facts {
+        PatchShareImage.Facts(
+            sighting: sighting, name: library.commonName(for: sighting), placement: collection.placement(of: sighting.identifier), place: place,
+            lore: species?.lore, hasPainting: patchArt != nil, photoCredits: photoCredits
         )
     }
 
-    /// The face's art: the card's own, except a pack photo whose license doesn't allow a share, which gives way to the
-    /// typographic face.
-    private var faceArt: CardText.Art {
-        Self.faceArt(CardArtView.art(for: sighting, library: library, setID: collection.placement(of: sighting.identifier)?.setID), content: content)
-    }
-
-    static func faceArt(_ art: CardText.Art, content: SharePolicy.Content) -> CardText.Art {
-        guard case .referencePhoto = art else { return art }
-        if case .reference = content.picture { return art }
-        return .none
-    }
-
-    private var face: some View {
-        CardFront(
-            sighting: sighting, placement: collection.placement(of: sighting.identifier), place: place,
-            art: faceArt, artImage: artImage
-        )
-        .environment(library)
-        .environment(\.colorScheme, .light)
+    private var loaded: PatchTextures.Loaded? {
+        if case .ready(let loaded) = patchLoad { loaded } else { nil }
     }
 
     var body: some View {
@@ -181,8 +185,15 @@ struct ShareCardView: View {
                 .padding(.vertical, 12)
                 .background(.bar)
             }
-            .task(id: faceArt) { loadArt() }
-            .task(id: ExportKey(choices: choices, place: place, hasArt: artImage != nil)) { render() }
+            .task(id: patchArt) {
+                patchLoad = .loading
+                if let patchArt {
+                    patchLoad = .ready(await PatchTextures.load(patchArt, size: .full))
+                } else {
+                    patchLoad = .ready(nil)
+                }
+            }
+            .task(id: ExportKey(choices: choices, place: place, isReady: isReady, hasPatch: loaded != nil)) { render() }
             .task {
                 if let location = sighting.location { await places.resolve(location) }
                 if showsCircles { await circles.refresh() }
@@ -293,12 +304,12 @@ struct ShareCardView: View {
             var photo: Data?
             if choices.includeOriginalPhoto {
                 guard let path = originalPhotoPath, let url = frameStore?.url(for: path) else { throw ShareFailure.photoUnavailable }
-                photo = try await Task.detached(priority: .userInitiated) { try ArtPhoto.prepare(jpeg: Data(contentsOf: url)).jpeg }.value
+                photo = try await Task.detached(priority: .userInitiated) { try SharedPhoto.prepare(jpeg: Data(contentsOf: url)).jpeg }.value
             }
             try await circles.shareCard(sightingID: sighting.identifier, photo: photo) { key in
                 FindPolicy.card(for: input, choices: choices, circleIDs: ids, photoKey: key)
             }
-            outbox.sharedByHand(sighting.identifier, isLegendary: input.isLegendary)
+            outbox.sharedByHand(sighting.identifier, isNewPatch: input.isNewPatch)
             sending = .sent("Sent to \(names.formatted(.list(type: .and))).")
         } catch {
             log.error("couldn't share the card: \(String(describing: error))")
@@ -314,7 +325,7 @@ struct ShareCardView: View {
     static func message(for error: Error) -> String {
         switch error {
         case ShareFailure.findWaiting: "This bird is still on its way to your Guilds. Try again once you're online."
-        case ShareFailure.photoUnavailable, is ArtPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
+        case ShareFailure.photoUnavailable, is SharedPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
         case CircleError.rejected: "The server turned this card down. Try again without the photo."
         default: CircleStore.message(for: error, doing: "share your card")
         }
@@ -335,37 +346,33 @@ struct ShareCardView: View {
         return "Only the city goes with the card, never the exact spot."
     }
 
-    /// The face's picture, loaded before the face is rendered: the renderer draws what is there at once.
-    private func loadArt() {
-        switch faceArt {
-        case .photoArt(let path), .sceneArt(let path):
-            artImage = (frameStore?.url(for: path)).flatMap { FrameImage.croppedFrame(at: $0, zoom: 1) }
-        case .packArt(let url, _), .referencePhoto(let url, _):
-            artImage = UIImage(contentsOfFile: url.path(percentEncoded: false))
-        case .none:
-            artImage = nil
-        }
+    private var isReady: Bool {
+        if case .ready = patchLoad { true } else { false }
     }
 
-    /// What the face and its text depend on; the city can arrive after the sheet opens.
+    /// What the image and its text depend on; the city can arrive after the sheet opens.
     private struct ExportKey: Equatable {
         var choices: FindPolicy.Choices
         var place: String?
-        var hasArt: Bool
+        var isReady: Bool
+        var hasPatch: Bool
     }
 
-    /// Renders the face at the screen's scale into a PNG with nothing but its pixels.
+    /// Renders the image into a PNG with nothing but its pixels, once the patch is decoded.
     @MainActor
     private func render() {
-        guard let image = CardExport.render(face, scale: max(displayScale, 2)) else { return }
+        guard isReady else { return }
+        let image = PatchShareImage(facts: facts, edition: PatchEdition.of(setID: setID), loaded: loaded)
+        guard let rendered = CardExport.render(image, scale: CardExport.imageScale) else { return }
         let content = content
-        let lore = library.species(scientificName: sighting.scientificName)?.species.lore
-        let text = [SharePolicy.text(for: content), lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
-        export = CardExport(image: image.image, png: image.png, text: text, title: "\(content.commonName) · Featherguild")
+        let lore = species?.lore
+        let credits = photoCredits.isEmpty ? nil : "Patch: AI illustration from a reference photo (\(photoCredits.joined(separator: "; ")))"
+        let text = [SharePolicy.text(for: content), credits, lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
+        export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName) · Featherguild")
     }
 
-    /// The credit of the lore excerpt the face carries (issue #116; design guide page 17: lore licenses and revision
-    /// links travel with shared exports): who wrote it, its sources and license, and the article revision.
+    /// The credit of the lore the image takes its story title from (issue #116; design guide page 17: lore licenses and
+    /// revision links travel with shared exports): who wrote it, its sources and license, and the article revision.
     static func loreCredit(_ lore: PackLore) -> String {
         (["Lore: \(LoreText.credit(lore))"] + [lore.wikipediaRevision?.absoluteString].compactMap { $0 }).joined(separator: " ")
     }
@@ -375,7 +382,7 @@ extension ShareCardView.SendState {
     var isSent: Bool { if case .sent = self { true } else { false } }
 }
 
-/// The card face as the system share takes it: the image, a fresh PNG of it, and the text.
+/// The share image as the system share takes it: the image, a fresh PNG of it, and the text.
 struct CardExport: Transferable {
     let image: UIImage
     let png: Data
@@ -387,10 +394,14 @@ struct CardExport: Transferable {
             .suggestedFileName { "\($0.title).png" }
     }
 
-    /// The face drawn 360 points wide, and its PNG.
+    /// The scale of the share image, whatever the phone's screen: `PatchShareImage` draws its patch 240 points wide, so
+    /// the patch comes to 1080 px (guide page 8).
+    static let imageScale: CGFloat = 4.5
+
+    /// The view drawn 360 points wide, and its PNG.
     @MainActor
-    static func render(_ face: some View, scale: CGFloat) -> (image: UIImage, png: Data)? {
-        let renderer = ImageRenderer(content: face.frame(width: 360))
+    static func render(_ view: some View, scale: CGFloat) -> (image: UIImage, png: Data)? {
+        let renderer = ImageRenderer(content: view.frame(width: 360))
         renderer.scale = scale
         renderer.proposedSize = ProposedViewSize(width: 360, height: nil)
         guard let image = renderer.uiImage, let cgImage = image.cgImage, let png = png(cgImage) else { return nil }

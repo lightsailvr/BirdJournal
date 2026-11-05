@@ -4,6 +4,8 @@ Every picture is the running app on an iOS 27.2 simulator, taken by `capture.sh`
 
 Names end in `-dark` or `-light`. The boards are at the default text size.
 
+`board-12-share-*`, `board-13-guild-*` and `state-no-location-rarity-*` were taken again on top of #136 and #137, whose changes they show. The rest are from before those two merged. Looking over the sheets, none of them shows anything those two changed.
+
 ## The journey (guide pages 4–8)
 
 | Board | Guide | App | Remaining difference |
@@ -13,14 +15,14 @@ Names end in `-dark` or `-light`. The boards are at the default text size.
 | 03 Review and add | page 4 | `board-03-review-*` | Matches. The action reads "Add and sew patch" or "Add sighting". |
 | 04 Stitching | page 5 | `board-04-stitching-*` | Matches. The caption also names the thread (as page 14 asks); the board's says only "Thread 5 of 10". |
 | 05 Your patch | page 5 | `board-05-your-patch-*` | "See it in my collection" and "Your sighting is already saved." are additions #135 kept. With no run going, the first button reads Done rather than Keep listening. |
-| 06 Seen again | page 5 | not captured | The maintainer decided on 2026-11-04 that a repeat add has no page: the number ticks up and the sighting is recorded. That page is being removed on `feature/135-sewing-ceremony`. |
+| 06 Seen again | page 5 | not captured | The maintainer decided on 2026-11-04 that a repeat add has no page: the number ticks up and the sighting is recorded. #135 removed that page; `docs/screenshots/135/seen-again-toast.jpg` shows the toast that took its place. |
 | 07 The patch board | page 6 | `board-07-patches-*` | No patterns after your patches (the decision above). Otherwise matches: three columns, collector order, number and count. |
 | 08 The patch | page 6 | `board-08-patch-*` | Matches. |
 | 09 The paper card | page 6 | `board-09-paper-card-*` | Matches. |
 | 10 Two editions | page 7 | `board-10-two-editions-*` | No "Still to find" row (the decision above). San Diego's patch is the tagged blank here, since only Los Angeles has paintings; the guide's shield is Orlando's. |
 | 11 Atlas | page 7 | `board-11-atlas-*` | Each set shows its cover, not the patch family the board shows beside its progress. A difference to decide, not in this slice's issue. |
-| 12 Share | page 8 | `board-12-share-*` | Still the story card, not the patch on linen. Its slice is #136, which isn't on this stack. |
-| 13 Guild | page 8 | `board-13-guild-*` | Finds are led by the photo, not the member's patch. Also #136. |
+| 12 Share | page 8 | `board-12-share-*` | The patch on linen with its paper card (#136). The sheet keeps its title "A story to share", the Your note and City switches and Share card image, where the board has Cancel, Share, Next and rows for the note, place and credits. |
+| 13 Guild | page 8 | `board-13-guild-*` | A new patch is led by the member's patch and a repeat is a quiet line (#136). A repeat has no "8 times now", since the count isn't on the wire, and keeps its labels and reactions. The shot is scrolled to the finds, so the Guild's heading and goal are above it. |
 
 ## The states (guide page 15)
 

@@ -104,17 +104,17 @@ def test_a_bad_environment_or_no_access_token_is_refused(client: TestClient, iss
 # The notable-versus-digest decision.
 
 
-def test_a_legendary_pushes_at_once_to_every_friend_with_the_find(
+def test_a_new_patch_pushes_at_once_to_every_friend_with_the_find(
     client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
 ) -> None:
     _register(client, issuer, "bo", BO_IPAD, "production")
-    sighting = _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    sighting = _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     for token in (BO_PHONE, BO_IPAD, CY_PHONE):
         (push,) = apns.to(token)
         assert push.kind is PushKind.NOTABLE
     push = apns.to(BO_PHONE)[0]
     payload = push.payload()
-    assert payload["aps"]["alert"] == {"title": "Ada Lovelace found a Black Phoebe", "body": "Legendary · Pasadena"}
+    assert payload["aps"]["alert"] == {"title": "Ada Lovelace found a Black Phoebe", "body": "New patch · Pasadena"}
     assert payload["aps"]["content-available"] == 1
     assert payload["aps"]["thread-id"] == "friend-ada"
     assert payload["find"] == {
@@ -127,6 +127,9 @@ def test_a_legendary_pushes_at_once_to_every_friend_with_the_find(
         "method": "heard",
         "place": "Pasadena",
         "found_at": "2026-11-01T08:15:00Z",
+        "new_patch": True,
+        "edition": None,
+        # Until every beta phone has updated: an old client's `FriendFind` can't decode a push without it.
         "legendary": True,
         "rarity": "common",
         "circle_first": False,
@@ -136,10 +139,42 @@ def test_a_legendary_pushes_at_once_to_every_friend_with_the_find(
     assert environments[BO_IPAD] == "production" and environments[BO_PHONE] == "sandbox"
 
 
+def test_a_new_patch_push_says_its_edition_for_the_phone_and_new_patch_for_the_birder(
+    client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
+) -> None:
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True, edition="us-ca-la"))
+    (push,) = apns.to(BO_PHONE)
+    assert push.body == "New patch · Pasadena"
+    assert "Legendary" not in str(push.title) + str(push.body)
+    assert push.data["find"]["new_patch"] is True
+    assert push.data["find"]["edition"] == "us-ca-la"
+
+
+def test_a_repeat_sighting_is_not_notable_and_waits_for_the_digest(
+    client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
+) -> None:
+    # The circle's first Black Phoebe is already Cy's (the fixture).
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=False, edition="us-ca-la"))
+    assert [push.kind for push in apns.to(BO_PHONE)] == [PushKind.REFRESH]
+
+
+def test_an_old_beta_clients_legendary_still_makes_a_notable_find(
+    client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
+) -> None:
+    """A phone that hasn't updated sends `legendary` and no `new_patch`: compatibility until they all have."""
+    body = _find(PHOEBE, legendary=True)
+    del body["new_patch"]
+    sighting = _put_ok(client, issuer, "ada", body)
+    (push,) = apns.to(BO_PHONE)
+    assert push.kind is PushKind.NOTABLE
+    assert push.body == "New patch · Pasadena"
+    assert push.data["find"]["sighting_id"] == sighting and push.data["find"]["new_patch"] is True
+
+
 def test_the_owner_is_never_pushed_about_their_own_find(
     client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
 ) -> None:
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     _put_ok(client, issuer, "ada", _find(PHOEBE))
     assert apns.to(ADA_PHONE) == []
     _flush(client)
@@ -184,16 +219,16 @@ def test_a_find_published_late_from_earlier_still_takes_the_first(
 
 
 def test_a_repeated_put_sends_nothing(client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str) -> None:
-    sighting = _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    sighting = _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     apns.clear()
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True, method="seen"), sighting)
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True, method="seen"), sighting)
     assert apns.sent == []
 
 
 def test_a_friend_in_two_circles_hears_once(client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str) -> None:
     second = str(_create(client, issuer, sub="ada", name="Weekday walkers")["id"])
     _join(client, issuer, second, "bo")
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     assert len(apns.to(BO_PHONE)) == 1
     assert set(apns.to(BO_PHONE)[0].payload()["find"]["circle_ids"]) == {circle, second}
 
@@ -208,7 +243,7 @@ def test_a_friend_without_a_phone_gets_nothing_and_nothing_waits(
 
 def test_a_member_who_left_hears_nothing(client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str) -> None:
     assert client.delete(f"/v1/circles/{circle}/members/me", headers=issuer.headers(sub="bo")).status_code == 204
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     assert apns.to(BO_PHONE) == []
     assert len(apns.to(CY_PHONE)) == 1
 
@@ -217,7 +252,7 @@ def test_a_token_apns_calls_gone_is_forgotten(
     client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str, table: Any
 ) -> None:
     apns.gone.add(BO_PHONE)
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     assert "Item" not in table.get_item(Key={"pk": "ACCOUNT#bo", "sk": f"DEVICE#{BO_PHONE}"})
     assert "Item" not in table.get_item(Key={"pk": f"DEVICE#{BO_PHONE}", "sk": "DEVICE"})
 
@@ -227,7 +262,7 @@ def test_a_failing_apns_never_fails_the_put(client: TestClient, issuer: TestIssu
         raise RuntimeError("APNs is down")
 
     apns.send = broken  # type: ignore[method-assign]
-    _, response = _put(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _, response = _put(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     assert response.status_code == 201
 
 
@@ -272,7 +307,7 @@ def test_a_burst_of_ordinary_finds_arrives_as_one_digest(
 def test_digests_wait_two_hours_after_the_last_push_about_that_friend(
     client: TestClient, issuer: TestIssuer, apns: FakeApns, clock: Clock, circle: str
 ) -> None:
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     clock.now += timedelta(minutes=10)
     _put_ok(client, issuer, "ada", _find(SPECIES[0]))
     _put_ok(client, issuer, "cy", _find(SPECIES[1]))
@@ -344,7 +379,7 @@ def test_a_notable_push_names_only_the_recipient_s_circles(
     client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
 ) -> None:
     second = str(_create(client, issuer, sub="ada", name="Weekday walkers")["id"])
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     # Bo isn't in the weekday circle: his push doesn't name it.
     assert apns.to(BO_PHONE)[0].payload()["find"]["circle_ids"] == [circle]
     assert second
@@ -368,13 +403,13 @@ def test_muting_the_circle_a_buffered_find_came_through_drops_it_though_another_
 
 def test_a_muted_friend_sends_nothing(client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str) -> None:
     assert client.put("/v1/friends/ada/mute", headers=issuer.headers(sub="bo")).status_code == 204
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     _put_ok(client, issuer, "ada", _find(SPECIES[0]))
     _flush(client)
     assert apns.to(BO_PHONE) == []
     assert apns.to(CY_PHONE) != []
     assert client.delete("/v1/friends/ada/mute", headers=issuer.headers(sub="bo")).status_code == 204
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True, found_at="2026-11-01T09:00:00Z"))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True, found_at="2026-11-01T09:00:00Z"))
     assert len(apns.to(BO_PHONE)) == 1
 
 
@@ -382,11 +417,11 @@ def test_a_muted_circle_sends_nothing_unless_another_circle_carries_the_find(
     client: TestClient, issuer: TestIssuer, apns: FakeApns, circle: str
 ) -> None:
     assert client.put(f"/v1/circles/{circle}/mute", headers=issuer.headers(sub="bo")).status_code == 204
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True))
     assert apns.to(BO_PHONE) == []
     second = str(_create(client, issuer, sub="ada", name="Weekday walkers")["id"])
     _join(client, issuer, second, "bo")
-    _put_ok(client, issuer, "ada", _find(PHOEBE, legendary=True, found_at="2026-11-01T09:00:00Z"))
+    _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True, found_at="2026-11-01T09:00:00Z"))
     (push,) = apns.to(BO_PHONE)
     assert push.kind is PushKind.NOTABLE
 
@@ -464,7 +499,7 @@ def test_the_schedule_s_event_flushes_the_digests(
 def _content(common: str, scientific: str, place: str | None, minute: int) -> FindContent:
     return FindContent(
         species_id=f"{scientific}_{common}", scientific_name=scientific, common_name=common, method=Method.HEARD,
-        place=place, found_at=datetime(2026, 11, 1, 8, minute, tzinfo=UTC), legendary=False, rarity=None,
+        place=place, found_at=datetime(2026, 11, 1, 8, minute, tzinfo=UTC), new_patch=False, rarity=None,
         threatened=False, art=None,
     )
 
