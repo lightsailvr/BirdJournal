@@ -4,10 +4,12 @@ using namespace metal;
 
 // A patch lit by the app (issue #134, guide page 13). The layer is the patch's colour on transparency, drawn inside the
 // `face` rectangle with room around it for the shadow. `layers` is the pack's half-size layers: height in red (thread
-// relief plus the raised cord), the cord's mask in green. Diffuse shading and a soft sheen come from the height's normal
-// under one light; the sheen is strongest on the cord. A two-part shadow falls opposite the light. With `pattern` at 1 the
-// patch hasn't been sewn: the cord stays, and bare twill takes the rest, with the patch's own stitch lines (where the
-// painting's colour changes) drawn on it in transfer pen.
+// relief plus the raised cord), the cord's mask in green, the stitch order in blue. Diffuse shading and a soft sheen come
+// from the height's normal under one light; the sheen is strongest on the cord. A two-part shadow falls opposite the light.
+//
+// `sewnTo` is how far along the stitch order the thread is laid (issue #135), 1 or more for a finished patch, which skips all
+// of it. Where the thread hasn't reached yet there's bare twill, up to the patch's edge since the cord comes last, with the
+// patch's own stitch lines (where the painting's colour changes) drawn on it in transfer pen.
 
 // How far the light is from straight overhead when it rests upper-left, in the units of `light`: where the shadow's offset is
 // the guide's 9 pt, so it lengthens as the phone tilts away from the light and shortens as it tilts toward it.
@@ -18,6 +20,8 @@ constant float softBlur = 10.0;
 constant float contactOffset = 1.0;
 constant float contactBlur = 2.0;
 constant float contactStrengthLimit = 0.5;
+// The soft edge of the laid thread on the stitch order, wide enough to hide the order's own 8-bit steps.
+constant float stitchEdge = 0.006;
 
 // How much of the patch covers `point` when blurred over `radius`: thirteen taps, two rings and the centre.
 static float blurredCoverage(SwiftUI::Layer layer, float2 point, float radius) {
@@ -45,7 +49,7 @@ static float paintedEdge(SwiftUI::Layer layer, float2 point, float radius) {
 }
 
 [[ stitchable ]] half4 patchLit(float2 position, SwiftUI::Layer layer,
-                                float2 light, float4 face, float2 texel, float scale, float softStrength, float pattern,
+                                float2 light, float4 face, float2 texel, float scale, float softStrength, float sewnTo,
                                 half4 ground, half4 pen, texture2d<half> layers) {
     constexpr sampler linear(filter::linear, address::clamp_to_edge);
     half4 colour = layer.sample(position);
@@ -78,17 +82,21 @@ static float paintedEdge(SwiftUI::Layer layer, float2 point, float radius) {
     float dy = (bl + 2.0 * bc + br) - (tl + 2.0 * tc + tr);
 
     half3 base = colour.rgb / max(colour.a, half(0.001));
-    if (pattern > 0.5) {
-        // Bare twill: its diagonal rib, the painting's cord, and the stitch lines in transfer pen inside the cord.
-        float rib = 0.97 + 0.03 * sin((position.x + position.y) * 2.4 / max(scale, 0.4));
-        half3 twill = ground.rgb * half(rib);
-        float inside = smoothstep(0.05, 0.0, cord);
-        float edge = paintedEdge(layer, position, 3.4 * scale);
-        float line = smoothstep(0.10, 0.22, edge) * inside;
-        twill = mix(twill, pen.rgb, half(line * 0.62));
-        base = mix(twill, base, half(smoothstep(0.35, 0.65, cord)));
-        dx *= cord;
-        dy *= cord;
+    if (sewnTo < 1.0) {
+        float sewn = 1.0 - smoothstep(sewnTo - stitchEdge, sewnTo + stitchEdge, float(here.b));
+        if (sewn < 1.0) {
+            // Bare twill: its diagonal rib, and the stitch lines in transfer pen inside where the cord will go.
+            float rib = 0.97 + 0.03 * sin((position.x + position.y) * 2.4 / max(scale, 0.4));
+            half3 twill = ground.rgb * half(rib);
+            float inside = 1.0 - smoothstep(0.0, 0.05, cord);
+            float edge = paintedEdge(layer, position, 3.4 * scale);
+            float line = smoothstep(0.10, 0.22, edge) * inside;
+            twill = mix(twill, pen.rgb, half(line * 0.62));
+            base = mix(twill, base, half(sewn));
+            dx *= sewn;
+            dy *= sewn;
+            cord *= sewn;
+        }
     }
 
     // Diffuse: the whole patch brightens as it faces the light and dims as it turns away, 1 for a flat patch with the light

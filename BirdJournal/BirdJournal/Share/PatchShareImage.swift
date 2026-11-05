@@ -55,7 +55,7 @@ struct PatchShareImage: View {
             .aspectRatio(edition.aspect, contentMode: .fit)
             .overlay {
                 if let loaded {
-                    LitPatch(loaded: loaded, ground: edition.twill, isPattern: false, room: 34, fixedLight: Self.light)
+                    LitPatch(loaded: loaded, ground: edition.twill, sewnTo: StitchTimeline.allSewn, room: 34, fixedLight: Self.light)
                 } else {
                     PatchBlank(edition: edition)
                 }

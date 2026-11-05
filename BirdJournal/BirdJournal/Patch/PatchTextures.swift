@@ -9,6 +9,8 @@ nonisolated struct PatchArt: Hashable, Sendable {
     let layers: URL
     /// The bare twill's colour: what an unstitched pattern shows.
     let ground: String
+    /// Where each stitch layer starts on the order's 0...255, the last being 255 (`PackPatch`): the stitch-in's threads.
+    var stitchBounds: [Int] = []
 }
 
 extension PackLibrary {
@@ -16,7 +18,7 @@ extension PackLibrary {
     /// bird, or the patch is Uncharted. A patch is never drawn with another edition's painting (guide page 7).
     func patchArt(scientificName: String, setID: String?) -> PatchArt? {
         patch(scientificName: scientificName, setID: setID).map { found in
-            PatchArt(colour: found.pack.patchURL(for: found.patch), layers: found.pack.patchLayersURL(for: found.patch), ground: found.patch.ground)
+            PatchArt(colour: found.pack.patchURL(for: found.patch), layers: found.pack.patchLayersURL(for: found.patch), ground: found.patch.ground, stitchBounds: found.patch.stitchBounds)
         }
     }
 }
@@ -37,11 +39,16 @@ enum PatchTextures {
         let layers: Image
         /// One layer pixel in the 0...1 of the shader's `uv`.
         let texel: CGSize
+        /// The same pictures' pixels, which the images above hold anyway: what the stitch-in reads its threads from.
+        let colourBitmap: CGImage
+        let layersBitmap: CGImage
 
-        init(colour: Image, layers: Image, texel: CGSize) {
-            self.colour = colour
-            self.layers = layers
-            self.texel = texel
+        init(colour: CGImage, layers: CGImage) {
+            self.colour = Image(decorative: colour, scale: 1)
+            self.layers = Image(decorative: layers, scale: 1)
+            texel = CGSize(width: 1 / CGFloat(layers.width), height: 1 / CGFloat(layers.height))
+            colourBitmap = colour
+            layersBitmap = layers
         }
     }
 
@@ -62,10 +69,7 @@ enum PatchTextures {
                         continuation.resume(returning: nil)
                         return
                     }
-                    continuation.resume(returning: Loaded(
-                        colour: Image(decorative: colour, scale: 1), layers: Image(decorative: layers, scale: 1),
-                        texel: CGSize(width: 1 / CGFloat(layers.width), height: 1 / CGFloat(layers.height))
-                    ))
+                    continuation.resume(returning: Loaded(colour: colour, layers: layers))
                 }
             }
         } onCancel: {
@@ -73,6 +77,15 @@ enum PatchTextures {
         }
         if let loaded { cache.setObject(loaded, forKey: key(art, size)) }
         return loaded
+    }
+
+    /// The patch's threads, for its stitch-in: every pixel of its layers is read, so it's off the main thread too.
+    nonisolated static func threads(of loaded: Loaded, art: PatchArt) async -> [StitchThread] {
+        await withCheckedContinuation { continuation in
+            decoding.addOperation {
+                continuation.resume(returning: StitchThread.threads(colour: loaded.colourBitmap, layers: loaded.layersBitmap, bounds: art.stitchBounds))
+            }
+        }
     }
 
     /// Decodes block their thread, so they run here and never on Swift's cooperative pool: a board asks for a dozen at

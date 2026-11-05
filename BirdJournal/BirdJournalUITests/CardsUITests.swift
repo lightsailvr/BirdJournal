@@ -1,11 +1,11 @@
 import XCTest
 
-/// Issue #132 (of #131; before it #51's Legendary card): the first add of a species in a place sews its patch. Real taps
-/// on a phone run over the example soundscape, with no location, so every patch is Uncharted: the first add says "Add
-/// and sew patch" and shows the new-patch reveal (Keep listening first, issue #117), See it in my collection lands on
-/// the patch, seen once; a second add of the same species says "Add another sighting", is acknowledged as seen again,
-/// and leaves one patch, seen twice; opening the patch never replays the reveal. Skipped when the clip is not on disk
-/// (`scripts/download-clips.sh`).
+/// Issues #132, #135 (of #131; before them #51's Legendary card): the first add of a species in a place sews its patch.
+/// Real taps on a phone run over the example soundscape, with no location, so every patch is Uncharted: the first add says
+/// "Add and sew patch" and shows the new-patch reveal (Keep listening first, issue #117), See it in my collection lands on
+/// the patch, seen once; a second add of the same species says "Add another sighting", says the count is 2 with no page and
+/// nothing to tap, and leaves one patch, seen twice; opening the patch replays neither. Skipped when the clip is not on
+/// disk (`scripts/download-clips.sh`). `SewingUITests` drives the stitch-in itself, on a patch with a painting.
 final class CardsUITests: XCTestCase {
     @MainActor
     func testFirstAddSewsAPatchAndARepeatAddsToItsCount() throws {
@@ -55,6 +55,8 @@ final class CardsUITests: XCTestCase {
         addAnother.tap()
         XCTAssertTrue(app.staticTexts["Seen again · 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
+        XCTAssertFalse(app.buttons["stitch-in"].exists, "a repeat add stitches nothing")
+        XCTAssertFalse(app.buttons["Keep listening"].exists, "and opens no page")
 
         // Still one patch of the species, seen twice; reopening it shows its page (issue #134), not the reveal again.
         app.tabBars.buttons["Collection"].tap()

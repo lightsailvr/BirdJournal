@@ -7,8 +7,18 @@ import Pack
 enum PatchText {
     /// "House Finch, Citrus edition patch, seen 8 times, sewn September 14, 2026"; "House Finch, Uncharted patch, …".
     static func spoken(_ patch: CardCollection.Patch, name: String) -> String {
-        let sewn = patch.sewn.confirmedAt.formatted(date: .long, time: .omitted)
-        return "\(name), \(patch.placement.editionLabel) patch, seen \(CardCollection.Patch.times(patch.count)), sewn \(sewn)"
+        spoken(name: name, edition: patch.placement.editionLabel, count: patch.count, sewn: patch.sewn.confirmedAt)
+    }
+
+    /// The same sentence for a patch that isn't read from the collection: the one just sewn.
+    static func spoken(name: String, edition: String, count: Int, sewn: Date) -> String {
+        "\(name), \(edition) patch, seen \(CardCollection.Patch.times(count)), sewn \(sewn.formatted(date: .long, time: .omitted))"
+    }
+
+    /// Under the name on the reveal: "No. 019 of 160 · Los Angeles"; nil outside every set.
+    static func revealNumberLine(_ placement: CardPlacement) -> String? {
+        guard case .numbered(_, let setName, _, let number, let total) = placement else { return nil }
+        return "No. \(CardPlacement.paddedNumber(number, of: total)) of \(total) · \(setName)"
     }
 
     /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set.
