@@ -77,12 +77,12 @@ struct PaperCardView: View {
         let heading = CardHeading.accessibilityText(placement: patch.placement).compactMap { $0 }.joined(separator: ", ")
         return ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline) {
-                Text(patch.placement.editionLabel).fixedSize()
+                Text(PatchText.cardEdition(patch.placement)).fixedSize()
                 Spacer(minLength: 8)
                 collectorNumber.fixedSize()
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(patch.placement.editionLabel).fixedSize(horizontal: false, vertical: true)
+                Text(PatchText.cardEdition(patch.placement)).fixedSize(horizontal: false, vertical: true)
                 collectorNumber.fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -141,7 +141,7 @@ struct PaperCardView: View {
                     .font(.caption)
                     .foregroundStyle(Color.cardInk)
                     .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel("\(PatchText.sightings(patch.count)) here, sewn \(patch.sewn.confirmedAt.formatted(date: .long, time: .omitted))")
+                    .accessibilityLabel("\(PatchText.sightings(patch.count)) here, sewn \(PatchText.spokenDate(patch.sewn.confirmedAt))")
                     .accessibilityIdentifier("card-history")
             }
             ForEach(sightings.prefix(Self.latestShown)) { sighting in
@@ -200,8 +200,16 @@ struct PaperCardView: View {
         let all = "All \(PatchText.sightings(patch.count))"
         let hasPainting = library.patchArt(scientificName: patch.scientificName, setID: patch.placement.setID) != nil
         return ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) { footerParts(all: all, hasPainting: hasPainting, hasCredits: hasCredits) }
-            VStack(alignment: .leading, spacing: 2) { footerParts(all: all, hasPainting: hasPainting, hasCredits: hasCredits) }
+            HStack(spacing: 8) {
+                footerLink(all: all)
+                Spacer(minLength: 0)
+                footerCredits(hasPainting: hasPainting, hasCredits: hasCredits)
+            }
+            // Stacked, with no spacer: in a column it would take the height the story needs (half the card at xxLarge).
+            VStack(alignment: .leading, spacing: 2) {
+                footerLink(all: all)
+                footerCredits(hasPainting: hasPainting, hasCredits: hasCredits)
+            }
         }
         .font(.caption)
         .foregroundStyle(Color.cardEdge)
@@ -211,7 +219,7 @@ struct PaperCardView: View {
         .padding(.bottom, 6)
     }
 
-    @ViewBuilder private func footerParts(all: String, hasPainting: Bool, hasCredits: Bool) -> some View {
+    private func footerLink(all: String) -> some View {
         NavigationLink(value: Route.sightings(.patch(patch.id))) {
             Label(all, systemImage: "chevron.right")
                 .labelStyle(TrailingChevronLabel())
@@ -221,7 +229,9 @@ struct PaperCardView: View {
         .buttonStyle(.plain)
         .fixedSize()
         .accessibilityIdentifier("card-all-sightings")
-        Spacer(minLength: 0)
+    }
+
+    @ViewBuilder private func footerCredits(hasPainting: Bool, hasCredits: Bool) -> some View {
         if hasPainting {
             Text("AI illustration")
                 .fixedSize()

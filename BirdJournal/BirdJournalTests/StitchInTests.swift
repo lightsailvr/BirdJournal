@@ -357,7 +357,7 @@ struct SewingCeremonyAccessibilityTests {
         }
     }
 
-    private static func element(in object: Any, labelled label: String) -> NSObject? {
+    static func element(in object: Any, labelled label: String) -> NSObject? {
         guard let object = object as? NSObject, !object.accessibilityElementsHidden else { return nil }
         if object.isAccessibilityElement { return object.accessibilityLabel == label ? object : nil }
         if let elements = object.accessibilityElements, !elements.isEmpty {

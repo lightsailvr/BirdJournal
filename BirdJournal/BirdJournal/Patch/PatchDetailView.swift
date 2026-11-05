@@ -14,8 +14,10 @@ struct PatchDetailView: View {
     @State private var turned: CardCollection.Patch.Key?
     @State private var isSharing = false
 
-    init(key: CardCollection.Patch.Key) {
+    /// - Parameter startsTurned: opens on its paper card rather than the patch.
+    init(key: CardCollection.Patch.Key, startsTurned: Bool = false) {
         _current = State(initialValue: key)
+        _turned = State(initialValue: startsTurned ? key : nil)
     }
 
     var body: some View {
@@ -65,8 +67,9 @@ struct PatchDetailView: View {
             }
         } else {
             // The last sighting was removed from under the page.
-            ContentUnavailableView("Patch unpicked", systemImage: "bird", description: Text("Its last sighting here was removed."))
-                .background(Color.paper)
+            PaperPage {
+                StateNotice("Patch unpicked", message: "Its last sighting here was removed.", mark: .symbol("bird"))
+            }
         }
     }
 
@@ -97,6 +100,8 @@ private struct PatchPage: View {
 
     private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     private var name: String { PatchText.name(of: patch, library: library) }
+    private var artState: PatchArtState { library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID) }
+    private var spokenPatch: String { PatchText.spoken(patch, name: name, beingSewn: artState == .beingSewn) }
     private var isSideways: Bool { verticalSizeClass == .compact }
 
     var body: some View {
@@ -113,7 +118,7 @@ private struct PatchPage: View {
                 picture
                     .frame(maxHeight: .infinity)
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(PatchText.spoken(patch, name: name))
+                    .accessibilityLabel(spokenPatch)
                     .accessibilityIdentifier("patch-face")
                 words
             }
@@ -138,9 +143,10 @@ private struct PatchPage: View {
                 if showsCard {
                     Text("Your notes, photos and every sighting open from this side.")
                         .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
+                        .foregroundStyle(Color.ink)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
+                        .boardLabel(horizontal: 12, vertical: 8)
                 } else {
                     words
                 }
@@ -161,10 +167,7 @@ private struct PatchPage: View {
     }
 
     private var picture: some View {
-        PatchView(
-            art: library.patchArt(scientificName: patch.scientificName, setID: patch.placement.setID),
-            edition: PatchEdition.of(setID: patch.placement.setID), size: .full, tag: name
-        )
+        PatchView(state: artState, edition: PatchEdition.of(setID: patch.placement.setID), size: .full, tag: name)
     }
 
     /// The front: the patch centred in the footprint. Tapping it turns it.
@@ -176,7 +179,7 @@ private struct PatchPage: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(PatchText.spoken(patch, name: name))
+        .accessibilityLabel(spokenPatch)
         .accessibilityHint("Turn over for its story.")
         .accessibilityIdentifier("patch-face")
         .accessibilityActions {
@@ -204,6 +207,7 @@ private struct PatchPage: View {
         }
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
+        .boardLabel(horizontal: 12, vertical: 8)
     }
 
     /// Turns the object over and says which face is up. A tap during a turn retargets it, so rapid taps settle on one

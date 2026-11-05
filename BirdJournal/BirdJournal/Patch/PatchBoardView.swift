@@ -50,10 +50,11 @@ struct SewnPatchTile: View {
     var spokenName: String? = nil
 
     var body: some View {
+        let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
         NavigationLink(value: Route.patch(patch.id)) {
             PatchTile(
-                art: library.patchArt(scientificName: patch.scientificName, setID: patch.placement.setID), edition: PatchEdition.of(setID: patch.placement.setID), face: .sewn,
-                name: name, line: line ?? PatchText.tileLine(patch), spoken: PatchText.spoken(patch, name: spokenName ?? name)
+                state: state, edition: PatchEdition.of(setID: patch.placement.setID), tag: spokenName ?? name,
+                name: name, line: line ?? PatchText.tileLine(patch), spoken: PatchText.spoken(patch, name: spokenName ?? name, beingSewn: state == .beingSewn)
             )
         }
         .buttonStyle(.plain)
@@ -65,10 +66,11 @@ struct SewnPatchTile: View {
 /// A patch with its words under it, in type: the name, and the number and count. Under Increase Contrast the words sit on
 /// a solid surface (guide page 14).
 struct PatchTile: View {
-    @Environment(\.colorSchemeContrast) private var contrast
-    let art: PatchArt?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let state: PatchArtState
     let edition: PatchEdition
-    let face: PatchView.Face
+    /// The bird's name, for the blank's paper tag.
+    let tag: String
     let name: String
     let line: String
     /// What VoiceOver reads: the tile is one element.
@@ -76,21 +78,20 @@ struct PatchTile: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            PatchView(art: art, edition: edition, face: face)
-                .frame(maxWidth: 124)
+            PatchView(state: state, edition: edition, tag: tag)
+                // One column at accessibility sizes: the patch grows with its words.
+                .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 124)
             VStack(spacing: 2) {
                 Text(name)
                     .font(PatchFont.tileName)
                     .foregroundStyle(Color.ink)
                 Text(line)
                     .font(PatchFont.tileLine)
-                    .foregroundStyle(Color.inkSecondary)
+                    .foregroundStyle(Color.ink)
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, contrast == .increased ? 6 : 0)
-            .padding(.vertical, contrast == .increased ? 3 : 0)
-            .background(contrast == .increased ? Color.paper : Color.clear, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .boardLabel()
         }
         .frame(maxWidth: .infinity, alignment: .top)
         .contentShape(Rectangle())

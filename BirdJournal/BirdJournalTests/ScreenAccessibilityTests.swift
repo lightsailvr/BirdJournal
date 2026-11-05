@@ -34,10 +34,15 @@ struct ScreenAccessibilityTests {
         let pushes: PushCenter
         let places = PlaceNames()
 
-        init(seeded: Bool = true) throws {
+        /// - Parameters:
+        ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
+        ///   - session: what its downloads go through.
+        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared) throws {
             album = try AlbumSchema.makeContainer(inMemory: true)
             frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibility-\(UUID().uuidString)", directoryHint: .isDirectory))
-            library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
+            let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)"))
+            if let index { try storage.cacheIndex(index) }
+            library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, indexURL: PackIndex.defaultURL, session: session, availableCapacity: { .max })
             edits = JournalEdits(container: album, frames: frames)
             account = FakeAccount.session(signedIn: true)
             let client = FakeCircleClient(seeded: true)
@@ -184,6 +189,178 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains("Turn over"), "the visible action: \(labels)")
         #expect(!labels.contains { $0.hasPrefix("All ") && $0.contains("sighting") }, "the card stays hidden: \(labels)")
         #expect(!labels.contains { $0.hasPrefix("Wingspan") }, "the card stays hidden: \(labels)")
+    }
+
+    @Test("The paper card: the name, the story, the biology and the history, and nothing of the patch's face", arguments: sizes)
+    func paperCard(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
+        let labels = try await Self.walk(PatchDetailView(key: key, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Turn back") && labels.contains { $0.hasPrefix("All 1 sighting") }
+        }
+        Self.expectClean(labels, screen: "Paper card")
+        #expect(labels.contains("Black Phoebe"), "the name: \(labels)")
+        #expect(labels.contains("Sayornis nigricans"), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("1 sighting here, sewn ") }, "the history: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("Wingspan") }, "the biology: \(labels)")
+        #expect(labels.contains("Sources"), "\(labels)")
+        #expect(labels.contains("AI illustration"), "\(labels)")
+        #expect(!labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch") }, "only the face showing: \(labels)")
+        #expect(!labels.contains("Turn over"), "\(labels)")
+    }
+
+    @Test("The paper card's footer stays a few lines when it stacks: as the text grows, the card's room goes to the story", arguments: [DynamicTypeSize.xLarge, .xxLarge, .xxxLarge])
+    func paperCardFooter(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
+        CardFlipAccessibilityTests.enableAccessibility()
+        let host = UIHostingController(rootView: harness.hosted(PatchDetailView(key: key, startsTurned: true), typeSize: typeSize))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = try UIWindow(windowScene: #require(scene))
+        window.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        var all: NSObject?
+        var sources: NSObject?
+        for _ in 0..<60 where all == nil || sources == nil {
+            try await Task.sleep(for: .milliseconds(250))
+            all = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "All 1 sighting")
+            sources = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "Sources")
+        }
+        let top = try #require(all).accessibilityFrame
+        let bottom = try #require(sources).accessibilityFrame
+        #expect(bottom.maxY - top.minY < 120, "the footer takes \(bottom.maxY - top.minY) points of a 470-point card")
+    }
+
+    @Test("An empty collection: the first patch in words and both ways on, with no patch and no pattern", arguments: sizes)
+    func emptyCollection(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness(seeded: false)
+        let labels = try await Self.walk(JournalView(state: CollectionState()), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Your first patch is a bird away.") && labels.contains("See the birds to find")
+        }
+        Self.expectClean(labels, screen: "Empty collection")
+        let title = try #require(labels.firstIndex(of: "Your first patch is a bird away."), "\(labels)")
+        let start = try #require(labels.firstIndex(of: "Start listening"), "\(labels)")
+        let atlas = try #require(labels.firstIndex(of: "See the birds to find"), "\(labels)")
+        #expect(title < start && start < atlas, "the words, then the first action, then the Atlas: \(labels)")
+        #expect(!labels.contains { $0.contains(" patch,") }, "no patch: \(labels)")
+    }
+
+    @Test("Uncharted: its board says so, the patch reads Uncharted, and the card reads outside every set", arguments: sizes)
+    func uncharted(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let state = CollectionState()
+        state.board = .uncharted
+        let board = try await Self.walk(JournalView(state: state), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("Anna's Hummingbird, Uncharted patch") }
+        }
+        Self.expectClean(board, screen: "Uncharted board")
+        #expect(board.contains { $0.hasPrefix("Anna's Hummingbird, Uncharted patch, seen once, sewn ") }, "\(board)")
+
+        let hummingbird = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Calypte anna" })
+        let key = CardCollection.Patch.Key(speciesID: hummingbird.speciesID, setID: nil)
+        let card = try await Self.walk(PatchDetailView(key: key, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Turn back") && labels.contains("Uncharted, outside every set")
+        }
+        Self.expectClean(card, screen: "Uncharted card")
+        #expect(card.contains("Uncharted, outside every set"), "\(card)")
+        #expect(!card.contains("AI illustration"), "no painting to credit: \(card)")
+    }
+
+    // A set the phone knows from the index and whose pack it doesn't have: Coastal (a stand-in for San Diego, around the
+    // seeded gallery's Balboa Park), with its download held open.
+
+    private static let sanDiego = try! PackSet.decode(from: Data("""
+    {"id": "us-ca-sd", "name": "San Diego", "edition": {"name": "Coastal edition", "theme": "Sea cliffs"}, "taxonomy": "IOC",
+     "regions": [{"name": "SD", "source": "test", "polygons": [[[[-118, 32], [-116, 32], [-116, 34], [-118, 34], [-118, 32]]]]}],
+     "species": [{"scientificName": "Haemorhous mexicanus", "commonName": "House Finch"}]}
+    """.utf8))
+
+    private static let sanDiegoPack = PackDescriptor(
+        id: "us-ca-sd", name: "San Diego", version: 1, url: URL(string: "https://stalled.invalid/us-ca-sd.zip")!, sha256: "00", byteCount: 1, schemaVersion: 5, set: sanDiego
+    )
+
+    /// Never answers, so a download stays in flight until it's cancelled.
+    private nonisolated final class StalledDownload: URLProtocol, @unchecked Sendable {
+        override class func canInit(with request: URLRequest) -> Bool { true }
+        override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+        override func startLoading() {}
+        override func stopLoading() {}
+    }
+
+    private static func sanDiegoHarness() throws -> Harness {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StalledDownload.self]
+        let harness = try Harness(seeded: false, index: PackIndex(packs: [sanDiegoPack]), session: URLSession(configuration: configuration))
+        DebugSeeds.seedGallery(context: harness.album.mainContext, frames: harness.frames)
+        return harness
+    }
+
+    @Test("A patch whose pack isn't on the phone is a tagged blank; while the pack downloads it's being sewn, in words, and afterwards a blank again")
+    func beingSewnOnTheRealPath() async throws {
+        let harness = try Self.sanDiegoHarness()
+        let state = CollectionState()
+        state.board = .set(id: "us-ca-sd")
+        let finch = "House Finch, Coastal edition patch, seen 6 times, sewn "
+        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .tagged)
+        let waiting = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) } }
+        Self.expectClean(waiting, screen: "Board, pack not on the phone")
+        #expect(waiting.contains { $0.hasPrefix(finch) && !$0.hasSuffix(", art on its way") }, "\(waiting)")
+
+        harness.library.startDownload(Self.sanDiegoPack)
+        for _ in 0..<40 where harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") != .beingSewn {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .beingSewn)
+        let sewing = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") } }
+        Self.expectClean(sewing, screen: "Board, pack on its way")
+        #expect(sewing.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") }, "\(sewing)")
+        let key = CardCollection.Patch.Key(speciesID: "Haemorhous mexicanus_House Finch", setID: "us-ca-sd")
+        let page = try await Self.walk(PatchDetailView(key: key), harness: harness) { $0.contains("Turn over") }
+        Self.expectClean(page, screen: "Page, pack on its way")
+        #expect(page.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") }, "\(page)")
+
+        harness.library.cancelDownload(id: "us-ca-sd")
+        for _ in 0..<40 where harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") != .tagged {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .tagged, "a cancelled download leaves the tagged blank")
+    }
+
+    @Test("A bird's patches across places: each reads the bird's name, the blank of a set whose pack isn't on the phone too", arguments: sizes)
+    func speciesPatches(typeSize: DynamicTypeSize) async throws {
+        let harness = try Self.sanDiegoHarness()
+        let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("House Finch, Coastal edition patch") } && labels.contains("Open in Field Guide")
+        }
+        Self.expectClean(labels, screen: "Species patches")
+        #expect(labels.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 9 times, sewn ") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("House Finch, Coastal edition patch, seen 6 times, sewn ") }, "the blank: \(labels)")
+        #expect(labels.contains("Open in Field Guide"), "\(labels)")
+    }
+
+    @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)
+    func notYetFound(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let first = try #require(set.species.first)
+        let rows = try await Self.walk(SetView(id: set.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("001, \(first.commonName), not yet found here")
+        }
+        Self.expectClean(rows, screen: "Set page")
+        #expect(rows.contains("001, \(first.commonName), not yet found here"), "\(rows)")
+
+        let page = try await Self.walk(SpeciesPatchesView(scientificName: first.scientificName, commonName: first.commonName), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Open in Field Guide") && labels.contains("Start listening")
+        }
+        Self.expectClean(page, screen: "A bird not yet found")
+        #expect(page.contains("No sightings of \(first.commonName) yet"), "\(page)")
+        #expect(page.contains("Number 1 of \(set.species.count) in \(set.name)"), "its number, in words: \(page)")
+        #expect(page.contains("Open in Field Guide"), "the path to its Atlas profile: \(page)")
+        #expect(!page.contains { $0.contains(" patch,") }, "no patch for a bird you haven't found: \(page)")
     }
 
     @Test("Atlas: the set's tile keeps Ready offline apart from the birder's progress, then the field guide", arguments: sizes)

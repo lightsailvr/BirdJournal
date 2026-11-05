@@ -13,15 +13,64 @@ nonisolated struct PatchArt: Hashable, Sendable {
     var stitchBounds: [Int] = []
 }
 
+/// What stands where a found bird's painting goes (issue #138, guide page 15). It's only ever a bird you did find: one you
+/// haven't has no patch at all.
+nonisolated enum PatchArtState: Hashable, Sendable {
+    case painted(PatchArt)
+    /// The sighting is saved and the edition's pack is on its way: the blank, saying "Being sewn", until it arrives.
+    case beingSewn
+    /// Nothing is coming: Uncharted, a pack that isn't on the phone, a bird it has no painting of. The blank with the bird's
+    /// name on a paper tag. Never an error patch: the sighting and the paper card are complete.
+    case tagged
+
+    var art: PatchArt? {
+        if case .painted(let art) = self { return art }
+        return nil
+    }
+
+    static func of(art: PatchArt?, setID: String?, transfer: PackLibrary.Status?) -> PatchArtState {
+        if let art { return .painted(art) }
+        guard setID != nil else { return .tagged }
+        switch transfer {
+        case .downloading, .installing: return .beingSewn
+        default: return .tagged
+        }
+    }
+}
+
 extension PackLibrary {
     /// A bird's painting in one edition; nil when that edition's pack isn't on the phone, or it has no painting of the
     /// bird, or the patch is Uncharted. A patch is never drawn with another edition's painting (guide page 7).
     func patchArt(scientificName: String, setID: String?) -> PatchArt? {
-        patch(scientificName: scientificName, setID: setID).map { found in
+        #if DEBUG
+        if FakePatchArt.current != nil { return nil }
+        #endif
+        return patch(scientificName: scientificName, setID: setID).map { found in
             PatchArt(colour: found.pack.patchURL(for: found.patch), layers: found.pack.patchLayersURL(for: found.patch), ground: found.patch.ground, stitchBounds: found.patch.stitchBounds)
         }
     }
+
+    /// What a found bird's patch shows in one edition.
+    func patchArtState(scientificName: String, setID: String?) -> PatchArtState {
+        #if DEBUG
+        if FakePatchArt.current == .sewing, setID != nil { return .beingSewn }
+        #endif
+        let transfer = setID.flatMap { id in index?.descriptor(id: id).map(status(of:)) }
+        return .of(art: patchArt(scientificName: scientificName, setID: setID), setID: setID, transfer: transfer)
+    }
 }
+
+#if DEBUG
+/// `-fakePatchArt missing|sewing` (issue #138): every patch without its painting, as when its pack hasn't come or is on its
+/// way, for the states' UI tests and screenshots: the bundled pack is always on the simulator.
+enum FakePatchArt: String {
+    case missing, sewing
+
+    static var current: FakePatchArt? {
+        UserDefaults.standard.string(forKey: "fakePatchArt").flatMap(FakePatchArt.init(rawValue:))
+    }
+}
+#endif
 
 /// The decoded pictures of a patch at one of two sizes, decoded off the main thread and kept while memory allows. A
 /// board's thumbnails decode smaller than a page's patch: at 30 on screen the shader's cost is their pixels (guide page 18).

@@ -59,6 +59,7 @@ private struct RevealHeading: View {
         }
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
+        .boardLabel(horizontal: 12, vertical: 8)
         .onAppear { if takesFocus { focused = true } }
     }
 }
@@ -74,8 +75,8 @@ private extension View {
 private extension ListeningCoordinator.Reveal {
     var edition: PatchEdition { PatchEdition.of(setID: addition.placement.setID) }
 
-    func art(in library: PackLibrary) -> PatchArt? {
-        library.patchArt(scientificName: addition.species.scientificName, setID: addition.placement.setID)
+    func artState(in library: PackLibrary) -> PatchArtState {
+        library.patchArtState(scientificName: addition.species.scientificName, setID: addition.placement.setID)
     }
 }
 
@@ -85,6 +86,7 @@ private struct SavedNote: View {
         Text("Your sighting is already saved.")
             .font(JournalFont.attribution)
             .foregroundStyle(Color.ink)
+            .boardLabel()
     }
 }
 
@@ -115,6 +117,7 @@ private struct RevealUndoButton: View {
             Button("Undo") { run.undo(reveal.addition) }
                 .font(JournalFont.supporting.weight(.semibold))
                 .foregroundStyle(Color.ink)
+                .boardLabel()
                 .frame(minHeight: 44)
                 .accessibilityLabel("Undo adding \(reveal.commonName)")
         }
@@ -136,7 +139,7 @@ private struct NewPatchReveal: View {
     /// The patch decoded and the clock over its threads. Once it's here, the stitch-in is on, whatever the settings do.
     @State private var prepared: (art: PatchArt, loaded: PatchTextures.Loaded, timeline: StitchTimeline)?
 
-    private var art: PatchArt? { reveal.art(in: library) }
+    private var art: PatchArt? { reveal.artState(in: library).art }
 
     private var stitches: Bool {
         StitchCeremony.stitches(
@@ -147,14 +150,14 @@ private struct NewPatchReveal: View {
     var body: some View {
         Group {
             if reveal.hasPlayed {
-                NewPatchPage(reveal: reveal, art: art, decoded: prepared?.loaded)
+                NewPatchPage(reveal: reveal, decoded: prepared?.loaded)
             } else if let prepared {
                 SewingPage(reveal: reveal, art: prepared.art, decoded: prepared.loaded, timeline: prepared.timeline)
             } else if stitches {
                 // A moment, while the patch decodes: its cloth.
                 SewingPage(reveal: reveal, art: nil, decoded: nil, timeline: StitchTimeline(threads: []))
             } else {
-                NewPatchPage(reveal: reveal, art: art, decoded: nil)
+                NewPatchPage(reveal: reveal, decoded: nil)
             }
         }
         .patchSheetBackground()
@@ -233,6 +236,7 @@ private struct SewingPage: View {
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.ink)
                 }
+                .boardLabel()
                 SavedNote()
             }
             .multilineTextAlignment(.center)
@@ -279,12 +283,12 @@ private struct SewingPage: View {
 
 /// The finished patch on felt: "New patch · Citrus edition", "Your first Acorn Woodpecker in Los Angeles.", Keep listening.
 private struct NewPatchPage: View {
+    @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.modelContext) private var context
     @Environment(\.openCollection) private var openCollection
     @Environment(\.dynamicTypeSize) private var typeSize
     let reveal: ListeningCoordinator.Reveal
-    let art: PatchArt?
     let decoded: PatchTextures.Loaded?
     @State private var sharing: Sighting?
     /// Set once on appearing: the haptic's trigger.
@@ -303,17 +307,18 @@ private struct NewPatchPage: View {
         ScrollView {
             VStack(spacing: 18) {
                 RevealHeading(eyebrow: reveal.eyebrow, name: reveal.commonName, line: PatchText.revealNumberLine(reveal.addition.placement))
-                PatchView(art: art, edition: reveal.edition, size: .full, tag: reveal.commonName, decoded: decoded)
+                PatchView(state: reveal.artState(in: library), edition: reveal.edition, size: .full, tag: reveal.commonName, decoded: decoded)
                     .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 280)
                     .padding(.vertical, 8)
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(PatchText.spoken(name: reveal.commonName, edition: reveal.addition.placement.editionLabel, count: reveal.addition.patchCount, sewn: sighting?.confirmedAt ?? .now))
+                    .accessibilityLabel(PatchText.spoken(name: reveal.commonName, edition: reveal.addition.placement.editionLabel, count: reveal.addition.patchCount, sewn: sighting?.confirmedAt ?? .now, beingSewn: reveal.artState(in: library) == .beingSewn))
                     .accessibilityIdentifier("revealed-patch")
                 Text("\(reveal.title).")
                     .font(.system(.body, design: .serif).italic())
                     .foregroundStyle(Color.ink)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .boardLabel(horizontal: 12, vertical: 8)
                     .accessibilityLabel(reveal.title)
                 VStack(spacing: 10) {
                     KeepListeningButton()
@@ -339,6 +344,7 @@ private struct NewPatchPage: View {
                     }
                     .font(JournalFont.supporting.weight(.semibold))
                     .foregroundStyle(Color.ink)
+                    .boardLabel()
                     .frame(minHeight: 44)
                     RevealUndoButton(reveal: reveal)
                     SavedNote()
