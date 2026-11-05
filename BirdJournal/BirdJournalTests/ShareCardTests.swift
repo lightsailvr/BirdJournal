@@ -48,7 +48,7 @@ struct ShareCardTests {
     /// One lit patch on white, as the share image draws it, through the same renderer.
     static func litPatch(_ loaded: PatchTextures.Loaded, light: SIMD2<Double>) throws -> UIImage {
         let view = Color.clear.aspectRatio(1, contentMode: .fit)
-            .overlay { LitPatch(loaded: loaded, ground: la.twill, isPattern: false, room: 34, fixedLight: light) }
+            .overlay { LitPatch(loaded: loaded, ground: la.twill, sewnTo: StitchTimeline.allSewn, room: 34, fixedLight: light) }
             .frame(width: 240, height: 240)
             .frame(width: 360, height: 360)
             .background(Color.white)
