@@ -36,11 +36,11 @@ struct PaintedArtFindsTests {
         let network = network
         outbox = FindOutbox(
             account: account, client: circles, fileURL: nil, sharing: { .automatic },
-            payload: { identifier, legendary in
+            payload: { identifier, newPatch in
                 var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })
                 descriptor.fetchLimit = 1
                 guard let sighting = try? container.mainContext.fetch(descriptor).first else { return nil }
-                var input = FindPolicyTests.input(isLegendary: legendary)
+                var input = FindPolicyTests.input(isNewPatch: newPatch)
                 input.paintedArtKey = sighting.art.shownPaintingKey
                 return FindPolicy.find(for: input, sharing: .automatic)
             },
@@ -56,7 +56,7 @@ struct PaintedArtFindsTests {
             log.entries.append(artClient.received)
         }
         art.holdsReceipt = { outbox.isWaitingToPublish($0) }
-        art.hasFind = { outbox.publishedLegendary($0) != nil }
+        art.hasFind = { outbox.publishedNewPatch($0) != nil }
     }
 
     func publishedSighting() async throws -> Sighting {
@@ -64,7 +64,7 @@ struct PaintedArtFindsTests {
         let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, soundConfidence: 0.8, frameImagePath: path, source: .glasses)
         container.mainContext.insert(sighting)
         try container.mainContext.save()
-        outbox.added(sighting.identifier, isLegendary: false)
+        outbox.added(sighting.identifier, isNewPatch: false)
         await outbox.flush()
         #expect(circles.puts[sighting.identifier]?.art?.kind == "pack")
         return sighting

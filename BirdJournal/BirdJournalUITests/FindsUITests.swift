@@ -19,7 +19,7 @@ final class FindsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.scrolledTo(app.staticTexts["Recent finds"]), "screen: \(app.debugDescription.prefix(3000))")
 
-        // The Guild's header and goals sit above the finds, and each find leads with its art (issue #118): the list
+        // The Guild's header and goals sit above the finds (issue #118): the list
         // builds only the rows on screen, so read them while scrolling.
         let labels = app.feedLabels()
         XCTAssertGreaterThanOrEqual(labels.count, 4, "\(labels)")
@@ -32,6 +32,8 @@ final class FindsUITests: XCTestCase {
         XCTAssertTrue(oldest.contains("Seen by Maya Ortiz") && oldest.contains("New patch") && oldest.contains("First for the Guild"), oldest)
         let later = labels[1]
         XCTAssertTrue(later.contains("Black Phoebe") && !later.contains("First for the Guild"), later)
+        // A repeat sighting is a quieter line (issue #136).
+        XCTAssertTrue(later.contains("Heard again by Jo Park") && !later.contains("New patch"), later)
     }
 
     @MainActor

@@ -1,6 +1,7 @@
 """Finds (issue #62, spec v2 "Finds"): a member's sightings reaching their circles. The phone's find policy decides
-what a find carries (species, Heard or Seen, a city or "a secret spot", the time to the minute, the Legendary and
-rarity flags, the art reference); the server never receives a coordinate and refuses a place label that holds one.
+what a find carries (species, Heard or Seen, a city or "a secret spot", the time to the minute, whether it sewed a new
+patch and in which edition, the rarity, the art reference); the server never receives a coordinate and refuses a place
+label that holds one.
 
 A find fans out to every circle the owner is in when it is first written. Joining a circle later doesn't backfill it,
 and leaving keeps the items already there. A repeated put (Heard changed to Seen, art ready) updates the find and its
@@ -67,6 +68,8 @@ SHARE_CIRCLES_MAX = 50
 # looks like in text, or minutes and seconds after a number (34 8' N). A city name has none of these.
 _COORDINATE = re.compile(r"\d+[.,]\d{2,}|°|\d\s*['′″\"]")
 _ART_KEY = re.compile(r"^(packs|art)/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*\.(jpg|jpeg|png|webp)$")
+# An edition is named by its set's pack id, like us-ca-la.
+_EDITION = re.compile(r"^[a-z0-9-]{1,64}$")
 
 
 class Method(StrEnum):
@@ -104,10 +107,13 @@ class FindContent:
     method: Method
     place: str | None
     found_at: datetime
-    legendary: bool
+    # The sighting sewed its patch: the birder's first of the species in this edition. Frozen at the add on the phone.
+    new_patch: bool
     rarity: Rarity | None
     threatened: bool
     art: ArtReference | None
+    # The set the sighting is in, by pack id; None outside every set (Uncharted).
+    edition: str | None = None
 
 
 @dataclass(frozen=True)
@@ -213,6 +219,12 @@ def clean_found_at(value: datetime) -> datetime:
     if value.tzinfo is None:
         raise ValueError("found_at needs a time zone")
     return value.astimezone(UTC).replace(second=0, microsecond=0)
+
+
+def clean_edition(raw: str | None) -> str | None:
+    if raw is not None and not _EDITION.match(raw):
+        raise ValueError("The edition isn't a pack id")
+    return raw
 
 
 def clean_art(kind: ArtKind, key: str) -> ArtReference:
@@ -607,11 +619,13 @@ def _content_attributes(content: FindContent) -> dict[str, Any]:
         "common_name": content.common_name,
         "method": content.method.value,
         "found_at": _minute(content.found_at),
-        "legendary": content.legendary,
+        "new_patch": content.new_patch,
         "threatened": content.threatened,
     }
     if content.place is not None:
         attributes["place"] = content.place
+    if content.edition is not None:
+        attributes["edition"] = content.edition
     if content.rarity is not None:
         attributes["rarity"] = content.rarity.value
     if content.art is not None:
@@ -662,10 +676,13 @@ def _content(item: dict[str, Any]) -> FindContent:
         method=Method(item["method"]),
         place=item.get("place"),
         found_at=_parse(item["found_at"]),
-        legendary=bool(item["legendary"]),
+        # Compatibility: a find stored before #136 has `legendary` and no `new_patch` until it is next put. This read
+        # stays until the table's old items are rewritten, which a deploy alone doesn't do.
+        new_patch=bool(item.get("new_patch", item.get("legendary", False))),
         rarity=Rarity(item["rarity"]) if "rarity" in item else None,
         threatened=bool(item.get("threatened", False)),
         art=art,
+        edition=item.get("edition"),
     )
 
 

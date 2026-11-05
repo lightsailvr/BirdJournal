@@ -191,9 +191,10 @@ final class FakeCircleClient: CircleClient {
         FeedItem(
             sightingID: sightingID.uuidString.lowercased(), speciesID: find.speciesID, scientificName: find.scientificName,
             commonName: find.commonName, method: find.method, place: find.place,
-            foundAt: (try? Date(find.foundAt, strategy: .iso8601)) ?? now(), legendary: find.legendary, rarity: find.rarity,
+            foundAt: (try? Date(find.foundAt, strategy: .iso8601)) ?? now(), newPatch: find.newPatch, rarity: find.rarity,
             art: find.art.map { FeedItem.Art(kind: $0.kind, key: $0.key, url: nil) },
-            owner: FeedItem.Owner(id: Self.me, displayName: Self.myName), circleFirst: false, isMine: true
+            owner: FeedItem.Owner(id: Self.me, displayName: Self.myName), circleFirst: false, isMine: true,
+            edition: find.edition
         )
     }
 
@@ -436,7 +437,7 @@ final class FakeCircleClient: CircleClient {
         return ReactionKind.allCases.map { ReactionCount(kind: $0, count: given[$0]?.count ?? 0, mine: given[$0]?.contains(Self.me) ?? false) }
     }
 
-    /// Friends' finds in a seeded circle: a circle first, a Legendary, a rare bird and one at a secret spot, and two
+    /// Friends' finds in a seeded circle: a circle first, new patches, a repeat, a rare bird and one at a secret spot, and two
     /// older ones of Maya's for Compare birds. Jo and Sam already find Maya's Black Phoebe lovely, and Maya is
     /// jealous of Sam's Gnatcatcher.
     private func seedFeed(circleID: String) {
@@ -450,16 +451,17 @@ final class FakeCircleClient: CircleClient {
         ]
         reactions["maya/00000000-0000-4000-8000-000000000000"] = [.lovely: ["jo", "sam"], .together: ["jo"]]
         reactions["sam/00000000-0000-4000-8000-000000000003"] = [.jealous: ["maya"]]
-        for (index, (owner, name, label, method, place, rarity, legendary, art, daysAgo)) in finds.enumerated() {
+        for (index, (owner, name, label, method, place, rarity, newPatch, art, daysAgo)) in finds.enumerated() {
             let common = String(label.split(separator: "_", maxSplits: 1).last ?? "")
             feedItems[circleID, default: []].append(FeedItem(
                 sightingID: "00000000-0000-4000-8000-00000000000\(index)", speciesID: label,
                 scientificName: Sighting.scientificName(ofLabel: label), commonName: common, method: method, place: place,
-                foundAt: now().addingTimeInterval(-daysAgo * 86_400), legendary: legendary, rarity: rarity,
+                foundAt: now().addingTimeInterval(-daysAgo * 86_400), newPatch: newPatch, rarity: rarity,
                 art: FeedItem.Art(kind: "pack", key: "packs/us-ca-la/\(art).jpg", url: nil),
                 owner: FeedItem.Owner(id: owner, displayName: name), circleFirst: false, isMine: false,
                 // Jo shared the hummingbird by hand (issue #66), with the caption and a note, and left the city out.
-                card: index == 1 ? FeedItem.SharedCard(note: "Buzzing the sage by the gate, twice.", caption: "A green spark hums where the sage is in flower.", photo: nil) : nil
+                card: index == 1 ? FeedItem.SharedCard(note: "Buzzing the sage by the gate, twice.", caption: "A green spark hums where the sage is in flower.", photo: nil) : nil,
+                edition: "us-ca-la"
             ))
         }
     }

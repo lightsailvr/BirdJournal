@@ -52,6 +52,6 @@ this directory and is declared as a package resource, so the pack ships in the p
    one the app ships).
 4. `gh release create pack-<id>-v<version> build/packs/<id>.zip --title "..." --notes "..."`, then
    `scripts/publish-pack-index.sh` to replace `index.json` on the `packs` release, and commit the manifest.
-5. `scripts/publish-pack-thumbnails.sh <id>` uploads the pack-art thumbnails (`packbuilder thumbnails`, 320 px JPEGs)
-   to the art CDN's bucket under `packs/<id>/<species id>.jpg` (issue #62), so a friend's phone shows the pack art of
-   any find without the pack. Needs the deployed stack (its `ArtBucket` output) and the `lsvr-admin` profile.
+5. `scripts/publish-pack-thumbnails.sh <id>` uploads the patch and pack-art thumbnails (`packbuilder thumbnails`, 320 px PNGs and JPEGs)
+   to the art CDN's bucket under `packs/<id>/patch/<species id>.png` and `packs/<id>/<species id>.jpg` (issues #62 and #136),
+   so a friend's phone shows the patch or pack art of any find without the pack. Needs the deployed stack (its `ArtBucket` output) and the `lsvr-admin` profile.

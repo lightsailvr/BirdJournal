@@ -183,14 +183,14 @@ def test_a_repeated_put_swaps_pack_art_for_the_painting_without_a_push(
     circle = _circle(client, issuer)
     for sub, phone in (("ada", ADA_PHONE), ("ben", BEN_PHONE)):
         assert _register(client, issuer, sub, phone).status_code == 204
-    sighting, first = _put(client, issuer, "ada", _find(legendary=True))
+    sighting, first = _put(client, issuer, "ada", _find(new_patch=True))
     assert first.status_code == 201
-    assert len(apns.to(BEN_PHONE)) == 1, "the new Legendary find pushes once"
+    assert len(apns.to(BEN_PHONE)) == 1, "the find with a new patch pushes once"
     apns.clear()
     digests_before = table.query(KeyConditionExpression=Key("pk").eq("DIGEST"))["Items"]
 
     job = _painting(client, issuer, art_storage, sighting)
-    _, again = _put(client, issuer, "ada", _find(legendary=True, art=_painted(job)), sighting)
+    _, again = _put(client, issuer, "ada", _find(new_patch=True, art=_painted(job)), sighting)
     assert again.status_code == 200
     assert again.json()["art"]["kind"] == "painted"
     assert apns.sent == [], "no alert, no silent push"

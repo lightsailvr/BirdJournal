@@ -100,7 +100,7 @@ What the sighting that created a patch did; a patch's sewn date is its earliest 
 _Avoid_: unlocked, earned (for a patch)
 
 **Card**:
-The paper card a patch turns over to (#134): its story, the species' biology and your history with the bird there. One per patch, never stored. The share image still draws one sighting's card face until #136. Art, captions and retries never make another.
+The paper card a patch turns over to (#134): its story, the species' biology and your history with the bird there. One per patch, never stored. The share image draws its front, on linen beneath the patch (#136). Art, captions and retries never make another.
 _Avoid_: trading card, edition (for the card itself), the collectible (that is the patch)
 
 **Collection**:
@@ -108,7 +108,7 @@ All of one birder's patches, and the sightings behind them.
 _Avoid_: deck, album, life list
 
 **Legendary** (retired 2026-11-03, #131):
-Was the status of a birder's earliest surviving card of a species, with a gold frame. Retired with the gold: every patch is the one patch for its bird and place. The finds' `legendary` flag carries "sewed a patch" until #136 renames it.
+Was the status of a birder's earliest surviving card of a species, with a gold frame. Retired with the gold: every patch is the one patch for its bird and place. A find says `new_patch` since #136; the old name lives on only in the compatibility seam for the server deployed before it, and in the art job until #137.
 _Avoid_: in copy
 
 **Rarity**:
@@ -180,7 +180,7 @@ Anyone who shares at least one circle with you.
 _Avoid_: follower, contact, connection
 
 **Find**:
-What a circle sees of a member's sighting: species, method, place label, time and card art. Sent automatically unless the member is private.
+What a circle sees of a member's sighting: species, method, place label, time, whether it sewed a new patch and in which edition, and art. Sent automatically unless the member is private.
 _Avoid_: post, activity, share
 
 **Shared card**:
@@ -196,7 +196,7 @@ The place a find shows: a city, or "a secret spot" for a threatened species. Nev
 _Avoid_: location (the coordinate on the phone), area
 
 **Circle first**:
-The earliest surviving find of a species in a circle, shown as "First for the Guild". Separate from any member's Legendary.
+The earliest surviving find of a species in a circle, shown as "First for the Guild". Separate from any member's new patch.
 _Avoid_: circle legendary, first find
 
 **Goal**:
@@ -212,7 +212,7 @@ You and a friend side by side, each species Heard, Seen or not yet: the friend's
 _Avoid_: leaderboard, ranking, life list comparison
 
 **Notable find**:
-A find that sends its own push: a Legendary, a circle first, Rare or Exceptional rarity, or one that completes a goal.
+A find that sends its own push: a new patch, a circle first, Rare or Exceptional rarity, or one that completes a goal.
 _Avoid_: highlight, alert
 
 **Digest**:

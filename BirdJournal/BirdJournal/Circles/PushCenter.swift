@@ -38,10 +38,12 @@ struct FriendFind: Equatable, Decodable, Sendable {
     var method: String
     var place: String?
     var foundAt: Date
-    var legendary: Bool
+    var newPatch: Bool
     var rarity: String?
     var circleFirst: Bool
     var circleIDs: [String]
+    /// The set the sighting is in, by pack id; nil outside every set.
+    var edition: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case owner
@@ -52,7 +54,8 @@ struct FriendFind: Equatable, Decodable, Sendable {
         case commonName = "common_name"
         case method, place
         case foundAt = "found_at"
-        case legendary, rarity
+        case newPatch = "new_patch"
+        case edition, rarity
         case circleFirst = "circle_first"
         case circleIDs = "circle_ids"
     }
@@ -60,9 +63,29 @@ struct FriendFind: Equatable, Decodable, Sendable {
     var friendName: String { ownerName ?? "A friend" }
 }
 
+extension FriendFind {
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        owner = try values.decode(String.self, forKey: .owner)
+        ownerName = try values.decodeIfPresent(String.self, forKey: .ownerName)
+        sightingID = try values.decode(String.self, forKey: .sightingID)
+        speciesID = try values.decode(String.self, forKey: .speciesID)
+        scientificName = try values.decode(String.self, forKey: .scientificName)
+        commonName = try values.decode(String.self, forKey: .commonName)
+        method = try values.decode(String.self, forKey: .method)
+        place = try values.decodeIfPresent(String.self, forKey: .place)
+        foundAt = try values.decode(Date.self, forKey: .foundAt)
+        newPatch = try LegacyFindWire.newPatch(from: decoder)
+        rarity = try values.decodeIfPresent(String.self, forKey: .rarity)
+        circleFirst = try values.decode(Bool.self, forKey: .circleFirst)
+        circleIDs = try values.decode([String].self, forKey: .circleIDs)
+        edition = try values.decodeIfPresent(String.self, forKey: .edition)
+    }
+}
+
 /// What a push from the BirdJournal server says, read from its payload's custom keys.
 enum PushMessage: Equatable {
-    /// A friend's new patch (the push's `legendary` flag until #136), circle first, or Rare or Exceptional find.
+    /// A friend's new patch, circle first, or Rare or Exceptional find.
     case notable(FriendFind)
     /// "Maya found 6 birds in Pasadena".
     case digest(friend: String)

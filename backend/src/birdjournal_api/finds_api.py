@@ -28,6 +28,7 @@ from birdjournal_api.finds import (
     PhotoUnavailable,
     Rarity,
     clean_art,
+    clean_edition,
     clean_found_at,
     clean_name,
     clean_place,
@@ -83,6 +84,10 @@ class FindBody(BaseModel):
     method: Method
     place: str | None = None
     found_at: datetime
+    # The sighting sewed its patch, and the set it's in by pack id (None outside every set).
+    new_patch: bool = False
+    edition: str | None = None
+    # Compatibility: what a beta phone from before #136 sends in place of `new_patch`. Remove once no such phone is left.
     legendary: bool = False
     rarity: Rarity | None = None
     threatened: bool = False
@@ -92,6 +97,11 @@ class FindBody(BaseModel):
     @classmethod
     def _names(cls, value: str, info: ValidationInfo) -> str:
         return clean_name(value, field=info.field_name or "name")
+
+    @field_validator("edition")
+    @classmethod
+    def _edition(cls, value: str | None) -> str | None:
+        return clean_edition(value)
 
     @field_validator("found_at")
     @classmethod
@@ -111,10 +121,11 @@ class FindBody(BaseModel):
             method=self.method,
             place=self.place,
             found_at=self.found_at,
-            legendary=self.legendary,
+            new_patch=self.new_patch or self.legendary,
             rarity=self.rarity,
             threatened=self.threatened,
             art=self.art.reference() if self.art is not None else None,
+            edition=self.edition,
         )
 
     def art_fallback(self) -> ArtReference | None:
@@ -142,6 +153,9 @@ class FindFields(BaseModel):
     method: Method
     place: str | None
     found_at: datetime
+    new_patch: bool
+    edition: str | None
+    # Compatibility: a beta phone from before #136 can't decode an item without it. Remove once no such phone is left.
     legendary: bool
     rarity: Rarity | None
     art: ArtResponse | None
@@ -160,7 +174,9 @@ class FindFields(BaseModel):
             "method": content.method,
             "place": content.place,
             "found_at": content.found_at,
-            "legendary": content.legendary,
+            "new_patch": content.new_patch,
+            "edition": content.edition,
+            "legendary": content.new_patch,
             "rarity": content.rarity,
             "art": ArtResponse.of(content.art, base_url),
         }
@@ -270,7 +286,7 @@ class ReactionResponse(BaseModel):
 
 class FeedItemResponse(FindFields):
     owner: Owner
-    # The earliest surviving find of this species in the circle, apart from anyone's Legendary.
+    # The earliest surviving find of this species in the circle, apart from anyone's new patch.
     circle_first: bool
     is_mine: bool
     # Every reaction kind with its count and whether the reader gave it (issue #64).

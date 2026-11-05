@@ -74,8 +74,7 @@ enum CardFont {
     static let tileName = Font.system(.headline, design: .serif, weight: .semibold)
     /// A tile's story title, about 15 pt.
     static let tileStoryTitle = Font.system(.subheadline, design: .serif, weight: .medium)
-    /// The footer and the art credit: system sans, quieter than the story.
-    static let footer = Font.footnote
+    /// The art credit: system sans, quieter than the story.
     static let credit = Font.caption2
 }
 

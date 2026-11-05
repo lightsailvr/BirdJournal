@@ -229,7 +229,7 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
      glasses", sit on the species list, lock the phone and pocket it. Then either run `WIZARD_FROM=5
      infra/scripts/push-wizard.sh` and send the test push to this phone's token (Settings → Developer → Push token; the
      test push carries a find, so it makes the banner), or have a second account in a shared circle add a species it has
-     never added (a Legendary, so notable). Note the time the push is sent and the time the banner appears on the lens.
+     never added (a new patch, so notable). Note the time the push is sent and the time the banner appears on the lens.
      Repeat three times, once after 10+ minutes locked. Record in DECISIONS.md, "Friend banner on the lens": every delay,
      any push that never made a banner, and whether the phone's own notification arrived meanwhile (iOS can throttle
      background pushes; the banner needs the app to wake for `content-available`).

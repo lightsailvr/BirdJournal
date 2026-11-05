@@ -201,7 +201,7 @@ def test_a_blocked_accounts_finds_never_push_the_blocker(
     client: TestClient, issuer: TestIssuer, circle: str, apns: FakeApns
 ) -> None:
     _block(client, issuer, "ada", "bo")
-    _put_ok(client, issuer, "bo", _find(PHOEBE, legendary=True))
+    _put_ok(client, issuer, "bo", _find(PHOEBE, new_patch=True))
     _put_ok(client, issuer, "bo", _find(WREN))
     assert apns.to(ADA_PHONE) == []
     # Cy hears of both as usual (each the circle's first of its species).

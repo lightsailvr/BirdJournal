@@ -2,11 +2,11 @@ import Album
 import Pack
 import SwiftUI
 
-/// A Guild's Recent finds (issue #62, led by the artwork since #118): friends' sightings, newest first, a page at a
-/// time, each with who found it, the city or "a secret spot" and when, then the art, the bird and Heard or Seen.
-/// "First for the Guild" marks the earliest surviving find of a species, apart from "New patch", a find that sewed the
-/// finder's own patch. Under each find, its reactions (issue #64): a friend's find takes a tap on each, the birder's
-/// own shows what friends gave. No comments.
+/// A Guild's Recent finds (issue #62; guide 2.0 page 8, issue #136): friends' sightings, newest first, a page at a time. A
+/// new patch is led by the finder's patch, with the bird, how and where they met it, and when; a repeat sighting is a
+/// quieter "saw a House Finch again" line. "First for the Guild" marks the earliest surviving find of a species, apart
+/// from a new patch. Under each find, its reactions (issue #64): a friend's find takes a tap on each, the birder's own
+/// shows what friends gave. No comments.
 struct CircleFeedSection: View {
     @Environment(CircleStore.self) private var circles
     let circleID: String
@@ -137,40 +137,19 @@ struct ReactionBar: View {
     }
 }
 
-/// One find, artwork first (design guide pages 3 and 13): who found it, where and when, and its marks; then the art;
-/// then the bird and Heard or Seen. VoiceOver reads the bird first.
+/// One find (guide 2.0 page 8). A new patch, or a card shared by hand, is led by the patch: who sewed it, then the bird,
+/// how and where they met it, when, and its marks. A repeat sighting is one quiet line with its marks. VoiceOver reads
+/// the bird first, either way.
 struct FindRow: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let item: FeedItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 10) {
-                Text(Self.initials(item.owner.name))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.mossText)
-                    .frame(width: 34, height: 34)
-                    .background(Color.moss, in: .circle)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(item.isMine ? "You" : item.owner.name).font(.subheadline.weight(.semibold)).foregroundStyle(Color.ink)
-                    Text(Self.whereAndWhen(item)).font(JournalFont.attribution).foregroundStyle(Color.inkSecondary)
-                }
-                Spacer(minLength: 6)
-            }
-            let marks = Self.marks(item)
-            if !marks.isEmpty {
-                FlowMarks(marks: marks)
-            }
-            FindArt(item: item)
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                // A scaled-to-fill picture still takes touches outside its clip.
-                .allowsHitTesting(false)
-            HStack(alignment: .firstTextBaseline) {
-                Text(item.commonName).font(JournalFont.heading).foregroundStyle(Color.ink)
-                Spacer(minLength: 8)
-                Text(item.method.title).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
-            }
-            if let card = item.card {
-                SharedCardExtras(card: card)
+        Group {
+            if Self.isLed(item) {
+                led
+            } else {
+                seenAgain
             }
         }
         .accessibilityElement(children: .ignore)
@@ -178,10 +157,53 @@ struct FindRow: View {
         .accessibilityIdentifier("find-\(item.sightingID)")
     }
 
-    /// "Black Phoebe. Heard by Maya Ortiz. Pasadena · 2 hours ago. First for the Guild.", then a shared card's caption
-    /// and note.
+    private var led: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+            layout {
+                FindPatch(item: item)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Self.headline(item)).font(JournalFont.attribution).foregroundStyle(Color.inkSecondary)
+                    Text(item.commonName).font(JournalFont.heading).foregroundStyle(Color.ink)
+                    Text(Self.howAndWhere(item)).font(JournalFont.attribution).foregroundStyle(Color.inkSecondary)
+                    marks.padding(.top, 4)
+                }
+                Spacer(minLength: 0)
+            }
+            FindArt(item: item)
+            if let card = item.card {
+                SharedCardExtras(card: card)
+            }
+        }
+    }
+
+    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago", and a painting if the find shows one (until #137).
+    private var seenAgain: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(Self.seenAgainLine(item)).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
+            marks
+            FindArt(item: item)
+        }
+    }
+
+    @ViewBuilder private var marks: some View {
+        let marks = Self.marks(item)
+        if !marks.isEmpty {
+            FlowMarks(marks: marks)
+        }
+    }
+
+    /// Whether the patch leads the row: a new patch, or a card the finder chose to share. Anything else is a repeat sighting.
+    static func isLed(_ item: FeedItem) -> Bool {
+        item.newPatch || item.card != nil
+    }
+
+    /// "Black Phoebe. Heard by Maya Ortiz. Pasadena · 2 hours ago. New patch. First for the Guild.", then a shared card's
+    /// caption and note; a repeat says "Heard again by Maya Ortiz".
     static func spoken(_ item: FeedItem) -> String {
-        var parts = [item.commonName, byline(item), whereAndWhen(item)] + marks(item)
+        var parts = [item.commonName, isLed(item) ? byline(item) : againByline(item), whereAndWhen(item)]
+        if item.newPatch { parts.append(newPatch) }
+        parts += marks(item)
         if let caption = item.card?.caption { parts.append(caption) }
         if let note = item.card?.note { parts.append("Note: \(note)") }
         if item.card?.photo?.url != nil { parts.append("With their photo") }
@@ -194,7 +216,37 @@ struct FindRow: View {
 
     /// "Heard by Maya Ortiz", "Seen by you".
     static func byline(_ item: FeedItem) -> String {
-        "\(item.method.title) by \(item.isMine ? "you" : item.owner.name)"
+        "\(item.method.title) by \(finder(item))"
+    }
+
+    /// "Heard again by Maya Ortiz", "Seen again by you".
+    static func againByline(_ item: FeedItem) -> String {
+        "\(item.method.title) again by \(finder(item))"
+    }
+
+    private static func finder(_ item: FeedItem) -> String {
+        item.isMine ? "you" : item.owner.name
+    }
+
+    /// The finder at the start of a sentence.
+    private static func subject(_ item: FeedItem) -> String {
+        item.isMine ? "You" : item.owner.name
+    }
+
+    /// "Maya Ortiz sewed a new patch", "You sewed a new patch"; "Maya Ortiz shared a sighting" for a repeat shared by hand.
+    static func headline(_ item: FeedItem) -> String {
+        "\(subject(item)) \(item.newPatch ? "sewed a new patch" : "shared a sighting")"
+    }
+
+    /// "Heard · Pasadena · 2 hours ago".
+    static func howAndWhere(_ item: FeedItem) -> String {
+        "\(item.method.title) · \(whereAndWhen(item))"
+    }
+
+    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago", "You saw an Acorn Woodpecker again · 2 hours ago".
+    static func seenAgainLine(_ item: FeedItem) -> String {
+        let verb = item.method == .seen ? "saw" : "heard"
+        return "\(subject(item)) \(verb) \(CardText.article(for: item.commonName)) \(item.commonName) again · \(whereAndWhen(item))"
     }
 
     /// "Pasadena · 2 hours ago", or the time alone without a place.
@@ -204,11 +256,10 @@ struct FindRow: View {
         return "\(place == FindPolicy.secretSpot ? "At a secret spot" : place) · \(when)"
     }
 
-    /// The marks a find wears, in this order: New patch (the find sewed the finder's patch; the find's flag keeps its
-    /// Legendary name until #136), First for the Guild, and Rare or Exceptional. Common and Uncommon aren't marked.
+    /// The labels a find wears: First for the Guild, then Rare or Exceptional. Common and Uncommon aren't marked, and a new
+    /// patch says so in its headline.
     static func marks(_ item: FeedItem) -> [String] {
         var marks: [String] = []
-        if item.legendary { marks.append(newPatch) }
         if item.circleFirst { marks.append(firstForTheGuild) }
         if let rarity = item.rarity, rarity == .rare || rarity == .exceptional { marks.append(rarity.title) }
         return marks
@@ -261,84 +312,75 @@ private struct SharedCardExtras: View {
     }
 }
 
-/// A find's mark. New patch is a filled aqua capsule; First for the Guild an outlined one, kept apart from it; a
-/// rarity is just its word. No gold (#132).
+/// A find's label. First for the Guild is a small aqua one; a rarity is just its word. No gold (#132).
 private struct FindMark: View {
     let title: String
 
     var body: some View {
-        let newPatch = title == FindRow.newPatch
         let first = title == FindRow.firstForTheGuild
         Text(title)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(newPatch || first ? Color.moss : Color.inkSecondary)
+            .foregroundStyle(first ? Color.moss : Color.inkSecondary)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)
-            .background(newPatch ? Color.moss.opacity(0.12) : Color.clear, in: .capsule)
-            .overlay(Capsule().strokeBorder(first ? Color.moss : newPatch ? Color.moss.opacity(0.4) : Color.rule, lineWidth: 1))
+            .overlay(Capsule().strokeBorder(first ? Color.moss : Color.rule, lineWidth: 1))
     }
 }
 
-/// The find's art from the art CDN; until it loads, or when it can't, the species' painting from an installed pack
-/// (the same pack art the find names), else its reference photo, else a typographic tile naming the bird. A pack
-/// painting sits whole on the card's ivory, as on the card: it is painted to its edges.
-private struct FindArt: View {
+/// What leads a find (guide 2.0 page 8): the finder's patch in its edition, lit like every other. A phone without that
+/// edition's pack shows the patch's thumbnail from the art CDN, then an installed pack's painting of the bird while packs
+/// without patches remain (#58), then the edition's blank. Never another edition's patch.
+private struct FindPatch: View {
     @Environment(PackLibrary.self) private var library
     let item: FeedItem
 
+    private static let side: CGFloat = 76
+
     var body: some View {
-        if let url = item.art?.url {
-            AsyncImage(url: url) { phase in
-                if let image = phase.image {
-                    if item.art?.kind == "pack" { painting(image) } else { filled(image) }
-                } else {
-                    fallback
+        Group {
+            if let art = library.patchArt(scientificName: item.scientificName, setID: item.edition) {
+                PatchView(art: art, edition: PatchEdition.of(setID: item.edition))
+            } else if item.art?.kind == "pack", let url = item.art?.url {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image { image.resizable().scaledToFit() } else { fallback }
                 }
+            } else {
+                fallback
             }
-        } else {
-            fallback
         }
-    }
-
-    /// A pack painting, whole on the ivory face in a square slot.
-    private func painting(_ image: Image) -> some View {
-        Color.cardFace
-            .aspectRatio(1, contentMode: .fit)
-            .frame(maxWidth: .infinity)
-            .overlay { image.resizable().scaledToFit().padding(.vertical, 6) }
-    }
-
-    /// A painted scene, the birder's photo art or a reference photo, filling a 4:3 slot.
-    private func filled(_ image: Image) -> some View {
-        Color.raised
-            .aspectRatio(4 / 3, contentMode: .fit)
-            .frame(maxWidth: .infinity)
-            .overlay { image.resizable().scaledToFill() }
-            .clipped()
+        .frame(width: Self.side, height: Self.side)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .holdsPatchLight()
     }
 
     @ViewBuilder private var fallback: some View {
-        if let art = library.packArt(scientificName: item.scientificName, setID: nil) {
-            // Decoded off the main actor, feathered into the face as on the card.
-            Color.cardFace
-                .aspectRatio(1, contentMode: .fit)
-                .frame(maxWidth: .infinity)
-                .overlay { PackImage(url: art.pack.artURL(for: art.art), painting: true).padding(.vertical, 6) }
-        } else if let url = library.thumbnailURL(scientificName: item.scientificName) {
-            PackImage(url: url)
+        if let art = library.packArt(scientificName: item.scientificName, setID: item.edition) {
+            PackImage(url: art.pack.artURL(for: art.art), painting: true)
+        } else {
+            let edition = PatchEdition.of(setID: item.edition)
+            PatchBlank(edition: edition).aspectRatio(edition.aspect, contentMode: .fit)
+        }
+    }
+}
+
+/// A painting the find shows, filling a 4:3 slot under the row. Only while finds carry painted art: #137 takes this away.
+private struct FindArt: View {
+    let item: FeedItem
+
+    var body: some View {
+        if item.art?.kind == "painted", let url = item.art?.url {
+            Color.raised
                 .aspectRatio(4 / 3, contentMode: .fit)
                 .frame(maxWidth: .infinity)
-        } else {
-            ZStack {
-                Color.cardFace
-                Text(item.commonName)
-                    .font(.system(.title3, design: .serif, weight: .medium))
-                    .foregroundStyle(Color.cardIvory)
-                    .multilineTextAlignment(.center)
-                    .padding(12)
-            }
-            .aspectRatio(4 / 3, contentMode: .fit)
-            .frame(maxWidth: .infinity)
+                .overlay {
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image { image.resizable().scaledToFill() }
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                // A scaled-to-fill picture still takes touches outside its clip.
+                .allowsHitTesting(false)
         }
     }
 }

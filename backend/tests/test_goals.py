@@ -475,13 +475,13 @@ def test_the_monthly_goal_s_completion_pushes_with_the_month(
     _species_finds(client, issuer, "ada", 9, "2026-11-01T16:00:00Z")
     assert _alerts(apns, BO_PHONE) == []
     apns.clear()
-    _put_ok(client, issuer, "ada", _find(SPECIES[9], found_at="2026-11-01T17:00:00Z", legendary=True))
+    _put_ok(client, issuer, "ada", _find(SPECIES[9], found_at="2026-11-01T17:00:00Z", new_patch=True))
     (push,) = apns.to(BO_PHONE)
     assert push.payload()["aps"]["alert"] == {
         "title": "Sunday Group reached the November goal",
-        "body": "Ada found a Bird 9, species 10 of 10 · Legendary · Pasadena",
+        "body": "Ada found a Bird 9, species 10 of 10 · New patch · Pasadena",
     }
-    # One alert for the Legendary and the goal together.
+    # One alert for the new patch and the goal together.
     assert push.kind is PushKind.NOTABLE
 
 
@@ -597,7 +597,7 @@ def test_a_goal_push_without_the_circle_name_says_your_guild() -> None:
     )
     content = FindContent(
         species_id="Sayornis nigricans_Black Phoebe", scientific_name="Sayornis nigricans", common_name="Black Phoebe",
-        method=Method("heard"), place="Pasadena", found_at=datetime(2026, 11, 3, tzinfo=UTC), legendary=False,
+        method=Method("heard"), place="Pasadena", found_at=datetime(2026, 11, 3, tzinfo=UTC), new_patch=False,
         rarity=None, threatened=False, art=None,
     )
     title, body = goal_words("Ada", content, None, CompletedGoal(goal=goal, progress=15), None)
