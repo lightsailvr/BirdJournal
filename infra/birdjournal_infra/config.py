@@ -5,7 +5,6 @@ from constructs import Node
 
 TAG_KEY = "project"
 TAG_VALUE = "birdjournal"
-ART_AUTO_PAINT_RULES = ("every_glasses_add", "legendary_or_rare")
 MODERATION_SWITCH = ("off", "on")
 
 
@@ -35,12 +34,6 @@ class BirdJournalConfig:
     # stack. Not a secret, but it names the account: `-c inviteCertificateArn=...` or INVITE_CERTIFICATE_ARN
     # (infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env).
     invite_certificate_arn: str
-    # The switch between the friends phase and the public launch (issues #68 and #69): `every_glasses_add` in the
-    # friends phase paints every add with a glasses photo by a signed-in birder and every painting asked for;
-    # `legendary_or_rare` at the public launch paints Legendary and Rare-or-rarer adds automatically, and other scene art
-    # and all photo art on request within `art_daily_allowance` a day per account. The API reads both.
-    art_auto_paint: str = "every_glasses_add"
-    art_daily_allowance: int = 5
     # The APNs token key (issue #63): a Secrets Manager secret {"key_id", "team_id", "private_key"} created by
     # infra/scripts/push-wizard.sh outside the stack, and the app's bundle id, every push's apns-topic.
     apns_secret_name: str = "birdjournal/apns"
@@ -49,8 +42,7 @@ class BirdJournalConfig:
     # sandbox is enough). Kept out of the public repo like the budget's: `-c reportEmail=...` or REPORT_EMAIL, else the
     # budget alert address.
     report_email: str = ""
-    # Rekognition moderation of art-job inputs and outputs and shared photos (issue #71): `off` in the friends phase,
-    # `on` for the public launch.
+    # Rekognition moderation of shared photos (issue #71): `off` in the friends phase, `on` for the public launch.
     moderation: str = "off"
 
     @classmethod
@@ -67,14 +59,10 @@ class BirdJournalConfig:
                 "Set INVITE_CERTIFICATE_ARN (or -c inviteCertificateArn=...): the invite domain's us-east-1 "
                 "certificate. infra/scripts/circles-wizard.sh requests it and saves it to ~/keys/birdjournal.env."
             )
-        art_auto_paint = node.try_get_context("artAutoPaint") or "every_glasses_add"
-        if art_auto_paint not in ART_AUTO_PAINT_RULES:
-            raise ValueError(f"artAutoPaint must be one of {', '.join(ART_AUTO_PAINT_RULES)}, not {art_auto_paint!r}")
         moderation = node.try_get_context("moderation") or "off"
         if moderation not in MODERATION_SWITCH:
             raise ValueError(f"moderation must be on or off, not {moderation!r}")
         report_email = node.try_get_context("reportEmail") or os.environ.get("REPORT_EMAIL") or email
-        art_daily_allowance = _whole_number(node.try_get_context("artDailyAllowance"), default=5, name="artDailyAllowance")
         return cls(
             cognito_domain_prefix=node.get_context("cognitoDomainPrefix"),
             google_oauth_secret_name=node.get_context("googleOAuthSecretName"),
@@ -86,20 +74,8 @@ class BirdJournalConfig:
             invite_domain=node.get_context("inviteDomain"),
             ios_app_ids=tuple(node.get_context("iosAppIds")),
             invite_certificate_arn=certificate,
-            art_auto_paint=art_auto_paint,
-            art_daily_allowance=art_daily_allowance,
             apns_secret_name=node.get_context("apnsSecretName"),
             apns_topic=node.get_context("apnsTopic"),
             report_email=report_email,
             moderation=moderation,
         )
-
-
-def _whole_number(value: object, *, default: int, name: str) -> int:
-    if value is None:
-        return default
-    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
-        return value
-    if isinstance(value, str) and value.isdigit():
-        return int(value)
-    raise ValueError(f"{name} must be a whole number of paintings, not {value!r}")

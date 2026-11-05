@@ -34,6 +34,45 @@ final class ShareCardUITests: XCTestCase {
     }
 
     #if ACCOUNTS_ENABLED && DEBUG
+    /// A sighting heard on the phone has no original photo to share until the birder attaches one (#137). `-fakeLibraryPhoto`
+    /// stands in for the system picker.
+    @MainActor
+    func testAnAttachedPhotoIsWhatACardCanSend() {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "sighting",
+            "-autoCardSpecies", "Zenaida macroura", "-fakeLibraryPhoto", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some",
+        ]
+        app.launch()
+        let share = app.navigationBars.buttons["Share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        share.tap()
+        let photo = app.switches["share-photo"]
+        XCTAssertTrue(photo.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(photo.isEnabled, "nothing to send yet")
+        app.navigationBars["A story to share"].buttons["Cancel"].tap()
+
+        let attach = app.buttons["sighting-attach-photo"]
+        XCTAssertTrue(attach.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
+        attach.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["sighting-attached-photo"].waitForExistence(timeout: 5))
+
+        share.tap()
+        XCTAssertTrue(photo.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(photo.isEnabled, "the attached photo can go")
+        let sunday = app.switches["share-circle-Sunday Group"]
+        XCTAssertTrue(sunday.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        app.swipeUp()
+        sunday.switches.firstMatch.tap()
+        photo.switches.firstMatch.tap()
+        XCTAssertEqual(photo.value as? String, "1")
+        app.buttons["share-send"].tap()
+        // Sending prepares the stored file (faces blurred, metadata stripped), so it really was read from the store.
+        let sent = app.descendants(matching: .any)["share-sent"]
+        XCTAssertTrue(sent.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
     @MainActor
     func testACardSentByHandReachesOnlyTheCircleChosen() {
         let app = openSheet(["-fakeAccount", "signedIn", "-fakeCircles", "some"])

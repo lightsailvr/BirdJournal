@@ -13,7 +13,7 @@ PENDING_LIFETIME = Duration.days(1)
 
 class SharedPhotos(Construct):
     """Shared cards' original photos (issue #66) in the art CDN's bucket, under their own prefix: no bucket of their
-    own (#68's ArtCdn serves them by unguessable URL like painted art).
+    own (#68's ArtCdn serves them by unguessable URL).
 
     The phone PUTs a photo through a URL the API presigns, tagged `pending=true`; a lifecycle rule expires pending
     photos after a day, so one uploaded for a card never sent doesn't stay. Sharing the card takes the tag off; the API

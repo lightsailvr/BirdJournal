@@ -109,8 +109,14 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
     struct Art: Equatable, Decodable, Sendable {
         var kind: String
         var key: String
-        /// On the art CDN; nil before the stack has one. Without it the row shows the reference photo or a tile.
+        /// On the art CDN; nil before the stack has one. Without it the row shows the edition's blank.
         var url: URL?
+
+        /// The URL when this is a patch's thumbnail (`packs/<pack id>/patch/…`). A stored find may name a watercolour's
+        /// thumbnail instead, which isn't drawn since #137.
+        var patchThumbnailURL: URL? {
+            kind == "pack" && FindPolicy.isPatchArtKey(key) ? url : nil
+        }
     }
 
     var sightingID: String

@@ -263,4 +263,55 @@ final class CardFlipUITests: XCTestCase {
         app.buttons["Done"].tap()
         XCTAssertFalse(app.navigationBars["Original photo"].waitForExistence(timeout: 2))
     }
+
+    /// Attaching a library photo to a sighting heard on the phone (#137). `-fakeLibraryPhoto` stands in for the system
+    /// picker, which is out of XCUITest's reach: its button hands over a picture as the picker's item would.
+    @MainActor
+    func testAPhotoAttachedToASightingShowsOnItAndCanBeRemoved() {
+        let app = launch("sighting", ["-autoCardSpecies", "Zenaida macroura", "-fakeLibraryPhoto", "YES"])
+        let attach = app.buttons["sighting-attach-photo"]
+        XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
+        XCTAssertTrue(app.staticTexts["No photo attached"].exists, "a sighting heard on the phone has no photo of its own")
+        XCTAssertFalse(app.buttons["View original photo"].exists)
+        attach.tap()
+
+        let photo = element(app, "sighting-attached-photo")
+        XCTAssertTrue(photo.waitForExistence(timeout: 5), "the photo isn't on the sighting; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertGreaterThan(photo.frame.height, 50, "it shows at a size to see")
+        XCTAssertTrue(app.staticTexts["Photo attached"].exists)
+        XCTAssertFalse(attach.exists, "one photo at a time, so it is clear which one a share sends")
+        XCTAssertTrue(app.buttons["Heard"].isSelected, "attaching a photo doesn't say the bird was seen")
+
+        // The photo takes no touches of its own: the controls under it still get theirs.
+        let view = app.buttons["View original photo"]
+        for _ in 0..<4 where !view.isHittable { app.swipeUp() }
+        view.tap()
+        XCTAssertTrue(app.navigationBars["Original photo"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.images["Original photo"].waitForExistence(timeout: 5), "the stored file opens")
+        app.buttons["Done"].tap()
+        XCTAssertFalse(app.navigationBars["Original photo"].waitForExistence(timeout: 2))
+
+        let remove = app.buttons["sighting-remove-photo"]
+        for _ in 0..<4 where !remove.isHittable { app.swipeUp() }
+        remove.tap()
+        let confirm = app.buttons["Remove"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
+        confirm.tap()
+        XCTAssertTrue(attach.waitForExistence(timeout: 5), "it can be attached again; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(photo.exists)
+        XCTAssertTrue(app.staticTexts["No photo attached"].exists)
+    }
+
+    /// The real picker's button, not the stand-in: the sheet is the system's and out of reach, but the control is there
+    /// and takes the tap.
+    @MainActor
+    func testTheAttachActionIsThereWithoutTheStandIn() {
+        let app = launch("sighting", ["-autoCardSpecies", "Zenaida macroura"])
+        let attach = app.buttons["sighting-attach-photo"]
+        XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
+        XCTAssertTrue(attach.isHittable, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(attach.label, "Attach a photo")
+    }
 }

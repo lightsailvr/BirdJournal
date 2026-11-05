@@ -5,7 +5,7 @@ import SwiftUI
 struct SupportView: View {
     /// The promise the screen makes; `NoPurchaseGateTests` holds the copy to it.
     static let unlocksNothing = "Tips are one-time and unlock nothing. Every feature of Featherguild stays free for everyone, whether you tip or not."
-    static let pitch = "Featherguild is free and has no ads. If you'd like to help, a tip goes toward the server and the machine at home that paints the cards."
+    static let pitch = "Featherguild is free and has no ads. If you'd like to help, a tip helps keep the server running."
     static let privacy = "No account needed. Apple handles the payment; Featherguild keeps no record of it and sends nothing to its server."
 
     @State private var tipJar = TipJar()
@@ -139,7 +139,7 @@ private struct ThankYouNote: View {
             Label("Thank you!", systemImage: "checkmark.circle.fill")
                 .font(JournalFont.heading)
                 .foregroundStyle(Color.moss)
-            Text("Thanks for the \(tipName.lowercased()). It helps keep the server up and the painting machine painting. Nothing in the app changes: it was all yours already.")
+            Text("Thanks for the \(tipName.lowercased()). It helps keep the server running. Nothing in the app changes: it was all yours already.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)

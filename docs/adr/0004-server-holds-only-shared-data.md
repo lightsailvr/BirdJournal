@@ -1,8 +1,8 @@
 # The server holds only what is shared; the phone holds the journal
 
-Status: accepted, 2026-10-13
+Status: accepted, 2026-10-13. Until #137 (2026-11-04) the server also held art jobs and painted art, and a private member's sightings could reach it as transient art-job inputs. Those ended before anyone had a painting on the server, so nothing painted is kept there and the rule has no exception.
 
-The phone's SwiftData store stays the only full copy of a birder's sightings, notes and original photos, restored on a new phone from the iPhone's iCloud backup. The server holds accounts, circles, finds, shared cards, reactions, goals, device tokens and art jobs. It keeps painted art only while a find or shared card shows it, and otherwise deletes it once the phone has downloaded it. A private member's sightings never reach it except as transient art-job inputs, which are deleted after a day. We chose this over syncing the whole journal for signed-in birders. That would have given multi-device access and server-side backup, but a private setting would then still mean "on our server". It would also grow storage costs with every photo and make account deletion and data requests heavier.
+The phone's SwiftData store stays the only full copy of a birder's sightings, notes and original photos, restored on a new phone from the iPhone's iCloud backup. The server holds accounts, circles, finds, shared cards, reactions, goals and device tokens. A private member's sightings never reach it. We chose this over syncing the whole journal for signed-in birders. That would have given multi-device access and server-side backup, but a private setting would then still mean "on our server". It would also grow storage costs with every photo and make account deletion and data requests heavier.
 
 ## Consequences
 

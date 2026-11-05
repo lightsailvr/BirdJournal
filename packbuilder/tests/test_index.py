@@ -19,13 +19,13 @@ def test_every_entry_carries_its_set_and_schema():
     for entry in index["packs"]:
         assert entry["set"] == load_set(PACKS / entry["id"] / "set.json")
         assert entry["set"]["id"] == entry["id"]
-        assert entry["schemaVersion"] in (3, 4)
+        assert entry["schemaVersion"] in (3, 5)
         assert entry["url"].startswith("https://github.com/lightsailvr/BirdJournal/releases/download/pack-")
 
 
-def test_the_bundled_pack_is_published_at_schema_4():
+def test_the_bundled_pack_is_published_at_schema_5():
     bundled = next(pack for pack in MANIFEST["packs"] if pack.get("bundled"))
-    assert bundled["schema_version"] == 4
+    assert bundled["schema_version"] == 5
 
 
 def test_a_stale_set_is_never_published(tmp_path):

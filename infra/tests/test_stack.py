@@ -24,8 +24,6 @@ UNTAGGABLE_TYPES = {
     "AWS::CloudFront::OriginAccessControl",
     "AWS::Lambda::LayerVersion",
     "Custom::CDKBucketDeployment",
-    # Scene art (issue #68): the queues' policies (enforce_ssl's Deny).
-    "AWS::SQS::QueuePolicy",
 }
 
 
@@ -259,7 +257,7 @@ def test_the_function_trusts_the_user_pool_and_its_app_client(template: Template
 
 
 def test_the_functions_dynamodb_access_is_the_table_only(template: Template) -> None:
-    """Its other grants are scene art's (tests/test_art.py)."""
+    """Its other grants are the art CDN's (tests/test_art.py, tests/test_shared_photos.py)."""
     (table,) = _resources(template, "AWS::DynamoDB::GlobalTable")
     _, function = _api_function(template)
     role = function["Properties"]["Role"]["Fn::GetAtt"][0]

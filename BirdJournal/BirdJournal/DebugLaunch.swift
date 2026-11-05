@@ -17,6 +17,8 @@ import UIKit
 ///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
 /// - `-patchLight "x,y"` puts the patches' light somewhere, as a tilt would (issue #134's screenshots; the simulator has
 ///   no motion; "l0.5,u0.6" for left and up, since a launch argument can't start with a minus); `-patchLightSweep YES` circles it and logs frame times under the `patch-light` category.
+/// - `-fakeLibraryPhoto YES`: "Attach a photo" on a sighting hands over a generated picture instead of opening the system
+///   picker, which XCUITest can't drive.
 /// - `-seedBoard YES` adds one sighting each of the bundled pack's first 30 birds in Griffith Park: a board that scrolls.
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
 ///   the species' patches (issue #134).
@@ -35,13 +37,6 @@ import UIKit
 ///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
 ///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
 ///   show those refusals).
-/// - `-autoArt pending|ready|failed` gives the newest seeded card with a glasses photo that scene art state (issue #68):
-///   a job on its way, a painting (a warm wash over its photo), or a failed job. With `-fakeAccount signedIn` and
-///   `-fakeArt paints|pending|fails` (the in-memory art server; `-fakeAccount` alone paints), Try again and Retry art
-///   work too. `photo-preview` gives it photo art waiting beside its glasses photo (issue #69), `photo-approved`
-///   approved photo art. `-fakeArtDaily <n>` keeps the public launch's allowance in the fake, and `-fakeLibraryPhoto`
-///   makes "Choose from your library" pick the card's glasses photo as a library photo (the system picker is out of
-///   the UI tests' reach). `-autoPhotoArt request|review` opens photo art's request or comparison sheet on the card.
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
@@ -88,7 +83,6 @@ struct DebugLaunch: ViewModifier {
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
-            if let mode = defaults.string(forKey: "autoArt") { DebugSeeds.setArt(mode, context: context, frames: frameStore) }
             if let id = defaults.string(forKey: "autoDownloadPack") {
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -427,35 +421,6 @@ enum DebugSeeds {
                 sighting.caption = CardCaption(text: "By the pond at morning, the dark sentinel kept its low perch.", generatorVersion: FixedCaptionWriter.versionString)
             }
             context.insert(sighting)
-        }
-        try? context.save()
-    }
-
-    /// The newest card with a glasses photo gets a scene art state for screenshots and the UI tests (issue #68).
-    static func setArt(_ mode: String, context: ModelContext, frames: FrameStore?) {
-        guard let sighting = (try? context.fetch(Sighting.newestFirst()))?.first(where: { $0.frameImagePath != nil }) else { return }
-        switch mode {
-        case "pending":
-            sighting.art.startSceneJob(id: UUID())
-        case "failed":
-            let id = UUID()
-            sighting.art.startSceneJob(id: id)
-            sighting.art.sceneJobFailed(id: id)
-        case "ready":
-            guard let frames, let frame = sighting.frameImagePath, let photo = try? Data(contentsOf: frames.url(for: frame)),
-                  let painting = FakeArtClient.paint(photo), let path = try? frames.write(jpeg: painting) else { return }
-            let id = UUID()
-            sighting.art.startSceneJob(id: id)
-            sighting.art.sceneJobReady(id: id, path: path)
-        case "photo-preview", "photo-approved":
-            guard let frames, let frame = sighting.frameImagePath, let photo = try? Data(contentsOf: frames.url(for: frame)),
-                  let painting = FakeArtClient.paint(photo), let path = try? frames.write(jpeg: painting) else { return }
-            let id = UUID()
-            sighting.art.startPhotoJob(id: id, source: frame)
-            sighting.art.photoJobReady(id: id, path: path)
-            if mode == "photo-approved" { sighting.art.approvePhotoArt() }
-        default:
-            return
         }
         try? context.save()
     }

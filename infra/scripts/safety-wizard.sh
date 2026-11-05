@@ -334,7 +334,7 @@ if begin "Optional: reports to another address (SES production access)"; then
 fi
 
 if begin "When you launch publicly: moderation on, and the AI services opt-out"; then
-  say "Moderation (Rekognition on art-job photos, paintings and shared photos) is off: \"moderation\": \"off\""
+  say "Moderation (Rekognition on shared photos) is off: \"moderation\": \"off\""
   say "in infra/cdk.json. For the public launch set it to \"on\" and deploy; nothing else changes."
   say "AWS may keep content Rekognition processes to improve the service unless the organization opts out."
   say "The opt-out is an AWS Organizations 'AI services opt-out policy' on the management (payer) account."

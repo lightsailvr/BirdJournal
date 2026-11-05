@@ -51,7 +51,7 @@ _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fall
 ## Packs
 
 **Pack**:
-A downloadable bundle for one region: species, photos, reference sounds, descriptions, stats, lore and pack art.
+A downloadable bundle for one region: species, photos, reference sounds, descriptions, stats, lore and patches.
 _Avoid_: region pack, bundle, dataset
 
 **Reference sound**:
@@ -141,34 +141,27 @@ _Avoid_: flavor text, tagline (the lore's one-line fallback)
 
 ## Art
 
-**Card art**:
-The picture on a card's front: pack art, scene art or photo art.
-_Avoid_: image, illustration (in domain language)
+The patch is the only painting (decided 2026-11-03, built in #137). Original photos stay as evidence: the glasses photo from the add, or one the birder attaches from the library.
 
 **Pack art**:
-A painted image of a species in its set's edition theme, shipped with the pack and shown the moment a card exists.
-_Avoid_: stock art, default art, placeholder
+Was a watercolour of a species shipped with its pack and shown on its card. The app no longer shows it; a pack not yet rebuilt with patches (#58) still carries it, unused, and shows the edition's blank patch.
 
 **Scene art**:
-The species painted into the original photo from the glasses at the add. Applied automatically when ready.
-_Avoid_: local edition, composite
+Was the species painted into the original photo from the glasses at the add. Retired; nothing paints it. A stored sighting keeps its art state, unread.
 
 **Photo art**:
-The birder's own photo of the bird embellished into card art, applied only after the birder approves a preview.
-_Avoid_: filter, enhanced photo
+Was the birder's own photo of the bird embellished by AI for its card. Retired with scene art.
 
 **Art job**:
-One request to paint scene art or photo art for an existing card. A retry is a new art job for the same card.
-_Avoid_: render, generation, task
+Was one request to paint scene art or photo art. Retired, with the server's allowance and auto-paint rule.
 
 **Art worker**:
-The program on the home GPU box that takes art jobs from the queue and paints them.
-_Avoid_: comfybox (the host's name), painter, renderer
+Was the program on the home GPU box that took art jobs from the queue. Retired. Patches are painted on the same box, by the pack builder.
 
 ## Circles
 
 **Account**:
-A birder's optional sign-in identity, through Apple or Google, needed only for circles and art jobs.
+A birder's optional sign-in identity, through Apple or Google, needed only for circles.
 _Avoid_: user, profile, login
 
 **Circle**:
@@ -228,5 +221,5 @@ A notable find shown on the lens while the birder is on a run.
 _Avoid_: lens notification
 
 **Tip**:
-A voluntary in-app payment that unlocks nothing and helps cover hosting and painting.
+A voluntary in-app payment that unlocks nothing and helps keep the server running.
 _Avoid_: donation, purchase, subscription

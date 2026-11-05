@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 /// "A story to share" (issue #66, spec v2 "Shared card"; guide 2.0 page 8): the patch on linen with its paper card as it
 /// will be sent, what it carries, and where it goes. The birder chooses the note (off), the city (on; off sends no place)
 /// and, for their circles, the original photo (off; faces blurred and metadata stripped on the phone,
-/// `ArtPhoto.prepare`) and the circles. **Send** shares the card by hand: the only way a private birder's sighting reaches
+/// `SharedPhoto.prepare`) and the circles. **Send** shares the card by hand: the only way a private birder's sighting reaches
 /// a circle. **Share card image…** is the system share: the composed image (`PatchShareImage`) as a fresh PNG (no metadata
 /// but its pixels) with its text, under the share policy's rules (the city only when chosen and never a coordinate, the
 /// note only when chosen).
@@ -304,7 +304,7 @@ struct ShareCardView: View {
             var photo: Data?
             if choices.includeOriginalPhoto {
                 guard let path = originalPhotoPath, let url = frameStore?.url(for: path) else { throw ShareFailure.photoUnavailable }
-                photo = try await Task.detached(priority: .userInitiated) { try ArtPhoto.prepare(jpeg: Data(contentsOf: url)).jpeg }.value
+                photo = try await Task.detached(priority: .userInitiated) { try SharedPhoto.prepare(jpeg: Data(contentsOf: url)).jpeg }.value
             }
             try await circles.shareCard(sightingID: sighting.identifier, photo: photo) { key in
                 FindPolicy.card(for: input, choices: choices, circleIDs: ids, photoKey: key)
@@ -325,7 +325,7 @@ struct ShareCardView: View {
     static func message(for error: Error) -> String {
         switch error {
         case ShareFailure.findWaiting: "This bird is still on its way to your Guilds. Try again once you're online."
-        case ShareFailure.photoUnavailable, is ArtPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
+        case ShareFailure.photoUnavailable, is SharedPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
         case CircleError.rejected: "The server turned this card down. Try again without the photo."
         default: CircleStore.message(for: error, doing: "share your card")
         }

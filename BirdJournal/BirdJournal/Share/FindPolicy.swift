@@ -36,14 +36,9 @@ enum FindPolicy {
         var isThreatened: Bool?
         /// The city the phone's reverse geocoding named (`PlaceNames`), nil when unknown or the sighting has no fix.
         var placeName: String?
-        /// The species' pack art, as the pack names it: the pack's id and the `pack_art` file.
-        var packArt: (packID: String, file: String)?
-        /// The patch's painting in this edition, as the pack names it (the `patch` table's file): what a find shows ahead
-        /// of pack art.
+        /// The patch's painting in this edition, as the pack names it (the `patch` table's file): what a find shows.
+        /// Nil for a bird with no patch yet, and the find then carries no art (the viewer draws the edition's blank).
         var patchArt: (packID: String, file: String)? = nil
-        /// The server key of the painting the card shows (scene or approved photo art, issue #70), nil when it shows
-        /// pack art: `CardArt.shownPaintingKey`.
-        var paintedArtKey: String? = nil
         /// The birder's note; only a card shared by hand carries it, and only when chosen.
         var note: String? = nil
         /// The caption written for the sighting (#56): part of the card face, so a card shared by hand carries it.
@@ -53,7 +48,7 @@ enum FindPolicy {
     /// What the birder chooses on the "A story to share" sheet (issue #66).
     struct Choices: Equatable {
         var includeNote = false
-        /// The original photo, faces blurred and metadata stripped (`ArtPhoto.prepare`). Off by default.
+        /// The original photo, faces blurred and metadata stripped (`SharedPhoto.prepare`). Off by default.
         var includeOriginalPhoto = false
         /// The city, or "a secret spot" for a threatened species. Off sends no place at all.
         var includeCity = true
@@ -95,23 +90,9 @@ enum FindPolicy {
     /// The find as the API takes it (`PUT /v1/finds/<sighting id>`): every field the server stores, and nothing else.
     struct Find: Codable, Equatable, Sendable {
         struct Art: Codable, Equatable, Sendable {
-            /// `pack`: a thumbnail on the art CDN of the pack's patch or pack art; `painted`: the card's painting (issue #70).
+            /// `pack`: a thumbnail on the art CDN of the pack's patch.
             var kind: String
             var key: String
-            /// With a painting only: the pack art the find shows if the server no longer holds the painting (it was
-            /// deleted after the phone downloaded it while nothing showed it). Omitted when nil.
-            var fallback: Fallback?
-
-            struct Fallback: Codable, Equatable, Sendable {
-                var kind: String
-                var key: String
-            }
-
-            init(kind: String, key: String, fallback: Fallback? = nil) {
-                self.kind = kind
-                self.key = key
-                self.fallback = fallback
-            }
         }
 
         var speciesID: String
@@ -186,17 +167,8 @@ enum FindPolicy {
             edition: input.edition,
             rarity: input.rarity,
             threatened: threatened,
-            art: art(for: input)
+            art: input.patchArt.map { Find.Art(kind: "pack", key: patchArtKey(packID: $0.packID, file: $0.file)) }
         )
-    }
-
-    /// The card's painting when it shows one the server painted, falling back to the patch or pack art; else the patch,
-    /// else the pack art.
-    private static func art(for input: Input) -> Find.Art? {
-        let pack = input.patchArt.map { Find.Art(kind: "pack", key: patchArtKey(packID: $0.packID, file: $0.file)) }
-            ?? input.packArt.map { Find.Art(kind: "pack", key: packArtKey(packID: $0.packID, file: $0.file)) }
-        guard let painted = input.paintedArtKey else { return pack }
-        return Find.Art(kind: "painted", key: painted, fallback: pack.map { Find.Art.Fallback(kind: $0.kind, key: $0.key) })
     }
 
     /// A card shared by hand (issue #66): the find whatever the sharing setting (it is the only way a private birder's
@@ -225,17 +197,17 @@ enum FindPolicy {
         return payload(for: input).place
     }
 
-    /// The pack-art thumbnail's key on the art CDN, as the pack publish step uploads it (`packbuilder thumbnails`):
-    /// `art/sayornis-nigricans.avif` in pack `us-ca-la` is `packs/us-ca-la/sayornis-nigricans.jpg`.
-    static func packArtKey(packID: String, file: String) -> String {
-        "packs/\(packID)/\(stem(of: file)).jpg"
-    }
-
     /// The patch thumbnail's key on the art CDN, as `packbuilder thumbnails` writes it, cut out on transparency:
     /// `patch/sayornis-nigricans.avif` in pack `us-ca-la` is `packs/us-ca-la/patch/sayornis-nigricans.png`. Under `packs/`
     /// with the `pack` kind, so a server from before #136 takes it too.
     static func patchArtKey(packID: String, file: String) -> String {
         "packs/\(packID)/patch/\(stem(of: file)).png"
+    }
+
+    /// Whether a key from the server is laid out as `patchArtKey` writes it. A stored find may name a watercolour's
+    /// thumbnail (`packs/<pack id>/<species>.jpg`) instead.
+    static func isPatchArtKey(_ key: String) -> Bool {
+        key.split(separator: "/").dropFirst(2).first == "patch"
     }
 
     /// The file's name without its last extension only, as the builder's `PurePosixPath.stem` does.

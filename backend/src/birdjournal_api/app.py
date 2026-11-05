@@ -1,5 +1,5 @@
 """The API: account get and update (issue #60), circles (issue #61), finds (issue #62) with shared cards (issue #66),
-art jobs (issue #68), pushes (issue #63), reactions and compare (issue #64), goals (issue #65), and reports, blocks,
+pushes (issue #63), reactions and compare (issue #64), goals (issue #65), and reports, blocks,
 moderation and account deletion (issue #71). Later tickets add their routers here."""
 
 import logging
@@ -9,25 +9,11 @@ from typing import Annotated
 
 import boto3
 import httpx2
-from botocore.config import Config
 from fastapi import Depends, FastAPI, Request
 from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from birdjournal_api.accounts import Account, AccountStore, clean_display_name
 from birdjournal_api.apns import ApnsSender, DisabledSender, secrets_manager_credentials
-from birdjournal_api.art import (
-    ArtJobStore,
-    ArtNotifier,
-    ArtQueue,
-    ArtStorage,
-    NoNotifier,
-    FindsShowArt,
-    PaintedArt,
-    S3ArtStorage,
-    SqsArtQueue,
-    WorkerToken,
-)
-from birdjournal_api.art_api import router as art_router
 from birdjournal_api.auth import (
     CurrentIdentity,
     SigningKeyResolver,
@@ -62,9 +48,6 @@ from birdjournal_api.settings import Settings
 
 logging.getLogger().setLevel(logging.INFO)
 
-# Presigned upload URLs must be SigV4 on the bucket's own regional host.
-S3_CONFIG = Config(signature_version="s3v4", s3={"addressing_style": "virtual"})
-
 
 class AccountResponse(BaseModel):
     id: str
@@ -98,9 +81,6 @@ def create_app(
     *,
     signing_key: SigningKeyResolver | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
-    art_storage: ArtStorage | None = None,
-    art_queue: ArtQueue | None = None,
-    art_notifier: ArtNotifier | None = None,
     photos: PhotoStore | None = None,
     push_sender: PushSender | None = None,
     mailer: Mailer | None = None,
@@ -109,7 +89,7 @@ def create_app(
     apple: AppleTokens | None = None,
 ) -> FastAPI:
     """The API over the settings' table. Tests pass a signing key from their own issuer, a clock, and fakes for the art
-    buckets, queue and notifier, the shared photos, APNs, the report mail, Rekognition, the user pool and Apple;
+    bucket, the shared photos, APNs, the report mail, Rekognition, the user pool and Apple;
     otherwise shared cards' photos go to the art bucket, when the stack has one."""
     dynamodb = boto3.resource("dynamodb", region_name=settings.region, endpoint_url=settings.dynamodb_endpoint)
     app = FastAPI(title="BirdJournal API")
@@ -124,23 +104,16 @@ def create_app(
         photos = S3PhotoStore(boto3.client("s3", region_name=settings.region), settings.art_bucket)
     app.state.photos = photos
     app.state.clock = clock
-    if art_storage is None and settings.upload_bucket and settings.art_bucket:
-        art_storage = S3ArtStorage(
-            boto3.client("s3", region_name=settings.region, config=S3_CONFIG), upload_bucket=settings.upload_bucket, art_bucket=settings.art_bucket
-        )
-    # Painted art on finds (#70): a find shows a painting only while the server holds it, and lets it go after.
     table = dynamodb.Table(settings.table_name)
-    painted = PaintedArt(table, art_storage, clock)
     # Rekognition (#71), behind the switch: never called while it is off.
     if moderator is None and settings.moderation:
         moderator = RekognitionModerator(boto3.client("rekognition", region_name=settings.region))
     moderation = Moderation(
-        enabled=settings.moderation, moderator=moderator, upload_bucket=settings.upload_bucket,
-        art_bucket=settings.art_bucket,
+        enabled=settings.moderation, moderator=moderator, art_bucket=settings.art_bucket,
     )
     app.state.moderation = moderation
     app.state.finds = FindStore(
-        dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, painted, moderation
+        dynamodb, settings.table_name, app.state.accounts, app.state.circles, clock, photos, moderation
     )
     app.state.devices = DeviceStore(table, clock)
     app.state.mutes = MuteStore(table, clock)
@@ -173,7 +146,7 @@ def create_app(
             post=lambda url, **kwargs: httpx2.post(url, timeout=5, **kwargs),
         )
     app.state.deleter = AccountDeleter(
-        table, app.state.circles, app.state.finds, app.state.devices, art_storage=art_storage, users=users, apple=apple,
+        table, app.state.circles, app.state.finds, app.state.devices, users=users, apple=apple,
         clock=clock,
     )
     app.include_router(safety_router)
@@ -183,34 +156,6 @@ def create_app(
     app.include_router(goals_router)
     app.include_router(reactions_router)
 
-    if art_queue is None and settings.art_queue_url:
-        art_queue = SqsArtQueue(boto3.client("sqs", region_name=settings.region), settings.art_queue_url)
-    app.state.art_jobs = (
-        ArtJobStore(
-            dynamodb.Table(settings.table_name),
-            clock,
-            rule=settings.art_auto_paint,  # type: ignore[arg-type]
-            daily_allowance=settings.art_daily_allowance,
-            storage=art_storage,
-            queue=art_queue,
-            notifier=art_notifier or NoNotifier(),
-            retention=FindsShowArt(app.state.finds.shown_art),
-            moderation=moderation,
-        )
-        if art_storage is not None
-        else None
-    )
-    app.state.worker_token = (
-        WorkerToken(value=settings.art_worker_token)
-        if settings.art_worker_token
-        else WorkerToken(
-            secret_id=settings.art_worker_token_secret,
-            secrets_client=boto3.client("secretsmanager", region_name=settings.region),
-        )
-        if settings.art_worker_token_secret
-        else None
-    )
-    app.include_router(art_router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

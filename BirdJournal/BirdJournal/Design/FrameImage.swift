@@ -46,30 +46,19 @@ struct FrameImage: View {
     }
 }
 
-/// A pack image from disk, decoded off the main actor; a bird placeholder when there is none. A pack painting
-/// (`painting`) is drawn whole on a clear ground with its edges feathered (`PaperFeather`), since it is painted on paper
-/// like the card face; a photo fills its slot.
+/// A pack photo from disk, decoded off the main actor, filling its slot; a bird placeholder when there is none.
 struct PackImage: View {
     let url: URL?
-    var painting = false
     @State private var image: UIImage?
 
     var body: some View {
-        (painting ? Color.clear : Color.raised)
+        Color.raised
             .overlay {
                 if let image {
-                    if painting {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .modifier(PaperFeather())
-                            .allowsHitTesting(false)
-                    } else {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFill()
-                            .allowsHitTesting(false)  // see FrameImage: the clipped overflow must not take touches
-                    }
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .allowsHitTesting(false)  // see FrameImage: the clipped overflow must not take touches
                 } else {
                     Image(systemName: "bird")
                         .foregroundStyle(Color.inkSecondary)

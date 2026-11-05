@@ -1,13 +1,15 @@
 import Album
 import Foundation
+import ImageIO
 import Observation
 import OSLog
 import SwiftData
+import UniformTypeIdentifiers
 
-/// Edits to the journal from the phone (issue #28): a note on a sighting, Heard or Seen (issue #52), and a removal
-/// that can be taken back for a few seconds. A removed sighting's record is kept here with its files on disk until the
-/// window closes; Undo puts it back as a new record with the same fields, its identifier included, so the same card
-/// returns (issue #51).
+/// Edits to the journal from the phone (issue #28): a note on a sighting, Heard or Seen (issue #52), the birder's own
+/// photo (issue #137), and a removal that can be taken back for a few seconds. A removed sighting's record is kept here
+/// with its files on disk until the window closes; Undo puts it back as a new record with the same fields, its identifier
+/// included, so the same card returns (issue #51).
 @MainActor
 @Observable
 final class JournalEdits {
@@ -65,6 +67,26 @@ final class JournalEdits {
         sighting.method = method
         save()
         findOutbox?.changed(sighting.identifier)
+    }
+
+    enum AttachFailure: Error, Equatable {
+        case unreadable
+    }
+
+    /// Keeps a photo from the library with the sighting, as it came, so it is the sighting's original and goes with it. A
+    /// find carries no photo, so nothing reaches the server: only a card shared by hand can, through `SharedPhoto`.
+    func attachPhoto(_ data: Data, to sighting: Sighting) throws {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil), let type = CGImageSourceGetType(source),
+              let pathExtension = UTType(type as String)?.preferredFilenameExtension else { throw AttachFailure.unreadable }
+        sighting.attachedPhotoPaths.append(try frames.write(data, pathExtension: pathExtension))
+        save()
+    }
+
+    /// Takes an attached photo off the sighting, with its file. A card already shared keeps the prepared copy it sent.
+    func removeAttachedPhoto(_ path: String, from sighting: Sighting) {
+        sighting.attachedPhotoPaths.removeAll { $0 == path }
+        save()
+        try? FileManager.default.removeItem(at: frames.url(for: path))
     }
 
     /// Removes the sighting from the journal, keeping what it was for `undoWindow`.

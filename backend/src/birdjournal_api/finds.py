@@ -25,12 +25,6 @@ Items, beside the account's and the circles' (tables.py, circles.py):
   items lays the circle's share over the find, so the extras show in the circles chosen and nowhere else, and a later
   put (Heard changed to Seen) keeps them. In the reactions' partition, so a delete takes them with it.
 
-Painted art (issue #70, ADR-0004): a find names a painting (`art/<sub>/…`, scene or photo art) once the phone has it,
-through a repeated put, which never pushes (#63). The server takes it only while it still holds that painting for that
-sighting (`PaintedArt.is_held`); otherwise the find shows the pack art the phone sent beside it (`fallback`), else
-what it showed before. A painting the find stops showing (replaced, Try again, Use pack art, or the find deleted) is
-let go (`PaintedArt.release`), so the server keeps painted art only while a find or a card shared by hand shows it.
-
 Not transactional: a find can go to more circles than one transaction holds. A put writes the find (with the circles it
 goes to) before its feed items, and a delete removes the items before the find, so the find always lists every circle
 that may hold an item of it, and a put or delete that fails half way is finished by the phone's retry (the outbox).
@@ -50,7 +44,6 @@ from typing import Any
 from boto3.dynamodb.conditions import Key
 
 from birdjournal_api.accounts import AccountStore
-from birdjournal_api.art import PaintedArt
 from birdjournal_api.circles import CircleStore, NotFound
 from birdjournal_api.moderation import Moderation
 from birdjournal_api.photos import PHOTO_MAX_BYTES, PhotoStore, is_photo_key_of
@@ -67,7 +60,7 @@ SHARE_CIRCLES_MAX = 50
 # A decimal number with two or more decimals (34.13), a degree sign, or degrees-minutes notation: what a coordinate
 # looks like in text, or minutes and seconds after a number (34 8' N). A city name has none of these.
 _COORDINATE = re.compile(r"\d+[.,]\d{2,}|°|\d\s*['′″\"]")
-_ART_KEY = re.compile(r"^(packs|art)/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*\.(jpg|jpeg|png|webp)$")
+_ART_KEY = re.compile(r"^packs/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*\.(jpg|jpeg|png|webp)$")
 # An edition is named by its set's pack id, like us-ca-la.
 _EDITION = re.compile(r"^[a-z0-9-]{1,64}$")
 
@@ -85,10 +78,9 @@ class Rarity(StrEnum):
 
 
 class ArtKind(StrEnum):
-    # A pack-art thumbnail the pack publish step uploaded to the art CDN, under packs/.
+    # A thumbnail of the pack's patch the pack publish step uploaded to the art CDN, under packs/. Finds from before
+    # #137 may name the watercolour pack art's thumbnail instead.
     PACK = "pack"
-    # Painted scene or photo art (#68, #69; on finds from #70), under art/<sub>/.
-    PAINTED = "painted"
 
 
 @dataclass(frozen=True)
@@ -229,18 +221,14 @@ def clean_edition(raw: str | None) -> str | None:
 
 def clean_art(kind: ArtKind, key: str) -> ArtReference:
     if ".." in key or not _ART_KEY.match(key):
-        raise ValueError("The art key isn't an art CDN key")
-    expected = "packs/" if kind is ArtKind.PACK else "art/"
-    if not key.startswith(expected):
-        raise ValueError(f"{kind.value} art lives under {expected}")
+        raise ValueError("The art key isn't a patch's key on the art CDN")
     return ArtReference(kind=kind, key=key)
 
 
 class FindStore:
     def __init__(
         self, dynamodb: Any, table_name: str, accounts: AccountStore, circles: CircleStore,
-        clock: Callable[[], datetime], photos: PhotoStore | None = None, painted: PaintedArt | None = None,
-        moderation: Moderation | None = None,
+        clock: Callable[[], datetime], photos: PhotoStore | None = None, moderation: Moderation | None = None,
     ) -> None:
         self._dynamodb = dynamodb
         self._table = dynamodb.Table(table_name)
@@ -248,19 +236,14 @@ class FindStore:
         self._circles = circles
         self._clock = clock
         self._photos = photos
-        self._painted = painted
         self._moderation = moderation
 
-    def put(
-        self, owner: str, sighting_id: str, content: FindContent, *, art_fallback: ArtReference | None = None
-    ) -> tuple[Find, bool]:
+    def put(self, owner: str, sighting_id: str, content: FindContent) -> tuple[Find, bool]:
         """Writes the find; True when it is new. A new find goes to the owner's current circles; a repeated put
-        updates the circles it went to the first time and no others. Painted art the server no longer holds gives way
-        to `art_fallback` (#70)."""
+        updates the circles it went to the first time and no others."""
         self._accounts.get_or_create(owner)
         now = self._clock()
         existing = self._get(_find_key(owner, sighting_id))
-        content = self._with_held_art(owner, sighting_id, content, art_fallback, existing)
         if existing is None:
             circle_ids = self._circles.circle_ids_of(owner)
             created_at = now
@@ -276,12 +259,11 @@ class FindStore:
             created_at=created_at, updated_at=now,
         )
         self._write(find, self._shares(owner, sighting_id) if existing is not None else {})
-        self._let_go(owner, existing, content)
         return find, existing is None
 
     def share(
         self, owner: str, sighting_id: str, content: FindContent, circle_ids: list[str], extras: CardExtras,
-        *, include_place: bool, art_fallback: ArtReference | None = None,
+        *, include_place: bool,
     ) -> tuple[Find, bool]:
         """A card shared by hand (issue #66): the find with the extras chosen, in the circles chosen, which must be
         the owner's current circles (NotFound otherwise, so a circle's existence never leaks). It is the only way a
@@ -307,13 +289,12 @@ class FindStore:
             if size > PHOTO_MAX_BYTES:
                 photos.delete(extras.photo_key)
                 raise ValueError("photo_too_large")
-            if self._moderation is not None and self._moderation.art_flag(extras.photo_key):
+            if self._moderation is not None and self._moderation.photo_flag(extras.photo_key):
                 # Withheld from the circle (#71): nothing is written and the photo goes; the card can go without it.
                 photos.delete(extras.photo_key)
                 raise ValueError("photo_flagged")
         now = self._clock()
         existing = self._get(_find_key(owner, sighting_id))
-        content = self._with_held_art(owner, sighting_id, content, art_fallback, existing)
         shares = self._shares(owner, sighting_id) if existing is not None else {}
         if existing is None:
             all_circles = chosen
@@ -351,7 +332,6 @@ class FindStore:
             for key in replaced:
                 if key is not None and key not in still_shown:
                     photos.delete(key)
-        self._let_go(owner, existing, content)
         return find, existing is None
 
     def delete(self, owner: str, sighting_id: str) -> None:
@@ -367,8 +347,6 @@ class FindStore:
         if existing is not None:
             content = _content(existing)
             self._delete_items(_item_keys(owner, sighting_id, content, list(existing.get("circle_ids", []))))
-            # Its painting goes with it (#70), before the find: a delete cut short is retried while the find names it.
-            self._let_go(owner, existing, None)
         reactions = self._query_keys(Key("pk").eq(_reactions_pk(owner, sighting_id)))
         # Each reaction's copy under its reactor (issue #64), the find's reaction push time and any waiting push.
         by_reactor = [
@@ -409,34 +387,6 @@ class FindStore:
         if share is not None:
             snapshot.update(_extras_attributes(share.extras))
         return snapshot
-
-    def shown_art(self, owner: str, sighting_id: str) -> str | None:
-        """The key of the art the sighting's find shows, if it has a find: what keeps a painting on the server."""
-        item = self._get(_find_key(owner, sighting_id))
-        return str(item["art_key"]) if item is not None and "art_key" in item else None
-
-    def _with_held_art(
-        self, owner: str, sighting_id: str, content: FindContent, fallback: ArtReference | None,
-        existing: dict[str, Any] | None,
-    ) -> FindContent:
-        """The find with painted art only if the server still holds that painting for this sighting: the art the find
-        already shows, or a ready job's that hasn't been deleted. Otherwise the pack art sent beside it, else what the
-        find showed before, else none."""
-        art = content.art
-        if art is None or art.kind is not ArtKind.PAINTED:
-            return content
-        previous = _content(existing).art if existing is not None else None
-        if previous == art or (self._painted is not None and self._painted.is_held(owner, sighting_id, art.key)):
-            return content
-        return replace(content, art=fallback or previous)
-
-    def _let_go(self, owner: str, existing: dict[str, Any] | None, content: FindContent | None) -> None:
-        """The painting the find showed before, once it shows something else (or, with no content, is deleted)."""
-        if existing is None or self._painted is None:
-            return
-        previous = _content(existing).art
-        if previous is not None and previous.kind is ArtKind.PAINTED and (content is None or previous != content.art):
-            self._painted.release(owner, previous.key)
 
     def feed(
         self, subject: str, circle_id: str, *, limit: int, cursor: str | None, hidden: frozenset[str] = frozenset()
