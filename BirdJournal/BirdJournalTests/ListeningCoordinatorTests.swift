@@ -447,7 +447,8 @@ struct ListeningCoordinatorTests {
         #expect(run.source == .glasses)
     }
 
-    private func waitUntil(_ what: String, timeout: Duration = .seconds(5), _ condition: () -> Bool) async throws {
+    /// Long, since it only bounds a failure: other tests' pixel work and start-up hold the main actor this test polls on for seconds at a time.
+    private func waitUntil(_ what: String, timeout: Duration = .seconds(30), _ condition: () -> Bool) async throws {
         let clock = ContinuousClock()
         let deadline = clock.now + timeout
         while !condition() {
