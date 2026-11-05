@@ -1,12 +1,14 @@
 import XCTest
 
-/// Issue #51: every add earns a card. Real taps on a phone run over the example soundscape: the first add of a species
-/// shows the Legendary reveal (Keep listening first, issue #117), See it in my collection lands on its Legendary card, a second add of the same species is
-/// the quieter acknowledgment, and opening the card never replays the reveal. Skipped when the clip is not on disk
+/// Issue #132 (of #131; before it #51's Legendary card): the first add of a species in a place sews its patch. Real taps
+/// on a phone run over the example soundscape, with no location, so every patch is Uncharted: the first add says "Add
+/// and sew patch" and shows the new-patch reveal (Keep listening first, issue #117), See it in my collection lands on
+/// the patch, seen once; a second add of the same species says "Add another sighting", is acknowledged as seen again,
+/// and leaves one patch, seen twice; opening the patch never replays the reveal. Skipped when the clip is not on disk
 /// (`scripts/download-clips.sh`).
 final class CardsUITests: XCTestCase {
     @MainActor
-    func testFirstAddRevealsLegendaryAndARepeatIsANewCard() throws {
+    func testFirstAddSewsAPatchAndARepeatAddsToItsCount() throws {
         let clip = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "fixtures/clips/birdnet-example-soundscape.wav")
@@ -25,23 +27,25 @@ final class CardsUITests: XCTestCase {
         XCTAssertTrue(review.waitForExistence(timeout: 60), "no species to review; screen: \(app.debugDescription.prefix(3000))")
         let name = String(review.label.dropFirst("Review ".count))
         review.tap()
-        let add = app.buttons["Add to collection"]
-        XCTAssertTrue(add.waitForExistence(timeout: 10), "no Add to collection; screen: \(app.debugDescription.prefix(3000))")
+        let add = app.buttons["Add and sew patch"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), "no Add and sew patch; screen: \(app.debugDescription.prefix(3000))")
         add.tap()
 
         let reveal = app.staticTexts["Your first \(name)"]
-        XCTAssertTrue(reveal.waitForExistence(timeout: 10), "no Legendary reveal for \(name); screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(reveal.waitForExistence(timeout: 10), "no new-patch reveal for \(name); screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch · Uncharted"].exists, "no New patch line; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Legendary'")).firstMatch.exists, "no Legendary")
         XCTAssertTrue(app.buttons["Keep listening"].exists, "no Keep listening during a run; screen: \(app.debugDescription.prefix(4000))")
         let back = app.buttons["See it in my collection"]
         XCTAssertTrue(back.exists)
         back.tap()
         XCTAssertFalse(reveal.waitForExistence(timeout: 2), "the reveal closed")
 
-        // The Cards view, with the new card Legendary.
-        let legendary = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS 'Legendary, your first'", name)).firstMatch
-        XCTAssertTrue(legendary.waitForExistence(timeout: 10), "no Legendary card for \(name); screen: \(app.debugDescription.prefix(4000))")
+        // The Patches view, with the new patch seen once.
+        let once = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS 'seen once'", name)).firstMatch
+        XCTAssertTrue(once.waitForExistence(timeout: 10), "no patch of \(name) seen once; screen: \(app.debugDescription.prefix(4000))")
 
-        // The same species again from the Listen tab: a new card, said quietly, no reveal.
+        // The same species again from the Listen tab: seen again, said quietly, no reveal.
         app.buttons["Listen"].firstMatch.tap()
         let again = app.buttons["Added. Review \(name)"]
         XCTAssertTrue(again.waitForExistence(timeout: 10), "no added row for \(name); screen: \(app.debugDescription.prefix(4000))")
@@ -49,17 +53,17 @@ final class CardsUITests: XCTestCase {
         let addAnother = app.buttons["Add another sighting"]
         XCTAssertTrue(addAnother.waitForExistence(timeout: 10))
         addAnother.tap()
-        XCTAssertTrue(app.staticTexts["A new card for your collection"].waitForExistence(timeout: 5), "no quiet acknowledgment; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Seen again · 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
 
-        // Two cards of the species now; reopening the Legendary one shows the card (issue #52), not the reveal again.
+        // Still one patch of the species, seen twice; reopening it shows its page (issue #134), not the reveal again.
         app.tabBars.buttons["Collection"].tap()
-        let cards = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name))
-        XCTAssertTrue(legendary.waitForExistence(timeout: 10))
-        XCTAssertEqual(cards.count, 2, "one card per add; screen: \(app.debugDescription.prefix(4000))")
-        legendary.tap()
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the card did not open; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(reveal.waitForExistence(timeout: 2), "reopening a card never replays the reveal")
+        let twice = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS 'seen 2 times'", name)).firstMatch
+        XCTAssertTrue(twice.waitForExistence(timeout: 10), "no patch of \(name) seen twice; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).count, 1, "one patch, not one per add; screen: \(app.debugDescription.prefix(4000))")
+        twice.tap()
+        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(reveal.waitForExistence(timeout: 2), "reopening a patch never replays the reveal")
         XCTAssertEqual(app.state, .runningForeground)
     }
 }

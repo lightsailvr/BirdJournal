@@ -31,7 +31,7 @@ struct BirdProfileView: View {
                     .padding(.top, 2)
 
                 if match == nil {
-                    YourCardsLink(scientificName: scientificName, commonName: reference?.species.commonName ?? commonName)
+                    YourSightingsLink(scientificName: scientificName, commonName: reference?.species.commonName ?? commonName)
                         .padding(.top, 12)
                 }
 
@@ -58,16 +58,16 @@ struct BirdProfileView: View {
     }
 }
 
-/// The way from the guide to the bird's gallery: how many cards the birder has of it, or none yet.
-private struct YourCardsLink: View {
+/// The way from the guide to the bird's patches: how many sightings the birder has of it, or none yet.
+private struct YourSightingsLink: View {
     @Query private var sightings: [Sighting]
     let scientificName: String
     let commonName: String
 
     var body: some View {
         let count = sightings.count { $0.scientificName == scientificName }
-        NavigationLink(value: Route.gallery(scientificName: scientificName, commonName: commonName)) {
-            Label(count == 0 ? "Your cards · none yet" : "Your cards · \(count)", systemImage: "rectangle.stack")
+        NavigationLink(value: Route.speciesPatches(scientificName: scientificName, commonName: commonName)) {
+            Label(count == 0 ? "Your sightings · none yet" : "Your sightings · \(count)", systemImage: "rectangle.stack")
         }
         .buttonStyle(.journalOutlined)
         .accessibilityIdentifier("profile-your-cards")

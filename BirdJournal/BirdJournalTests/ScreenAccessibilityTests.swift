@@ -156,35 +156,37 @@ struct ScreenAccessibilityTests {
         #expect(start < local, "Start listening comes before the local set")
     }
 
-    @Test("Collection: the summary, the modes and the cards, Legendary said in words", arguments: sizes)
+    @Test("Collection: the summary, the modes and the patches, each with how often it was seen", arguments: sizes)
     func collection(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(JournalView(state: CollectionState()), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.contains("House Finch") } && labels.contains("Cards")
+            labels.contains { $0.contains("House Finch") } && labels.contains("Patches")
         }
         Self.expectClean(labels, screen: "Collection")
-        #expect(labels.contains { $0.hasPrefix("6 cards") }, "the summary: \(labels)")
-        for mode in ["Cards", "Sightings", "Species"] {
+        #expect(labels.contains { $0.hasSuffix("· 6 sightings") && $0.contains("patches") }, "the summary: \(labels)")
+        for mode in ["Patches", "Sightings", "Species"] {
             #expect(labels.contains(mode), "\(mode): \(labels)")
         }
         #expect(labels.contains { $0.contains("House Finch") }, "\(labels)")
-        #expect(labels.contains { $0.contains("Legendary") }, "Legendary in words: \(labels)")
+        #expect(labels.contains { $0.contains("edition patch, seen ") && $0.contains(", sewn ") }, "a patch in words: \(labels)")
+        #expect(!labels.contains { $0.contains("not yet found") }, "a bird you haven't found has no patch: \(labels)")
+        #expect(!labels.contains { $0.contains("Legendary") }, "no Legendary: \(labels)")
     }
 
-    @Test("A card's page: the front's art, names and tale, and nothing of the back until it is turned", arguments: sizes)
-    func cardPage(typeSize: DynamicTypeSize) async throws {
+    @Test("A patch's page: the patch in one sentence, its words in type, Turn over, and nothing of the paper card until it is turned", arguments: sizes)
+    func patchPage(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
-        let labels = try await Self.walk(CardDetailView(id: phoebe.persistentModelID), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("Card art") } && labels.contains { $0.hasPrefix("Black Phoebe") }
+        let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
+        let labels = try await Self.walk(PatchDetailView(key: key), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Turn over") && labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch") }
         }
-        Self.expectClean(labels, screen: "Card page")
-        #expect(labels.contains { $0.hasPrefix("Card art") }, "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("Black Phoebe") }, "\(labels)")
-        #expect(labels.contains { $0.localizedCaseInsensitiveContains("flip") }, "the visible Flip action: \(labels)")
-        #expect(!labels.contains("Encounter story"), "the back stays hidden: \(labels)")
-        #expect(!labels.contains("Natural history"), "the back stays hidden: \(labels)")
-        #expect(!labels.contains { $0.hasPrefix("Tagline:") }, "the back stays hidden: \(labels)")
+        Self.expectClean(labels, screen: "Patch page")
+        #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn ") }, "the patch in words: \(labels)")
+        #expect(labels.contains("Black Phoebe"), "the name in type below it: \(labels)")
+        #expect(labels.contains("Turn over"), "the visible action: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("All ") && $0.contains("sighting") }, "the card stays hidden: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("Wingspan") }, "the card stays hidden: \(labels)")
     }
 
     @Test("Atlas: the set's tile keeps Ready offline apart from the birder's progress, then the field guide", arguments: sizes)

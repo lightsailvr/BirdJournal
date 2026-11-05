@@ -1,0 +1,6 @@
+{
+  "images" : [
+    { "filename" : "felt.jpg", "idiom" : "universal", "scale" : "2x" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 }
+}

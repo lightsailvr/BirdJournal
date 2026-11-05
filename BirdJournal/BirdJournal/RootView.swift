@@ -10,11 +10,12 @@ enum Route: Hashable {
     case species(scientificName: String, commonName: String)
     case speciesCredits(scientificName: String)
     case sighting(PersistentIdentifier)
-    /// One card, front first (issue #52); opened from a species gallery, it browses that gallery's filtered order
-    /// (issue #53).
-    case card(PersistentIdentifier, browse: GalleryBrowse? = nil)
-    /// One species' cards (issue #53), marking `selected` when a card's All encounters opened it.
-    case gallery(scientificName: String, commonName: String, selected: UUID? = nil)
+    /// One patch, on its page with its paper card behind it (issue #134).
+    case patch(CardCollection.Patch.Key)
+    /// A patch's sightings, or every sighting of the species.
+    case sightings(SightingsScope)
+    /// One species' patches across places (issue #134).
+    case speciesPatches(scientificName: String, commonName: String)
     /// One set's species in collector order, silhouettes for the uncollected (issue #54).
     case set(id: String)
     case packs
@@ -58,10 +59,12 @@ private struct RouteDestination: View {
             SpeciesCreditsView(scientificName: scientificName)
         case .sighting(let id):
             SightingDetailView(id: id)
-        case .card(let id, let browse):
-            CardDetailView(id: id, browse: browse)
-        case .gallery(let scientificName, let commonName, let selected):
-            SpeciesGalleryView(scientificName: scientificName, commonName: commonName, selected: selected)
+        case .patch(let key):
+            PatchDetailView(key: key)
+        case .sightings(let scope):
+            PatchSightingsView(scope: scope)
+        case .speciesPatches(let scientificName, let commonName):
+            SpeciesPatchesView(scientificName: scientificName, commonName: commonName)
         case .set(let id):
             SetView(id: id)
         case .packs:
@@ -98,9 +101,9 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Collection tab at the top of the Cards view: the Legendary reveal's "See it in my collection" (issue #51).
+    /// Opens the Collection tab at the top of the Patches view: the new-patch reveal's "See it in my collection" (issues #51, #132).
     @Entry var openCollection: @MainActor () -> Void = {}
-    /// Opens the Listen tab: a species gallery with no cards yet (issue #53).
+    /// Opens the Listen tab: a species with no sightings yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
     /// Opens a circle's page on the Guilds tab: the join screen once joined (issue #61).
     @Entry var openCircle: @MainActor (String) -> Void = { _ in }
@@ -168,7 +171,7 @@ struct RootView: View {
         }
         .tint(Color.moss)
         // Over the tabs and their bars; the run review sheet carries its own, since an add there happens over it.
-        .legendaryReveal()
+        .patchReveal()
         .environment(\.openCollection) {
             collection.mode = .cards
             collection.query = ""

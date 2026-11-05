@@ -3,15 +3,16 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// The Collection tab (issue #28, renamed from Journal in #117): the collection's cards (issue #51), every sighting by
-/// day (the journal), or the distinct species, with search; a card opens the card, a sighting the sighting and a
-/// species its gallery (issue #53). The mode picker stays pinned under the title, and the mode, the search, the Cards
-/// sort and each mode's scroll offset live in the root's `CollectionState`, so coming back finds them as they were
-/// (design guide page 10). Removals can be undone for a few seconds. The first time the collection has a card, a
-/// one-time "your collection so far" moment introduces it.
+/// The Collection tab (issue #28, renamed from Journal in #117): a felt board of a set's patches (issue #134), every
+/// sighting by day (the journal), or the distinct species, with search; a patch opens its page, a sighting the sighting
+/// and a species its patches. The mode picker stays pinned under the title, and the mode, the search, the board and each
+/// mode's scroll offset live in the root's `CollectionState`, so coming back finds them as they were (design guide page
+/// 10). Removals can be undone for a few seconds. The first time the collection has a patch, a one-time "your collection
+/// so far" moment introduces it.
 struct JournalView: View {
     enum Mode: String, CaseIterable, Identifiable {
-        case cards = "Cards"
+        /// The patches (issue #132); the case keeps its name from when they were cards.
+        case cards = "Patches"
         case sightings = "Sightings"
         case species = "Species"
         var id: Self { self }
@@ -57,7 +58,9 @@ struct JournalView: View {
                             }
                             .pickerStyle(.segmented)
                             .padding(.vertical, 8)
-                            .background(Color.paper)
+                            .background {
+                                if state.mode == .cards { BoardMaterial() } else { Color.paper }
+                            }
                             .accessibilityIdentifier("collection-mode")
                         }
                     }
@@ -81,12 +84,14 @@ struct JournalView: View {
                         if !isCovered, abs(saved - offset) > 1 { restore(saved) }
                     }
                 }
-                .onChange(of: state.sort) {
-                    // A new order starts from its first card.
+                .onChange(of: state.board) {
+                    // Another board starts from its first patch.
                     state.offsets[.cards] = 0
                     restore(0)
                 }
-                .background(Color.paper)
+                .background {
+                    if state.mode == .cards { BoardMaterial().ignoresSafeArea() } else { Color.paper.ignoresSafeArea() }
+                }
                 .searchable(text: $state.query, prompt: "Search birds")
                 #if DEBUG
                 .task {
@@ -95,16 +100,20 @@ struct JournalView: View {
                 }
                 #endif
                 .toolbar {
-                    if state.mode == .cards {
+                    if state.mode == .cards, state.query.isEmpty, boards(collection).count > 1 {
                         ToolbarItem(placement: .topBarTrailing) {
+                            let shown = shownBoard(collection)
                             Menu {
-                                Picker("Sort", selection: $state.sort) {
-                                    ForEach(CardSort.allCases) { Text($0.rawValue).tag($0) }
+                                Picker("Board", selection: Binding(get: { shown }, set: { state.board = $0 })) {
+                                    ForEach(boards(collection), id: \.self) { board in
+                                        Text(boardMenuTitle(board, collection)).tag(board)
+                                    }
                                 }
                             } label: {
-                                Label("Sort", systemImage: "arrow.up.arrow.down")
+                                Label("Board", systemImage: "square.stack")
                             }
-                            .accessibilityValue(state.sort.rawValue)
+                            .accessibilityValue(boardTitle(shown))
+                            .accessibilityIdentifier("collection-board")
                         }
                     }
                 }
@@ -112,9 +121,9 @@ struct JournalView: View {
         }
         .navigationTitle("Collection")
         .task(id: sightings.isEmpty) {
-            // The sightings the birder had before cards existed become their collection in one moment.
+            // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()
-            if intro.shouldShow(cardCount: sightings.count) {
+            if intro.shouldShow(patchCount: sightings.count) {
                 showsIntro = true
                 intro.markShown()
             }
@@ -136,33 +145,114 @@ struct JournalView: View {
                 .padding(.top, 8)
         }
         let shown = filtered
-        if shown.isEmpty {
+        if state.mode == .cards {
+            patches(collection)
+        } else if shown.isEmpty {
             NoSearchMatch(query: state.query) { state.query = "" }
                 .padding(.top, 24)
         } else {
-            switch state.mode {
-            case .cards:
-                if state.query.isEmpty, let progress = collection.progress.max(by: { $0.collected < $1.collected }) {
-                    NavigationLink(value: Route.set(id: progress.setID)) {
-                        SetProgressRow(progress: progress, detail: library.sets.first { $0.id == progress.setID }?.edition.name)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("cards-set-progress")
-                }
-                CardsGrid(sightings: shown, collection: collection, sort: state.sort)
-            case .sightings: SightingsByDay(sightings: shown)
-            case .species:
+            if state.mode == .sightings {
+                SightingsByDay(sightings: shown)
+            } else {
                 if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
                     SetProgressList(collection: collection)
                 }
                 SpeciesRows(entries: Journal.species(shown))
             }
-            Text(state.mode == .cards ? "Every add is a card. Your first of each species is Legendary." : "Your notes, one bird at a time.")
+            Text("Your notes, one bird at a time.")
                 .multilineTextAlignment(.center)
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 28)
+        }
+    }
+
+    /// The Patches mode: the chosen board's patches under its progress, or, while searching, the matches on every board.
+    @ViewBuilder
+    private func patches(_ collection: CardCollection) -> some View {
+        if state.query.isEmpty {
+            switch shownBoard(collection) {
+            case .set(let id):
+                if let set = library.sets.first(where: { $0.id == id }) {
+                    NavigationLink(value: Route.set(id: set.id)) {
+                        SetProgressRow(progress: collection.progress(of: set.id), detail: set.edition.name)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("cards-set-progress")
+                    PatchBoard(patches: collection.patches(in: set.id))
+                }
+            case .uncharted:
+                Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedPatches.count) outside every set")
+                    .font(JournalFont.rowTitle)
+                    .foregroundStyle(Color.ink)
+                    .padding(.vertical, 12)
+                PatchBoard(patches: collection.unchartedPatches)
+            }
+        } else {
+            searchResults(collection)
+        }
+        Text("One patch for every bird, in every place you find it.")
+            .multilineTextAlignment(.center)
+            .font(JournalFont.supporting)
+            .foregroundStyle(Color.inkSecondary)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 28)
+    }
+
+    /// A search reads every board, so a patch sewn in another place is still found.
+    @ViewBuilder
+    private func searchResults(_ collection: CardCollection) -> some View {
+        let groups = boards(collection).compactMap { board -> (board: BoardChoice, patches: [CardCollection.Patch])? in
+            let all: [CardCollection.Patch]
+            switch board {
+            case .set(let id): all = collection.patches(in: id)
+            case .uncharted: all = collection.unchartedPatches
+            }
+            let kept = all.filter { Journal.matches(query: state.query, commonName: PatchText.name(of: $0, library: library), scientificName: $0.scientificName) }
+            return kept.isEmpty ? nil : (board, kept)
+        }
+        if groups.isEmpty {
+            NoSearchMatch(query: state.query, searches: "Search your patches by a bird's common or scientific name.") { state.query = "" }
+                .padding(.top, 24)
+        } else {
+            ForEach(groups, id: \.board) { group in
+                Text(boardTitle(group.board))
+                    .font(JournalFont.rowTitle)
+                    .foregroundStyle(Color.ink)
+                    .padding(.vertical, 10)
+                    .accessibilityAddTraits(.isHeader)
+                PatchBoard(patches: group.patches)
+            }
+        }
+    }
+
+    /// The boards with a patch on them: there's nothing to show on any other.
+    private func boards(_ collection: CardCollection) -> [BoardChoice] {
+        library.sets.filter { collection.progress(of: $0.id).collected > 0 }.map { BoardChoice.set(id: $0.id) }
+            + (collection.unchartedPatches.isEmpty ? [] : [.uncharted])
+    }
+
+    /// The board to show: the one chosen while it still has a patch, else the place of the newest sighting (the set you're
+    /// in, guide page 6).
+    private func shownBoard(_ collection: CardCollection) -> BoardChoice {
+        let boards = boards(collection)
+        if let board = state.board, boards.contains(board) { return board }
+        if let newest = sightings.first, let setID = collection.placement(of: newest.identifier)?.setID { return .set(id: setID) }
+        return boards.first ?? .uncharted
+    }
+
+    private func boardMenuTitle(_ board: BoardChoice, _ collection: CardCollection) -> String {
+        switch board {
+        case .set(let id): "\(boardTitle(board)) · \(collection.progress(of: id).collected)"
+        case .uncharted: "\(boardTitle(board)) · \(collection.unchartedPatches.count)"
+        }
+    }
+
+    private func boardTitle(_ board: BoardChoice) -> String {
+        switch board {
+        case .set(let id): library.sets.first { $0.id == id }?.name ?? id
+        case .uncharted: CardPlacement.unchartedTitle
         }
     }
 
@@ -194,15 +284,15 @@ struct JournalView: View {
     }
 }
 
-/// No cards yet (issue #119, design guide page 16): what a card is, and Start listening as the way to the first one.
+/// No patches yet (issues #119, #132): what a patch is, and Start listening as the way to the first one.
 private struct EmptyJournal: View {
     @Environment(\.openListen) private var openListen
 
     var body: some View {
         PaperPage {
             StateNotice(
-                "No cards yet",
-                message: "Start listening, review the birds you hear and add the ones you recognize. Each one becomes a card in your collection, with the day, the place and a note if you like. Your first of each species is Legendary.",
+                "No patches yet",
+                message: "Start listening, review the birds you hear and add the ones you recognize. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count, with the day, the place and a note if you like.",
                 mark: .drawing
             ) {
                 Button {
@@ -233,30 +323,7 @@ struct NoSearchMatch: View {
     }
 }
 
-/// The Cards view (issue #51): every card newest first (or as `sort` orders them, issue #117), two columns, one at accessibility text sizes, each opening
-/// its card (issue #52). Legendary comes from the whole collection, so a search never changes which card is the first.
-private struct CardsGrid: View {
-    @Environment(\.dynamicTypeSize) private var typeSize
-    let sightings: [Sighting]
-    let collection: CardCollection
-    var sort: CardSort = .newest
-
-    var body: some View {
-        let byIdentifier = Dictionary(sightings.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
-        let columns = Array(repeating: GridItem(.flexible(), spacing: JournalLayout.rowGap, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2)
-        LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
-            ForEach(sort.ordered(collection.cards, in: collection).compactMap { byIdentifier[$0.identifier] }) { sighting in
-                NavigationLink(value: Route.card(sighting.persistentModelID)) {
-                    CardTile(sighting: sighting, isLegendary: collection.isLegendary(sighting.identifier), placement: collection.placement(of: sighting.identifier))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.top, 16)
-    }
-}
-
-/// The one-time "your collection so far" moment: what the birder's sightings became, and what Legendary means.
+/// The one-time "your collection so far" moment: what the birder's sightings became, and what a patch is.
 private struct CollectionIntroCard: View {
     let collection: CardCollection
     let dismiss: () -> Void
@@ -269,11 +336,11 @@ private struct CollectionIntroCard: View {
                     .foregroundStyle(Color.ink)
             } icon: {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(Color.goldInk)
+                    .foregroundStyle(Color.moss)
                     .accessibilityHidden(true)
             }
             .accessibilityAddTraits(.isHeader)
-            Text("\(collection.cardsText) of \(collection.speciesCount) species. Every bird you add is a card, and your earliest card of each species is Legendary, with a gold frame.")
+            Text("\(collection.patchesText) of \(collection.speciesCount) species. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)
@@ -282,7 +349,7 @@ private struct CollectionIntroCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.goldWash, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .background(Color.moss.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
     }
 }
 
@@ -439,24 +506,17 @@ struct SetProgressRow: View {
     }
 }
 
-/// The Species list: one row per bird added, with how many cards and when last, each opening its gallery (issue #53).
+/// The Species list: one row per bird added, with how many sightings and when last, each opening its patches (issue #134).
 private struct SpeciesRows: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
     let entries: [Journal.SpeciesEntry]
 
-    /// "today, November 2", "yesterday" or "October 30": the day's title inside a sentence, the month kept capitalised.
-    static func lastSeen(_ date: Date) -> String {
-        let title = Journal.title(for: date)
-        guard title.hasPrefix("Today") || title.hasPrefix("Yesterday"), let first = title.first else { return title }
-        return first.lowercased() + title.dropFirst()
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             ForEach(entries) { entry in
                 let reference = library.species(scientificName: entry.scientificName)
-                NavigationLink(value: Route.gallery(scientificName: entry.scientificName, commonName: reference?.species.commonName ?? entry.commonName)) {
+                NavigationLink(value: Route.speciesPatches(scientificName: entry.scientificName, commonName: reference?.species.commonName ?? entry.commonName)) {
                     AdaptiveRow(stacked: typeSize.stacksRows) {
                         PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
                             .frame(width: 64, height: 64)
@@ -469,7 +529,7 @@ private struct SpeciesRows: View {
                             Text(entry.scientificName)
                                 .font(JournalFont.scientific)
                                 .foregroundStyle(Color.inkSecondary)
-                            Text("\(entry.count) \(entry.count == 1 ? "card" : "cards") · last \(Self.lastSeen(entry.latest.confirmedAt))")
+                            Text("\(entry.count) \(entry.count == 1 ? "sighting" : "sightings") · last \(SpeciesRowsText.lastSeen(entry.latest.confirmedAt))")
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }
@@ -487,5 +547,14 @@ private struct SpeciesRows: View {
             }
         }
         .padding(.top, 16)
+    }
+}
+
+enum SpeciesRowsText {
+    /// "today, November 2", "yesterday" or "October 30": the day's title inside a sentence, the month kept capitalised.
+    static func lastSeen(_ date: Date) -> String {
+        let title = Journal.title(for: date)
+        guard title.hasPrefix("Today") || title.hasPrefix("Yesterday"), let first = title.first else { return title }
+        return first.lowercased() + title.dropFirst()
     }
 }

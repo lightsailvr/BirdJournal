@@ -35,7 +35,7 @@ enum CardText {
         }
         let when = season(week: snapshot.week, locale: locale)
         let rating = snapshot.occurrence.map { " at \($0.formatted(.number.precision(.fractionLength(2)).locale(locale))) on a scale of 0 to 1" } ?? ""
-        return "\(snapshot.label.title). The BirdNET geomodel rated the chance of \(article(for: commonName)) \(commonName) here in \(when)\(rating), read when you added it. Common, Uncommon, Rare and Exceptional are bands of that chance across the birds of the Featherguild packs. Rarity is about the place and the season, not whether the card is Legendary."
+        return "\(snapshot.label.title). The BirdNET geomodel rated the chance of \(article(for: commonName)) \(commonName) here in \(when)\(rating), read when you added it. Common, Uncommon, Rare and Exceptional are bands of that chance across the birds of the Featherguild packs. Rarity is about the place and the season, not about your patches."
     }
 
     /// The place on the card: its name when known, else the coordinate; "Place not recorded" without a location, never

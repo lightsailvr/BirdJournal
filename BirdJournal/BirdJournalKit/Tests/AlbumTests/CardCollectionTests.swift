@@ -2,16 +2,20 @@ import Foundation
 import Testing
 @testable import Album
 
-// Issue #51: every sighting is a card, and the birder's earliest surviving card of each species is Legendary. The
-// collection is a pure reading of the sightings, so these tests build value snapshots and nothing is stored.
-@Suite("Card collection")
+// Issue #132 (of #131): a birder collects patches, one per species per placement (a set, or Uncharted). The first
+// sighting of a species in a placement sews its patch; later sightings there add to its count. The collection is a
+// pure reading of the sightings, so these tests build value snapshots and nothing is stored.
+@Suite("Patch collection")
 struct CardCollectionTests {
     static let finch = "Haemorhous mexicanus_House Finch"
     static let phoebe = "Sayornis nigricans_Black Phoebe"
     static let start = Date(timeIntervalSince1970: 1_800_000_000)
+    static let la = CardSetTests.griffithPark
+    static let sd = CardSetTests.balboaPark
+    static let sets = CardSetTests.sets
 
-    static func card(_ species: String, minutes: Double, id: Int) -> CardCollection.Entry {
-        CardCollection.Entry(identifier: uuid(id), speciesID: species, confirmedAt: start.addingTimeInterval(minutes * 60))
+    static func card(_ species: String, minutes: Double, id: Int, at place: Coordinate? = nil) -> CardCollection.Entry {
+        CardCollection.Entry(identifier: uuid(id), speciesID: species, confirmedAt: start.addingTimeInterval(minutes * 60), location: place)
     }
 
     /// A UUID whose string sorts by `n`, so tie-breaks read in the test.
@@ -19,65 +23,125 @@ struct CardCollectionTests {
         UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))!
     }
 
-    @Test("Legendary is the earliest surviving card of each species, whatever order the sightings arrive in")
-    func earliestIsLegendary() {
+    @Test("one patch per species per placement, counting its sightings, sewn by the earliest")
+    func onePatchPerSpeciesPerPlacement() throws {
         let cards = [
-            Self.card(Self.finch, minutes: 30, id: 1),
-            Self.card(Self.phoebe, minutes: 20, id: 2),
-            Self.card(Self.finch, minutes: 10, id: 3),
-            Self.card(Self.phoebe, minutes: 40, id: 4),
+            Self.card(Self.finch, minutes: 30, id: 1, at: Self.la),
+            Self.card(Self.phoebe, minutes: 20, id: 2, at: Self.la),
+            Self.card(Self.finch, minutes: 10, id: 3, at: Self.la),
+            Self.card(Self.finch, minutes: 40, id: 4, at: Self.sd),
+            Self.card(Self.finch, minutes: 50, id: 5, at: Self.la),
         ]
+        let collection = CardCollection(cards.shuffled(), sets: Self.sets)
 
-        let collection = CardCollection(cards.shuffled())
+        #expect(collection.patches.count == 3)
+        let finchLA = try #require(collection.patch(of: Self.uuid(1)))
+        #expect(finchLA.count == 3)
+        #expect(finchLA.sewn.identifier == Self.uuid(3), "the earliest surviving sighting sewed it")
+        #expect(finchLA.latest.identifier == Self.uuid(5))
+        #expect(finchLA.sightings.map(\.identifier) == [Self.uuid(5), Self.uuid(1), Self.uuid(3)], "newest first")
+        #expect(finchLA.placement.setID == "us-ca-la")
+        #expect(collection.patch(of: Self.uuid(3)) == finchLA, "every sighting finds its patch")
+        #expect(collection.sewedItsPatch(Self.uuid(3)))
+        #expect(!collection.sewedItsPatch(Self.uuid(1)))
 
-        #expect(collection.legendary == [Self.uuid(3), Self.uuid(2)])
-        #expect(collection.isLegendary(Self.uuid(3)))
-        #expect(!collection.isLegendary(Self.uuid(1)))
-        #expect(collection.cards.map(\.identifier) == [Self.uuid(4), Self.uuid(1), Self.uuid(2), Self.uuid(3)], "newest first")
+        let finchSD = try #require(collection.patch(of: Self.uuid(4)))
+        #expect(finchSD != finchLA, "the same bird in another set is another patch")
+        #expect(finchSD.count == 1)
+        #expect(finchSD.placement.setID == "us-ca-sd")
+        #expect(collection.patches(of: Self.finch).map(\.placement.setID) == ["us-ca-la", "us-ca-sd"], "a species' patches, earliest sewn first")
     }
 
-    @Test("two cards of a species at the same moment: the lower identifier is Legendary")
-    func tiesByIdentifier() {
+    @Test("sightings with no location, or outside every set, share the species' Uncharted patch")
+    func unchartedPatch() throws {
+        let collection = CardCollection(
+            [Self.card(Self.finch, minutes: 0, id: 1), Self.card(Self.finch, minutes: 5, id: 2, at: CardSetTests.portland)],
+            sets: Self.sets
+        )
+        let patch = try #require(collection.patch(of: Self.uuid(1)))
+        #expect(patch.placement == .uncharted)
+        #expect(patch.count == 2)
+        #expect(collection.patches.count == 1)
+    }
+
+    @Test("an add sews a patch only when no surviving sighting of its species is in that placement")
+    func addSewsPatch() {
+        let collection = CardCollection([Self.card(Self.finch, minutes: 0, id: 1, at: Self.la)], sets: Self.sets)
+        #expect(!collection.addSewsPatch(speciesID: Self.finch, at: Self.la), "seen again")
+        #expect(collection.addSewsPatch(speciesID: Self.finch, at: Self.sd), "a new place")
+        #expect(collection.addSewsPatch(speciesID: Self.phoebe, at: Self.la), "a new bird")
+        #expect(collection.addSewsPatch(speciesID: Self.finch, at: nil), "the Uncharted patch is a patch too")
+        #expect(collection.count(ofSpeciesID: Self.finch, at: Self.la) == 1)
+        #expect(collection.count(ofSpeciesID: Self.finch, at: Self.sd) == 0)
+        #expect(CardCollection([]).addSewsPatch(speciesID: Self.finch, at: Self.la))
+    }
+
+    @Test("deleting a sighting lowers its patch's count and moves its sewn date on; deleting the last unpicks it")
+    func deletion() throws {
+        let first = Self.card(Self.finch, minutes: 0, id: 1, at: Self.la)
+        let second = Self.card(Self.finch, minutes: 60, id: 2, at: Self.la)
+        let third = Self.card(Self.finch, minutes: 30, id: 3, at: Self.la)
+
+        let all = try #require(CardCollection([first, second, third], sets: Self.sets).patch(of: Self.uuid(2)))
+        #expect(all.count == 3)
+        #expect(all.sewn.identifier == Self.uuid(1))
+
+        let fewer = try #require(CardCollection([second, third], sets: Self.sets).patch(of: Self.uuid(2)))
+        #expect(fewer.count == 2)
+        #expect(fewer.sewn.identifier == Self.uuid(3))
+        #expect(fewer.id == all.id, "the same patch, by species and placement")
+
+        let none = CardCollection([], sets: Self.sets)
+        #expect(none.patches.isEmpty)
+        #expect(!none.contains(speciesID: Self.finch))
+        #expect(CardCollection([second], sets: Self.sets).isLastSighting(of: Self.uuid(2)))
+        #expect(!CardCollection([second, third], sets: Self.sets).isLastSighting(of: Self.uuid(2)))
+    }
+
+    @Test("two sightings at the same moment: the lower identifier sewed the patch")
+    func tiesByIdentifier() throws {
         let collection = CardCollection([Self.card(Self.finch, minutes: 5, id: 9), Self.card(Self.finch, minutes: 5, id: 7)])
-        #expect(collection.legendary == [Self.uuid(7)])
-        #expect(collection.cards.map(\.identifier) == [Self.uuid(9), Self.uuid(7)], "the Legendary card sorts as the older")
+        #expect(try #require(collection.patch(of: Self.uuid(9))).sewn.identifier == Self.uuid(7))
+        #expect(collection.cards.map(\.identifier) == [Self.uuid(9), Self.uuid(7)], "the earlier sorts as the older")
     }
 
-    @Test("deleting the Legendary card passes it to the next-earliest; deleting the last removes the species")
-    func deletionPassesLegendaryOn() {
-        let first = Self.card(Self.finch, minutes: 0, id: 1)
-        let second = Self.card(Self.finch, minutes: 60, id: 2)
-        let third = Self.card(Self.finch, minutes: 30, id: 3)
-        let other = Self.card(Self.phoebe, minutes: 10, id: 4)
-
-        #expect(CardCollection([first, second, third, other]).legendary == [Self.uuid(1), Self.uuid(4)])
-        #expect(CardCollection([second, third, other]).legendary == [Self.uuid(3), Self.uuid(4)])
-        #expect(CardCollection([second, other]).legendary == [Self.uuid(2), Self.uuid(4)])
-
-        let withoutFinches = CardCollection([other])
-        #expect(withoutFinches.speciesCount == 1)
-        #expect(!withoutFinches.contains(speciesID: Self.finch))
-        #expect(withoutFinches.legendary == [Self.uuid(4)])
+    @Test("a set's patches in collector-number order")
+    func patchesInSet() {
+        let collection = CardCollection(
+            [Self.card(Self.phoebe, minutes: 0, id: 1, at: Self.la), Self.card(Self.finch, minutes: 5, id: 2, at: Self.la), Self.card(Self.finch, minutes: 9, id: 3, at: Self.sd)],
+            sets: Self.sets
+        )
+        // The finch is 21st in Los Angeles, the phoebe 87th.
+        #expect(collection.patches(in: "us-ca-la").map(\.speciesID) == [Self.finch, Self.phoebe])
+        #expect(collection.patches(in: "us-ca-sd").map(\.speciesID) == [Self.finch])
+        #expect(collection.progress(of: "us-ca-la").collected == 2, "progress counts patches")
     }
 
-    @Test("two sightings of a species on the same day are two cards, one of them Legendary")
-    func sameDayIsTwoCards() {
-        let collection = CardCollection([Self.card(Self.finch, minutes: 0, id: 1), Self.card(Self.finch, minutes: 90, id: 2)])
-
-        #expect(collection.cardCount == 2)
-        #expect(collection.speciesCount == 1)
-        #expect(collection.legendary.count == 1)
-        #expect(collection.summary == "2 cards · 1 species")
-        #expect(collection.cardsText == "2 cards")
-        #expect(CardCollection([Self.card(Self.finch, minutes: 0, id: 1)]).summary == "1 card · 1 species")
+    @Test("the summary counts patches and sightings")
+    func summary() {
+        let collection = CardCollection(
+            [Self.card(Self.finch, minutes: 0, id: 1), Self.card(Self.finch, minutes: 90, id: 2), Self.card(Self.phoebe, minutes: 9, id: 3)]
+        )
+        #expect(collection.sightingCount == 3)
+        #expect(collection.patchCount == 2)
+        #expect(collection.speciesCount == 2)
+        #expect(collection.summary == "2 patches · 3 sightings")
+        #expect(collection.patchesText == "2 patches")
+        #expect(CardCollection([Self.card(Self.finch, minutes: 0, id: 1)]).summary == "1 patch · 1 sighting")
     }
 
-    @Test("an add makes a Legendary only when no other surviving card of its species exists")
-    func addMakesLegendary() {
-        let collection = CardCollection([Self.card(Self.finch, minutes: 0, id: 1)])
-        #expect(!collection.addMakesLegendary(speciesID: Self.finch))
-        #expect(collection.addMakesLegendary(speciesID: Self.phoebe))
-        #expect(CardCollection([]).addMakesLegendary(speciesID: Self.finch))
+    @Test("seen-again and new-patch lines")
+    func patchLines() throws {
+        let collection = CardCollection(
+            [Self.card(Self.finch, minutes: 0, id: 1, at: Self.la), Self.card(Self.finch, minutes: 9, id: 2, at: Self.la)],
+            sets: Self.sets
+        )
+        let patch = try #require(collection.patch(of: Self.uuid(1)))
+        #expect(patch.countText == "Seen 2 times")
+        #expect(patch.seenAgainText == "Seen 2 times in Los Angeles")
+        let single = try #require(CardCollection([Self.card(Self.finch, minutes: 0, id: 1)]).patch(of: Self.uuid(1)))
+        #expect(single.countText == "Seen once")
+        #expect(single.seenAgainText == "Seen once, Uncharted")
     }
 
     @Test("the collection reads stored sightings")
@@ -86,17 +150,17 @@ struct CardCollectionTests {
         #expect(CardCollection.Entry(sighting) == Self.card(Self.finch, minutes: 0, id: 5))
     }
 
-    @Test("the intro shows once, the first time the collection has a card")
+    @Test("the intro shows once, the first time the collection has a patch")
     func introShowsOnce() throws {
         let suite = "collection-intro-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let intro = CollectionIntro(defaults: defaults)
 
-        #expect(!intro.shouldShow(cardCount: 0), "nothing to show yet")
-        #expect(intro.shouldShow(cardCount: 12))
+        #expect(!intro.shouldShow(patchCount: 0), "nothing to show yet")
+        #expect(intro.shouldShow(patchCount: 12))
         intro.markShown()
-        #expect(!intro.shouldShow(cardCount: 12))
-        #expect(!CollectionIntro(defaults: defaults).shouldShow(cardCount: 13), "remembered across launches")
+        #expect(!intro.shouldShow(patchCount: 12))
+        #expect(!CollectionIntro(defaults: defaults).shouldShow(patchCount: 13), "remembered across launches")
     }
 }

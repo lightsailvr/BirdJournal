@@ -1,0 +1,126 @@
+import ImageIO
+import Pack
+import SwiftUI
+
+/// A patch's painting on the phone (the pack's `PackPatch`), what `PatchView` lights.
+nonisolated struct PatchArt: Hashable, Sendable {
+    let colour: URL
+    /// Height in red, the cord in green, the stitch order in blue, at half size.
+    let layers: URL
+    /// The bare twill's colour: what an unstitched pattern shows.
+    let ground: String
+}
+
+extension PackLibrary {
+    /// A bird's painting in one edition; nil when that edition's pack isn't on the phone, or it has no painting of the
+    /// bird, or the patch is Uncharted. A patch is never drawn with another edition's painting (guide page 7).
+    func patchArt(scientificName: String, setID: String?) -> PatchArt? {
+        patch(scientificName: scientificName, setID: setID).map { found in
+            PatchArt(colour: found.pack.patchURL(for: found.patch), layers: found.pack.patchLayersURL(for: found.patch), ground: found.patch.ground)
+        }
+    }
+}
+
+/// The decoded pictures of a patch at one of two sizes, decoded off the main thread and kept while memory allows. A
+/// board's thumbnails decode smaller than a page's patch: at 30 on screen the shader's cost is their pixels (guide page 18).
+@MainActor
+enum PatchTextures {
+    enum Size: Sendable {
+        case thumbnail, full
+
+        var colourPixels: Int { self == .thumbnail ? 360 : 720 }
+        var layerPixels: Int { self == .thumbnail ? 180 : 360 }
+    }
+
+    nonisolated final class Loaded: Sendable {
+        let colour: Image
+        let layers: Image
+        /// One layer pixel in the 0...1 of the shader's `uv`.
+        let texel: CGSize
+
+        init(colour: Image, layers: Image, texel: CGSize) {
+            self.colour = colour
+            self.layers = layers
+            self.texel = texel
+        }
+    }
+
+    private static let cache = NSCache<NSString, Loaded>()
+
+    static func cached(_ art: PatchArt, size: Size) -> Loaded? {
+        cache.object(forKey: key(art, size))
+    }
+
+    static func load(_ art: PatchArt, size: Size) async -> Loaded? {
+        if let hit = cached(art, size: size) { return hit }
+        let colourPixels = size.colourPixels, layerPixels = size.layerPixels
+        let flag = CancelFlag()
+        let loaded: Loaded? = await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                decoding.addOperation {
+                    guard !flag.isCancelled, let colour = decode(art.colour, maxPixels: colourPixels), let layers = decode(art.layers, maxPixels: layerPixels) else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    continuation.resume(returning: Loaded(
+                        colour: Image(decorative: colour, scale: 1), layers: Image(decorative: layers, scale: 1),
+                        texel: CGSize(width: 1 / CGFloat(layers.width), height: 1 / CGFloat(layers.height))
+                    ))
+                }
+            }
+        } onCancel: {
+            flag.cancel()
+        }
+        if let loaded { cache.setObject(loaded, forKey: key(art, size)) }
+        return loaded
+    }
+
+    /// Decodes block their thread, so they run here and never on Swift's cooperative pool: a board asks for a dozen at
+    /// once, which on the pool held every thread until the decoders' own work couldn't run (the app's test host hung).
+    /// Two at a time, and one scrolled away before its turn is skipped.
+    private nonisolated static let decoding: OperationQueue = {
+        let queue = OperationQueue()
+        queue.name = "patch decoding"
+        queue.maxConcurrentOperationCount = 2
+        queue.qualityOfService = .userInitiated
+        return queue
+    }()
+
+    private nonisolated final class CancelFlag: @unchecked Sendable {
+        private let lock = NSLock()
+        private var cancelled = false
+
+        var isCancelled: Bool { lock.withLock { cancelled } }
+
+        func cancel() {
+            lock.withLock { cancelled = true }
+        }
+    }
+
+    private static func key(_ art: PatchArt, _ size: Size) -> NSString {
+        "\(art.colour.path(percentEncoded: false))|\(size.colourPixels)" as NSString
+    }
+
+    private nonisolated static func decode(_ url: URL, maxPixels: Int) -> CGImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixels,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary).flatMap(bitmap)
+    }
+
+    /// The same pixels in plain memory. A thumbnail from ImageIO can stay a lazy provider that decodes the file again when
+    /// the renderer asks for its pixels, and a moving light rebuilds the shader, so it asked on every frame for every patch
+    /// on screen (about 120 AV1 decodes a second, seen in the log while the light swept). A still light hid it.
+    private nonisolated static func bitmap(_ image: CGImage) -> CGImage? {
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8, bytesPerRow: 0, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.interpolationQuality = .none
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return context.makeImage()
+    }
+}

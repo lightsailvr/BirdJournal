@@ -64,17 +64,17 @@
     {
       "id": "us-ca-la",
       "name": "Los Angeles",
-      "version": 10,
+      "version": 11,
       "bundled": true,
-      "release": "pack-us-ca-la-v10",
+      "release": "pack-us-ca-la-v11",
       "asset": "us-ca-la.zip",
-      "sha256": "ea1dc4b7f0c8ede664c3476ec62e8f62a3c5132a41641c6436dd2c08c49997d8",
-      "bytes": 191683498,
+      "sha256": "c3cec48351db4bbacae5c11791386d5f9a45632db644853b3a8461cea4f2a8a8",
+      "bytes": 192820539,
       "species": 160,
       "photos": 785,
       "sounds": 266,
       "region": "Los Angeles County, California, US",
-      "schema_version": 4
+      "schema_version": 5
     }
   ]
 }

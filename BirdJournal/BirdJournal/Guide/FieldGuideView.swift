@@ -123,7 +123,7 @@ struct FieldGuideView: View {
         .background(Color.paper)
         .navigationTitle("Atlas")
         .navigationSubtitle("Field guide & regional sets")
-        .searchable(text: $query, prompt: "Search birds or regions")
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search birds or regions")
         #if DEBUG
         .task {
             // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.

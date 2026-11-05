@@ -68,4 +68,35 @@ extension XCUIElement {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", label), object: self)
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
+
+    /// Issue #134: the Atlas's search is always in view, not behind a pull down the page.
+    @MainActor
+    func testTheAtlasSearchIsInViewAndFindsABird() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoScreen", "guide"]
+        app.launch()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 15), "no search field in view; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(search.isHittable)
+        search.tap()
+        search.typeText("Black Phoebe")
+        XCTAssertTrue(app.staticTexts["Sayornis nigricans"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    /// Issue #134: a set's page searches its own birds, by name, keeping their collector numbers.
+    @MainActor
+    func testASetsPageSearchesItsBirds() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoScreen", "set"]
+        app.launch()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 15), "no search field in view; screen: \(app.debugDescription.prefix(3000))")
+        search.tap()
+        search.typeText("House Finch")
+        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '130, House Finch'")).firstMatch
+        XCTAssertTrue(finch.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(app.buttons.matching(identifier: "set-species-silhouette").count, 1, "only the match; screen: \(app.debugDescription.prefix(3000))")
+        search.typeText("zzz")
+        XCTAssertTrue(app.descendants(matching: .any)["no-search-match"].waitForExistence(timeout: 5))
+    }
 }

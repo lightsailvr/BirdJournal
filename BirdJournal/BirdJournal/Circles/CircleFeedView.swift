@@ -4,8 +4,8 @@ import SwiftUI
 
 /// A Guild's Recent finds (issue #62, led by the artwork since #118): friends' sightings, newest first, a page at a
 /// time, each with who found it, the city or "a secret spot" and when, then the art, the bird and Heard or Seen.
-/// "First for the Guild" marks the earliest surviving find of a species, apart from anyone's Legendary, which is the
-/// finder's own first. Under each find, its reactions (issue #64): a friend's find takes a tap on each, the birder's
+/// "First for the Guild" marks the earliest surviving find of a species, apart from "New patch", a find that sewed the
+/// finder's own patch. Under each find, its reactions (issue #64): a friend's find takes a tap on each, the birder's
 /// own shows what friends gave. No comments.
 struct CircleFeedSection: View {
     @Environment(CircleStore.self) private var circles
@@ -204,17 +204,18 @@ struct FindRow: View {
         return "\(place == FindPolicy.secretSpot ? "At a secret spot" : place) · \(when)"
     }
 
-    /// The marks a find wears, in this order: Legendary (the finder's first), First for the Guild, and Rare or
-    /// Exceptional. Common and Uncommon aren't marked.
+    /// The marks a find wears, in this order: New patch (the find sewed the finder's patch; the find's flag keeps its
+    /// Legendary name until #136), First for the Guild, and Rare or Exceptional. Common and Uncommon aren't marked.
     static func marks(_ item: FeedItem) -> [String] {
         var marks: [String] = []
-        if item.legendary { marks.append("Legendary") }
+        if item.legendary { marks.append(newPatch) }
         if item.circleFirst { marks.append(firstForTheGuild) }
         if let rarity = item.rarity, rarity == .rare || rarity == .exceptional { marks.append(rarity.title) }
         return marks
     }
 
     static let firstForTheGuild = "First for the Guild"
+    static let newPatch = "New patch"
 }
 
 /// The marks in a row that wraps at large text sizes.
@@ -260,21 +261,21 @@ private struct SharedCardExtras: View {
     }
 }
 
-/// A find's mark. Legendary keeps the gold, its one job; First for the Guild is an outlined aqua capsule, kept
-/// apart from it; a rarity is just its word.
+/// A find's mark. New patch is a filled aqua capsule; First for the Guild an outlined one, kept apart from it; a
+/// rarity is just its word. No gold (#132).
 private struct FindMark: View {
     let title: String
 
     var body: some View {
-        let legendary = title == "Legendary"
+        let newPatch = title == FindRow.newPatch
         let first = title == FindRow.firstForTheGuild
         Text(title)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(legendary ? Color.goldInk : first ? Color.moss : Color.inkSecondary)
+            .foregroundStyle(newPatch || first ? Color.moss : Color.inkSecondary)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)
-            .background(legendary ? Color.goldWash : Color.clear, in: .capsule)
-            .overlay(Capsule().strokeBorder(first ? Color.moss : legendary ? Color.goldInk.opacity(0.5) : Color.rule, lineWidth: 1))
+            .background(newPatch ? Color.moss.opacity(0.12) : Color.clear, in: .capsule)
+            .overlay(Capsule().strokeBorder(first ? Color.moss : newPatch ? Color.moss.opacity(0.4) : Color.rule, lineWidth: 1))
     }
 }
 

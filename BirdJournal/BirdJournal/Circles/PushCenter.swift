@@ -62,7 +62,7 @@ struct FriendFind: Equatable, Decodable, Sendable {
 
 /// What a push from the BirdJournal server says, read from its payload's custom keys.
 enum PushMessage: Equatable {
-    /// A friend's Legendary, circle first, or Rare or Exceptional find.
+    /// A friend's new patch (the push's `legendary` flag until #136), circle first, or Rare or Exceptional find.
     case notable(FriendFind)
     /// "Maya found 6 birds in Pasadena".
     case digest(friend: String)
@@ -144,7 +144,7 @@ final class PushCenter {
     /// Raised but not answered yet (issue #107): the next Circles tab or circle page offers it once more.
     static let pendingKey = "pushPermissionExplanationPending"
     /// Why, before the system's prompt.
-    static let explanation = "Featherguild can tell you when someone in your Guilds finds a Legendary, a first for the Guild or a rare bird, and bundles their other finds into one notification every couple of hours. You can mute a Guild or a friend at any time."
+    static let explanation = "Featherguild can tell you when someone in your Guilds sews a new patch, finds a first for the Guild or a rare bird, and bundles their other finds into one notification every couple of hours. You can mute a Guild or a friend at any time."
 
     private(set) var permission: PushPermission?
     /// The explanation before the system prompt is raised. A dropped alert can leave it up with nothing on screen.

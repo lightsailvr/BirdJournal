@@ -1,5 +1,5 @@
 {
- "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}, \"art\": {\"reference\": inat photo id: the pack photo pack art is painted from, instead of the best-lit one (#57); \"setting\": what pack art paints the bird on, one of perch, trunk, flight, ground, rock, shore, wade or water, from what its reference shows (any perch off the ground is a branch; prompts v10); \"length_cm\": the bird's length, which sizes the setting, where the description gives none}}. Photo ids are in the pack's report.json and LICENSE.",
+ "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}, \"art\": {\"reference\": inat photo id: the pack photo pack art is painted from, instead of the best-lit one (#57); \"setting\": what pack art paints the bird on, one of perch, trunk, flight, ground, rock, shore, wade or water, from what its reference shows (any perch off the ground is a branch; prompts v10); \"length_cm\": the bird's length, which sizes the setting, where the description gives none}}. Photo ids are in the pack's report.json and LICENSE. \"art.patch\" is for the species' embroidered patch (#133): {\"reference\": another of the pack's inat photo ids to paint it from, \"markings\": plumage facts stated in its prompt, which describe the bird and never name it}.",
  "Melozone crissalis": {
   "exclude": [
    740654177,
@@ -114,7 +114,10 @@
   ],
   "_why": "open-license review (#50): out 640224688: brown colour cast hides the black and white; out 632063781: brown colour cast hides the black and white",
   "art": {
-   "setting": "perch"
+   "setting": "perch",
+   "patch": {
+    "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white."
+   }
   }
  },
  "Euphagus cyanocephalus": {
@@ -359,7 +362,10 @@
   "art": {
    "reference": 593312066,
    "_why": "a distant bird came out a black blob; a male close on the water",
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "markings": "The whole body and wings are solid black, with no white or cream on them; the only white is on the forehead and the nape."
+   }
   }
  },
  "Dryobates pubescens": {
@@ -368,7 +374,10 @@
   ],
   "_why": "open-license review (#50): out 99703960: dark, half hidden",
   "art": {
-   "setting": "trunk"
+   "setting": "trunk",
+   "patch": {
+    "reference": 169830093
+   }
   }
  },
  "Melospiza lincolnii": {
@@ -413,7 +422,11 @@
   ],
   "_why": "open-license review (#50): out 204573102: nestling behind sticks",
   "art": {
-   "setting": "rock"
+   "setting": "rock",
+   "patch": {
+    "reference": 461778080,
+    "markings": "The body and back are a smooth grey-blue, with a black scaled pattern on the wings; there is no purple or brown."
+   }
   }
  },
  "Brotogeris chiriri": {
@@ -639,7 +652,12 @@
   ],
   "_why": "open-license review (#50): out 739638372: underexposed, in shadow",
   "art": {
-   "setting": "ground"
+   "setting": "ground",
+   "patch": {
+    "reference": 446193801,
+    "markings": "The whole bird is iridescent black from head to tail, with a purple-blue sheen on the head and upper body; there is no brown, white or cream anywhere.",
+    "_why": "the pack art reference is a brown female"
+   }
   }
  },
  "Thryomanes bewickii": {
@@ -685,7 +703,18 @@
   ],
   "_why": "open-license review (#50): in 27578347: missed by the detector; roosting on mulch; in 27035889: missed by the detector; roosting on gravel; in 360352886: missed by the detector; on a trail at night",
   "art": {
-   "setting": "ground"
+   "setting": "ground",
+   "patch": {
+    "reference": 27578347,
+    "box": [
+     0.28,
+     0.43,
+     0.91,
+     0.72
+    ],
+    "markings": "It crouches flat, its legs hidden beneath it, and its plumage is finely patterned in grey and black above.",
+    "_why": "the detector cannot see it on the bark mulch, so the box is by hand"
+   }
   }
  },
  "Megascops kennicottii": {
@@ -737,7 +766,10 @@
   "art": {
    "reference": 604259110,
    "_why": "a branch across the tail became a long blade; a bird standing in the open",
-   "setting": "ground"
+   "setting": "ground",
+   "patch": {
+    "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white or grey anywhere."
+   }
   }
  },
  "Branta canadensis": {
@@ -864,7 +896,11 @@
    "_why": "two birds in the reference, two in the painting; one bird, well lit",
    "setting": "rock",
    "length_cm": 44,
-   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides",
+   "patch": {
+    "reference": 260950245,
+    "markings": "The whole body, wings and head are very dark blackish thread, with no tan or light brown; the long bill is orange-red, the iris bright yellow with a red eye-ring."
+   }
   }
  },
  "Campylorhynchus brunneicapillus": {
@@ -876,7 +912,10 @@
  },
  "Junco hyemalis": {
   "art": {
-   "setting": "perch"
+   "setting": "perch",
+   "patch": {
+    "markings": "The hood, back, shoulders and wings are all one slate blue-grey, with no brown or tan on the back or shoulders; only the belly is pale."
+   }
   }
  },
  "Mimus polyglottos": {
@@ -911,12 +950,18 @@
  },
  "Fulica americana": {
   "art": {
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches."
+   }
   }
  },
  "Corvus brachyrhynchos": {
   "art": {
-   "setting": "ground"
+   "setting": "ground",
+   "patch": {
+    "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white, grey or blue anywhere."
+   }
   }
  },
  "Nycticorax nycticorax": {
@@ -967,7 +1012,11 @@
  },
  "Mareca americana": {
   "art": {
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "reference": 344944792,
+    "markings": "The band sweeping back from the eye and the patch on the wing are iridescent green thread, not white."
+   }
   }
  },
  "Callipepla californica": {
@@ -996,7 +1045,11 @@
   "art": {
    "setting": "shore",
    "length_cm": 48,
-   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+   "_length_why": "the Wikipedia text gives no length; a typical length from the field guides",
+   "patch": {
+    "reference": 572948025,
+    "markings": "The head and chest are light grey, the wings a darker grey, and the bill is red with a black tip."
+   }
   }
  },
  "Butorides virescens": {
@@ -1026,7 +1079,12 @@
  },
  "Pelecanus erythrorhynchos": {
   "art": {
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "reference": 340865450,
+    "_why": "the pack art reference wears a numbered wildlife wing tag, which the thread copied",
+    "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange."
+   }
   }
  },
  "Streptopelia decaocto": {
@@ -1151,12 +1209,18 @@
  },
  "Urile penicillatus": {
   "art": {
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "markings": "The whole bird is very dark, nearly black, from head to tail, with no brown and no white or pale patches on the belly."
+   }
   }
  },
  "Lophodytes cucullatus": {
   "art": {
-   "setting": "water"
+   "setting": "water",
+   "patch": {
+    "reference": 340591597
+   }
   }
  },
  "Passerina amoena": {

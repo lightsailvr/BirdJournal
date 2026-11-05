@@ -8,6 +8,12 @@ struct SpeciesCreditsView: View {
     @Environment(PackLibrary.self) private var library
     let scientificName: String
 
+    /// " from a reference photo (© Name, CC BY)", or nothing for a painting whose photo the pack no longer lists.
+    private static func source(of patch: PackPatch, in species: PackSpecies) -> String {
+        let credits = patch.sourcePhotoIDs.compactMap { id in species.photos.first { $0.inatPhotoID == id }?.creditLine }
+        return credits.isEmpty ? "" : " from a reference photo (\(credits.joined(separator: "; ")))"
+    }
+
     var body: some View {
         if let found = library.species(scientificName: scientificName) {
             List {
@@ -52,6 +58,15 @@ struct SpeciesCreditsView: View {
                         Text(CardStatsText.sources(stats))
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
+                    }
+                }
+                if let patch = found.species.patch {
+                    Section {
+                        Text("AI illustration, not a photograph: an embroidered patch painted for the pack (\(patch.workflowVersion))\(Self.source(of: patch, in: found.species)). It shows the species, not your bird.")
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                    } header: {
+                        Text("Patch")
                     }
                 }
                 if let art = found.species.packArt {

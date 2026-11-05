@@ -110,11 +110,11 @@ struct FindRowTests {
         #expect(!FindRow.whereAndWhen(Self.item(place: nil)).contains("·"))
     }
 
-    @Test("Legendary, First for the Guild and Rare or Exceptional are marked; Common and Uncommon aren't")
+    @Test("New patch, First for the Guild and Rare or Exceptional are marked; Common and Uncommon aren't")
     func marks() {
         #expect(FindRow.marks(Self.item()) == [])
         #expect(FindRow.marks(Self.item(rarity: .uncommon)) == [])
-        #expect(FindRow.marks(Self.item(legendary: true, first: true, rarity: .exceptional)) == ["Legendary", "First for the Guild", "Exceptional"])
+        #expect(FindRow.marks(Self.item(legendary: true, first: true, rarity: .exceptional)) == ["New patch", "First for the Guild", "Exceptional"])
         #expect(FindRow.marks(Self.item(first: true, rarity: .rare)) == ["First for the Guild", "Rare"])
     }
 }

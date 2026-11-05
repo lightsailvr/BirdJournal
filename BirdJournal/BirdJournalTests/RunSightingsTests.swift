@@ -55,8 +55,8 @@ struct RunSightingsTests {
         #expect(!ledger.isAdded(Self.finch))
     }
 
-    @Test("an add writes a card: its own identifier and Heard, and a Legendary only when no other surviving sighting of the species exists (issue #51)")
-    func addEarnsACard() throws {
+    @Test("an add writes a sighting with its own identifier and Heard, and sews a patch only when no other surviving sighting of the species is in its place (issues #51, #132)")
+    func addSewsAPatch() throws {
         let album = try AlbumSchema.makeContainer(inMemory: true)
         let folder = URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
@@ -65,31 +65,35 @@ struct RunSightingsTests {
         func stored() throws -> [Sighting] { try album.mainContext.fetch(Sighting.newestFirst()) }
 
         let first = try ledger.add(Self.candidate(score: 0.5), confirmedAt: start, location: nil, frame: nil, source: .glasses)
-        #expect(first.isLegendary)
+        #expect(first.sewsPatch)
+        #expect(first.patchCount == 1)
         let written = try #require(try stored().first)
         #expect(written.identifier == first.identifier)
         #expect(written.method == .heard)
 
         let second = try ledger.add(Self.candidate(score: 0.6), confirmedAt: start.addingTimeInterval(60), location: nil, frame: nil, source: .phone)
-        #expect(!second.isLegendary, "a repeat add is a new card")
+        #expect(!second.sewsPatch, "a repeat add is seen again")
+        #expect(second.patchCount == 2)
         #expect(second.identifier != first.identifier)
         #expect(Set(try stored().map(\.identifier)) == [first.identifier, second.identifier])
 
-        // With the first gone, the second survives: another add is still not the birder's first.
+        // With the first gone, the second survives: another add still joins the patch.
         try ledger.undo(first)
-        #expect(!(try ledger.add(Self.candidate(score: 0.7), confirmedAt: start.addingTimeInterval(120), location: nil, frame: nil, source: .phone).isLegendary))
+        let third = try ledger.add(Self.candidate(score: 0.7), confirmedAt: start.addingTimeInterval(120), location: nil, frame: nil, source: .phone)
+        #expect(!third.sewsPatch)
+        #expect(third.patchCount == 2)
 
-        // Once no sighting of the species survives, the next add is Legendary again.
+        // Once no sighting of the species survives, the patch is unpicked and the next add sews it again.
         for sighting in try stored() { album.mainContext.delete(sighting) }
         try album.mainContext.save()
-        #expect(try ledger.add(Self.candidate(score: 0.8), confirmedAt: start.addingTimeInterval(180), location: nil, frame: nil, source: .phone).isLegendary)
+        #expect(try ledger.add(Self.candidate(score: 0.8), confirmedAt: start.addingTimeInterval(180), location: nil, frame: nil, source: .phone).sewsPatch)
 
         // A sighting from an earlier run counts as surviving too.
         let otherAlbum = try AlbumSchema.makeContainer(inMemory: true)
         otherAlbum.mainContext.insert(Sighting(speciesID: Self.finch.birdnetLabel, confirmedAt: start.addingTimeInterval(-86_400), soundConfidence: 0.5, source: .glasses))
         try otherAlbum.mainContext.save()
         let nextRun = RunSightings(recorder: SightingRecorder(container: otherAlbum, frames: FrameStore(directory: folder)))
-        #expect(!(try nextRun.add(Self.candidate(score: 0.9), confirmedAt: start, location: nil, frame: nil, source: .phone).isLegendary))
+        #expect(!(try nextRun.add(Self.candidate(score: 0.9), confirmedAt: start, location: nil, frame: nil, source: .phone).sewsPatch))
     }
 
     @Test("a sighting names its species from the packs, else from its label, so a removed pack leaves the journal readable")

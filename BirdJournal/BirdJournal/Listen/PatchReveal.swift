@@ -1,15 +1,16 @@
 import Album
+import Pack
 import SwiftData
 import SwiftUI
 
 extension View {
-    /// Shows the coordinator's Legendary reveal over this screen, bars included, while there is one (issue #51).
-    func legendaryReveal() -> some View {
-        modifier(LegendaryRevealOverlay())
+    /// Shows the coordinator's new-patch reveal over this screen, bars included, while there is one (issues #51, #132).
+    func patchReveal() -> some View {
+        modifier(PatchRevealOverlay())
     }
 }
 
-private struct LegendaryRevealOverlay: ViewModifier {
+private struct PatchRevealOverlay: ViewModifier {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -17,7 +18,7 @@ private struct LegendaryRevealOverlay: ViewModifier {
         content
             .overlay {
                 if let reveal = run.reveal {
-                    LegendaryRevealView(reveal: reveal)
+                    PatchRevealView(reveal: reveal)
                         .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
                 }
             }
@@ -25,13 +26,15 @@ private struct LegendaryRevealOverlay: ViewModifier {
     }
 }
 
-/// The Legendary reveal after an add that was the birder's first of a species (issue #51; issue #117 after design guide
-/// pages 15–16): "Added to your collection", "Your first Black Phoebe.", the card in a restrained orbit, a light haptic
-/// as it opens, and Keep listening as the way back, with Share this discovery and the collection after it. The sighting
-/// was written before this opened, so closing it or a failed share loses nothing ("Your card is already saved");
-/// Undo stays while the add's window is open. It belongs to the add: reopening the card never shows it again.
-private struct LegendaryRevealView: View {
+/// The new-patch reveal after an add that sewed a patch, the species' first sighting in its placement (issue #132, of
+/// #131; before it the Legendary reveal of #51 and #117): "New patch · Citrus edition", "Your first Black Phoebe in Los
+/// Angeles.", the card in a restrained orbit, a light haptic as it opens, and Keep listening as the way back, with Share
+/// and the collection after it. The sighting was written before this opened, so closing it or a failed share loses
+/// nothing ("Your sighting is already saved"); Undo stays while the add's window is open. It belongs to the add:
+/// reopening the patch never shows it again. Slice #135 replaces the card with the stitched patch.
+private struct PatchRevealView: View {
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(PackLibrary.self) private var library
     @Environment(\.modelContext) private var context
     @Environment(\.openCollection) private var openCollection
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -53,7 +56,7 @@ private struct LegendaryRevealView: View {
         ScrollView {
             VStack(spacing: 18) {
                 ZStack {
-                    Text("Added to your collection")
+                    Text(reveal.eyebrow)
                         .font(.system(.subheadline, design: .serif))
                         .tracking(1.2)
                         .foregroundStyle(Color.inkSecondary)
@@ -80,8 +83,12 @@ private struct LegendaryRevealView: View {
                     .accessibilityLabel(reveal.title)
                     .accessibilityAddTraits(.isHeader)
                 if let sighting {
-                    CardTile(sighting: sighting, isLegendary: true, placement: reveal.addition.placement)
-                        .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : 240)
+                    PatchView(
+                        art: library.patchArt(scientificName: sighting.scientificName, setID: reveal.addition.placement.setID),
+                        edition: PatchEdition.of(setID: reveal.addition.placement.setID), size: .full, tag: library.commonName(for: sighting)
+                    )
+                        .holdsPatchLight()
+                        .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 240)
                         .padding(.vertical, typeSize.isAccessibilitySize ? 0 : 22)
                         .background {
                             if !typeSize.isAccessibilitySize {
@@ -90,7 +97,7 @@ private struct LegendaryRevealView: View {
                             }
                         }
                 }
-                Text("Your earliest card of each species is Legendary.")
+                Text("The first time you find a bird in a place, you sew its patch. Every sighting after adds to its count.")
                     .font(JournalFont.body)
                     .foregroundStyle(Color.ink)
                     .multilineTextAlignment(.center)
@@ -123,7 +130,7 @@ private struct LegendaryRevealView: View {
                             .frame(minHeight: 44)
                             .accessibilityLabel("Undo adding \(reveal.commonName)")
                     }
-                    Text("Your card is already saved.")
+                    Text("Your sighting is already saved.")
                         .font(JournalFont.attribution)
                         .foregroundStyle(Color.inkSecondary)
                 }
@@ -135,8 +142,8 @@ private struct LegendaryRevealView: View {
         .background {
             ZStack {
                 Color.paper
-                // A soft gold light behind the card: the reveal's one wash (gold's one job is Legendary).
-                RadialGradient(colors: [Color.goldWash, Color.paper.opacity(0)], center: UnitPoint(x: 0.5, y: 0.45), startRadius: 10, endRadius: 360)
+                // A soft light behind the card: the reveal's one wash.
+                RadialGradient(colors: [Color.moss.opacity(0.14), Color.paper.opacity(0)], center: UnitPoint(x: 0.5, y: 0.45), startRadius: 10, endRadius: 360)
             }
             .ignoresSafeArea()
         }
@@ -152,7 +159,7 @@ private struct LegendaryRevealView: View {
     }
 }
 
-/// The restrained orbit behind the revealed card (page 15): one fine gold ellipse with two small stones on it, drawn
+/// The restrained orbit behind the revealed card (guide 1.0 page 15): one fine ellipse with two small stones on it, drawn
 /// once as the reveal opens and then still. No glints, no spin (page 19).
 private struct RevealOrbit: View {
     let drawn: Bool
@@ -164,14 +171,14 @@ private struct RevealOrbit: View {
             ZStack {
                 Ellipse()
                     .trim(from: 0, to: drawn ? 1 : 0)
-                    .stroke(Color.goldInk.opacity(0.7), lineWidth: 1)
+                    .stroke(Color.moss.opacity(0.6), lineWidth: 1)
                     .rotationEffect(.degrees(-90))
                     .frame(width: rect.width, height: rect.height)
                     .position(x: rect.midX, y: rect.midY)
                 ForEach([0.12, 0.62], id: \.self) { turn in
                     let angle = 2 * Double.pi * turn
                     Circle()
-                        .fill(Color.goldInk)
+                        .fill(Color.moss)
                         .frame(width: 6, height: 6)
                         .position(x: rect.midX + rect.width / 2 * cos(angle), y: rect.midY + rect.height / 2 * sin(angle))
                         .opacity(drawn ? 1 : 0)

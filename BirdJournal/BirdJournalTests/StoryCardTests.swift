@@ -108,12 +108,11 @@ struct DesignTokenTests {
     @Test("text on the page and on a raised surface is at least 4.5:1")
     func pageText() throws {
         for surface in ["JournalPaper", "JournalRaised"] {
-            for text in ["JournalInk", "JournalInkSecondary", "JournalMoss", "CollectibleGoldInk"] {
+            for text in ["JournalInk", "JournalInkSecondary", "JournalMoss"] {
                 try expect(text, on: surface, atLeast: 4.5)
             }
         }
         try expect("JournalMossText", on: "JournalMoss", atLeast: 4.5)
-        try expect("JournalInk", on: "CollectibleGoldWash", atLeast: 4.5)
         try expect("JournalOnSharedGoal", on: "JournalSharedGoal", atLeast: 4.5)
     }
 
@@ -121,7 +120,7 @@ struct DesignTokenTests {
     func cardFace() throws {
         // The face draws in the light scheme whatever the app's (`CardSurface`).
         let light = Self.variants.filter { $0.name.hasPrefix("light") }
-        for text in ["CollectibleInk", "CollectibleInkSecondary", "CollectibleEdge", "CollectibleGoldInk", "JournalInk", "JournalInkSecondary", "JournalMoss"] {
+        for text in ["CollectibleInk", "CollectibleInkSecondary", "CollectibleEdge", "JournalInk", "JournalInkSecondary", "JournalMoss"] {
             try expect(text, on: "CollectibleFace", atLeast: 4.5, in: light)
         }
         for variant in Self.variants {
@@ -156,39 +155,42 @@ struct DesignTokenTests {
         #expect(try hex("JournalMoss", light) == "#15363A")
         #expect(try hex("JournalSharedGoal", dark) == "#B9BEDD")
         #expect(try hex("JournalSharedGoal", light) == "#E8E6F0")
-        #expect(try hex("CollectibleGoldInk", dark) == "#D3B475")
     }
 }
 
-// Issue #116 with #52's walk: the real front and back in the two-sided card, hosted in a window with app
+// Issue #134 with #52's walk: the real patch and paper card in the two-sided object, hosted in a window with app
 // accessibility on, expose only the face that is up to VoiceOver.
-@Suite("Story card accessibility", .serialized)
+@Suite("Paper card accessibility", .serialized)
 @MainActor
-struct StoryCardAccessibilityTests {
-    static func card(showsBack: Bool, storyTitle: String? = nil) throws -> some View {
+struct PaperCardAccessibilityTests {
+    static func page(showsBack: Bool) throws -> some View {
         let album = try AlbumSchema.makeContainer(inMemory: true)
-        let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, soundConfidence: 0.8, source: .phone)
+        let griffithPark = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
+        let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, location: griffithPark, soundConfidence: 0.8, source: .phone)
         album.mainContext.insert(sighting)
-        let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "StoryCardTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
-        let edits = JournalEdits(container: album, frames: FrameStore(directory: URL.temporaryDirectory))
-        return ScrollView {
-            CollectibleCard(showsBack: showsBack, rotates: true) {
-                CardFront(sighting: sighting, isLegendary: true, placement: nil, place: "Griffith Park", storyTitle: storyTitle)
-            } back: {
-                CardBack(sighting: sighting, isLegendary: true, placement: nil, showOriginal: {})
+        let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PaperCardTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
+        let collection = library.collection(of: [sighting])
+        let patch = try #require(collection.patch(of: sighting.identifier))
+        return NavigationStack {
+            ScrollView {
+                CollectibleCard(showsBack: showsBack, rotates: true) {
+                    Button("Black Phoebe, Citrus edition patch") {}
+                        .frame(height: 470)
+                } back: {
+                    PaperCardView(patch: patch, sightings: [sighting], name: "Black Phoebe", isReadingView: false)
+                }
             }
         }
         .environment(library)
         .environment(PlaceNames())
-        .environment(edits)
         .modelContainer(album)
     }
 
-    /// The labels VoiceOver reaches in the hosted card, walked again until `ready` holds or ten seconds pass: SwiftUI
+    /// The labels VoiceOver reaches in the hosted page, walked again until `ready` holds or ten seconds pass: SwiftUI
     /// fills the accessibility tree some time after the first render, later under a full parallel test run.
-    static func labels(showsBack: Bool, storyTitle: String? = nil, ready: ([String]) -> Bool) async throws -> [String] {
+    static func labels(showsBack: Bool, ready: ([String]) -> Bool) async throws -> [String] {
         CardFlipAccessibilityTests.enableAccessibility()
-        let host = UIHostingController(rootView: try card(showsBack: showsBack, storyTitle: storyTitle))
+        let host = UIHostingController(rootView: try page(showsBack: showsBack))
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 900))
         window.rootViewController = host
         window.makeKeyAndVisible()
@@ -203,30 +205,155 @@ struct StoryCardAccessibilityTests {
         return labels
     }
 
-    @Test("front up: the art, the names and the excerpt, nothing of the back")
-    func front() async throws {
-        let labels = try await Self.labels(showsBack: false) { $0.contains("Card art: AI illustration") && $0.contains { $0.hasPrefix("Black Phoebe") } }
-        #expect(labels.contains("Card art: AI illustration"), "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("Black Phoebe") }, "\(labels)")
+    @Test("patch up: the patch, nothing of the card")
+    func patchUp() async throws {
+        let labels = try await Self.labels(showsBack: false) { $0.contains { $0.hasPrefix("Black Phoebe, Citrus") } }
+        #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus") }, "\(labels)")
+        #expect(!labels.contains { $0.hasPrefix("All 1") }, "\(labels)")
+        #expect(!labels.contains("Sources"), "\(labels)")
+    }
+
+    @Test("card up: the edition, the names, the story, the biology, the history and the footer, nothing of the patch")
+    func cardUp() async throws {
+        let labels = try await Self.labels(showsBack: true) { $0.contains("Sources") && $0.contains { $0.hasPrefix("1 sighting here") } }
+        #expect(labels.contains { $0.hasPrefix("Citrus edition, number ") }, "the edition line: \(labels)")
+        #expect(labels.contains("Black Phoebe"), "\(labels)")
+        #expect(labels.contains("Sayornis nigricans"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Wherever the black phoebe keeps house") || $0.hasPrefix("Where water runs") }, "the excerpt: \(labels)")
-        #expect(!labels.contains("Encounter story"), "\(labels)")
-        #expect(!labels.contains { $0.hasPrefix("Tagline:") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("Wingspan") }, "the biology: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("1 sighting here, sewn ") }, "the history: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("All 1 sighting") }, "the footer: \(labels)")
+        #expect(labels.contains("AI illustration"), "the footer: \(labels)")
+        #expect(labels.contains("Sources"), "the footer: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("Black Phoebe, Citrus") }, "\(labels)")
     }
 
-    @Test("back up: the encounter, the lore and the natural history, nothing of the front")
-    func back() async throws {
-        let labels = try await Self.labels(showsBack: true) { $0.contains("Encounter story") && $0.contains("Natural history") }
-        #expect(labels.contains("Encounter story"), "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("Tagline:") }, "\(labels)")
-        #expect(labels.contains("Natural history"), "\(labels)")
-        #expect(!labels.contains("Card art: AI illustration"), "\(labels)")
+    @Test("what's left of the lore follows the excerpt without repeating it")
+    func restOfLore() throws {
+        let long = "One short opening sentence here. " + LoreExcerptTests.sentence(30) + " " + LoreExcerptTests.sentence(30)
+        let excerpt = try #require(LoreExcerpt.front(long))
+        let rest = try #require(PatchText.restOfLore(long))
+        #expect(excerpt + " " + rest == long)
+        #expect(PatchText.restOfLore(LoreExcerptTests.sentence(30)) == nil, "the excerpt took it all")
     }
 
-    @Test("a story title leads the tale, before the excerpt")
-    func storyTitle() async throws {
-        let labels = try await Self.labels(showsBack: false, storyTitle: "The Waterside Mason") { $0.contains("The Waterside Mason") }
-        let title = try #require(labels.firstIndex(of: "The Waterside Mason"), "\(labels)")
-        let excerpt = try #require(labels.firstIndex { $0.hasPrefix("Wherever the black phoebe keeps house") || $0.hasPrefix("Where water runs") }, "\(labels)")
-        #expect(title < excerpt)
+    @Test("biology lists wingspan, weight, diet, nest, clutch and size, in that order, for the bundled finch")
+    func biology() throws {
+        let finch = try #require(try SpeciesPack.bundled().species(scientificName: "Haemorhous mexicanus"))
+        #expect(PatchText.biology(finch).map(\.label) == ["Wingspan", "Weight", "Diet", "Nest", "Clutch", "Size"])
+        #expect(PatchText.biology(nil).isEmpty, "a bird no pack describes")
+    }
+}
+
+// Issue #134 (guide pages 6, 11 and 14): the words around a patch, and the board's columns.
+@Suite("Patch words and layout")
+@MainActor
+struct PatchWordsTests {
+    static let set = CardSet(id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition", species: ["Sayornis nigricans", "Haemorhous mexicanus"], regions: [
+        CardSet.Region(name: "LA", polygons: [[[
+            CardSet.Point(longitude: -119, latitude: 33), CardSet.Point(longitude: -117, latitude: 33), CardSet.Point(longitude: -117, latitude: 35), CardSet.Point(longitude: -119, latitude: 35), CardSet.Point(longitude: -119, latitude: 33),
+        ]]]),
+    ])
+
+    static func patch(count: Int, at location: Coordinate?) throws -> CardCollection.Patch {
+        let start = Date(timeIntervalSince1970: 1_789_000_000)
+        let entries = (0..<count).map { CardCollection.Entry(identifier: UUID(), speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: start.addingTimeInterval(Double($0) * 86400), location: location) }
+        return try #require(CardCollection(entries, sets: [Self.set]).patches.first)
+    }
+
+    @Test("VoiceOver reads a patch as one sentence, as the guide writes it")
+    func spoken() throws {
+        let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
+        let spoken = PatchText.spoken(try Self.patch(count: 8, at: griffith), name: "House Finch")
+        #expect(spoken.hasPrefix("House Finch, Citrus edition patch, seen 8 times, sewn "), "\(spoken)")
+        #expect(PatchText.spoken(try Self.patch(count: 1, at: nil), name: "House Finch").hasPrefix("House Finch, Uncharted patch, seen once, sewn "))
+    }
+
+    @Test("a tile's line carries the number and the count; Uncharted has no number")
+    func tileLine() throws {
+        let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
+        #expect(PatchText.tileLine(try Self.patch(count: 8, at: griffith)) == "No. 002 · seen 8×")
+        #expect(PatchText.tileLine(try Self.patch(count: 3, at: nil)) == "seen 3×")
+        #expect(PatchText.editionLine(try Self.patch(count: 1, at: griffith).placement) == "Citrus edition · No. 002")
+        #expect(PatchText.editionLine(.uncharted) == "Uncharted")
+    }
+
+    @Test("the board takes three columns, two as the text grows, one at accessibility sizes")
+    func columns() {
+        #expect(PatchBoardLayout.columns(for: .large) == 3)
+        #expect(PatchBoardLayout.columns(for: .xLarge) == 3)
+        #expect(PatchBoardLayout.columns(for: .xxLarge) == 2)
+        #expect(PatchBoardLayout.columns(for: .xxxLarge) == 2)
+        #expect(PatchBoardLayout.columns(for: .accessibility1) == 1)
+    }
+
+    @Test("every edition has its own silhouette; Uncharted is the plain round; an unknown set too")
+    func editions() {
+        let ids = ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"]
+        #expect(Set(ids.map { "\(PatchEdition.of(setID: $0).shape)" }).count == ids.count)
+        #expect(PatchEdition.of(setID: nil).shape == .circle)
+        #expect(PatchEdition.of(setID: nil) == PatchEdition.of(setID: "somewhere-new"))
+        #expect(PatchEdition.of(setID: "us-ca-la").shape == .circle)
+        #expect(PatchEdition.of(setID: "us-fl-orlando").shape == .shield)
+    }
+
+    @Test("a painting is only ever its own edition's")
+    func artIsTheEditions() throws {
+        let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PatchWordsTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
+        let art = try #require(library.patchArt(scientificName: "Haemorhous mexicanus", setID: "us-ca-la"))
+        #expect(art.colour.lastPathComponent == "haemorhous-mexicanus.avif")
+        #expect(art.layers.lastPathComponent == "haemorhous-mexicanus-layers.avif")
+        #expect(library.patchArt(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == nil)
+        #expect(library.patchArt(scientificName: "Haemorhous mexicanus", setID: nil) == nil)
+    }
+
+    @Test("the bundled pack's patch decodes at both sizes, with its alpha, for the shader")
+    func decodes() async throws {
+        let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PatchWordsTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
+        let art = try #require(library.patchArt(scientificName: "Haemorhous mexicanus", setID: "us-ca-la"))
+        let full = await PatchTextures.load(art, size: .full)
+        let small = await PatchTextures.load(art, size: .thumbnail)
+        #expect(full != nil)
+        #expect(small != nil)
+        #expect(abs((try #require(full)).texel.width - 1.0 / 360) < 0.0001)
+        #expect(abs((try #require(small)).texel.width - 1.0 / 180) < 0.0001)
+    }
+}
+
+// Issue #134: a board asks for many decodes at once. On Swift's cooperative pool they held every thread and hung the host.
+@Suite("Patch decoding")
+@MainActor
+struct PatchDecodingTests {
+    @Test("a whole set decoding at once finishes, and a repeat comes from the cache", .timeLimit(.minutes(2)))
+    func manyAtOnce() async throws {
+        let pack = try SpeciesPack.bundled()
+        let arts = pack.species.compactMap(\.patch).map { PatchArt(colour: pack.patchURL(for: $0), layers: pack.patchLayersURL(for: $0), ground: $0.ground) }
+        #expect(arts.count == pack.species.count)
+        await withTaskGroup(of: Bool.self) { group in
+            for art in arts.prefix(60) {
+                group.addTask { await PatchTextures.load(art, size: .thumbnail) != nil }
+            }
+            for await loaded in group {
+                #expect(loaded)
+            }
+        }
+        #expect(PatchTextures.cached(arts[0], size: .thumbnail) != nil)
+        #expect(PatchTextures.cached(arts[0], size: .full) == nil, "each size on its own")
+    }
+
+    @Test("a task cancelled before its turn gives nothing and caches nothing")
+    func cancelled() async throws {
+        let pack = try SpeciesPack.bundled()
+        let patch = try #require(pack.species.last?.patch)
+        let art = PatchArt(colour: pack.patchURL(for: patch), layers: pack.patchLayersURL(for: patch), ground: patch.ground)
+        let task = Task { @MainActor in
+            await withUnsafeContinuation { (resume: UnsafeContinuation<Void, Never>) in
+                resume.resume()
+            }
+            return await PatchTextures.load(art, size: .full)
+        }
+        task.cancel()
+        #expect(await task.value == nil)
+        #expect(PatchTextures.cached(art, size: .full) == nil)
     }
 }

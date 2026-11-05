@@ -61,8 +61,8 @@ extension MockDeviceKitTests {
                 input.navRight()
                 try await waitUntil(timeout: .seconds(2)) { run.saved.count == 1 }
                 #expect(run.lens.page == .details(index: 0))
-                // The birder's first House Finch: the saved line is the Legendary reveal (issue #51).
-                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("Your first House Finch", legendary: true)) }
+                // The birder's first House Finch with no place: the saved line names its new Uncharted patch (issue #132).
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New patch · Uncharted")) }
                 #expect(run.lens.card.wordCount <= LensCardRenderer.detailsWordBudget)
 
                 let sightings = try album.mainContext.fetch(FetchDescriptor<Sighting>())
@@ -91,8 +91,8 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { run.lens.savedSightings.count == 2 }
                 try await waitUntil(timeout: .seconds(5)) { run.saved.count == 2 }
                 #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 2)
-                // A New York sighting with no set known: the card is Uncharted (issue #54).
-                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("New card · Uncharted", legendary: false)) }
+                // A New York sighting with no set known: its Uncharted patch, seen again (issues #54, #132).
+                try await waitUntil(timeout: .seconds(1)) { run.lens.card.elements.contains(.saved("Seen again · 2 times")) }
                 #expect(Set(try album.mainContext.fetch(FetchDescriptor<Sighting>()).map(\.identifier)).count == 2)
 
                 // Back (the middle-finger tap) returns to the list; Back on the root ends the whole run: lens, engine,

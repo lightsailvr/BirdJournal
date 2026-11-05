@@ -71,7 +71,7 @@ extension PackLibrary {
         sets.map(CardSet.init)
     }
 
-    /// The birder's collection over every set the phone knows: what each screen reads Legendary, sets and progress from.
+    /// The birder's collection over every set the phone knows: what each screen reads patches, sets and progress from.
     func collection(of sightings: [Sighting]) -> CardCollection {
         CardCollection(sightings: sightings, sets: cardSets)
     }
