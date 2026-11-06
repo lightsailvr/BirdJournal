@@ -99,9 +99,8 @@ final class AfterTheRunUITests: XCTestCase {
     @MainActor
     func testARecapWaitingWhenTheAppIsKilledIsThereAtTheNextLaunch() throws {
         let album = "recap-\(UUID().uuidString)"
-        let app = try launchRecap(["-albumFile", album])
         // Not the helper's in-memory album: this one is on disk, as a birder's is.
-        app.terminate()
+        let app = XCUIApplication()
         app.launchArguments = ["-albumFile", album, "-collectionIntroShown", "YES", "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "recap"]
         app.launch()
         XCTAssertTrue(recap(app).waitForExistence(timeout: 120), "no recap; screen: \(app.debugDescription.prefix(4000))")
