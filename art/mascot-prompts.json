@@ -30,13 +30,13 @@
   {
    "id": "house-finch",
    "title": "House Finch",
-   "icon": "BirdJournal/MyBirdJournal-HouseFinch.icon/Assets/house-finch-1024.png",
+   "icon": "art/mascot/icons/house-finch.png",
    "markings": "The red on its forehead, cheeks and throat is a vivid rose-red thread, not salmon."
   },
   {
    "id": "perched-finch",
    "title": "House Finch on its branch",
-   "icon": "BirdJournal/MyBirdJournal-HouseFinch.icon/Assets/house-finch-1024.png",
+   "icon": "art/mascot/icons/house-finch.png",
    "markings": "The red on its forehead, cheeks and throat is a vivid rose-red thread, not salmon.",
    "round": [
     ["perched", "tan"],
@@ -50,13 +50,13 @@
   {
    "id": "blue-bird",
    "title": "Blue Bird",
-   "icon": "BirdJournal/MyBirdJournal-Default.icon/Assets/my-bird-journal-icon-1024.png",
+   "icon": "art/mascot/icons/blue-bird.png",
    "markings": "Its crest, back and wings are a clear sky-blue thread and its face and breast a warm cream."
   },
   {
    "id": "great-egret",
    "title": "Great Egret",
-   "icon": "BirdJournal/MyBirdJournal-GreatEgret.icon/Assets/great-egret-1024.png",
+   "icon": "art/mascot/icons/great-egret.png",
    "markings": "It is pure white all over, stitched in clean white thread with pale grey shading and no orange or pink in the feathers, with a long yellow-orange dagger bill that stays inside the badge.",
    "compositions": {
     "whole": "wade"
@@ -65,19 +65,19 @@
   {
    "id": "prothonotary-warbler",
    "title": "Prothonotary Warbler",
-   "icon": "BirdJournal/MyBirdJournal-ProthonotaryWarbler.icon/Assets/prothonotary-warbler-1024.png",
+   "icon": "art/mascot/icons/prothonotary-warbler.png",
    "markings": "Its head and breast are a saturated golden yellow, its wings blue-grey with an olive shoulder."
   },
   {
    "id": "red-tailed-hawk",
    "title": "Red-tailed Hawk",
-   "icon": "BirdJournal/MyBirdJournal-RedTailedHawk.icon/Assets/red-tailed-hawk-1024.png",
+   "icon": "art/mascot/icons/red-tailed-hawk.png",
    "markings": "Its back and wings are dark chocolate brown, its breast cream with dark brown streaks, its bill dark with a yellow base, and a little of its rust-red tail shows at the lower left."
   },
   {
    "id": "stellers-jay",
    "title": "Steller's Jay",
-   "icon": "BirdJournal/MyBirdJournal-StellersJay.icon/Assets/stellers-jay-1024.png",
+   "icon": "art/mascot/icons/stellers-jay.png",
    "markings": "Its head and crest are sooty black with a bright blue streak on the crown, and its body and wings are a vivid cobalt blue. The glasses stand out from the black head with a thin grey outline stitch."
   }
  ]

@@ -1,8 +1,8 @@
 """The mascot patches (issue #150, slice 11): the app's six birds in glasses, and the House Finch on its branch for the
 places `PerchedBirdDrawing` is today, as embroidered patches in the language of the real ones (`packbuilder.patch_art`).
 
-A mascot patch is painted on comfybox with the committed `mascot-patch` workflow from the app icon's bird, cut out of the
-icon's ground with BiRefNet and laid on white, with the template in `art/mascot-prompts.json`. Each round paints a few
+A mascot patch is painted on comfybox with the committed `mascot-patch` workflow from the bird of the app icon it replaces
+(kept in `art/mascot/icons/`), cut out of the icon's ground with BiRefNet and laid on white, with the template in `art/mascot-prompts.json`. Each round paints a few
 candidates per bird, in the looks the prompts' `round` lists, and cuts each from the card (`cut_from_card`, at 1024 px, the
 size of an app icon). Nothing here measures the bird against its icon: a thread rendering of a 3D cartoon is meant to move
 from it, and the patches' own measure only ever ranked. The maintainer picks from the numbered contact sheets.
@@ -16,6 +16,9 @@ SHA-256 (its file in `<cache>/mascot/patches/`), and the review:
   `art/mascot/approved/<bird>.png`, the one place the app takes a mascot from, and records its SHA-256; `approved` reads
   them back, and refuses a file that isn't the one the review chose.
 - `rejected`: the next run paints a new round from new seeds with the current templates.
+
+`write_app_assets` makes the app's art from the approved patches: the app icons on felt, the Settings thumbnails and the
+perched finch. Nothing else writes those files, and it refuses a bird without an approved patch.
 
 A warm lock paints nothing. A candidate no longer in the cache is painted again from its seed, which gives the same
 picture on the same prompts version. A new icon or workflow starts a new round, since the review no longer applies; new
@@ -32,7 +35,7 @@ import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 from packbuilder.art import ART_DIR, Workflow
 from packbuilder.comfy import ComfyClient, PaintingFailed
@@ -59,13 +62,48 @@ that a pack's patch can keep still shows."""
 ICON_INSET = 90
 """The size of the sheet's inset, which shows each patch as small as a home-screen icon reads (60 pt at 1.5x)."""
 
+APP_ICONS = {
+    "red-tailed-hawk": "MyBirdJournal-RedTailedHawk",
+    "blue-bird": "MyBirdJournal-Default",
+    "great-egret": "MyBirdJournal-GreatEgret",
+    "house-finch": "MyBirdJournal-HouseFinch",
+    "prothonotary-warbler": "MyBirdJournal-ProthonotaryWarbler",
+    "stellers-jay": "MyBirdJournal-StellersJay",
+}
+"""The icon choices by bird, under the names they have always had, since iOS remembers a birder's choice by the name."""
+PRIMARY_ICON = "red-tailed-hawk"
+"""The icon the build installs, and so the one the App Store shows at 1024 px."""
+PERCHED_FINCH = "perched-finch"
+ALTERNATE_ICON_SIDE = 512
+"""An alternate icon's picture: never seen above 180 px, and a 1024 px one costs the app about 1.3 MB more per icon."""
+ICON_CANVAS = 1024
+ICON_PATCH = 0.88
+"""How much of the icon's width the patch takes: as large as it reads at 60 pt, with felt round it for the shadow."""
+ICON_THUMBNAIL = 180
+"""The Settings thumbnail: 60 pt at 3x."""
+FELT_PICTURE = Path("BirdJournal/BirdJournal/Assets.xcassets/MaterialFelt.imageset/felt.jpg")
+ICON_GROUND = (14, 52, 60)
+"""The icon's ground: the app's wool felt, in the petrol of the Guild page's felt, which every patch stands out on."""
+ICON_GROUND_TINT = 0.45
+ICON_GROUND_SOFTENING = 3
+"""The blur on the felt under an icon, in the 1024 px canvas's pixels. It's gone by 180 px, and the felt's finest fibre costs
+the app about 1.3 MB per icon, because iOS keeps each icon's rendering losslessly at 1024 px."""
+ICON_GROUND_FILL = "extended-srgb:0.05490,0.20392,0.23529,1.00000"
+"""The same petrol, behind the picture in the icon's document."""
+FINCH_CANVAS = 240
+"""The perched finch's picture in points, the patch and the room for its shadow: the launch screen shows it at this size."""
+FINCH_PATCH = 200
+SHADOW = (((0.025, 0.04), 0.035, 0.34), ((0.01, 0.015), 0.01, 0.30))
+"""A patch's two-part shadow, opposite the light at the upper left, as `PatchView` and the shader draw it, in fractions of the
+patch's side: (x, y offset), blur, strength."""
+
 
 @dataclass(frozen=True)
 class MascotBird:
     id: str
     title: str
     icon: str
-    """The app icon's picture, relative to the repository."""
+    """The picture it's painted from, relative to the repository: the app icon it replaced, under `art/mascot/icons/`."""
     markings: str
     round: tuple[tuple[str, str], ...]
     """What a round paints: (composition, ground) per candidate."""
@@ -262,7 +300,7 @@ def draw_sheets(lock: MascotLock, cache_dir: Path, out_dir: Path, prompts: Masco
         if entry is None:
             continue
         icon = repo / bird.icon
-        cells = [(Image.open(icon).convert("RGB") if icon.exists() else None, f"{bird.title}\nthe app icon today")]
+        cells = [(Image.open(icon).convert("RGB") if icon.exists() else None, f"{bird.title}\nthe icon it replaces")]
         for candidate in entry["candidates"]:
             path = _patch_file(cache_dir, candidate["sha256"])
             state = "APPROVED" if entry.get("chosen") == candidate["number"] else entry["review"].upper()
@@ -368,3 +406,95 @@ def approved(lock: MascotLock) -> dict[str, Path]:
             raise StaleApproval(f"{path} is missing or isn't {bird_id}'s approved patch: run `packbuilder mascot-review --approve {entry['chosen']}` again")
         patches[bird_id] = path
     return patches
+
+
+def _on_shadow(patch: Image.Image, canvas: Image.Image, size: int) -> Image.Image:
+    """`patch` resized to fit `size` in the middle of `canvas`, with its soft drop shadow. `canvas` keeps its mode's alpha."""
+    placed = patch.copy()
+    placed.thumbnail((size, size), Image.Resampling.LANCZOS)
+    x, y = (canvas.width - placed.width) // 2, (canvas.height - placed.height) // 2
+    silhouette = Image.new("L", canvas.size, 0)
+    silhouette.paste(placed.getchannel("A"), (x, y))
+    black = Image.new("RGBA", canvas.size, (0, 0, 0, 255))
+    result = canvas.convert("RGBA")
+    for (dx, dy), blur, strength in SHADOW:
+        moved = ImageChops.offset(silhouette, round(dx * size), round(dy * size))
+        soft = moved.filter(ImageFilter.GaussianBlur(blur * size)).point(lambda value: round(value * strength))
+        layer = black.copy()
+        layer.putalpha(soft)
+        result.alpha_composite(layer)
+    result.alpha_composite(placed, (x, y))
+    return result
+
+
+def app_icon(patch: Image.Image, felt: Image.Image, side: int) -> Image.Image:
+    """The icon's picture: the patch and its shadow on felt, opaque to the edge, as an icon has to be."""
+    softened = felt.convert("RGB").crop((0, 0, ICON_CANVAS, ICON_CANVAS)).filter(ImageFilter.GaussianBlur(ICON_GROUND_SOFTENING))
+    ground = Image.blend(softened, Image.new("RGB", softened.size, ICON_GROUND), ICON_GROUND_TINT)
+    picture = _on_shadow(patch, ground, round(ICON_CANVAS * ICON_PATCH)).convert("RGB")
+    return picture if side == ICON_CANVAS else picture.resize((side, side), Image.Resampling.LANCZOS)
+
+
+def perched_finch(patch: Image.Image, scale: int) -> Image.Image:
+    """The finch for the launch screen, which can't draw a shadow of its own, the splash and the empty states: transparent
+    round the patch and its shadow."""
+    side = FINCH_CANVAS * scale
+    return _on_shadow(patch, Image.new("RGBA", (side, side), (0, 0, 0, 0)), FINCH_PATCH * scale)
+
+
+def _icon_document(bird: str, scale: int) -> str:
+    """The icon's Icon Composer document: one flat picture on the ground's colour, with no glass. Cloth has no specular edge,
+    and the picture already carries its shadow."""
+    return json.dumps({
+        "fill": {"solid": ICON_GROUND_FILL},
+        "groups": [{
+            "layers": [{"image-name": f"{bird}.png", "name": bird, "position": {"scale": scale, "translation-in-points": [0, 0]}}],
+            "name": "Group",
+            "shadow": {"kind": "none", "opacity": 0.5},
+            "specular": False,
+            "translucency": {"enabled": False, "value": 0.3},
+        }],
+        "supported-platforms": {"circles": ["watchOS"], "squares": "shared"},
+    }, indent=2) + "\n"
+
+
+def _imageset(entries: list[tuple[str, str]]) -> str:
+    images = [{"filename": name, "idiom": "universal", "scale": scale} for name, scale in entries]
+    return json.dumps({"images": images, "info": {"author": "xcode", "version": 1}}, indent=2) + "\n"
+
+
+def write_app_assets(lock: MascotLock, repo: Path = REPO) -> list[Path]:
+    """The app's art from the approved patches, and only from them: per icon its picture, its document and its Settings
+    thumbnail, and the perched finch at 2x and 3x. Raises StaleApproval, writing nothing, when a bird has no approved patch."""
+    repo = Path(repo)
+    patches = approved(lock)
+    missing = [bird for bird in (*APP_ICONS, PERCHED_FINCH) if bird not in patches]
+    if missing:
+        raise StaleApproval(f"no approved patch for {', '.join(missing)}: review them on the sheets in build/mascot/")
+    with Image.open(repo / FELT_PICTURE) as opened:
+        felt = opened.convert("RGB")
+    catalog = repo / "BirdJournal" / "BirdJournal" / "Assets.xcassets"
+    written = []
+
+    def put(path: Path, data: bytes | str) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data.encode() if isinstance(data, str) else data)
+        written.append(path)
+
+    for bird, icon in APP_ICONS.items():
+        with Image.open(patches[bird]) as opened:
+            patch = opened.convert("RGBA")
+        side = ICON_CANVAS if bird == PRIMARY_ICON else ALTERNATE_ICON_SIDE
+        bundle = repo / "BirdJournal" / f"{icon}.icon"
+        put(bundle / "Assets" / f"{bird}.png", png(app_icon(patch, felt, side)))
+        put(bundle / "icon.json", _icon_document(bird, ICON_CANVAS // side))
+        thumbnail = app_icon(patch, felt, ICON_THUMBNAIL)
+        put(catalog / "AppIconPreview" / f"{icon}.imageset" / f"{icon}.png", png(thumbnail))
+        put(catalog / "AppIconPreview" / f"{icon}.imageset" / "Contents.json", _imageset([(f"{icon}.png", "1x")]))
+    with Image.open(patches[PERCHED_FINCH]) as opened:
+        patch = opened.convert("RGBA")
+    finch = catalog / "PerchedFinch.imageset"
+    for scale in (2, 3):
+        put(finch / f"PerchedFinch@{scale}x.png", png(perched_finch(patch, scale)))
+    put(finch / "Contents.json", _imageset([("PerchedFinch@2x.png", "2x"), ("PerchedFinch@3x.png", "3x")]))
+    return written

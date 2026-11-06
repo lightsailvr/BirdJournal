@@ -91,7 +91,7 @@ struct FieldGuideView: View {
                         StateNotice(
                             "No field guide yet",
                             message: "No field guide is on this iPhone, so there are no pages to browse. Download a set's field guide for its photos, sounds and stories. Listening and identification work without one.",
-                            mark: .symbol("map")
+                            mark: .drawing
                         ) {
                             NavigationLink("See field-guide downloads", value: Route.packs)
                                 .buttonStyle(.journalOutlined)
