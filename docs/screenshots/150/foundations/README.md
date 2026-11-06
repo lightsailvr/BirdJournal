@@ -5,9 +5,9 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 | Pick | The fix | Shots |
 |---|---|---|
 | V1 | The widened material rule, in the design guide | `docs/design/featherguild-2/README.md` |
-| V3 | One word per thing, in `CONTEXT.md` and every string | `packs-dark`, `pack-dark`, `atlas-dark`, `settings-light` |
+| V3 | One word per thing, in `CONTEXT.md` and every string | `packs-dark`, `packs-xxxl`, `packs-ax5`, `pack-dark`, `atlas-dark`, `settings-light` |
 | V6 | The copy table: "3 of 160 sewn", "157 still out there", "About this bird", the story title alone | `set-dark`, `atlas-dark`, `profile-dark` |
-| V8 | Capitals and dots go from the patch page, the reveal and the goal card | `patch-dark`, `reveal-dark`, `goal-dark`, `sightings-dark` |
+| V8 | Capitals and dots go from the patch page, the reveal and the goal card | `patch-dark`, `reveal-dark`, `goal-dark`, `sightings-dark`, `share-dark` |
 | V9 | The light page is a pale sage-grey | `listen-light`, `atlas-light`, `set-light`, `settings-light`, `guild-light` |
 | F11 | The paper card is lighter than the linen, with an edge | `card-light`, `board-light`, `patch-light`, with `card-dark` unchanged |
 | F17 | Collection's tab icon is the stitched ring | any shot with the tab bar; `tab-bar-dark`, `tab-bar-light` at full size |
