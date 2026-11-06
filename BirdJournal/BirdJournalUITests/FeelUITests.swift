@@ -187,7 +187,8 @@ final class FeelUITests: XCTestCase {
 
         XCTAssertTrue(finch.waitForExistence(timeout: 10))
         finch.press(forDuration: 1.2)
-        let all = app.buttons["All 2 sightings"]
+        // The species' page has a link with the same words, under the menu.
+        let all = app.buttons.matching(NSPredicate(format: "label == 'All 2 sightings' AND identifier != 'species-all-sightings'")).firstMatch
         XCTAssertTrue(all.waitForExistence(timeout: 5), "\(app.debugDescription.prefix(3000))")
         all.tap()
         let sighting = app.buttons["patch-sighting"].firstMatch

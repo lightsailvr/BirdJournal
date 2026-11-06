@@ -23,7 +23,7 @@ if [[ "${1:-}" == "--sheets" ]]; then
     in_out() { local s; for s in "$@"; do printf '%s\n' "$out/$s.jpg"; done; }
     collect() { local line; while IFS= read -r line; do shots+=("$line"); done; }
     shots=("$references/2-listening-run.png"); collect < <(in_out listening-dark reveal-undo-dark); sheet reference-outlined 3 "${shots[@]}"
-    shots=(); collect < <(in_out board-dark menu-dark board-light mode-fade-dark sightings-dark board-ax5); sheet set-menu-and-modes 6 "${shots[@]}"
+    shots=(); collect < <(in_out board-dark menu-dark board-scrolled-dark mode-fade-dark sightings-dark board-light board-ax5); sheet set-menu-and-modes 7 "${shots[@]}"
     shots=(); collect < <(in_out reveal-dark reveal-shared-dark reveal-undo-dark reveal-light reveal-ax5 sewing-dark); sheet reveal 6 "${shots[@]}"
     shots=(); collect < <(in_out lift-1 lift-2 lift-3 lift-4 lift-5 lift-6); sheet lift 6 "${shots[@]}"
     shots=(); collect < <(in_out peek-dark board-contrast splash-dark); sheet peek-contrast-splash 3 "${shots[@]}"
@@ -59,8 +59,9 @@ if [[ -z "${LIFT_ONLY:-}" ]]; then
         "$repo_root/scripts/build-and-test.sh" \
         -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheSetsMenuAndThePeek \
         -only-testing:BirdJournalUITests/FeelCaptureUITests/testAModePartWayThroughItsFade \
-        -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheRevealWithUndoOpen
-    for shot in menu peek mode-fade reveal-undo; do
+        -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheRevealWithUndoOpen \
+        -only-testing:BirdJournalUITests/FeelCaptureUITests/testAScrolledBoard
+    for shot in menu peek mode-fade reveal-undo board-scrolled; do
         [[ -f "$raw/$shot.png" ]] && half "$raw/$shot.png" "$shot-dark"
     done
 fi
@@ -110,7 +111,7 @@ shot sightings-dark   9 "${seeded[@]}" -autoScreen sightings
 shot reveal-dark     10 "${seeded[@]}" "${reveal[@]}"
 shot reveal-shared-dark 10 "${seeded[@]}" -fakeAccount signedIn -fakeCircles some "${reveal[@]}"
 shot sewing-dark      5 "${seeded[@]}" "${phoebe[@]}" -autoScreen reveal -stitchInSeconds 60
-shot listening-dark  30 -inMemoryAlbum YES -collectionIntroShown YES -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
+shot listening-dark  45 -inMemoryAlbum YES -collectionIntroShown YES -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
 shot splash-dark      3 -inMemoryAlbum YES -resetLaunchSplash YES -launchSplashSeconds 30
 
 xcrun simctl ui "$udid" appearance light

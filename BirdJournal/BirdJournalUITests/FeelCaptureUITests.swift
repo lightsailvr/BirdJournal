@@ -45,6 +45,17 @@ final class FeelCaptureUITests: XCTestCase {
         try shot("peek", app)
     }
 
+    /// The menu pinned with the modes, partway down a board.
+    @MainActor
+    func testAScrolledBoard() throws {
+        let app = launch(["-seedBoard", "YES", "-seedJournal", "YES", "-autoScreen", "cards"])
+        XCTAssertTrue(app.buttons["collection-board"].waitForExistence(timeout: 20))
+        Thread.sleep(forTimeInterval: 3)
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 2)
+        try shot("board-scrolled", app)
+    }
+
     /// For the script's recording: a tap on a tile, a swipe on the page, and back.
     @MainActor
     func testTheLift() throws {
