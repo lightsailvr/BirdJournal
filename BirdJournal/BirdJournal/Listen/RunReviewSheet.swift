@@ -178,7 +178,7 @@ struct RunReviewSheet: View {
                 loaded = await PatchTextures.load(art, size: .thumbnail)
             }
             guard !Task.isCancelled else { return }
-            if let image = FlatPatch.render(loaded: loaded, edition: PatchEdition.of(setID: patch.placement.setID), tag: name(of: patch), width: 64, scale: CardExport.imageScale) {
+            if let image = FlatPatch.render(loaded: loaded, edition: PatchEdition.of(setID: patch.placement.setID), tag: name(of: patch), width: 80, scale: CardExport.imageScale) {
                 drawn.append(RunRecap.Picture(id: patch.id, image: image))
             }
         }
@@ -191,5 +191,11 @@ struct RunReviewSheet: View {
         let image = RunRecapShareImage(recap: recap, pictures: pictures, imprint: RunRecap.imprint(hasPainting: hasPainting), credits: RunRecap.creditLine(credits))
         guard let rendered = CardExport.render(image, scale: CardExport.imageScale) else { return }
         export = CardExport(image: rendered.image, png: rendered.png, text: recap.shareText(credits: credits), title: "Your run · Featherguild")
+        #if DEBUG
+        // `-saveRecapImage YES`: what the system share would send, in the app's tmp, for the screenshots.
+        if UserDefaults.standard.bool(forKey: "saveRecapImage") {
+            try? rendered.png.write(to: URL.temporaryDirectory.appending(path: "recap-share.png"))
+        }
+        #endif
     }
 }

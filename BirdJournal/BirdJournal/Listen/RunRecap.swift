@@ -38,7 +38,7 @@ struct RunRecap: Equatable {
 
     /// Rounded to the minute, with under a minute said as such.
     private static func listened(seconds: Int) -> (String, String) {
-        if seconds < 60 { return ("Under 1 min", "under a minute") }
+        if seconds < 60 { return ("<1 min", "under a minute") }
         let minutes = (seconds + 30) / 60
         let (hours, left) = (minutes / 60, minutes % 60)
         let spokenMinutes = "\(left) \(left == 1 ? "minute" : "minutes")"
@@ -97,7 +97,14 @@ struct RunRecapCard: View {
     var imprint: String? = nil
     var credits: String? = nil
 
-    private static let perRow = 5
+    /// One patch or a few get the room; a big morning's fit five across.
+    private var perRow: Int {
+        switch pictures.count {
+        case ...3: 3
+        case 4: 4
+        default: 5
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -171,10 +178,11 @@ struct RunRecapCard: View {
 
     /// The patches in equal cells, so one patch is the size of ten. An image can't lazily draw, and neither can this.
     private var patches: some View {
-        VStack(spacing: 4) {
-            ForEach(Array(stride(from: 0, to: pictures.count, by: Self.perRow)), id: \.self) { start in
-                HStack(spacing: 4) {
-                    ForEach(start..<(start + Self.perRow), id: \.self) { index in
+        let perRow = perRow
+        return VStack(spacing: 2) {
+            ForEach(Array(stride(from: 0, to: pictures.count, by: perRow)), id: \.self) { start in
+                HStack(spacing: 2) {
+                    ForEach(start..<(start + perRow), id: \.self) { index in
                         if index < pictures.count {
                             Image(uiImage: pictures[index].image)
                                 .resizable()
@@ -187,11 +195,14 @@ struct RunRecapCard: View {
                 }
             }
         }
+        // The pictures' room for their shadows, so the first patch's edge lines up with the type above it.
+        .padding(.horizontal, -10)
         .allowsHitTesting(false)
     }
 }
 
 private struct RecapFigure: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let value: String
     let label: String
 
@@ -201,8 +212,8 @@ private struct RecapFigure: View {
                 .font(.system(.title2, design: .serif))
                 .monospacedDigit()
                 .foregroundStyle(Color.cardInk)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
+                .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
+                .minimumScaleFactor(0.7)
             Text(label)
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.cardInkSecondary)

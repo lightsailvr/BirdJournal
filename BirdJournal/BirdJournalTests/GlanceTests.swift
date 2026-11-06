@@ -357,7 +357,7 @@ struct RunRecapTests {
 
     @Test("small runs and long ones read properly")
     func amounts() {
-        #expect(recap(minutes: 0.5).listenedText == "Under 1 min")
+        #expect(recap(minutes: 0.5).listenedText == "<1 min")
         #expect(recap(minutes: 0.5).listenedSpoken == "under a minute")
         #expect(recap(minutes: 1).listenedSpoken == "1 minute")
         #expect(recap(minutes: 60).listenedText == "1 hr")
