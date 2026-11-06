@@ -35,8 +35,13 @@ slow="${CAPTURE_SLOW:-0}"
 
 trap 'xcrun simctl ui "$udid" content_size large; xcrun simctl ui "$udid" appearance dark; xcrun simctl status_bar "$udid" clear 2>/dev/null || true' EXIT
 
+# Installed over another build, the launch screen draws from the last build's asset catalog until the simulator restarts: a
+# picture under a new name comes up blank. So restart it after the install, with the app in place.
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl install "$udid" "$app"
+xcrun simctl shutdown "$udid"
+xcrun simctl boot "$udid"
+xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 2>/dev/null || true
 
 screenshot() {  # name
