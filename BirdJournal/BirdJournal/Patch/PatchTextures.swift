@@ -166,7 +166,7 @@ enum PatchTextures {
         }
     }
 
-    private nonisolated static func key(_ art: PatchArt, _ size: Size) -> NSString {
+    private static func key(_ art: PatchArt, _ size: Size) -> NSString {
         "\(art.colour.path(percentEncoded: false))|\(size.colourPixels)" as NSString
     }
 
