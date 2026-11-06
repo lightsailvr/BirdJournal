@@ -14,6 +14,7 @@ struct ActiveListeningView: View {
     @Environment(CollectionStore.self) private var collectionStore
 
     var body: some View {
+        ScrollViewReader { proxy in
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
                 StatusLine()
@@ -64,6 +65,7 @@ struct ActiveListeningView: View {
                 } else {
                     HuntSummary(hunt: run.hunt(in: collectionStore.collection))
                         .padding(.top, 16)
+                        .id("run-rows")
                     // Once a second while listening, so "just now" ages and a calling marker lapses on time; rows move with
                     // the order (issue #42), animated unless motion is reduced. Patches on these rows are plain bitmaps, and
                     // the waveform has its own view so that its dozen updates a second don't reach them.
@@ -94,6 +96,10 @@ struct ActiveListeningView: View {
                 }
 
             }
+        }
+        #if DEBUG
+        .debugScroll(proxy, to: "run-rows", when: !run.candidates.isEmpty)
+        #endif
         }
         .navigationTitle(run.state.isActive ? "Listening" : "Last run")
         .navigationBarTitleDisplayMode(.large)

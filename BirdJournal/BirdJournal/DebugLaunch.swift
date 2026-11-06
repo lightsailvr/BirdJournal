@@ -32,7 +32,7 @@ import UIKit
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the patches of the newest sighting's species, or `-autoCardSpecies`'s, found or not), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
-///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe),
+///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe, or `-autoCardSpecies`'s),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
@@ -210,7 +210,8 @@ struct DebugLaunch: ViewModifier {
                 tab = .guide
             case "profile":
                 tab = .guide
-                guidePath.append(Route.species(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"))
+                let scientificName = defaults.string(forKey: "autoCardSpecies") ?? "Sayornis nigricans"
+                guidePath.append(Route.species(scientificName: scientificName, commonName: library.species(scientificName: scientificName)?.species.commonName ?? scientificName))
             case "packs":
                 tab = .guide
                 guidePath.append(Route.packs)

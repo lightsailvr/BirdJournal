@@ -1,0 +1,4 @@
+run with the mock's rows: log lines in the last 8 s of the sweep: 10; patch decodes: 0; of them AV1 or ImageIO: 0
+run over the clip: log lines in the last 8 s of the sweep: 90; patch decodes: 2; of them AV1 or ImageIO: 18
+species rows: log lines in the last 8 s of the sweep: 3; patch decodes: 0; of them AV1 or ImageIO: 0
+set rows: log lines in the last 8 s of the sweep: 3; patch decodes: 0; of them AV1 or ImageIO: 0

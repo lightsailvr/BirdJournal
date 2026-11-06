@@ -7,7 +7,8 @@
 #   docs/screenshots/150/hunt/capture.sh <simulator UDID> <app path>     the shots and the decode counts
 #   docs/screenshots/150/hunt/capture.sh --sheets                        the contact sheets, reference first
 #
-# The waits are fixed, so look over the shots afterwards; CAPTURE_SLOW=<seconds> adds to each wait.
+# The waits are fixed, so look over the shots afterwards; CAPTURE_SLOW=<seconds> adds to each wait, and CAPTURE_ONLY=<regex> takes
+# only the shots it matches, with the decode counts if it matches "counts".
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -38,6 +39,7 @@ slow="${CAPTURE_SLOW:-0}"
 
 restore() {
     xcrun simctl ui "$udid" content_size large 2>/dev/null || true
+    xcrun simctl ui "$udid" increase_contrast disabled 2>/dev/null || true
     xcrun simctl ui "$udid" appearance dark 2>/dev/null || true
     xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
     xcrun simctl status_bar "$udid" clear 2>/dev/null || true
@@ -72,6 +74,7 @@ snap() {
 
 shot() {  # name seconds flags...
     local name="$1" wait="$2"; shift 2
+    [[ -z "${CAPTURE_ONLY:-}" || "$name" =~ $CAPTURE_ONLY ]] || return 0
     launch "$wait" "$@"
     snap "$name"
 }
@@ -92,28 +95,48 @@ done
 xcrun simctl ui "$udid" appearance dark
 shot run-added-dark        14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRowAdd "House Finch"
 shot run-after-stop-dark   14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRunStops YES
+shot run-no-pack-dark      12 "${seeded[@]}" -fakeRunBirds "Melanerpes formicivorus_Acorn Woodpecker,Turdus merula_Common Blackbird,Strix nebulosa_Great Gray Owl" -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
 shot profile-gallery-dark  10 -inMemoryAlbum YES -seedGallery YES -collectionIntroShown YES -autoCardSpecies "Haemorhous mexicanus" -autoScreen profile
+shot profile-none-dark      9 -inMemoryAlbum YES -collectionIntroShown YES -autoScreen profile
+
+xcrun simctl ui "$udid" increase_contrast enabled
+shot run-contrast-dark     12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening
+xcrun simctl ui "$udid" appearance light
+shot run-contrast-light    12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening
+xcrun simctl ui "$udid" appearance dark
+xcrun simctl ui "$udid" increase_contrast disabled
 
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
-shot run-ax5     12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening
+shot run-ax5     12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoScrollTo run-rows
 shot species-ax5  9 "${seeded[@]}" -autoScreen species-list
 shot set-ax5      9 "${seeded[@]}" -seedBoard YES -autoScreen set
+shot sightings-ax5 9 "${seeded[@]}" -autoScreen sightings
 shot profile-ax5  9 "${seeded[@]}" -autoScreen profile
 xcrun simctl ui "$udid" content_size large
 
 # The trap the brief names: patches on rows that refresh every second, under a moving light. A healthy sweep logs its frame times
-# and decodes each patch once, as it comes on screen; a thumbnail that had stayed a lazy provider would log a decode per frame.
-count() {  # label flags...
-    local label="$1"; shift
-    launch 12 "$@" -patchLightSweep YES -patchDecodeLog YES
+# and decodes each patch once, as it comes on screen; a thumbnail that had stayed a lazy provider would log AV1 lines at about the
+# frame rate for every patch on screen (about 120 a second on a board, as #134 found). Each surface is read twice, after it's
+# had time to settle: the second window is the one with nothing new coming on screen, unless the clip has just heard a new bird.
+window() {
     local log
     log="$(xcrun simctl spawn "$udid" log show --last 8s --process BirdJournal --info --style compact 2>/dev/null)"
-    printf '%s: log lines in the last 8 s of the sweep: %s; patch decodes: %s; of them AV1 or ImageIO: %s\n' "$label" \
-        "$(grep -c . <<<"$log")" "$(grep -c 'patch-decode' <<<"$log" || true)" "$(grep -Ec 'AV1|AVIF|ImageIO' <<<"$log" || true)"
+    printf '%s lines, %s patch decodes, %s AV1 or ImageIO lines' "$(grep -c . <<<"$log")" "$(grep -c 'patch-decode' <<<"$log" || true)" "$(grep -Ec 'AV1|AVIF|ImageIO' <<<"$log" || true)"
 }
-{
-    count "run with the mock's rows" "${seeded[@]}" "${hunt[@]}" -autoScreen listening
-    count "run over the clip" "${seeded[@]}" -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
-    count "species rows" "${seeded[@]}" -seedBoard YES -autoScreen species-list
-    count "set rows" "${seeded[@]}" -seedBoard YES -autoScreen set
-} | tee "$out/decode-counts.txt"
+count() {  # label flags...
+    local label="$1"; shift
+    launch 14 "$@" -patchLightSweep YES -patchDecodeLog YES
+    local first second
+    first="$(window)"
+    sleep 12
+    second="$(window)"
+    printf '%s: 8 s after settling: %s. 20 s later: %s.\n' "$label" "$first" "$second"
+}
+if [[ -z "${CAPTURE_ONLY:-}" || "counts" =~ $CAPTURE_ONLY ]]; then
+    {
+        count "A run, three rows holding still" "${seeded[@]}" "${hunt[@]}" -autoScreen listening
+        count "A run over the clip, with 30 patches sewn" -inMemoryAlbum YES -seedBoard YES -collectionIntroShown YES -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
+        count "Species rows, 30 patches" -inMemoryAlbum YES -seedBoard YES -collectionIntroShown YES -autoScreen species-list
+        count "Set rows, 30 patches" -inMemoryAlbum YES -seedBoard YES -collectionIntroShown YES -autoScreen set
+    } | tee "$out/decode-counts.txt"
+fi
