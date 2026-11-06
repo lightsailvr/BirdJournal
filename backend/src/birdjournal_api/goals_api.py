@@ -29,6 +29,15 @@ class Creator(BaseModel):
     display_name: str | None
 
 
+class GoalSpecies(BaseModel):
+    species_id: str
+    scientific_name: str
+    common_name: str
+    # The edition (pack id) of its earliest find in the period that names a set. Null when none does: found outside
+    # every set (Uncharted), or a find too old to say.
+    edition: str | None
+
+
 class GoalResponse(BaseModel):
     id: str
     kind: GoalKind
@@ -42,6 +51,8 @@ class GoalResponse(BaseModel):
     ends_at: datetime
     # Distinct species among the circle's finds in the period, now.
     progress: int
+    # Issue #150: what progress counted, one per species, earliest found first; always `progress` long. Names no finder.
+    species: list[GoalSpecies]
     status: GoalStatus
     # When progress first reached the target (it can fall back after a delete; this stays).
     completed_at: datetime | None
@@ -70,6 +81,13 @@ class GoalResponse(BaseModel):
             starts_at=view.starts_at,
             ends_at=view.ends_at,
             progress=view.progress,
+            species=[
+                GoalSpecies(
+                    species_id=species.species_id, scientific_name=species.scientific_name,
+                    common_name=species.common_name, edition=species.edition,
+                )
+                for species in view.species
+            ],
             status=view.status,
             completed_at=goal.completed_at,
             created_by=Creator(id=goal.created_by, display_name=view.created_by_name) if goal.created_by else None,
