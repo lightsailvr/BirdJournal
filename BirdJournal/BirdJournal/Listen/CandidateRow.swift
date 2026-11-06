@@ -43,7 +43,7 @@ struct CandidateRow: View {
                         statusLine(look: look, heard: heard)
                     }
                     .multilineTextAlignment(.leading)
-                    if !stacked { Spacer(minLength: 0) }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
