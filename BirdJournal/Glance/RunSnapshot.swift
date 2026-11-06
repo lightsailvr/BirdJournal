@@ -58,10 +58,7 @@ nonisolated struct RunSnapshot: Codable, Hashable, Sendable {
     }
 }
 
-/// The run's Live Activity: its source is fixed for the run, and everything that changes is the snapshot.
+/// The run's Live Activity: everything it shows is the snapshot.
 nonisolated struct RunActivityAttributes: ActivityAttributes {
     typealias ContentState = RunSnapshot
-
-    /// `ListeningCoordinator.Source`'s raw value.
-    var source: String
 }

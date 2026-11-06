@@ -19,6 +19,8 @@ struct RunReviewSheet: View {
     @State private var drawnFor: [CardCollection.Patch.Key]?
     @State private var includeCity = true
     @State private var export: CardExport?
+    /// The recap `export` is the image of: coming back to the front draws nothing new.
+    @State private var exported: RunRecap?
 
     private var collection: CardCollection { collectionStore.collection }
 
@@ -32,10 +34,6 @@ struct RunReviewSheet: View {
         }
     }
 
-    private func name(of patch: CardCollection.Patch) -> String {
-        patch.commonName(in: library)
-    }
-
     private var place: String? {
         SharePolicy.recapPlace(
             placeName: run.coordinate.flatMap(places.name(for:)), hasLocation: run.coordinate != nil,
@@ -44,7 +42,7 @@ struct RunReviewSheet: View {
     }
 
     private var recap: RunRecap {
-        RunRecap(startedAt: run.startedAt, endedAt: run.endedAt ?? .now, place: place, birdsHeard: run.candidates.count, patchNames: sewn.map(name(of:)))
+        RunRecap(startedAt: run.startedAt, endedAt: run.endedAt ?? .now, place: place, birdsHeard: run.candidates.count, patchNames: sewn.map { PatchText.name(of: $0, library: library) })
     }
 
     /// Who took the photos the pictured patches were stitched from, for the image and its text.
@@ -68,7 +66,8 @@ struct RunReviewSheet: View {
 
     private struct ExportKey: Equatable {
         var recap: RunRecap
-        var isReady: Bool
+        var isDrawn: Bool
+        var isActive: Bool
     }
 
     var body: some View {
@@ -147,10 +146,14 @@ struct RunReviewSheet: View {
                 guard scenePhase == .active else { return }
                 await drawPictures()
             }
-            .task(id: ExportKey(recap: recap, isReady: scenePhase == .active && drawnFor == sewn.map(\.id))) {
-                export = nil
-                guard scenePhase == .active, drawnFor == sewn.map(\.id) else { return }
-                render()
+            .task(id: ExportKey(recap: recap, isDrawn: drawnFor == sewn.map(\.id), isActive: scenePhase == .active)) {
+                // A moment out of the front leaves the image as it was, and a share under way with it.
+                guard scenePhase == .active else { return }
+                guard drawnFor == sewn.map(\.id) else {
+                    export = nil
+                    return
+                }
+                if exported != recap { render() }
             }
             .task(id: run.coordinate) {
                 if let coordinate = run.coordinate { await places.resolve(coordinate) }
@@ -181,7 +184,7 @@ struct RunReviewSheet: View {
                 loaded = await PatchTextures.load(art, size: .thumbnail)
             }
             guard !Task.isCancelled else { return }
-            if let image = FlatPatch.render(loaded: loaded, edition: PatchEdition.of(setID: patch.placement.setID), tag: name(of: patch), width: 80, scale: CardExport.imageScale) {
+            if let image = FlatPatch.render(loaded: loaded, edition: PatchEdition.of(setID: patch.placement.setID), tag: PatchText.name(of: patch, library: library), width: 80, scale: CardExport.imageScale) {
                 drawn.append(RunRecap.Picture(id: patch.id, image: image))
             }
         }
@@ -194,7 +197,8 @@ struct RunReviewSheet: View {
         let credits = credits
         let image = RunRecapShareImage(recap: recap, pictures: pictures, imprint: RunRecap.imprint(hasPainting: hasPainting), credits: RunRecap.creditLine(credits))
         guard let rendered = CardExport.render(image, scale: CardExport.imageScale) else { return }
-        export = CardExport(image: rendered.image, png: rendered.png, text: recap.shareText(credits: credits), title: "Your run · Featherguild")
+        exported = recap
+        export = CardExport(image: rendered.image, png: rendered.png, text: recap.shareText(credits: credits), title: "Your run, Featherguild")
         #if DEBUG
         // `-saveRecapImage YES`: what the system share would send, in the app's tmp, for the screenshots.
         if UserDefaults.standard.bool(forKey: "saveRecapImage") {

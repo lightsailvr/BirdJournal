@@ -37,16 +37,7 @@ struct LatestPatchWidgetView: View {
                 .resizable()
                 .widgetAccentedRenderingMode(.fullColor)
                 .scaledToFit()
-        } else {
-            ring
         }
-    }
-
-    /// The place a patch will go: not a patch, since none is yours yet.
-    private var ring: some View {
-        Circle()
-            .strokeBorder(GlanceInk.pen(scheme), style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-            .aspectRatio(1, contentMode: .fit)
     }
 
     @ViewBuilder private var thread: some View {
@@ -99,8 +90,10 @@ struct LatestPatchWidgetView: View {
 
     private var empty: some View {
         VStack(alignment: .leading, spacing: 6) {
-            ring
-                .frame(maxHeight: family == .systemSmall ? 44 : 40)
+            // No patch, not even a blank, for a bird not found: Listen's mark, since that's where the first one starts.
+            Image(systemName: "waveform")
+                .font(.title2)
+                .foregroundStyle(tint)
             Spacer(minLength: 0)
             Text(WidgetSnapshot.emptyText)
                 .font(.system(family == .systemSmall ? .footnote : .body, design: .serif))

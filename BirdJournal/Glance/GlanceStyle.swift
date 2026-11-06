@@ -37,9 +37,6 @@ nonisolated enum GlanceInk {
         }
     }
 
-    /// The transfer pen's blue: what's not sewn yet.
-    static func pen(_ scheme: ColorScheme) -> Color { color(scheme == .dark ? 0x9DB4EE : 0x3F5FA8) }
-
     /// The tint of a set's edition, the issue's table; a set the app doesn't know, or none, keeps today's aqua. Increase
     /// Contrast takes the ink, which measures highest on every surface here.
     static func tint(setID: String?, _ scheme: ColorScheme, _ contrast: ColorSchemeContrast) -> Color {

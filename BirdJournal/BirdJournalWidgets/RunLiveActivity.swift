@@ -6,7 +6,7 @@ import WidgetKit
 struct RunLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RunActivityAttributes.self) { context in
-            RunLockScreen(context: context)
+            RunLockScreenContent(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -37,7 +37,7 @@ struct RunLiveActivity: Widget {
 }
 
 /// The page colour under it, so the tints keep the contrast they were measured at.
-private struct RunLockScreen: View {
+private struct RunLockScreenContent: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.colorSchemeContrast) private var contrast
     let context: ActivityViewContext<RunActivityAttributes>

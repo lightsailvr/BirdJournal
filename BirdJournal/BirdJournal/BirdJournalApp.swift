@@ -85,7 +85,7 @@ struct BirdJournalApp: App {
         _collectionStore = State(initialValue: collectionStore)
         // The run on the Lock Screen, and the patch on the Home Screen (issue #150). Neither waits for a view: a run goes on
         // behind a locked phone.
-        runActivity = RunActivityController(host: ActivityKitRunHost()) { [weak listening] in listening?.activeSource.rawValue ?? "" }
+        runActivity = RunActivityController(host: ActivityKitRunHost())
         runActivity.follow { [weak listening, collectionStore] in listening?.snapshot(in: collectionStore.collection) ?? .idle }
         RunStopper.stop = { [weak listening] in await listening?.stop() }
         latestPatch = WidgetStore.shared.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }

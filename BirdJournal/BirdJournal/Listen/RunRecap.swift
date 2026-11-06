@@ -59,10 +59,14 @@ struct RunRecap: Equatable {
     /// "patch sewn", "patches sewn".
     var patchesLabel: String { patchesSewn == 1 ? "patch sewn" : "patches sewn" }
 
+    private var dateAndPlace: String {
+        [dateText, place].compactMap { $0 }.joined(separator: ", ")
+    }
+
     /// What VoiceOver reads for the whole card.
     var spokenText: String {
         let sewn = patchNames.isEmpty ? "\(patchesSewn) \(patchesLabel)" : "\(patchesSewn) \(patchesLabel): \(patchNames.formatted(.list(type: .and)))"
-        return [[dateText, place].compactMap { $0 }.joined(separator: ", "), "Listened for \(listenedSpoken)", "\(birdsHeard) \(birdsLabel)", sewn].joined(separator: ". ") + "."
+        return [dateAndPlace, "Listened for \(listenedSpoken)", "\(birdsHeard) \(birdsLabel)", sewn].joined(separator: ". ") + "."
     }
 
     /// The words under the card, the same way the share sheet says them.
@@ -76,15 +80,15 @@ struct RunRecap: Equatable {
 
     /// The text that goes with the image: the run in a line, the app's credits, and the patches' photo credits.
     func shareText(credits: [String]) -> String {
-        var lines = [[dateText, place].compactMap { $0 }.joined(separator: ", ") + ". Listened for \(listenedSpoken), \(birdsHeard) \(birdsLabel), \(patchesSewn) \(patchesLabel)."]
-        lines.append("Heard with Featherguild · Powered by BirdNET")
+        var lines = ["\(dateAndPlace). Listened for \(listenedSpoken), \(birdsHeard) \(birdsLabel), \(patchesSewn) \(patchesLabel)."]
+        lines.append(SharePolicy.appCredit)
         if !credits.isEmpty { lines.append("Patches: AI illustrations from reference photos (\(credits.joined(separator: "; ")))") }
         return lines.joined(separator: "\n")
     }
 
-    /// "AI illustration · Featherguild", the wordmark small: a blank isn't an illustration.
+    /// "AI illustration, Featherguild", the wordmark small: a blank isn't an illustration.
     static func imprint(hasPainting: Bool) -> String {
-        hasPainting ? "AI illustration · Featherguild" : "Featherguild"
+        hasPainting ? "AI illustration, Featherguild" : "Featherguild"
     }
 
     /// The photo credits as the image prints them; nil when nothing needs crediting.

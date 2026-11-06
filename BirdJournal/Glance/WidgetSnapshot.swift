@@ -13,7 +13,7 @@ nonisolated struct WidgetSnapshot: Codable, Hashable, Sendable {
         var hasPainting: Bool
     }
 
-    struct Progress: Codable, Hashable, Sendable {
+    struct SetCount: Codable, Hashable, Sendable {
         var setID: String
         var setName: String
         var sewn: Int
@@ -26,7 +26,7 @@ nonisolated struct WidgetSnapshot: Codable, Hashable, Sendable {
     /// The most recently sewn patch; nil before the first.
     var latest: Latest?
     /// The latest patch's set, or the birder's local set while there's none or it's Uncharted; nil when the phone knows no set.
-    var progress: Progress?
+    var progress: SetCount?
 
     /// The widget's kind, for reloading its timeline.
     static let widgetKind = "LatestPatch"

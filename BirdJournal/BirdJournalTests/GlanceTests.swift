@@ -85,14 +85,18 @@ struct RunSnapshotTests {
 
     private final class FakeHost: RunActivityHost {
         enum Call: Equatable {
-            case begin(RunSnapshot, String)
+            case begin(RunSnapshot)
             case update(RunSnapshot)
             case end(RunSnapshot)
             case leftovers
         }
 
         var calls: [Call] = []
-        func begin(_ snapshot: RunSnapshot, source: String) { calls.append(.begin(snapshot, source)) }
+        var refuses = false
+        func begin(_ snapshot: RunSnapshot) -> Bool {
+            calls.append(.begin(snapshot))
+            return !refuses
+        }
         func update(_ snapshot: RunSnapshot) { calls.append(.update(snapshot)) }
         func end(_ snapshot: RunSnapshot) { calls.append(.end(snapshot)) }
         func endLeftovers() { calls.append(.leftovers) }
@@ -101,7 +105,7 @@ struct RunSnapshotTests {
     @Test("one activity begins with a run, changes only when the snapshot does, ends with the run, and the next run gets its own")
     func controllerRule() {
         let host = FakeHost()
-        let controller = RunActivityController(host: host) { "phone" }
+        let controller = RunActivityController(host: host)
         let starting = RunSnapshot(phase: .starting, startedAt: nil, birdsHeard: 0, newPatchesWaiting: 0)
         var listening = RunSnapshot(phase: .listening, startedAt: .now, birdsHeard: 0, newPatchesWaiting: 0)
         let ended = RunSnapshot(phase: .ended, startedAt: listening.startedAt, birdsHeard: 1, newPatchesWaiting: 0)
@@ -110,7 +114,7 @@ struct RunSnapshotTests {
         #expect(host.calls.isEmpty, "no run, no activity")
         controller.apply(starting)
         controller.apply(starting)
-        #expect(host.calls == [.begin(starting, "phone")])
+        #expect(host.calls == [.begin(starting)])
         controller.apply(listening)
         controller.apply(listening)
         listening.birdsHeard = 1
@@ -122,7 +126,27 @@ struct RunSnapshotTests {
         controller.apply(.idle)
         #expect(host.calls.count == 4, "nothing stale: it ended once")
         controller.apply(starting)
-        #expect(host.calls.last == .begin(starting, "phone"))
+        #expect(host.calls.last == .begin(starting))
+    }
+
+    @Test("refused an activity, as behind a locked phone, the next change of the run asks again")
+    func refusedAsksAgain() {
+        let host = FakeHost()
+        host.refuses = true
+        let controller = RunActivityController(host: host)
+        var snapshot = RunSnapshot(phase: .listening, startedAt: .now, birdsHeard: 0, newPatchesWaiting: 0)
+        controller.apply(snapshot)
+        controller.apply(.idle)
+        #expect(host.calls.count == 1, "a run that ended with none has nothing to end")
+
+        controller.apply(snapshot)
+        host.refuses = false
+        snapshot.birdsHeard = 1
+        controller.apply(snapshot)
+        #expect(host.calls.last == .begin(snapshot))
+        snapshot.birdsHeard = 2
+        controller.apply(snapshot)
+        #expect(host.calls.last == .update(snapshot))
     }
 
     @Test("over a real run: an add takes a bird off what's waiting, undo puts it back, and Stop through the intent ends the run and its activity")
@@ -131,7 +155,7 @@ struct RunSnapshotTests {
         let run = harness.run
         let store = CollectionStore(container: harness.album, sets: { [] })
         let host = FakeHost()
-        let controller = RunActivityController(host: host) { run.activeSource.rawValue }
+        let controller = RunActivityController(host: host)
         controller.follow { run.snapshot(in: store.collection) }
         #expect(host.calls == [.leftovers], "a launch clears what a killed app left, and starts nothing")
 
@@ -142,9 +166,7 @@ struct RunSnapshotTests {
             if case .update(let shown)? = host.calls.last { return shown.birdsHeard == 2 && shown.newPatchesWaiting == 2 }
             return false
         }
-        if case .begin(_, let source)? = host.calls.dropFirst().first {
-            #expect(source == "phone")
-        } else {
+        if case .begin? = host.calls.dropFirst().first {} else {
             Issue.record("the run's first call wasn't begin: \(host.calls)")
         }
 
@@ -303,6 +325,46 @@ struct WidgetSnapshotTests {
         #expect(!store.hasPatchImage)
     }
 
+    @Test("a picture that can't be drawn leaves the old words with the old picture and tries again; a blank drawn for a painting tries again too")
+    func publisherNeverNamesTheWrongPicture() async throws {
+        let album = try AlbumSchema.makeContainer(inMemory: true)
+        let library = PackLibrary.forApp()
+        let collection = CollectionStore(container: album, sets: { library.cardSets })
+        let store = WidgetStore(directory: URL.temporaryDirectory.appending(path: "widget-\(UUID().uuidString)", directoryHint: .isDirectory))
+        var drawing: LatestPatchPublisher.DrawnPatch? = .init(png: Data([1]), isPainted: true)
+        var drew = 0
+        let publisher = LatestPatchPublisher(store: store, collection: collection, packs: library, draw: { _ in
+            drew += 1
+            return drawing
+        })
+        func add(_ species: String, at seconds: Double) throws {
+            album.mainContext.insert(Sighting(speciesID: species, confirmedAt: Date(timeIntervalSince1970: seconds), location: Self.griffith, soundConfidence: 0.9, source: .phone))
+            try album.mainContext.save()
+        }
+
+        try add(Self.finch, at: 100)
+        await publisher.write()
+        #expect(store.snapshot()?.latest?.name == "House Finch")
+
+        drawing = nil
+        try add(Self.jay, at: 200)
+        await publisher.write()
+        #expect(store.snapshot()?.latest?.name == "House Finch", "the finch's picture is still there, so its name stays")
+        #expect(store.patchImage() == Data([1]))
+
+        drawing = .init(png: Data([2]), isPainted: false)
+        await publisher.write()
+        #expect(store.snapshot()?.latest?.link.speciesID == Self.jay)
+        #expect(store.snapshot()?.latest?.hasPainting == false)
+        let before = drew
+        drawing = .init(png: Data([3]), isPainted: true)
+        await publisher.write()
+        #expect(drew == before + 1, "the painting it couldn't decode gets another try")
+        #expect(store.patchImage() == Data([3]))
+        await publisher.write()
+        #expect(drew == before + 1, "and then it stands")
+    }
+
     @Test("from the album: an add writes a flat picture of the patch with clear corners, and a repeat leaves the files alone")
     func publisher() async throws {
         let album = try AlbumSchema.makeContainer(inMemory: true)
@@ -407,10 +469,12 @@ struct RunRecapTests {
     @Test("what goes with the image credits the app and the patches' photos, and carries nothing the card doesn't")
     func shareText() {
         let text = recap().shareText(credits: ["© A. Birder (CC BY)"])
-        #expect(text == "October 26, 2026, Los Angeles. Listened for 42 minutes, 3 birds heard, 1 patch sewn.\nHeard with Featherguild · Powered by BirdNET\nPatches: AI illustrations from reference photos (© A. Birder (CC BY))")
+        #expect(text == "October 26, 2026, Los Angeles. Listened for 42 minutes, 3 birds heard, 1 patch sewn.\nHeard with Featherguild. Powered by BirdNET.\nPatches: AI illustrations from reference photos (© A. Birder (CC BY))")
         #expect(!recap(place: nil).shareText(credits: []).contains("Los Angeles"))
         #expect(!recap().shareText(credits: []).contains("AI illustrations"))
         #expect(RunRecap.imprint(hasPainting: false) == "Featherguild")
+        #expect(!text.contains("·"), "the maintainer, 2026-11-06: no dots in what's shared")
+        #expect(RunRecap.imprint(hasPainting: true) == "AI illustration, Featherguild")
         #expect(RunRecap.creditLine([]) == nil)
     }
 

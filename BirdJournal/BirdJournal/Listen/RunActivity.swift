@@ -15,8 +15,7 @@ extension RunSnapshot {
         case .idle: phase = .idle
         case .starting: phase = .starting
         case .listening: phase = .listening
-        case .interrupted, .resuming: phase = .paused
-        case .paused: phase = .paused
+        case .interrupted, .resuming, .paused: phase = .paused
         case .stopping: phase = .stopping
         case .ended: phase = .ended
         }
@@ -54,7 +53,8 @@ extension ListeningCoordinator {
 /// Where a run's snapshots go: ActivityKit on a phone, a double in tests.
 @MainActor
 protocol RunActivityHost: AnyObject {
-    func begin(_ snapshot: RunSnapshot, source: String)
+    /// Whether there's an activity now: the system refuses one with the app out of front, or with them turned off.
+    func begin(_ snapshot: RunSnapshot) -> Bool
     func update(_ snapshot: RunSnapshot)
     func end(_ snapshot: RunSnapshot)
     /// Ends activities no run in this process started: the app was killed part way through one.
@@ -68,20 +68,19 @@ final class RunActivityController {
     static let heartbeat: Duration = .seconds(300)
 
     private let host: any RunActivityHost
-    private let source: () -> String
     private var shown: RunSnapshot?
     private var heartbeatTask: Task<Void, Never>?
 
-    init(host: any RunActivityHost, source: @escaping () -> String) {
+    init(host: any RunActivityHost) {
         self.host = host
-        self.source = source
     }
 
     /// What a new snapshot means for the activity.
     func apply(_ snapshot: RunSnapshot) {
         if snapshot.isRunning {
             if shown == nil {
-                host.begin(snapshot, source: source())
+                // Refused, the next change of the run asks again: a run started from behind a locked phone can still get one.
+                guard host.begin(snapshot) else { return }
                 startHeartbeat()
             } else if snapshot != shown {
                 host.update(snapshot)
@@ -133,12 +132,14 @@ final class ActivityKitRunHost: RunActivityHost {
         ActivityContent(state: snapshot, staleDate: .now.addingTimeInterval(Self.staleAfter))
     }
 
-    func begin(_ snapshot: RunSnapshot, source: String) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+    func begin(_ snapshot: RunSnapshot) -> Bool {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
         do {
-            activity = try Activity.request(attributes: RunActivityAttributes(source: source), content: content(snapshot))
+            activity = try Activity.request(attributes: RunActivityAttributes(), content: content(snapshot))
+            return true
         } catch {
-            log.error("no Live Activity for this run: \(error.localizedDescription, privacy: .public)")
+            log.error("no Live Activity for this run yet: \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
 

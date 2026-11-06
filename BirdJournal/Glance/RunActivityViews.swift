@@ -49,10 +49,9 @@ struct RunActivityCounts: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.colorSchemeContrast) private var contrast
     let snapshot: RunSnapshot
-    var alignment: HorizontalAlignment = .leading
 
     var body: some View {
-        VStack(alignment: alignment, spacing: 2) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(snapshot.birdsHeardText)
                 .foregroundStyle(GlanceInk.secondary(scheme, contrast))
             if let new = snapshot.newPatchesText {
@@ -62,7 +61,6 @@ struct RunActivityCounts: View {
             }
         }
         .font(.subheadline)
-        .multilineTextAlignment(alignment == .trailing ? .trailing : .leading)
         .lineLimit(2)
         .minimumScaleFactor(0.85)
     }
