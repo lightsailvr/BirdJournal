@@ -163,6 +163,33 @@ final class HuntUITests: XCTestCase {
         wait(for: [expectation(for: NSPredicate { _, _ in row.label != held }, evaluatedWith: NSObject())], timeout: 15)
     }
 
+    /// Scrolling counts as touching, with the finger nowhere near a row: here it's on the timer. These birds move three times a
+    /// second, so two looks at one spot, a moment apart, would see different birds if the list weren't holding.
+    @MainActor
+    func testScrollingHoldsTheListAndItMovesAgainAfter() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "0.3",
+            "-fakeRunBirds", Self.movingBirds + ",Melozone crissalis_California Towhee,Spinus psaltria_Lesser Goldfinch",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+        let first = row.label
+        wait(for: [expectation(for: NSPredicate { _, _ in row.label != first }, evaluatedWith: NSObject())], timeout: 15)
+
+        let timer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Listening for'")).firstMatch
+        XCTAssertTrue(timer.exists, "screen: \(app.debugDescription.prefix(3000))")
+        let from = timer.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        from.press(forDuration: 0.1, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -60)), withVelocity: .slow, thenHoldForDuration: 2)
+        let held = row.label
+        Thread.sleep(forTimeInterval: 0.6)
+        XCTAssertEqual(row.label, held, "the list moved during its 1.5 s after a scroll")
+
+        wait(for: [expectation(for: NSPredicate { _, _ in row.label != held }, evaluatedWith: NSObject())], timeout: 15)
+    }
+
     /// The finger's watcher leaves the touch to the scroll view.
     @MainActor
     func testTheListStillScrolls() throws {
