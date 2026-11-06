@@ -6,7 +6,7 @@ import SwiftUI
 /// VoiceOver reads the title, the words and the action. `.statePage()` centres one on a whole page.
 struct StateNotice<Actions: View>: View {
     enum Mark {
-        /// The perched bird line drawing of the empty collection.
+        /// The perched finch in glasses, the mascot, for a page that's empty because nothing has happened yet.
         case drawing
         /// An SF Symbol on a raised disc.
         case symbol(String)
@@ -33,9 +33,7 @@ struct StateNotice<Actions: View>: View {
         VStack(spacing: 14) {
             switch mark {
             case .drawing:
-                PerchedBirdDrawing()
-                    .frame(height: 110)
-                    .accessibilityHidden(true)
+                PerchedFinch()
             case .symbol(let name):
                 Image(systemName: name)
                     .font(.title2)
