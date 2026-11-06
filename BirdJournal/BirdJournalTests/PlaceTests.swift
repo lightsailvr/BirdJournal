@@ -10,19 +10,19 @@ import UIKit
 @Suite("The place")
 @MainActor
 struct PlaceTests {
-    static func ring(_ corners: [(Double, Double)]) -> [CardSet.Point] {
+    nonisolated static func ring(_ corners: [(Double, Double)]) -> [CardSet.Point] {
         (corners + [corners[0]]).map { CardSet.Point(longitude: $0.0, latitude: $0.1) }
     }
 
-    static func set(_ id: String, _ corners: [(Double, Double)]) -> CardSet {
+    nonisolated static func set(_ id: String, _ corners: [(Double, Double)]) -> CardSet {
         CardSet(id: id, name: id, edition: "\(id) edition", species: ["Sayornis nigricans"], regions: [CardSet.Region(name: id, polygons: [[ring(corners)]])])
     }
 
-    static let losAngeles = set("us-ca-la", [(-119, 33.7), (-117.6, 33.7), (-117.6, 34.8), (-119, 34.8)])
-    static let desert = set("us-ca-desert", [(-117, 33), (-115, 33), (-115, 34.5), (-117, 34.5)])
-    static let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
-    static let joshuaTree = Coordinate(latitude: 33.87, longitude: -115.90, accuracy: 10)
-    static let portland = Coordinate(latitude: 45.52, longitude: -122.68, accuracy: 10)
+    nonisolated static let losAngeles = set("us-ca-la", [(-119, 33.7), (-117.6, 33.7), (-117.6, 34.8), (-119, 34.8)])
+    nonisolated static let desert = set("us-ca-desert", [(-117, 33), (-115, 33), (-115, 34.5), (-117, 34.5)])
+    nonisolated static let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
+    nonisolated static let joshuaTree = Coordinate(latitude: 33.87, longitude: -115.90, accuracy: 10)
+    nonisolated static let portland = Coordinate(latitude: 45.52, longitude: -122.68, accuracy: 10)
 
     struct Choice: Sendable {
         let because: String
@@ -60,9 +60,9 @@ struct PlaceTests {
 
     @Test("the read only ever uses a permission already granted", arguments: [
         (CLAuthorizationStatus.notDetermined, false), (.denied, false), (.restricted, false), (.authorizedWhenInUse, true), (.authorizedAlways, true),
-    ])
-    func theReadNeverAsks(_ status: CLAuthorizationStatus, _ reads: Bool) {
-        #expect(CoreLocationProvider.mayRead(status) == reads)
+    ] as [(status: CLAuthorizationStatus, reads: Bool)])
+    func theReadNeverAsks(_ row: (status: CLAuthorizationStatus, reads: Bool)) {
+        #expect(CoreLocationProvider.mayRead(row.status) == row.reads)
     }
 
     // MARK: - What's remembered
@@ -178,9 +178,9 @@ struct ThreadProgressTests {
         (159, 160, 23, true), (160, 160, 24, true), (12, 14, 21, true), (14, 14, 24, true),
         (1, 1_000_000, 1, false), (2_000, 1_000_000, 1, false), (500_000, 1_000_000, 12, false), (999_999, 1_000_000, 23, false), (1_000_000, 1_000_000, 24, false),
         (5, 0, 0, true),
-    ] as [(Double, Double, Int, Bool)])
-    func sewn(_ value: Double, _ total: Double, _ sewn: Int, _ counted: Bool) {
-        #expect(ThreadProgress.sewn(value: value, total: total, stitches: 24, countsBirds: counted) == sewn)
+    ] as [(value: Double, total: Double, sewn: Int, counted: Bool)])
+    func sewn(_ row: (value: Double, total: Double, sewn: Int, counted: Bool)) {
+        #expect(ThreadProgress.sewn(value: row.value, total: row.total, stitches: 24, countsBirds: row.counted) == row.sewn, "\(row)")
     }
 
     /// The stitches actually drawn in `color`, along the row: a pixel fact.
@@ -226,7 +226,7 @@ struct ThreadProgressTests {
 @Suite("Edition tints")
 @MainActor
 struct EditionTintTests {
-    static let tints = ["EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionUncharted"]
+    nonisolated static let tints = ["EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionUncharted"]
 
     @Test("4.5:1 on the page and a raised surface, and the accent's words 4.5:1 on its fill", arguments: tints + ["ThreadTogether"])
     func onThePage(_ tint: String) throws {

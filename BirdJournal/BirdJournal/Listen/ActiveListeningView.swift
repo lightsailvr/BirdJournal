@@ -153,8 +153,8 @@ private struct StatusLine: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(isWaiting ? Color.clear : color)
-                .overlay(Circle().strokeBorder(isWaiting ? color : Color.clear, lineWidth: 1.5))
+                .fill(isWaiting ? AnyShapeStyle(Color.clear) : color)
+                .overlay(Circle().strokeBorder(isWaiting ? color : AnyShapeStyle(Color.clear), lineWidth: 1.5))
                 .frame(width: 9, height: 9)
             Text(text)
                 .font(JournalFont.body)
