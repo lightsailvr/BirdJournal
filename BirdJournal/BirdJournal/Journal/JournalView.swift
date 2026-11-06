@@ -118,7 +118,8 @@ struct JournalView: View {
                     restore(0)
                 }
                 .background { ModeSurface(mode: state.mode).ignoresSafeArea() }
-                .searchable(text: $state.query, prompt: "Search birds")
+                // Always showing: a drawer that hides as the page scrolls would take the picker up and down with it.
+                .searchable(text: $state.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search birds")
                 #if DEBUG
                 .task {
                     // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.

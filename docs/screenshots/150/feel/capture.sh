@@ -7,7 +7,7 @@
 #   docs/screenshots/150/feel/capture.sh --sheets
 #
 # The waits are fixed, so look over the shots afterwards; CAPTURE_SLOW=<seconds> adds to each wait. The Lift's frames are picked by
-# hand from the recording: CAPTURE_RAW=<folder> keeps them, LIFT_FRAMES="a b c d e f" copies those, LIFT_ONLY=1 does only this part.
+# hand from the recordings: CAPTURE_RAW=<folder> keeps them, LIFT_ONLY=1 does only the recordings.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -26,6 +26,10 @@ if [[ "${1:-}" == "--sheets" ]]; then
     shots=(); collect < <(in_out board-dark menu-dark board-scrolled-dark mode-fade-dark sightings-dark board-light board-ax5); sheet set-menu-and-modes 7 "${shots[@]}"
     shots=(); collect < <(in_out reveal-dark reveal-shared-dark reveal-undo-dark reveal-light reveal-ax5 sewing-dark); sheet reveal 6 "${shots[@]}"
     shots=(); collect < <(in_out lift-1 lift-2 lift-3 lift-4 lift-5 lift-6); sheet lift 6 "${shots[@]}"
+    shots=(); collect < <(in_out lift-reduced-1 lift-reduced-2 lift-reduced-3 lift-reduced-4 lift-reduced-5 lift-reduced-6); sheet lift-reduce-motion 6 "${shots[@]}"
+    shots=(); collect < <(in_out modes-1 modes-2 modes-3 modes-4 modes-5 modes-6); sheet modes-from-a-scrolled-board 6 "${shots[@]}"
+    shots=(); collect < <(in_out foot-1 foot-2 foot-3 foot-4 foot-5 foot-6); sheet foot-of-the-board 6 "${shots[@]}"
+    shots=(); collect < <(in_out sheet-1 sheet-2 sheet-3 sheet-4); sheet plain-push-in-a-sheet 4 "${shots[@]}"
     shots=(); collect < <(in_out peek-dark board-contrast splash-dark); sheet peek-contrast-splash 3 "${shots[@]}"
     exit 0
 fi
@@ -67,21 +71,22 @@ if [[ -z "${LIFT_ONLY:-}" ]]; then
 fi
 xcrun simctl boot "$udid" 2>/dev/null || true
 
-# The Lift, from a recording: the board, the page growing out of the tile, a swipe, and back to the tile.
-xcrun simctl io "$udid" recordVideo --codec=h264 --force "$raw/lift.mp4" & recording=$!
-BIRDJOURNAL_SIMULATOR="$name" TEST_RUNNER_BIRDJOURNAL_FEEL_SHOTS="$raw" "$repo_root/scripts/build-and-test.sh" -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheLift || true
-kill -INT "$recording" 2>/dev/null || true
-wait "$recording" 2>/dev/null || true
+# Recordings, each to frames in a folder of its own, picked from by hand. The motion only shows there.
+record() {  # name, test
+    local folder="$raw/$1"
+    mkdir -p "$folder"
+    xcrun simctl boot "$udid" 2>/dev/null || true
+    xcrun simctl io "$udid" recordVideo --codec=h264 --force "$folder/$1.mp4" & local recording=$!
+    BIRDJOURNAL_SIMULATOR="$name" TEST_RUNNER_BIRDJOURNAL_FEEL_SHOTS="$raw" "$repo_root/scripts/build-and-test.sh" "-only-testing:BirdJournalUITests/FeelCaptureUITests/$2" || true
+    kill -INT "$recording" 2>/dev/null || true
+    wait "$recording" 2>/dev/null || true
+    [[ -f "$folder/$1.mp4" ]] && ffmpeg -loglevel error -y -i "$folder/$1.mp4" -vf "fps=20,scale=402:-1" "$folder/frame-%04d.jpg"
+}
+record lift testTheLift
+record modes testRecordAModeChange
+record foot testRecordTheFoot
+record sheet testRecordInASheet
 xcrun simctl boot "$udid" 2>/dev/null || true
-[[ -f "$raw/lift.mp4" ]] && ffmpeg -loglevel error -y -i "$raw/lift.mp4" -vf "fps=20,scale=402:-1" "$raw/frame-%04d.jpg"
-echo "lift frames in $raw: pick them with LIFT_FRAMES=\"a b c d e f\""
-if [[ -n "${LIFT_FRAMES:-}" ]]; then
-    index=1
-    for frame in $LIFT_FRAMES; do
-        cp "$raw/frame-$(printf %04d "$frame").jpg" "$out/lift-$index.jpg"
-        index=$((index + 1))
-    done
-fi
 
 [[ -z "${LIFT_ONLY:-}" ]] || exit 0
 
