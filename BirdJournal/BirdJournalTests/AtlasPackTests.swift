@@ -34,7 +34,7 @@ struct AtlasPackCollectionTests {
         try album.mainContext.save()
 
         func sightings() throws -> [Sighting] { try album.mainContext.fetch(FetchDescriptor<Sighting>()) }
-        let before = PackLibrary(bundled: nil, storage: storage).collection(of: try sightings())
+        let before = CardCollection(sightings: try sightings(), sets: PackLibrary(bundled: nil, storage: storage).cardSets)
         #expect(before.speciesCount == 2)
 
         // "Download" the Los Angeles pack: the installed copy, as `PackStorage.install` leaves it.
@@ -50,7 +50,7 @@ struct AtlasPackCollectionTests {
         let library = PackLibrary(bundled: nil, storage: storage)
         #expect(library.pack(id: bundled.info.id) != nil, "the download is ready offline")
         #expect(try sightings().count == 2, "a download adds no sightings")
-        #expect(library.collection(of: try sightings()).speciesCount == before.speciesCount, "a download adds no birds to the collection")
+        #expect(CardCollection(sightings: try sightings(), sets: library.cardSets).speciesCount == before.speciesCount, "a download adds no birds to the collection")
 
         // Remove it.
         try library.remove(id: bundled.info.id)
@@ -64,7 +64,7 @@ struct AtlasPackCollectionTests {
         #expect(kept.attachedPhotoPaths == ["phoebe-original.jpg"])
         #expect(FileManager.default.fileExists(atPath: photo.path(percentEncoded: false)), "and the glasses photo")
         #expect(FileManager.default.fileExists(atPath: original.path(percentEncoded: false)), "and the original photo")
-        #expect(library.collection(of: after).speciesCount == before.speciesCount, "and the collection")
+        #expect(CardCollection(sightings: after, sets: library.cardSets).speciesCount == before.speciesCount, "and the collection")
     }
 }
 
@@ -76,7 +76,7 @@ struct PackFailureTests {
         let offline = PackFailure(message: "No internet connection. Connect to Wi‑Fi or cellular data and try again.")
         #expect(offline.kind == .offline)
         #expect(offline.action == "Try again")
-        #expect(PackFailure(message: "The pack server could not be reached. Try again later.").kind == .offline)
+        #expect(PackFailure(message: "The download server could not be reached. Try again later.").kind == .offline)
 
         let dropped = PackFailure(message: "The connection dropped before the download finished. Try again.")
         #expect(dropped.kind == .interrupted)
@@ -93,7 +93,7 @@ struct PackFailureTests {
         let checksum = PackFailure(message: "The download's checksum did not match the index, so it was not installed. Try again.")
         #expect(checksum.kind == .install)
         #expect(checksum.action == "Download again")
-        #expect(PackFailure(message: "The download is not a readable pack (malformed).").kind == .install)
+        #expect(PackFailure(message: "The download is not a readable field guide (malformed).").kind == .install)
     }
 }
 

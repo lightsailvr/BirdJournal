@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3300" height="2200">
+ <!-- The stitched ring: Collection's tab icon (issue #150, the guide's boards). -->
+ <g id="Notes">
+  <text style="stroke:none;fill:black;font-family:sans-serif;font-size:13;" transform="matrix(1 0 0 1 263 322)">Regular-M</text>
+ </g>
+ <g id="Guides">
+  <g id="H-reference" style="fill:#27AAE1;stroke:none;" transform="matrix(1 0 0 1 339 696)">
+   <path d="M0.993 0L3.2 0L28.9 -71.1L30.5 -71.1L30.5 -73.8L28.9 -73.8Z"/>
+  </g>
+  <line id="Baseline-S" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="696" y2="696"/>
+  <line id="Capline-S" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="625.541" y2="625.541"/>
+  <line id="Baseline-M" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1126" y2="1126"/>
+  <line id="Capline-M" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1055.54" y2="1055.54"/>
+  <line id="Baseline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1556" y2="1556"/>
+  <line id="Capline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1485.54" y2="1485.54"/>
+  <line id="left-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="1400" x2="1400" y1="1030" y2="1150"/>
+  <line id="right-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="1536" x2="1536" y1="1030" y2="1150"/>
+ </g>
+ <g id="Symbols">
+  <g id="Regular-M" transform="matrix(1 0 0 1 1400 1126)">
+   <path d="M74.301 -96.879C80.894 -96.205 87.336 -94.479 93.382 -91.766L88.593 -81.093C83.688 -83.294 78.461 -84.695 73.112 -85.241ZM104.297 -85.465C109.669 -81.585 114.385 -76.869 118.265 -71.497L108.781 -64.648C105.633 -69.007 101.807 -72.833 97.448 -75.981ZM124.566 -60.582C127.279 -54.536 129.005 -48.094 129.679 -41.501L118.041 -40.312C117.495 -45.661 116.094 -50.888 113.893 -55.793ZM129.679 -28.899C129.005 -22.306 127.279 -15.864 124.566 -9.818L113.893 -14.607C116.094 -19.512 117.495 -24.739 118.041 -30.088ZM118.265 1.097C114.385 6.469 109.669 11.185 104.297 15.065L97.448 5.581C101.807 2.433 105.633 -1.393 108.781 -5.752ZM93.382 21.366C87.336 24.079 80.894 25.805 74.301 26.479L73.112 14.841C78.461 14.295 83.688 12.894 88.593 10.693ZM61.699 26.479C55.106 25.805 48.664 24.079 42.618 21.366L47.407 10.693C52.312 12.894 57.539 14.295 62.888 14.841ZM31.703 15.065C26.331 11.185 21.615 6.469 17.735 1.097L27.219 -5.752C30.367 -1.393 34.193 2.433 38.552 5.581ZM11.434 -9.818C8.721 -15.864 6.995 -22.306 6.321 -28.899L17.959 -30.088C18.505 -24.739 19.906 -19.512 22.107 -14.607ZM6.321 -41.501C6.995 -48.094 8.721 -54.536 11.434 -60.582L22.107 -55.793C19.906 -50.888 18.505 -45.661 17.959 -40.312ZM17.735 -71.497C21.615 -76.869 26.331 -81.585 31.703 -85.465L38.552 -75.981C34.193 -72.833 30.367 -69.007 27.219 -64.648ZM42.618 -91.766C48.664 -94.479 55.106 -96.205 61.699 -96.879L62.888 -85.241C57.539 -84.695 52.312 -83.294 47.407 -81.093ZM68 -63.275C83.506 -63.275 96.075 -50.706 96.075 -35.2C96.075 -19.694 83.506 -7.125 68 -7.125C52.494 -7.125 39.925 -19.694 39.925 -35.2C39.925 -50.706 52.494 -63.275 68 -63.275Z"/>
+  </g>
+ </g>
+</svg>

@@ -3,7 +3,7 @@ import XCTest
 /// The profile's reference sounds (issue #41): a real tap plays the song, the row turns into its stop control, the
 /// clip plays to its end, and a tap on the playing call stops it.
 final class GuideUITests: XCTestCase {
-    /// The Atlas (issue #118): a set's tile keeps the birder's "species collected" apart from "Ready offline", and the
+    /// The Atlas (issue #118): a set's tile keeps the birder's "sewn" apart from "Ready offline", and the
     /// profile keeps its full credits a tap away.
     @MainActor
     func testTheAtlasKeepsSpeciesCollectedApartFromReadyOffline() throws {
@@ -17,19 +17,20 @@ final class GuideUITests: XCTestCase {
         XCTAssertTrue(tile.label.contains("Los Angeles"), tile.label)
         XCTAssertTrue(tile.label.contains("Citrus edition"), tile.label)
         XCTAssertTrue(tile.label.contains("Ready offline"), tile.label)
-        XCTAssertTrue(tile.label.contains("0 of 160 species collected"), "nothing collected yet, though the pack is on the phone: \(tile.label)")
+        XCTAssertTrue(tile.label.contains("0 of 160 sewn"), "nothing collected yet, though the pack is on the phone: \(tile.label)")
         tile.tap()
         XCTAssertTrue(app.navigationBars["Los Angeles"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
-    func testTheProfileHasTheTaleAndItsCreditsATapAway() throws {
+    func testTheProfileHasItsStoryAndItsCreditsATapAway() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-inMemoryAlbum", "YES", "-autoScreen", "profile"]
         app.launch()
 
         let credits = app.buttons["profile-credits"]
-        XCTAssertTrue(app.staticTexts["The tale"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["About this bird"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.staticTexts["The tale"].exists, "the story's own title is its heading")
         for _ in 0..<12 where !(credits.exists && credits.isHittable) { app.swipeUp() }
         XCTAssertTrue(credits.isHittable, "screen: \(app.debugDescription.prefix(3000))")
         credits.tap()
@@ -60,14 +61,6 @@ final class GuideUITests: XCTestCase {
         XCTAssertTrue(call.waitForLabel("Play the call", timeout: 5), "a tap on the playing call did not stop it")
         XCTAssertEqual(app.state, .runningForeground)
     }
-}
-
-extension XCUIElement {
-    /// Waits for the element's accessibility label to read `label`.
-    func waitForLabel(_ label: String, timeout: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", label), object: self)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
-    }
 
     /// Issue #134: the Atlas's search is always in view, not behind a pull down the page.
     @MainActor
@@ -81,6 +74,23 @@ extension XCUIElement {
         search.tap()
         search.typeText("Black Phoebe")
         XCTAssertTrue(app.staticTexts["Sayornis nigricans"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    /// Issue #150: a set's page makes its rows as they come on screen, not all 160 when it opens (XCUITest lists what's off
+    /// screen too, so the count is what was made), and the last bird is still there at the end of a scroll.
+    @MainActor
+    func testASetsPageMakesItsRowsAsTheyScrollIn() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoScreen", "set"]
+        app.launch()
+        let rows = app.buttons.matching(identifier: "set-species-silhouette")
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertLessThan(rows.count, 40, "made at open")
+        let last = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '160, '")).firstMatch
+        for _ in 0..<40 where !last.exists {
+            app.swipeUp(velocity: .fast)
+        }
+        XCTAssertTrue(last.exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 
     /// Issue #134: a set's page searches its own birds, by name, keeping their collector numbers.
@@ -98,5 +108,13 @@ extension XCUIElement {
         XCTAssertEqual(app.buttons.matching(identifier: "set-species-silhouette").count, 1, "only the match; screen: \(app.debugDescription.prefix(3000))")
         search.typeText("zzz")
         XCTAssertTrue(app.descendants(matching: .any)["no-search-match"].waitForExistence(timeout: 5))
+    }
+}
+
+extension XCUIElement {
+    /// Waits for the element's accessibility label to read `label`.
+    func waitForLabel(_ label: String, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", label), object: self)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 }

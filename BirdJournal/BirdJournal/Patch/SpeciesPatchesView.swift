@@ -9,12 +9,13 @@ struct SpeciesPatchesView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     let scientificName: String
     let commonName: String
 
     var body: some View {
-        let collection = library.collection(of: sightings)
+        let collection = collectionStore.collection
         let ofSpecies = sightings.filter { $0.scientificName == scientificName }
         let patches = collection.patches.filter { $0.scientificName == scientificName }.sorted { $0.sewn.confirmedAt < $1.sewn.confirmedAt }
         let name = library.species(scientificName: scientificName)?.species.commonName ?? ofSpecies.first?.commonName ?? commonName
@@ -78,7 +79,7 @@ struct SpeciesPatchesView: View {
                 .font(JournalFont.scientific)
                 .foregroundStyle(Color.ink)
             if let first = patches.map(\.sewn.confirmedAt).min() {
-                Text("\(CardCollection.Patch.speciesSummary(patches)) · since \(first.formatted(.dateTime.month(.abbreviated).day()))")
+                Text("\(CardCollection.Patch.speciesSummary(patches)), since \(first.formatted(.dateTime.month(.abbreviated).day()))")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.ink)
                     .padding(.top, 4)
@@ -106,11 +107,7 @@ private struct NoPatchesYet: View {
                 AttributedImage(pack: reference.pack, photo: photo)
                     .padding(.top, 12)
             }
-            Text("No sightings of \(commonName) yet")
-                .font(JournalFont.section)
-                .foregroundStyle(Color.ink)
-                .padding(.top, 14)
-                .accessibilityAddTraits(.isHeader)
+            SectionTitle("No sightings of \(commonName) yet", size: .lead, top: 14)
             ForEach(PatchText.setNumbers(of: scientificName, in: library.sets), id: \.self) { number in
                 Text(number.text)
                     .font(JournalFont.supporting.monospacedDigit())
@@ -141,16 +138,25 @@ enum SightingsScope: Hashable {
 }
 
 extension CardCollection.Patch {
-    /// This patch's sightings among `sightings`, in their order.
+    /// The album by identifier, for finding many patches' sightings in it.
+    static func table(of sightings: [Sighting]) -> [UUID: Sighting] {
+        Dictionary(sightings.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// This patch's sightings from the album's `table`, newest first.
+    func ownSightings(in table: [UUID: Sighting]) -> [Sighting] {
+        sightings.compactMap { table[$0.identifier] }
+    }
+
+    /// This patch's sightings among `sightings`, newest first.
     func ownSightings(among sightings: [Sighting]) -> [Sighting] {
-        let own = Set(self.sightings.map(\.identifier))
-        return sightings.filter { own.contains($0.identifier) }
+        ownSightings(in: Self.table(of: sightings))
     }
 }
 
 /// The sightings behind a patch, or behind every patch of a species: newest first, each opening its sighting.
 struct PatchSightingsView: View {
-    @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     let scope: SightingsScope
 
@@ -175,7 +181,7 @@ struct PatchSightingsView: View {
     private var shownSightings: [Sighting] {
         switch scope {
         case .species(let speciesID): sightings.filter { $0.speciesID == speciesID }
-        case .patch(let key): library.collection(of: sightings).patch(key: key)?.ownSightings(among: sightings) ?? []
+        case .patch(let key): collectionStore.collection.patch(key: key)?.ownSightings(among: sightings) ?? []
         }
     }
 }

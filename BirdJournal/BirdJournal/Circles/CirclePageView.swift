@@ -73,7 +73,7 @@ struct CirclePageView: View {
                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder() }
             }
             if let error, detail != nil {
                 Section { InlineError(error) }
@@ -175,7 +175,7 @@ struct CirclePageView: View {
                             .foregroundStyle(Color.ink)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)
-                        Text("\(detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members") · Invite-only")
+                        Text("\(detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members"), invite-only")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             // Wraps at the largest sizes instead of "4 members…" (issue #119).
@@ -266,7 +266,7 @@ struct CirclePageView: View {
                     }
             }
         } header: {
-            Text("Members · \(detail.members.count) of 20")
+            Text("Members, \(detail.members.count) of 20")
         } footer: {
             if detail.members.count > 1 {
                 Text(detail.circle.isCreator
@@ -380,10 +380,10 @@ struct CirclePageView: View {
         return "You can join again only with a new invitation."
     }
 
-    /// The signed-in birder among the members: the account's ID, or the creator's when the account isn't read yet
-    /// and the birder created the circle.
+    /// The signed-in birder among the members: the account's ID, or until the account is read (it may not be, on a cached page
+    /// with no connection), the sign-in's, or the creator's if the birder created the circle.
     private func myID(in detail: CircleDetail) -> String? {
-        circles.account.account?.id ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
+        circles.account.account?.id ?? circles.account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
     }
 
     private func load() async {
@@ -442,12 +442,7 @@ private struct MemberRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(member.initials)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.mossText)
-                .frame(width: 36, height: 36)
-                .background(Color.moss, in: .circle)
-                .accessibilityHidden(true)
+            MemberFace(member: member, size: 36)
             VStack(alignment: .leading, spacing: 2) {
                 Text(isMe ? "\(member.name) (you)" : member.name).font(JournalFont.rowTitle)
                 if member.isCreator {

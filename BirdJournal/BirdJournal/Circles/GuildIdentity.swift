@@ -81,43 +81,68 @@ struct GuildCover: View {
     }
 }
 
-/// Member presence: the first few members' initials, overlapping, and "+N" for the rest. Initials only (spec v2,
-/// "Accounts and the app client").
+/// The one avatar (issue #150): a person's initials on a disc in their own tone, with a fine ring in the page colour. Initials
+/// only (spec v2, "Accounts and the app client"). Decorative and fixed in size, so the initials don't grow with Dynamic Type
+/// and VoiceOver skips it: say who it is in words next to it.
+struct MemberFace: View {
+    /// The initials' colour, on every tone.
+    nonisolated static let ink: UInt32 = 0x10292D
+    /// Muted, never gold: each member keeps one tone by their ID.
+    nonisolated static let tones: [UInt32] = [0x8E9BC4, 0x9AAE7E, 0x6F9FB0, 0xA98390, 0x8FB3A5, 0xB79A7C]
+
+    let id: String
+    let initials: String
+    var size: CGFloat = 30
+
+    init(id: String, initials: String, size: CGFloat = 30) {
+        self.id = id
+        self.initials = initials
+        self.size = size
+    }
+
+    init(member: CircleMember, size: CGFloat = 30) {
+        self.init(id: member.id, initials: member.initials, size: size)
+    }
+
+    var body: some View {
+        MemberDisc(text: initials.isEmpty ? "·" : initials, ink: Color(guildHex: Self.ink), fill: Color(guildHex: Self.tones[Int(SeededRandom.seed(id) % UInt64(Self.tones.count))]), size: size)
+    }
+}
+
+/// Words on a member's disc, at a size that follows the disc.
+private struct MemberDisc: View {
+    let text: String
+    let ink: Color
+    let fill: Color
+    let size: CGFloat
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: size * 0.37, weight: .semibold))
+            .foregroundStyle(ink)
+            .minimumScaleFactor(0.7)
+            .frame(width: size, height: size)
+            .background(fill, in: .circle)
+            .overlay(Circle().strokeBorder(Color.paper, lineWidth: 2))
+            .accessibilityHidden(true)
+    }
+}
+
+/// Member presence: the first few members' faces, overlapping, and "+N" for the rest.
 struct MemberFaces: View {
     let members: [CircleMember]
     var total: Int? = nil
     var shown = 4
     var size: CGFloat = 30
 
-    /// Muted, never gold: each member keeps one tone by their ID.
-    private static let tones: [Color] = [
-        Color(guildHex: 0x8E9BC4), Color(guildHex: 0x9AAE7E), Color(guildHex: 0x6F9FB0), Color(guildHex: 0xA98390), Color(guildHex: 0x8FB3A5), Color(guildHex: 0xB79A7C),
-    ]
-
     var body: some View {
         let more = max(0, (total ?? members.count) - min(shown, members.count))
         HStack(spacing: -size * 0.25) {
-            ForEach(members.prefix(shown)) { member in
-                Text(member.initials.isEmpty ? "·" : member.initials)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Color(guildHex: 0x10292D))
-                    .minimumScaleFactor(0.7)
-                    .frame(width: size, height: size)
-                    .background(Self.tones[Int(SeededRandom.seed(member.id) % UInt64(Self.tones.count))], in: .circle)
-                    .overlay(Circle().strokeBorder(Color.paper, lineWidth: 2))
-            }
+            ForEach(members.prefix(shown)) { MemberFace(member: $0, size: size) }
             if more > 0 {
-                Text("+\(more)")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Color.ink)
-                    .minimumScaleFactor(0.7)
-                    .frame(width: size, height: size)
-                    .background(Color.raised, in: .circle)
-                    .overlay(Circle().strokeBorder(Color.paper, lineWidth: 2))
+                MemberDisc(text: "+\(more)", ink: Color.ink, fill: Color.raised, size: size)
             }
         }
-        // Decorative and fixed in size: initials don't grow with Dynamic Type (the names are in the members list).
-        .dynamicTypeSize(...DynamicTypeSize.large)
         .accessibilityHidden(true)
     }
 }

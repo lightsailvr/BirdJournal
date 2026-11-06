@@ -1,7 +1,6 @@
 import Album
 import Identification
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The run under way (issue #28): the source with its state, the elapsed time, a modest waveform, the species heard
@@ -10,10 +9,9 @@ import SwiftUI
 /// page 11): the list gets the room.
 struct ActiveListeningView: View {
     @Environment(ListeningCoordinator.self) private var run
-    @Environment(PackLibrary.self) private var library
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// For each row's "new here" or "seen 7 times" (issue #132).
-    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
 
     var body: some View {
         PaperPage {
@@ -76,7 +74,7 @@ struct ActiveListeningView: View {
                 } else {
                     // Once a second while listening, so "Heard just now" ages and a calling marker lapses on time;
                     // rows move with the order (issue #42), animated unless motion is reduced.
-                    let collection = library.collection(of: sightings)
+                    let collection = collectionStore.collection
                     TimelineView(.periodic(from: .now, by: run.state.isActive ? 1 : 3_600)) { context in
                         let ordered = run.orderedCandidates
                         let calling = run.callingSpecies
@@ -185,7 +183,7 @@ private struct StatusLine: View {
         switch run.state {
         case .starting: return "Starting \(source == .glasses ? "the glasses" : "the microphone")…"
         case .listening: return source == .glasses ? "Glasses microphones" : "iPhone microphone"
-        case .interrupted, .paused, .resuming: return "\(source.title) · paused"
+        case .interrupted, .paused, .resuming: return "\(source.title), paused"
         case .stopping: return "Stopping…"
         case .ended(.stopped): return "Listening stopped"
         case .ended(.endedByGlasses): return "Ended by the glasses"
@@ -250,7 +248,7 @@ struct Waveform: View {
     }
 }
 
-/// "Near Griffith Park, Los Angeles · updated 3 min ago": where the next add is recorded and how fresh that fix is
+/// "Near Griffith Park, Los Angeles, updated 3 min ago": where the next add is recorded and how fresh that fix is
 /// (issue #44), ageing once a second while the run is on. The name is looked up once per kilometre of movement, so
 /// a walk does not geocode every step.
 private struct PlaceLine: View {
@@ -289,10 +287,10 @@ private struct PlaceLine: View {
         "Near \(places.name(for: lookedUp ?? coordinate) ?? coordinate.formatted)"
     }
 
-    /// "Near <place> · updated 3 min ago"; the place alone without a fix time.
+    /// "Near <place>, updated 3 min ago"; the place alone without a fix time.
     static func text(place: String, fixedAt: Date?, now: Date) -> String {
         guard let fixedAt else { return place }
-        return "\(place) · updated \(AgeText.text(seconds: now.timeIntervalSince(fixedAt)))"
+        return "\(place), updated \(AgeText.text(seconds: now.timeIntervalSince(fixedAt)))"
     }
 }
 
@@ -377,7 +375,7 @@ struct CandidateRow: View {
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         } else {
-                            Text([Self.heardText(candidate, startedAt: startedAt, now: now), seenHere.map(Self.seenText)].compactMap { $0 }.joined(separator: " · "))
+                            Text([Self.heardText(candidate, startedAt: startedAt, now: now), seenHere.map(Self.seenText)].compactMap { $0 }.joined(separator: ", "))
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }

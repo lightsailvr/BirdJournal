@@ -19,6 +19,7 @@ struct BirdJournalApp: App {
     @State private var sounds: ReferenceSounds
     @State private var places: PlaceNames
     @State private var packs: PackLibrary
+    @State private var collectionStore: CollectionStore
     @State private var journalEdits: JournalEdits
     @State private var account: AccountSession
     @State private var circles: CircleStore
@@ -76,6 +77,7 @@ struct BirdJournalApp: App {
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
+        _collectionStore = State(initialValue: CollectionStore(container: album, sets: { packs.cardSets }))
         let lens = Self.makeLensSession(connection: connection, packs: packs)
         _lens = State(initialValue: lens)
         _phoneListening = State(initialValue: phone)
@@ -262,6 +264,8 @@ struct BirdJournalApp: App {
             .environment(pushes)
             .environment(places)
             .environment(packs)
+            .environment(collectionStore)
+            .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
             .onOpenURL { url in
                 // An invite link (issue #61) arrives here as a universal link; everything else is the toolkit's.

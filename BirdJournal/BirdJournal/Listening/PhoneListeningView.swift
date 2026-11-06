@@ -104,7 +104,7 @@ struct LocationRow: View {
         case .settled(.denied):
             VStack(alignment: .leading, spacing: 4) {
                 Label("No location", systemImage: "location.slash")
-                Text("Species are not filtered by region. Allow location in Settings to narrow the list.")
+                Text("Species are not filtered by place. Allow location in Settings to narrow the list.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Button("Open Settings") {
@@ -115,7 +115,7 @@ struct LocationRow: View {
         case .settled(.unavailable):
             VStack(alignment: .leading, spacing: 4) {
                 Label("No location fix", systemImage: "location.slash")
-                Text("Species are not filtered by region until a fix arrives.")
+                Text("Species are not filtered by place until a fix arrives.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

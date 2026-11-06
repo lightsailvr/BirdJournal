@@ -125,9 +125,9 @@ struct CardCollectionTests {
         #expect(collection.sightingCount == 3)
         #expect(collection.patchCount == 2)
         #expect(collection.speciesCount == 2)
-        #expect(collection.summary == "2 patches · 3 sightings")
+        #expect(collection.summary == "2 patches, 3 sightings")
         #expect(collection.patchesText == "2 patches")
-        #expect(CardCollection([Self.card(Self.finch, minutes: 0, id: 1)]).summary == "1 patch · 1 sighting")
+        #expect(CardCollection([Self.card(Self.finch, minutes: 0, id: 1)]).summary == "1 patch, 1 sighting")
     }
 
     @Test("seen-again and new-patch lines")
@@ -162,5 +162,58 @@ struct CardCollectionTests {
         intro.markShown()
         #expect(!intro.shouldShow(patchCount: 12))
         #expect(!CollectionIntro(defaults: defaults).shouldShow(patchCount: 13), "remembered across launches")
+    }
+}
+
+// Issue #150: the app keeps one collection instead of building it in every view body. Kept, it has to answer exactly as a
+// collection built fresh from the same sightings and sets would, whatever happened on the way there.
+@Suite("A kept collection")
+struct CardCollectionCacheTests {
+    private static let finch = CardCollectionTests.finch
+    private static let phoebe = CardCollectionTests.phoebe
+    private static let la = CardCollectionTests.la
+    private static let sd = CardCollectionTests.sd
+    private static let sets = CardCollectionTests.sets
+
+    private static func card(_ species: String, minutes: Double, id: Int, at place: Coordinate? = nil) -> CardCollection.Entry {
+        CardCollectionTests.card(species, minutes: minutes, id: id, at: place)
+    }
+
+    @Test("it answers as a fresh one does through adds, removals, a moved sighting and a newly known set")
+    func answersAsAFreshOneDoes() {
+        let first = Self.card(Self.finch, minutes: 10, id: 1, at: Self.la)
+        let second = Self.card(Self.phoebe, minutes: 20, id: 2, at: Self.la)
+        let third = Self.card(Self.finch, minutes: 30, id: 3, at: Self.sd)
+        let moved = Self.card(Self.phoebe, minutes: 20, id: 2, at: Self.sd)
+
+        var cache = CardCollectionCache([first], sets: [])
+        let steps: [(entries: [CardCollection.Entry], sets: [CardSet])] = [
+            ([first, second], []),  // an add before the set is known
+            ([first, second], Self.sets),  // the set arrives and pulls older sightings in
+            ([third, first, second], Self.sets),  // an add, in a different order
+            ([third, first, moved], Self.sets),  // a sighting's place corrected
+            ([third, moved], Self.sets),  // a removal that unpicks a patch
+            ([], Self.sets),  // the last one goes
+        ]
+        for step in steps {
+            cache.update(step.entries, sets: step.sets)
+            #expect(cache.collection == CardCollection(step.entries, sets: step.sets))
+        }
+    }
+
+    @Test("it builds again only when the sightings or the sets changed")
+    func buildsOnlyOnAChange() {
+        let first = Self.card(Self.finch, minutes: 10, id: 1, at: Self.la)
+        let second = Self.card(Self.phoebe, minutes: 20, id: 2, at: Self.la)
+
+        var cache = CardCollectionCache([first], sets: Self.sets)
+        let unchanged = cache.update([first], sets: Self.sets)
+        #expect(!unchanged)
+        let added = cache.update([first, second], sets: Self.sets)
+        #expect(added)
+        let again = cache.update([first, second], sets: Self.sets)
+        #expect(!again)
+        let setsChanged = cache.update([first, second], sets: [])
+        #expect(setsChanged)
     }
 }

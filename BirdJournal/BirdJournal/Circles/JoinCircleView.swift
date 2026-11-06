@@ -26,7 +26,7 @@ struct JoinCircleView: View {
             } else if let error {
                 Section { intro(title: "Can't open this invitation", text: error) }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder(rows: 1) }
             }
             if let message = account.errorMessage, !account.isSignedIn {
                 Section { InlineError(message) }
@@ -40,7 +40,7 @@ struct JoinCircleView: View {
     private func intro(title: String, text: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             GuildEmblem(identity: GuildIdentity(circleID: token), size: 56)
-            Text(title).font(JournalFont.section)
+            SectionTitle(title, size: .lead, top: 0)
             Text(text).foregroundStyle(Color.inkSecondary)
         }
         .padding(.vertical, 6)
@@ -84,7 +84,7 @@ struct JoinCircleView: View {
 
     private func details(_ preview: InvitePreview) -> String {
         let members = preview.circle.memberCount == 1 ? "1 member" : "\(preview.circle.memberCount) members"
-        let from = preview.invitedBy.map { "Invited by \($0) · " } ?? ""
+        let from = preview.invitedBy.map { "Invited by \($0). " } ?? ""
         if preview.alreadyMember { return "\(from)\(members). You're already in this Guild." }
         return "\(from)\(members). The invitation expires \(preview.expiresAt.formatted(date: .abbreviated, time: .omitted))."
     }

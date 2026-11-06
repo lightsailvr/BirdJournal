@@ -131,7 +131,7 @@ struct GoalWordsTests {
         let now = Date(timeIntervalSince1970: 1_793_692_800)
         let week = goal(progress: 3, target: 10)
         #expect(GoalWords.days(week, timeZone: "America/Los_Angeles") == "3 Nov – 9 Nov" || GoalWords.days(week, timeZone: "America/Los_Angeles") == "Nov 3 – Nov 9")
-        #expect(GoalWords.customNote(week, timeZone: "America/Los_Angeles", now: now).hasSuffix("by Maya Ortiz · 7 still to discover"))
+        #expect(GoalWords.customNote(week, timeZone: "America/Los_Angeles", now: now).hasSuffix("by Maya Ortiz, 7 still to discover"))
         let bigDay = goal(start: "2026-11-07", end: "2026-11-07", startsAt: Date(timeIntervalSince1970: 1_794_038_400), endsAt: Date(timeIntervalSince1970: 1_794_124_800))
         #expect(!GoalWords.days(bigDay, timeZone: "America/Los_Angeles").contains("–"), "one day, one date")
         #expect(GoalWords.customNote(goal(progress: 10, target: 10, status: .ended), timeZone: "UTC", now: now).hasSuffix("Reached"))

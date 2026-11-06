@@ -80,9 +80,9 @@ public struct CardCollection: Sendable, Equatable {
             count == 1 ? "once" : "\(count) times"
         }
 
-        /// A species' patches in a line: "2 patches · seen 10 times".
+        /// A species' patches in a line: "2 patches, seen 10 times".
         public static func speciesSummary(_ patches: [Patch]) -> String {
-            "\(patches.count) \(patches.count == 1 ? "patch" : "patches") · seen \(times(patches.reduce(0) { $0 + $1.count }))"
+            "\(patches.count) \(patches.count == 1 ? "patch" : "patches"), seen \(times(patches.reduce(0) { $0 + $1.count }))"
         }
     }
 
@@ -242,9 +242,9 @@ public struct CardCollection: Sendable, Equatable {
         "\(patchCount) \(patchCount == 1 ? "patch" : "patches")"
     }
 
-    /// The Collection's line under its title, e.g. "7 patches · 21 sightings".
+    /// The Collection's line under its title, e.g. "7 patches, 21 sightings".
     public var summary: String {
-        "\(patchesText) · \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
+        "\(patchesText), \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
     }
 }
 
@@ -265,5 +265,30 @@ public struct CollectionIntro {
 
     public func markShown() {
         defaults.set(true, forKey: Self.defaultsKey)
+    }
+}
+
+/// One collection kept between readings (issue #150): building it places every sighting in its set's polygons, so the app
+/// builds it when the sightings or the sets change, not whenever a screen draws. `update` compares what it's given with what
+/// the collection was built from, so whoever feeds it can do so on any save.
+public struct CardCollectionCache: Sendable {
+    public private(set) var collection: CardCollection
+    private var entries: [CardCollection.Entry]
+    private var sets: [CardSet]
+
+    public init(_ entries: [CardCollection.Entry], sets: [CardSet]) {
+        self.entries = entries
+        self.sets = sets
+        collection = CardCollection(entries, sets: sets)
+    }
+
+    /// Builds again if the sightings or the sets differ from the last time, and says whether it did.
+    @discardableResult
+    public mutating func update(_ entries: [CardCollection.Entry], sets: [CardSet]) -> Bool {
+        guard entries != self.entries || sets != self.sets else { return false }
+        self.entries = entries
+        self.sets = sets
+        collection = CardCollection(entries, sets: sets)
+        return true
     }
 }

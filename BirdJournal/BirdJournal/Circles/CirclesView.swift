@@ -44,8 +44,8 @@ struct CirclesView: View {
         // Each card's members and this month's goal: read once per Guild, then kept by the store.
         .task(id: circles.circles.map(\.id)) {
             for circle in circles.circles {
-                if circles.details[circle.id] == nil { try? await circles.loadDetail(id: circle.id) }
-                if circles.goals[circle.id] == nil { await circles.loadGoals(circleID: circle.id) }
+                if circles.needsDetail(circle.id) { try? await circles.loadDetail(id: circle.id) }
+                if circles.needsGoals(circle.id) { await circles.loadGoals(circleID: circle.id) }
             }
         }
         // A notifications explanation that never got on screen gets one more chance (issue #107).
@@ -66,10 +66,7 @@ struct CirclesView: View {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     GuildEmblem(identity: GuildIdentity(circleID: "featherguild"), size: 56)
-                    Text("Bird with your friends")
-                        .font(JournalFont.section)
-                        .foregroundStyle(Color.ink)
-                        .accessibilityAddTraits(.isHeader)
+                    SectionTitle("Bird with your friends", size: .lead, top: 0)
                     Text("A Guild is a small, invite-only group of up to 20 birders who see each other's finds and chase goals together. Sign in with Apple or Google to start one or join one from an invitation.")
                         .font(JournalFont.body)
                         .foregroundStyle(Color.inkSecondary)
@@ -88,9 +85,7 @@ struct CirclesView: View {
     private var intro: some View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Find wonder together.")
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
+                SectionTitle("Find wonder together.", size: .lead, top: 0)
                 Text("Small groups. Shared discoveries.")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
@@ -104,8 +99,7 @@ struct CirclesView: View {
     private var list: some View {
         switch circles.listState {
         case .idle, .loading where circles.circles.isEmpty:
-            Section { ProgressView().frame(maxWidth: .infinity) }
-                .listRowBackground(Color.clear)
+            Section { GuildPlaceholder(rows: 2) }
         case .failed(let message) where circles.circles.isEmpty:
             // Offline or the server out of reach (issue #119): say so plainly, with what still works and Try again.
             Section {
@@ -156,22 +150,18 @@ struct CirclesView: View {
 
     private var empty: some View {
         Section {
-            VStack(alignment: .leading, spacing: 10) {
-                GuildEmblem(identity: GuildIdentity(circleID: "featherguild"), size: 56)
-                Text("No Guilds yet")
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-                    .accessibilityAddTraits(.isHeader)
-                Text("Start one for your family or your Sunday group, then invite friends with a link or a QR code. Got an invitation? Open its link on this iPhone.")
-                    .foregroundStyle(Color.inkSecondary)
-                Button("Start a Guild") { creating = true }
-                    .buttonStyle(.journalPrimary)
-                    .padding(.top, 6)
-                Label("Guilds are invite-only.", systemImage: "lock")
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 4)
+            StateNotice(
+                "No Guilds yet",
+                message: "Start one for your family or your Sunday group, then invite friends with a link or a QR code. Got an invitation? Open its link on this iPhone.",
+                mark: .emblem(GuildIdentity(circleID: "featherguild"))
+            ) {
+                VStack(spacing: 10) {
+                    Button("Start a Guild") { creating = true }
+                        .buttonStyle(.journalPrimary)
+                    Label("Guilds are invite-only.", systemImage: "lock")
+                        .font(JournalFont.attribution)
+                        .foregroundStyle(Color.inkSecondary)
+                }
             }
             .padding(.vertical, 6)
             .listRowBackground(Color.clear)
@@ -236,7 +226,7 @@ private struct GuildCard: View {
 
     static func subtitle(_ circle: CircleSummary) -> String {
         let members = circle.memberCount == 1 ? "1 member" : "\(circle.memberCount) members"
-        return circle.isCreator ? "\(members) · You started it" : members
+        return circle.isCreator ? "\(members), you started it" : members
     }
 }
 

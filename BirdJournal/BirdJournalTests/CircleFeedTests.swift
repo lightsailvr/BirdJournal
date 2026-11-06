@@ -194,8 +194,8 @@ struct FindRowTests {
 
     @Test("it says where, or a secret spot, and when")
     func whereAndWhen() {
-        #expect(FindRow.whereAndWhen(Self.item()).hasPrefix("Pasadena · "))
-        #expect(FindRow.whereAndWhen(Self.item(place: FindPolicy.secretSpot)).hasPrefix("At a secret spot · "))
+        #expect(FindRow.whereAndWhen(Self.item()).hasPrefix("Pasadena, "))
+        #expect(FindRow.whereAndWhen(Self.item(place: FindPolicy.secretSpot)).hasPrefix("At a secret spot, "))
         #expect(!FindRow.whereAndWhen(Self.item(place: nil)).contains("·"))
     }
 
@@ -215,8 +215,8 @@ extension FindRowTests {
         #expect(FindRow.isLed(item))
         #expect(FindRow.headline(item) == "Maya Ortiz sewed a new patch")
         #expect(FindRow.headline(Self.item(newPatch: true, mine: true)) == "You sewed a new patch")
-        #expect(FindRow.howAndWhere(item).hasPrefix("Heard · Pasadena · "))
-        #expect(FindRow.spoken(item).hasPrefix("Black Phoebe. Heard by Maya Ortiz. Pasadena · "))
+        #expect(FindRow.howAndWhere(item).hasPrefix("Heard in Pasadena, "))
+        #expect(FindRow.spoken(item).hasPrefix("Black Phoebe. Heard by Maya Ortiz. Pasadena, "))
         #expect(FindRow.spoken(item).hasSuffix(". New patch. First for the Guild"))
     }
 
@@ -224,12 +224,12 @@ extension FindRowTests {
     func seenAgain() {
         let item = Self.item(first: true)
         #expect(!FindRow.isLed(item))
-        #expect(FindRow.seenAgainLine(item).hasPrefix("Maya Ortiz heard a Black Phoebe again · Pasadena · "))
+        #expect(FindRow.seenAgainLine(item).hasPrefix("Maya Ortiz heard a Black Phoebe again in Pasadena, "))
         var seen = Self.item(mine: true, place: nil)
         seen.method = .seen
         seen.commonName = "Acorn Woodpecker"
-        #expect(FindRow.seenAgainLine(seen).hasPrefix("You saw an Acorn Woodpecker again · "))
-        #expect(!FindRow.seenAgainLine(seen).contains("· ·"))
+        #expect(FindRow.seenAgainLine(seen).hasPrefix("You saw an Acorn Woodpecker again, "))
+        #expect(!FindRow.seenAgainLine(seen).contains(", ,"))
         #expect(FindRow.spoken(item).contains("Heard again by Maya Ortiz"))
         #expect(!FindRow.spoken(item).contains("New patch"))
         #expect(FindRow.marks(item) == ["First for the Guild"])
@@ -307,3 +307,246 @@ struct CircleFeedStoreTests {
     }
 }
 #endif
+
+
+// Issue #150: Guild screens draw what the store last had at once. The list, each Guild's detail and goals and each feed's
+// first page outlive a launch in a small file, until sign-out or account deletion.
+@Suite("Last-known Guilds on disk")
+struct CircleCacheTests {
+    private func file() -> URL {
+        URL.temporaryDirectory.appending(path: "circle-cache-\(UUID().uuidString)/last-known.json")
+    }
+
+    /// A store over the seeded fake that has read Sunday Group's page, with its cache written.
+    private func filled(at url: URL, client: FakeCircleClient = FakeCircleClient(seeded: true)) async throws -> (CircleStore, CircleSummary) {
+        let cache = CircleCache(fileURL: url)
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client, cache: cache)
+        await store.refresh()
+        let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
+        try await store.loadDetail(id: sunday.id)
+        await store.loadGoals(circleID: sunday.id)
+        await store.loadFeed(circleID: sunday.id)
+        // Past the store's own delayed write, then its last write on disk.
+        try await Task.sleep(for: .milliseconds(300))
+        store.writeCache()
+        cache.finishWrites()
+        return (store, sunday)
+    }
+
+    private func offlineStore(at url: URL, signedIn: Bool = true) -> CircleStore {
+        CircleStore(account: FakeAccount.session(signedIn: signedIn), client: FakeCircleClient(seeded: false, offline: true), cache: CircleCache(fileURL: url))
+    }
+
+    @Test("the next launch draws the list, the Guild and its finds before any answer, and refreshing offline keeps them")
+    func drawsAtOnce() async throws {
+        let url = file()
+        let (first, sunday) = try await filled(at: url)
+
+        let next = offlineStore(at: url)
+        #expect(next.circles == first.circles, "no answer asked for yet")
+        #expect(next.listState == .loaded)
+        #expect(next.details[sunday.id] == first.details[sunday.id])
+        let feed = try #require(next.feeds[sunday.id])
+        #expect(feed.isLoaded)
+        #expect(feed.items.map(\.id) == first.feeds[sunday.id]?.items.map(\.id))
+        #expect(feed.items.map(\.commonName) == first.feeds[sunday.id]?.items.map(\.commonName))
+        #expect(feed.items.map(\.reactions) == first.feeds[sunday.id]?.items.map(\.reactions))
+        #expect(feed.items.map(\.newPatch) == first.feeds[sunday.id]?.items.map(\.newPatch))
+        #expect(feed.items.map(\.place) == first.feeds[sunday.id]?.items.map(\.place), "a secret spot stays one")
+        #expect(next.goals[sunday.id]?.map(\.title) == first.goals[sunday.id]?.map(\.title))
+
+        await next.refresh()
+        await next.loadFeed(circleID: sunday.id)
+        #expect(next.circles == first.circles, "offline keeps what's drawn")
+        #expect(next.feeds[sunday.id]?.items.count == feed.items.count)
+    }
+
+    @Test("what's drawn from the cache is still read again, in place")
+    func refreshesInPlace() async throws {
+        let url = file()
+        let (_, sunday) = try await filled(at: url)
+        let next = CircleStore(account: FakeAccount.session(signedIn: true), client: FakeCircleClient(seeded: true), cache: CircleCache(fileURL: url))
+        #expect(next.needsDetail(sunday.id))
+        #expect(next.needsGoals(sunday.id))
+        try await next.loadDetail(id: sunday.id)
+        await next.loadGoals(circleID: sunday.id)
+        #expect(!next.needsDetail(sunday.id))
+        #expect(!next.needsGoals(sunday.id))
+    }
+
+    @Test("only the first page of a feed is kept")
+    func firstPageOnly() async throws {
+        let url = file()
+        let client = FakeCircleClient(seeded: false)
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client, cache: CircleCache(fileURL: url))
+        let circle = try await store.create(named: "Big Day")
+        for minute in 0..<25 {
+            var input = FindPolicyTests.input()
+            input.confirmedAt = FindPolicyTests.confirmedAt.addingTimeInterval(Double(minute) * 60)
+            try await client.putFind(FindPolicy.find(for: input, sharing: .automatic)!, sightingID: UUID(), accessToken: "t")
+        }
+        await store.loadFeed(circleID: circle.circle.id)
+        let firstCursor = store.feeds[circle.circle.id]?.nextCursor
+        await store.loadMoreFeed(circleID: circle.circle.id)
+        #expect(store.feeds[circle.circle.id]?.items.count == 25)
+        let kept = try #require(store.snapshot.feeds[circle.circle.id])
+        #expect(kept.items.count == 20)
+        #expect(kept.nextCursor == firstCursor)
+    }
+
+    @Test("sign-out removes it, and an answer on its way then doesn't bring it back")
+    func removedOnClear() async throws {
+        let url = file()
+        let client = FakeCircleClient(seeded: true)
+        let (store, sunday) = try await filled(at: url, client: client)
+        #expect(FileManager.default.fileExists(atPath: url.path(percentEncoded: false)))
+
+        client.latency = .milliseconds(100)
+        async let late: Void = store.loadFeed(circleID: sunday.id)
+        try await Task.sleep(for: .milliseconds(10))
+        store.clear()
+        #expect(!FileManager.default.fileExists(atPath: url.path(percentEncoded: false)))
+        await late
+        try await Task.sleep(for: .milliseconds(350))
+        #expect(store.feeds.isEmpty, "the late answer is dropped")
+        #expect(!FileManager.default.fileExists(atPath: url.path(percentEncoded: false)))
+    }
+
+    @Test("a cache found while signed out goes without being read")
+    func signedOutAtLaunch() async throws {
+        let url = file()
+        _ = try await filled(at: url)
+        let store = offlineStore(at: url, signedIn: false)
+        #expect(store.circles.isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: url.path(percentEncoded: false)))
+    }
+
+    @Test("a file it can't read is no cache at all")
+    func unreadable() throws {
+        let url = file()
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("not json".utf8).write(to: url)
+        let store = offlineStore(at: url)
+        #expect(store.circles.isEmpty)
+        #expect(store.listState == .idle)
+        #expect(!FileManager.default.fileExists(atPath: url.path(percentEncoded: false)))
+    }
+
+    @Test("a Guild left, and a blocked friend's finds, leave what's kept")
+    func leavesWithThem() async throws {
+        let url = file()
+        let (store, sunday) = try await filled(at: url)
+        let friend = try #require(store.feeds[sunday.id]?.items.first { !$0.isMine }?.owner)
+        try await store.setBlocked(true, accountID: friend.id, name: friend.displayName)
+        #expect(store.snapshot.feeds[sunday.id]?.items.contains { $0.owner.id == friend.id } == false)
+
+        let family = try #require(store.circles.first { $0.name == "Family" })
+        try await store.leave(circleID: family.id)
+        #expect(!store.snapshot.circles.contains { $0.id == family.id })
+        #expect(store.snapshot.feeds[family.id] == nil)
+    }
+
+    @Test("a page on its way when a friend is blocked doesn't bring their finds back")
+    func aPageOnItsWay() async throws {
+        let url = file()
+        let client = FakeCircleClient(seeded: true)
+        let (store, sunday) = try await filled(at: url, client: client)
+        let friend = try #require(store.feeds[sunday.id]?.items.first { !$0.isMine }?.owner)
+        let shownBefore = store.feeds[sunday.id]?.items.count ?? 0
+        client.latency = .milliseconds(200)
+        async let late: Void = store.loadFeed(circleID: sunday.id)
+        try await Task.sleep(for: .milliseconds(20))
+        try await store.setBlocked(true, accountID: friend.id, name: friend.displayName)
+        await late
+        let items = try #require(store.feeds[sunday.id]?.items)
+        #expect(!items.contains { $0.owner.id == friend.id })
+        #expect(items.count < shownBefore)
+        #expect(store.snapshot.feeds[sunday.id]?.items.count == items.count, "the first page's count stays true")
+    }
+
+    @Test("a Guild the birder is no longer in isn't kept, though the store read it")
+    func goneFromTheList() async throws {
+        let url = file()
+        let client = FakeCircleClient(seeded: true)
+        let (store, sunday) = try await filled(at: url, client: client)
+        try await client.leave(circleID: sunday.id, accessToken: "t")
+        await store.refresh()
+        #expect(store.snapshot.feeds[sunday.id] == nil)
+        #expect(store.snapshot.details[sunday.id] == nil)
+        #expect(store.snapshot.goals[sunday.id] == nil)
+    }
+
+    @Test("a block made on another device takes the friend's finds out of what was restored, and off the disk")
+    func blockedElsewhere() async throws {
+        let url = file()
+        let client = FakeCircleClient(seeded: true)
+        let (first, sunday) = try await filled(at: url, client: client)
+        let friend = try #require(first.feeds[sunday.id]?.items.first { !$0.isMine }?.owner)
+
+        let elsewhere = CircleCache(fileURL: url)
+        let next = CircleStore(account: FakeAccount.session(signedIn: true), client: client, cache: elsewhere)
+        #expect(next.feeds[sunday.id]?.items.contains { $0.owner.id == friend.id } == true, "restored as it was")
+        try await client.setBlocked(true, accountID: friend.id, accessToken: "t")
+        await next.refresh()
+        #expect(next.feeds[sunday.id]?.items.contains { $0.owner.id == friend.id } == false)
+        next.writeCache()
+        elsewhere.finishWrites()
+        let again = CircleStore(account: FakeAccount.session(signedIn: true), client: client, cache: CircleCache(fileURL: url))
+        #expect(again.feeds[sunday.id]?.items.isEmpty == false)
+        #expect(again.feeds[sunday.id]?.items.contains { $0.owner.id == friend.id } == false, "nor on disk")
+    }
+
+    @Test("blocking a friend drops what was last read of their birds")
+    func blockDropsCompare() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        try await store.compare(friendID: "maya")
+        #expect(store.friendBirds["maya"] != nil)
+        try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
+        #expect(store.friendBirds["maya"] == nil)
+    }
+
+    @Test("Compare answering not found drops what was last read, as for a block made elsewhere")
+    func notFoundDropsCompare() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        try await store.compare(friendID: "maya")
+        try await client.setBlocked(true, accountID: "maya", accessToken: "t")
+        await #expect(throws: CircleError.notFound) { try await store.compare(friendID: "maya") }
+        #expect(store.friendBirds["maya"] == nil)
+    }
+
+    @Test("a block out of date here, lifted on another device, doesn't strand Compare: the server's answer is kept")
+    func staleBlockKeepsTheAnswer() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
+        try await client.setBlocked(false, accountID: "maya", accessToken: "t")
+        #expect(store.blocked.contains { $0.id == "maya" }, "still listed here")
+
+        let birds = try await store.compare(friendID: "maya")
+        #expect(!birds.species.isEmpty)
+        #expect(store.friendBirds["maya"] == birds, "there for the screen to draw")
+    }
+
+    @Test("a block landing while Compare's answer is on its way drops the answer, and says so")
+    func blockMidCallDropsTheAnswer() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        client.compareAnswerLatency = .milliseconds(300)
+        let answer = Task { try await store.compare(friendID: "maya") }
+        try await Task.sleep(for: .milliseconds(50))
+        try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
+        await #expect(throws: CircleError.notFound) { try await answer.value }
+        #expect(store.friendBirds["maya"] == nil)
+    }
+
+    @Test("a friend's side of Compare is there the next time it's opened")
+    func compareIsKept() async throws {
+        let (store, _) = try await filled(at: file())
+        let birds = try await store.compare(friendID: "maya")
+        #expect(store.friendBirds["maya"] == birds)
+        store.clear()
+        #expect(store.friendBirds.isEmpty)
+    }
+}

@@ -1,7 +1,6 @@
 import Album
 import Identification
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The calm review after a run ends (issue #28): every species heard, what was added, and Review for the rest. In
@@ -10,9 +9,8 @@ struct RunReviewSheet: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openCollection) private var openCollection
-    @Environment(PackLibrary.self) private var library
     @State private var reviewing: Candidate?
-    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
 
     var body: some View {
         NavigationStack {
@@ -23,12 +21,12 @@ struct RunReviewSheet: View {
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 4)
                     if let startedAt = run.startedAt {
-                        Text("Started \(startedAt.formatted(date: .omitted, time: .shortened)) · listened for \(ElapsedTime.text(from: startedAt, to: .now))")
+                        Text("Started \(startedAt.formatted(date: .omitted, time: .shortened)), listened for \(ElapsedTime.text(from: startedAt, to: .now))")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 4)
                     }
-                    let collection = library.collection(of: sightings)
+                    let collection = collectionStore.collection
                     VStack(spacing: 0) {
                         ForEach(run.orderedCandidates) { candidate in
                             CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), startedAt: run.startedAt, seenHere: collection.count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)) {

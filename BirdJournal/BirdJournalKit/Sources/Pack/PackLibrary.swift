@@ -304,10 +304,10 @@ public final class PackLibrary {
     static func message(for error: any Error) -> String {
         switch error {
         case PackInstallError.checksumMismatch: "The download's checksum did not match the index, so it was not installed. Try again."
-        case PackInstallError.wrongPack(let expected, let actual): "The download holds the pack \(actual), not \(expected)."
-        case PackDownloadError.httpStatus(let code): "The pack server answered \(code). Try again later."
-        case let error as ZipError: "The download is not a pack zip (\(error))."
-        case let error as PackError: "The download is not a readable pack (\(error))."
+        case PackInstallError.wrongPack(let expected, let actual): "The download holds \(actual), not \(expected)."
+        case PackDownloadError.httpStatus(let code): "The download server answered \(code). Try again later."
+        case let error as ZipError: "The download is not a field guide (\(error))."
+        case let error as PackError: "The download is not a readable field guide (\(error))."
         case let error as URLError:
             switch error.code {
             case .notConnectedToInternet, .internationalRoamingOff, .dataNotAllowed:
@@ -317,7 +317,7 @@ public final class PackLibrary {
             case .timedOut:
                 "The download timed out. Try again."
             case .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed:
-                "The pack server could not be reached. Try again later."
+                "The download server could not be reached. Try again later."
             default:
                 error.localizedDescription
             }

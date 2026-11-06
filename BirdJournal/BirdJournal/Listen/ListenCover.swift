@@ -1,6 +1,5 @@
 import Album
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The local set the Listen tab invites the birder to (issue #117, design guide page 11): the set of their newest card,
@@ -10,7 +9,7 @@ struct LocalSet {
     let progress: SetProgress
 
     @MainActor
-    static func find(library: PackLibrary, collection: CardCollection, newest: Sighting?) -> LocalSet? {
+    static func find(library: PackLibrary, collection: CardCollection, newest: CardCollection.Entry?) -> LocalSet? {
         let sets = library.sets
         let preferred = newest.flatMap { collection.placement(of: $0.identifier)?.setID }
         guard let set = sets.first(where: { $0.id == preferred })
@@ -20,10 +19,10 @@ struct LocalSet {
         return LocalSet(set: set, progress: collection.progress(of: set.id))
     }
 
-    /// "Los Angeles · Citrus edition".
-    var title: String { "\(set.name) · \(set.edition.name)" }
-    /// "18 of 160 species collected".
-    var progressText: String { "\(progress.collected) of \(progress.total) species collected" }
+    /// "Los Angeles, Citrus edition".
+    var title: String { "\(set.name), \(set.edition.name)" }
+    /// "18 of 160 sewn".
+    var progressText: String { progress.sewnText }
 }
 
 /// The calm ready state's atmosphere (page 11): the local set's cover (issue #114) under the status bar, fading into the
@@ -143,14 +142,12 @@ struct LocalSetSection: View {
     @Environment(PackLibrary.self) private var library
     let local: LocalSet
     let collection: CardCollection
-    let sightings: [Sighting]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     heading
-                    Spacer(minLength: 8)
                     explore
                 }
                 VStack(alignment: .leading, spacing: 6) {
@@ -202,10 +199,7 @@ struct LocalSetSection: View {
     }
 
     private var heading: some View {
-        Text("Your local set")
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .accessibilityAddTraits(.isHeader)
+        SectionTitle("Your local set", top: 0)
     }
 
     private var explore: some View {
@@ -223,10 +217,10 @@ struct LocalSetSection: View {
     }
 
     /// The newest cards of the set's species, one per species, at most two.
-    private var latestCards: [Sighting] {
+    private var latestCards: [CardCollection.Entry] {
         var seen = Set<String>()
-        var cards: [Sighting] = []
-        for sighting in sightings where collection.placement(of: sighting.identifier)?.setID == local.set.id {
+        var cards: [CardCollection.Entry] = []
+        for sighting in collection.cards where collection.placement(of: sighting.identifier)?.setID == local.set.id {
             guard seen.insert(sighting.scientificName).inserted else { continue }
             cards.append(sighting)
             if cards.count == (typeSize.isAccessibilitySize ? 1 : 2) { break }

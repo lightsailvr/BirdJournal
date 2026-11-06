@@ -3,7 +3,6 @@ import CoreTransferable
 import ImageIO
 import OSLog
 import Pack
-import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -22,7 +21,7 @@ struct ShareCardView: View {
     @Environment(AccountSession.self) private var account
     @Environment(CircleStore.self) private var circles
     @Environment(FindOutbox.self) private var outbox
-    @Query private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     let sighting: Sighting
     @State private var choices = FindPolicy.Choices()
     @State private var chosenCircles: Set<String> = []
@@ -46,7 +45,7 @@ struct ShareCardView: View {
 
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "share")
 
-    private var collection: CardCollection { library.collection(of: sightings) }
+    private var collection: CardCollection { collectionStore.collection }
     /// Whether this sighting sewed its patch.
     private var sewedPatch: Bool { collection.sewedItsPatch(sighting.identifier) }
     private var input: FindPolicy.Input {
@@ -111,11 +110,7 @@ struct ShareCardView: View {
                         .accessibilityIdentifier("share-preview")
                         .padding(.top, 4)
 
-                    Text("Include")
-                        .font(JournalFont.section)
-                        .foregroundStyle(Color.ink)
-                        .padding(.top, JournalLayout.sectionGap)
-                        .accessibilityAddTraits(.isHeader)
+                    SectionTitle("Include")
                     VStack(spacing: 0) {
                         Toggle(isOn: $choices.includeNote) { Label("Your note", systemImage: "note.text") }
                             .padding(.vertical, 10)
@@ -205,11 +200,7 @@ struct ShareCardView: View {
     // The circles.
 
     @ViewBuilder private var circlesSection: some View {
-        Text("Your Guilds")
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .padding(.top, JournalLayout.sectionGap)
-            .accessibilityAddTraits(.isHeader)
+        SectionTitle("Your Guilds")
         if !account.isSignedIn {
             Text("Sign in under Settings → Account to share patches with your Guilds.")
                 .font(JournalFont.supporting)

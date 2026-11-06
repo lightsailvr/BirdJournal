@@ -22,14 +22,12 @@ struct CircleFeedSection: View {
         Section {
             if feed.items.isEmpty {
                 if feed.isLoaded {
-                    Text("No finds yet. Birds your Guild adds while sharing show here.")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
+                    StateNotice("No finds yet", message: "Birds your Guild adds while sharing show here.")
                         .accessibilityIdentifier("feedEmpty")
                 } else if let error = feed.error {
                     Text(error).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
                 } else {
-                    ProgressView().frame(maxWidth: .infinity)
+                    GuildPlaceholder()
                 }
             }
             ForEach(feed.items) { item in
@@ -130,9 +128,9 @@ struct ReactionBar: View {
         }
     }
 
-    /// "Lovely find 2 · Let's go together 1".
+    /// "Lovely find 2, Let's go together 1".
     static func summary(_ counts: [ReactionCount]) -> String {
-        counts.map { "\($0.kind.title) \($0.count)" }.joined(separator: " · ")
+        counts.map { "\($0.kind.title) \($0.count)" }.joined(separator: ", ")
     }
 
     private func buttons(titled: Bool, symbols: Bool) -> some View {
@@ -207,7 +205,7 @@ struct FindRow: View {
         }
     }
 
-    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago".
+    /// "Maya Ortiz heard a Black Phoebe again in Pasadena, 2 hours ago".
     private var seenAgain: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(Self.seenAgainLine(item)).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
@@ -227,7 +225,7 @@ struct FindRow: View {
         item.newPatch || item.card != nil
     }
 
-    /// "Black Phoebe. Heard by Maya Ortiz. Pasadena · 2 hours ago. New patch. First for the Guild.", then a shared card's
+    /// "Black Phoebe. Heard by Maya Ortiz. Pasadena, 2 hours ago. New patch. First for the Guild.", then a shared card's
     /// caption and note; a repeat says "Heard again by Maya Ortiz".
     static func spoken(_ item: FeedItem) -> String {
         var parts = [item.commonName, isLed(item) ? byline(item) : againByline(item), whereAndWhen(item)]
@@ -237,10 +235,6 @@ struct FindRow: View {
         if let note = item.card?.note { parts.append("Note: \(note)") }
         if item.card?.photo?.url != nil { parts.append("With their photo") }
         return parts.joined(separator: ". ")
-    }
-
-    static func initials(_ name: String) -> String {
-        name.split(whereSeparator: \.isWhitespace).prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
     }
 
     /// "Heard by Maya Ortiz", "Seen by you".
@@ -267,22 +261,31 @@ struct FindRow: View {
         "\(subject(item)) \(item.newPatch ? "sewed a new patch" : "shared a sighting")"
     }
 
-    /// "Heard · Pasadena · 2 hours ago".
+    /// "Heard in Pasadena, 2 hours ago", "Seen at a secret spot, 2 hours ago", or "Heard, 2 hours ago" without a place.
     static func howAndWhere(_ item: FeedItem) -> String {
-        "\(item.method.title) · \(whereAndWhen(item))"
+        "\(item.method.title)\(inPlace(item)), \(when(item))"
     }
 
-    /// "Maya Ortiz heard a Black Phoebe again · Pasadena · 2 hours ago", "You saw an Acorn Woodpecker again · 2 hours ago".
+    /// "Maya Ortiz heard a Black Phoebe again in Pasadena, 2 hours ago", "You saw an Acorn Woodpecker again, 2 hours ago".
     static func seenAgainLine(_ item: FeedItem) -> String {
         let verb = item.method == .seen ? "saw" : "heard"
-        return "\(subject(item)) \(verb) \(CardText.article(for: item.commonName)) \(item.commonName) again · \(whereAndWhen(item))"
+        return "\(subject(item)) \(verb) \(CardText.article(for: item.commonName)) \(item.commonName) again\(inPlace(item)), \(when(item))"
     }
 
-    /// "Pasadena · 2 hours ago", or the time alone without a place.
+    /// "Pasadena, 2 hours ago", or the time alone without a place.
     static func whereAndWhen(_ item: FeedItem) -> String {
-        let when = item.foundAt.formatted(.relative(presentation: .named, unitsStyle: .wide))
-        guard let place = item.place else { return when }
-        return "\(place == FindPolicy.secretSpot ? "At a secret spot" : place) · \(when)"
+        guard let place = item.place else { return when(item) }
+        return "\(place == FindPolicy.secretSpot ? "At a secret spot" : place), \(when(item))"
+    }
+
+    private static func when(_ item: FeedItem) -> String {
+        item.foundAt.formatted(.relative(presentation: .named, unitsStyle: .wide))
+    }
+
+    /// " in Pasadena", " at a secret spot", or nothing without a place.
+    private static func inPlace(_ item: FeedItem) -> String {
+        guard let place = item.place else { return "" }
+        return place == FindPolicy.secretSpot ? " at a secret spot" : " in \(place)"
     }
 
     /// The labels a find wears: First for the Guild, then Rare or Exceptional. Common and Uncommon aren't marked, and a new
