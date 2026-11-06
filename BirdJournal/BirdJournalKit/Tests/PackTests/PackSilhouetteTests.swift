@@ -15,6 +15,8 @@ struct PackSilhouetteTests {
         let installed = try PackSetTests.install("test-pack", root: root)
         let speciesID = try #require(installed.species.first?.id)
         try PackPatchTests.exec(installed.directory, """
+            CREATE TABLE patch (species_id TEXT PRIMARY KEY, file TEXT NOT NULL, layers_file TEXT NOT NULL, width INTEGER NOT NULL,
+                height INTEGER NOT NULL, ground TEXT NOT NULL, stitch_bounds TEXT NOT NULL, source_photo_ids TEXT NOT NULL, workflow_version TEXT NOT NULL);
             CREATE TABLE silhouette (species_id TEXT PRIMARY KEY, file TEXT NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL,
                 source_photo_ids TEXT NOT NULL, workflow_version TEXT NOT NULL);
             INSERT INTO silhouette VALUES ('\(speciesID)', 'silhouette/\(speciesID).png', 92, 180, '[2]', 'silhouette@1');

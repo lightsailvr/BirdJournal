@@ -75,12 +75,12 @@ struct PackImage: View {
 }
 
 /// The slot a reference photo gets (issue #150, F12): the photo's own shape, so a bird isn't cut off by a fixed one. A 3:2 slot
-/// filled from the middle took the head and feet off the portrait crops. Los Angeles's first photos run from 0.8 to 2.2 wide over tall,
+/// filled from the middle took the head and feet off the portrait crops. Los Angeles's first photos run from 3:4 to 2.2:1,
 /// and a slot this side of `tallest` shows them whole. Only the file's header is read, once, so the page lays out at the
 /// photo's size the first time, before the picture has decoded.
 enum PhotoSlot {
-    /// As tall as a slot gets on a phone's page, 4:5: anything narrower is cropped from the middle.
-    static let tallest: CGFloat = 4 / 5
+    /// As tall as a slot gets on a phone's page, 3:4: anything narrower is cropped from the middle.
+    static let tallest: CGFloat = 3 / 4
     static let widest: CGFloat = 2.4
     /// A photo whose size can't be read.
     static let standard: CGFloat = 3 / 2
