@@ -127,6 +127,55 @@ final class HuntUITests: XCTestCase {
         XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
     }
 
+    /// The list holds still around a touch (the maintainer, issue #150). These birds keep swapping places every second, so a
+    /// row that moved under the finger would end the press off its button, and nothing would be added.
+    @MainActor
+    func testAPressOnAListThatKeepsReSortingLandsOnTheBirdItWasAimedAtAndTheListMovesAgainAfter() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-fakeRunReorderEvery", "1",
+            "-fakeRunBirds", "Melanerpes formicivorus_Acorn Woodpecker,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Zenaida macroura_Mourning Dove",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let add = app.buttons["Add House Finch"]
+        XCTAssertTrue(add.waitForExistence(timeout: 60), "no Add; screen: \(app.debugDescription.prefix(3000))")
+
+        // It does keep moving when nobody's touching it.
+        let row = button(app, beginning: "Black Phoebe, ")
+        let first = row.frame.minY
+        let moved = NSPredicate { _, _ in row.frame.minY != first }
+        wait(for: [expectation(for: moved, evaluatedWith: NSObject())], timeout: 15)
+
+        // Longer than three re-sorts, with the finger down on one bird's Add.
+        add.press(forDuration: 3.5)
+        XCTAssertTrue(app.staticTexts["House Finch seen again, 3 times in Los Angeles"].waitForExistence(timeout: 5), "the press missed its bird; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Black Phoebe seen again' OR label BEGINSWITH 'Mourning Dove seen again'")).firstMatch.exists, "another bird took it")
+
+        // And it's let go: within a few seconds of the finger lifting, the list is moving again.
+        let held = row.frame.minY
+        let movedAgain = NSPredicate { _, _ in row.frame.minY != held }
+        wait(for: [expectation(for: movedAgain, evaluatedWith: NSObject())], timeout: 15)
+    }
+
+    /// The finger's watcher leaves the touch to the scroll view.
+    @MainActor
+    func testTheListStillScrolls() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES",
+            "-fakeRunBirds", "Melanerpes formicivorus_Acorn Woodpecker,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Zenaida macroura_Mourning Dove,Branta canadensis_Canada Goose,Calypte anna_Anna's Hummingbird,Junco hyemalis_Dark-eyed Junco",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+        let before = row.frame.minY
+        row.swipeUp()
+        let scrolled = NSPredicate { _, _ in row.frame.minY < before }
+        wait(for: [expectation(for: scrolled, evaluatedWith: NSObject())], timeout: 10)
+    }
+
     @MainActor
     func testASightingWithYourPhotoKeepsItAndOneWithoutShowsItsPatchAndTheRowsTakeTheirTaps() throws {
         let app = XCUIApplication()

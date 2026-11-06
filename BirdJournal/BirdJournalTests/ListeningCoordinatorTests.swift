@@ -189,6 +189,100 @@ struct ListeningCoordinatorTests {
         #expect(SightingRow.caption(.reference(url)) == "Reference photo", "a reference photo never looks like your own")
     }
 
+    // The maintainer, issue #150: the list holds still around a touch.
+
+    static let holdStart = Date(timeIntervalSince1970: 1_800_000_000)
+
+    @Test("the order holds from a finger coming down until 1.5 s after it lifts, then takes the coordinator's")
+    func theOrderHoldsAroundATouch() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        #expect(held.shown(["a", "b", "c"]) == ["a", "b", "c"], "nothing holds it: as the coordinator has it")
+
+        held.hold(.finger, showing: ["a", "b", "c"], at: start)
+        #expect(held.isHeld)
+        #expect(held.frozenAt == start)
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "a re-sort under the finger moves nothing")
+        held.tick(at: start.addingTimeInterval(600))
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "however long the finger stays down")
+
+        let lifted = start.addingTimeInterval(600)
+        held.letGo(.finger, at: lifted)
+        #expect(held.releaseAt == lifted.addingTimeInterval(1.5))
+        held.tick(at: lifted.addingTimeInterval(1.4))
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "still holding, for the next tap")
+        held.tick(at: lifted.addingTimeInterval(1.5))
+        #expect(!held.isHeld)
+        #expect(held.frozenAt == nil)
+        #expect(held.shown(["c", "a", "b"]) == ["c", "a", "b"], "then it moves")
+    }
+
+    @Test("another touch inside the 1.5 s holds the same order, and starts the wait again when it lifts")
+    func aSecondTouchKeepsTheHold() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.letGo(.finger, at: start.addingTimeInterval(1))
+        held.hold(.finger, showing: ["b", "a"], at: start.addingTimeInterval(2))
+        #expect(held.releaseAt == nil)
+        #expect(held.frozenAt == start)
+        held.tick(at: start.addingTimeInterval(10))
+        #expect(held.shown(["b", "a"]) == ["a", "b"], "the order it was holding, not the one it's been told since")
+        held.letGo(.finger, at: start.addingTimeInterval(11))
+        #expect(held.releaseAt == start.addingTimeInterval(12.5))
+    }
+
+    @Test("scrolling and VoiceOver's focus hold it like a finger, and it moves only when the last of them lets go")
+    func everyHolderHolds() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.hold(.scroll, showing: ["b", "a"], at: start)
+        held.letGo(.finger, at: start.addingTimeInterval(1))
+        #expect(held.releaseAt == nil, "a flick still decelerating")
+        held.hold(.voiceOverFocus("a"), showing: ["b", "a"], at: start.addingTimeInterval(2))
+        held.letGo(.scroll, at: start.addingTimeInterval(3))
+        #expect(held.releaseAt == nil, "focus is on a row")
+        held.tick(at: start.addingTimeInterval(100))
+        #expect(held.shown(["b", "a"]) == ["a", "b"])
+
+        // Focus moving from one row to the next: whichever order the two reports come in, the wait doesn't finish in between.
+        held.letGo(.voiceOverFocus("a"), at: start.addingTimeInterval(101))
+        held.hold(.voiceOverFocus("b"), showing: ["b", "a"], at: start.addingTimeInterval(101))
+        held.tick(at: start.addingTimeInterval(200))
+        #expect(held.shown(["b", "a"]) == ["a", "b"])
+        held.letGo(.voiceOverFocus("b"), at: start.addingTimeInterval(201))
+        held.tick(at: start.addingTimeInterval(203))
+        #expect(!held.isHeld)
+    }
+
+    @Test("a bird first heard during a hold goes at the bottom, where it moves no row, and stays in the place it was shown")
+    func aNewBirdGoesAtTheBottom() {
+        var held = HeldListOrder<String>()
+        held.hold(.finger, showing: ["a", "b"], at: Self.holdStart)
+        // The coordinator would put a calling bird first.
+        #expect(held.shown(["new", "b", "a"]) == ["a", "b", "new"])
+        held.take(["new", "b", "a"])
+        #expect(held.shown(["other", "new", "b", "a"]) == ["a", "b", "new", "other"])
+        held.take(["other", "new", "b", "a"])
+        #expect(held.shown(["new", "other", "a", "b"]) == ["a", "b", "new", "other"], "the two new birds don't swap under the thumb either")
+    }
+
+    @Test("a row's own contents aren't held: only the order is", arguments: [true, false])
+    func onlyTheOrderHolds(isHolding: Bool) {
+        var held = HeldListOrder<String>()
+        if isHolding { held.hold(.finger, showing: ["a", "b"], at: Self.holdStart) }
+        // The value holds identifiers: what a row shows is read from the coordinator on each draw, whichever way this goes.
+        #expect(Set(held.shown(["b", "a"])) == ["a", "b"])
+    }
+
+    @Test("a hold with nothing to hold doesn't outlive a run: a bird gone from the order goes from the list")
+    func aBirdGoneFromTheOrderGoes() {
+        var held = HeldListOrder<String>()
+        held.hold(.finger, showing: ["a", "b"], at: Self.holdStart)
+        #expect(held.shown(["b"]) == ["b"])
+    }
+
     @Test("the summary leads with new patches waiting")
     func summaryLeadsWithWhatsWaiting() {
         #expect(RunHunt(newPatches: 1, alreadyHave: 2).text == "1 new patch waiting and 2 you already have")
