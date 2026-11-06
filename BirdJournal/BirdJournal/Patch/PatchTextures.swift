@@ -102,7 +102,8 @@ enum PatchTextures {
         }
     }
 
-    private static let cache = NSCache<NSString, Loaded>()
+    /// Safe from the decoding queue, which looks here too: a screen of rows showing one patch asks for it once per row.
+    private nonisolated(unsafe) static let cache = NSCache<NSString, Loaded>()
 
     static func cached(_ art: PatchArt, size: Size) -> Loaded? {
         cache.object(forKey: key(art, size))
@@ -111,10 +112,15 @@ enum PatchTextures {
     static func load(_ art: PatchArt, size: Size) async -> Loaded? {
         if let hit = cached(art, size: size) { return hit }
         let colourPixels = size.colourPixels, layerPixels = size.layerPixels
+        let cacheKey = key(art, size)
         let flag = CancelFlag()
         let loaded: Loaded? = await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
                 decoding.addOperation {
+                    if let hit = cache.object(forKey: cacheKey) {
+                        continuation.resume(returning: hit)
+                        return
+                    }
                     guard !flag.isCancelled, let colour = decode(art.colour, maxPixels: colourPixels), let layers = decode(art.layers, maxPixels: layerPixels) else {
                         continuation.resume(returning: nil)
                         return
@@ -125,7 +131,7 @@ enum PatchTextures {
         } onCancel: {
             flag.cancel()
         }
-        if let loaded { cache.setObject(loaded, forKey: key(art, size)) }
+        if let loaded { cache.setObject(loaded, forKey: cacheKey) }
         return loaded
     }
 
@@ -160,7 +166,7 @@ enum PatchTextures {
         }
     }
 
-    private static func key(_ art: PatchArt, _ size: Size) -> NSString {
+    private nonisolated static func key(_ art: PatchArt, _ size: Size) -> NSString {
         "\(art.colour.path(percentEncoded: false))|\(size.colourPixels)" as NSString
     }
 

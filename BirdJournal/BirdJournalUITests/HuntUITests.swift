@@ -37,8 +37,8 @@ final class HuntUITests: XCTestCase {
         let app = try launchRun()
         let sew = app.buttons["Sew it, Acorn Woodpecker"]
         XCTAssertTrue(sew.waitForExistence(timeout: 60), "no Sew it; screen: \(app.debugDescription.prefix(3000))")
-        // The blackbird has no patch in Los Angeles either: its review can still sew one.
-        XCTAssertTrue(app.staticTexts["2 new patches waiting and 2 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        // The seeded blackbird is on no set's list, so here too it joins its Uncharted patch.
+        XCTAssertTrue(app.staticTexts["1 new patch waiting and 3 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["Possible matches. Add the birds you recognize."].exists)
         XCTAssertEqual(button(app, beginning: "Acorn Woodpecker, ").label, "Acorn Woodpecker, calling now, new patch waiting")
         XCTAssertTrue(app.buttons["Add House Finch"].exists)
@@ -70,9 +70,9 @@ final class HuntUITests: XCTestCase {
         undo.tap()
         XCTAssertFalse(reveal.waitForExistence(timeout: 2), "Undo closes the reveal")
         XCTAssertTrue(sew.waitForExistence(timeout: 10), "the bird is new again; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["2 new patches waiting and 2 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["1 new patch waiting and 3 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
 
-        // Sewn and kept, the row shows it: the patch and a check, and one fewer waiting.
+        // Sewn and kept, the row shows it: the patch and a check, and none waiting.
         sew.tap()
         XCTAssertTrue(stitching.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         stitching.tap()
@@ -81,7 +81,7 @@ final class HuntUITests: XCTestCase {
         keepListening.tap()
         XCTAssertTrue(app.buttons["Added. Review Acorn Woodpecker"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(button(app, beginning: "Acorn Woodpecker, ").label, "Acorn Woodpecker, added, you have this patch, seen once")
-        XCTAssertTrue(app.staticTexts["1 new patch waiting and 3 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["4 birds you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
