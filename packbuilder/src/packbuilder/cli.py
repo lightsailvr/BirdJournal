@@ -4,6 +4,9 @@
 `packbuilder cover <definition-dir>`: paints the set's cover candidates the cover lock lacks and draws their contact sheet (`covers.py`).
 `packbuilder cover-review <definition-dir> --approve <n> | --reject`: records the maintainer's choice of cover in cover.lock.json.
 `packbuilder bundle-covers`: writes every approved cover into the app's `Pack` target (`covers.py`, issue #150).
+`packbuilder mascot`: paints the mascot patches `art/mascot/mascot.lock.json` lacks and draws their contact sheets (`mascot_art.py`).
+`packbuilder mascot-review --approve <n> ... | --reject <bird> ...`: records the maintainer's picks of mascot patch.
+`packbuilder mascot-assets`: makes the app's icons, thumbnails and perched finch from the approved mascot patches.
 `packbuilder art-references <definition-dir> --pack <pack-dir> --out <dir>`: exports the art worker's reference birds (`art_references.py`).
 `packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
 `packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore, and of the story titles on
@@ -149,6 +152,21 @@ def main(argv: list[str] | None = None) -> int:
     calibrate = commands.add_parser("calibrate-rarity", help="write the rarity label thresholds from the geomodel over every pack definition")
     calibrate.add_argument("--version", type=int, required=True, help="the calibration version; bump it for any new calibration")
     calibrate.add_argument("--out", type=Path, help="file to write (default: the Identification module's RarityCalibration.json)")
+    mascot = commands.add_parser("mascot", help="paint the mascot patches art/mascot/mascot.lock.json lacks and draw their contact sheets (issue #150)")
+    mascot.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
+    mascot.add_argument("--cache", type=Path, default=_mascot_cache(), help="where the references and candidates live (default: packbuilder/cache/mascot)")
+    mascot.add_argument("--lock", type=Path, help="the lock (default art/mascot/mascot.lock.json)")
+    mascot.add_argument("--sheets", type=Path, help="folder for the contact sheets (default build/mascot)")
+    mascot.add_argument("--only", action="append", default=[], metavar="BIRD", help="only these birds (repeat), for a trial")
+    mascot_review = commands.add_parser("mascot-review", help="record the maintainer's picks of mascot patch; approving writes art/mascot/approved/<bird>.png")
+    mascot_review.add_argument("--approve", action="append", type=int, default=[], metavar="N", help="approve candidate N, numbered as on the contact sheets, one per bird (repeat)")
+    mascot_review.add_argument("--reject", action="append", default=[], metavar="BIRD", help="reject a bird's round: the next `mascot` run paints a new one (repeat)")
+    mascot_review.add_argument("--why", help="the reason, kept in the lock with --reject")
+    mascot_review.add_argument("--cache", type=Path, default=_mascot_cache(), help="where the candidates live (default: packbuilder/cache/mascot)")
+    mascot_review.add_argument("--lock", type=Path, help="the lock (default art/mascot/mascot.lock.json)")
+    mascot_review.add_argument("--sheets", type=Path, help="folder for the redrawn contact sheets (default build/mascot)")
+    mascot_assets = commands.add_parser("mascot-assets", help="make the app's icons, thumbnails and perched finch from art/mascot/approved/")
+    mascot_assets.add_argument("--lock", type=Path, help="the lock (default art/mascot/mascot.lock.json)")
     args = parser.parse_args(argv)
     if args.command == "draft":
         return _draft(args)
@@ -170,6 +188,12 @@ def main(argv: list[str] | None = None) -> int:
         return _patch_review(args)
     if args.command == "cover":
         return _cover(args)
+    if args.command == "mascot":
+        return _mascot(args)
+    if args.command == "mascot-review":
+        return _mascot_review(args)
+    if args.command == "mascot-assets":
+        return _mascot_assets(args)
     if args.command == "cover-review":
         return _cover_review(args)
     if args.command == "bundle-covers":
@@ -420,6 +444,53 @@ def _cover_review(args: argparse.Namespace) -> int:
     sheet = painter.sheet(args.sheets or _art_sheets_path(definition.id), definition.set.edition.name if definition.set else "")
     chosen = f", candidate {lock.cover['chosen']}; thumbnail {lock.thumbnail_path}" if lock.cover["review"] == "approved" else ""
     print(f"{lock.path}: {lock.cover['review']}{chosen}; contact sheet {sheet}", file=sys.stderr)
+    return 0
+
+
+def _mascot_cache() -> Path:
+    return Path(__file__).resolve().parents[2] / "cache" / "mascot"
+
+
+def _mascot_sheets() -> Path:
+    return Path(__file__).resolve().parents[3] / "build" / "mascot"
+
+
+def _mascot(args: argparse.Namespace) -> int:
+    from packbuilder.comfy import ComfyClient
+    from packbuilder.mascot_art import LOCK_PATH, MascotArtist, MascotLock
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    artist = MascotArtist(ComfyClient(args.comfy), MascotLock.load(args.lock or LOCK_PATH), args.cache)
+    artist.paint(args.only)
+    sheets = artist.sheets(args.sheets or _mascot_sheets())
+    print(f"mascot: {artist.painted} painted; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)
+    return 0
+
+
+def _mascot_review(args: argparse.Namespace) -> int:
+    from packbuilder.mascot_art import LOCK_PATH, MascotLock, draw_sheets, review
+
+    lock = MascotLock.load(args.lock or LOCK_PATH)
+    try:
+        review(lock, args.cache, approve=args.approve, reject=args.reject, why=args.why)
+    except ValueError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    sheets = draw_sheets(lock, args.cache, args.sheets or _mascot_sheets())
+    states = ", ".join(f"{bird}: {entry['review']}" + (f" ({entry['chosen']})" if entry.get("chosen") else "") for bird, entry in lock.birds.items())
+    print(f"{lock.path}: {states}; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)
+    return 0
+
+
+def _mascot_assets(args: argparse.Namespace) -> int:
+    from packbuilder.mascot_art import LOCK_PATH, MascotLock, StaleApproval, write_app_assets
+
+    try:
+        written = write_app_assets(MascotLock.load(args.lock or LOCK_PATH))
+    except StaleApproval as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    print(f"mascot-assets: {len(written)} files written under BirdJournal/", file=sys.stderr)
     return 0
 
 

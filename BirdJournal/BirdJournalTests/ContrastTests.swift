@@ -399,6 +399,22 @@ struct EditionTintTests {
         }
     }
 
+    @Test("Sew it is filled with the edition's tint, rendered, and its words clear 4.5:1 on that fill", arguments: tints)
+    func sewIt(_ tint: String) async throws {
+        let button = Button("Sew it") {}
+            .buttonStyle(.journalRowPill(isFilled: true))
+            .tint(Color(tint))
+        for (name, traits) in DesignTokenTests.variants {
+            let image = try await TokenPairingTests.renderImage(ZStack { Color.paper; button }, traits: traits, size: 120)
+            // In the pill's padding, left of its words.
+            let fill = try #require(TokenPairingTests.pixel(image, at: CGPoint(x: 60 - 32, y: 60)))
+            let expected = try DesignTokenTests.color(tint, traits)
+            #expect(TokenPairingTests.distance(fill, expected) < 0.03, "\(tint), \(name): drew \(TokenPairingTests.hex(fill)), the tint is \(TokenPairingTests.hex(expected))")
+            let words = DesignTokenTests.contrast(try DesignTokenTests.color("JournalMossText", traits), fill)
+            #expect(words >= 4.5, "Sew it on \(tint), \(name): \(String(format: "%.2f", words)):1")
+        }
+    }
+
     @Test("on felt and linen, against the texture's worst pixel", arguments: tints + ["ThreadTogether"])
     func onTheBoard(_ tint: String) async throws {
         for (name, traits) in DesignTokenTests.variants {
