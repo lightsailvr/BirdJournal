@@ -79,7 +79,8 @@ struct ActiveListeningView: View {
                                     run.reviewing = candidate
                                 }
                                 .padding(.horizontal, 10)
-                                .id("run-row-\(position)")
+                                // Keyed to the bird: an id with the row's position in it would make new rows at each re-sort.
+                                .id("run-row-\(candidate.species.scientificName)")
                                 .background(isCalling ? Color.raised : Color.clear, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                                 .padding(.horizontal, -10)
                                 RowRule()

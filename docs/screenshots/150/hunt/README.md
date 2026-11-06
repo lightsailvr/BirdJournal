@@ -5,8 +5,8 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 | Pick | The change | Shots |
 |---|---|---|
 | L1 | The summary leads with new patches waiting; three looks on a run's rows; quiet Stop | `sheets/run-against-reference`, `run-dark`, `run-light`, `run-ax5`, `run-row-ax5`, `sheets/contrast` |
-| L2 | Sew it and Add on rows, with the review's reveal and Undo; a tap on the row opens the review; a bird no pack describes keeps Review | `sheets/rows-after-add`: `run-added-dark`, `run-no-pack-dark`, `run-after-stop-dark`, `review-dark`; `review-light`; `HuntUITests` for the taps |
-| V2 | Your patch on rows: species, sightings without a photo, sets, the Atlas, a run | `sheets/grammar-dark`, `sheets/grammar-light`, `species-*`, `sightings-*`, `set-*` |
+| L2 | Sew it and Add on rows, with the review's reveal and Undo; a tap on the row opens the review; a bird no pack describes keeps Review | `sheets/rows-after-add`: `run-added-dark`, `run-toast-dark`, `run-no-pack-dark`, `run-after-stop-dark`, `review-dark`; `review-light`; `HuntUITests` for the taps |
+| V2 | Your patch on rows: species, sightings without a photo, sets, the Atlas, a run | `sheets/grammar-dark`, `sheets/grammar-light`, `species-*`, `sightings-*`, `set-*`, `atlas-search-dark` |
 | A2 | A found bird's profile leads with your patch and its story on card stock | `sheets/profile`: `profile-dark`, `profile-light`, `profile-gallery-dark` (two patches, one with no painting on this phone), `profile-none-dark` (no sighting, as before); `profile-ax5` |
 
 ## Where it differs from the reference
@@ -22,16 +22,15 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 
 ## Decodes under a moving light
 
-`decode-counts.txt`, from `capture.sh`: each surface after 12 s, with the light sweeping (`-patchLightSweep YES`), counting the last 8 s of the app's log. A thumbnail that had stayed a lazy provider would log AV1 lines at about the frame rate per patch, as #134 found.
+`decode-counts.txt`, from `capture.sh`: each surface with the light sweeping (`-patchLightSweep YES`), counting two 8 s windows of the app's log, then the patch decodes in the last minute. A thumbnail that had stayed a lazy provider would log AV1 lines at about the frame rate for every patch on screen, as #134 found. `count-*.jpg` shows what was on screen during each count.
 
 ```
-A run, three rows holding still: 8 s after settling: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
-A run over the clip, with 30 patches sewn: 8 s after settling: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
-Species rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
-Set rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+DECODE_COUNTS
 ```
 
-The first run has only seeded patches, decoded before the windows start, and no frame re-decodes any of them. An AV1 line per frame would be hundreds in 8 s.
+## The first count was wrong
+
+An earlier version of this table said "A run over the clip, with 30 patches sewn". `-seedBoard` seeded the pack's bare label then, and the first 30 birds are not the clip's, so those rows had no patches on them and the zero proved nothing. The seeds now write the label an add writes, and the real run uses `-seedLarge`, so nearly every bird it hears has a patch.
 
 ## Not proven here
 
