@@ -89,6 +89,7 @@ private struct ReadyToListenView: View {
         let collection = collectionStore.collection
         let local = LocalSet(setID: place.setID, library: library, collection: collection)
         GeometryReader { proxy in
+            ScrollViewReader { scroll in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     // The cover's words sit under the status bar, level with the gear on the navigation bar.
@@ -125,6 +126,7 @@ private struct ReadyToListenView: View {
 
                         if let local {
                             LocalSetSection(local: local, collection: collection)
+                                .id("local-set")
                         }
                     }
                     .padding(.horizontal, JournalLayout.margin)
@@ -134,6 +136,10 @@ private struct ReadyToListenView: View {
             }
             .ignoresSafeArea(edges: .top)
             .background(Color.paper)
+            #if DEBUG
+            .debugScroll(scroll, to: "local-set")
+            #endif
+            }
         }
         .navigationTitle("Listen")
         // The bar stays for the gear, on real glass over the painting (issue #150); the painting carries the screen's words.

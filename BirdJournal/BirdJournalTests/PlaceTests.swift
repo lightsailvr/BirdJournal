@@ -52,8 +52,8 @@ struct PlaceTests {
 
     @Test("an Uncharted newest sighting doesn't lose your last set")
     func unchartedNewest() {
-        let inSet = CardCollection.Entry(identifier: .init(UUID()), speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", location: Self.joshuaTree, confirmedAt: Date(timeIntervalSince1970: 1_000))
-        let uncharted = CardCollection.Entry(identifier: .init(UUID()), speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", location: Self.portland, confirmedAt: Date(timeIntervalSince1970: 2_000))
+        let inSet = CardCollection.Entry(identifier: UUID(), speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: Date(timeIntervalSince1970: 1_000), location: Self.joshuaTree)
+        let uncharted = CardCollection.Entry(identifier: UUID(), speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: Date(timeIntervalSince1970: 2_000), location: Self.portland)
         let collection = CardCollection([inSet, uncharted], sets: [Self.losAngeles, Self.desert])
         #expect(LocalSet.newestSetID(in: collection) == "us-ca-desert")
     }
@@ -84,18 +84,19 @@ struct PlaceTests {
         return PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, availableCapacity: { .max })
     }
 
-    static func defaults() -> UserDefaults {
-        UserDefaults(suiteName: "place-\(UUID().uuidString)")!
+    static func defaults(name: String = "place-\(UUID().uuidString)") -> UserDefaults {
+        UserDefaults(suiteName: name)!
     }
 
     static func place(_ library: PackLibrary, at coordinate: Coordinate?, defaults: UserDefaults) -> CurrentPlace {
-        CurrentPlace(library: library, collection: { CardCollection([CardCollection.Entry](), sets: library.cardSets) }, location: Place(coordinate: coordinate), defaults: defaults)
+        CurrentPlace(library: library, collection: { CardCollection([], sets: library.cardSets) }, location: Place(coordinate: coordinate), defaults: defaults)
     }
 
     @Test("a first launch is on the bundled set with its painting at once, then a read moves it and remembers only the set")
     func movesAndRemembers() async throws {
         let library = try Self.library()
-        let defaults = Self.defaults()
+        let suite = "place-\(UUID().uuidString)"
+        let defaults = Self.defaults(name: suite)
         let place = Self.place(library, at: Self.joshuaTree, defaults: defaults)
         #expect(place.setID == "us-ca-la")
         #expect(place.painting != nil, "before anything's been awaited")
@@ -107,8 +108,7 @@ struct PlaceTests {
         #expect(place.painting != nil && place.painting !== first, "a cover that isn't on the phone as a pack, at full size")
         #expect(place.painting?.size == CGSize(width: 1536, height: 864))
         #expect(defaults.string(forKey: CurrentPlace.rememberedKey) == "us-ca-desert")
-        let stored = defaults.persistentDomain(forName: defaults.volatileDomainNames.first ?? "") ?? [:]
-        #expect(stored.values.allSatisfy { !($0 is Double) }, "no coordinate")
+        #expect(defaults.persistentDomain(forName: suite)?.keys.sorted() == [CurrentPlace.rememberedKey], "the set, and no coordinate")
     }
 
     @Test("the next launch shows the remembered painting at once, and changes only when a read says so")
