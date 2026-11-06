@@ -64,8 +64,12 @@
           "attempts": 1
         }
       ],
-      "review": "pending",
-      "chosen": null
+      "review": "approved",
+      "chosen": 3,
+      "approved": {
+        "file": "approved/house-finch.png",
+        "sha256": "355e165663cc8bb2cdae8fe0532f864424cfb1ebd688cc61bb1ea4c1bb4ff632"
+      }
     },
     "perched-finch": {
       "title": "House Finch on its branch",
@@ -194,8 +198,12 @@
           "attempts": 1
         }
       ],
-      "review": "pending",
-      "chosen": null
+      "review": "approved",
+      "chosen": 13,
+      "approved": {
+        "file": "approved/blue-bird.png",
+        "sha256": "5163d5d30f0da48d6aedbdb9420574f46b67558b0969e631e89949b4a376782f"
+      }
     },
     "great-egret": {
       "title": "Great Egret",
@@ -259,8 +267,12 @@
           "attempts": 1
         }
       ],
-      "review": "pending",
-      "chosen": null
+      "review": "approved",
+      "chosen": 20,
+      "approved": {
+        "file": "approved/great-egret.png",
+        "sha256": "7ae9b4a63587d877332d7d561c1a5157906df4067bab61bc5c1cba29d823944e"
+      }
     },
     "prothonotary-warbler": {
       "title": "Prothonotary Warbler",
@@ -324,8 +336,12 @@
           "attempts": 1
         }
       ],
-      "review": "pending",
-      "chosen": null
+      "review": "approved",
+      "chosen": 29,
+      "approved": {
+        "file": "approved/prothonotary-warbler.png",
+        "sha256": "24b8de59afca0f284234edd0dca7d72d3dd6acc9563c36dba826f81539552dc1"
+      }
     },
     "red-tailed-hawk": {
       "title": "Red-tailed Hawk",
@@ -389,8 +405,12 @@
           "attempts": 1
         }
       ],
-      "review": "pending",
-      "chosen": null
+      "review": "approved",
+      "chosen": 31,
+      "approved": {
+        "file": "approved/red-tailed-hawk.png",
+        "sha256": "57933846cf53d7cf0183abc93ade0fec9d43fcbfb5899c77e9fdfe191f98a0c0"
+      }
     },
     "stellers-jay": {
       "title": "Steller's Jay",
@@ -454,8 +474,12 @@
           "attempts": 1
         }
       ],
-      "review": "pending",
-      "chosen": null
+      "review": "approved",
+      "chosen": 38,
+      "approved": {
+        "file": "approved/stellers-jay.png",
+        "sha256": "4c44818b2289325b97001c06a9a43768bd169ba3a4af067deb3d56e244341abe"
+      }
     }
   }
 }
