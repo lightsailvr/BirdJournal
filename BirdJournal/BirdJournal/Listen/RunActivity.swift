@@ -1,6 +1,7 @@
-import ActivityKit
+@preconcurrency import ActivityKit
 import Album
 import Foundation
+import Identification
 import Observation
 import OSLog
 import UIKit

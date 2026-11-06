@@ -23,7 +23,7 @@ private func waitUntil(_ what: String, timeout: Duration = .seconds(30), _ condi
 
 /// Southern California, as a set's boundary.
 private let southernCalifornia = CardSet.Region(name: "Los Angeles", polygons: [[[
-    .init(latitude: 33, longitude: -119), .init(latitude: 33, longitude: -117), .init(latitude: 35, longitude: -117), .init(latitude: 35, longitude: -119), .init(latitude: 33, longitude: -119),
+    .init(longitude: -119, latitude: 33), .init(longitude: -117, latitude: 33), .init(longitude: -117, latitude: 35), .init(longitude: -119, latitude: 35), .init(longitude: -119, latitude: 33),
 ]]])
 
 @Suite("The run snapshot and its Live Activity")
@@ -80,7 +80,7 @@ struct RunSnapshotTests {
     func noEdition() {
         let collection = CardCollection([], sets: [Self.la])
         #expect(RunSnapshot(state: .listening, startedAt: nil, heard: [], at: nil, collection: collection).setID == nil)
-        #expect(RunSnapshot(state: .listening, startedAt: nil, heard: [], at: Coordinate(latitude: 40.7, longitude: -74), collection: collection).setID == nil)
+        #expect(RunSnapshot(state: .listening, startedAt: nil, heard: [], at: Coordinate(latitude: 40.7, longitude: -74, accuracy: 10), collection: collection).setID == nil)
     }
 
     private final class FakeHost: RunActivityHost {

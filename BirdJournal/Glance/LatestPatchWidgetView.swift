@@ -33,8 +33,8 @@ struct LatestPatchWidgetView: View {
         if let patchImage {
             Image(uiImage: patchImage)
                 .resizable()
-                .scaledToFit()
                 .widgetAccentedRenderingMode(.fullColor)
+                .scaledToFit()
         } else {
             ring
         }
