@@ -25,7 +25,7 @@ final class AtlasUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Los Angeles"].waitForExistence(timeout: 15), screen(app))
         XCTAssertTrue(app.staticTexts["Citrus edition, 160 birds"].exists, screen(app))
         XCTAssertTrue(app.staticTexts["3 of 160 sewn"].exists, screen(app))
-        XCTAssertTrue(app.staticTexts["AI illustration"].exists || element(app, "set-plate").exists, screen(app))
+        XCTAssertTrue(element(app, "set-plate").exists, screen(app))
         XCTAssertTrue(app.staticTexts["157 still out there"].exists, screen(app))
         XCTAssertFalse(app.staticTexts["Not yet found here"].exists)
         let row = app.buttons.matching(identifier: "set-species-silhouette").firstMatch
@@ -108,8 +108,17 @@ final class AtlasUITests: XCTestCase {
         XCTAssertTrue(cluster.waitForExistence(timeout: 15), screen(app))
         XCTAssertTrue(cluster.label.contains(" sightings, the newest "), cluster.label)
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'Black Phoebe'")).firstMatch.exists, "the one the map was opened on; \(screen(app))")
-        // A tap on a cluster zooms into it rather than opening a callout of its own.
         XCTAssertTrue(app.otherElements["sighting-map-callout"].staticTexts["Black Phoebe"].exists, screen(app))
+
+        // All at one spot: no zoom would part them, so a tap lists them, and each opens.
+        cluster.tap()
+        let here = app.otherElements["sighting-map-here"]
+        XCTAssertTrue(here.waitForExistence(timeout: 5), screen(app))
+        XCTAssertTrue(here.staticTexts.matching(NSPredicate(format: "label ENDSWITH ' sightings here'")).firstMatch.exists, screen(app))
+        let open = here.buttons["Open"].firstMatch
+        XCTAssertTrue(open.exists, screen(app))
+        open.tap()
+        XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 10), "the sighting's page; \(screen(app))")
     }
 
     // MARK: - The record
@@ -117,11 +126,11 @@ final class AtlasUITests: XCTestCase {
     @MainActor
     func testARecordWithoutAPhotoLeadsWithItsPatchWhichOpensIt() {
         let app = launch(seeded + ["-autoCardSpecies", "Zenaida macroura", "-autoScreen", "sighting"])
-        let patch = element(app, "record-patch")
+        let patch = element(app, "sighting-patch")
         XCTAssertTrue(patch.waitForExistence(timeout: 15), screen(app))
-        XCTAssertFalse(element(app, "record-photo").exists)
+        XCTAssertFalse(element(app, "sighting-photo").exists)
         patch.tap()
-        XCTAssertFalse(element(app, "record-patch").waitForExistence(timeout: 2) && element(app, "record-patch").isHittable, "the patch's page is on top; \(screen(app))")
+        XCTAssertFalse(element(app, "sighting-patch").waitForExistence(timeout: 2) && element(app, "sighting-patch").isHittable, "the patch's page is on top; \(screen(app))")
     }
 
     /// A photo at the head of the page is scaled to fill and clipped: what overflows takes no touches, so Heard and Seen and the way back
@@ -129,14 +138,14 @@ final class AtlasUITests: XCTestCase {
     @MainActor
     func testARecordWithAPhotoLeadsWithItAndWhatsAroundItStillAnswers() {
         let app = launch(seeded + ["-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "sighting"])
-        XCTAssertTrue(element(app, "record-photo").waitForExistence(timeout: 15), screen(app))
-        XCTAssertFalse(element(app, "record-patch").exists)
+        XCTAssertTrue(element(app, "sighting-photo").waitForExistence(timeout: 15), screen(app))
+        XCTAssertFalse(element(app, "sighting-patch").exists)
         XCTAssertTrue(app.staticTexts["Heard with Ray-Ban Display"].exists, screen(app))
         app.buttons["Seen"].tap()
         XCTAssertTrue(app.staticTexts["Seen, and heard with Ray-Ban Display"].waitForExistence(timeout: 5), screen(app))
         XCTAssertTrue(app.staticTexts["When"].exists && app.staticTexts["Where"].exists && app.staticTexts["How"].exists, screen(app))
         app.navigationBars.buttons.firstMatch.tap()
-        XCTAssertFalse(element(app, "record-photo").waitForExistence(timeout: 2) && element(app, "record-photo").isHittable, "went back; \(screen(app))")
+        XCTAssertFalse(element(app, "sighting-photo").waitForExistence(timeout: 2) && element(app, "sighting-photo").isHittable, "went back; \(screen(app))")
     }
 
     @MainActor

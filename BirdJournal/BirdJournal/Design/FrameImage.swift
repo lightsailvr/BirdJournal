@@ -94,11 +94,12 @@ enum PhotoSlot {
 
     static func aspect(of url: URL) -> CGFloat {
         if let known = cache.object(forKey: url as NSURL) { return CGFloat(known.doubleValue) }
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-              let width = properties[kCGImagePropertyPixelWidth] as? CGFloat, let height = properties[kCGImagePropertyPixelHeight] as? CGFloat
-        else { return standard }
-        let aspect = aspect(width: width, height: height)
+        var aspect = standard
+        if let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+           let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+           let width = properties[kCGImagePropertyPixelWidth] as? CGFloat, let height = properties[kCGImagePropertyPixelHeight] as? CGFloat {
+            aspect = Self.aspect(width: width, height: height)
+        }
         cache.setObject(NSNumber(value: Double(aspect)), forKey: url as NSURL)
         return aspect
     }

@@ -143,6 +143,8 @@ struct PackRow: View {
                 .padding(5)
                 .frame(width: 104)
                 .modifier(CardStockSurface(.plate))
+                // The row says what it is: a credit on every row is noise, and the set's own pages say it.
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(JournalFont.rowTitle)

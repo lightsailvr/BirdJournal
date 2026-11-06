@@ -153,20 +153,10 @@ private struct PackPlate: View {
                     .padding(.top, 2)
             }
             if let progress {
-                ThreadProgress(progress)
-                    .accessibilityHidden(true)
-                    .padding(.top, 13)
-                Text(progress.sewnText)
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(Color.cardInk)
-                    .padding(.top, 8)
+                PlateProgress(progress: progress)
             }
         }
-        .padding(.horizontal, 11)
-        .padding(.top, 11)
-        .padding(.bottom, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .modifier(CardStockSurface(.plate))
+        .plateStock()
     }
 }
 

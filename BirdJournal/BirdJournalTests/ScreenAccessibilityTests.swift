@@ -513,6 +513,27 @@ struct ScreenAccessibilityTests {
         #expect(withPatch.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch, seen once, sewn ") }, "\(withPatch)")
     }
 
+    @Test("A download's page: the plate is one labelled image, and its count is said once", arguments: sizes)
+    func packPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(PackDetailView(id: PackIndex.bundledPackID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Painted plate, AI illustration")
+        }
+        Self.expectClean(labels, screen: "Download's page")
+        #expect(labels.contains("Painted plate, AI illustration"), "\(labels)")
+        #expect(labels.filter { $0.hasSuffix(" sewn") }.count == 1, "\(labels)")
+    }
+
+    @Test("The map: each patch says which bird and when, and a cluster how many")
+    func mapPatches() async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(SightingMapView(focus: phoebe), harness: harness) { labels in
+            labels.contains { $0.hasPrefix("Black Phoebe, ") }
+        }
+        #expect(labels.contains { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+    }
+
     @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)
     func notYetFound(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()

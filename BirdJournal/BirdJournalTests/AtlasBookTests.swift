@@ -1,6 +1,8 @@
 import Album
+import CoreLocation
 import Foundation
 import ImageIO
+import MapKit
 import Pack
 import SQLite3
 import SwiftData
@@ -119,6 +121,14 @@ struct AtlasBookTests {
         #expect(MapPatchThumbnail.immediate(art: art, edition: edition) === done)
         let blank = MapPatchThumbnail.immediate(art: nil, edition: edition)
         #expect(done !== blank, "a painting, not the blank")
+    }
+
+    @Test("a cluster is listed when no zoom would part it, and zoomed into when one would")
+    func oneSpot() {
+        let griffith = CLLocationCoordinate2D(latitude: 34.1365, longitude: -118.2942)
+        #expect(SightingMap.isOneSpot([griffith, griffith]))
+        #expect(SightingMap.isOneSpot([griffith, CLLocationCoordinate2D(latitude: 34.13652, longitude: -118.29422)]), "a few metres of GPS")
+        #expect(!SightingMap.isOneSpot([griffith, CLLocationCoordinate2D(latitude: 34.1402, longitude: -118.2898)]), "the pond, half a kilometre off")
     }
 
     // MARK: - The record

@@ -33,6 +33,7 @@ One word for each thing, in every string, VoiceOver label and error (#150). The 
 | **Patch**, **paper card** | The collectible and its reverse | card, on its own |
 | **Sewn** | What a bird in a set is once you have its patch: "3 of 160 sewn" | species collected |
 | **Still out there** | A bird in a set you haven't found: "157 still out there", once on a page | not yet found here |
+| **Plate** | A set's painted cover printed on card stock in the Atlas, with its margin, keyline and credit | cover, on a page of the Atlas |
 
 Kept word for word: "Wonder is nearby.", "Your first patch is a bird away.", "Fourteen birds, together.", "First for the Guild", "Jealous!", "Possible matches. Add the birds you recognize."
 

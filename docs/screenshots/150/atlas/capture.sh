@@ -94,7 +94,7 @@ shot packs-dark                    9 "${seeded[@]}" -autoScreen packs
 shot map-cluster-dark             12 "${base[@]}" -seedGallery YES -autoCardSpecies "Haemorhous mexicanus" -autoScreen map
 shot map-editions-dark  12 "${base[@]}" -seedGallery YES -seedJournal YES "${phoebe[@]}" -autoScreen map -autoMapAcross 500000
 shot record-photo-dark            10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting
-shot record-disclosures-dark      10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting -autoRecordOpen YES -autoScrollTo record-disclosures
+shot record-disclosures-dark      10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting -autoDisclosuresOpen YES -autoScrollTo sighting-disclosures
 for bird in "Sayornis nigricans:black-phoebe" "Buteo jamaicensis:red-tailed-hawk" "Falco peregrinus:peregrine-falcon" "Megascops kennicottii:western-screech-owl"; do
     shot "photo-${bird#*:}-dark" 9 "${base[@]}" -autoCardSpecies "${bird%%:*}" -autoScreen profile
 done
@@ -115,7 +115,7 @@ shot atlas-ax5              9 "${seeded[@]}" -autoScreen guide
 shot pack-ax5               9 "${seeded[@]}" -autoScreen pack
 shot packs-ax5              9 "${seeded[@]}" -autoScreen packs
 shot record-ax5            10 "${seeded[@]}" "${dove[@]}" -autoScreen sighting
-shot record-disclosures-ax5 10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting -autoRecordOpen YES -autoScrollTo record-disclosures
+shot record-disclosures-ax5 10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting -autoDisclosuresOpen YES -autoScrollTo sighting-disclosures
 shot map-ax5               12 "${seeded[@]}" "${phoebe[@]}" -autoScreen map
 xcrun simctl ui "$udid" content_size large
 

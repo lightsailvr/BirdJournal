@@ -15,6 +15,8 @@ struct SetView: View {
     @State private var query = ""
     /// The plate names the set, so the bar only does once the plate has scrolled away.
     @State private var isPlateGone = false
+    /// About the plate's height, which grows with the text.
+    @ScaledMetric(relativeTo: .body) private var plateHeight: CGFloat = 200
 
     /// With no index entry there's no Download to offer yet, so this doesn't promise one.
     static func notOnPhoneText(canDownload: Bool) -> String {
@@ -71,8 +73,8 @@ struct SetView: View {
             #if DEBUG
             .debugScroll(proxy, to: "set-rows")
             #endif
-            .onScrollGeometryChange(for: Bool.self) { geometry in
-                geometry.contentOffset.y + geometry.contentInsets.top > 200
+            .onScrollGeometryChange(for: Bool.self) { [plateHeight] geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top > plateHeight
             } action: { _, isGone in
                 isPlateGone = isGone
             }
@@ -157,6 +159,7 @@ struct SpeciesSilhouette: View {
 
     /// The pack's picture; nil is the glyph.
     let url: URL?
+    /// What's been read for `url`: a row stays alive if its pack is removed, and it goes back to the glyph.
     @State private var image: UIImage?
     @State private var failed = false
 
@@ -168,7 +171,7 @@ struct SpeciesSilhouette: View {
     var body: some View {
         ZStack {
             Color.raised
-            if let image {
+            if let image, url != nil {
                 Image(uiImage: image)
                     .renderingMode(.template)
                     .resizable()
@@ -185,9 +188,15 @@ struct SpeciesSilhouette: View {
         }
         .allowsHitTesting(false)
         .task(id: url) {
-            guard let url, image == nil else { return }
-            image = await SilhouetteImages.load(url)
-            failed = image == nil
+            failed = false
+            guard let url else {
+                image = nil
+                return
+            }
+            let loaded = await SilhouetteImages.load(url)
+            guard !Task.isCancelled else { return }
+            image = loaded
+            failed = loaded == nil
         }
     }
 }

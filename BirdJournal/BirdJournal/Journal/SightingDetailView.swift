@@ -52,11 +52,11 @@ struct SightingDetailView: View {
             ScrollViewReader { proxy in
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
-                    RecordLead(sighting: sighting, patch: patch, name: commonName)
+                    SightingLead(sighting: sighting, photo: leadPhoto, patch: patch, name: commonName)
                         .padding(.top, 4)
                         .padding(.bottom, 16)
 
-                    SightingRecord(name: commonName, sighting: sighting, place: placeText(for: sighting))
+                    SightingFacts(name: commonName, sighting: sighting, place: placeText(for: sighting))
 
                     Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
                         ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
@@ -119,6 +119,10 @@ struct SightingDetailView: View {
                             Button("View original photo", systemImage: "photo") { showingOriginal = true }
                                 .buttonStyle(.journalOutlined)
                         }
+                        // The snapshot, when a photo of yours has taken its place at the head of the page.
+                        if leadPhoto != nil, sighting.frameImagePath != nil {
+                            GlassesSnapshot(sighting: sighting)
+                        }
                         SightingPhotos(sighting: sighting, leadPath: leadPhoto)
                     }
                     .padding(.top, 12)
@@ -146,7 +150,7 @@ struct SightingDetailView: View {
                     .padding(.top, 12)
 
                     VStack(spacing: 0) {
-                        RecordDisclosure("Rarity", identifier: "record-rarity") {
+                        SightingDisclosure("Rarity", identifier: "sighting-rarity") {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(CardText.rarityLine(sighting.rarity))
                                     .font(JournalFont.supporting.weight(.semibold))
@@ -159,12 +163,12 @@ struct SightingDetailView: View {
                             }
                         }
                         RowRule()
-                        RecordDisclosure("Identification", identifier: "record-identification") {
+                        SightingDisclosure("Identification", identifier: "sighting-identification") {
                             SightingMatchDetails(sighting: sighting)
                         }
                     }
                     .padding(.top, JournalLayout.sectionGap)
-                    .id("record-disclosures")
+                    .id("sighting-disclosures")
 
                     Button(role: .destructive) {
                         confirmingRemoval = true
@@ -178,7 +182,7 @@ struct SightingDetailView: View {
                 }
             }
             #if DEBUG
-            .debugScroll(proxy, to: "record-disclosures")
+            .debugScroll(proxy, to: "sighting-disclosures")
             #endif
             }
             // A sighting's page is in its patch's edition, like the patch's own.
@@ -245,29 +249,22 @@ struct SightingDetailView: View {
     }
 }
 
-/// What a record leads with: your original photo where there is one, since it's evidence, else its patch on felt, which opens the
-/// patch's page. A sighting always has a patch, but one that's just gone from the collection shows nothing here.
-private struct RecordLead: View {
+/// What a sighting's page leads with: your original photo where there is one, since it's evidence, else its patch on felt, which opens
+/// the patch's page. A sighting always has a patch, but one that's just gone from the collection shows nothing here.
+private struct SightingLead: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
+    /// A photo you attached.
+    let photo: String?
     let patch: CardCollection.Patch?
     let name: String
 
     var body: some View {
-        if let path = sighting.attachedPhotoPaths.first {
-            AttachedPhoto(path: path)
+        if let photo {
+            AttachedPhoto(path: photo)
                 .frame(maxWidth: .infinity)
         } else if sighting.frameImagePath != nil {
-            VStack(alignment: .leading, spacing: 6) {
-                FrameImage(frameImagePath: sighting.frameImagePath)
-                    .aspectRatio(4 / 3, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                    .accessibilityLabel("Your glasses snapshot from this sighting")
-                    .accessibilityIdentifier("record-photo")
-                Text("Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
-            }
+            GlassesSnapshot(sighting: sighting)
         } else if let patch {
             let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
             FeltBoard {
@@ -279,7 +276,7 @@ private struct RecordLead: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(PatchText.spoken(patch, name: name, beingSewn: state == .beingSewn))
                 .accessibilityHint("Opens the patch")
-                .accessibilityIdentifier("record-patch")
+                .accessibilityIdentifier("sighting-patch")
                 .frame(maxWidth: .infinity)
             }
             .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
@@ -288,8 +285,26 @@ private struct RecordLead: View {
     }
 }
 
+/// The glasses' frame from this sighting, and what it is.
+private struct GlassesSnapshot: View {
+    let sighting: Sighting
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            FrameImage(frameImagePath: sighting.frameImagePath)
+                .aspectRatio(4 / 3, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                .accessibilityLabel("Your glasses snapshot from this sighting")
+                .accessibilityIdentifier("sighting-photo")
+            Text("Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
+                .font(JournalFont.attribution)
+                .foregroundStyle(Color.inkSecondary)
+        }
+    }
+}
+
 /// When, where and how, printed: the rule's "if you read it, it's printed on paper".
-private struct SightingRecord: View {
+private struct SightingFacts: View {
     let name: String
     let sighting: Sighting
     let place: String
@@ -317,12 +332,12 @@ private struct SightingRecord: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .modifier(CardStockSurface())
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("sighting-record")
+        .accessibilityIdentifier("sighting-facts")
     }
 }
 
-/// Something a record keeps until you ask for it. VoiceOver hears a button that says whether it's open.
-private struct RecordDisclosure<Content: View>: View {
+/// Something a sighting's page keeps until you ask for it. VoiceOver hears a button that says whether it's open.
+private struct SightingDisclosure<Content: View>: View {
     let title: String
     let identifier: String
     @ViewBuilder var content: Content
@@ -333,8 +348,8 @@ private struct RecordDisclosure<Content: View>: View {
         self.identifier = identifier
         self.content = content()
         #if DEBUG
-        // `-autoRecordOpen YES`, for the screenshots.
-        _isExpanded = State(initialValue: UserDefaults.standard.bool(forKey: "autoRecordOpen"))
+        // `-autoDisclosuresOpen YES`, for the screenshots.
+        _isExpanded = State(initialValue: UserDefaults.standard.bool(forKey: "autoDisclosuresOpen"))
         #else
         _isExpanded = State(initialValue: false)
         #endif

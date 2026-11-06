@@ -55,27 +55,9 @@ struct SetPlate: View {
                 }
             }
             .padding(.top, 2)
-            ThreadProgress(progress)
-                .accessibilityHidden(true)
-                .padding(.top, 13)
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
-                    sewn
-                    Spacer(minLength: 8)
-                    if showsReadyOffline { ReadyOffline(ink: .cardInk) }
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    sewn
-                    if showsReadyOffline { ReadyOffline(ink: .cardInk) }
-                }
-            }
-            .padding(.top, 8)
+            PlateProgress(progress: progress, showsReadyOffline: showsReadyOffline)
         }
-        .padding(.horizontal, 11)
-        .padding(.top, 11)
-        .padding(.bottom, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .modifier(CardStockSurface(.plate))
+        .plateStock()
     }
 
     private var name: some View {
@@ -93,11 +75,46 @@ struct SetPlate: View {
             .foregroundStyle(Color.cardInk)
             .fixedSize(horizontal: false, vertical: true)
     }
+}
+
+/// The thread on paper and "3 of 160 sewn", in the full ink, and "Ready offline" apart from it.
+struct PlateProgress: View {
+    let progress: SetProgress
+    var showsReadyOffline = false
+
+    var body: some View {
+        ThreadProgress(progress)
+            .accessibilityHidden(true)
+            .padding(.top, 13)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline) {
+                sewn
+                Spacer(minLength: 8)
+                if showsReadyOffline { ReadyOffline(ink: .cardInk) }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                sewn
+                if showsReadyOffline { ReadyOffline(ink: .cardInk) }
+            }
+        }
+        .padding(.top, 8)
+    }
 
     private var sewn: some View {
         Text(progress.sewnText)
             .font(JournalFont.supporting)
             .foregroundStyle(Color.cardInk)
             .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+extension View {
+    /// A full-width plate's margin and card stock.
+    func plateStock() -> some View {
+        padding(.horizontal, 11)
+            .padding(.top, 11)
+            .padding(.bottom, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .modifier(CardStockSurface(.plate))
     }
 }
