@@ -120,7 +120,8 @@ final class AppIconHomeScreenUITests: XCTestCase {
         for bird in birds {
             choose(bird, in: app)
             XCUIDevice.shared.press(.home)
-            let icon = springboard.icons["Featherguild"]
+            // The app's icon, not its widget (issue #150), which goes by the same name on a simulator that has one.
+            let icon = springboard.icons.matching(NSPredicate(format: "label == 'Featherguild' AND NOT (value == 'Widget')")).firstMatch
             XCTAssertTrue(icon.waitForExistence(timeout: 10), "no icon on the home screen: \(springboard.debugDescription.prefix(2000))")
             for _ in 0..<4 where !icon.isHittable { springboard.swipeLeft(); sleep(1) }
             XCTAssertTrue(icon.isHittable, "the icon is on no page reached: \(springboard.debugDescription.prefix(2000))")

@@ -58,6 +58,41 @@ final class GlanceCaptureUITests: XCTestCase {
         try save("activity-recap-after-lock-stop", to: folder)
     }
 
+    /// Stop on the Lock Screen with a bird's review open: closing that sheet leads on to the recap.
+    @MainActor
+    func testStopUnderACandidatesSheetReachesTheRecapWhenItCloses() throws {
+        guard ProcessInfo.processInfo.environment["BIRDJOURNAL_CAPTURE_DIR"] != nil else { throw XCTSkip("no capture folder") }
+        let clip = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appending(path: "fixtures/clips/birdnet-example-soundscape.wav")
+            .path(percentEncoded: false)
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoPhoneListening", clip, "-autoLocation", "griffith", "-autoScreen", "listening"]
+        app.launch()
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 120), "no bird heard; screen: \(app.debugDescription.prefix(3000))")
+        row.tap()
+        let close = app.buttons["Close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 10), "no sheet; screen: \(app.debugDescription.prefix(3000))")
+
+        let lock = NSSelectorFromString("pressLockButton")
+        XCUIDevice.shared.perform(lock)
+        sleep(2)
+        XCUIDevice.shared.perform(lock)
+        sleep(3)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let stop = springboard.buttons["Stop listening"]
+        XCTAssertTrue(stop.waitForExistence(timeout: 10), "no Stop on the Lock Screen; screen: \(springboard.debugDescription.prefix(3000))")
+        stop.tap()
+        sleep(3)
+        app.activate()
+        if !app.wait(for: .runningForeground, timeout: 3) { springboard.swipeUp() }
+
+        XCTAssertTrue(close.waitForExistence(timeout: 10), "the bird's sheet stays till it's closed; screen: \(app.debugDescription.prefix(3000))")
+        close.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["run-recap"].waitForExistence(timeout: 15), "no recap after the sheet closed; screen: \(app.debugDescription.prefix(4000))")
+    }
+
     /// The widget added to the Home Screen as a person adds it, and a tap on it. The widget gallery isn't anyone's interface to
     /// promise, so a step it can't find ends the capture rather than failing anything.
     @MainActor
