@@ -80,7 +80,7 @@ final class HuntUITests: XCTestCase {
         XCTAssertTrue(keepListening.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
         keepListening.tap()
         XCTAssertTrue(app.buttons["Added. Review Acorn Woodpecker"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(button(app, beginning: "Acorn Woodpecker, ").label, "Acorn Woodpecker, added, you have this patch, seen once")
+        XCTAssertEqual(button(app, beginning: "Acorn Woodpecker, ").label, "Acorn Woodpecker, calling now, added, you have this patch, seen once")
         XCTAssertTrue(app.staticTexts["4 birds you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 

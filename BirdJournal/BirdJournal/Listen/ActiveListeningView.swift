@@ -79,6 +79,7 @@ struct ActiveListeningView: View {
                                     run.reviewing = candidate
                                 }
                                 .padding(.horizontal, 10)
+                                .id("run-row-\(position)")
                                 .background(isCalling ? Color.raised : Color.clear, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                                 .padding(.horizontal, -10)
                                 RowRule()
@@ -98,7 +99,7 @@ struct ActiveListeningView: View {
             }
         }
         #if DEBUG
-        .debugScroll(proxy, to: "run-rows", when: !run.candidates.isEmpty)
+        .debugScroll(proxy, to: UserDefaults.standard.string(forKey: "autoScrollTo") ?? "run-rows", when: !run.candidates.isEmpty)
         #endif
         }
         .navigationTitle(run.state.isActive ? "Listening" : "Last run")

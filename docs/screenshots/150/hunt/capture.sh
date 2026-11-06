@@ -23,11 +23,12 @@ if [[ "${1:-}" == "--sheets" ]]; then
         uv run -q "$repo_root/docs/screenshots/138/sheet.py" "$out/sheets/$name.jpg" "$columns" "$@"
     }
     sheet run-against-reference 3 "$out/sheets/reference-2-listening-run.jpg" "$out/run-dark.jpg" "$out/run-light.jpg"
-    sheet rows-after-add 3 "$out/run-added-dark.jpg" "$out/run-after-stop-dark.jpg" "$out/review-dark.jpg"
+    sheet rows-after-add 4 "$out/run-added-dark.jpg" "$out/run-no-pack-dark.jpg" "$out/run-after-stop-dark.jpg" "$out/review-dark.jpg"
+    sheet contrast 2 "$out/run-contrast-dark.jpg" "$out/run-contrast-light.jpg"
     sheet grammar-dark 3 "$out/species-dark.jpg" "$out/sightings-dark.jpg" "$out/set-dark.jpg"
     sheet grammar-light 3 "$out/species-light.jpg" "$out/sightings-light.jpg" "$out/set-light.jpg"
-    sheet profile 3 "$out/profile-dark.jpg" "$out/profile-light.jpg" "$out/profile-gallery-dark.jpg"
-    sheet ax5 4 "$out/run-ax5.jpg" "$out/species-ax5.jpg" "$out/set-ax5.jpg" "$out/profile-ax5.jpg"
+    sheet profile 4 "$out/profile-dark.jpg" "$out/profile-light.jpg" "$out/profile-gallery-dark.jpg" "$out/profile-none-dark.jpg"
+    sheet ax5 4 "$out/run-ax5.jpg" "$out/run-row-ax5.jpg" "$out/species-ax5.jpg" "$out/sightings-ax5.jpg" "$out/set-ax5.jpg" "$out/profile-ax5.jpg"
     exit 0
 fi
 
@@ -108,6 +109,7 @@ xcrun simctl ui "$udid" increase_contrast disabled
 
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shot run-ax5     12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoScrollTo run-rows
+shot run-row-ax5 12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoScrollTo run-row-1
 shot species-ax5  9 "${seeded[@]}" -autoScreen species-list
 shot set-ax5      9 "${seeded[@]}" -seedBoard YES -autoScreen set
 shot sightings-ax5 9 "${seeded[@]}" -autoScreen sightings
