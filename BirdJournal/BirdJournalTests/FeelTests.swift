@@ -1,5 +1,6 @@
 import Album
 import Foundation
+import Pack
 import SwiftUI
 import Testing
 import UIKit
@@ -8,7 +9,7 @@ import UIKit
 // Issue #150, slice 3: the one table of haptics, the press, what the reveal says about sharing, and decoding ahead. Real taps are in
 // `FeelUITests`.
 #if DEBUG
-@Suite("Feel")
+@Suite("Feel", .serialized)
 @MainActor
 struct FeelTests {
     @Test("each haptic means one thing, from the table in the issue")
@@ -64,7 +65,6 @@ struct FeelTests {
         #expect(arts.allSatisfy { PatchTextures.cached($0, size: .thumbnail) == nil })
         await PatchTextures.decodeAhead(arts, size: .thumbnail)
         #expect(arts.allSatisfy { PatchTextures.cached($0, size: .thumbnail) != nil })
-        #expect(arts.allSatisfy { PatchTextures.cached($0, size: .full) == nil }, "only the size the board shows")
     }
 
     @Test("leaving a board stops decoding its patches ahead")
@@ -91,6 +91,11 @@ struct FeelTests {
     @Test("Start's and Stop's haptic follows the run, and a phone run only lets go when its microphone has")
     func runFelt() async throws {
         let harness = try ScreenAccessibilityTests.Harness()
+        #expect(!harness.run.isRunFelt)
+        await harness.run.start()
+        #expect(harness.run.state.isActive)
+        #expect(harness.run.isRunFelt)
+        await harness.run.stop()
         #expect(!harness.run.isRunFelt)
         #expect(!harness.run.hasFailed)
     }

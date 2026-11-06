@@ -154,7 +154,7 @@ final class FeelUITests: XCTestCase {
         let share = app.buttons["Share"]
         XCTAssertTrue(share.waitForExistence(timeout: 5))
         share.tap()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10) || app.buttons["Done"].waitForExistence(timeout: 2), "no share sheet: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.navigationBars["Share this patch"].waitForExistence(timeout: 10), "no share sheet: \(app.debugDescription.prefix(3000))")
     }
 
     // MARK: - The set's menu
@@ -172,7 +172,8 @@ final class FeelUITests: XCTestCase {
         name.tap()
         let uncharted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch
         XCTAssertTrue(uncharted.waitForExistence(timeout: 5), "no list of sets: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS '5 patches, 6 sightings'")).firstMatch.exists, "the total is in the menu: \(app.debugDescription.prefix(3000))")
+        let total = app.descendants(matching: .any).matching(NSPredicate(format: "label == '5 patches, 6 sightings'")).firstMatch
+        XCTAssertTrue(total.exists, "the total is in the menu: \(app.staticTexts.allElementsBoundByIndex.map(\.label)), \(app.buttons.allElementsBoundByIndex.map(\.label))")
         uncharted.tap()
 
         XCTAssertTrue(tile(app, "Common Blackbird").waitForExistence(timeout: 5), "the Uncharted board: \(app.debugDescription.prefix(3000))")
@@ -214,7 +215,7 @@ final class FeelUITests: XCTestCase {
 
         modes.buttons["Sightings"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let during = surfaceColour(of: app.screenshot())
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'sightings of'")).firstMatch.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS '6 sightings'")).firstMatch.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
         Thread.sleep(forTimeInterval: 7)
         let page = surfaceColour(of: app.screenshot())
 
@@ -280,7 +281,7 @@ final class FeelUITests: XCTestCase {
         XCTAssertTrue(solo.buttons["revealed-patch"].waitForExistence(timeout: 15))
         XCTAssertFalse(element(solo, "revealed-shared").waitForExistence(timeout: 3), "in no Guild")
 
-        let quiet = launch(arguments + ["-fakeCircles", "some", "-shareFindsAutomatically", "NO"])
+        let quiet = launch(arguments + ["-fakeCircles", "some", "-shareFindsAutomatically", "<false/>"])
         XCTAssertTrue(quiet.buttons["revealed-patch"].waitForExistence(timeout: 15))
         XCTAssertFalse(element(quiet, "revealed-shared").waitForExistence(timeout: 3), "sharing is off")
     }

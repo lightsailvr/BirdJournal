@@ -192,11 +192,12 @@ struct JournalView: View {
         let boards = boards(collection)
         if boards.count > 1 {
             Menu {
-                Section(collection.summary) {
-                    Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
-                        ForEach(boards, id: \.self) { board in
-                            Text(boardMenuTitle(board, collection)).tag(board)
-                        }
+                // A line of its own: a section's title doesn't show over a picker.
+                Text(collection.summary)
+                Divider()
+                Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
+                    ForEach(boards, id: \.self) { board in
+                        Text(boardMenuTitle(board, collection)).tag(board)
                     }
                 }
             } label: {
