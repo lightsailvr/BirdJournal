@@ -127,35 +127,40 @@ final class HuntUITests: XCTestCase {
         XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
     }
 
-    /// The list holds still around a touch (the maintainer, issue #150). These birds keep swapping places every second, so a
-    /// row that moved under the finger would end the press off its button, and nothing would be added.
+    /// A woodpecker always calling, and five with patches that keep passing their places along once a second, each with Add.
+    /// (A launch argument can't hold an apostrophe: the defaults read it as a property list and drop every flag.)
+    private static let movingBirds = "Melanerpes formicivorus_Acorn Woodpecker,Buteo jamaicensis_Red-tailed Hawk,Anas platyrhynchos_Mallard,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Zenaida macroura_Mourning Dove"
+
+    /// The list holds still around a touch (the maintainer, issue #150). A finger comes down on one spot on a list that keeps
+    /// re-sorting, and stays for 2.5 s, two or three re-sorts where it takes five to come round again. Whichever bird's Add was at
+    /// that spot takes the add, and when the finger lifts that bird is still at that spot.
     @MainActor
-    func testAPressOnAListThatKeepsReSortingLandsOnTheBirdItWasAimedAtAndTheListMovesAgainAfter() throws {
+    func testAFingerDownOnAListThatKeepsReSortingKeepsItsBirdUnderItAndTheListMovesAgainAfter() throws {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-fakeRunReorderEvery", "1",
-            "-fakeRunBirds", "Melanerpes formicivorus_Acorn Woodpecker,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Zenaida macroura_Mourning Dove",
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeRunBirds", Self.movingBirds,
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
         ]
         app.launch()
-        let add = app.buttons["Add House Finch"]
-        XCTAssertTrue(add.waitForExistence(timeout: 60), "no Add; screen: \(app.debugDescription.prefix(3000))")
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
 
         // It does keep moving when nobody's touching it.
-        let row = button(app, beginning: "Black Phoebe, ")
-        let first = row.frame.minY
-        let moved = NSPredicate { _, _ in row.frame.minY != first }
-        wait(for: [expectation(for: moved, evaluatedWith: NSObject())], timeout: 15)
+        let first = row.label
+        wait(for: [expectation(for: NSPredicate { _, _ in row.label != first }, evaluatedWith: NSObject())], timeout: 15)
 
-        // Longer than three re-sorts, with the finger down on one bird's Add.
-        add.press(forDuration: 3.5)
-        XCTAssertTrue(app.staticTexts["House Finch seen again, 3 times in Los Angeles"].waitForExistence(timeout: 5), "the press missed its bird; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Black Phoebe seen again' OR label BEGINSWITH 'Mourning Dove seen again'")).firstMatch.exists, "another bird took it")
+        // The row's own button is the row's width less the pill, which sits to its right.
+        let frame = row.frame
+        let spot = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.maxX + 30, dy: frame.midY))
+        spot.press(forDuration: 2.5)
+        let said = app.staticTexts.matching(NSPredicate(format: "label CONTAINS ' seen again, 2 times in Los Angeles'")).firstMatch
+        XCTAssertTrue(said.waitForExistence(timeout: 1), "the press added nothing; screen: \(app.debugDescription.prefix(4000))")
+        let bird = said.label.components(separatedBy: " seen again").first ?? ""
+        XCTAssertTrue(row.label.hasPrefix("\(bird), added"), "\(bird) moved from under the finger: the row there is \(row.label)")
 
         // And it's let go: within a few seconds of the finger lifting, the list is moving again.
-        let held = row.frame.minY
-        let movedAgain = NSPredicate { _, _ in row.frame.minY != held }
-        wait(for: [expectation(for: movedAgain, evaluatedWith: NSObject())], timeout: 15)
+        let held = row.label
+        wait(for: [expectation(for: NSPredicate { _, _ in row.label != held }, evaluatedWith: NSObject())], timeout: 15)
     }
 
     /// The finger's watcher leaves the touch to the scroll view.
@@ -164,7 +169,7 @@ final class HuntUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES",
-            "-fakeRunBirds", "Melanerpes formicivorus_Acorn Woodpecker,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Zenaida macroura_Mourning Dove,Branta canadensis_Canada Goose,Calypte anna_Anna's Hummingbird,Junco hyemalis_Dark-eyed Junco",
+            "-fakeRunBirds", Self.movingBirds + ",Melozone crissalis_California Towhee,Spinus psaltria_Lesser Goldfinch",
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
         ]
         app.launch()
