@@ -3,8 +3,13 @@ import Testing
 import UIKit
 @testable import BirdJournal
 
-// Issue #150, slice 11: the birds in glasses as what a birder sees of them in the built app. `MascotArt` in the pack builder's
-// tests holds that the pictures come from the approved patches; this holds that the build carries them as iOS needs them.
+// Issue #150, slice 11: the birds in glasses as the built app carries them. The pack builder's `test_mascot_art.py` holds that
+// the pictures come from the approved patches; this holds that the build has them as iOS needs them.
+nonisolated private let iconNames = [
+    "MyBirdJournal-RedTailedHawk", "MyBirdJournal-Default", "MyBirdJournal-GreatEgret",
+    "MyBirdJournal-HouseFinch", "MyBirdJournal-ProthonotaryWarbler", "MyBirdJournal-StellersJay",
+]
+
 @Suite("The mascot")
 @MainActor
 struct MascotTests {
@@ -25,10 +30,7 @@ struct MascotTests {
 
     @Test("Someone who chose a bird keeps it: the icons keep the names iOS remembers a choice by")
     func iconNamesStay() {
-        #expect(AppIconChoice.all.map(\.name) == [
-            "MyBirdJournal-RedTailedHawk", "MyBirdJournal-Default", "MyBirdJournal-GreatEgret",
-            "MyBirdJournal-HouseFinch", "MyBirdJournal-ProthonotaryWarbler", "MyBirdJournal-StellersJay",
-        ])
+        #expect(AppIconChoice.all.map(\.name) == iconNames)
     }
 
     @Test("Every choice is in the build as an icon iOS can switch to")
@@ -41,12 +43,12 @@ struct MascotTests {
         }
     }
 
-    @Test("An icon's thumbnail is square and opaque to its corners", arguments: AppIconChoice.all)
-    func thumbnailsAreOpaque(choice: AppIconChoice) throws {
-        let image = try #require(UIImage(named: "AppIconPreview/\(choice.name)"))
+    @Test("An icon's thumbnail is square and opaque to its corners", arguments: iconNames)
+    func thumbnailsAreOpaque(name: String) throws {
+        let image = try #require(UIImage(named: "AppIconPreview/\(name)"))
         #expect(image.size.width == image.size.height)
         for (x, y) in [(0.0, 0.0), (0.99, 0.0), (0.0, 0.99), (0.99, 0.99), (0.5, 0.5)] {
-            #expect(alpha(image, atX: x, y: y) == 1, "\(choice.name) shows through at \(x), \(y)")
+            #expect(alpha(image, atX: x, y: y) == 1, "\(name) shows through at \(x), \(y)")
         }
     }
 
@@ -64,8 +66,4 @@ struct MascotTests {
         #expect(name == "PerchedFinch")
         #expect(try #require(UIImage(named: name)).size == LaunchSplash.birdSize)
     }
-}
-
-extension AppIconChoice: CustomTestStringConvertible {
-    var testDescription: String { title }
 }
