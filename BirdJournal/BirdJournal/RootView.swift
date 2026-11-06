@@ -141,6 +141,16 @@ struct RootView: View {
     var isUnderSplash = false
     /// A patch the widget opened (issue #150), cleared once shown.
     @Binding var pendingPatch: CardCollection.Patch.Key?
+    /// No sheet is up for a run's review to take the place of.
+    @State private var isClearForReview = false
+
+    /// A sheet, alert or the like is up. There are many, in many views, and no one place that knows of them all but UIKit.
+    private static var isSomethingPresented: Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .contains { $0.rootViewController?.presentedViewController != nil }
+    }
 
     /// The patch's page on the Collection tab, or the tab alone if the patch has been unpicked since the widget last drew. An
     /// open run review goes first: its skipped birds are forgotten when it closes, so it isn't closed for them.
@@ -189,10 +199,16 @@ struct RootView: View {
             ListeningAccessory { tab = .listen }
         }
         // The end of a run, from whichever tab it finds the birder on (issue #150). On the Listen tab's own view it could only be
-        // presented with that tab showing: on another, SwiftUI gave up on it and the birds heard went with it. It waits for a
-        // candidate's sheet to close, since only one can be up.
-        .sheet(isPresented: Binding(get: { run.isReviewing && run.reviewing == nil }, set: { if !$0 { run.isReviewing = false } })) {
+        // presented with that tab showing: on another, SwiftUI gave up on it and the birds heard went with it. It waits for any
+        // sheet already up to close, since only one can be: over a bird's review or New Guild it would throw away what's in it.
+        .sheet(isPresented: Binding(get: { run.isReviewing && isClearForReview }, set: { if !$0 { run.isReviewing = false } })) {
             RunReviewSheet()
+        }
+        .task(id: run.isReviewing) {
+            isClearForReview = false
+            guard run.isReviewing else { return }
+            while !Task.isCancelled, Self.isSomethingPresented { try? await Task.sleep(for: .milliseconds(300)) }
+            if !Task.isCancelled { isClearForReview = true }
         }
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
         // it's up this one waits: two pages would sew the patch twice, each with its own haptics.

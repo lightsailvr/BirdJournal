@@ -4,7 +4,8 @@ import Pack
 import SwiftUI
 
 /// The end of a run (issues #28, #150): a recap printed on paper, with a picture of it to share, then every species heard, so
-/// a bird skipped can still be added, and what becomes of the rest. In memory only; a named outing is deferred.
+/// a bird skipped can still be added, and what becomes of the rest. It's kept until it has been seen (`EndedRun`), and gone
+/// after that; a named outing is deferred.
 struct RunReviewSheet: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.dismiss) private var dismiss

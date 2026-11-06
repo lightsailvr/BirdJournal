@@ -95,6 +95,28 @@ final class AfterTheRunUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Collection"].exists, "and the birder is where they were")
     }
 
+    /// A recap landing while New Guild is up waits for it, and what's typed there stays.
+    @MainActor
+    func testARecapWaitsForASheetAlreadyUpAndWhatsTypedInIt() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle-new",
+            "-autoRunStopAfter", "20", "-fakeRunBirds", "Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith",
+        ]
+        app.launch()
+        let name = app.textFields.firstMatch
+        XCTAssertTrue(name.waitForExistence(timeout: 15), "no New Guild; screen: \(app.debugDescription.prefix(3000))")
+        name.tap()
+        name.typeText("Dawn chorus")
+        XCTAssertFalse(recap(app).waitForExistence(timeout: 30), "it came over the sheet; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(name.value as? String, "Dawn chorus", "what's typed stays")
+
+        app.buttons["Cancel"].firstMatch.tap()
+        XCTAssertTrue(recap(app).waitForExistence(timeout: 15), "the recap didn't follow; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(recap(app).label.contains("2 birds heard"), recap(app).label)
+    }
+
     /// Stop on the Lock Screen leaves a suspended app that iOS can kill. Coming back after that, the recap is still there.
     @MainActor
     func testARecapWaitingWhenTheAppIsKilledIsThereAtTheNextLaunch() throws {

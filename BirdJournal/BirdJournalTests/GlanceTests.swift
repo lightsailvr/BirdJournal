@@ -473,6 +473,29 @@ struct RunEndTests {
         run.dismissEnded()
     }
 
+    @Test("a bird added from a recap days old has the run's date and place, on the sighting and in what goes to a Guild")
+    func addFromAnOldRecapKeepsTheRunsDate() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let started = Date.now.addingTimeInterval(-3 * 86_400)
+        let ended = started.addingTimeInterval(1_800)
+        let finch = Candidate(species: Species(index: 0, scientificName: "Haemorhous mexicanus", commonName: "House Finch", taxonomicClass: "Aves"), score: 0.9, windowsAboveThreshold: 2, firstHeardAt: 60, lastHeardAt: 120, admittedAt: 60)
+        let waiting = EndedRun(source: "phone", startedAt: started, endedAt: ended, listened: 1_800, coordinate: griffith, birds: [.init(finch)], added: [])
+        harness.defaults.set(try JSONEncoder().encode(waiting), forKey: ListeningCoordinator.endedRunKey)
+
+        let run = harness.relaunched()
+        try #require(run.isReviewing)
+        try #require(await run.add(run.candidates[0]))
+
+        let sighting = try #require(harness.stored.first)
+        #expect(sighting.confirmedAt == ended)
+        #expect(sighting.location == griffith)
+        let input = FindOutbox.input(of: sighting, isNewPatch: true, packs: PackLibrary.forApp(), places: PlaceNames())
+        let find = try #require(FindPolicy.find(for: input, sharing: .automatic))
+        #expect(find.foundAt == FindPolicy.minute(ended))
+        #expect(find.foundAt != FindPolicy.minute(.now))
+    }
+
     @Test("killed with its review waiting, the next launch opens on it, with the birds, the place, the time and the adds; Done forgets it")
     func reviewOutlivesTheApp() async throws {
         let harness = try ListeningCoordinatorTests.makeHarness()
@@ -515,6 +538,20 @@ struct RunEndTests {
 @Suite("The run recap")
 @MainActor
 struct RunRecapTests {
+    @Test("a bird's heard line is minutes ago, or the date on a recap that has waited past a day")
+    func heardText() {
+        let bird = Candidate(species: Species(index: 0, scientificName: "Haemorhous mexicanus", commonName: "House Finch", taxonomicClass: "Aves"), score: 0.9, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 0, admittedAt: 0)
+        let text = { (seconds: TimeInterval) in
+            CandidateRow.heardText(bird, startedAt: Self.start, now: Self.start.addingTimeInterval(seconds), calendar: Self.losAngeles, locale: Locale(identifier: "en_US"))
+        }
+        #expect(text(30) == "just now")
+        #expect(text(180) == "3 min ago")
+        #expect(text(3_700) == "1 h 1 min ago")
+        #expect(text(86_399) == "23 h 59 min ago")
+        #expect(text(86_400) == "Oct 26")
+        #expect(text(3 * 86_400 + 60) == "Oct 26")
+    }
+
     private static let start = Date(timeIntervalSince1970: 1_793_000_000)
     private static let losAngeles: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
