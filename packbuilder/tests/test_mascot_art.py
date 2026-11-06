@@ -285,6 +285,8 @@ def test_the_finch_keeps_its_transparency_and_gains_a_soft_shadow(tmp_path):
         below = alpha[side - edge + reach, side // 2]
         above = alpha[edge - reach, side // 2]
         assert 0 < below < 255 and below > above, "the shadow falls below the patch, opposite the light"
+        edges = (alpha[0, :], alpha[-1, :], alpha[:, 0], alpha[:, -1])
+        assert max(edge.max() for edge in edges) <= 3, "the shadow is cut off at the picture's edge"
 
 
 def test_nothing_is_written_from_a_file_the_review_did_not_choose(tmp_path):

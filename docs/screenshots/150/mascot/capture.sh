@@ -57,6 +57,17 @@ xcrun simctl boot "$udid"
 xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 2>/dev/null || true
 
+# Just after a restart, or under load, the system can refuse a launch as busy for a while.
+launch() {  # simctl launch's arguments
+    local attempt
+    for attempt in 1 2 3 4 5 6; do
+        xcrun simctl launch "$@" >/dev/null 2>&1 && return 0
+        sleep 10
+    done
+    echo "the app wouldn't launch: $*" >&2
+    return 1
+}
+
 screenshot() {  # name
     xcrun simctl io "$udid" screenshot --type=jpeg "$out/$prefix$1.jpg" >/dev/null 2>&1
     sips -Z 800 -s formatOptions 78 "$out/$prefix$1.jpg" >/dev/null
@@ -67,7 +78,7 @@ shot() {  # name seconds flags...
     local name="$1" wait="$2"; shift 2
     xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
     sleep 2
-    xcrun simctl launch "$udid" "$bundle" "$@" >/dev/null
+    launch "$udid" "$bundle" "$@"
     sleep $((wait + slow))
     screenshot "$name"
 }
@@ -76,7 +87,7 @@ shot() {  # name seconds flags...
 launch_screen() {  # name
     xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
     sleep 2
-    xcrun simctl launch --wait-for-debugger "$udid" "$bundle" >/dev/null
+    launch --wait-for-debugger "$udid" "$bundle"
     sleep $((4 + slow))
     screenshot "$1"
     xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
@@ -91,7 +102,7 @@ splash() {  # name
     xcrun simctl io "$udid" recordVideo --codec=h264 --force "$movie" >/dev/null 2>&1 &
     local recorder=$!
     sleep 2
-    xcrun simctl launch "$udid" "$bundle" -inMemoryAlbum YES >/dev/null
+    launch "$udid" "$bundle" -inMemoryAlbum YES
     sleep $((5 + slow))
     kill -INT "$recorder"
     wait "$recorder" || true
@@ -132,6 +143,7 @@ xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
 
 # The build's icon on the home screen, for the sheet that has the new ones beside it.
 if [[ -n "$prefix" ]]; then
+    xcrun simctl ui "$udid" content_size large
     sleep 3
     xcrun simctl io "$udid" screenshot --type=png "$icon_shots/before-home.png" >/dev/null 2>&1
 fi

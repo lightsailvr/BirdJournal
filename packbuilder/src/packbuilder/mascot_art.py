@@ -91,9 +91,10 @@ the app about 1.3 MB per icon, because iOS keeps each icon's rendering losslessl
 FINCH_CANVAS = 240
 """The perched finch's picture in points, the patch and the room for its shadow: the launch screen shows it at this size."""
 FINCH_PATCH = 200
-SHADOW = (((0.03, 0.05), 0.04, 0.55), ((0.012, 0.018), 0.012, 0.42))
+SHADOW = (((0.02, 0.035), 0.03, 0.55), ((0.01, 0.015), 0.01, 0.42))
 """A patch's two-part shadow, opposite the light at the upper left, in fractions of the patch's side: (x, y offset), blur,
-strength. Stronger than the lit patches' 38%, because this one picture has to show on the dark felt as well as on the light page."""
+strength. Stronger than the lit patches' 38%, because this one picture has to show on the dark felt as well as on the light page,
+and tight enough to fade out within the finch's picture, whose edge would otherwise cut it off in a straight line."""
 
 
 @dataclass(frozen=True)
