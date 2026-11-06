@@ -348,6 +348,7 @@ struct Toast: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
     @Environment(ListeningCoordinator.self) private var run: ListeningCoordinator?
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var ticked = false
 
     /// Long enough for a review sheet to have finished closing, so the tick is seen.
@@ -378,8 +379,10 @@ struct Toast: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.regularMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.rule, lineWidth: 1))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous).strokeBorder(Color.rule, lineWidth: 1))
+        // It says one short thing for a few seconds: at the largest sizes it stops growing, or it takes the page and squeezes Stop.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
         .haptic(.stitchTick, trigger: ticked) { _, _ in Haptic.ticks(phoneRunHoldsSession: run?.phoneRunHoldsSession ?? false) }

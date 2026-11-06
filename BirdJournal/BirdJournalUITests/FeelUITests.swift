@@ -518,7 +518,7 @@ final class FeelUITests: XCTestCase {
             }
         }
         XCTAssertTrue(added, "never reached its review: \(app.debugDescription.prefix(3000))")
-        let toast = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Seen again'")).firstMatch
+        let toast = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'seen again'")).firstMatch
         XCTAssertTrue(toast.waitForExistence(timeout: 10), "no toast: \(app.debugDescription.prefix(3000))")
         let stop = app.buttons["Stop listening"]
         XCTAssertTrue(stop.exists)

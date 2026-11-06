@@ -120,10 +120,10 @@ struct ActiveListeningView: View {
                         Label(run.state == .stopping ? "Stopping…" : "Stop listening", systemImage: "stop.fill")
                             .padding(.horizontal, 8)
                             .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : nil)
-                            // Its words wrap rather than truncate, whatever a toast above it leaves of the page.
-                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .buttonStyle(.journalQuiet)
+                    // Its words wrap inside their shape rather than truncate, whatever a toast leaves of the page.
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
                     .disabled(run.state == .stopping || run.state == .starting)
                 } else {
