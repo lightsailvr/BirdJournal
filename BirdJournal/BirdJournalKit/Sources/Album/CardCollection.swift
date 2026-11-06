@@ -99,6 +99,8 @@ public struct CardCollection: Sendable, Equatable {
     private let species: Set<String>
     private let placements: [UUID: CardPlacement]
     private let patchByKey: [Patch.Key: Patch]
+    /// The same patches by scientific name, in the `speciesID` of the key.
+    private let patchByScientificName: [Patch.Key: Patch]
     private let keyBySighting: [UUID: Patch.Key]
     /// Scientific names collected per set id.
     private let collectedBySet: [String: Set<String>]
@@ -132,6 +134,7 @@ public struct CardCollection: Sendable, Equatable {
         keyBySighting = keys
         let byKey = grouped.mapValues { Patch(speciesID: $0.sightings[0].speciesID, placement: $0.placement, sightings: $0.sightings) }
         patchByKey = byKey
+        patchByScientificName = Dictionary(byKey.values.map { (Patch.Key(speciesID: $0.scientificName, setID: $0.placement.setID), $0) }) { first, _ in first }
         patches = byKey.values.sorted { Entry.isEarlier($1.sewn, $0.sewn) }
         collectedBySet = collected
         unchartedSpeciesCount = uncharted.count
@@ -158,6 +161,12 @@ public struct CardCollection: Sendable, Equatable {
     /// The patch with this species and placement; nil when no sighting has sewn it.
     public func patch(key: Patch.Key) -> Patch? {
         patchByKey[key]
+    }
+
+    /// The species' patch in a set, nil for Uncharted, for whoever has only its scientific name: a pack's own label for a bird
+    /// needn't be the BirdNET label its sightings carry.
+    public func patch(scientificName: String, setID: String?) -> Patch? {
+        patchByScientificName[Patch.Key(speciesID: scientificName, setID: setID)]
     }
 
     /// Whether the sighting is the one that sewed its patch: the patch's earliest surviving sighting.
