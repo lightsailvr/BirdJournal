@@ -157,6 +157,16 @@ struct ScreenAccessibilityTests {
 
     nonisolated static let sizes: [DynamicTypeSize] = [.large, .accessibility5]
 
+    @Test("The run recap reads as one sentence: no dots, no retired words (issue #150)", arguments: sizes)
+    func runRecap(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let recap = RunRecap(startedAt: .now.addingTimeInterval(-2_520), endedAt: .now, place: "Los Angeles", birdsHeard: 3, patchNames: ["House Finch"])
+        let labels = try await Self.walk(RunRecapCard(recap: recap, pictures: []), harness: harness, typeSize: typeSize) { $0.contains(recap.spokenText) }
+        Self.expectClean(labels, screen: "Run recap")
+        Self.expectOneWordPerThing(labels, screen: "Run recap")
+        #expect(labels == [recap.spokenText], "\(labels)")
+    }
+
     @Test("Listen: the source, Start listening and the local set; the cover is one labelled image", arguments: sizes)
     func listen(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()

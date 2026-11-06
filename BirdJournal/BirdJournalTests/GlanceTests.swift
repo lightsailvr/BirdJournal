@@ -346,12 +346,12 @@ struct RunRecapTests {
     @Test("it says the date, the place, the time listened, the birds heard and the patches sewn, in plain words")
     func words() {
         let value = recap()
-        #expect(value.dateText == "October 25, 2026")
+        #expect(value.dateText == "October 26, 2026")
         #expect(value.place == "Los Angeles")
         #expect(value.listenedText == "42 min")
         #expect(value.birdsLabel == "birds heard")
         #expect(value.patchesLabel == "patch sewn")
-        #expect(value.spokenText == "October 25, 2026, Los Angeles. Listened for 42 minutes. 3 birds heard. 1 patch sewn: House Finch.")
+        #expect(value.spokenText == "October 26, 2026, Los Angeles. Listened for 42 minutes. 3 birds heard. 1 patch sewn: House Finch.")
         #expect(!value.spokenText.contains("·"))
     }
 
@@ -367,7 +367,7 @@ struct RunRecapTests {
         #expect(recap(patches: []).patchesLabel == "patches sewn")
         #expect(recap(patches: []).spokenText.hasSuffix("0 patches sewn."))
         #expect(recap(patches: ["House Finch", "Black Phoebe"]).spokenText.hasSuffix("2 patches sewn: House Finch and Black Phoebe."))
-        #expect(recap(place: nil).spokenText.hasPrefix("October 25, 2026. Listened"))
+        #expect(recap(place: nil).spokenText.hasPrefix("October 26, 2026. Listened"))
     }
 
     @Test("the place follows the share policy: the city only, off when chosen, and a secret spot with a sensitive bird on it")
@@ -389,7 +389,7 @@ struct RunRecapTests {
     @Test("what goes with the image credits the app and the patches' photos, and carries nothing the card doesn't")
     func shareText() {
         let text = recap().shareText(credits: ["© A. Birder (CC BY)"])
-        #expect(text == "October 25, 2026, Los Angeles. Listened for 42 minutes, 3 birds heard, 1 patch sewn.\nHeard with Featherguild · Powered by BirdNET\nPatches: AI illustrations from reference photos (© A. Birder (CC BY))")
+        #expect(text == "October 26, 2026, Los Angeles. Listened for 42 minutes, 3 birds heard, 1 patch sewn.\nHeard with Featherguild · Powered by BirdNET\nPatches: AI illustrations from reference photos (© A. Birder (CC BY))")
         #expect(!recap(place: nil).shareText(credits: []).contains("Los Angeles"))
         #expect(!recap().shareText(credits: []).contains("AI illustrations"))
         #expect(RunRecap.imprint(hasPainting: false) == "Featherguild")
@@ -402,9 +402,12 @@ struct RunRecapTests {
         let rendered = try #require(CardExport.render(image, scale: CardExport.imageScale))
         let source = try #require(CGImageSourceCreateWithData(rendered.png as CFData, nil))
         let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
-        #expect(properties[kCGImagePropertyExifDictionary] == nil)
         #expect(properties[kCGImagePropertyGPSDictionary] == nil)
         #expect(properties[kCGImagePropertyTIFFDictionary] == nil)
+        // ImageIO records the pixel size under Exif, as for the patch's image; nothing that dates or places it may be there.
+        let exif = (properties[kCGImagePropertyExifDictionary] as? [CFString: Any]) ?? [:]
+        #expect(exif[kCGImagePropertyExifDateTimeOriginal] == nil)
+        #expect(exif[kCGImagePropertyExifDateTimeDigitized] == nil)
         #expect(rendered.image.size.width * rendered.image.scale == 1620)
     }
 

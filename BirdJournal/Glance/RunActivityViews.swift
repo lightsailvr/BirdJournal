@@ -12,10 +12,11 @@ struct RunActivityClock: View {
 
     var body: some View {
         Group {
-            if let startedAt = snapshot.startedAt, snapshot.phase != .paused {
+            if let startedAt = snapshot.startedAt {
                 Text(timerInterval: startedAt...Date.distantFuture, countsDown: false)
             } else {
-                Text(snapshot.phase == .paused ? "Paused" : "–:––")
+                Text("–:––")
+                    .accessibilityLabel(snapshot.statusText)
             }
         }
         .font(font)

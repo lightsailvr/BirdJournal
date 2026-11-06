@@ -12,32 +12,46 @@ struct GlancePreview: View {
     private static let run = RunSnapshot(phase: .listening, startedAt: .now.addingTimeInterval(-2_532), birdsHeard: 3, newPatchesWaiting: 1, setID: "us-ca-la")
     private static let empty = WidgetSnapshot(progress: .init(setID: "us-ca-la", setName: "Los Angeles", sewn: 0, total: 160))
 
-    private var store: WidgetStore? { WidgetStore.shared }
-    private var image: UIImage? { store?.patchImage().flatMap(UIImage.init(data:)) }
+    /// `-glancePage widgets`: the widgets alone, so they fit one screenshot.
+    private static var showsWidgets: Bool { UserDefaults.standard.string(forKey: "glancePage") == "widgets" }
+
+    @State private var snapshot: WidgetSnapshot?
+    @State private var image: UIImage?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                RunLockScreenView(snapshot: Self.run)
-                    .background(GlanceInk.page(scheme), in: RoundedRectangle(cornerRadius: 22))
-                RunLockScreenView(snapshot: RunSnapshot(phase: .paused, startedAt: .now, birdsHeard: 1, newPatchesWaiting: 0, pausedTitle: "Paused: glasses off"))
-                    .background(GlanceInk.page(scheme), in: RoundedRectangle(cornerRadius: 22))
-                island
-                if let snapshot = store?.snapshot() {
-                    HStack(spacing: 14) {
-                        widget(snapshot, image, .systemSmall, width: 170)
-                        widget(Self.empty, nil, .systemSmall, width: 170)
+                if Self.showsWidgets {
+                    if let snapshot {
+                        HStack(spacing: 14) {
+                            widget(snapshot, image, .systemSmall, width: 170)
+                            widget(Self.empty, nil, .systemSmall, width: 170)
+                        }
+                        widget(snapshot, image, .systemMedium, width: 354)
+                        widget(Self.empty, nil, .systemMedium, width: 354)
+                    } else {
+                        Text("No widget files were written.")
                     }
-                    widget(snapshot, image, .systemMedium, width: 364)
-                    widget(Self.empty, nil, .systemMedium, width: 364)
                 } else {
-                    Text("No widget files were written.")
+                    RunLockScreenView(snapshot: Self.run)
+                        .background(GlanceInk.page(scheme), in: RoundedRectangle(cornerRadius: 22))
+                    RunLockScreenView(snapshot: RunSnapshot(phase: .paused, startedAt: .now.addingTimeInterval(-300), birdsHeard: 1, newPatchesWaiting: 0, pausedTitle: "Paused: glasses off"))
+                        .background(GlanceInk.page(scheme), in: RoundedRectangle(cornerRadius: 22))
+                    island
                 }
             }
             .padding(16)
             .accessibilityIdentifier("glance")
         }
         .background(Color.black.opacity(scheme == .dark ? 1 : 0.2))
+        .task {
+            // The app writes the files a moment after launch.
+            while !Task.isCancelled {
+                snapshot = WidgetStore.shared?.snapshot()
+                image = WidgetStore.shared?.patchImage().flatMap(UIImage.init(data:))
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
     }
 
     /// The Island is always dark, whatever the phone's appearance.
