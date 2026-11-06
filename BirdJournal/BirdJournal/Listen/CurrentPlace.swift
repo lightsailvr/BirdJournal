@@ -44,7 +44,7 @@ final class CurrentPlace {
     /// its cover decodes off the main actor and then everything changes at once.
     func refresh() async {
         guard let id = LocalSet.choose(coordinate: location.lastKnownCoordinate(), in: collection()) else { return }
-        defaults.set(id, forKey: Self.rememberedKey)
+        if defaults.string(forKey: Self.rememberedKey) != id { defaults.set(id, forKey: Self.rememberedKey) }
         let cover = library.cover(setID: id)
         guard id != setID || cover != shownCover else { return }
         let image = await SetCoverImage.load(cover)

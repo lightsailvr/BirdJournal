@@ -26,8 +26,6 @@ struct BirdJournalApp: App {
     @State private var circles: CircleStore
     @State private var findOutbox: FindOutbox
     @State private var pushes: PushCenter
-    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
-    @State private var showingSplash = true
     private let album: ModelContainer
     private let frames: FrameStore
 
@@ -246,23 +244,18 @@ struct BirdJournalApp: App {
     #endif
 
     var body: some Scene {
+        // Nothing this closure reads may change after launch: SwiftUI can call it from the thread that draws animation frames, and
+        // Swift 6 traps it there, since it belongs to the main actor (issue #150). So what changes lives in `AppSurface`, a view,
+        // whose body SwiftUI keeps on the main thread. `LaunchUITests` holds it.
         WindowGroup {
-            ZStack {
-                root
-                if showingSplash {
-                    LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
-                        .transition(.opacity)
-                        .zIndex(1)
-                }
-            }
-            .preferredColorScheme(appearance.colorScheme)
+            AppSurface { isUnderSplash in root(isUnderSplash: isUnderSplash) }
         }
         .modelContainer(album)
     }
 
     /// The app with its shared objects, under the launch splash.
-    private var root: some View {
-        RootView(isUnderSplash: showingSplash)
+    private func root(isUnderSplash: Bool) -> some View {
+        RootView(isUnderSplash: isUnderSplash)
             .environment(connection)
             .environment(spike)
             .environment(lens)
@@ -294,5 +287,24 @@ struct BirdJournalApp: App {
                     circles.pendingInvite = token
                 }
             }
+    }
+}
+
+/// The window's content, with the two things at this level that change: the launch splash going, and the appearance from Settings.
+private struct AppSurface<Root: View>: View {
+    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
+    @State private var showingSplash = true
+    @ViewBuilder let root: (_ isUnderSplash: Bool) -> Root
+
+    var body: some View {
+        ZStack {
+            root(showingSplash)
+            if showingSplash {
+                LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+        .preferredColorScheme(appearance.colorScheme)
     }
 }
