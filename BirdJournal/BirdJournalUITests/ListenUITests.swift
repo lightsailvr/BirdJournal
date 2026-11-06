@@ -39,9 +39,10 @@ final class ListenUITests: XCTestCase {
         let localSet = app.buttons["Your local set, Los Angeles"]
         XCTAssertTrue(localSet.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         localSet.tap()
-        let set = app.navigationBars["Los Angeles"]
-        XCTAssertTrue(set.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertGreaterThan(set.frame.height, 130, "with the search drawer, inline is 108 pt, large 160 pt")
+        // A set's page is the exception, as the reference draws it (issue #150): its plate is its title, and its search a pull away.
+        let plate = app.staticTexts["Citrus edition, 160 birds"]
+        XCTAssertTrue(plate.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertLessThan(app.navigationBars.firstMatch.frame.height, 80, "no large title over the plate")
     }
 
     /// Heard or Seen is on the review sheet itself (issue #150, guide board 03), Heard until the birder says otherwise.
