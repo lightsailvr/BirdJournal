@@ -252,6 +252,52 @@ struct WarmLoaderTests {
         _ = try await ScreenAccessibilityTests.walk(ListenView().environment(\.warmEngine) { asked += 1 }, harness: harness) { _ in asked > 0 }
         #expect(asked == 1)
     }
+
+    @Test("not during a run, which holds its own engine")
+    func listenDoesntWarmDuringARun() async throws {
+        let harness = try ScreenAccessibilityTests.Harness()
+        await harness.run.start()
+        #expect(harness.run.state == .listening)
+        var asked = 0
+        var polls = 0
+        _ = try await ScreenAccessibilityTests.walk(ListenView().environment(\.warmEngine) { asked += 1 }, harness: harness) { _ in
+            polls += 1
+            return polls >= 4  // a second on screen, past the warm-up's wait
+        }
+        #expect(asked == 0)
+        await harness.run.stop()
+    }
+}
+
+@Suite("Guild screens from what's kept", .serialized)
+@MainActor
+struct LastKnownGuildScreenTests {
+    @Test("Compare stops showing a friend once the server says they're gone, as after a block made elsewhere")
+    func compareClearsOnNotFound() async throws {
+        let harness = try ScreenAccessibilityTests.Harness()
+        let store = harness.circles
+        let client = try #require(store.client as? FakeCircleClient)
+        await store.refresh()
+        let birds = try await store.compare(friendID: "maya")
+        #expect(!birds.species.isEmpty)
+        try await client.setBlocked(true, accountID: "maya", accessToken: "t")
+
+        let labels = try await ScreenAccessibilityTests.walk(CompareBirdsView(friendID: "maya", friendName: "Maya Ortiz"), harness: harness) { $0.contains("Try again") }
+        #expect(labels.contains("Try again"), "\(labels)")
+        #expect(!labels.contains { label in birds.species.contains { label.contains($0.commonName) } }, "\(labels)")
+    }
+
+    @Test("a birder who didn't start the Guild is still themselves when the account hasn't been read")
+    func myRowWithoutTheAccount() async throws {
+        let harness = try ScreenAccessibilityTests.Harness()
+        let store = harness.circles
+        await store.refresh()
+        let family = try #require(store.circles.first { $0.name == "Family" })
+        #expect(!family.isCreator)
+        #expect(harness.account.account == nil)
+        let labels = try await ScreenAccessibilityTests.walk(CirclePageView(id: family.id), harness: harness) { $0.contains { $0.contains("Pat Birder (you)") } }
+        #expect(labels.contains { $0.contains("Pat Birder (you)") }, "\(labels)")
+    }
 }
 
 @Suite("The Guild placeholder", .serialized)

@@ -63,7 +63,9 @@ final class SpeedTour {
     }
 
     func walk() async {
+        let fetchStarted = ContinuousClock.now
         let all = (try? context.fetch(Sighting.newestFirst())) ?? []
+        print("SPEED album-fetch ms=\((ContinuousClock.now - fetchStarted).speedMilliseconds)")
         print("SPEED album sightings=\(all.count) launch-builds=\(SpeedProbe.builds) launch-build-ms=\(SpeedProbe.buildTime.speedMilliseconds)")
         // What the store knows the moment the app is up, before any answer from the server.
         print("SPEED guilds-at-launch circles=\(circles.circles.count) feeds=\(circles.feeds.values.filter(\.isLoaded).count)")

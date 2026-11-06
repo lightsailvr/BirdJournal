@@ -476,6 +476,46 @@ struct CircleCacheTests {
         #expect(store.snapshot.goals[sunday.id] == nil)
     }
 
+    @Test("a block made on another device takes the friend's finds out of what was restored, and off the disk")
+    func blockedElsewhere() async throws {
+        let url = file()
+        let client = FakeCircleClient(seeded: true)
+        let (first, sunday) = try await filled(at: url, client: client)
+        let friend = try #require(first.feeds[sunday.id]?.items.first { !$0.isMine }?.owner)
+
+        let elsewhere = CircleCache(fileURL: url)
+        let next = CircleStore(account: FakeAccount.session(signedIn: true), client: client, cache: elsewhere)
+        #expect(next.feeds[sunday.id]?.items.contains { $0.owner.id == friend.id } == true, "restored as it was")
+        try await client.setBlocked(true, accountID: friend.id, accessToken: "t")
+        await next.refresh()
+        #expect(next.feeds[sunday.id]?.items.contains { $0.owner.id == friend.id } == false)
+        next.writeCache()
+        elsewhere.finishWrites()
+        let again = CircleStore(account: FakeAccount.session(signedIn: true), client: client, cache: CircleCache(fileURL: url))
+        #expect(again.feeds[sunday.id]?.items.isEmpty == false)
+        #expect(again.feeds[sunday.id]?.items.contains { $0.owner.id == friend.id } == false, "nor on disk")
+    }
+
+    @Test("blocking a friend drops what was last read of their birds")
+    func blockDropsCompare() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        try await store.compare(friendID: "maya")
+        #expect(store.friendBirds["maya"] != nil)
+        try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
+        #expect(store.friendBirds["maya"] == nil)
+    }
+
+    @Test("Compare answering not found drops what was last read, as for a block made elsewhere")
+    func notFoundDropsCompare() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        try await store.compare(friendID: "maya")
+        try await client.setBlocked(true, accountID: "maya", accessToken: "t")
+        await #expect(throws: CircleError.notFound) { try await store.compare(friendID: "maya") }
+        #expect(store.friendBirds["maya"] == nil)
+    }
+
     @Test("a friend's side of Compare is there the next time it's opened")
     func compareIsKept() async throws {
         let (store, _) = try await filled(at: file())

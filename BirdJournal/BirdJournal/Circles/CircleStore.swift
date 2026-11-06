@@ -299,6 +299,7 @@ final class CircleStore {
         let session = session
         if let blocked = try? await call({ try await $0.blocks(accessToken: $1) }), session == self.session {
             self.blocked = blocked
+            forgetFinds(of: blocked.map(\.id))
         }
     }
 
@@ -308,20 +309,33 @@ final class CircleStore {
         blocked.removeAll { $0.id == accountID }
         if isBlocked {
             blocked.append(BlockedAccount(id: accountID, displayName: name))
-            // At once, and on disk: their finds don't wait on the reload, which could fail.
-            for id in feeds.keys { feeds[id]?.removeFinds(of: [accountID]) }
-            cacheLater()
+            forgetFinds(of: [accountID])
         }
         for id in feeds.keys { await loadFeed(circleID: id) }
     }
 
-    /// A friend's side of Compare birds (issue #64).
+    /// Blocked, here or on another device: their finds and birds go at once, in memory and on disk, without waiting on a
+    /// reload, which could fail.
+    private func forgetFinds(of accounts: [String]) {
+        guard !accounts.isEmpty else { return }
+        for id in feeds.keys { feeds[id]?.removeFinds(of: accounts) }
+        for id in accounts { friendBirds[id] = nil }
+        cacheLater()
+    }
+
+    /// A friend's side of Compare birds (issue #64). The server answers not found for someone blocked, or no longer in a Guild
+    /// with the birder, and what was last read of them goes with that answer.
     @discardableResult
     func compare(friendID: String) async throws -> FriendBirds {
         let session = session
-        let birds = try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
-        if session == self.session { friendBirds[friendID] = birds }
-        return birds
+        do {
+            let birds = try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
+            if session == self.session, !blocked.contains(where: { $0.id == friendID }) { friendBirds[friendID] = birds }
+            return birds
+        } catch CircleError.notFound {
+            if session == self.session { friendBirds[friendID] = nil }
+            throw CircleError.notFound
+        }
     }
 
     private func update(_ itemID: String, _ change: (FeedItem) -> FeedItem) {

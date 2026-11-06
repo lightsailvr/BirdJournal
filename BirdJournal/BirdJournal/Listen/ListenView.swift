@@ -2,7 +2,6 @@ import Album
 import Identification
 import MWDATCore
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The Listen tab (issue #28; issue #117's ready and active states): one Start listening action over the chosen audio
@@ -46,10 +45,11 @@ struct ListenView: View {
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: run.acknowledgment)
-        // After the first frame, so Start is ready before it's tapped (issue #150).
+        // After the first frame, so Start is ready before it's tapped (issue #150). Not during a run: it holds its own engine,
+        // and if a memory warning has dropped the shared one, this would load a second beside it.
         .task {
             try? await Task.sleep(for: .milliseconds(300))
-            if !Task.isCancelled { warmEngine() }
+            if !Task.isCancelled, !run.state.isActive { warmEngine() }
         }
     }
 }
@@ -67,7 +67,6 @@ private struct ReadyToListenView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
-    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @State private var choosingSource = false
 
     /// The status bar's height, which the cover runs under: the window's inset, since this page's own safe area also counts the
@@ -78,7 +77,7 @@ private struct ReadyToListenView: View {
 
     var body: some View {
         let collection = collectionStore.collection
-        let local = LocalSet.find(library: library, collection: collection, newest: sightings.first)
+        let local = LocalSet.find(library: library, collection: collection, newest: collection.cards.first)
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -115,7 +114,7 @@ private struct ReadyToListenView: View {
                         .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
 
                         if let local {
-                            LocalSetSection(local: local, collection: collection, sightings: sightings)
+                            LocalSetSection(local: local, collection: collection)
                         }
                     }
                     .padding(.horizontal, JournalLayout.margin)

@@ -437,7 +437,7 @@ final class FakeCircleClient: CircleClient {
             let members = circlesByID[id]?.members ?? []
             return members.contains { $0.id == Self.me } && members.contains { $0.id == friendID }
         }
-        guard friendID != Self.me, !shared.isEmpty else { throw CircleError.notFound }
+        guard friendID != Self.me, !shared.isEmpty, !blockedIDs.contains(friendID) else { throw CircleError.notFound }
         var best: [String: FriendBirds.Species] = [:]
         for item in shared.flatMap({ feedItems[$0] ?? [] }) where item.owner.id == friendID {
             if best[item.scientificName]?.method != .seen {
