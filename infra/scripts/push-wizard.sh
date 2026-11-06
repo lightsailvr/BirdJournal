@@ -338,7 +338,7 @@ if begin "Deploy the stack with pushes"; then
   say "bootstraps), and deploys the 15-minute digest schedule and the API's read access to $SECRET_NAME."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
     "$INFRA_DIR/scripts/deploy.sh" || {
-      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=4 infra/scripts/push-wizard.sh" >&2
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=4 infra/scripts/push-wizard.sh, or WIZARD_FROM=5 if you then deployed by hand with deploy.sh --new-host-first" >&2
       exit 1
     }
   else

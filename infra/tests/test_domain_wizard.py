@@ -708,19 +708,17 @@ def _nothing(wizard: Wizard) -> None:
 @pytest.mark.parametrize(
     ("break_it", "arguments"),
     [
-        (_no_certificate, ()),
         (_record_missing, ()),
         (_dns_down, ()),
         (_no_name_servers, ()),
-        (_stack_unreadable, ()),
         (_backend_missing, ()),
         (_nothing, ()),  # between the deploys, a plain deploy is refused
         (_new_host_broken, ("--move-to-new-host",)),
         (_moved, ("--new-host-first",)),
     ],
-    ids=["certificate", "record", "dns-down", "no-name-servers", "stack", "backend", "between-deploys", "new-host", "moved-back"],
+    ids=["record", "dns-down", "no-name-servers", "backend", "between-deploys", "new-host", "moved-back"],
 )
-def test_every_refusal_names_the_emergency_flag_and_the_flag_gets_past_it(
+def test_a_refusal_the_flag_can_help_with_names_it_and_the_flag_gets_past_it(
     wizard: Wizard, break_it: Any, arguments: tuple[str, ...]
 ) -> None:
     wizard.use_the_real_deploy()
@@ -736,6 +734,103 @@ def test_every_refusal_names_the_emergency_flag_and_the_flag_gets_past_it(
     assert "cdk deploy" in wizard.reached_cdk()
     assert "EMERGENCY DEPLOY" in through.stderr
     assert "DNS points both hosts" in through.stderr
+
+
+@pytest.mark.parametrize(
+    ("sans", "status"), [([OLD], "ISSUED"), ([NEW], "ISSUED"), ([NEW, OLD], "PENDING_VALIDATION")],
+    ids=["old-certificate", "misses-the-old-host", "not-issued"],
+)
+def test_a_certificate_that_cant_work_doesnt_offer_the_flag_and_says_how_to_ship_a_fix(
+    wizard: Wizard, sans: list[str], status: str
+) -> None:
+    wizard.use_the_real_deploy()
+    wizard.state["certificates"] = [{"arn": NEW_ARN, "domain": sans[0], "sans": sans, "status": status, "tags": [], "checks_until_issued": 99}]
+    result = wizard.deploy()
+    assert result.returncode == 1
+    assert "deploy.sh --emergency" not in result.stdout
+    assert "--emergency wouldn't help" in result.stdout
+    assert "stages 2 to 5" in result.stdout
+    assert "--new-host-first" in result.stdout
+    assert "holds slice 8's backend but not the host move" in result.stdout
+    assert wizard.reached_cdk() == ""
+
+
+def test_between_the_deploys_the_refusal_says_how_to_ship_a_fix(wizard: Wizard) -> None:
+    result = wizard.deploy()
+    assert result.returncode == 1
+    assert "holds" in result.stdout and "but not the host move" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("break_it"), [_nothing, _record_missing, _new_host_broken, _dns_down], ids=["all-fine", "no-record", "host-down", "dns-down"]
+)
+def test_before_the_move_the_flag_alone_keeps_the_site_where_it_is(wizard: Wizard, break_it: Any) -> None:
+    """The plain template would redirect the old host to a name that may not resolve: the lock-out itself."""
+    wizard.use_the_real_deploy()
+    break_it(wizard)
+    result = wizard.deploy("--emergency")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "cdk deploy BirdJournal --require-approval broadening -c inviteNewHostFirst=true" in wizard.reached_cdk()
+    assert "stays where it is" in result.stderr
+
+
+def test_before_the_move_a_new_host_record_gone_and_the_host_down_never_get_the_plain_template(wizard: Wizard) -> None:
+    wizard.use_the_real_deploy()
+    del wizard.state["records"][NEW]
+    del wizard.state["web"][f"https://{NEW}/"]
+    result = wizard.deploy("--emergency")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert wizard.reached_cdk().splitlines() == ["cdk deploy BirdJournal --require-approval broadening -c inviteNewHostFirst=true"]
+
+
+def test_an_emergency_diff_shows_the_template_the_deploy_would_use(wizard: Wizard) -> None:
+    result = wizard.deploy("--emergency", "--diff")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert wizard.reached_cdk().splitlines() == ["cdk diff BirdJournal --method=template -c inviteNewHostFirst=true"]
+
+
+def test_moving_the_site_in_an_emergency_has_to_be_named_and_says_so(wizard: Wizard) -> None:
+    wizard.use_the_real_deploy()
+    del wizard.state["web"][f"https://{NEW}/"]
+    result = wizard.deploy("--emergency", "--move-to-new-host")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "inviteNewHostFirst" not in wizard.reached_cdk()
+    assert "MOVES THE SITE" in result.stderr
+
+
+def test_after_the_move_the_flag_alone_stays_on_the_new_host(wizard: Wizard) -> None:
+    wizard.use_the_real_deploy()
+    _moved(wizard)
+    _record_missing(wizard)
+    result = wizard.deploy("--emergency")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "inviteNewHostFirst" not in wizard.reached_cdk()
+    assert "The site stays where it is" in result.stderr
+
+
+def test_moving_back_in_an_emergency_has_to_be_named_and_says_so(wizard: Wizard) -> None:
+    wizard.use_the_real_deploy()
+    _moved(wizard)
+    result = wizard.deploy("--emergency", "--new-host-first")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "inviteNewHostFirst=true" in wizard.reached_cdk()
+    assert "moves them back" in result.stderr
+
+
+def test_an_unreadable_stack_names_the_flag_then_asks_for_a_side(wizard: Wizard) -> None:
+    wizard.use_the_real_deploy()
+    _stack_unreadable(wizard)
+    refused = wizard.deploy()
+    assert refused.returncode != 0
+    assert "--emergency" in refused.stdout
+    alone = wizard.deploy("--emergency")
+    assert alone.returncode == 1
+    assert "--emergency --new-host-first" in alone.stdout
+    assert "--emergency --move-to-new-host" in alone.stdout
+    assert wizard.reached_cdk() == ""
+    through = wizard.deploy("--emergency", "--new-host-first")
+    assert through.returncode == 0, through.stdout + through.stderr
+    assert "inviteNewHostFirst=true" in wizard.reached_cdk()
 
 
 def test_an_ordinary_deploy_gives_no_emergency_warning(wizard: Wizard) -> None:
@@ -797,3 +892,4 @@ def test_an_unknown_argument_stops_a_deploy(wizard: Wizard) -> None:
 def test_the_other_wizards_say_where_to_resume_when_a_deploy_is_refused(script: str, stage: int) -> None:
     text = (INFRA / "scripts" / script).read_text()
     assert f'deploy.sh" || {{\n      printf \'%s\\n\' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM={stage}' in text
+    assert f"or WIZARD_FROM={stage + 1} if you then deployed by hand with deploy.sh --new-host-first" in text

@@ -14,7 +14,9 @@
 # And two ways past a refusal:
 #   --without-live-backend the live-backend check is wrong, or you mean to remove those fields
 #   --emergency            skips every check above, for when one of them stands between you and fixing an outage. The
-#                          template tests and the bootstrap check still run. It says what it skipped.
+#                          template tests and the bootstrap check still run, and it says what it skipped. Before the
+#                          move, with no side named, it uses --new-host-first's template: the site stays where it is.
+#                          It can't help with a certificate that doesn't cover both hosts: CloudFront should refuse that.
 #
 # Needs the wizards' console steps done first: infra/scripts/accounts-wizard.sh (the two secrets in Secrets
 # Manager, the CDK bootstrap, BUDGET_ALERT_EMAIL in ~/keys/birdjournal.env) and, from issue #61,
@@ -106,6 +108,8 @@ check_the_move() {
             echo "A plain deploy from this checkout would finish that move, so it has to be a choice:"
             echo "  to finish it, infra/scripts/domain-wizard.sh, or infra/scripts/deploy.sh --move-to-new-host"
             echo "  to deploy something else and leave the site where it is, infra/scripts/deploy.sh --new-host-first"
+            echo "To ship an urgent fix without the wizard's certificate and records: deploy from a checkout that holds"
+            echo "slice 8's backend but not the host move."
             echo "$EMERGENCY"
             exit 1
             ;;
@@ -122,6 +126,36 @@ check_the_move() {
     esac
 }
 
+# emergency_side: what an emergency deploy does to the site, said out loud. With no side named it never moves the site.
+emergency_side() {
+    local new_url current
+    new_url="https://$(jq -r '.context.inviteDomain' "$infra/cdk.json")"
+    case "$move" in
+        new-host-first)
+            echo "  This uses --new-host-first's template: the old host serves its pages and the API's links are on it," >&2
+            echo "  which moves them back if the stack has already moved." >&2
+            ;;
+        move)
+            echo "  This MOVES THE SITE, answering or not: the old host redirects to $new_url and the API's links go there." >&2
+            ;;
+        stay)
+            if ! current=$(site_address); then
+                echo "Can't read the stack, so this can't tell which side of the host move the site is on. Name one:"
+                echo "  infra/scripts/deploy.sh --emergency --new-host-first    the old host serves its pages, and the API's links are on it"
+                echo "  infra/scripts/deploy.sh --emergency --move-to-new-host  the old host redirects, and the API's links are on the new host"
+                exit 1
+            fi
+            if [[ "$current" == "$new_url" || "$current" == "none" ]]; then
+                echo "  The site stays where it is, on $new_url." >&2
+            else
+                context="-c inviteNewHostFirst=true"
+                echo "  The site hasn't moved, so this uses --new-host-first's template and it stays where it is: the old" >&2
+                echo "  host serves its pages and the API's links are on it. --move-to-new-host is what moves it." >&2
+            fi
+            ;;
+    esac
+}
+
 if [[ "$emergency" == "yes" && "$mode" != "synth" ]]; then
     cat >&2 <<'WARNING'
 
@@ -133,9 +167,11 @@ if [[ "$emergency" == "yes" && "$mode" != "synth" ]]; then
   !!   the new host answers, and which side of the host move this deploy is on
   !! Any of them could now break invite links or take fields off the API.
   !! The template tests and the shared account's bootstrap check still run.
+  !! A certificate that doesn't cover both hosts should still be refused by CloudFront.
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 WARNING
+    emergency_side
 elif [[ "$mode" != "synth" ]]; then
     # Before anything slow: CloudFront would refuse a certificate that doesn't cover the hosts, partway through the deploy.
     "$infra/scripts/check-invite-certificate.sh"

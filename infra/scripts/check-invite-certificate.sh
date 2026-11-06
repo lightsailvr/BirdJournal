@@ -11,6 +11,8 @@ infra="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export AWS_PROFILE="${AWS_PROFILE:-lsvr-admin}"
 arn="${INVITE_CERTIFICATE_ARN:?set INVITE_CERTIFICATE_ARN or run infra/scripts/domain-wizard.sh}"
 EMERGENCY="If you have to deploy regardless: infra/scripts/deploy.sh --emergency"
+URGENT="To ship an urgent fix before the site has moved: domain-wizard.sh stages 2 to 5, then deploy.sh --new-host-first,
+or deploy from a checkout that holds slice 8's backend but not the host move."
 hosts=$(jq -c '[.context.inviteDomain] + (.context.inviteFormerDomains // [])' "$infra/cdk.json")
 
 if ! certificate=$(aws acm describe-certificate --region us-east-1 --certificate-arn "$arn" --output json 2>/dev/null); then
@@ -23,12 +25,14 @@ missing=$(jq -r --argjson hosts "$hosts" '$hosts - .Certificate.SubjectAlternati
 if [[ -n "$missing" ]]; then
     echo "The invite certificate doesn't cover: $missing. CloudFront would refuse the deploy."
     echo "Run infra/scripts/domain-wizard.sh: it makes one for every host and saves its ARN."
-    echo "$EMERGENCY"
+    echo "--emergency wouldn't help: every template names both hosts, so CloudFront should refuse this certificate."
+    echo "$URGENT"
     exit 1
 fi
 if [[ "$status" != "ISSUED" ]]; then
     echo "The invite certificate is $status, not ISSUED. Run infra/scripts/domain-wizard.sh to finish it."
-    echo "$EMERGENCY"
+    echo "--emergency wouldn't help: CloudFront should refuse a certificate that isn't issued."
+    echo "$URGENT"
     exit 1
 fi
 echo "Invite certificate: issued, covers $(jq -r 'join(" and ")' <<<"$hosts"). OK."

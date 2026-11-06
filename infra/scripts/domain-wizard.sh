@@ -686,7 +686,7 @@ finish
 say "Keep, for good:"
 note "  the $FORMER_HOSTS CNAME and both validation records at SiteGround, and the old host in inviteFormerDomains."
 say ""
-say "A deploy.sh refusal names --emergency, which skips its checks, for when one of them stands in the way of a fix."
+say "deploy.sh's refusals name --emergency where it can help: it skips the checks, for when one stands in the way of a fix."
 say ""
 say "From here on, deploy only from branches that hold this change. An older branch would take $DOMAIN back off the"
 say "distribution and send the API's invite links back to the old host."

@@ -405,7 +405,7 @@ if begin "Deploy the stack"; then
   say "sign-in settings into the app (BirdJournal/BirdJournal/Account/AccountServer.json)."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
     "$INFRA_DIR/scripts/deploy.sh" || {
-      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=10 infra/scripts/accounts-wizard.sh" >&2
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=10 infra/scripts/accounts-wizard.sh, or WIZARD_FROM=11 if you then deployed by hand with deploy.sh --new-host-first" >&2
       exit 1
     }
     note "Commit BirdJournal/BirdJournal/Account/AccountServer.json so the app can sign in."

@@ -265,7 +265,7 @@ if begin "Deploy: the SES identity and the API's new permissions"; then
   say "only once moderation is on), AdminDeleteUser on the user pool and the Apple key's secret."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
     REPORT_EMAIL="$(report_email)" "$INFRA_DIR/scripts/deploy.sh" || {
-      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=2 infra/scripts/safety-wizard.sh" >&2
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=2 infra/scripts/safety-wizard.sh, or WIZARD_FROM=3 if you then deployed by hand with deploy.sh --new-host-first" >&2
       exit 1
     }
   else
