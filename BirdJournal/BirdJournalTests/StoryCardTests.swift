@@ -169,7 +169,7 @@ struct PaperCardAccessibilityTests {
         let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, location: griffithPark, soundConfidence: 0.8, source: .phone)
         album.mainContext.insert(sighting)
         let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PaperCardTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
-        let collection = library.collection(of: [sighting])
+        let collection = CardCollection(sightings: [sighting], sets: library.cardSets)
         let patch = try #require(collection.patch(of: sighting.identifier))
         return NavigationStack {
             ScrollView {

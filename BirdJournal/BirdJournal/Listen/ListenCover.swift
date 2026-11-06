@@ -1,6 +1,5 @@
 import Album
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The local set the Listen tab invites the birder to (issue #117, design guide page 11): the set of their newest card,
@@ -10,7 +9,7 @@ struct LocalSet {
     let progress: SetProgress
 
     @MainActor
-    static func find(library: PackLibrary, collection: CardCollection, newest: Sighting?) -> LocalSet? {
+    static func find(library: PackLibrary, collection: CardCollection, newest: CardCollection.Entry?) -> LocalSet? {
         let sets = library.sets
         let preferred = newest.flatMap { collection.placement(of: $0.identifier)?.setID }
         guard let set = sets.first(where: { $0.id == preferred })
@@ -143,7 +142,6 @@ struct LocalSetSection: View {
     @Environment(PackLibrary.self) private var library
     let local: LocalSet
     let collection: CardCollection
-    let sightings: [Sighting]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -223,10 +221,10 @@ struct LocalSetSection: View {
     }
 
     /// The newest cards of the set's species, one per species, at most two.
-    private var latestCards: [Sighting] {
+    private var latestCards: [CardCollection.Entry] {
         var seen = Set<String>()
-        var cards: [Sighting] = []
-        for sighting in sightings where collection.placement(of: sighting.identifier)?.setID == local.set.id {
+        var cards: [CardCollection.Entry] = []
+        for sighting in collection.cards where collection.placement(of: sighting.identifier)?.setID == local.set.id {
             guard seen.insert(sighting.scientificName).inserted else { continue }
             cards.append(sighting)
             if cards.count == (typeSize.isAccessibilitySize ? 1 : 2) { break }

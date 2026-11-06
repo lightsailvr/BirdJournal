@@ -269,7 +269,7 @@ struct SewingCeremonyAccessibilityTests {
         let context = harness.album.mainContext
         let all = try context.fetch(Sighting.newestFirst())
         let phoebe = try #require(all.first { $0.scientificName == "Sayornis nigricans" })
-        let placement = try #require(harness.library.collection(of: all).placement(of: phoebe.identifier))
+        let placement = try #require(CardCollection(sightings: all, sets: harness.library.cardSets).placement(of: phoebe.identifier))
         #expect(placement.setID != nil, "in the Los Angeles set")
         harness.run.showRevealForScreenshot(of: phoebe, placement: placement)
         return harness

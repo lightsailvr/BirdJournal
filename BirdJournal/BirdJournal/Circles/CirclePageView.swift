@@ -73,7 +73,7 @@ struct CirclePageView: View {
                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder() }
             }
             if let error, detail != nil {
                 Section { InlineError(error) }
@@ -380,10 +380,10 @@ struct CirclePageView: View {
         return "You can join again only with a new invitation."
     }
 
-    /// The signed-in birder among the members: the account's ID, or the creator's when the account isn't read yet
-    /// and the birder created the circle.
+    /// The signed-in birder among the members: the account's ID, or until the account is read (it may not be, on a cached page
+    /// with no connection), the sign-in's, or the creator's if the birder created the circle.
     private func myID(in detail: CircleDetail) -> String? {
-        circles.account.account?.id ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
+        circles.account.account?.id ?? circles.account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
     }
 
     private func load() async {
