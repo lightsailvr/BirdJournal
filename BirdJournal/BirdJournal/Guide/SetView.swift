@@ -3,7 +3,7 @@ import Pack
 import SwiftUI
 
 /// One set's page (issue #54): its species in collector order, each with its number; a species with a patch in the set
-/// shows its photo, and one not yet found there shows as a silhouette (guide page 15's state, without the pattern: see
+/// shows the patch, and one not yet found there shows as a silhouette (guide page 15's state, without the pattern: see
 /// DECISIONS.md, issue #138), so the page reads as what is still out there. Reached from the Atlas's set tiles and the Collection's set progress; every row opens the bird's
 /// profile. It leads with the set's tile (#118): the cover, "Ready offline" or the download, and "Species collected".
 /// Works for a set whose pack isn't downloaded: the names come from the set definition.
@@ -42,7 +42,7 @@ struct SetView: View {
                         ForEach(shown, id: \.element.scientificName) { offset, species in
                             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: species.commonName)) {
                                 SetSpeciesRow(
-                                    number: CardPlacement.paddedNumber(offset + 1, of: set.species.count), species: species,
+                                    number: CardPlacement.paddedNumber(offset + 1, of: set.species.count), species: species, setID: set.id,
                                     isCollected: collected.contains(species.scientificName)
                                 )
                             }
@@ -56,6 +56,7 @@ struct SetView: View {
                 .padding(.bottom, JournalLayout.sectionGap)
             }
             .background(Color.paper)
+            .holdsPatchLight()
             .navigationTitle(set.name)
             // Listen's bar, which this can be pushed from, is inline.
             .navigationBarTitleDisplayMode(.large)
@@ -67,28 +68,28 @@ struct SetView: View {
     }
 }
 
-/// One species of a set: its collector number, its photo once sewn (a bird whose pack isn't on the phone has no photo, so the
-/// row also says Sewn) or a silhouette, and its names. A silhouette needs no words: the heading above counts them.
+/// One species of a set: its collector number, your patch in this set's edition once sewn (a bird whose pack isn't on the phone
+/// has only the blank, so the row also says Sewn) or a silhouette, and its names. A silhouette needs no words: the heading
+/// above counts them.
 private struct SetSpeciesRow: View {
-    @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
     /// e.g. "021".
     let number: String
     let species: PackSet.Species
+    /// The set's id.
+    let setID: String
     let isCollected: Bool
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            Group {
-                if isCollected {
-                    PackImage(url: library.thumbnailURL(scientificName: species.scientificName))
-                } else {
-                    SpeciesSilhouette()
-                }
+            if isCollected {
+                RowPicture(source: .patch(scientificName: species.scientificName, setID: setID))
+            } else {
+                SpeciesSilhouette()
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                    .rowPicture()
+                    .accessibilityHidden(true)
             }
-            .frame(width: 64, height: 64)
-            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-            .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(number)
                     .font(JournalFont.attribution.monospacedDigit())
