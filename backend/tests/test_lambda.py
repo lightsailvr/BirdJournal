@@ -54,7 +54,7 @@ def test_settings_come_from_the_stacks_environment() -> None:
     assert settings.table_name == "birdjournal"
     assert settings.cognito_client_ids == frozenset({"ios-client", "other-client"})
     assert settings.dynamodb_endpoint is None
-    assert settings.invite_base_url == "https://birdquest.matthewcelia.com"
+    assert settings.invite_base_url == "https://featherguild.matthewcelia.com"
 
 
 def test_the_invite_base_url_comes_from_the_environment() -> None:

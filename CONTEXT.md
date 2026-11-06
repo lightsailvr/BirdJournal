@@ -29,7 +29,7 @@ One word for each thing, in every string, VoiceOver label and error (#150). The 
 | **Set** | A place's collection of birds | board, region |
 | **Edition** | How a set's patches look | |
 | **Place** | Plain English for where you are | |
-| **Field-guide download** | What a pack is, to a birder ("the download" or "the field guide" once it's clear) | pack |
+| **Field-guide download** | What a pack is, to a birder ("the download" or "the field guide" once it's clear; the page's title is "Downloads") | pack |
 | **Patch**, **paper card** | The collectible and its reverse | card, on its own |
 | **Sewn** | What a bird in a set is once you have its patch: "3 of 160 sewn" | species collected |
 | **Still out there** | A bird in a set you haven't found: "157 still out there", once on a page | not yet found here |

@@ -204,7 +204,7 @@ def test_reactions_within_ten_minutes_collapse_into_one_push(
     first, second = apns.to(ADA_PHONE)
     # It replaces the first on the phone, so it names the first's reaction too.
     assert second.payload()["aps"]["alert"] == {
-        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find · Jealous! · Let's go together",
+        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find, Jealous! Let's go together",
     }
     # It replaces the first on the phone.
     assert first.collapse_id == second.collapse_id
@@ -225,7 +225,7 @@ def test_a_reaction_after_the_window_pushes_at_once_with_anything_waiting(
     pushes = _reaction_alerts(apns, ADA_PHONE)
     assert len(pushes) == 2
     assert pushes[1].payload()["aps"]["alert"] == {
-        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find · Jealous!",
+        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find, Jealous!",
     }
     assert _flush(client).sent == 0
 
@@ -330,7 +330,7 @@ def test_a_failing_apns_never_fails_the_reaction(
 def test_the_words() -> None:
     lovely, jealous, together = ReactionKind.LOVELY, ReactionKind.JEALOUS, ReactionKind.TOGETHER
     assert reaction_words(["Bo"], "Oak Titmouse", [lovely]) == ("Bo reacted to your Oak Titmouse", "Lovely find")
-    assert reaction_words(["Bo", "Cy"], "Oak Titmouse", [together, lovely])[1] == "Lovely find · Let's go together"
+    assert reaction_words(["Bo", "Cy"], "Oak Titmouse", [together, lovely])[1] == "Lovely find, Let's go together"
     assert reaction_words(["Bo", "Cy", "Di"], "Oak Titmouse", [jealous])[0] == "Bo and 2 others reacted to your Oak Titmouse"
     assert reaction_words([], "Oak Titmouse", [jealous])[0] == "A friend reacted to your Oak Titmouse"
 
@@ -375,6 +375,88 @@ def test_compare_reads_only_finds_in_circles_the_two_share(client: TestClient, i
     assert [entry["common_name"] for entry in _compare(client, issuer, "dee", "bo").json()["species"]] == [
         "California Gnatcatcher", "Northern House Wren",
     ]
+
+
+def _editions(client: TestClient, issuer: TestIssuer, sub: str, friend: str) -> dict[str, list[str]]:
+    response = _compare(client, issuer, sub, friend)
+    assert response.status_code == 200, response.text
+    return {entry["common_name"]: entry["editions"] for entry in response.json()["species"]}
+
+
+def test_compare_gives_the_editions_the_friend_found_each_species_in(
+    client: TestClient, issuer: TestIssuer, circle: str
+) -> None:
+    # Earliest first, so the first is the patch to show (#150): New York, though Los Angeles sorts ahead of it and came
+    # later twice.
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-11-01T07:00:00Z"))
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ny-nyc", found_at="2026-10-30T07:00:00Z"))
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-10-31T07:00:00Z"))
+    # Outside every set: the species is on the list, with no edition to name.
+    _put_ok(client, issuer, "bo", _find(WREN, edition=None))
+    assert _editions(client, issuer, "ada", "bo") == {
+        "Black Phoebe": ["us-ny-nyc", "us-ca-la"],
+        "Northern House Wren": [],
+    }
+
+
+def test_compare_s_editions_come_only_from_finds_in_circles_the_two_share(
+    client: TestClient, issuer: TestIssuer, circle: str
+) -> None:
+    # Bo finds the Phoebe in New York while only in Dee's circle, which Ada isn't in, then comes back to Ada's circle
+    # and finds it in Los Angeles: Ada hears of Los Angeles alone, and Dee of both.
+    dee_s = str(_create(client, issuer, sub="dee", name="Dee's walks")["id"])
+    _join(client, issuer, dee_s, "bo", inviter="dee")
+    assert client.delete(f"/v1/circles/{circle}/members/me", headers=issuer.headers(sub="bo")).status_code == 204
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ny-nyc"))
+    _join(client, issuer, circle, "bo")
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-11-01T09:00:00Z"))
+    assert _editions(client, issuer, "ada", "bo") == {"Black Phoebe": ["us-ca-la"]}
+    assert _editions(client, issuer, "dee", "bo") == {"Black Phoebe": ["us-ny-nyc", "us-ca-la"]}
+
+
+def test_compare_s_editions_stop_at_a_circle_no_longer_shared(
+    client: TestClient, issuer: TestIssuer, circle: str
+) -> None:
+    # A find in the Sunday group alone, then a second circle for Ada and Bo: when Bo leaves the first, its find goes
+    # from Ada's side though the two still share a circle.
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la"))
+    second = str(_create(client, issuer, sub="ada", name="Second")["id"])
+    _join(client, issuer, second, "bo")
+    assert _editions(client, issuer, "ada", "bo") == {"Black Phoebe": ["us-ca-la"]}
+    assert client.delete(f"/v1/circles/{circle}/members/me", headers=issuer.headers(sub="bo")).status_code == 204
+    assert _editions(client, issuer, "ada", "bo") == {}
+
+
+def test_compare_hides_a_blocked_friend_s_editions_from_the_blocker_alone(
+    client: TestClient, issuer: TestIssuer, circle: str
+) -> None:
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la"))
+    assert client.put("/v1/blocks/bo", headers=issuer.headers(sub="ada")).status_code == 204
+    assert _compare(client, issuer, "ada", "bo").status_code == 404
+    assert _editions(client, issuer, "cy", "bo") == {"Black Phoebe": ["us-ca-la"]}
+    assert client.delete("/v1/blocks/bo", headers=issuer.headers(sub="ada")).status_code == 204
+    assert _editions(client, issuer, "ada", "bo") == {"Black Phoebe": ["us-ca-la"]}
+
+
+def test_compare_drops_the_edition_of_a_deleted_find(client: TestClient, issuer: TestIssuer, circle: str) -> None:
+    gone = _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ny-nyc"))
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-10-31T07:00:00Z"))
+    assert client.delete(f"/v1/finds/{gone}", headers=issuer.headers(sub="bo")).status_code == 204
+    assert _editions(client, issuer, "ada", "bo") == {"Black Phoebe": ["us-ca-la"]}
+
+
+def test_compare_reads_a_find_stored_without_an_edition_from_its_patch_s_art_key(
+    client: TestClient, issuer: TestIssuer, circle: str
+) -> None:
+    # Finds from before #136 name no edition; a patch's art key names its pack, as the feed's readers already take it.
+    # Pack art doesn't: it can come from any pack that has the bird, even for a find outside every set.
+    _put_ok(client, issuer, "bo", _find(PHOEBE, art={"kind": "pack", "key": "packs/us-ca-la/patch/sayornis-nigricans.png"}))
+    _put_ok(client, issuer, "bo", _find(WREN, art={"kind": "pack", "key": "packs/us-ca-la/troglodytes-aedon.jpg"}))
+    # An art key is looser than a pack id: what couldn't be an edition isn't read as one.
+    _put_ok(client, issuer, "bo", _find(GNATCATCHER, art={"kind": "pack", "key": "packs/Not_A_Pack/patch/polioptila.png"}))
+    assert _editions(client, issuer, "ada", "bo") == {
+        "Black Phoebe": ["us-ca-la"], "California Gnatcatcher": [], "Northern House Wren": [],
+    }
 
 
 def test_compare_needs_a_shared_circle(client: TestClient, issuer: TestIssuer, circle: str) -> None:

@@ -6,6 +6,9 @@ import SwiftUI
 /// index offers, each row with its set cover, species and size from real
 /// metadata, and every transfer state with its recovery: offline, interrupted, failed install and low storage.
 struct BirdPacksView: View {
+    /// Short, so the large title is never cut short (issue #150); the links to this page say "Field-guide downloads".
+    static let title = "Downloads"
+
     @Environment(PackLibrary.self) private var library
     @State private var query = ""
     @State private var removalError: String?
@@ -105,7 +108,7 @@ struct BirdPacksView: View {
             .padding(.bottom, JournalLayout.sectionGap)
         }
         .background(Color.paper)
-        .navigationTitle("Field-guide downloads")
+        .navigationTitle(Self.title)
         .searchable(text: $query, prompt: "Find a set")
         .task { await library.refreshIndex() }
         .refreshable { await library.refreshIndex() }

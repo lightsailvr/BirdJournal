@@ -24,6 +24,10 @@ class ComparedSpeciesResponse(BaseModel):
     common_name: str
     # The friend's best: seen beats heard.
     method: Method
+    # Issue #150: the editions (pack ids) the friend found it in, from finds in circles the two share, earliest found
+    # first, so the first is the patch to show. Empty when none names a set: found outside every set (Uncharted), or a
+    # find too old to say.
+    editions: list[str]
 
 
 class CompareResponse(BaseModel):
@@ -87,7 +91,7 @@ def compare(subject: Subject, friend_id: str, reactions: Reactions, circles: Cir
         species=[
             ComparedSpeciesResponse(
                 species_id=entry.species_id, scientific_name=entry.scientific_name,
-                common_name=entry.common_name, method=entry.method,
+                common_name=entry.common_name, method=entry.method, editions=list(entry.editions),
             )
             for entry in species
         ],
