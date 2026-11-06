@@ -167,6 +167,21 @@ struct ListeningCoordinatorTests {
         #expect(CandidateLook.newHere.offer(isDescribed: true) == .sewIt)
     }
 
+    @Test("a row's picture: your own photo where the row is about a sighting, then your patch, then the reference photo")
+    func picturesFollowTheGrammar() {
+        let url = URL(fileURLWithPath: "/reference.jpg")
+        let entry = CardCollection.Entry(identifier: UUID(), speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now)
+        let patch = CardCollection([entry]).patch(of: entry.identifier)
+        let patchSource = RowPictureSource.patch(scientificName: "Haemorhous mexicanus", setID: nil)
+        #expect(RowPictureSource.of(ownPhoto: "mine.jpg", patch: patch, reference: url) == .ownPhoto(path: "mine.jpg"))
+        #expect(RowPictureSource.of(patch: patch, reference: url) == patchSource)
+        #expect(RowPictureSource.of(patch: nil, reference: url) == .reference(url))
+        #expect(SightingRow.caption(.ownPhoto(path: "mine.jpg"), hasAttachedPhoto: true) == "Your photo")
+        #expect(SightingRow.caption(.ownPhoto(path: "mine.jpg"), hasAttachedPhoto: false) == "Your glasses snapshot")
+        #expect(SightingRow.caption(patchSource, hasAttachedPhoto: false) == nil, "a patch needs no caption")
+        #expect(SightingRow.caption(.reference(url), hasAttachedPhoto: false) == "Reference photo", "a reference photo never looks like your own")
+    }
+
     @Test("the summary leads with new patches waiting")
     func summaryLeadsWithWhatsWaiting() {
         #expect(RunHunt(newPatches: 1, alreadyHave: 2).text == "1 new patch waiting and 2 you already have")
@@ -184,7 +199,8 @@ struct ListeningCoordinatorTests {
         #expect(CandidateLook.newHere.spoken(name: "Acorn Woodpecker", heard: "just now", isCalling: true) == "Acorn Woodpecker, calling now, new patch waiting")
         #expect(CandidateLook.newHere.spoken(name: "Acorn Woodpecker", heard: "3 min ago", isCalling: false) == "Acorn Woodpecker, heard 3 min ago, new patch waiting")
         #expect(CandidateLook.sewn(count: 7).spoken(name: "House Finch", heard: "3 min ago", isCalling: false) == "House Finch, heard 3 min ago, you have this patch, seen 7 times")
-        #expect(CandidateLook.added(count: 1).spoken(name: "Black Phoebe", heard: "just now", isCalling: true) == "Black Phoebe, added, you have this patch, seen once")
+        #expect(CandidateLook.added(count: 1).spoken(name: "Black Phoebe", heard: "just now", isCalling: true) == "Black Phoebe, calling now, added, you have this patch, seen once")
+        #expect(CandidateLook.added(count: 2).spoken(name: "Black Phoebe", heard: "just now", isCalling: false) == "Black Phoebe, added, you have this patch, seen 2 times")
     }
 
     @Test("an add records the latest fix of the run, not the one Start took (issue #44)")

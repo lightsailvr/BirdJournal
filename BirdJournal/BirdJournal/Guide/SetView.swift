@@ -82,16 +82,14 @@ private struct SetSpeciesRow: View {
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            Group {
-                if isCollected {
-                    RowPatch(scientificName: species.scientificName, setID: setID)
-                } else {
-                    SpeciesSilhouette()
-                        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                }
+            if isCollected {
+                RowPicture(source: .patch(scientificName: species.scientificName, setID: setID))
+            } else {
+                SpeciesSilhouette()
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                    .rowPicture()
+                    .accessibilityHidden(true)
             }
-            .rowPicture()
-            .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(number)
                     .font(JournalFont.attribution.monospacedDigit())

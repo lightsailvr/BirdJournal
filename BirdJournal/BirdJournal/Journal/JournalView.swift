@@ -411,23 +411,14 @@ struct SightingRow: View {
     var showsDate = false
 
     var body: some View {
-        let reference = library.species(scientificName: sighting.scientificName)
         let photo = CardText.originalPhotoPath(sighting)
-        let patch = collectionStore.collection.patch(of: sighting.identifier)
+        let source = RowPictureSource.of(
+            ownPhoto: photo,
+            patch: collectionStore.collection.patch(of: sighting.identifier),
+            reference: library.thumbnailURL(scientificName: sighting.scientificName)
+        )
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            Group {
-                if let photo {
-                    FrameImage(frameImagePath: photo)
-                        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                } else if let patch {
-                    RowPatch(scientificName: patch.scientificName, setID: patch.placement.setID)
-                } else {
-                    PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
-                        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                }
-            }
-            .frame(width: 84, height: 84)
-            .accessibilityHidden(true)
+            RowPicture(source: source, side: 84)
             VStack(alignment: .leading, spacing: 3) {
                 Text(library.commonName(for: sighting))
                     .font(JournalFont.heading)
@@ -435,8 +426,8 @@ struct SightingRow: View {
                 Text("\(showsDate ? sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened) : sighting.confirmedAt.formatted(date: .omitted, time: .shortened)), \(sighting.source == .glasses ? "added from glasses" : "added from iPhone")")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
-                if photo != nil {
-                    Text(sighting.attachedPhotoPaths.isEmpty ? "Your glasses snapshot" : "Your photo")
+                if let caption = Self.caption(source, hasAttachedPhoto: !sighting.attachedPhotoPaths.isEmpty) {
+                    Text(caption)
                         .font(JournalFont.attribution)
                         .foregroundStyle(Color.inkSecondary)
                 }
@@ -458,6 +449,15 @@ struct SightingRow: View {
             if let location = sighting.location { await places.resolve(location) }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// Whose picture it is, so a reference photo never looks like your own. A patch needs no caption.
+    static func caption(_ source: RowPictureSource, hasAttachedPhoto: Bool) -> String? {
+        switch source {
+        case .ownPhoto: hasAttachedPhoto ? "Your photo" : "Your glasses snapshot"
+        case .patch: nil
+        case .reference(let url): url == nil ? "No photo" : "Reference photo"
+        }
     }
 }
 
@@ -533,19 +533,9 @@ private struct SpeciesRows: View {
         LazyVStack(spacing: 0) {
             ForEach(entries) { entry in
                 let reference = library.species(scientificName: entry.scientificName)
-                let patch = collectionStore.collection.patch(of: entry.latest.identifier)
                 NavigationLink(value: Route.speciesPatches(scientificName: entry.scientificName, commonName: reference?.species.commonName ?? entry.commonName)) {
                     AdaptiveRow(stacked: typeSize.stacksRows) {
-                        Group {
-                            if let patch {
-                                RowPatch(scientificName: patch.scientificName, setID: patch.placement.setID)
-                            } else {
-                                PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
-                                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                            }
-                        }
-                        .rowPicture()
-                        .accessibilityHidden(true)
+                        RowPicture(source: .of(patch: collectionStore.collection.patch(of: entry.latest.identifier), reference: library.thumbnailURL(scientificName: entry.scientificName)))
                         VStack(alignment: .leading, spacing: 3) {
                             Text(reference?.species.commonName ?? entry.commonName)
                                 .font(JournalFont.rowTitle)

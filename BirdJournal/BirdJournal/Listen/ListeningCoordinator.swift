@@ -262,7 +262,6 @@ final class ListeningCoordinator {
     /// Whether a phone-microphone run holds the audio session, which a reference clip then plays in (issue #41).
     var phoneRunHoldsSession: Bool { runSource == .phone && state.isActive }
     var errorMessage: String? { runSource == .glasses ? glasses.errorMessage : phone.errorMessage }
-    var addedCount: Int { sightings.entries.count }
 
     func isAdded(_ candidate: Candidate) -> Bool { sightings.isAdded(candidate.species) }
 

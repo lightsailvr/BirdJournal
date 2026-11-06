@@ -20,7 +20,7 @@ struct BirdProfileView: View {
 
     var body: some View {
         let reference = library.species(scientificName: scientificName)
-        let patches = match == nil ? BirdProfilePatches.ofSpecies(scientificName, in: collectionStore.collection) : []
+        let patches = match == nil ? Self.patches(of: scientificName, in: collectionStore.collection) : []
         ScrollViewReader { proxy in
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
@@ -65,6 +65,13 @@ struct BirdProfileView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
     }
+
+    /// The species' patches, the one with the newest sighting first: that's the one the profile leads with.
+    private static func patches(of scientificName: String, in collection: CardCollection) -> [CardCollection.Patch] {
+        collection.patches
+            .filter { $0.scientificName == scientificName }
+            .sorted { $0.latest.confirmedAt > $1.latest.confirmedAt }
+    }
 }
 
 /// The way from the guide to the bird's patches: how many sightings the birder has of it, or none yet.
@@ -83,16 +90,7 @@ private struct YourSightingsLink: View {
     }
 }
 
-enum BirdProfilePatches {
-    /// The species' patches, the one with the newest sighting first: that's the one the profile leads with.
-    static func ofSpecies(_ scientificName: String, in collection: CardCollection) -> [CardCollection.Patch] {
-        collection.patches
-            .filter { $0.scientificName == scientificName }
-            .sorted { $0.latest.confirmedAt > $1.latest.confirmedAt }
-    }
-}
-
-/// Your patch of this bird, large, in the edition of your newest sighting, with any others beside it, each opening its page. On
+/// Your patch of this bird, large, in the edition of your newest sighting, with every other beside it, each opening its page. On
 /// the felt or linen every patch sits on (the guide's rule: what you earned is an object you could hold).
 private struct ProfilePatches: View {
     @Environment(PackLibrary.self) private var library
@@ -107,13 +105,17 @@ private struct ProfilePatches: View {
                 if let newest = patches.first {
                     link(to: newest, size: .full, width: 190)
                 }
-                let others = patches.dropFirst().prefix(3)
+                let others = Array(patches.dropFirst())
                 if !others.isEmpty {
-                    VStack(spacing: 10) {
+                    // One column, or two for a bird found in most of the sets: a set is one patch, so there are never many.
+                    let columns = others.count > 3 && !typeSize.isAccessibilitySize ? 2 : 1
+                    let width: CGFloat = columns == 2 ? 58 : 78
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(width), spacing: 8), count: columns), spacing: 10) {
                         ForEach(others) { patch in
-                            link(to: patch, size: .thumbnail, width: 78)
+                            link(to: patch, size: .thumbnail, width: width)
                         }
                     }
+                    .fixedSize()
                 }
             }
             .frame(maxWidth: .infinity)

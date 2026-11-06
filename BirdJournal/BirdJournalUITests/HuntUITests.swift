@@ -128,14 +128,20 @@ final class HuntUITests: XCTestCase {
     }
 
     @MainActor
-    func testRowsShowPatchesAndTheRowsStillTakeTheirTaps() throws {
+    func testASightingWithYourPhotoKeepsItAndOneWithoutShowsItsPatchAndTheRowsTakeTheirTaps() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoScreen", "species-list"]
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoScreen", "sightings"]
         app.launch()
+        // The House Finch has a glasses photo and says so; the Mourning Dove has its patch, which needs no words.
+        let finch = button(app, beginning: "House Finch")
+        XCTAssertTrue(finch.waitForExistence(timeout: 15), "no sighting row; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(finch.label.contains("Your glasses snapshot"), finch.label)
+        let dove = button(app, beginning: "Mourning Dove")
+        XCTAssertTrue(dove.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(dove.label.contains("photo"), dove.label)
+        XCTAssertFalse(dove.label.contains("snapshot"), dove.label)
         // A row with a patch on it still opens: the patch takes no touches of its own.
-        let row = button(app, beginning: "Mourning Dove")
-        XCTAssertTrue(row.waitForExistence(timeout: 15), "no species row; screen: \(app.debugDescription.prefix(3000))")
-        row.tap()
+        dove.tap()
         XCTAssertTrue(app.navigationBars["Mourning Dove"].waitForExistence(timeout: 10) || app.staticTexts["Mourning Dove"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 

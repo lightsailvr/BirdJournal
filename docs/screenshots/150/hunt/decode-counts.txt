@@ -1,4 +1,3 @@
-run with the mock's rows: log lines in the last 8 s of the sweep: 10; patch decodes: 0; of them AV1 or ImageIO: 0
-run over the clip: log lines in the last 8 s of the sweep: 90; patch decodes: 2; of them AV1 or ImageIO: 18
-species rows: log lines in the last 8 s of the sweep: 3; patch decodes: 0; of them AV1 or ImageIO: 0
-set rows: log lines in the last 8 s of the sweep: 3; patch decodes: 0; of them AV1 or ImageIO: 0
+A run, three rows holding still: 8 s after settling: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 28 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+A run over the clip, with 30 patches sewn: 8 s after settling: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 33 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+Species rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 23 lines, 0 patch decodes, 0 AV1 or ImageIO lines.

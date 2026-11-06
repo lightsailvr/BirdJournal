@@ -122,23 +122,23 @@ struct PrimaryButtonStyle: ButtonStyle {
 }
 
 /// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
-/// rectangle, since its words wrap (issue #150). `ink` makes it quieter: Stop, which shouldn't speak over the birds.
+/// rectangle, since its words wrap (issue #150). `colour` makes it quieter: Stop, in the ink, doesn't speak over the birds.
 struct OutlinedButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.dynamicTypeSize) private var typeSize
-    var ink = Color.moss
+    var colour = Color.moss
 
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(ink)
+            .foregroundStyle(colour)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
             .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
             .frame(minHeight: 44)
-            .background(ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
-            .overlay(shape.strokeBorder(ink, lineWidth: 1))
+            .background(colour.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(colour, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
             .contentShape(shape)
     }
@@ -150,7 +150,7 @@ extension ButtonStyle where Self == PrimaryButtonStyle {
 
 extension ButtonStyle where Self == OutlinedButtonStyle {
     static var journalOutlined: OutlinedButtonStyle { OutlinedButtonStyle() }
-    static var journalQuiet: OutlinedButtonStyle { OutlinedButtonStyle(ink: .ink) }
+    static var journalQuiet: OutlinedButtonStyle { OutlinedButtonStyle(colour: .ink) }
 }
 
 /// Lays a screen out on paper with the journal's margins: the standard scroll container for the tabs.

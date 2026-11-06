@@ -313,16 +313,10 @@ private struct GuideRow: View {
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            Group {
-                if collectionStore.collection.patch(key: .init(speciesID: species.birdnetLabel, setID: pack.info.id)) != nil {
-                    RowPatch(scientificName: species.scientificName, setID: pack.info.id)
-                } else {
-                    PackImage(url: species.photos.first.map(pack.lensImageURL(for:)))
-                        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                }
-            }
-            .rowPicture()
-            .accessibilityHidden(true)
+            RowPicture(source: .of(
+                patch: collectionStore.collection.patch(key: .init(speciesID: species.birdnetLabel, setID: pack.info.id)),
+                reference: species.photos.first.map(pack.lensImageURL(for:))
+            ))
             VStack(alignment: .leading, spacing: 3) {
                 Text(species.commonName)
                     .font(JournalFont.rowTitle)

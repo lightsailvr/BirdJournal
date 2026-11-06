@@ -102,7 +102,8 @@ enum PatchTextures {
         }
     }
 
-    /// Safe from the decoding queue, which looks here too: a screen of rows showing one patch asks for it once per row.
+    /// Safe from the decoding queue, which reads and fills it there: a screen of rows showing one patch asks for it once per row,
+    /// and only the two decoding at once can miss each other.
     private nonisolated(unsafe) static let cache = NSCache<NSString, Loaded>()
 
     static func cached(_ art: PatchArt, size: Size) -> Loaded? {
@@ -125,13 +126,14 @@ enum PatchTextures {
                         continuation.resume(returning: nil)
                         return
                     }
-                    continuation.resume(returning: Loaded(colour: colour, layers: layers))
+                    let loaded = Loaded(colour: colour, layers: layers)
+                    cache.setObject(loaded, forKey: cacheKey)
+                    continuation.resume(returning: loaded)
                 }
             }
         } onCancel: {
             flag.cancel()
         }
-        if let loaded { cache.setObject(loaded, forKey: cacheKey) }
         return loaded
     }
 

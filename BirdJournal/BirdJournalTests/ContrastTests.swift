@@ -21,6 +21,8 @@ struct TokenPairingTests {
         ("JournalMoss", "JournalPaper"), ("JournalMoss", "JournalRaised"),
         ("AccentColor", "JournalPaper"), ("AccentColor", "JournalRaised"),
         ("JournalAlert", "JournalPaper"), ("JournalAlert", "JournalRaised"),
+        // The transfer pen is held to the issue's tint table, though today it only marks the ring round a bird not yet sewn.
+        ("TransferPen", "JournalPaper"), ("TransferPen", "JournalRaised"),
         // A primary action's label.
         ("JournalMossText", "JournalMoss"),
         // Shared goals: everything on the lavender is `onSharedGoal`.
@@ -34,8 +36,6 @@ struct TokenPairingTests {
         ("JournalInk", "JournalPaper"), ("JournalInkSecondary", "JournalPaper"), ("JournalInkSecondary", "JournalRaised"),
         ("JournalOnSharedGoal", "JournalSharedGoal"),
         ("JournalAlert", "JournalPaper"), ("JournalAlert", "JournalRaised"),
-        // The dashed ring round a bird not yet sewn, on a row and a calling row.
-        ("TransferPen", "JournalPaper"), ("TransferPen", "JournalRaised"),
     ]
 
     @Test("every text pairing is at least 4.5:1 in all four variants")

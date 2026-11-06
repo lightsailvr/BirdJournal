@@ -7,8 +7,8 @@ import SwiftUI
 /// dashed transfer-pen ring, with "new here" in the tint and Sew it. One you have shows your patch and its count, with Add. One
 /// added on this run shows the patch and a check. Sew it and Add call the same add as the review sheet, with the same reveal,
 /// count and Undo; the rest of the row opens the review. A bird no installed pack describes keeps Review: nothing is added with
-/// nothing to compare it against. A calling bird has the level glyph and "Calling now", and its row is raised by the list;
-/// rows never move when the scores change, only with the list order (issue #42).
+/// nothing to compare it against. A calling bird has the level glyph, "Calling now" and an outline on its patch, and its row is
+/// raised by the list; rows never move when the scores change, only with the list order (issue #42).
 struct CandidateRow: View {
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
@@ -32,10 +32,10 @@ struct CandidateRow: View {
         let look = CandidateLook(seenHere: patch?.count ?? 0, isAdded: run.isAdded(candidate))
         let heard = Self.heardText(candidate, startedAt: run.startedAt, now: now)
         let stacked = typeSize.stacksRows
-        AdaptiveRow(stacked: stacked) {
+        AdaptiveRow(stacked: stacked, spacing: 0) {
             Button(action: review) {
                 AdaptiveRow(stacked: stacked) {
-                    picture(look: look, patch: patch, reference: reference)
+                    picture(look: look, patch: patch)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(name)
                             .font(JournalFont.heading)
@@ -45,6 +45,8 @@ struct CandidateRow: View {
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .padding(.vertical, 12)
+                .padding(.trailing, stacked ? 0 : 14)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
                 .accessibilityElement(children: .ignore)
@@ -54,25 +56,23 @@ struct CandidateRow: View {
             .buttonStyle(.plain)
             .accessibilityIdentifier(position.map { "candidate-row-\($0)" } ?? "")
             action(look.offer(isDescribed: reference != nil), name: name, isDescribed: reference != nil)
+                .padding(.bottom, stacked ? 12 : 0)
         }
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
-        .onTapGesture(perform: review)
     }
 
     /// Your patch once you have it here, else the reference photo in a ring that says it isn't yours yet.
     @ViewBuilder
-    private func picture(look: CandidateLook, patch: CardCollection.Patch?, reference: (pack: SpeciesPack, species: PackSpecies)?) -> some View {
+    private func picture(look: CandidateLook, patch: CardCollection.Patch?) -> some View {
         if let patch, look != .newHere {
-            RowPatch(scientificName: patch.scientificName, setID: patch.placement.setID)
+            RowPatch(scientificName: patch.scientificName, setID: patch.placement.setID, isCalling: isCalling)
                 .rowPicture()
         } else {
-            PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
+            PackImage(url: library.thumbnailURL(scientificName: candidate.species.scientificName))
                 .rowPicture()
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 .overlay {
+                    // The `TransferPen` colorset: what's marked out on the cloth and not sewn yet.
                     RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius + 3, style: .continuous)
-                        // The `TransferPen` colorset: what's marked out on the cloth and not sewn yet. Never words.
                         .strokeBorder(Color.transferPen, style: StrokeStyle(lineWidth: 2, dash: [5, 3.5]))
                         .padding(-3.5)
                 }
@@ -92,8 +92,8 @@ struct CandidateRow: View {
                     .accessibilityHidden(true)
             }
             Group {
-                if case .added = look {
-                    Text(look.note).foregroundStyle(Color.inkSecondary)
+                if case .added = look, !isCalling {
+                    Text(look.note.capitalizedFirst).foregroundStyle(Color.inkSecondary)
                 } else {
                     let when = isCalling ? Text("Calling now").foregroundStyle(.tint) : Text(heard.capitalizedFirst).foregroundStyle(Color.inkSecondary)
                     let note = Text(", \(look.note)")
@@ -182,6 +182,8 @@ private struct RowPillStyle: ButtonStyle {
 /// The run's line: "1 new patch waiting" in the tint, then what you already have.
 struct HuntSummary: View {
     let hunt: RunHunt
+    /// The run's page centres it, as it does the line under its rows; a page of left-aligned lines doesn't.
+    var isCentred = true
 
     var body: some View {
         Group {
@@ -193,8 +195,8 @@ struct HuntSummary: View {
         }
         .font(JournalFont.body)
         .foregroundStyle(Color.inkSecondary)
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
+        .multilineTextAlignment(isCentred ? .center : .leading)
+        .frame(maxWidth: .infinity, alignment: isCentred ? .center : .leading)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityAddTraits(.isHeader)
     }

@@ -81,12 +81,12 @@ enum CandidateLook: Equatable {
         }
     }
 
-    /// "new here" or "seen 7 times", or "Added, seen 8 times".
+    /// "new here", "seen 7 times", or "added, seen 8 times".
     var note: String {
         switch self {
         case .newHere: "new here"
         case .sewn(let count): "seen \(CardCollection.Patch.times(count))"
-        case .added(let count): "Added, seen \(CardCollection.Patch.times(count))"
+        case .added(let count): "added, seen \(CardCollection.Patch.times(count))"
         }
     }
 
@@ -97,7 +97,7 @@ enum CandidateLook: Equatable {
         return switch self {
         case .newHere: "\(name), \(when), new patch waiting"
         case .sewn(let count): "\(name), \(when), you have this patch, seen \(CardCollection.Patch.times(count))"
-        case .added(let count): "\(name), added, you have this patch, seen \(CardCollection.Patch.times(count))"
+        case .added(let count): "\(name),\(isCalling ? " calling now," : "") added, you have this patch, seen \(CardCollection.Patch.times(count))"
         }
     }
 }

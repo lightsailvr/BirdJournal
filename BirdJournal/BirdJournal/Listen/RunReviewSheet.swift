@@ -16,7 +16,7 @@ struct RunReviewSheet: View {
         NavigationStack {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
-                    HuntSummary(hunt: run.hunt(in: collectionStore.collection))
+                    HuntSummary(hunt: run.hunt(in: collectionStore.collection), isCentred: false)
                         .padding(.top, 4)
                     if let startedAt = run.startedAt {
                         Text("Started \(startedAt.formatted(date: .omitted, time: .shortened)), listened for \(ElapsedTime.text(from: startedAt, to: .now))")
