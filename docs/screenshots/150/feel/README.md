@@ -15,6 +15,12 @@ Every picture is the running app on an iPhone 17 Pro simulator at half size, tak
 
 `2-listening-run.png` is the reference for the quiet outlined button: `reference-outlined` sets it beside `listening-dark` and `reveal-undo-dark`. The stroke is the moss token until slice 6's tint, and the run's rows are slice 5's.
 
+## Measured
+
+Sweeping the light over a board of 30 (`-seedBoard YES -patchLightSweep YES`) logged 3 lines in 8 s: its own frame times (median 16.7 ms, the simulator's 60 Hz cap) and no decodes. So the fade and decoding ahead left thumbnails as plain bitmaps under the moving shader.
+
+`lift-1` to `lift-6` are frames of one recording, at 20 frames a second: the Black Phoebe's page growing out of its tile, a swipe to the House Finch, and back onto the Black Phoebe's tile, where it was opened.
+
 ## Not proven here
 
 A simulator has no Taptic Engine and runs at 60 Hz, so these are for a phone: the feel of the zoom and of dragging a page back, the spring, whether the haptics feel right, and haptics during a phone-mic run (see `DECISIONS.md`).
