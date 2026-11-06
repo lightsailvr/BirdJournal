@@ -61,7 +61,7 @@ SHARE_CIRCLES_MAX = 50
 _COORDINATE = re.compile(r"\d+[.,]\d{2,}|°|\d\s*['′″\"]")
 _ART_KEY = re.compile(r"^packs/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*\.(jpg|jpeg|png|webp)$")
 # An edition is named by its set's pack id, like us-ca-la.
-_EDITION = re.compile(r"^[a-z0-9-]{1,64}$")
+_EDITION = re.compile(r"[a-z0-9-]{1,64}")
 
 
 class Method(StrEnum):
@@ -225,7 +225,7 @@ def clean_found_at(value: datetime) -> datetime:
 
 
 def clean_edition(raw: str | None) -> str | None:
-    if raw is not None and not _EDITION.match(raw):
+    if raw is not None and not _EDITION.fullmatch(raw):
         raise ValueError("The edition isn't a pack id")
     return raw
 
@@ -666,7 +666,7 @@ def stored_edition(item: dict[str, Any]) -> str | None:
     if "edition" in item:
         return str(item["edition"])
     parts = str(item.get("art_key", "")).split("/")
-    is_patch = len(parts) == 4 and parts[0] == "packs" and parts[2] == "patch" and _EDITION.match(parts[1])
+    is_patch = len(parts) == 4 and parts[0] == "packs" and parts[2] == "patch" and _EDITION.fullmatch(parts[1])
     return parts[1] if is_patch else None
 
 

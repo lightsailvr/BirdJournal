@@ -280,7 +280,7 @@ def test_a_repeat_or_a_find_outside_every_set_says_so(client: TestClient, issuer
     assert (by_species[WREN["scientific_name"]]["new_patch"], by_species[WREN["scientific_name"]]["edition"]) == (True, None)
 
 
-@pytest.mark.parametrize("edition", ["", "US-CA-LA", "us ca la", "us-ca-la#1", "../etc", "x" * 65])
+@pytest.mark.parametrize("edition", ["", "US-CA-LA", "us ca la", "us-ca-la#1", "../etc", "x" * 65, "us-ca-la\n"])
 def test_an_edition_is_a_pack_id(client: TestClient, issuer: TestIssuer, edition: str) -> None:
     _, response = _put(client, issuer, "ada", _find(edition=edition))
     assert response.status_code == 422
