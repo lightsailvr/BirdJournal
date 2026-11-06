@@ -3,14 +3,14 @@
 # ///
 """Issue #150 slice 11's icon sheets, at the simulator's true pixels, so an icon is seen at the size it is on a phone.
 
-uv run docs/screenshots/150/mascot/icon-sheets.py <folder of shots> <out folder>
+uv run docs/screenshots/150/mascot/icon-sheets.py <folder of shots> <out folder> <art/mascot/icons> <AppIconPreview folder>
 """
 import pathlib
 import sys
 
 from PIL import Image, ImageDraw
 
-shots, out = map(pathlib.Path, sys.argv[1:])
+shots, out, old_icons, previews = map(pathlib.Path, sys.argv[1:])
 BIRDS = ["red-tailed-hawk", "blue-bird", "great-egret", "house-finch", "prothonotary-warbler", "stellers-jay"]
 ICON = (880, 540, 1206, 840)  # the Featherguild icon and its label on the home screen, in pixels of a 402 pt screen at 3x
 
@@ -33,3 +33,12 @@ def screen(name):
 
 labelled([("before: hawk", screen("before-home")), *[(bird, screen(f"home-{bird}")) for bird in BIRDS]]).save(out / "home-icons.jpg", quality=88)
 labelled([(r, Image.open(shots / f"r-{r}.png")) for r in ("Default", "Dark", "TintedLight", "TintedDark", "ClearLight", "ClearDark")]).save(out / "icon-appearances.jpg", quality=88)
+
+# The Settings page's thumbnails, the pictures they replace above them: the pictures, since the old build has no way to that page.
+NAMES = dict(zip(BIRDS, ["RedTailedHawk", "Default", "GreatEgret", "HouseFinch", "ProthonotaryWarbler", "StellersJay"]))
+before = labelled([(f"before: {bird}", Image.open(old_icons / f"{bird}.png").convert("RGB").resize((180, 180), Image.LANCZOS)) for bird in BIRDS])
+after = labelled([(bird, Image.open(previews / f"MyBirdJournal-{NAMES[bird]}.imageset" / f"MyBirdJournal-{NAMES[bird]}.png")) for bird in BIRDS])
+thumbnails = Image.new("RGB", (before.width, before.height + after.height), "#1b2b2e")
+thumbnails.paste(before, (0, 0))
+thumbnails.paste(after, (0, before.height))
+thumbnails.save(out / "icon-thumbnails.jpg", quality=88)

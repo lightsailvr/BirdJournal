@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# The splash's frames in a recording of a launch, as the middle of those where it's at rest: the title has come in and the fade
-# hasn't begun. A frame's distance from the next is small once the title has settled and before the Listen tab fades in.
+# The last frame of the splash in a recording of a launch, when its title has come in and just before it fades: the last frame
+# with nothing at the top of the screen and something in the middle.
 #
 #   pick-splash-frame.sh <movie> <out.jpg>
 set -euo pipefail
@@ -13,8 +13,6 @@ from PIL import Image
 files = sorted(pathlib.Path(sys.argv[1]).glob("*.jpg"))
 pictures = [np.asarray(Image.open(file).convert("L"), dtype=float) for file in files]
 middle = pictures[0].shape[0] // 2
-# The splash is the frames whose top of the screen is plain paper (the launch screen and splash have nothing there) and whose
-# middle isn't: the last of those is the splash at rest with its title, just before it fades.
 def plain(picture):
     return picture[140:middle - 240].std() < 3
 def busy(picture):

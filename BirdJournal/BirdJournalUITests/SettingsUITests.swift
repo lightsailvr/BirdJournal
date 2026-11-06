@@ -109,12 +109,8 @@ final class AppIconHomeScreenUITests: XCTestCase {
         let app = XCUIApplication()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_ICON_SHOTS"]
+        var pictures = Set<Data>()
         openIcons(app)
-        if let folder {
-            XCTAssertTrue(app.buttons[birds[0]].waitForExistence(timeout: 10))
-            sleep(1)
-            try XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(filePath: folder).appending(path: "icons.png"))
-        }
         for bird in birds {
             choose(bird, in: app)
             XCUIDevice.shared.press(.home)
@@ -122,14 +118,17 @@ final class AppIconHomeScreenUITests: XCTestCase {
             XCTAssertTrue(icon.waitForExistence(timeout: 10), "no icon on the home screen: \(springboard.debugDescription.prefix(2000))")
             for _ in 0..<4 where !icon.isHittable { springboard.swipeLeft(); sleep(1) }
             XCTAssertTrue(icon.isHittable, "the icon is on no page reached: \(springboard.debugDescription.prefix(2000))")
+            sleep(1)
+            pictures.insert(icon.screenshot().pngRepresentation)
             if let folder {
-                sleep(1)
                 let name = bird.lowercased().replacing(" ", with: "-").replacing("'", with: "")
                 try XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(filePath: folder).appending(path: "home-\(name).png"))
             }
             app.activate()
             XCTAssertTrue(app.buttons[bird].waitForExistence(timeout: 10))
         }
+
+        XCTAssertEqual(pictures.count, birds.count, "some choices left the same picture on the home screen")
 
         // The one chosen last is still the one chosen after the app starts again, as it is after an update: iOS keeps it by name.
         app.terminate()

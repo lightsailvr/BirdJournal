@@ -1,5 +1,5 @@
 """The mascot patches (issue #150, slice 11): the app's six birds in glasses, and the House Finch on its branch for the
-places `PerchedBirdDrawing` is today, as embroidered patches in the language of the real ones (`packbuilder.patch_art`).
+launch screen, the splash, the sign-in page and the empty pages, as embroidered patches in the language of the real ones (`packbuilder.patch_art`).
 
 A mascot patch is painted on comfybox with the committed `mascot-patch` workflow from the bird of the app icon it replaces
 (kept in `art/mascot/icons/`), cut out of the icon's ground with BiRefNet and laid on white, with the template in `art/mascot-prompts.json`. Each round paints a few
@@ -88,14 +88,12 @@ ICON_GROUND_TINT = 0.45
 ICON_GROUND_SOFTENING = 3
 """The blur on the felt under an icon, in the 1024 px canvas's pixels. It's gone by 180 px, and the felt's finest fibre costs
 the app about 1.3 MB per icon, because iOS keeps each icon's rendering losslessly at 1024 px."""
-ICON_GROUND_FILL = "extended-srgb:0.05490,0.20392,0.23529,1.00000"
-"""The same petrol, behind the picture in the icon's document."""
 FINCH_CANVAS = 240
 """The perched finch's picture in points, the patch and the room for its shadow: the launch screen shows it at this size."""
 FINCH_PATCH = 200
-SHADOW = (((0.025, 0.04), 0.035, 0.34), ((0.01, 0.015), 0.01, 0.30))
-"""A patch's two-part shadow, opposite the light at the upper left, as `PatchView` and the shader draw it, in fractions of the
-patch's side: (x, y offset), blur, strength."""
+SHADOW = (((0.03, 0.05), 0.04, 0.55), ((0.012, 0.018), 0.012, 0.42))
+"""A patch's two-part shadow, opposite the light at the upper left, in fractions of the patch's side: (x, y offset), blur,
+strength. Stronger than the lit patches' 38%, because this one picture has to show on the dark felt as well as on the light page."""
 
 
 @dataclass(frozen=True)
@@ -408,6 +406,11 @@ def approved(lock: MascotLock) -> dict[str, Path]:
     return patches
 
 
+def _rgba(path: Path) -> Image.Image:
+    with Image.open(path) as opened:
+        return opened.convert("RGBA")
+
+
 def _on_shadow(patch: Image.Image, canvas: Image.Image, size: int) -> Image.Image:
     """`patch` resized to fit `size` in the middle of `canvas`, with its soft drop shadow. `canvas` keeps its mode's alpha."""
     placed = patch.copy()
@@ -446,7 +449,7 @@ def _icon_document(bird: str, scale: int) -> str:
     """The icon's Icon Composer document: one flat picture on the ground's colour, with no glass. Cloth has no specular edge,
     and the picture already carries its shadow."""
     return json.dumps({
-        "fill": {"solid": ICON_GROUND_FILL},
+        "fill": {"solid": "extended-srgb:" + ",".join(f"{channel / 255:.5f}" for channel in (*ICON_GROUND, 255))},
         "groups": [{
             "layers": [{"image-name": f"{bird}.png", "name": bird, "position": {"scale": scale, "translation-in-points": [0, 0]}}],
             "name": "Group",
@@ -471,8 +474,7 @@ def write_app_assets(lock: MascotLock, repo: Path = REPO) -> list[Path]:
     missing = [bird for bird in (*APP_ICONS, PERCHED_FINCH) if bird not in patches]
     if missing:
         raise StaleApproval(f"no approved patch for {', '.join(missing)}: review them on the sheets in build/mascot/")
-    with Image.open(repo / FELT_PICTURE) as opened:
-        felt = opened.convert("RGB")
+    felt = _rgba(repo / FELT_PICTURE)
     catalog = repo / "BirdJournal" / "BirdJournal" / "Assets.xcassets"
     written = []
 
@@ -482,8 +484,7 @@ def write_app_assets(lock: MascotLock, repo: Path = REPO) -> list[Path]:
         written.append(path)
 
     for bird, icon in APP_ICONS.items():
-        with Image.open(patches[bird]) as opened:
-            patch = opened.convert("RGBA")
+        patch = _rgba(patches[bird])
         side = ICON_CANVAS if bird == PRIMARY_ICON else ALTERNATE_ICON_SIDE
         bundle = repo / "BirdJournal" / f"{icon}.icon"
         put(bundle / "Assets" / f"{bird}.png", png(app_icon(patch, felt, side)))
@@ -491,8 +492,7 @@ def write_app_assets(lock: MascotLock, repo: Path = REPO) -> list[Path]:
         thumbnail = app_icon(patch, felt, ICON_THUMBNAIL)
         put(catalog / "AppIconPreview" / f"{icon}.imageset" / f"{icon}.png", png(thumbnail))
         put(catalog / "AppIconPreview" / f"{icon}.imageset" / "Contents.json", _imageset([(f"{icon}.png", "1x")]))
-    with Image.open(patches[PERCHED_FINCH]) as opened:
-        patch = opened.convert("RGBA")
+    patch = _rgba(patches[PERCHED_FINCH])
     finch = catalog / "PerchedFinch.imageset"
     for scale in (2, 3):
         put(finch / f"PerchedFinch@{scale}x.png", png(perched_finch(patch, scale)))

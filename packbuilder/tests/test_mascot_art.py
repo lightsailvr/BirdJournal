@@ -312,3 +312,7 @@ def test_the_committed_app_art_is_made_from_the_approved_patches(tmp_path):
         with Image.open(tmp_path / path) as ours, Image.open(REPO / path) as theirs:
             assert ours.mode == theirs.mode and ours.size == theirs.size, path
             assert np.abs(np.asarray(ours, dtype=int) - np.asarray(theirs, dtype=int)).max() <= 2, path
+    documents = [path.relative_to(tmp_path) for path in (tmp_path / "BirdJournal").rglob("*.json") if path.parent != tmp_path / FELT_PICTURE.parent]
+    assert len(documents) == 6 + 6 + 1
+    for path in documents:
+        assert (tmp_path / path).read_text() == (REPO / path).read_text(), path
