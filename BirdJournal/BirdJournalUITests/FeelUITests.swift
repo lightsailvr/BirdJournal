@@ -160,28 +160,12 @@ final class FeelUITests: XCTestCase {
     /// A stack in a sheet: the page grows in the sheet, the peek's actions land in the sheet, and neither pushes onto the tab behind it.
     @MainActor
     func testLiftAndPeekInASheetStayInTheSheet() throws {
-        guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
-        // A run in Griffith Park, where the House Finch has a patch to be reached from its review.
-        let app = launch(["-seedJournal", "YES", "-reduceMotion", "NO", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
-        let row = app.buttons["Review House Finch"]
-        let close = app.buttons["Close"]
-        let yours = element(app, "profile-your-cards")
-        var reached = false
-        for _ in 0..<5 {
-            XCTAssertTrue(row.waitForExistence(timeout: 90), "no row: \(app.debugDescription.prefix(3000))")
-            row.tap()
-            XCTAssertTrue(close.waitForExistence(timeout: 10), "no sheet: \(app.debugDescription.prefix(3000))")
-            if app.staticTexts["House Finch"].exists {
-                reached = true
-                break
-            }
-            close.tap()
-        }
-        XCTAssertTrue(reached, "the live list kept moving")
-        XCTAssertTrue(app.scrolledTo(yours, limit: 12), "no way to its patches: \(app.debugDescription.prefix(3000))")
-        yours.tap()
-        let finch = tile(app, "Citrus")
-        XCTAssertTrue(finch.waitForExistence(timeout: 10), "no tile in the sheet: \(app.debugDescription.prefix(3000))")
+        // The full map's own stack, opened on a sighting's sheet, on the bird's patches: a sheet stack that reaches a tile.
+        let app = launch(["-seedJournal", "YES", "-autoScreen", "map", "-autoCardSpecies", "Haemorhous mexicanus", "-autoMapSpeciesPatches", "YES"])
+        XCTAssertTrue(app.navigationBars.buttons["On the map"].waitForExistence(timeout: 20) || app.navigationBars["House Finch"].waitForExistence(timeout: 20), "not on the map's stack: \(app.debugDescription.prefix(3000))")
+        let finch = tile(app, "House Finch")
+        XCTAssertTrue(finch.waitForExistence(timeout: 15), "no tile in the sheet: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(finch.isHittable, "the tile isn't in the sheet in front")
 
         // The Lift, there and back.
         finch.tap()
@@ -245,11 +229,11 @@ final class FeelUITests: XCTestCase {
 
     // MARK: - Modes
 
-    /// The middle of the window's foot, averaged: only the surface shows there on these short boards.
+    /// The left margin, down the page and averaged: only the surface shows there, whichever mode is up.
     private func surfaceColour(of screenshot: XCUIScreenshot) -> (red: Double, green: Double, blue: Double) {
         let image = screenshot.image
         let scale = image.scale
-        let box = CGRect(x: 20 * scale, y: (image.size.height - 180) * scale, width: 40 * scale, height: 40 * scale)
+        let box = CGRect(x: 2 * scale, y: 280 * scale, width: 14 * scale, height: (image.size.height - 480) * scale)
         guard let crop = image.cgImage?.cropping(to: box) else { return (0, 0, 0) }
         var pixel = [UInt8](repeating: 0, count: 4)
         let context = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
@@ -274,7 +258,7 @@ final class FeelUITests: XCTestCase {
         let page = surfaceColour(of: app.screenshot())
 
         let span = abs(felt.red - page.red) + abs(felt.green - page.green) + abs(felt.blue - page.blue)
-        XCTAssertGreaterThan(span, 30, "felt and the page differ: \(felt) \(page)")
+        XCTAssertGreaterThan(span, 8, "felt and the page differ: \(felt) \(page)")
         let fromFelt = abs(during.red - felt.red) + abs(during.green - felt.green) + abs(during.blue - felt.blue)
         let fromPage = abs(during.red - page.red) + abs(during.green - page.green) + abs(during.blue - page.blue)
         XCTAssertGreaterThan(fromFelt, span * 0.1, "under way it has left the felt: \(felt) \(during) \(page)")

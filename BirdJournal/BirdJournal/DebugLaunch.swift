@@ -46,6 +46,7 @@ import UIKit
 /// - `-hapticLog YES` lists the haptics played where a UI test can read them (`HapticLog`). `-resetLaunchSplash YES` forgets the
 ///   splash has played, and `-launchSplashSeconds <n>` holds it that long, so a UI test can catch it; `-modeFadeSeconds <n>` slows
 ///   the Collection's cross-fade between modes the same way (issue #150).
+/// - `-autoMapSpeciesPatches YES` with `-autoScreen map` goes on to the bird's patches in the map sheet's own stack (issue #150).
 /// - `-reduceMotion YES` makes the card flip switch faces and the stitch-in not happen, as with the system's Reduce
 ///   Motion, which a UI test cannot turn on. `-voiceOverPath YES` skips the stitch-in as VoiceOver does (issue #135).
 /// - `-stitchInSeconds <n>` makes the stitch-in that long, so a UI test or a screenshot can catch it part way;
