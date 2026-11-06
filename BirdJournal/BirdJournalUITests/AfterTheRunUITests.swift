@@ -100,8 +100,8 @@ final class AfterTheRunUITests: XCTestCase {
         return app
     }
 
-    /// The bundled pack's first bird, in Griffith Park, as `-seedBoard` adds it: its seeds carry the pack's bare label.
-    private static let seeded = "birdjournal://patch?species=Buteo%20jamaicensis&set=us-ca-la"
+    /// The bundled pack's first bird, in Griffith Park, as `-seedBoard` adds it.
+    private static let seeded = "birdjournal://patch?species=Buteo%20jamaicensis_Red-tailed%20Hawk&set=us-ca-la"
 
     /// A link to the app as it runs, as a widget's tap arrives: `XCUIApplication.open` would launch it again. The system asks
     /// first when a link doesn't come from a widget.
