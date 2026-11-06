@@ -10,6 +10,7 @@ import SwiftUI
 struct ActiveListeningView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// For each row's "new here" or "seen 7 times" (issue #132).
     @Environment(CollectionStore.self) private var collectionStore
 
@@ -112,11 +113,13 @@ struct ActiveListeningView: View {
                     Button {
                         Task { await run.stop() }
                     } label: {
+                        // A compact pill, quieter than the rows; across the page only where its words need the room.
                         Label(run.state == .stopping ? "Stopping…" : "Stop listening", systemImage: "stop.fill")
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : nil)
                     }
                     .buttonStyle(.journalOutlined)
                     .disabled(run.state == .stopping || run.state == .starting)
+                    .frame(maxWidth: .infinity)
                 } else {
                     Button("Done") { run.dismissEnded() }
                         .buttonStyle(.journalPrimary)

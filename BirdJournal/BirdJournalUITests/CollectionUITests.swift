@@ -82,6 +82,26 @@ final class CollectionUITests: XCTestCase {
         XCTAssertEqual(Self.settledMinY(of: tile), scrolledTo, accuracy: 12, "Patches did not keep its own scroll position")
     }
 
+    /// The tab bar hides on a patch's page, which clamps the offset at the board's foot: it has to come back all the same.
+    @MainActor
+    func testTheFootOfABoardComesBackWhereItWas() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES"])
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 15), "no board; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<8 { app.swipeUp() }
+        let tiles = app.buttons.matching(identifier: "board-patch").allElementsBoundByIndex
+        let shown = try XCTUnwrap(tiles.last { Self.isClearOfBars($0, in: app) }, "no patch in view; screen: \(app.debugDescription.prefix(3000))")
+        let tile = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
+        let before = Self.settledMinY(of: tile)
+        for _ in 0..<3 {
+            tile.tap()
+            XCTAssertTrue(app.buttons["card-flip"].firstMatch.waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            XCTAssertTrue(tile.waitForExistence(timeout: 10))
+            Thread.sleep(forTimeInterval: 3)
+            XCTAssertEqual(Self.settledMinY(of: tile), before, accuracy: 2, "the board's foot moved")
+        }
+    }
+
     @MainActor
     func testAnotherBoardIsChosenAndKeptAcrossTheTabs() throws {
         let app = launch()
