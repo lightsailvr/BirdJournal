@@ -104,7 +104,7 @@ private struct RouteDestination: View {
 
 extension EnvironmentValues {
     /// Opens the Collection tab at the top of the Patches view, on one board: the new patch on the reveal (issues #51, #132, #150).
-    @Entry var openCollection: @MainActor (BoardChoice) -> Void = { _ in }
+    @Entry var openCollection: @MainActor (BoardChoice?) -> Void = { _ in }
     /// Opens the Listen tab: a species with no sightings yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
     /// Opens the Atlas tab: an empty collection's birds to find (issue #138).

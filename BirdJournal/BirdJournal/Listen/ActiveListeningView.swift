@@ -120,7 +120,7 @@ struct ActiveListeningView: View {
             setHolding(.scroll, phase == .interacting || phase == .decelerating)
             #if DEBUG
             // `-fakeLeaveDuringFlick YES`: another tab while the list decelerates, quicker than a UI test can tap one.
-            if phase == .decelerating, UserDefaults.standard.bool(forKey: "fakeLeaveDuringFlick") { openCollection() }
+            if phase == .decelerating, UserDefaults.standard.bool(forKey: "fakeLeaveDuringFlick") { openCollection(nil) }
             #endif
         }
         .task(id: held.releaseAt) {
