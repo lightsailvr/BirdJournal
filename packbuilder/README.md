@@ -246,6 +246,40 @@ uv run packbuilder patch-review packs/us-ca-la --gap "Black Phoebe" --why "threa
 - **In the pack (schema 5)**: an approved patch is written, without the pale rim of card its cut can leave along one side (`trim_rim`: that only changes the alpha, so the lock stands), as `patch/<species id>.avif`, its colour on transparency at 720 px on its longest side, and `patch/<species id>-layers.avif` at half size, its height map (thread relief plus the raised cord) in red, the cord's mask (25 px deep at 720 px) in green and the stitch order (one thread colour at a time, the largest first, the cord last) in blue (`patch_art.layers`), with a `patch` row: the files, its size, the bare twill's colour, the stitch layers' starts and its source photo. About 120 KB a species; a build with patches writes no pack art, which keeps Los Angeles inside its 200 MB budget.
 - **Running it**: about 20 s a patch on the box itself; from the Mac it waits on the tailnet (about a minute a patch on 2026-11-03). To run it on the box, copy `packbuilder/src`, `art/`, the pack's definition and locks and the isolated birds to a checkout-shaped folder there and run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli patches packbuilder/packs/<id> --comfy http://127.0.0.1:8189 --cache packbuilder/cache`, then copy `patch.lock.json`, `<cache>/art/patches/` and the sheets back.
 
+## Silhouettes
+
+A bird still out there shows its own shape on a set page, so a goose looks like a goose (#150). Nothing is painted: `packbuilder.silhouettes` takes the shape from the species' reference bird, already isolated on white in the art cache for its patch.
+
+```sh
+cd packbuilder
+uv run packbuilder silhouettes packs/us-ca-la        # derive what silhouette.lock.json lacks, then the contact sheets
+uv run packbuilder silhouette-review packs/us-ca-la --reject 22,49 --why "head down, no neck" --approve-all
+uv run packbuilder silhouette-review packs/us-ca-la --gap 154 --why "a blob: keep the glyph"
+```
+
+- **The recipe** (`derive`): everything that isn't paper (the isolated bird's background is pure white, so the threshold sits at 254: anything laxer eats an egret), specks dropped, holes filled only where they are plumage, cropped tight, the outline smoothed at four times the size, opaque white on transparency at 180 px on its longest side, 16 alpha steps. The app tints it at draw time.
+- **Which holes close**: a hole in the mask is either plumage blown to pure white (a Bald Eagle's head) or air (the gap between a gull's legs, which must stay open or its legs become a block). A ring of the bird just outside the hole tells them apart: on the 160 Los Angeles birds at least half of it is pale for plumage (the eagle's 56% and 62%) and at most 16% for air, but for one small gap by a Red-winged Blackbird's leg (57%), which closes. Pinholes close whatever is around them.
+- **The bird**: `art.silhouette.reference` in `overrides.json` (another of the pack's photos with a cached isolation, for a bird whose pose makes a poor shape), else the patch's reference in `patch.lock.json`, else the pack art's in `art.lock.json`. A species painted from text has none.
+- **The lock**: `silhouette.lock.json` pins the photo, isolation seed, recipe version, the picture's SHA-256 (its file in `<cache>/art/silhouettes/`), size, what the recipe noticed and the review. A warm lock derives nothing; a new reference or recipe derives again, and anything that comes out different is pending again.
+- **Reviewed by number**: the sheets in `build/pack-art/<pack id>/silhouettes/` show the isolated bird beside its silhouette in the set page's tile and tint, numbered as in `pack.json`, plus an overview; they say when the frame cuts the bird or it was small in its photo. Unlike a painting, a rejected silhouette would come back the same, so it stays rejected, and out of the pack, until `art.silhouette.reference` gives another bird. A gap keeps the app's glyph on purpose.
+- **In the pack**: an approved silhouette is written as `silhouette/<species id>.png` with a `silhouette` row (the file, its size, its source photo), about 1.8 KB a species. It came within schema 5, as `cover` did within 4: a reader that doesn't know the table never opens it, and an older pack has no such table, which reads as no silhouettes. Its LICENSE line credits the photo, so one whose photo left the pack stays out and is listed in `report.json`'s `unreviewed.silhouettes`.
+
+## Hero photos
+
+A bird's profile opens with its first photo, drawn filling a 3:2 slot, centred (`AttributedImage`). A portrait phone crop loses its top and bottom there, which is how Black Phoebe's profile came to open on a blurry back (#150). `packbuilder.hero_photos` reviews all of them as the profile shows them.
+
+```sh
+cd packbuilder
+uv run packbuilder hero-sheets packs/us-ca-la                                  # the first photos, flagged, and the proposals beside them
+uv run packbuilder hero-candidates packs/us-ca-la --species 4,12 --out /tmp/candidates.jpg   # the best of the cached pool, with their ids
+uv run packbuilder hero-review packs/us-ca-la --propose 4=636417717 --why "the head is cut off"
+uv run packbuilder hero-review packs/us-ca-la --accept-all --decline 24,157    # the maintainer's answer, by the sheets' numbers
+```
+
+- **The flags**: the detector's box against the slot and the photo's frame ("slot: top", "frame: right", "no bird found"). It is a hint: its box is loose, and it can't tell a head from a tail. On Los Angeles 19 of the 44 it flagged were fine, and it missed 8 of the 33 that needed replacing (a bird behind a branch has an uncut box), so the proposals come from looking at the sheets.
+- **The pool**: `hero-candidates` ranks the species' cleared photos already in `<cache>/photos/large`, under the build's own rules (license, excluded observations, size, sharpness), keeping only a whole bird in the slot, by the light on it and its sharpness. Look at them: it can't see a hand or a dead bird.
+- **A proposal is not a pin**: `"hero": {"proposed": <photo id>, "_why": ...}` in `overrides.json`, which the build ignores. `--accept` puts the photo first in `include` and leaves `"hero": {"pinned": ...}`, with the species' patch and silhouette photos pinned after it: a pack holds five photos, a sixth would push out the last, and their credits name those photos. `--decline` removes the proposal. Then rebuild the pack.
+
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
@@ -315,7 +349,7 @@ nothing, cites a fact the sheet lacks or misses the counts is sent back with wha
 | `src/packbuilder/art.py`, `comfy.py`, `fidelity.py`, `painting.py`, `contact_sheets.py`, `bakeoff.py` | Card art (#49): prompts and workflows from the repo's `art/`, the 3:4 card crop and the telephoto crop of a glasses photo, a ComfyUI client for comfybox, the painted bird's fidelity to its photo and the colour fit, painting through the fidelity gate, contact sheets, and the art model bake-off (`python -m packbuilder.bakeoff`; see `art/README.md`). |
 | `src/packbuilder/pack_art.py` | The pack-art step (#57): the reference by lighting, the lock, the review and the contact sheets. |
 | `src/packbuilder/factsheet.py`, `lore.py` | The fact sheet and the lore step (#56): the Anthropic client, the citation checks, the lock, the review and its file. |
-| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json`, `lore.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from, the pack art's sources and review, and the lore with its facts and review (committed). |
+| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json`, `patch.lock.json`, `silhouette.lock.json`, `lore.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from, the pack art's, patches' and silhouettes' sources and review, and the lore with its facts and review (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
 | `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |

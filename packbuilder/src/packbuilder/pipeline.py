@@ -21,7 +21,6 @@ from packbuilder.geometry import Box
 from packbuilder.licenses import PHOTO_LICENSES
 from packbuilder.scoring import score_crop
 from packbuilder.selection import Overrides, ScoredPhoto, select_photos
-from packbuilder.silhouettes import VERSION as SILHOUETTE_VERSION
 from packbuilder.sounds import SoundPicker
 from packbuilder.stats import JoinedSpecies
 from packbuilder.writer import ChosenPhoto, SpeciesResult, WrittenPack, write_pack
@@ -153,7 +152,7 @@ def build_pack(
     written = write_pack(definition, results, options.out_dir, built_at=built_at, archive_path=options.archive_path, card_set=card_set, joined=joined, art=art,
                          facts=facts, lore=written_lore, cover=cover, patches=patches,
                          patch_versions=f"{patch_artist.workflow.tag} patch-prompts@{patch_artist.prompts.version}" if patch_artist else "",
-                         silhouettes=silhouettes, silhouette_version=SILHOUETTE_VERSION)
+                         silhouettes=silhouettes, silhouette_version=silhouette_maker.version if silhouette_maker else "")
     gaps = [r.entry.common_name for r in results if r.gap]
     undescribed = [r.entry.common_name for r in results if r.description is None]
     silent = [r.entry.common_name for r in results if r.sounds is not None and r.sounds.gap]

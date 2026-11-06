@@ -1,5 +1,5 @@
 """Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, sounds/ clips, art/ (the reviewed pack art as AVIF, #57),
-cover.avif (the set's approved cover, #114), LICENSE (every photo, sound, art and text credit), report.json (counts, chosen ids, and the photo, description, sound and
+silhouette/ (the reviewed silhouettes, #150), cover.avif (the set's approved cover, #114), LICENSE (every photo, sound, art and text credit), report.json (counts, chosen ids, and the photo, description, sound and
 art gaps), and optionally a zip of it (the download format for other regions, DECISIONS.md "Species pack")."""
 
 from __future__ import annotations

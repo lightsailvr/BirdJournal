@@ -191,6 +191,7 @@ class SilhouetteMaker:
     lock: SilhouetteLock
     sources: dict[str, tuple[int, int | None, str]]
     cache_dir: Path
+    version: str = VERSION
     derived: int = field(default=0, init=False)
 
     def __post_init__(self):
@@ -218,7 +219,7 @@ class SilhouetteMaker:
         if species_id not in self.sources:
             raise KeyError(f"{species_id}: its art was painted from text, so there is no bird to take a shape from")
         photo_id, seed, name = self.sources[species_id]
-        same = entry is not None and entry["workflow"] == VERSION and entry["photos"] == [photo_id] and (seed is None or entry["isolate_seed"] == seed)
+        same = entry is not None and entry["workflow"] == self.version and entry["photos"] == [photo_id] and (seed is None or entry["isolate_seed"] == seed)
         if same and entry["review"] == REJECTED:
             return Silhouette(species_id, REJECTED, self._file(entry["sha256"]), (photo_id,))
         if same and self._file(entry["sha256"]).exists():
@@ -236,7 +237,7 @@ class SilhouetteMaker:
         self.derived += 1
         review_state = APPROVED if same and entry["review"] == APPROVED and entry["sha256"] == digest else PENDING
         self.lock.species[species_id] = {
-            "common_name": name, "photos": [photo_id], "isolate_seed": seed, "workflow": VERSION, "sha256": digest,
+            "common_name": name, "photos": [photo_id], "isolate_seed": seed, "workflow": self.version, "sha256": digest,
             "width": made.image.width, "height": made.image.height, "bytes": len(made.png),
             "measure": {"bird_pixels": made.bird_pixels, "holes_filled": made.holes_filled, "cut": made.cut},
             "review": review_state,

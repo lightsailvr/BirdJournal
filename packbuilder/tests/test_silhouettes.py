@@ -4,18 +4,21 @@ its review, only an approved one ships in the pack, and the review goes by the c
 import hashlib
 import json
 import sqlite3
+from pathlib import Path
 
 import numpy as np
 import pytest
 from PIL import Image, ImageDraw
 
 from packbuilder import cli
+from packbuilder.definition import PackDefinition
 from packbuilder.pack_art import ArtLock
 from packbuilder.patch_art import PatchLock, _isolate_prompt
 from packbuilder.silhouettes import APPROVED, GAP, PENDING, REJECTED, SIZE, SilhouetteLock, SilhouetteMaker, derive, review, sources
 from packbuilder.writer import write_pack
 from tests.test_writer import definition, result_for
 
+PACKS = Path(__file__).resolve().parents[1] / "packs"
 PHOEBE, HUMMINGBIRD = "sayornis-nigricans", "calypte-anna"
 
 
@@ -266,7 +269,19 @@ def test_a_pack_built_without_the_step_has_an_empty_table(tmp_path):
     assert "silhouettes" not in json.loads((tmp_path / "out" / "report.json").read_text()).get("unreviewed", {})
 
 
-def definition_folder(tmp_path) -> "Path":
+@pytest.mark.parametrize("pack_dir", [p for p in sorted(PACKS.iterdir()) if (p / "silhouette.lock.json").exists()], ids=lambda p: p.name)
+def test_the_committed_lock_covers_its_pack_and_follows_its_pins(pack_dir):
+    species = PackDefinition.load(pack_dir / "pack.json").species
+    lock = SilhouetteLock.load(pack_dir / "silhouette.lock.json").species
+    overrides = json.loads((pack_dir / "overrides.json").read_text())
+    assert {entry.id for entry in species} == set(lock)
+    for entry in species:
+        pin = overrides.get(entry.scientific_name, {}).get("art", {}).get("silhouette", {}).get("reference")
+        if pin is not None:
+            assert lock[entry.id]["photos"] == [pin], entry.common_name
+
+
+def definition_folder(tmp_path) -> Path:
     folder = tmp_path / "definition"
     folder.mkdir()
     (folder / "pack.json").write_text(json.dumps({

@@ -37,6 +37,10 @@
    "reference": 658085144,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 657921273,
+   "_why": "the head is cut and a wire crosses it; whole on barbed wire"
   }
  },
  "Pyrocephalus rubinus": {
@@ -105,6 +109,10 @@
   "_why": "open-license review (#50): out 649074599: domestic white Pekin duck; out 689499641: domestic-type brown duck; out 617097864: buff domestic-type duck; out 674477146: pied domestic hybrid; out 679992718: black domestic duck with a white bib; out 689501607: black domestic duck with a white bib; in 613917690: wild drake, ahead of the domestic ducks the scorer favours; in 686362677: wild hen, ahead of the domestic ducks the scorer favours",
   "art": {
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 640251838,
+   "_why": "the head is cut off; a whole drake on water"
   }
  },
  "Sayornis nigricans": {
@@ -118,6 +126,10 @@
    "patch": {
     "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white."
    }
+  },
+  "hero": {
+   "proposed": 636417717,
+   "_why": "the profile showed a blurry back, cut at the neck; whole, sharp, in the pack already"
   }
  },
  "Euphagus cyanocephalus": {
@@ -153,6 +165,10 @@
   "_why": "open-license review (#50): out 455833681: head macro in hand at a banding station; out 455833651: head macro in hand at a banding station; out 458289112: dark and unreadable; out 458495950: brown bird that does not read as a kinglet",
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 345316988,
+   "_why": "behind a branch; whole on a twig"
   }
  },
  "Larus californicus": {
@@ -184,6 +200,10 @@
    "setting": "perch",
    "length_cm": 12.5,
    "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  },
+  "hero": {
+   "proposed": 339267644,
+   "_why": "the face is hidden in the leaves; a whole adult on a branch"
   }
  },
  "Colaptes auratus": {
@@ -201,6 +221,10 @@
     "reference": 242825399,
     "_why": "the patch's bird is a round back with a bill; this one has a woodpecker's long body (a cached isolation of another pack photo; #150)"
    }
+  },
+  "hero": {
+   "proposed": 244870096,
+   "_why": "behind branches and cut at the bottom; whole on grass"
   }
  },
  "Cairina moschata": {
@@ -275,6 +299,10 @@
    "reference": 262701129,
    "_why": "a dim bird among needles lost its spots; one side-on with its spotted breast",
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 475706589,
+   "_why": "the head is cut off, only a belly shows; whole on a rock"
   }
  },
  "Falco peregrinus": {
@@ -284,6 +312,10 @@
   "_why": "open-license review (#50): out 160326266: small and motion-blurred",
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 353937999,
+   "_why": "the wings are cut; a whole adult perched, feet showing"
   }
  },
  "Molothrus ater": {
@@ -325,6 +357,10 @@
    "setting": "perch",
    "length_cm": 15,
    "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  },
+  "hero": {
+   "proposed": 322020971,
+   "_why": "the head and tail are cut; whole on a twig"
   }
  },
  "Cardellina pusilla": {
@@ -370,6 +406,10 @@
    "patch": {
     "markings": "The whole body and wings are solid black, with no white or cream on them; the only white is on the forehead and the nape."
    }
+  },
+  "hero": {
+   "proposed": 177215819,
+   "_why": "the head is turned away; a whole male with its bill showing"
   }
  },
  "Dryobates pubescens": {
@@ -395,6 +435,10 @@
   "_why": "open-license review (#50): out 110234771: heavily obscured by leaves",
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 171734183,
+   "_why": "the head is down in the grass; whole with its face showing"
   }
  },
  "Aratinga nenday": {
@@ -525,6 +569,10 @@
    "reference": 604025942,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 671595653,
+   "_why": "head and tail cut, behind branches; a whole adult on a post"
   }
  },
  "Calypte anna": {
@@ -547,6 +595,10 @@
   "_why": "open-license review (#50): out 658119400: backlit, hidden by the branch; out 654338693: dark behind blurred foliage",
   "art": {
    "setting": "trunk"
+  },
+  "hero": {
+   "proposed": 705003277,
+   "_why": "only a head in a hole; the whole bird on a snag, in the pack already"
   }
  },
  "Sialia mexicana": {
@@ -582,6 +634,10 @@
    "reference": 488593366,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 489597159,
+   "_why": "half hidden behind a trunk, head cut; whole on a branch with its tufts"
   }
  },
  "Buteo lineatus": {
@@ -670,6 +726,10 @@
     "markings": "The whole bird is iridescent black from head to tail, with a purple-blue sheen on the head and upper body; there is no brown, white or cream anywhere.",
     "_why": "the pack art reference is a brown female"
    }
+  },
+  "hero": {
+   "proposed": 621036744,
+   "_why": "the head is behind leaves; a whole male on grass"
   }
  },
  "Thryomanes bewickii": {
@@ -680,6 +740,10 @@
   "_why": "open-license review (#50): out 465399045: fluffed with drooped wings, looks handled; out 604350365: indoors on a towel, rescued or captive",
   "art": {
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 367390166,
+   "_why": "the head is behind a branch; whole on a stump"
   }
  },
  "Patagioenas fasciata": {
@@ -705,6 +769,10 @@
    "setting": "perch",
    "length_cm": 37,
    "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
+  },
+  "hero": {
+   "proposed": 148143364,
+   "_why": "in the dark, half behind a beam; whole and lit, in the pack already"
   }
  },
  "Phalaenoptilus nuttallii": {
@@ -758,6 +826,10 @@
    "reference": 356387267,
    "_why": "a singing bird, open-mouthed against the sky, came out with a pink throat; one perched quietly",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 698232171,
+   "_why": "behind twigs; whole against the sky"
   }
  },
  "Buteo jamaicensis": {
@@ -765,6 +837,10 @@
    "reference": 685715513,
    "_why": "the pack's first photo is a blurred flight shot; the painting made a malformed bird; a front-lit adult on a fence instead",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 686796012,
+   "_why": "a smeared bird in flight; whole, perched, well lit"
   }
  },
  "Setophaga coronata": {
@@ -810,6 +886,10 @@
    "reference": 593312023,
    "_why": "several birds in flight became a muddle; one bird standing on a rock",
    "setting": "rock"
+  },
+  "hero": {
+   "proposed": 646851133,
+   "_why": "preening behind rocks, no clear head; a whole adult on rocks"
   }
  },
  "Psaltriparus minimus": {
@@ -824,6 +904,10 @@
    "reference": 489597210,
    "_why": "a backlit bird against the sky came out near-black; a front-lit adult on a post",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 489597210,
+   "_why": "blurred and the tail is cut; a whole, sharp adult"
   }
  },
  "Alopochen aegyptiaca": {
@@ -831,6 +915,10 @@
    "reference": 578296243,
    "_why": "a head-only close-up became a head among leaves; the whole bird in good light",
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 689499230,
+   "_why": "only the head; the whole bird standing"
   }
  },
  "Toxostoma redivivum": {
@@ -946,6 +1034,10 @@
  "Larus occidentalis": {
   "art": {
    "setting": "rock"
+  },
+  "hero": {
+   "proposed": 718687259,
+   "_why": "the feet and tail are cut; a whole adult standing on sand"
   }
  },
  "Zonotrichia leucophrys": {
@@ -956,6 +1048,10 @@
  "Passer domesticus": {
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 659961976,
+   "_why": "the top of the head is cut; a whole male on the ground"
   }
  },
  "Selasphorus sasin": {
@@ -966,6 +1062,10 @@
  "Egretta thula": {
   "art": {
    "setting": "wade"
+  },
+  "hero": {
+   "proposed": 601299814,
+   "_why": "the head is cut off; whole on the shore"
   }
  },
  "Fulica americana": {
@@ -974,6 +1074,10 @@
    "patch": {
     "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches."
    }
+  },
+  "hero": {
+   "proposed": 605479128,
+   "_why": "the feet and tail are cut; a whole adult on water"
   }
  },
  "Corvus brachyrhynchos": {
@@ -982,6 +1086,10 @@
    "patch": {
     "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white, grey or blue anywhere."
    }
+  },
+  "hero": {
+   "proposed": 491765059,
+   "_why": "the head is cut; whole on the ground"
   }
  },
  "Nycticorax nycticorax": {
@@ -1063,6 +1171,10 @@
    "reference": 437503733,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 459532951,
+   "_why": "only the head and neck; the whole male"
   }
  },
  "Larus heermanni": {
@@ -1170,6 +1282,10 @@
  "Megaceryle alcyon": {
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 347173613,
+   "_why": "the head is cut off; a whole, sharp female"
   }
  },
  "Limosa fedoa": {
@@ -1204,6 +1320,10 @@
    "reference": 173413643,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 545655853,
+   "_why": "the body is cut; the whole bird against the sky"
   }
  },
  "Aythya collaris": {
@@ -1224,6 +1344,10 @@
  "Zonotrichia atricapilla": {
   "art": {
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 261560260,
+   "_why": "only the head, very close; the whole bird, its gold crown showing"
   }
  },
  "Spatula clypeata": {
@@ -1237,6 +1361,10 @@
    "patch": {
     "markings": "The whole bird is very dark, nearly black, from head to tail, with no brown and no white or pale patches on the belly."
    }
+  },
+  "hero": {
+   "proposed": 427510885,
+   "_why": "the head is cut off; head and neck clear on water"
   }
  },
  "Lophodytes cucullatus": {
@@ -1304,6 +1432,10 @@
  "Thalasseus elegans": {
   "art": {
    "setting": "wade"
+  },
+  "hero": {
+   "proposed": 106338464,
+   "_why": "a flock, no one bird; a single whole adult on sand"
   }
  },
  "Spatula discors": {
