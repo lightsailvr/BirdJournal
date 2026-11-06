@@ -25,8 +25,13 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 `decode-counts.txt`, from `capture.sh`: each surface with the light sweeping (`-patchLightSweep YES`), counting two 8 s windows of the app's log, then the patch decodes in the last minute. A thumbnail that had stayed a lazy provider would log AV1 lines at about the frame rate for every patch on screen, as #134 found. `count-*.jpg` shows what was on screen during each count.
 
 ```
-DECODE_COUNTS
+A real run over the clip, its birds sewn (`count-run-clip`): first window: 89 lines, 2 patch decodes, 18 AV1 or ImageIO lines. 20 s later: 33 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 4.
+A run holding still, three rows (`count-run-still`): first window: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 28 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 4.
+Species rows (`count-species`): first window: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 23 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 12.
+Set rows (`count-set`): first window: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 23 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 2.
 ```
+
+Each patch is two decodes, its colour and its layers: 2 patches on the real run's rows, 2 on the still one, 6 on Species and 1 on Set, each decoded once. The real run's first window caught a bird arriving, 2 patch decodes and their 18 decoder lines, which also shows the count can see a decode. Everything after is 0, at the sweep's rate of about 60 frames a second, where a re-decoding thumbnail would log hundreds. The second window's extra 20 lines are the system's network log closing the pack index's connection, nothing to do with patches.
 
 ## The first count was wrong
 

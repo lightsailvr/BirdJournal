@@ -96,7 +96,7 @@ done
 xcrun simctl ui "$udid" appearance dark
 shot run-added-dark        14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRowAdd "House Finch"
 shot run-after-stop-dark   14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRunStops YES
-shot run-toast-dark        14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRowAdd "House Finch" -autoRowAddAfter 6
+shot run-toast-dark        14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRowAdd "House Finch" -autoRowAddAfter 11
 shot atlas-search-dark     10 "${seeded[@]}" -autoScreen guide -autoQuery "Finch"
 shot run-no-pack-dark      12 "${seeded[@]}" -fakeRunBirds "Melanerpes formicivorus_Acorn Woodpecker,Turdus merula_Common Blackbird,Strix nebulosa_Great Gray Owl" -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
 shot profile-gallery-dark  10 -inMemoryAlbum YES -seedGallery YES -collectionIntroShown YES -autoCardSpecies "Haemorhous mexicanus" -autoScreen profile
