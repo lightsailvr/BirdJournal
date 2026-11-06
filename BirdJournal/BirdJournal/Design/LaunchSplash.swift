@@ -3,13 +3,12 @@ import UIKit
 
 /// The moment after the launch screen on the first launch only (issue #150, audit F15): later launches go straight to Listen,
 /// for someone reaching for the phone because a bird is calling. It starts as the launch screen (`UILaunchScreen` in the Info.plist, the paper
-/// colour with the `LaunchBird` image, the perched bird at 240 × 144 pt in the middle of the screen), sets the app's
+/// colour with the `PerchedFinch` image, the patch and its shadow at 240 × 240 pt in the middle of the screen), sets the app's
 /// name in the serif under the bird, then fades away over the Listen tab, which is already built underneath. It takes
 /// no touches and hides from VoiceOver, so nothing waits on it.
 ///
 /// The launch screen follows the system appearance, not the one picked in Settings, so the splash starts in the
-/// system's and crossfades into the app's with its fade. `LaunchBird` is rendered from `PerchedBirdDrawing` at that
-/// size; re-render it if the drawing changes.
+/// system's and crossfades into the app's with its fade. Both draw the same picture, so nothing moves between them.
 struct LaunchSplash: View {
     var onFinished: () -> Void
 
@@ -18,7 +17,7 @@ struct LaunchSplash: View {
     @State private var showsTitle = false
     private let systemScheme = Self.systemColorScheme
 
-    static let birdSize = CGSize(width: 240, height: 144)
+    static let birdSize = CGSize(width: 240, height: 240)
     /// Remembers that it played.
     static let shownKey = "launchSplashShown"
 
@@ -54,9 +53,9 @@ struct LaunchSplash: View {
         }
     }
 
-    /// The bird. The mascot's embroidered patch goes here, and in `LaunchBird`, so the launch screen still leads into it.
+    /// The mascot's patch: the picture the launch screen shows too, so nothing moves between them.
     private var art: some View {
-        PerchedBirdDrawing()
+        Image("PerchedFinch").resizable()
     }
 
     private var holds: Duration {

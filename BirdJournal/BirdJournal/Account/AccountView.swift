@@ -65,7 +65,14 @@ struct AccountView: View {
         }
     }
 
+    @ViewBuilder
     private var signedOut: some View {
+        Section {
+            PerchedFinch()
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+        }
         Section {
             SignInButtons()
         } header: {
