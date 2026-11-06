@@ -36,9 +36,9 @@ final class ListenUITests: XCTestCase {
         XCTAssertGreaterThan(settings.frame.height, 80, "inline is 54 pt, large 106 pt")
         settings.buttons.element(boundBy: 0).tap()
 
-        let explore = app.buttons["Explore the Los Angeles set"]
-        XCTAssertTrue(explore.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        explore.tap()
+        let localSet = app.buttons["Your local set, Los Angeles"]
+        XCTAssertTrue(localSet.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        localSet.tap()
         let set = app.navigationBars["Los Angeles"]
         XCTAssertTrue(set.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertGreaterThan(set.frame.height, 130, "with the search drawer, inline is 108 pt, large 160 pt")

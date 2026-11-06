@@ -60,6 +60,8 @@ struct SetView: View {
             // Listen's bar, which this can be pushed from, is inline.
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search \(set.name) birds")
+            // A set's page is in its own edition, wherever the birder is (issue #150).
+            .tint(PatchEdition.tint(setID: set.id))
         } else {
             StateNotice("Set not found", message: "The list of sets no longer includes this one.", mark: .symbol("square.stack.3d.down.right"))
                 .statePage()

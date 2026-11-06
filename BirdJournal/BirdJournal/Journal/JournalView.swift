@@ -359,7 +359,7 @@ private struct CollectionIntroCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.moss.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .background(.tint.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
         .boardLabel(horizontal: 0, vertical: 0)
     }
 }
@@ -497,8 +497,7 @@ struct SetProgressRow: View {
                         .font(JournalFont.supporting)
                         .foregroundStyle(detailInk)
                 }
-                ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
-                    .tint(Color.moss)
+                ThreadProgress(progress)
                     .accessibilityHidden(true)
             }
             Image(systemName: "chevron.right")

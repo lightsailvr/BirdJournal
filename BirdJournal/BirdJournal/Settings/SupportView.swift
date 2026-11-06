@@ -137,7 +137,7 @@ private struct ThankYouNote: View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Thank you!", systemImage: "checkmark.circle.fill")
                 .font(JournalFont.heading)
-                .foregroundStyle(Color.moss)
+                .foregroundStyle(.tint)
             Text("Thanks for the \(tipName.lowercased()). It helps keep the server running. Nothing in the app changes: it was all yours already.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)

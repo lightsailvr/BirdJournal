@@ -124,6 +124,7 @@ struct RootView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(AccountSession.self) private var account
     @Environment(FindOutbox.self) private var findOutbox
+    @Environment(CurrentPlace.self) private var place
     @Environment(PushCenter.self) private var pushes
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
@@ -173,7 +174,8 @@ struct RootView: View {
         .tabViewBottomAccessory(isEnabled: run.state.isActive && tab != .listen) {
             ListeningAccessory { tab = .listen }
         }
-        .tint(Color.moss)
+        // The accent follows the place (issue #150); a set's page and a patch's page set their own.
+        .tint(place.setID.map(PatchEdition.tint(setID:)) ?? .moss)
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
         // it's up this one waits: two pages would sew the patch twice, each with its own haptics. The sheet is the Listen tab's:
         // on another tab, after Stop on the listening strip, it isn't up until the birder comes back.

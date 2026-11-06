@@ -59,7 +59,6 @@ struct SettingsView: View {
                 Section {
                     AccountRow()
                     Toggle("Share my finds automatically", isOn: $sharesFinds)
-                        .tint(Color.moss)
                         .accessibilityIdentifier("shareFindsToggle")
                     HowThisWorks(SharingWords.detail(sharesFinds))
                 } header: {
@@ -136,7 +135,7 @@ struct GlassesDeviceRow: View {
             Text(device.name).font(.headline)
             ShortFacts(device.linkText, device.state.compatibility.displayString)
                 .font(JournalFont.supporting)
-                .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? Color.moss : Color.inkSecondary)
+                .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color.inkSecondary))
             if let battery = device.state.batteryLevel {
                 Text("Battery \(battery)%\(device.state.chargingState == .charging ? ", charging" : "")")
                     .font(JournalFont.attribution)

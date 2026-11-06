@@ -16,7 +16,7 @@ from packbuilder import cli
 from packbuilder.comfy import ComfyClient, PaintingFailed
 from packbuilder.covers import (
     APPROVED, CANDIDATES, CANVAS_SIZE, COVER_SIZE, LOCK_FILE, PENDING, REJECTED, THUMBNAIL_FILE, THUMBNAIL_SIZE, UNPAINTED, CoverLock, CoverPainter, CoverPrompts,
-    StaleThumbnail, index_cover, review, round_seed,
+    StaleThumbnail, bundle_covers, index_cover, review, round_seed,
 )
 from packbuilder.index import pack_index
 from packbuilder.pack_art import ArtLock, PackArtist
@@ -276,3 +276,43 @@ def test_the_cover_and_cover_review_commands_paint_draw_and_approve(tmp_path, co
     assert lock(folder)["chosen"] == 1 and (folder / THUMBNAIL_FILE).exists()
     assert "approved, candidate 1" in capsys.readouterr().err
     assert len(comfy.jobs) == CANDIDATES, "reviewing paints nothing"
+
+
+def test_the_app_bundles_every_approved_cover_and_only_those(tmp_path):
+    """Issue #150: the covers committed in the app's `Pack` target are the ones the locks approved, each with its credit."""
+    bundled = REPO / "BirdJournal" / "BirdJournalKit" / "Sources" / "Pack" / "Covers"
+    covers = json.loads((bundled / "covers.json").read_text())
+    approved = {}
+    for lock_path in PACKS.glob(f"*/{LOCK_FILE}"):
+        entry = CoverLock.load(lock_path).cover
+        if entry and entry.get("review") == APPROVED:
+            approved[lock_path.parent.name] = entry
+    assert set(covers) == set(approved) and len(covers) == 5
+    total = 0
+    for pack_id, cover in covers.items():
+        entry = approved[pack_id]
+        chosen = entry["candidates"][entry["chosen"] - 1]
+        assert cover["painting"] == chosen["sha256"], f"{pack_id}: run `packbuilder bundle-covers`"
+        assert (cover["seed"], cover["model"]) == (chosen["seed"], entry["model"])
+        with Image.open(bundled / cover["file"]) as image:
+            assert (image.format, image.size) == ("JPEG", COVER_SIZE)
+        total += (bundled / cover["file"]).stat().st_size
+    assert total < 3_500_000, f"{total} bytes: about 3 MB together"
+
+
+def test_bundling_a_cover_needs_its_approved_painting(tmp_path):
+    definitions = tmp_path / "packs"
+    (definitions / "us-ca-la").mkdir(parents=True)
+    shutil.copy(PACKS / "us-ca-la" / LOCK_FILE, definitions / "us-ca-la" / LOCK_FILE)
+    (definitions / "us-ca-new").mkdir()
+    (definitions / "us-ca-new" / LOCK_FILE).write_text(json.dumps({"review": PENDING, "candidates": []}))
+    cache = tmp_path / "covers"
+    with pytest.raises(FileNotFoundError):
+        bundle_covers(definitions, cache, tmp_path / "out")
+
+    entry = CoverLock.load(definitions / "us-ca-la" / LOCK_FILE).cover
+    cache.mkdir()
+    Image.new("RGB", COVER_SIZE, (120, 140, 90)).save(cache / f"{entry['candidates'][entry['chosen'] - 1]['sha256']}.png")
+    covers = bundle_covers(definitions, cache, tmp_path / "out")
+    assert list(covers) == ["us-ca-la"], "a pending cover isn't bundled"
+    assert covers["us-ca-la"]["file"] == "us-ca-la.jpg" and (tmp_path / "out" / "us-ca-la.jpg").exists()

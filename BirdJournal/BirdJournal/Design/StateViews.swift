@@ -98,7 +98,6 @@ struct HowThisWorks: View {
             .fixedSize(horizontal: false, vertical: true)
         }
         .font(JournalFont.supporting)
-        .tint(Color.moss)
         .accessibilityIdentifier("how-this-works")
     }
 }

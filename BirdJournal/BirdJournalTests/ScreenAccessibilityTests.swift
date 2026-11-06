@@ -34,6 +34,7 @@ struct ScreenAccessibilityTests {
         let outbox: FindOutbox
         let pushes: PushCenter
         let places = PlaceNames()
+        let place: CurrentPlace
 
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
@@ -45,6 +46,7 @@ struct ScreenAccessibilityTests {
             if let index { try storage.cacheIndex(index) }
             library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, indexURL: PackIndex.defaultURL, session: session, availableCapacity: { .max })
             collectionStore = CollectionStore(container: album, sets: { [library] in library.cardSets })
+            place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: ScriptedLocationProvider([.denied]), defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
             edits = JournalEdits(container: album, frames: frames)
             account = FakeAccount.session(signedIn: true)
             let client = FakeCircleClient(seeded: true)
@@ -79,6 +81,7 @@ struct ScreenAccessibilityTests {
             .environment(account)
             .environment(circles)
             .environment(collectionStore)
+            .environment(place)
             .environment(outbox)
             .environment(pushes)
             .environment(places)
@@ -161,17 +164,18 @@ struct ScreenAccessibilityTests {
     func listen(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(ListenView(), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Start listening") && labels.contains("Your local set")
+            labels.contains("Start listening") && labels.contains { $0.hasPrefix("Your local set") }
         }
         Self.expectClean(labels, screen: "Listen")
         Self.expectOneWordPerThing(labels, screen: "Listen")
         #expect(labels.contains("Start listening"), "\(labels)")
         #expect(labels.contains("Settings"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("iPhone microphone") }, "the source row: \(labels)")
-        #expect(labels.contains("Your local set"), "\(labels)")
-        #expect(labels.contains { $0.contains("of 160 sewn") }, "the set's progress: \(labels)")
+        #expect(labels.contains("Your local set, Los Angeles"), "\(labels)")
+        #expect(labels.contains { $0.contains("of 160 sewn in Los Angeles") }, "the thread reads a sentence: \(labels)")
+        #expect(labels.contains("Los Angeles cover, AI illustration"), "\(labels)")
         let start = try #require(labels.firstIndex(of: "Start listening"))
-        let local = try #require(labels.firstIndex(of: "Your local set"))
+        let local = try #require(labels.firstIndex(of: "Your local set, Los Angeles"))
         #expect(start < local, "Start listening comes before the local set")
     }
 

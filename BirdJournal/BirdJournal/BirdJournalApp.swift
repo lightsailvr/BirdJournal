@@ -20,6 +20,7 @@ struct BirdJournalApp: App {
     @State private var places: PlaceNames
     @State private var packs: PackLibrary
     @State private var collectionStore: CollectionStore
+    @State private var place: CurrentPlace
     @State private var journalEdits: JournalEdits
     @State private var account: AccountSession
     @State private var circles: CircleStore
@@ -77,7 +78,9 @@ struct BirdJournalApp: App {
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
-        _collectionStore = State(initialValue: CollectionStore(container: album, sets: { packs.cardSets }))
+        let collectionStore = CollectionStore(container: album, sets: { packs.cardSets })
+        _collectionStore = State(initialValue: collectionStore)
+        _place = State(initialValue: CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation()))
         let lens = Self.makeLensSession(connection: connection, packs: packs)
         _lens = State(initialValue: lens)
         _phoneListening = State(initialValue: phone)
@@ -221,13 +224,23 @@ struct BirdJournalApp: App {
         return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) }, suppression: suppression)
     }
 
+    /// What picks the Listen painting's set (issue #150): the phone's last known position, which never prompts. `-autoLocation`
+    /// stands in for it in debug builds.
+    private static func makePlaceLocation() -> any LocationProvider {
+        #if DEBUG
+        return debugLocationProvider()
+        #else
+        return CoreLocationProvider()
+        #endif
+    }
+
     #if DEBUG
-    /// `-autoLocation denied|griffith` answers without a permission prompt a UI test couldn't answer.
+    /// `-autoLocation denied|griffith|…` answers without a permission prompt a UI test couldn't answer.
     private static func debugLocationProvider() -> any LocationProvider {
         switch UserDefaults.standard.string(forKey: "autoLocation") {
         case "denied": DeniedLocationProvider()
-        case "griffith": GriffithParkLocationProvider()
-        default: CoreLocationProvider()
+        case let name?: DebugPlace(rawValue: name).map(FixedLocationProvider.init) ?? CoreLocationProvider()
+        case nil: CoreLocationProvider()
         }
     }
     #endif
@@ -265,6 +278,7 @@ struct BirdJournalApp: App {
             .environment(places)
             .environment(packs)
             .environment(collectionStore)
+            .environment(place)
             .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
             .onOpenURL { url in

@@ -87,7 +87,8 @@ struct PackCoverTests {
         let indexURL = root.appending(path: "index.json")
         try JSONEncoder().encode(PackIndex(packs: [descriptor, elsewhere])).write(to: indexURL)
         let library = PackLibrary(
-            bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL, availableCapacity: { nil }
+            bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL, availableCapacity: { nil },
+            bundledCovers: .none
         )
         await library.refreshIndex()
 
@@ -103,6 +104,43 @@ struct PackCoverTests {
         }
         #expect(cover.file == "cover.avif" && FileManager.default.fileExists(atPath: url.path(percentEncoded: false)))
         #expect(library.cover(setID: "test-pack")?.credit == "AI illustration: FLUX.3 Image Klein, set-cover@1 cover-prompts@1, seed 2471396767")
+    }
+
+    @Test("the five approved covers ship with the app at full size, each with its credit")
+    func shippedCovers() throws {
+        for id in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"] {
+            guard case let .bundled(cover, url) = BundledCovers.shipped.cover(setID: id) else {
+                Issue.record("\(id) has no bundled cover")
+                continue
+            }
+            #expect(Self.pixelSize(of: url) == CGSize(width: 1536, height: 864), "\(id)")
+            #expect(cover.model == "FLUX.3 Image Klein" && cover.workflowVersion == "set-cover@1 cover-prompts@1", "\(id)")
+        }
+        #expect(BundledCovers.shipped.cover(setID: "us-tx-houston") == nil)
+    }
+
+    @Test("a bundled cover comes before the pack's and the index's, so the painting needs neither the download nor a connection")
+    func bundledFirst() async throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let zip = try Fixtures.testPackZip()
+        let plain = try Fixtures.descriptor(for: zip, version: 1)
+        let thumbnail = PackIndexCover(thumbnail: Data([0xFF, 0xD8]), width: 480, height: 270, model: "FLUX.3 Image Klein", workflowVersion: "set-cover@1 cover-prompts@1", seed: 7)
+        let descriptor = PackDescriptor(id: plain.id, name: plain.name, version: plain.version, url: plain.url, sha256: plain.sha256, byteCount: plain.byteCount, cover: thumbnail)
+        let indexURL = root.appending(path: "index.json")
+        try JSONEncoder().encode(PackIndex(packs: [descriptor])).write(to: indexURL)
+        let own = SetCover.bundled(PackCover(file: "test-pack.jpg", workflowVersion: "set-cover@1 cover-prompts@1", seed: 9, model: "FLUX.3 Image Klein"), root.appending(path: "test-pack.jpg"))
+        let library = PackLibrary(
+            bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL, availableCapacity: { nil },
+            bundledCovers: BundledCovers(covers: ["test-pack": own])
+        )
+
+        #expect(library.cover(setID: "test-pack") == own, "before the index, offline")
+        await library.refreshIndex()
+        #expect(library.cover(setID: "test-pack") == own, "over the index's thumbnail")
+        await library.download(descriptor)
+        #expect(library.cover(setID: "test-pack") == own, "over the pack's")
+        #expect(own.credit == "AI illustration: FLUX.3 Image Klein, set-cover@1 cover-prompts@1, seed 9")
     }
 
     private static func pixelSize(of url: URL) -> CGSize? {

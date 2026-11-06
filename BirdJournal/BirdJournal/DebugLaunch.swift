@@ -49,8 +49,10 @@ import UIKit
 ///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).
 /// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
-/// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
-///   prompting, for the UI tests; `griffith` answers with a fix in Griffith Park.
+/// - `-autoLocation denied` answers the location request as denied instead of prompting, for the UI tests; `griffith` answers
+///   with a fix in Griffith Park. `san-diego`, `oakland`, `joshua-tree` and `orlando` are places in the other sets, and `kansas`
+///   is outside every set (`DebugPlace`). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
+///   picks the Listen painting (issue #150).
 /// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
@@ -279,15 +281,35 @@ struct DeniedLocationProvider: LocationProvider {
     }
 }
 
-/// Stands in for Core Location with a fix in Griffith Park (`-autoLocation griffith`, issue #135): a run in the Los Angeles
-/// set, so an add there sews a patch with a painting, with no permission prompt for a UI test to answer.
-struct GriffithParkLocationProvider: LocationProvider {
+/// The places `-autoLocation` names: one in each set, and one outside them all.
+enum DebugPlace: String {
+    case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas
+
+    var coordinate: Coordinate {
+        switch self {
+        case .griffith: Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 10)
+        case .sanDiego: Coordinate(latitude: 32.7157, longitude: -117.1611, accuracy: 10)
+        case .oakland: Coordinate(latitude: 37.8044, longitude: -122.2712, accuracy: 10)
+        case .joshuaTree: Coordinate(latitude: 33.8734, longitude: -115.9010, accuracy: 10)
+        case .orlando: Coordinate(latitude: 28.5384, longitude: -81.3789, accuracy: 10)
+        case .kansas: Coordinate(latitude: 38.5, longitude: -98.5, accuracy: 10)
+        }
+    }
+}
+
+/// Stands in for Core Location with a fix in one place (`-autoLocation griffith`, issue #135: a run in the Los Angeles set, so
+/// an add there sews a patch with a painting), with no permission prompt for a UI test to answer.
+struct FixedLocationProvider: LocationProvider {
+    let place: DebugPlace
+
     func fixes() -> AsyncStream<LocationFix> {
         AsyncStream { continuation in
-            continuation.yield(.fix(latitude: 34.1365, longitude: -118.2942, accuracy: 10, at: .now))
+            continuation.yield(.fix(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude, accuracy: place.coordinate.accuracy, at: .now))
             continuation.finish()
         }
     }
+
+    func lastKnownCoordinate() -> Coordinate? { place.coordinate }
 }
 
 /// Hands a file's chunks out at the pace they were recorded, so a WAV drives the Listen tab like a microphone would

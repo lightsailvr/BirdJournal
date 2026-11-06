@@ -65,7 +65,7 @@ struct ActiveListeningView: View {
 
                 if run.candidates.isEmpty {
                     HStack(spacing: 10) {
-                        if run.state == .starting { ProgressView().tint(Color.moss) }
+                        if run.state == .starting { ProgressView() }
                         Text(emptyText)
                     }
                     .font(JournalFont.body)
@@ -163,11 +163,11 @@ private struct StatusLine: View {
         .accessibilityElement(children: .combine)
     }
 
-    private var color: Color {
+    private var color: AnyShapeStyle {
         switch run.state {
-        case .listening: .moss
-        case .starting, .interrupted, .paused, .resuming, .stopping: .ink
-        case .idle, .ended: .inkSecondary
+        case .listening: AnyShapeStyle(TintShapeStyle.tint)
+        case .starting, .interrupted, .paused, .resuming, .stopping: AnyShapeStyle(Color.ink)
+        case .idle, .ended: AnyShapeStyle(Color.inkSecondary)
         }
     }
 
@@ -238,7 +238,7 @@ struct Waveform: View {
             HStack(alignment: .center, spacing: gap) {
                 ForEach(Array(levels.enumerated()), id: \.offset) { _, level in
                     Capsule()
-                        .fill(Color.moss.opacity(isLive ? 0.9 : 0.35))
+                        .fill(.tint.opacity(isLive ? 0.9 : 0.35))
                         .frame(width: width, height: 4 + CGFloat(level) * (geometry.size.height - 4))
                 }
             }
@@ -351,7 +351,7 @@ struct CandidateRow: View {
                 .overlay {
                     if isCalling {
                         RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous)
-                            .strokeBorder(Color.moss, lineWidth: 2.5)
+                            .strokeBorder(.tint, lineWidth: 2.5)
                     }
                 }
                 .accessibilityHidden(true)
@@ -368,7 +368,7 @@ struct CandidateRow: View {
                             Text("Calling now")
                         }
                         .font(JournalFont.supporting.weight(.medium))
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                     } else {
                         if isAdded {
                             Label("Added to collection", systemImage: "checkmark.circle.fill")
@@ -388,7 +388,7 @@ struct CandidateRow: View {
                 Button(action: review) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                         .frame(minWidth: 44, minHeight: 44)
                 }
                 .accessibilityLabel("Added. Review \(candidate.species.commonName)")

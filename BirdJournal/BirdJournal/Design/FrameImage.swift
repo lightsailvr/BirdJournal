@@ -101,7 +101,7 @@ struct AttributedImage: View {
                             .font(.caption2)
                     }
                     .font(JournalFont.attribution)
-                    .foregroundStyle(Color.moss)
+                    .foregroundStyle(.tint)
                 }
                 .accessibilityLabel("Photo credit: \(photo.creditLine). Opens the observation on iNaturalist.")
             }

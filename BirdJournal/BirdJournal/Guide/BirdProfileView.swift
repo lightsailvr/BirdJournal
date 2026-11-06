@@ -223,7 +223,7 @@ private struct ProfileContent: View {
                 Link(destination: wikipedia) {
                     Label("Read more on Wikipedia", systemImage: "arrow.up.right.square")
                         .font(JournalFont.supporting)
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                 }
             }
             Text("Powered by BirdNET")
@@ -267,7 +267,7 @@ private struct SoundRow: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.mossText)
                     .frame(width: 44, height: 44)
-                    .background(Color.moss, in: Circle())
+                    .background(.tint, in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
                     Text(isPlaying ? "Playing \(sound.kind.title.lowercased())…" : sound.kind.title)
                         .font(JournalFont.rowTitle)

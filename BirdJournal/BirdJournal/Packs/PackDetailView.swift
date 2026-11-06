@@ -26,7 +26,7 @@ struct PackDetailView: View {
         let edition = installed?.set?.edition.name ?? descriptor?.set?.edition.name
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
-                SetCoverImage(setID: id, edition: edition ?? "")
+                SetCoverImage(setID: id)
                     .frame(height: 150)
                     .frame(maxWidth: .infinity)
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
@@ -116,6 +116,8 @@ struct PackDetailView: View {
         }
         .navigationTitle(name)
         .navigationBarTitleDisplayMode(.large)
+        // A set's download page is in its edition, like the set's own (issue #150).
+        .tint(PatchEdition.tint(setID: id))
         .confirmationDialog(isBundledUpdate ? "Remove the downloaded update?" : "Remove \(name) from this iPhone?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
             Button(isBundledUpdate ? "Remove update" : "Remove download", role: .destructive) {
                 do {
@@ -198,7 +200,6 @@ private struct PackPreview: View {
             }
             .font(JournalFont.body)
             .foregroundStyle(Color.ink)
-            .tint(Color.moss)
         }
     }
 }

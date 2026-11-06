@@ -3,6 +3,7 @@
 `packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
 `packbuilder cover <definition-dir>`: paints the set's cover candidates the cover lock lacks and draws their contact sheet (`covers.py`).
 `packbuilder cover-review <definition-dir> --approve <n> | --reject`: records the maintainer's choice of cover in cover.lock.json.
+`packbuilder bundle-covers`: writes every approved cover into the app's `Pack` target (`covers.py`, issue #150).
 `packbuilder art-references <definition-dir> --pack <pack-dir> --out <dir>`: exports the art worker's reference birds (`art_references.py`).
 `packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
 `packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore, and of the story titles on
@@ -104,6 +105,10 @@ def main(argv: list[str] | None = None) -> int:
     cover_review.add_argument("--why", help="the reason, kept in the lock with --reject")
     cover_review.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache holding <cache>/covers (default: packbuilder/cache)")
     cover_review.add_argument("--sheets", type=Path, help="folder for the redrawn contact sheet (default build/pack-art/<pack id>)")
+    bundle = commands.add_parser("bundle-covers", help="write every approved cover into the app's Pack target, so the Listen painting works before a pack is on the phone")
+    bundle.add_argument("--definitions", type=Path, default=Path(__file__).resolve().parents[2] / "packs", help="the folders holding each set's cover.lock.json (default: packbuilder/packs)")
+    bundle.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache holding <cache>/covers (default: packbuilder/cache)")
+    bundle.add_argument("--out", type=Path, default=Path(__file__).resolve().parents[3] / "BirdJournal/BirdJournalKit/Sources/Pack/Covers", help="the folder the app bundles (default: the Pack target's Covers)")
     patches = commands.add_parser("patches", help="paint the embroidered patches patch.lock.json lacks and draw their contact sheets, without building the pack (issue #133)")
     patches.add_argument("definition", type=Path, help="folder holding pack.json, art.lock.json (the reference birds) and patch.lock.json")
     patches.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
@@ -167,6 +172,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cover(args)
     if args.command == "cover-review":
         return _cover_review(args)
+    if args.command == "bundle-covers":
+        return _bundle_covers(args)
     if args.command == "lore-review":
         return _lore_review(args)
     if args.command == "lore":
@@ -386,6 +393,15 @@ def _cover(args: argparse.Namespace) -> int:
     sheet = painter.sheet(args.sheets or _art_sheets_path(definition.id), card_set["edition"].get("name", ""))
     print(f"{definition.id} cover: {cover.review}, {painter.painted} painted; contact sheet {sheet}", file=sys.stderr)
     return 0 if sheet is not None else 1
+
+
+def _bundle_covers(args: argparse.Namespace) -> int:
+    from packbuilder.covers import bundle_covers
+
+    covers = bundle_covers(args.definitions, args.cache / "covers", args.out)
+    total = sum((args.out / cover["file"]).stat().st_size for cover in covers.values())
+    print(f"{args.out}: {len(covers)} covers, {total / 1_000_000:.1f} MB", file=sys.stderr)
+    return 0
 
 
 def _cover_review(args: argparse.Namespace) -> int:

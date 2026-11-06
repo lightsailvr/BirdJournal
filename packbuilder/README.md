@@ -225,6 +225,11 @@ watercolours often end in.
   `packbuilder index` carries the committed `cover-thumbnail.jpg` (480 × 270 JPEG, base64) and refuses one that isn't
   the approved cover's. Commit the lock and the thumbnail together; then rebuild and pin the pack and publish the
   index, so the pack and the index show the same cover.
+- **In the app.** Every approved cover also ships in the app itself, so the Listen painting works before a set's pack is
+  on the phone and offline (issue #150): `uv run packbuilder bundle-covers` writes them at full size as JPEG, about 3 MB
+  together, with `covers.json`, into the `Pack` target's `Covers` folder, which is committed. Run it after approving a
+  cover: `test_covers` fails while a bundled cover isn't the one its lock approved. It reads the cover cache, so the
+  chosen paintings have to be there (`packbuilder cover` paints a missing one from its seed).
 
 ## Patches
 

@@ -1,3 +1,4 @@
+import Album
 import CoreLocation
 import Foundation
 import Synchronization
@@ -21,6 +22,15 @@ protocol LocationProvider {
     /// Asks for when-in-use permission the first time (the system prompts once) and yields fixes until the stream
     /// is dropped.
     func fixes() -> AsyncStream<LocationFix>
+
+    /// The last position the phone knows (issue #150), for picking the Listen painting's set: one read, which never prompts,
+    /// starts no updates and shows no indicator, and nothing unless when-in-use permission is already granted. The caller
+    /// uses it to pick a set, and neither stores nor sends it.
+    func lastKnownCoordinate() -> Coordinate?
+}
+
+extension LocationProvider {
+    func lastKnownCoordinate() -> Coordinate? { nil }
 }
 
 /// Core Location through `CLLocationUpdate.liveUpdates`, which prompts for when-in-use permission itself when
@@ -57,6 +67,20 @@ final class CoreLocationProvider: LocationProvider {
                 defer { state.settled = true }
                 return !state.settled
             }
+        }
+    }
+
+    func lastKnownCoordinate() -> Coordinate? {
+        let manager = CLLocationManager()
+        guard Self.mayRead(manager.authorizationStatus), let location = manager.location else { return nil }
+        return Coordinate(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, accuracy: location.horizontalAccuracy)
+    }
+
+    /// Only a permission already granted: an undetermined one stays undetermined until the birder taps Start.
+    nonisolated static func mayRead(_ status: CLAuthorizationStatus) -> Bool {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways: true
+        default: false
         }
     }
 

@@ -16,9 +16,10 @@ extension Color {
     static let ink = Color("JournalInk")
     /// Supporting text, at least 4.5:1 on the page and on a raised surface.
     static let inkSecondary = Color("JournalInkSecondary")
-    /// Primary actions, links and the selected tab: aqua #BCE3D9 dark, teal #15363A light.
+    /// Today's aqua: #BCE3D9 dark, teal #15363A light. It's what a set the app doesn't know keeps. Everything else reads the
+    /// accent through `.tint`, since it follows the place (issue #150): `PatchEdition.tint(setID:)`, at the root.
     static let moss = Color("JournalMoss")
-    /// Text on a primary action's fill.
+    /// Text on the accent's fill, in every edition's tint.
     static let mossText = Color("JournalMossText")
     /// Fine separators; decorative, stronger under Increase Contrast.
     static let rule = Color("JournalRule")
@@ -26,6 +27,8 @@ extension Color {
     static let sharedGoal = Color("JournalSharedGoal")
     /// Text and marks on a `sharedGoal` fill.
     static let onSharedGoal = Color("JournalOnSharedGoal")
+    /// Lavender thread on the page, in `ThreadProgress`: `sharedGoal` itself, which is a pale fill in the light appearance, wouldn't show there.
+    static let togetherThread = Color("ThreadTogether")
     /// Errors and destructive actions in a page (issue #119): brick #A3322A light, salmon #F4A79B dark, at least 5.5:1
     /// on the page and a raised surface. The system red measured 3.2:1 on the light page and 3.6:1 on the dark raised
     /// surface, under the 4.5:1 text needs.
@@ -107,7 +110,7 @@ extension JournalFont {
     }
 }
 
-/// The primary action of a page: a full-width moss button with the label centred, 54 pt tall.
+/// The primary action of a page: a full-width button in the accent with the label centred, 54 pt tall.
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
@@ -116,12 +119,12 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(.body.weight(.semibold))
             .foregroundStyle(Color.mossText)
             .frame(maxWidth: .infinity, minHeight: JournalLayout.primaryActionHeight)
-            .background(Color.moss.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .background(.tint.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
     }
 }
 
-/// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
+/// A secondary action: a capsule outlined in the accent, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
 /// rectangle, since its words wrap (issue #150).
 struct OutlinedButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
@@ -131,13 +134,13 @@ struct OutlinedButtonStyle: ButtonStyle {
         let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color.moss)
+            .foregroundStyle(.tint)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
             .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
             .frame(minHeight: 44)
-            .background(Color.moss.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
-            .overlay(shape.strokeBorder(Color.moss, lineWidth: 1))
+            .background(.tint.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(.tint, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
             .contentShape(shape)
     }
@@ -319,7 +322,7 @@ struct Toast: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.moss)
+                .foregroundStyle(.tint)
             Text(shown)
                 .font(JournalFont.supporting.weight(.medium))
                 .foregroundStyle(Color.ink)
@@ -328,7 +331,7 @@ struct Toast: View {
                 Spacer(minLength: 8)
                 Button("Undo", action: undo)
                     .font(JournalFont.supporting.weight(.semibold))
-                    .foregroundStyle(Color.moss)
+                    .foregroundStyle(.tint)
             }
         }
         .padding(.horizontal, 16)

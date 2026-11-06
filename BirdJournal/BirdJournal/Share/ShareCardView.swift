@@ -121,7 +121,6 @@ struct ShareCardView: View {
                             .padding(.vertical, 10)
                             .accessibilityIdentifier("share-city")
                     }
-                    .tint(Color.moss)
                     .font(JournalFont.body)
                     .foregroundStyle(Color.ink)
                     .padding(.top, 8)
@@ -226,7 +225,6 @@ struct ShareCardView: View {
                     .disabled(originalPhotoPath == nil)
                     .accessibilityIdentifier("share-photo")
             }
-            .tint(Color.moss)
             .font(JournalFont.body)
             .foregroundStyle(Color.ink)
             .padding(.top, 8)
@@ -247,7 +245,7 @@ struct ShareCardView: View {
         case .sent(let message):
             Label(message, systemImage: "checkmark.circle")
                 .font(JournalFont.supporting)
-                .foregroundStyle(Color.moss)
+                .foregroundStyle(.tint)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("share-sent")
         case .failed(let message):

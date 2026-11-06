@@ -288,6 +288,8 @@ public struct PackCover: Sendable, Hashable {
 
 /// A set's cover where the phone has it (issue #114): `PackLibrary.cover(setID:)`.
 public enum SetCover: Sendable, Hashable {
+    /// The full cover that ships with the app (issue #150), and its file.
+    case bundled(PackCover, URL)
     /// The full cover of the pack on the phone, and its file.
     case pack(PackCover, URL)
     /// The index's thumbnail, before the pack is downloaded.
@@ -296,9 +298,43 @@ public enum SetCover: Sendable, Hashable {
     /// The credit for the credits screen, labelled as illustration: "AI illustration: FLUX.3 Image Klein, set-cover@1 cover-prompts@1, seed 42".
     public var credit: String {
         switch self {
-        case let .pack(cover, _): "AI illustration: \(cover.model), \(cover.workflowVersion), seed \(cover.seed)"
+        case let .bundled(cover, _), let .pack(cover, _): "AI illustration: \(cover.model), \(cover.workflowVersion), seed \(cover.seed)"
         case let .thumbnail(cover): "AI illustration: \(cover.model), \(cover.workflowVersion), seed \(cover.seed)"
         }
+    }
+}
+
+/// The approved covers that ship with the app (issue #150): every set's painting, so Listen shows it before the set's pack is on
+/// the phone and offline. `packbuilder bundle-covers` writes them, with `covers.json`, into this target's `Covers` folder.
+public struct BundledCovers: Sendable {
+    private let covers: [String: SetCover]
+
+    public init(covers: [String: SetCover]) {
+        self.covers = covers
+    }
+
+    public static let none = BundledCovers(covers: [:])
+
+    /// The ones in this build. A folder that can't be read is the same as none: the packs' covers and the index's thumbnails remain.
+    public static let shipped: BundledCovers = {
+        struct Entry: Decodable {
+            let file: String
+            let model: String
+            let workflowVersion: String
+            let seed: Int
+        }
+        guard let manifest = Bundle.module.url(forResource: "covers", withExtension: "json", subdirectory: "Covers"),
+              let data = try? Data(contentsOf: manifest),
+              let entries = try? JSONDecoder().decode([String: Entry].self, from: data)
+        else { return .none }
+        let folder = manifest.deletingLastPathComponent()
+        return BundledCovers(covers: entries.mapValues { entry in
+            .bundled(PackCover(file: entry.file, workflowVersion: entry.workflowVersion, seed: entry.seed, model: entry.model), folder.appending(path: entry.file))
+        })
+    }()
+
+    public func cover(setID: String) -> SetCover? {
+        covers[setID]
     }
 }
 
