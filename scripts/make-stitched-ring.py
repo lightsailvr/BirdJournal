@@ -10,9 +10,9 @@ import pathlib
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "BirdJournal/BirdJournal/Assets.xcassets/stitched.ring.symbolset"
 
-# The mock's 18x17 viewBox has r 7.2, stroke 1.5 and centre r 3.6. At Regular-M the ring's outer edge spans 124 units, which
-# sits beside the system's map and waveform symbols at their height in the tab bar.
-OUTER = 62.0
+# The mock's 18x17 viewBox has r 7.2, stroke 1.5 and centre r 3.6. The tab bar draws the large scale, so at Regular-L the ring's
+# outer edge spans 126 units: the height of the system's map and waveform symbols beside it.
+OUTER = 49.0
 UNIT = OUTER / (7.2 + 0.75)
 STROKE = 1.5 * UNIT
 CENTRE = 3.6 * UNIT
