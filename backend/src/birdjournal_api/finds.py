@@ -34,7 +34,6 @@ import base64
 import binascii
 import re
 import unicodedata
-from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -116,6 +115,18 @@ class Find:
     circle_ids: list[str]
     created_at: datetime
     updated_at: datetime
+
+
+@dataclass(frozen=True)
+class CountedSpecies:
+    """One species among a circle's finds in a period (`FindStore.species_between`)."""
+
+    species_id: str
+    scientific_name: str
+    common_name: str
+    # The edition of its earliest find that has one; None when no find names a set.
+    edition: str | None
+    finds: int
 
 
 @dataclass(frozen=True)
@@ -483,21 +494,32 @@ class FindStore:
         (issue #63), the same query the feed's mark reads."""
         return self._first_of(circle_id, scientific_name) == (owner, sighting_id)
 
-    def species_between(self, circle_id: str, starts_at: datetime, ends_at: datetime) -> Counter[str]:
-        """How many of the circle's feed items found from `starts_at` up to, not including, `ends_at` are of each
-        species (scientific name): a goal's progress is the number of keys (issue #65). The feed's sort key starts with
-        the found minute, so this is one key range; an item at exactly `ends_at` sorts after the bare minute and is
-        left out."""
-        species: Counter[str] = Counter()
+    def species_between(self, circle_id: str, starts_at: datetime, ends_at: datetime) -> dict[str, CountedSpecies]:
+        """The species among the circle's feed items found from `starts_at` up to, not including, `ends_at`, by
+        scientific name and earliest first: a goal's progress is how many there are, and these are what it counted
+        (issues #65, #150). The feed's sort key starts with the found minute, so this is one key range; an item at
+        exactly `ends_at` sorts after the bare minute and is left out."""
+        species: dict[str, CountedSpecies] = {}
         kwargs: dict[str, Any] = {
             "KeyConditionExpression": Key("pk").eq(_feed_pk(circle_id))
             & Key("sk").between(_minute(starts_at), _minute(ends_at)),
-            "ProjectionExpression": "scientific_name",
+            "ProjectionExpression": "species_id, scientific_name, common_name, edition, art_key",
             "ConsistentRead": True,
         }
         while True:
             response = self._table.query(**kwargs)
-            species.update(str(item["scientific_name"]) for item in response["Items"])
+            for item in response["Items"]:
+                name = str(item["scientific_name"])
+                edition = stored_edition(item)
+                counted = species.get(name)
+                species[name] = (
+                    CountedSpecies(
+                        species_id=item["species_id"], scientific_name=name, common_name=item["common_name"],
+                        edition=edition, finds=1,
+                    )
+                    if counted is None
+                    else replace(counted, edition=counted.edition or edition, finds=counted.finds + 1)
+                )
             if "LastEvaluatedKey" not in response:
                 return species
             kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
@@ -634,6 +656,17 @@ def _content(item: dict[str, Any]) -> FindContent:
         art=art,
         edition=item.get("edition"),
     )
+
+
+def stored_edition(item: dict[str, Any]) -> str | None:
+    """The edition of a stored find or feed item (read with `edition` and `art_key`). Compatibility: a find stored before
+    #136 has no `edition`, but a patch's art key names its pack, `packs/us-ca-la/patch/…`. Only a patch's: pack art can
+    come from any pack that has the bird, even for a find outside every set. This read stays until the table's old items
+    are rewritten, which a deploy alone doesn't do."""
+    if "edition" in item:
+        return str(item["edition"])
+    parts = str(item.get("art_key", "")).split("/")
+    return parts[1] if len(parts) == 4 and parts[0] == "packs" and parts[2] == "patch" else None
 
 
 def _item_keys(owner: str, sighting_id: str, content: FindContent, circle_ids: list[str]) -> list[dict[str, str]]:

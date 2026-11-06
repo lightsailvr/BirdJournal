@@ -9,7 +9,8 @@
   time zone, both included, so a Big Day is one date). The goal's creator or the circle's creator deletes it.
 - **Progress** is the number of distinct species among the circle's feed items found inside the period, read when
   asked: repeat cards and several members finding the same bird count once, a deleted find stops counting at once, and
-  the finds of a member who left still count (they stay in the feed, #62).
+  the finds of a member who left still count (they stay in the feed, #62). The same read names what it counted (#150):
+  each species, earliest first, with the edition of its earliest find that has one.
 - **Completion** is noted once (`completed_at`, written on the condition that it isn't there): the new find that
   brings progress to the target (its species new to the period, and the count reaching the target with it) makes a
   notable push (pushes.py), and no later find, nor progress falling and rising again after a delete, pushes it again.
@@ -40,7 +41,7 @@ from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 from birdjournal_api.circles import Circle, CircleStore, NotFound
-from birdjournal_api.finds import Find, FindStore
+from birdjournal_api.finds import CountedSpecies, Find, FindStore
 
 ROLLOVER_PK = "GOAL_ROLLOVER"
 FIRST_MONTH_TARGET = 10
@@ -93,6 +94,8 @@ class GoalView:
     starts_at: datetime
     ends_at: datetime
     progress: int
+    # What the progress counted, earliest first: `progress` of them, from the same read.
+    species: list[CountedSpecies]
     status: GoalStatus
     created_by_name: str | None
     can_delete: bool
@@ -249,7 +252,8 @@ class GoalStore:
                 species = self._finds.species_between(circle_id, starts_at, ends_at)
                 # This find is the one that crossed: its species is new to the period, and with it the count reaches
                 # the target. A repeat bird after a goal reached otherwise (a moved find) takes no credit.
-                crossed = species[find.content.scientific_name] == 1 and len(species) == goal.target
+                counted = species.get(find.content.scientific_name)
+                crossed = counted is not None and counted.finds == 1 and len(species) == goal.target
                 if crossed and self._note_completed(goal, find, now):
                     completed.append(CompletedGoal(goal=goal, progress=len(species)))
         return completed
@@ -351,11 +355,13 @@ class GoalStore:
         starts_at, ends_at = period(circle.time_zone, goal.start_date, goal.end_date)
         status = GoalStatus.UPCOMING if now < starts_at else GoalStatus.ACTIVE if now < ends_at else GoalStatus.ENDED
         names = self._circles.display_names([goal.created_by]) if goal.created_by else {}
+        species = list(self._finds.species_between(circle.id, starts_at, ends_at).values())
         return GoalView(
             goal=goal,
             starts_at=starts_at,
             ends_at=ends_at,
-            progress=self._progress(circle.id, starts_at, ends_at),
+            progress=len(species),
+            species=species,
             status=status,
             created_by_name=names.get(goal.created_by) if goal.created_by else None,
             can_delete=goal.kind is GoalKind.CUSTOM and subject in (goal.created_by, circle.created_by),
