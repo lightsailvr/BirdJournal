@@ -127,6 +127,157 @@ final class HuntUITests: XCTestCase {
         XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
     }
 
+    /// The bird a row shows. Its label's other words can change while the list holds: a row's own contents aren't held.
+    private func bird(_ row: XCUIElement) -> String {
+        String(row.label.prefix { $0 != "," })
+    }
+
+    /// A woodpecker always calling, and five with patches that keep passing their places along once a second, each with Add.
+    /// (A launch argument can't hold an apostrophe: the defaults read it as a property list and drop every flag.)
+    private static let movingBirds = "Melanerpes formicivorus_Acorn Woodpecker,Buteo jamaicensis_Red-tailed Hawk,Anas platyrhynchos_Mallard,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Zenaida macroura_Mourning Dove"
+
+    /// The list holds still around a touch (the maintainer, issue #150). A finger comes down on one spot on a list that keeps
+    /// re-sorting, and stays for 2.5 s, two or three re-sorts where it takes five to come round again. Whichever bird's Add was at
+    /// that spot takes the add, and when the finger lifts that bird is still at that spot.
+    @MainActor
+    func testAFingerDownOnAListThatKeepsReSortingKeepsItsBirdUnderItAndTheListMovesAgainAfter() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeRunBirds", Self.movingBirds,
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+
+        // It does keep moving when nobody's touching it.
+        let first = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != first }, evaluatedWith: NSObject())], timeout: 15)
+
+        // The row's own button is the row's width less the pill, which sits to its right.
+        let frame = row.frame
+        let spot = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.maxX + 30, dy: frame.midY))
+        spot.press(forDuration: 2.5)
+        let said = app.staticTexts.matching(NSPredicate(format: "label CONTAINS ' seen again, 2 times in Los Angeles'")).firstMatch
+        XCTAssertTrue(said.waitForExistence(timeout: 1), "the press added nothing; screen: \(app.debugDescription.prefix(4000))")
+        let added = said.label.components(separatedBy: " seen again").first ?? ""
+        XCTAssertTrue(row.label.hasPrefix("\(added), added"), "\(added) moved from under the finger: the row there is \(row.label)")
+
+        // And it's let go: within a few seconds of the finger lifting, the list is moving again.
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != added }, evaluatedWith: NSObject())], timeout: 15)
+    }
+
+    /// Scrolling counts as touching, with the finger nowhere near a row: here it's on the timer. These birds move three times a
+    /// second, so two looks at one spot, a moment apart, would see different birds if the list weren't holding.
+    @MainActor
+    func testScrollingHoldsTheListAndItMovesAgainAfter() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "0.3",
+            "-fakeRunBirds", Self.movingBirds + ",Melozone crissalis_California Towhee,Spinus psaltria_Lesser Goldfinch",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+        let first = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != first }, evaluatedWith: NSObject())], timeout: 15)
+
+        let timer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Listening for'")).firstMatch
+        XCTAssertTrue(timer.exists, "screen: \(app.debugDescription.prefix(3000))")
+        let from = timer.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        from.press(forDuration: 0.1, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -60)), withVelocity: .slow, thenHoldForDuration: 2)
+        let held = bird(row)
+        let words = row.label
+        Thread.sleep(forTimeInterval: 0.6)
+        XCTAssertEqual(bird(row), held, "the list moved during its 1.5 s after a scroll")
+        XCTAssertNotEqual(row.label, words, "a row's own contents aren't held, only the order")
+
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 15)
+    }
+
+    /// A flick still decelerating when the list leaves the screen never tells it the scroll is over, so leaving lets go.
+    @MainActor
+    func testAFlickThenAnotherTabDoesNotLeaveTheListHeld() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeLeaveDuringFlick", "YES",
+            "-fakeRunBirds", Self.movingBirds + ",Melozone crissalis_California Towhee,Spinus psaltria_Lesser Goldfinch",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+
+        row.swipeUp(velocity: .fast)
+        let collection = app.tabBars.buttons["Collection"]
+        XCTAssertTrue(collection.waitForExistence(timeout: 5) && collection.isSelected, "the flick didn't leave; screen: \(app.debugDescription.prefix(3000))")
+        app.tabBars.buttons["Listen"].tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // Well inside the safety net's time: this is leaving letting go, not the net.
+        let held = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 8)
+    }
+
+    /// Tapping the tab you're on scrolls to the top, which with the list already there never reports that it's over: only a
+    /// finger or a deceleration holds the list, not that.
+    @MainActor
+    func testRetappingTheListenTabDoesNotHoldTheList() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1",
+            "-fakeRunBirds", Self.movingBirds,
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+
+        app.tabBars.buttons["Listen"].tap()
+        let held = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 8)
+    }
+
+    /// A sheet landing under a finger takes the touch away, so the list can't wait to hear it end.
+    @MainActor
+    func testASheetLandingMidTouchLetsTheListGo() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeSheetDuringTouch", "YES",
+            "-fakeRunBirds", Self.movingBirds,
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+
+        row.press(forDuration: 2.5)
+        let close = app.buttons["Close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 10), "no sheet; screen: \(app.debugDescription.prefix(3000))")
+        close.tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        let held = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 8)
+    }
+
+    /// The finger's watcher leaves the touch to the scroll view.
+    @MainActor
+    func testTheListStillScrolls() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES",
+            "-fakeRunBirds", Self.movingBirds + ",Melozone crissalis_California Towhee,Spinus psaltria_Lesser Goldfinch",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+        let before = row.frame.minY
+        row.swipeUp()
+        let scrolled = NSPredicate { _, _ in row.frame.minY < before }
+        wait(for: [expectation(for: scrolled, evaluatedWith: NSObject())], timeout: 10)
+    }
+
     @MainActor
     func testASightingWithYourPhotoKeepsItAndOneWithoutShowsItsPatchAndTheRowsTakeTheirTaps() throws {
         let app = XCUIApplication()

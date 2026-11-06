@@ -112,6 +112,7 @@ xcrun simctl ui "$udid" increase_contrast disabled
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shot run-ax5     12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoScrollTo run-rows
 shot run-row-ax5 12 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoScrollTo "run-row-Haemorhous mexicanus"
+shot run-toast-ax5 14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRowAdd "House Finch" -autoRowAddAfter 11
 shot species-ax5  9 "${seeded[@]}" -autoScreen species-list
 shot set-ax5      9 "${seeded[@]}" -seedBoard YES -autoScreen set
 shot sightings-ax5 9 "${seeded[@]}" -autoScreen sightings

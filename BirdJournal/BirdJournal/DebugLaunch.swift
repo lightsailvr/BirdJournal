@@ -66,7 +66,9 @@ import UIKit
 /// - `-fakeRunBirds "Haemorhous mexicanus_House Finch,…"` makes a run's list these BirdNET labels and hold still, the first
 ///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
 ///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
-///   reveal; `-autoRunStops YES` stops the run, for the review. `-patchDecodeLog YES` logs each patch decode under `patch-decode`.
+///   reveal; `-fakeRunReorderEvery <seconds>` keeps those heard earlier swapping places, so the list keeps re-sorting;
+///   `-fakeSheetDuringTouch YES` lands a review a second into a touch on the list; `-fakeLeaveDuringFlick YES` opens the
+///   Collection while the list decelerates; `-autoRunStops YES` stops the run, for the review. `-patchDecodeLog YES` logs each patch decode under `patch-decode`.
 /// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
@@ -139,6 +141,9 @@ struct DebugLaunch: ViewModifier {
                 run.source = .phone
                 run.fakeStack = FakeRunBirds.stack
                 await run.start()
+                if defaults.double(forKey: "fakeRunReorderEvery") > 0 {
+                    FakeRunBirds.keepReordering(run, every: defaults.double(forKey: "fakeRunReorderEvery"))
+                }
                 if let name = defaults.string(forKey: "autoRowAdd"), let bird = run.candidates.first(where: { $0.species.commonName == name }) {
                     // `-autoRowAddAfter <seconds>`: late enough for a screenshot to catch its acknowledgment.
                     try? await Task.sleep(for: .seconds(defaults.double(forKey: "autoRowAddAfter")))
@@ -603,6 +608,22 @@ enum DebugSeeds {
 }
 /// `-fakeRunBirds`: a run's list from the launch arguments.
 enum FakeRunBirds {
+    /// The birds after the first, always calling, pass their last-heard times along, so each in turn comes up first among them.
+    static func keepReordering(_ run: ListeningCoordinator, every seconds: Double) {
+        Task { @MainActor in
+            while let stack = run.fakeStack {
+                try? await Task.sleep(for: .seconds(seconds))
+                let birds = stack.candidates
+                guard birds.count > 2 else { return }
+                let earlier = birds.dropFirst().map(\.lastHeardAt)
+                let passed = Array(earlier.dropFirst()) + [earlier[0]]
+                run.fakeStack = CandidateStack(candidates: [birds[0]] + zip(birds.dropFirst(), passed).map { bird, heard in
+                    Candidate(species: bird.species, score: bird.score, windowsAboveThreshold: bird.windowsAboveThreshold, firstHeardAt: bird.firstHeardAt, lastHeardAt: heard, admittedAt: bird.admittedAt)
+                })
+            }
+        }
+    }
+
     static var stack: CandidateStack? {
         guard let labels = UserDefaults.standard.string(forKey: "fakeRunBirds") else { return nil }
         return CandidateStack(candidates: labels.split(separator: ",").enumerated().map { position, label in
