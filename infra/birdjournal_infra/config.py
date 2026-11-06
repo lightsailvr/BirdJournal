@@ -26,12 +26,12 @@ class BirdJournalConfig:
     # Who the budget alarm emails. Kept out of the public repo: `-c budgetAlertEmail=...` or the
     # BUDGET_ALERT_EMAIL environment variable (infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env).
     budget_alert_email: str
-    # The invite links' host (issue #61): https://<invite_domain>/i/<token>. Its DNS is at SiteGround.
+    # The invite links' host (issues #61, #150): https://<invite_domain>/i/<token>. Its DNS is at SiteGround.
     invite_domain: str
     # The app IDs (<team ID>.<bundle ID>) the domain's apple-app-site-association names for universal links.
     ios_app_ids: tuple[str, ...]
-    # The invite domain's ACM certificate in us-east-1, requested by infra/scripts/circles-wizard.sh outside the
-    # stack. Not a secret, but it names the account: `-c inviteCertificateArn=...` or INVITE_CERTIFICATE_ARN
+    # The invite domain's ACM certificate in us-east-1, covering the former hosts too, requested by
+    # infra/scripts/domain-wizard.sh outside the stack. Not a secret, but it names the account: `-c inviteCertificateArn=...` or INVITE_CERTIFICATE_ARN
     # (infra/scripts/deploy.sh reads it from ~/keys/birdjournal.env).
     invite_certificate_arn: str
     # The APNs token key (issue #63): a Secrets Manager secret {"key_id", "team_id", "private_key"} created by
@@ -44,6 +44,9 @@ class BirdJournalConfig:
     report_email: str = ""
     # Rekognition moderation of shared photos (issue #71): `off` in the friends phase, `on` for the public launch.
     moderation: str = "off"
+    # Hosts the site used to answer on (issue #150). They stay on the distribution for good, because old invite links,
+    # QR codes and installed apps still name them: their association file is served and all else redirects.
+    invite_former_domains: tuple[str, ...] = ()
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -57,7 +60,7 @@ class BirdJournalConfig:
         if not certificate:
             raise ValueError(
                 "Set INVITE_CERTIFICATE_ARN (or -c inviteCertificateArn=...): the invite domain's us-east-1 "
-                "certificate. infra/scripts/circles-wizard.sh requests it and saves it to ~/keys/birdjournal.env."
+                "certificate. infra/scripts/domain-wizard.sh requests it and saves it to ~/keys/birdjournal.env."
             )
         moderation = node.try_get_context("moderation") or "off"
         if moderation not in MODERATION_SWITCH:
@@ -72,6 +75,7 @@ class BirdJournalConfig:
             monthly_budget_usd=int(node.get_context("monthlyBudgetUsd")),
             budget_alert_email=email,
             invite_domain=node.get_context("inviteDomain"),
+            invite_former_domains=tuple(node.try_get_context("inviteFormerDomains") or ()),
             ios_app_ids=tuple(node.get_context("iosAppIds")),
             invite_certificate_arn=certificate,
             apns_secret_name=node.get_context("apnsSecretName"),

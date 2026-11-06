@@ -282,7 +282,7 @@ With an optional account (Apple or Google), I join small invite-only circles. My
   - Reactions push to the find's owner, collapsed per find within 10 minutes.
   - Mutes (per circle, per friend) and blocks suppress pushes and hide content. The owner is never pushed about their own finds.
 - **Safety**: reports are stored and emailed to the maintainer through SES. Rekognition moderation runs on art-job inputs and outputs and on shared original photos, switched on by configuration for the public launch; a flagged image fails its job or is withheld from the circle.
-- **Invite links**: `https://birdquest.matthewcelia.com/i/<token>`, served by CloudFront with an ACM certificate (us-east-1). The domain also serves the `apple-app-site-association` file, so the app's associated-domains entitlement opens the link in the app, and a static fallback page explains how to get the app. The QR code encodes the same URL. The domain's DNS is at SiteGround, not Route 53, so the CNAME and certificate-validation records are a manual step, and the privacy policy page lives on the same domain.
+- **Invite links**: `https://featherguild.matthewcelia.com/i/<token>`, served by CloudFront with an ACM certificate (us-east-1). The domain also serves the `apple-app-site-association` file, so the app's associated-domains entitlement opens the link in the app, and a static fallback page explains how to get the app. The QR code encodes the same URL. The domain's DNS is at SiteGround, not Route 53, so the CNAME and certificate-validation records are a manual step, and the privacy policy page lives on the same domain.
 - **Costs**: idle cost of a few dollars a month, plus the art bucket and request charges. Push through APNs is free.
 
 ### The app's circle side

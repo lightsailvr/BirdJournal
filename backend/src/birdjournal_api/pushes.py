@@ -133,7 +133,7 @@ def find_summary(find: Find, owner_name: str | None, circle_first_in: list[str],
 
 
 def notable_words(owner_name: str | None, content: FindContent, first_for: str | None) -> tuple[str, str]:
-    """The alert's title and body: "Maya found a Black Phoebe" / "New patch · First for Sunday Group · Pasadena"."""
+    """The alert's title and body: "Maya found a Black Phoebe" / "New patch, First for Sunday Group, Pasadena"."""
     name = owner_name or FRIEND_FALLBACK
     reasons: list[str] = []
     if content.new_patch:
@@ -146,7 +146,7 @@ def notable_words(owner_name: str | None, content: FindContent, first_for: str |
         reasons.append("At a secret spot")
     elif content.place:
         reasons.append(content.place)
-    return f"{name} found {_with_article(content.common_name)}", " · ".join(reasons)
+    return f"{name} found {_with_article(content.common_name)}", ", ".join(reasons)
 
 
 def goal_words(
@@ -154,14 +154,14 @@ def goal_words(
     first_for: str | None,
 ) -> tuple[str, str]:
     """A goal reached (issue #65): "Sunday Group reached the November goal" / "Ada found a Black Phoebe, species 15
-    of 15 · New patch · Pasadena". The find's own reasons follow, so one alert says both."""
+    of 15, New patch, Pasadena". The find's own reasons follow, so one alert says both."""
     goal = completed.goal
     circle = circle_name or "Your Guild"
     name = owner_name or FRIEND_FALLBACK
     title = f"{circle} reached the {goal.title}" if goal.kind is GoalKind.MONTHLY else f"{circle} reached “{goal.title}”"
     _, reasons = notable_words(owner_name, content, first_for)
     lead = f"{name} found {_with_article(content.common_name)}, species {completed.progress} of {goal.target}"
-    return title, " · ".join(part for part in (lead, reasons) if part)
+    return title, ", ".join(part for part in (lead, reasons) if part)
 
 
 def goal_summary(completed: CompletedGoal) -> dict[str, Any]:

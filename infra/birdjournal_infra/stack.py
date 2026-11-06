@@ -33,6 +33,7 @@ class BirdJournalStack(Stack):
             self,
             "InviteSite",
             domain=config.invite_domain,
+            former_domains=config.invite_former_domains,
             certificate_arn=config.invite_certificate_arn,
             app_ids=list(config.ios_app_ids),
         )
@@ -79,7 +80,7 @@ class BirdJournalStack(Stack):
             # Both Google's authorized redirect URI and Apple's Services ID return URL.
             "IdpResponseUrl": f"https://{domain}/oauth2/idpresponse",
             "TableName": data.table.table_name,
-            # The invite domain's CNAME target at SiteGround (the circles wizard).
+            # The invite domain's CNAME target at SiteGround (the domain wizard).
             "InviteDistributionDomain": invites.distribution.distribution_domain_name,
             "InviteBaseUrl": invites.url,
             # The art CDN's host (#68; finds' thumbnails, #62, use it too).

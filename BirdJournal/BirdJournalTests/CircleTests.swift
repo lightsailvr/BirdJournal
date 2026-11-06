@@ -56,7 +56,7 @@ struct HTTPCircleClientTests {
         let summary = #"{"id":"c1","name":"Family","created_by":"x","created_at":"2026-11-01T09:30:00Z","time_zone":"UTC","member_count":3,"is_creator":false}"#
         recorder.responses = [
             http(200, #"{"circles":[\#(summary)]}"#),
-            http(201, #"{"token":"tok_1","url":"https://birdquest.matthewcelia.com/i/tok_1","expires_at":"2026-11-08T09:30:00Z"}"#),
+            http(201, #"{"token":"tok_1","url":"https://featherguild.matthewcelia.com/i/tok_1","expires_at":"2026-11-08T09:30:00Z"}"#),
             http(200, #"{"circle":\#(summary),"invited_by":"Robin","expires_at":"2026-11-08T09:30:00Z","already_member":false}"#),
             http(200, circleJSON),
             http(204, ""),
@@ -106,19 +106,32 @@ struct HTTPCircleClientTests {
 struct InviteLinkTests {
     @Test("an invite link gives its token")
     func token() {
-        #expect(InviteLink.token(from: URL(string: "https://birdquest.matthewcelia.com/i/AbC-d_12")!) == "AbC-d_12")
+        #expect(InviteLink.token(from: URL(string: "https://featherguild.matthewcelia.com/i/AbC-d_12")!) == "AbC-d_12")
         #expect(InviteLink.token(from: InviteLink.url(token: "xyz")) == "xyz")
     }
 
+    @Test("a link made on the old host still gives its token")
+    func oldHost() {
+        #expect(InviteLink.token(from: URL(string: "https://birdquest.matthewcelia.com/i/AbC-d_12")!) == "AbC-d_12")
+    }
+
+    @Test("new links are made on the new host")
+    func newHost() {
+        #expect(InviteLink.url(token: "xyz").absoluteString == "https://featherguild.matthewcelia.com/i/xyz")
+    }
+
     @Test("other links are not invites", arguments: [
+        "https://featherguild.matthewcelia.com/",
+        "https://featherguild.matthewcelia.com/i/",
+        "https://featherguild.matthewcelia.com/i/a/b",
+        "https://featherguild.matthewcelia.com/x/abc",
+        "http://featherguild.matthewcelia.com/i/abc",
+        "https://featherguild.matthewcelia.com/i/a%20b",
         "https://birdquest.matthewcelia.com/",
-        "https://birdquest.matthewcelia.com/i/",
-        "https://birdquest.matthewcelia.com/i/a/b",
         "https://birdquest.matthewcelia.com/x/abc",
         "http://birdquest.matthewcelia.com/i/abc",
         "https://example.com/i/abc",
         "birdjournal://auth/callback?code=1",
-        "https://birdquest.matthewcelia.com/i/a%20b",
     ])
     func notInvites(link: String) {
         #expect(InviteLink.token(from: URL(string: link)!) == nil)

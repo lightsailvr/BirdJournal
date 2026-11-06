@@ -439,7 +439,7 @@ def test_the_find_that_reaches_the_target_pushes_once(
     payload = push.payload()
     assert payload["aps"]["alert"] == {
         "title": "Sunday Group reached “Big Day”",
-        "body": "Bo found a Bird 2, species 3 of 3 · Ojai",
+        "body": "Bo found a Bird 2, species 3 of 3, Ojai",
     }
     assert payload["goals"] == [
         {"circle_id": group, "goal_id": goal_id, "kind": "custom", "title": "Big Day", "target": 3, "progress": 3}
@@ -479,7 +479,7 @@ def test_the_monthly_goal_s_completion_pushes_with_the_month(
     (push,) = apns.to(BO_PHONE)
     assert push.payload()["aps"]["alert"] == {
         "title": "Sunday Group reached the November goal",
-        "body": "Ada found a Bird 9, species 10 of 10 · New patch · Pasadena",
+        "body": "Ada found a Bird 9, species 10 of 10, New patch, Pasadena",
     }
     # One alert for the new patch and the goal together.
     assert push.kind is PushKind.NOTABLE

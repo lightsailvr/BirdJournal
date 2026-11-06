@@ -326,7 +326,7 @@ if begin "Optional: reports to another address (SES production access)"; then
   fi
   if [[ "$production" != "True" ]] && confirm "Request production access now?"; then
     open_url "https://us-west-2.console.aws.amazon.com/ses/home?region=us-west-2#/account"
-    step "Request production access. Mail type: Transactional. Website: https://birdquest.matthewcelia.com"
+    step "Request production access. Mail type: Transactional. Website: https://featherguild.matthewcelia.com"
     step "Use case: 'Moderation reports from the Bird Journal app, sent only to the maintainer, a few a week.'"
     note "AWS answers within a day; nothing in the stack changes either way."
   fi

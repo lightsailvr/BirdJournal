@@ -52,7 +52,7 @@ def _sender(credentials: ApnsCredentials | None, apns: Apns, clock: Clock) -> Ap
     return ApnsSender(lambda: credentials, TOPIC, client=httpx2.Client(transport=httpx2.MockTransport(apns)), now=clock)
 
 
-NOTABLE = Push(kind=PushKind.NOTABLE, title="Maya found a Black Phoebe", body="New patch · Pasadena", data={"find": {"sighting_id": "s"}}, thread_id="friend-maya")
+NOTABLE = Push(kind=PushKind.NOTABLE, title="Maya found a Black Phoebe", body="New patch, Pasadena", data={"find": {"sighting_id": "s"}}, thread_id="friend-maya")
 REFRESH = Push(kind=PushKind.REFRESH, data={"circle_ids": ["c"]})
 
 
@@ -73,7 +73,7 @@ def test_an_alert_goes_to_the_device_s_environment_with_a_signed_token(
     body = json.loads(sandbox.content)
     assert body["aps"] == {
         "content-available": 1,
-        "alert": {"title": "Maya found a Black Phoebe", "body": "New patch · Pasadena"},
+        "alert": {"title": "Maya found a Black Phoebe", "body": "New patch, Pasadena"},
         "sound": "default",
         "thread-id": "friend-maya",
     }

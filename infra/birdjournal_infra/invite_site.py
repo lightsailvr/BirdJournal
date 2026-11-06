@@ -1,4 +1,5 @@
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 from aws_cdk import Duration, RemovalPolicy
@@ -12,13 +13,41 @@ from constructs import Construct
 SITE_DIRECTORY = Path(__file__).resolve().parents[1] / "site"
 AASA_KEY = ".well-known/apple-app-site-association"
 
-# Viewer request: an invite link, /i/<token>, gets the fallback page. Apple fetches the association file through its
-# own CDN, and in the app the link never reaches CloudFront at all. The privacy policy and terms (#71) answer at
-# /privacy and /terms, the addresses the app and the App Store listing give.
-REWRITE_INVITES = """
+ASSOCIATION_PATH = f"/{AASA_KEY}"
+
+# Viewer request. A former host (#150) redirects to the same path on the current host, except its association file:
+# Apple doesn't follow redirects for that, and phones with an old app still ask the old host for it. On the current
+# host an invite link, /i/<token>, gets the fallback page. Apple fetches the association file through its own CDN, and
+# in the app the link never reaches CloudFront at all. The privacy policy and terms (#71) answer at /privacy and /terms,
+# the addresses the app and the App Store listing give.
+VIEWER_REQUEST = """
+var CURRENT_HOST = %(current)s;
+var FORMER_HOSTS = %(former)s;
+var ASSOCIATION_PATH = %(association)s;
 var PAGES = { '/privacy': '/privacy.html', '/privacy/': '/privacy.html', '/terms': '/terms.html', '/terms/': '/terms.html' };
+function query(parameters) {
+  var parts = [];
+  Object.keys(parameters).forEach(function (name) {
+    var parameter = parameters[name];
+    (parameter.multiValue || [parameter]).forEach(function (one) {
+      parts.push(one.value === '' ? name : name + '=' + one.value);
+    });
+  });
+  return parts.length ? '?' + parts.join('&') : '';
+}
 function handler(event) {
   var request = event.request;
+  var host = request.headers.host ? request.headers.host.value.toLowerCase() : '';
+  if (FORMER_HOSTS.indexOf(host) !== -1 && request.uri !== ASSOCIATION_PATH) {
+    return {
+      statusCode: 301,
+      statusDescription: 'Moved Permanently',
+      headers: {
+        location: { value: 'https://' + CURRENT_HOST + request.uri + query(request.querystring) },
+        'cache-control': { value: 'max-age=3600' }
+      }
+    };
+  }
   if (request.uri === '/i' || request.uri.indexOf('/i/') === 0) {
     request.uri = '/invite.html';
   } else if (PAGES[request.uri]) {
@@ -27,6 +56,15 @@ function handler(event) {
   return request;
 }
 """
+
+
+def viewer_request_code(domain: str, former_domains: Sequence[str]) -> str:
+    """The CloudFront function's source, with the site's hosts in it."""
+    return VIEWER_REQUEST % {
+        "current": json.dumps(domain),
+        "former": json.dumps(list(former_domains)),
+        "association": json.dumps(ASSOCIATION_PATH),
+    }
 
 
 def apple_app_site_association(app_ids: list[str]) -> dict[str, object]:
@@ -44,13 +82,20 @@ class InviteSite(Construct):
     """The invite domain (issue #61): CloudFront in front of a private bucket (origin access control) serving the
     apple-app-site-association file and the fallback page every /i/<token> link shows in a browser.
 
-    The certificate is in us-east-1, as CloudFront requires, but outside this stack: the wizard requests it and the
-    maintainer adds its validation record at SiteGround, so nothing here waits on a DNS change, and the shared
+    The certificate is in us-east-1, as CloudFront requires, and covers the former hosts too, but outside this stack:
+    the wizard (infra/scripts/domain-wizard.sh) requests it and the maintainer adds its validation records at SiteGround, so nothing here waits on a DNS change, and the shared
     account's us-east-1 needs no CDK bootstrap. CloudFront takes it by ARN from this us-west-2 stack.
     """
 
     def __init__(
-        self, scope: Construct, id: str, *, domain: str, certificate_arn: str, app_ids: list[str]
+        self,
+        scope: Construct,
+        id: str,
+        *,
+        domain: str,
+        certificate_arn: str,
+        app_ids: list[str],
+        former_domains: Sequence[str] = (),
     ) -> None:
         super().__init__(scope, id)
 
@@ -67,16 +112,16 @@ class InviteSite(Construct):
         rewrite = cloudfront.Function(
             self,
             "RewriteInvites",
-            code=cloudfront.FunctionCode.from_inline(REWRITE_INVITES),
+            code=cloudfront.FunctionCode.from_inline(viewer_request_code(domain, former_domains)),
             runtime=cloudfront.FunctionRuntime.JS_2_0,
-            comment="BirdJournal: /i/<token> serves the invite fallback page; /privacy and /terms their pages",
+            comment="BirdJournal: former hosts redirect; /i/<token> serves the invite page; /privacy and /terms theirs",
         )
 
         self.distribution = cloudfront.Distribution(
             self,
             "Distribution",
             comment="BirdJournal invite links",
-            domain_names=[domain],
+            domain_names=[domain, *former_domains],
             certificate=acm.Certificate.from_certificate_arn(self, "Certificate", certificate_arn),
             default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
