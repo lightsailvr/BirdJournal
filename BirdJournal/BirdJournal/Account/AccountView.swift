@@ -132,7 +132,7 @@ struct AccountView: View {
         return text
     }
 
-    static let optionalNote = "An account is optional. Listening, your collection and bird packs all work without one; signing in will let you join Guilds with friends."
+    static let optionalNote = "An account is optional. Listening, your collection and field-guide downloads all work without one; signing in will let you join Guilds with friends."
 }
 
 /// Sign in with Apple and with Google, as list rows: Settings → Account, the Circles tab and the join screen.

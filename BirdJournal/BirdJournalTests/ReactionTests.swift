@@ -90,7 +90,7 @@ struct ReactionCountTests {
     @Test("the birder's own find says what friends gave")
     func summary() {
         #expect(ReactionBar.summary([ReactionCount(kind: .lovely, count: 2, mine: false), ReactionCount(kind: .together, count: 1, mine: false)])
-                == "Lovely find 2 · Let's go together 1")
+                == "Lovely find 2, Let's go together 1")
     }
 
     @Test("the fixed set, in order, with no comments")

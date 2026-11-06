@@ -21,7 +21,7 @@ struct RunReviewSheet: View {
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 4)
                     if let startedAt = run.startedAt {
-                        Text("Started \(startedAt.formatted(date: .omitted, time: .shortened)) · listened for \(ElapsedTime.text(from: startedAt, to: .now))")
+                        Text("Started \(startedAt.formatted(date: .omitted, time: .shortened)), listened for \(ElapsedTime.text(from: startedAt, to: .now))")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 4)

@@ -49,7 +49,7 @@ struct CandidateReviewView: View {
             .safeAreaBar(edge: .bottom) {
                 VStack(spacing: 8) {
                     if run.isAdded(candidate) {
-                        Label("Added · seen \(CardCollection.Patch.times(seenHere)) here", systemImage: "checkmark.circle.fill")
+                        Label("Added, seen \(CardCollection.Patch.times(seenHere)) here", systemImage: "checkmark.circle.fill")
                             .font(JournalFont.supporting.weight(.medium))
                             .foregroundStyle(Color.moss)
                         Button(isAdding ? "Adding…" : "Add another sighting") { add() }

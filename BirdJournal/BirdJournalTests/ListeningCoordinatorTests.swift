@@ -119,13 +119,13 @@ struct ListeningCoordinatorTests {
         harness.source.feed(seconds: 4.5)
         try await waitUntil("candidates appear") { run.candidates.count == 2 }
         #expect(run.candidates.map(\.species.commonName) == ["House Finch", "Blue Jay"])
-        #expect(run.summary == "2 species heard · 0 added")
+        #expect(run.summary == "2 species heard, 0 added")
         #expect(harness.stored.isEmpty, "hearing a bird saves nothing")
 
         let finch = run.candidates[0]
         let addition = try #require(await run.add(finch))
         #expect(run.isAdded(finch))
-        #expect(run.summary == "2 species heard · 1 added")
+        #expect(run.summary == "2 species heard, 1 added")
         #expect(run.acknowledgment?.text == "Your first House Finch")
         #expect(run.acknowledgment?.undo == addition)
         let stored = harness.stored
@@ -178,7 +178,7 @@ struct ListeningCoordinatorTests {
 
         #expect(again.sightingID != first.sightingID)
         #expect(harness.stored.count == 2)
-        #expect(run.acknowledgment?.text == "Seen again · 2 times", "no place: the Uncharted patch, seen again")
+        #expect(run.acknowledgment?.text == "Seen again, 2 times", "no place: the Uncharted patch, seen again")
         #expect(run.sightings.entries.count == 2)
         #expect(run.sightings.count(of: jay.species) == 2)
 
@@ -218,7 +218,7 @@ struct ListeningCoordinatorTests {
         #expect(first.patchCount == 1)
         let reveal = try #require(run.reveal)
         #expect(reveal.title == "Your first House Finch")
-        #expect(reveal.eyebrow == "New patch · Uncharted")
+        #expect(reveal.eyebrow == "New patch, Uncharted")
         #expect(run.acknowledgment?.ticksFrom == nil, "a new patch has no count to tick")
         #expect(reveal.addition == first)
         #expect(!reveal.hasPlayed, "the stitch-in is still to come")
@@ -245,8 +245,8 @@ struct ListeningCoordinatorTests {
         #expect(again.patchCount == 2)
         #expect(run.reveal == nil, "a repeat add opens no page")
         #expect(harness.stored.count == 2, "and the sighting is saved")
-        #expect(run.acknowledgment?.text == "Seen again · 2 times")
-        #expect(run.acknowledgment?.ticksFrom == "Seen again · 1 time", "what it says before it ticks")
+        #expect(run.acknowledgment?.text == "Seen again, 2 times")
+        #expect(run.acknowledgment?.ticksFrom == "Seen again, 1 time", "what it says before it ticks")
         #expect(run.acknowledgment?.undo == again)
 
         // A first of another species, taken back inside the window: the sighting and its reveal are gone.
@@ -293,7 +293,7 @@ struct ListeningCoordinatorTests {
         let first = try #require(run.reveal)
         #expect(first.commonName == "Blue Jay", "the order sewn")
         #expect(first.addition.patchCount == 2, "as the album has it now")
-        #expect(first.eyebrow == "New patch · Uncharted")
+        #expect(first.eyebrow == "New patch, Uncharted")
         #expect(!first.hasPlayed)
         #expect(!run.hasCeremonyWaiting, "one at a time")
 

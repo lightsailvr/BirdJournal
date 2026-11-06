@@ -19,10 +19,10 @@ struct LocalSet {
         return LocalSet(set: set, progress: collection.progress(of: set.id))
     }
 
-    /// "Los Angeles · Citrus edition".
-    var title: String { "\(set.name) · \(set.edition.name)" }
-    /// "18 of 160 species collected".
-    var progressText: String { "\(progress.collected) of \(progress.total) species collected" }
+    /// "Los Angeles, Citrus edition".
+    var title: String { "\(set.name), \(set.edition.name)" }
+    /// "18 of 160 sewn".
+    var progressText: String { progress.sewnText }
 }
 
 /// The calm ready state's atmosphere (page 11): the local set's cover (issue #114) under the status bar, fading into the
@@ -146,9 +146,8 @@ struct LocalSetSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     heading
-                    Spacer(minLength: 8)
                     explore
                 }
                 VStack(alignment: .leading, spacing: 6) {
@@ -200,10 +199,7 @@ struct LocalSetSection: View {
     }
 
     private var heading: some View {
-        Text("Your local set")
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .accessibilityAddTraits(.isHeader)
+        SectionTitle("Your local set", top: 0)
     }
 
     private var explore: some View {

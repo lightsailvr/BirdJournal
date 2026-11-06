@@ -39,10 +39,6 @@ final class PlaceNames {
         CardText.place(location: coordinate, name: coordinate.flatMap(name(for:)))
     }
 
-    /// "Heard · Altadena": Heard or Seen, and a city-level place, as a patch's history lists its sightings.
-    func methodAndPlace(of sighting: Sighting) -> String {
-        "\(sighting.method.title) · \(cardPlace(for: sighting.location))"
-    }
 
     /// Looks the name up once per coordinate and run; a failure (offline, no result) leaves the coordinate showing.
     func resolve(_ coordinate: Coordinate) async {

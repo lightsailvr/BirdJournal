@@ -62,15 +62,15 @@ struct SpeciesCreditsView: View {
                 }
                 if let patch = found.species.patch {
                     Section {
-                        Text("AI illustration, not a photograph: an embroidered patch painted for the pack (\(patch.workflowVersion))\(Self.source(of: patch, in: found.species)). It shows the species, not your bird.")
+                        Text("AI illustration, not a photograph: an embroidered patch painted for the set (\(patch.workflowVersion))\(Self.source(of: patch, in: found.species)). It shows the species, not your bird.")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                     } header: {
                         Text("Patch")
                     }
                 }
-                Section("Pack") {
-                    LabeledContent("Bird pack", value: "\(found.pack.info.name), version \(found.pack.info.version)")
+                Section("Field-guide download") {
+                    LabeledContent("Download", value: "\(found.pack.info.name), version \(found.pack.info.version)")
                     if let cover = library.cover(setID: found.pack.info.id) {
                         LabeledContent("Set cover", value: cover.credit)
                     }
@@ -80,7 +80,8 @@ struct SpeciesCreditsView: View {
             .navigationTitle("Sources & credits")
             .navigationBarTitleDisplayMode(.inline)
         } else {
-            ContentUnavailableView("No pack describes this bird", systemImage: "bird")
+            StateNotice("No field-guide download describes this bird", mark: .symbol("bird"))
+                .statePage()
         }
     }
 }
@@ -126,7 +127,7 @@ struct SoundCreditRow: View {
             Text(sound.recordist)
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
-            Text("\(sound.kind.rawValue.capitalized) · \(sound.duration.formatted(.units(allowed: [.seconds])))")
+            ShortFacts(sound.kind.rawValue.capitalized, sound.duration.formatted(.units(allowed: [.seconds])))
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
             if let licenseURL = sound.licenseURL {

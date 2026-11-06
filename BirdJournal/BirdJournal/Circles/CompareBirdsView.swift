@@ -130,7 +130,7 @@ struct CompareBirdsView: View {
                 }
             } header: {
                 HStack {
-                    Text("\(header) · \(rows.count)")
+                    Text("\(header), \(rows.count)")
                     Spacer()
                     Text("You").frame(width: CompareRow.column)
                     Text(firstName).lineLimit(1).frame(width: CompareRow.column)

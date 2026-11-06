@@ -110,11 +110,7 @@ struct ShareCardView: View {
                         .accessibilityIdentifier("share-preview")
                         .padding(.top, 4)
 
-                    Text("Include")
-                        .font(JournalFont.section)
-                        .foregroundStyle(Color.ink)
-                        .padding(.top, JournalLayout.sectionGap)
-                        .accessibilityAddTraits(.isHeader)
+                    SectionTitle("Include")
                     VStack(spacing: 0) {
                         Toggle(isOn: $choices.includeNote) { Label("Your note", systemImage: "note.text") }
                             .padding(.vertical, 10)
@@ -204,11 +200,7 @@ struct ShareCardView: View {
     // The circles.
 
     @ViewBuilder private var circlesSection: some View {
-        Text("Your Guilds")
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .padding(.top, JournalLayout.sectionGap)
-            .accessibilityAddTraits(.isHeader)
+        SectionTitle("Your Guilds")
         if !account.isSignedIn {
             Text("Sign in under Settings → Account to share patches with your Guilds.")
                 .font(JournalFont.supporting)
@@ -367,7 +359,7 @@ struct ShareCardView: View {
         let lore = species?.lore
         let credits = photoCredits.isEmpty ? nil : "Patch: AI illustration from a reference photo (\(photoCredits.joined(separator: "; ")))"
         let text = [SharePolicy.text(for: content), credits, lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
-        export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName) · Featherguild")
+        export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName), Featherguild")
     }
 
     /// The credit of the lore the image takes its story title from (issue #116; design guide page 17: lore licenses and

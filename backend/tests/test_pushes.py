@@ -91,6 +91,13 @@ def test_unregistering_stops_the_account_s_pushes_and_leaves_another_s(
     assert "Item" not in table.get_item(Key={"pk": f"DEVICE#{ADA_PHONE}", "sk": "DEVICE"})
 
 
+def test_a_token_s_trailing_newline_is_trimmed_before_it_is_checked(
+    client: TestClient, issuer: TestIssuer, table: Any
+) -> None:
+    assert _register(client, issuer, "ada", f"{ADA_PHONE}%0A").status_code == 204
+    assert table.get_item(Key={"pk": "ACCOUNT#ada", "sk": f"DEVICE#{ADA_PHONE}"})["Item"]["token"] == ADA_PHONE
+
+
 @pytest.mark.parametrize("token", ["xyz", "a" * 63, "g" * 64, "a" * 201])
 def test_a_bad_token_is_refused(client: TestClient, issuer: TestIssuer, token: str) -> None:
     assert _register(client, issuer, "ada", token).status_code == 422

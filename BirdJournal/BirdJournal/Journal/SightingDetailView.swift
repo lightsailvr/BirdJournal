@@ -55,7 +55,7 @@ struct SightingDetailView: View {
                                 .aspectRatio(4 / 3, contentMode: .fit)
                                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                                 .accessibilityLabel("Your glasses snapshot from this sighting")
-                            Text("Your glasses snapshot · the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
+                            Text("Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
                                 .font(JournalFont.attribution)
                                 .foregroundStyle(Color.inkSecondary)
                         }
@@ -120,7 +120,7 @@ struct SightingDetailView: View {
                             .accessibilityIdentifier("card-caption")
                     }
 
-                    SectionTitle(text: "Your note")
+                    SectionTitle("Your note")
                     TextField("Add a note", text: $note, axis: .vertical)
                         .font(JournalFont.body)
                         .foregroundStyle(Color.ink)
@@ -134,7 +134,7 @@ struct SightingDetailView: View {
                         }
                         .accessibilityLabel("Your note")
 
-                    SectionTitle(text: "Evidence")
+                    SectionTitle("Evidence")
                     VStack(alignment: .leading, spacing: 8) {
                         Text(CardText.evidence(sighting))
                             .font(JournalFont.body)
@@ -148,19 +148,19 @@ struct SightingDetailView: View {
                     .padding(.top, 12)
 
                     if let reference, let photo = reference.species.photos.first {
-                        SectionTitle(text: "Reference photo")
+                        SectionTitle("Reference photo")
                         AttributedImage(pack: reference.pack, photo: photo, caption: "Reference photo, not your bird")
                             .padding(.top, 12)
                     }
 
-                    SectionTitle(text: "About this bird")
+                    SectionTitle("About this bird")
                     if let summary = reference?.species.summary, !summary.isEmpty {
                         Text(summary)
                             .font(JournalFont.body)
                             .foregroundStyle(Color.ink)
                             .padding(.top, 12)
                     } else if reference == nil {
-                        Text("No photos or notes for this bird are in your bird packs. It was identified by name.")
+                        Text("No photos or notes for this bird are in your field-guide downloads. It was identified by name.")
                             .font(JournalFont.body)
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 12)
@@ -171,7 +171,7 @@ struct SightingDetailView: View {
                     .buttonStyle(.journalOutlined)
                     .padding(.top, 12)
 
-                    SectionTitle(text: "Rarity")
+                    SectionTitle("Rarity")
                     VStack(alignment: .leading, spacing: 4) {
                         Text(CardText.rarityLine(sighting.rarity))
                             .font(JournalFont.supporting.weight(.semibold))
@@ -184,7 +184,7 @@ struct SightingDetailView: View {
                     }
                     .padding(.top, 12)
 
-                    SectionTitle(text: "Identification")
+                    SectionTitle("Identification")
                     SightingMatchDetails(sighting: sighting)
                         .padding(.top, 8)
 
@@ -249,7 +249,8 @@ struct SightingDetailView: View {
                 if let sighting = self.sighting { edits.setNote(note, on: sighting) }
             }
         } else {
-            ContentUnavailableView("Sighting removed", systemImage: "bird")
+            StateNotice("Sighting removed", mark: .symbol("bird"))
+                .statePage()
         }
     }
 
@@ -351,7 +352,7 @@ struct OriginalPhotoView: View {
                             .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                             .accessibilityLabel("Original photo")
                     } else if loaded {
-                        ContentUnavailableView("Photo unavailable", systemImage: "photo", description: Text("The file is no longer on this iPhone."))
+                        StateNotice("Photo unavailable", message: "The file is no longer on this iPhone.", mark: .symbol("photo"))
                     } else {
                         ProgressView()
                             .frame(maxWidth: .infinity, minHeight: 200)

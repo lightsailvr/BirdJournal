@@ -53,8 +53,8 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(face(app).label.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn "), face(app).label)
         XCTAssertEqual(face(app).value as? String ?? "", "")
         XCTAssertTrue(app.staticTexts["Black Phoebe"].exists)
-        XCTAssertTrue(element(app, "patch-count").label.hasPrefix("Seen once in Los Angeles · sewn "), element(app, "patch-count").label)
-        let line = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Citrus edition · No. '")).firstMatch
+        XCTAssertTrue(element(app, "patch-count").label.hasPrefix("Seen once in Los Angeles, sewn "), element(app, "patch-count").label)
+        let line = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Citrus edition, No. '")).firstMatch
         XCTAssertTrue(line.exists, "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Legendary'")).firstMatch.exists)
     }
@@ -138,7 +138,7 @@ final class CardFlipUITests: XCTestCase {
     func testAnUnchartedPatchWithNoPackSaysSoPlainly() {
         let app = launch("cards")
         // The oldest seed: a Common Blackbird no pack describes, added with no location and no photo.
-        let boards = app.navigationBars["Collection"].buttons["Board"]
+        let boards = app.navigationBars["Collection"].buttons["Set"]
         XCTAssertTrue(boards.waitForExistence(timeout: 15), "no board menu; screen: \(app.debugDescription.prefix(3000))")
         boards.tap()
         let uncharted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch

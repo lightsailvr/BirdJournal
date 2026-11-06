@@ -6,6 +6,9 @@ import SwiftUI
 /// index offers, each row with its set cover (or the landscape its edition names), species and size from real
 /// metadata, and every transfer state with its recovery: offline, interrupted, failed install and low storage.
 struct BirdPacksView: View {
+    /// Short, so the large title is never cut short (issue #150); the links to this page say "Field-guide downloads".
+    static let title = "Downloads"
+
     @Environment(PackLibrary.self) private var library
     @State private var query = ""
     @State private var removalError: String?
@@ -20,23 +23,19 @@ struct BirdPacksView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Photos, sounds and field notes, ready offline. A pack adds reference material, never birds; removing one keeps every patch, sighting, note and original photo.")
+                Text("Photos, sounds and field notes, ready offline. A download adds reference material, never birds; removing one keeps every patch, sighting, note and original photo.")
                     .font(JournalFont.body)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 2)
 
-                Text("On your iPhone")
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-                    .padding(.top, JournalLayout.sectionGap)
-                    .accessibilityAddTraits(.isHeader)
+                SectionTitle("On your iPhone")
                 VStack(spacing: 0) {
                     if let bundled = library.bundled, matches(bundled.info.name, bundled.info.region) {
                         let shown = library.bundledUpdate?.pack ?? bundled
                         NavigationLink(value: Route.pack(id: bundled.info.id)) {
                             PackRow(
                                 name: shown.info.name, region: shown.info.region, setID: bundled.info.id, edition: shown.set?.edition.name,
-                                facts: "\(shown.species.count) species · Included with the app",
+                                facts: "\(shown.species.count) birds, included with the app",
                                 status: library.index?.descriptor(id: bundled.info.id).map(library.status(of:)) ?? .bundled,
                                 descriptor: library.index?.descriptor(id: bundled.info.id)
                             )
@@ -49,7 +48,7 @@ struct BirdPacksView: View {
                             NavigationLink(value: Route.pack(id: installed.id)) {
                                 PackRow(
                                     name: installed.pack.info.name, region: installed.pack.info.region, setID: installed.id, edition: installed.pack.set?.edition.name,
-                                    facts: "\(installed.pack.species.count) species · \(installed.descriptor.byteCount.formatted(.byteCount(style: .file))) download",
+                                    facts: "\(installed.pack.species.count) birds, \(installed.descriptor.byteCount.formatted(.byteCount(style: .file))) download",
                                     status: library.index?.descriptor(id: installed.id).map(library.status(of:)) ?? .installed(version: installed.descriptor.version),
                                     descriptor: library.index?.descriptor(id: installed.id) ?? installed.descriptor
                                 )
@@ -61,27 +60,23 @@ struct BirdPacksView: View {
                 }
                 .padding(.top, 8)
 
-                Text("Explore regions")
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-                    .padding(.top, JournalLayout.sectionGap)
-                    .accessibilityAddTraits(.isHeader)
+                SectionTitle("More sets")
                 if library.index == nil, library.isRefreshingIndex {
                     HStack(spacing: 8) {
                         ProgressView()
-                        Text("Looking for packs…")
+                        Text("Looking for sets…")
                     }
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 12)
                 } else if library.indexError != nil, library.index == nil {
                     // Plain words, not the system's error string (issue #119: no diagnostics in a normal page).
-                    ErrorNotice("Couldn't fetch the list of packs", message: "You may be offline. The packs already on this iPhone, your collection and identification keep working.", symbol: "wifi.exclamationmark") {
+                    ErrorNotice("Couldn't fetch the list of sets", message: "You may be offline. The downloads already on this iPhone, your collection and identification keep working.", symbol: "wifi.exclamationmark") {
                         Button("Try again") { Task { await library.refreshIndex() } }
                     }
                     .padding(.top, 12)
                 } else if library.available.isEmpty, library.index != nil {
-                    Text("Every pack there is has been downloaded.")
+                    Text("Every field guide there is has been downloaded.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 12)
@@ -91,7 +86,7 @@ struct BirdPacksView: View {
                             NavigationLink(value: Route.pack(id: descriptor.id)) {
                                 PackRow(
                                     name: descriptor.name, region: descriptor.region, setID: descriptor.id, edition: descriptor.set?.edition.name,
-                                    facts: [descriptor.speciesCount.map { "\($0) species" }, "\(descriptor.byteCount.formatted(.byteCount(style: .file))) download"].compactMap { $0 }.joined(separator: " · "),
+                                    facts: [descriptor.speciesCount.map { "\($0) birds" }, "\(descriptor.byteCount.formatted(.byteCount(style: .file))) download"].compactMap { $0 }.joined(separator: ", "),
                                     status: library.status(of: descriptor), descriptor: descriptor
                                 )
                             }
@@ -102,7 +97,7 @@ struct BirdPacksView: View {
                     .padding(.top, 8)
                 }
 
-                Text("Packs add photos and field notes for a region. Birds outside your packs can still be identified by name.")
+                Text("A download adds photos and field notes for a set. Birds outside your downloads can still be identified by name.")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .frame(maxWidth: .infinity)
@@ -113,8 +108,8 @@ struct BirdPacksView: View {
             .padding(.bottom, JournalLayout.sectionGap)
         }
         .background(Color.paper)
-        .navigationTitle("Bird packs")
-        .searchable(text: $query, prompt: "Find a region")
+        .navigationTitle(Self.title)
+        .searchable(text: $query, prompt: "Find a set")
         .task { await library.refreshIndex() }
         .refreshable { await library.refreshIndex() }
         #if DEBUG
@@ -152,7 +147,7 @@ struct PackRow: View {
                 Text(name)
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
-                if let line = [edition, region].compactMap({ $0?.isEmpty == false ? $0 : nil }).joined(separator: " · ").nilIfEmpty {
+                if let line = [edition, region].compactMap({ $0?.isEmpty == false ? $0 : nil }).joined(separator: ", ").nilIfEmpty {
                     Text(line)
                         .font(JournalFont.attribution)
                         .foregroundStyle(Color.inkSecondary)
@@ -192,7 +187,7 @@ struct PackTransferStatus: View {
                 Button {
                     library.startDownload(descriptor)
                 } label: {
-                    Label(compact ? "Download" : "Download · \(descriptor.byteCount.formatted(.byteCount(style: .file)))", systemImage: "arrow.down.circle")
+                    Label(compact ? "Download" : "Download, \(descriptor.byteCount.formatted(.byteCount(style: .file)))", systemImage: "arrow.down.circle")
                 }
                 .buttonStyle(.journalOutlined)
                 .padding(.top, 4)
@@ -207,7 +202,7 @@ struct PackTransferStatus: View {
                 Button {
                     library.startDownload(descriptor)
                 } label: {
-                    Label(compact ? "Update to version \(available)" : "Update to version \(available) · \(descriptor.byteCount.formatted(.byteCount(style: .file)))", systemImage: "arrow.down.circle")
+                    Label(compact ? "Update to version \(available)" : "Update to version \(available), \(descriptor.byteCount.formatted(.byteCount(style: .file)))", systemImage: "arrow.down.circle")
                 }
                 .buttonStyle(.journalOutlined)
                 .padding(.top, 4)
@@ -238,7 +233,7 @@ struct PackTransferStatus: View {
     }
 }
 
-/// A download under way: a bar, "41.2 MB of 173 MB · 24%", and Cancel.
+/// A download under way: a bar, "41.2 MB of 173 MB, 24%", and Cancel.
 struct DownloadProgress: View {
     let name: String
     let received: Int64
@@ -248,7 +243,7 @@ struct DownloadProgress: View {
     var body: some View {
         let shown = min(received, total)
         let fraction = Double(shown) / Double(max(total, 1))
-        let words = "\(shown.formatted(.byteCount(style: .file))) of \(total.formatted(.byteCount(style: .file))) · \(fraction.formatted(.percent.precision(.fractionLength(0))))"
+        let words = "\(shown.formatted(.byteCount(style: .file))) of \(total.formatted(.byteCount(style: .file))), \(fraction.formatted(.percent.precision(.fractionLength(0))))"
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 10) {
                 ProgressView(value: Double(shown), total: Double(max(total, 1)))
@@ -261,7 +256,7 @@ struct DownloadProgress: View {
                 }
                 .accessibilityLabel("Cancel download")
             }
-            Text("Downloading · \(words)")
+            Text("Downloading, \(words)")
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .monospacedDigit()
@@ -295,7 +290,7 @@ struct PackFailure: Equatable {
         case .offline: "You're offline"
         case .interrupted: "The download was interrupted"
         case .lowStorage: "Not enough space"
-        case .install: "The pack couldn't be installed"
+        case .install: "The download couldn't be installed"
         }
     }
 
@@ -321,7 +316,7 @@ struct PackFailure: Equatable {
     var advice: String? {
         switch kind {
         case .lowStorage: "Settings → General → iPhone Storage shows what takes the room. Nothing in your collection is touched."
-        case .offline: "Packs already on this iPhone keep working."
+        case .offline: "Downloads already on this iPhone keep working."
         case .interrupted: "Nothing was installed; the download starts over."
         case .install: "Nothing was installed, and nothing in your collection changed."
         }
@@ -380,14 +375,13 @@ struct PackStatesPreview: View {
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Self.pages[page.id - 1].map { Self.states[$0] }, id: \.0) { name, status in
-                    Text(name.uppercased())
-                        .font(CardFont.edition)
-                        .tracking(CardFont.editionTracking)
+                    Text(name)
+                        .font(JournalFont.supporting.weight(.semibold))
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 18)
                     PackRow(
                         name: Self.sample.name, region: Self.sample.region, setID: Self.sample.id, edition: "Coastal edition",
-                        facts: "159 species · 173 MB download", status: status, descriptor: Self.sample
+                        facts: "159 birds, 173 MB download", status: status, descriptor: Self.sample
                     )
                     RowRule()
                 }

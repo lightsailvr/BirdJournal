@@ -67,7 +67,7 @@ private struct YourSightingsLink: View {
     var body: some View {
         let count = sightings.count { $0.scientificName == scientificName }
         NavigationLink(value: Route.speciesPatches(scientificName: scientificName, commonName: commonName)) {
-            Label(count == 0 ? "Your sightings · none yet" : "Your sightings · \(count)", systemImage: "rectangle.stack")
+            Label(count == 0 ? "No sightings yet" : "\(count) \(count == 1 ? "sighting" : "sightings")", systemImage: "rectangle.stack")
         }
         .buttonStyle(.journalOutlined)
         .accessibilityIdentifier("profile-your-cards")
@@ -86,13 +86,13 @@ private struct ProfileContent: View {
         }
 
         if !species.sounds.isEmpty {
-            SectionTitle(text: "Hear it")
+            SectionTitle("Hear it")
             SoundRows(pack: pack, sounds: species.sounds)
                 .padding(.top, 8)
         }
 
         if let summary = species.summary, !summary.isEmpty {
-            SectionTitle(text: "Get to know this bird")
+            SectionTitle("About this bird")
             Text(summary)
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
@@ -100,20 +100,16 @@ private struct ProfileContent: View {
         }
 
         if let lore = species.lore {
-            SectionTitle(text: "The tale")
+            // The story's own title is its heading (issue #150), so the lore needs no other.
+            SectionTitle(lore.title ?? "The story")
                 .id("profile-tale")
             VStack(alignment: .leading, spacing: 8) {
-                if let title = lore.title {
-                    Text(title)
-                        .font(CardFont.storyTitle)
-                        .foregroundStyle(Color.ink)
-                }
                 Text(lore.text)
                     .font(CardFont.lore)
                     .lineSpacing(CardFont.loreLeading)
                     .foregroundStyle(Color.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Lore written from this bird's sourced fact sheet and reviewed by hand · CC BY-SA 4.0")
+                Text("Lore written from this bird's sourced fact sheet and reviewed by hand. CC BY-SA 4.0.")
                     .font(JournalFont.attribution)
                     .foregroundStyle(Color.inkSecondary)
             }
@@ -124,7 +120,7 @@ private struct ProfileContent: View {
         if let stats = species.stats {
             let rows = CardStatsText.front(stats) + CardStatsText.back(stats)
             if !rows.isEmpty {
-                SectionTitle(text: "At a glance")
+                SectionTitle("At a glance")
                 if let typeLine = species.typeLine {
                     Text(typeLine.text)
                         .font(JournalFont.supporting)
@@ -159,7 +155,7 @@ private struct ProfileContent: View {
             ("Often near", (species.habitat ?? "").capitalizedFirst),
         ].filter { !$0.1.isEmpty }
         if !facts.isEmpty {
-            SectionTitle(text: "In the field")
+            SectionTitle("In the field")
             VStack(spacing: 0) {
                 ForEach(Array(facts.enumerated()), id: \.offset) { position, fact in
                     if position > 0 { RowRule() }
@@ -181,13 +177,13 @@ private struct ProfileContent: View {
         }
 
         if let match {
-            SectionTitle(text: "This detection")
+            SectionTitle("This detection")
             MatchDetails(candidate: match)
                 .padding(.top, 8)
         }
 
         if species.photos.count > 1 {
-            SectionTitle(text: "More photos")
+            SectionTitle("More photos")
             Text("Different birds, ages and lights; every photo is credited to the observer who took it.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
@@ -198,7 +194,7 @@ private struct ProfileContent: View {
             }
         }
 
-        SectionTitle(text: "Sources & credits")
+        SectionTitle("Sources & credits")
         VStack(alignment: .leading, spacing: 10) {
             if species.descriptionSource != nil {
                 Text("The text is adapted from the English Wikipedia article on this species, by Wikipedia contributors, under CC BY-SA 4.0.")
@@ -276,7 +272,7 @@ private struct SoundRow: View {
                     Text(isPlaying ? "Playing \(sound.kind.title.lowercased())…" : sound.kind.title)
                         .font(JournalFont.rowTitle)
                         .foregroundStyle(Color.ink)
-                    Text("\(sound.duration.formatted(.units(allowed: [.seconds]))) · \(sound.shortCredit)")
+                    ShortFacts(sound.duration.formatted(.units(allowed: [.seconds])), sound.shortCredit)
                         .font(JournalFont.attribution)
                         .foregroundStyle(Color.inkSecondary)
                         .multilineTextAlignment(.leading)
@@ -316,20 +312,20 @@ private struct NameOnlyProfile: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 30)
                 .accessibilityHidden(true)
-            Text("No photos or field notes for this bird are on your iPhone. BirdNET can still identify it by name; a bird pack that covers its region adds the rest.")
+            Text("No photos or field notes for this bird are on your iPhone. BirdNET can still identify it by name; a field-guide download that covers it adds the rest.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
             NavigationLink(value: Route.packs) {
-                Label("Bird packs", systemImage: "square.stack.3d.down.right")
+                Label("Field-guide downloads", systemImage: "square.stack.3d.down.right")
             }
             .buttonStyle(.journalOutlined)
             .frame(maxWidth: .infinity)
         }
         .padding(.top, 8)
         if let match {
-            SectionTitle(text: "This detection")
+            SectionTitle("This detection")
             MatchDetails(candidate: match)
                 .padding(.top, 8)
         }
