@@ -125,6 +125,7 @@ struct RootView: View {
     @Environment(AccountSession.self) private var account
     @Environment(FindOutbox.self) private var findOutbox
     @Environment(PushCenter.self) private var pushes
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
     @State private var collection = CollectionState()
@@ -137,6 +138,19 @@ struct RootView: View {
     #endif
     /// The launch splash is still over this: a ceremony waits for it, rather than starting unseen.
     var isUnderSplash = false
+    /// A patch the widget opened (issue #150), cleared once shown.
+    @Binding var pendingPatch: CardCollection.Patch.Key?
+
+    /// The patch's page on the Collection tab, or the tab alone if the patch has been unpicked since the widget last drew. An
+    /// open run review goes first: its skipped birds are forgotten when it closes, so it isn't closed for them.
+    private func openPendingPatch() {
+        guard let key = pendingPatch, !run.isReviewing else { return }
+        pendingPatch = nil
+        collection.mode = .cards
+        journalPath = NavigationPath()
+        tab = .journal
+        if collectionStore.collection.patch(key: key) != nil { journalPath.append(Route.patch(key)) }
+    }
 
     var body: some View {
         TabView(selection: $tab) {
@@ -230,6 +244,8 @@ struct RootView: View {
         } message: {
             Text(PushCenter.explanation)
         }
+        .onChange(of: pendingPatch, initial: true) { openPendingPatch() }
+        .onChange(of: run.isReviewing) { openPendingPatch() }
         // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
         .onChange(of: circles.pendingInvite, initial: true) { _, token in
             guard let token, AccountSession.isEnabledInThisBuild else { return }

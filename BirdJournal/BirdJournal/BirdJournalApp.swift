@@ -25,10 +25,14 @@ struct BirdJournalApp: App {
     @State private var circles: CircleStore
     @State private var findOutbox: FindOutbox
     @State private var pushes: PushCenter
+    /// A patch the widget opened, until the root has shown it.
+    @State private var pendingPatch: CardCollection.Patch.Key?
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @State private var showingSplash = true
     private let album: ModelContainer
     private let frames: FrameStore
+    private let runActivity: RunActivityController
+    private let latestPatch: LatestPatchPublisher?
 
     init() {
         do {
@@ -77,7 +81,15 @@ struct BirdJournalApp: App {
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
-        _collectionStore = State(initialValue: CollectionStore(container: album, sets: { packs.cardSets }))
+        let collectionStore = CollectionStore(container: album, sets: { packs.cardSets })
+        _collectionStore = State(initialValue: collectionStore)
+        // The run on the Lock Screen, and the patch on the Home Screen (issue #150). Neither waits for a view: a run goes on
+        // behind a locked phone.
+        runActivity = RunActivityController(host: ActivityKitRunHost()) { [weak listening] in listening?.activeSource.rawValue ?? "" }
+        runActivity.follow { [weak listening, collectionStore] in listening?.snapshot(in: collectionStore.collection) ?? .idle }
+        RunStopper.stop = { [weak listening] in await listening?.stop() }
+        latestPatch = WidgetStore.shared.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }
+        latestPatch?.follow()
         let lens = Self.makeLensSession(connection: connection, packs: packs)
         _lens = State(initialValue: lens)
         _phoneListening = State(initialValue: phone)
@@ -249,7 +261,7 @@ struct BirdJournalApp: App {
 
     /// The app with its shared objects, under the launch splash.
     private var root: some View {
-        RootView(isUnderSplash: showingSplash)
+        RootView(isUnderSplash: showingSplash, pendingPatch: $pendingPatch)
             .environment(connection)
             .environment(spike)
             .environment(lens)
@@ -268,9 +280,12 @@ struct BirdJournalApp: App {
             .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
             .onOpenURL { url in
-                // An invite link (issue #61) arrives here as a universal link; everything else is the toolkit's.
+                // An invite link (issue #61) arrives here as a universal link, the widget's patch as `birdjournal://patch`
+                // (issue #150); everything else is the toolkit's.
                 if let token = InviteLink.token(from: url) {
                     circles.pendingInvite = token
+                } else if let link = PatchLink(url: url) {
+                    pendingPatch = CardCollection.Patch.Key(speciesID: link.speciesID, setID: link.setID)
                 } else {
                     Task { await connection.handle(url: url) }
                 }

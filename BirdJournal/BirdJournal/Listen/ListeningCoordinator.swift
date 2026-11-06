@@ -140,6 +140,8 @@ final class ListeningCoordinator {
     private(set) var pendingCeremonies: [UUID] {
         didSet { defaults.set(pendingCeremonies.map(\.uuidString), forKey: Self.pendingCeremoniesKey) }
     }
+    /// When Stop finished the run: what the recap counts the time to, however long the review waits to be seen.
+    private(set) var endedAt: Date?
     /// Set when a run that heard something ends, until the review is dismissed.
     var isReviewing = false
     /// The candidate the birder is reviewing, nil when none.
@@ -266,6 +268,7 @@ final class ListeningCoordinator {
         Self.logger.info("start tapped: source \(self.source.rawValue, privacy: .public), state \(String(describing: self.state), privacy: .public)")
         guard !state.isActive else { return }
         lastEnd = nil
+        endedAt = nil
         isReviewing = false
         acknowledgment = nil
         hasRun = true
@@ -297,6 +300,7 @@ final class ListeningCoordinator {
         case nil: break
         }
         lastEnd = lastEnd ?? .stopped
+        endedAt = .now
         listOrder = currentOrder()
         isReviewing = !candidates.isEmpty
         // The page moves to over the review: it picks up as finished rather than starting again.

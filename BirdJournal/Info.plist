@@ -32,6 +32,8 @@
 		<key>TeamID</key>
 		<string>$(DEVELOPMENT_TEAM)</string>
 	</dict>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_bonjour._tcp</string>

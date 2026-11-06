@@ -98,6 +98,8 @@ struct CardStockSurface: ViewModifier {
     static let radius: CGFloat = 8
     /// The page's appearance: this modifier reads it from outside the light scheme it sets below.
     @Environment(\.colorScheme) private var pageScheme
+    /// The backer's slot: a patch's card has one, a printed page doesn't.
+    var isPunched = true
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: Self.radius, style: .continuous)
@@ -126,12 +128,14 @@ struct CardStockSurface: ViewModifier {
                     .accessibilityHidden(true)
             }
             .overlay(alignment: .top) {
-                Capsule()
-                    .fill(Color.black.opacity(0.32))
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5))
-                    .frame(width: 26, height: 7)
-                    .padding(.top, 12)
-                    .accessibilityHidden(true)
+                if isPunched {
+                    Capsule()
+                        .fill(Color.black.opacity(0.32))
+                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5))
+                        .frame(width: 26, height: 7)
+                        .padding(.top, 12)
+                        .accessibilityHidden(true)
+                }
             }
             .environment(\.colorScheme, .light)
     }

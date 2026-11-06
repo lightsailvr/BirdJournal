@@ -1,0 +1,162 @@
+import ActivityKit
+import Album
+import Foundation
+import Observation
+import OSLog
+import UIKit
+
+extension RunSnapshot {
+    /// The pure reading of a run (issue #150): what the Live Activity shows, from the coordinator's state and the collection.
+    /// A bird heard is a new patch waiting until an add would only tick an existing patch's count, so an add takes it off,
+    /// and an undo puts it back.
+    init(state: ListeningCoordinator.State, startedAt: Date?, heard: [String], at coordinate: Coordinate?, collection: CardCollection) {
+        switch state {
+        case .idle: phase = .idle
+        case .starting: phase = .starting
+        case .listening: phase = .listening
+        case .interrupted, .resuming: phase = .paused
+        case .paused: phase = .paused
+        case .stopping: phase = .stopping
+        case .ended: phase = .ended
+        }
+        switch state {
+        case .paused(let reason): pausedTitle = reason.phoneTitle
+        case .interrupted: pausedTitle = "Checking the glasses"
+        case .resuming: pausedTitle = "Picking up the glasses"
+        default: pausedTitle = nil
+        }
+        self.startedAt = startedAt
+        birdsHeard = heard.count
+        newPatchesWaiting = heard.count { collection.addSewsPatch(speciesID: $0, at: coordinate) }
+        setID = Self.setID(at: coordinate, in: collection.sets)
+    }
+
+    /// The set whose boundary holds the place, the smallest part winning as for a patch's placement; nil outside every set.
+    /// Slice 6's "a coordinate's set" can take this over.
+    static func setID(at coordinate: Coordinate?, in sets: [CardSet]) -> String? {
+        guard let coordinate else { return nil }
+        let holding = sets.compactMap { set -> (id: String, area: Double)? in
+            let areas = set.regions.filter { $0.contains(latitude: coordinate.latitude, longitude: coordinate.longitude) }.map(\.area)
+            return areas.min().map { (set.id, $0) }
+        }
+        return holding.min { $0.area != $1.area ? $0.area < $1.area : $0.id < $1.id }?.id
+    }
+}
+
+extension ListeningCoordinator {
+    /// The run as the Live Activity shows it.
+    func snapshot(in collection: CardCollection) -> RunSnapshot {
+        RunSnapshot(state: state, startedAt: startedAt, heard: candidates.map(\.species.birdnetLabel), at: coordinate, collection: collection)
+    }
+}
+
+/// Where a run's snapshots go: ActivityKit on a phone, a double in tests.
+@MainActor
+protocol RunActivityHost: AnyObject {
+    func begin(_ snapshot: RunSnapshot, source: String)
+    func update(_ snapshot: RunSnapshot)
+    func end(_ snapshot: RunSnapshot)
+    /// Ends activities no run in this process started: the app was killed part way through one.
+    func endLeftovers()
+}
+
+/// Keeps one Live Activity in step with the run: it begins with the run, changes when the snapshot does, and ends with it.
+@MainActor
+final class RunActivityController {
+    /// A heartbeat this often keeps a run's activity from going stale while the app is alive.
+    static let heartbeat: Duration = .seconds(300)
+
+    private let host: any RunActivityHost
+    private let source: () -> String
+    private var shown: RunSnapshot?
+    private var heartbeatTask: Task<Void, Never>?
+
+    init(host: any RunActivityHost, source: @escaping () -> String) {
+        self.host = host
+        self.source = source
+    }
+
+    /// What a new snapshot means for the activity.
+    func apply(_ snapshot: RunSnapshot) {
+        if snapshot.isRunning {
+            if shown == nil {
+                host.begin(snapshot, source: source())
+                startHeartbeat()
+            } else if snapshot != shown {
+                host.update(snapshot)
+            }
+            shown = snapshot
+        } else if shown != nil {
+            shown = nil
+            heartbeatTask?.cancel()
+            heartbeatTask = nil
+            host.end(snapshot)
+        }
+    }
+
+    /// Follows the snapshot from now on, whatever screen is up and whether or not the app is in front: a run goes on behind
+    /// a locked phone, where no view is drawn.
+    func follow(_ read: @escaping @MainActor () -> RunSnapshot) {
+        host.endLeftovers()
+        observe(read)
+    }
+
+    private func observe(_ read: @escaping @MainActor () -> RunSnapshot) {
+        let snapshot = withObservationTracking(read) { [weak self] in
+            Task { @MainActor in self?.observe(read) }
+        }
+        apply(snapshot)
+    }
+
+    private func startHeartbeat() {
+        heartbeatTask?.cancel()
+        heartbeatTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: Self.heartbeat)
+                guard !Task.isCancelled, let self, let shown = self.shown else { return }
+                self.host.update(shown)
+            }
+        }
+    }
+}
+
+/// The real Live Activity. With no word from the app for a while it shows as stale, since an app killed mid-run can't end it;
+/// the next launch does.
+@MainActor
+final class ActivityKitRunHost: RunActivityHost {
+    private static let staleAfter: TimeInterval = 900
+    private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "listening")
+    private var activity: Activity<RunActivityAttributes>?
+
+    private func content(_ snapshot: RunSnapshot) -> ActivityContent<RunSnapshot> {
+        ActivityContent(state: snapshot, staleDate: .now.addingTimeInterval(Self.staleAfter))
+    }
+
+    func begin(_ snapshot: RunSnapshot, source: String) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        do {
+            activity = try Activity.request(attributes: RunActivityAttributes(source: source), content: content(snapshot))
+        } catch {
+            log.error("no Live Activity for this run: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    func update(_ snapshot: RunSnapshot) {
+        guard let activity else { return }
+        let content = content(snapshot)
+        Task { await activity.update(content) }
+    }
+
+    func end(_ snapshot: RunSnapshot) {
+        guard let activity else { return }
+        self.activity = nil
+        let content = ActivityContent(state: snapshot, staleDate: nil)
+        Task { await activity.end(content, dismissalPolicy: .immediate) }
+    }
+
+    func endLeftovers() {
+        for leftover in Activity<RunActivityAttributes>.activities {
+            Task { await leftover.end(nil, dismissalPolicy: .immediate) }
+        }
+    }
+}

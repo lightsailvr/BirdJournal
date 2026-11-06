@@ -14,6 +14,8 @@ final class RunSightings {
     /// One sighting added this run, as the screens list it.
     struct Entry: Identifiable, Equatable {
         let id: PersistentIdentifier
+        /// The sighting's stable identifier, which the collection knows it by.
+        let identifier: UUID
         var candidate: Candidate
         var hasFrame: Bool
     }
@@ -68,7 +70,7 @@ final class RunSightings {
         let recorded = try recorder.record(candidate, confirmedAt: confirmedAt, location: location, frame: frame, source: source, method: method)
         let sighting = recorded.sighting
         records[sighting.persistentModelID] = sighting
-        entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))
+        entries.append(Entry(id: sighting.persistentModelID, identifier: sighting.identifier, candidate: candidate, hasFrame: frame != nil))
         if let captioner { Task { await captioner.caption(sighting) } }
         findOutbox?.added(sighting.identifier, isNewPatch: recorded.sewsPatch)
         return Addition(species: candidate.species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: recorded.sewsPatch, patchCount: recorded.patchCount, placement: recorded.placement)
