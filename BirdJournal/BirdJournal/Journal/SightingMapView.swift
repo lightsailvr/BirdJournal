@@ -215,6 +215,7 @@ private final class PatchPinView: MKAnnotationView {
     override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         collisionMode = .circle
+        canShowCallout = false
         ring.fillColor = nil
         ring.lineWidth = 2.5
         ring.isHidden = true
@@ -275,6 +276,7 @@ private final class PatchClusterView: MKAnnotationView {
     override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         collisionMode = .circle
+        canShowCallout = false
         displayPriority = .defaultHigh
     }
 

@@ -49,6 +49,7 @@ struct SightingDetailView: View {
             let commonName = library.commonName(for: sighting)
             let patch = collectionStore.collection.patch(of: sighting.identifier)
             let leadPhoto = sighting.attachedPhotoPaths.first
+            ScrollViewReader { proxy in
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
                     RecordLead(sighting: sighting, patch: patch, name: commonName)
@@ -163,6 +164,7 @@ struct SightingDetailView: View {
                         }
                     }
                     .padding(.top, JournalLayout.sectionGap)
+                    .id("record-disclosures")
 
                     Button(role: .destructive) {
                         confirmingRemoval = true
@@ -174,6 +176,10 @@ struct SightingDetailView: View {
                     .tint(Color.alert)
                     .padding(.top, JournalLayout.sectionGap)
                 }
+            }
+            #if DEBUG
+            .debugScroll(proxy, to: "record-disclosures")
+            #endif
             }
             // A sighting's page is in its patch's edition, like the patch's own.
             .tint(patch.map { PatchEdition.tint(setID: $0.placement.setID) })
@@ -321,12 +327,18 @@ private struct RecordDisclosure<Content: View>: View {
     let title: String
     let identifier: String
     @ViewBuilder var content: Content
-    @State private var isExpanded = false
+    @State private var isExpanded: Bool
 
     init(_ title: String, identifier: String, @ViewBuilder content: () -> Content) {
         self.title = title
         self.identifier = identifier
         self.content = content()
+        #if DEBUG
+        // `-autoRecordOpen YES`, for the screenshots.
+        _isExpanded = State(initialValue: UserDefaults.standard.bool(forKey: "autoRecordOpen"))
+        #else
+        _isExpanded = State(initialValue: false)
+        #endif
     }
 
     var body: some View {
@@ -394,6 +406,7 @@ struct FactRow: View {
             }
         }
         .padding(.vertical, 11)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
 }

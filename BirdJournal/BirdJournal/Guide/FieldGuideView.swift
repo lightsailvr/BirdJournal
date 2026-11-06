@@ -201,11 +201,14 @@ struct SetTile: View {
 
 /// Installed content status, in words and a check: kept apart from the birder's progress.
 struct ReadyOffline: View {
+    /// The tint on the page. On a plate it's the card's ink, which clears the fibre in every edition.
+    var ink: Color?
+
     var body: some View {
         Label("Ready offline", systemImage: "checkmark.circle.fill")
             .font(JournalFont.supporting.weight(.medium))
             .fixedSize(horizontal: false, vertical: true)
-            .foregroundStyle(.tint)
+            .foregroundStyle(ink.map(AnyShapeStyle.init) ?? AnyShapeStyle(TintShapeStyle.tint))
     }
 }
 

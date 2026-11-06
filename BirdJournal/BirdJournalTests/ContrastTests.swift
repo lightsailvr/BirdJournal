@@ -261,6 +261,25 @@ struct TokenPairingTests {
         }
     }
 
+    @Test("an Atlas plate's fibre shows more on the dark page, and its ink and every edition's stitches still clear it")
+    func plateStock() async throws {
+        let stock = Color.clear.modifier(CardStockSurface(.plate))
+        for variant in DesignTokenTests.variants {
+            let image = try await Self.renderImage(stock, traits: variant.traits, size: 300)
+            let extremes = try #require(Self.luminanceExtremes(image))
+            let light = UITraitCollection { traits in
+                traits.userInterfaceStyle = .light
+                traits.accessibilityContrast = variant.traits.accessibilityContrast
+            }
+            let ink = Self.worst(try DesignTokenTests.color("CollectibleInk", light), on: extremes)
+            #expect(ink >= 4.5, "the ink on a plate, \(variant.name) (\(Self.hex(extremes.darkest))...\(Self.hex(extremes.lightest))): \(String(format: "%.2f", ink)):1")
+            for tint in EditionTintTests.tints {
+                let ratio = Self.worst(try DesignTokenTests.color(tint, light), on: extremes)
+                #expect(ratio >= 3, "\(tint)'s stitch on a plate, \(variant.name): \(String(format: "%.2f", ratio)):1")
+            }
+        }
+    }
+
     @Test("a paper tag's words clear 4.5:1 on the plain stock it's cut from")
     func paperTag() throws {
         let ink = try DesignTokenTests.color("CollectibleInk", UITraitCollection(userInterfaceStyle: .light))

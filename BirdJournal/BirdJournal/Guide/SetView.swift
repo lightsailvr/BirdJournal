@@ -145,7 +145,8 @@ private struct SetSpeciesRow: View {
 /// phone, one without silhouettes, or a bird left out on purpose). It says "no patch yet", so it holds 3:1 on the raised surface.
 /// The pack's picture is white and alpha, so it takes its colour here. It's a plain bitmap, and it takes no touches.
 struct SpeciesSilhouette: View {
-    /// How strong the mark is over the raised surface (`TokenPairingTests`).
+    /// How strong the glyph is over the raised surface (`TokenPairingTests`). A true shape is the secondary ink itself, as the reference
+    /// draws it, which is stronger still.
     static let markOpacity = 0.75
 
     /// The pack's picture; nil is the glyph.
@@ -161,21 +162,20 @@ struct SpeciesSilhouette: View {
     var body: some View {
         ZStack {
             Color.raised
-            Group {
-                if let image {
-                    Image(uiImage: image)
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .padding(7)
-                } else if url == nil || failed {
-                    Image(systemName: "bird.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .padding(14)
-                }
+            if let image {
+                Image(uiImage: image)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(7)
+                    .foregroundStyle(Color.inkSecondary)
+            } else if url == nil || failed {
+                Image(systemName: "bird.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(14)
+                    .foregroundStyle(Color.inkSecondary.opacity(Self.markOpacity))
             }
-            .foregroundStyle(Color.inkSecondary.opacity(Self.markOpacity))
         }
         .allowsHitTesting(false)
         .task(id: url) {

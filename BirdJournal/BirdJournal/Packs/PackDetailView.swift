@@ -158,7 +158,7 @@ private struct PackPlate: View {
                     .padding(.top, 13)
                 Text(progress.sewnText)
                     .font(JournalFont.supporting)
-                    .foregroundStyle(Color.cardInkSecondary)
+                    .foregroundStyle(Color.cardInk)
                     .padding(.top, 8)
             }
         }

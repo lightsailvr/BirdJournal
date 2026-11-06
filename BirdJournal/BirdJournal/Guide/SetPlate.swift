@@ -16,13 +16,13 @@ struct PlatePicture: View {
         VStack(alignment: .trailing, spacing: 3) {
             SetCoverImage(setID: setID)
                 .aspectRatio(aspect, contentMode: .fit)
-                .overlay(Rectangle().strokeBorder(Color.cardEdge.opacity(0.55), lineWidth: 1))
+                .overlay(Rectangle().strokeBorder(Color.cardEdge.opacity(0.35), lineWidth: 1))
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Painted plate, AI illustration")
                 .accessibilityAddTraits(.isImage)
             Text("AI illustration")
                 .font(CardFont.credit)
-                .foregroundStyle(Color.cardInkSecondary)
+                .foregroundStyle(Color.cardInk)
                 .accessibilityHidden(true)
         }
     }
@@ -62,11 +62,11 @@ struct SetPlate: View {
                 HStack(alignment: .firstTextBaseline) {
                     sewn
                     Spacer(minLength: 8)
-                    if showsReadyOffline { ReadyOffline() }
+                    if showsReadyOffline { ReadyOffline(ink: .cardInk) }
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     sewn
-                    if showsReadyOffline { ReadyOffline() }
+                    if showsReadyOffline { ReadyOffline(ink: .cardInk) }
                 }
             }
             .padding(.top, 8)
@@ -97,7 +97,7 @@ struct SetPlate: View {
     private var sewn: some View {
         Text(progress.sewnText)
             .font(JournalFont.supporting)
-            .foregroundStyle(Color.cardInkSecondary)
+            .foregroundStyle(Color.cardInk)
             .fixedSize(horizontal: false, vertical: true)
     }
 }

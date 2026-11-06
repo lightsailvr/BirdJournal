@@ -456,6 +456,44 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains("Open in Atlas"), "\(labels)")
     }
 
+    @Test("A set's page: the plate is one labelled image and the set's name a heading, and a found bird's row says it's yours", arguments: sizes)
+    func setPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let labels = try await Self.walk(SetView(id: set.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Painted plate, AI illustration") && labels.contains { $0.hasSuffix("Mourning Dove, yours, seen once") }
+        }
+        Self.expectClean(labels, screen: "Set page")
+        #expect(labels.contains("Painted plate, AI illustration"), "\(labels)")
+        #expect(!labels.contains("AI illustration"), "said once, with the picture: \(labels)")
+        #expect(labels.contains(set.name), "\(labels)")
+        #expect(labels.contains("\(set.edition.name), \(set.species.count) birds"), "\(labels)")
+        #expect(labels.contains("3 of \(set.species.count) sewn"), "the thread's count, once: \(labels)")
+        #expect(labels.contains { $0.hasSuffix("Mourning Dove, yours, seen once") }, "\(labels)")
+        #expect(labels.contains { $0.hasSuffix("House Finch, yours, seen 2 times") }, "\(labels)")
+    }
+
+    @Test("A record: the facts, Heard and Seen, and two closed disclosures that VoiceOver can find", arguments: sizes)
+    func record(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(SightingDetailView(id: phoebe.persistentModelID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Rarity") && labels.contains("Identification")
+        }
+        Self.expectClean(labels, screen: "Record")
+        #expect(labels.contains("Black Phoebe"), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("How") && $0.contains("Heard with Ray-Ban Display") }, "\(labels)")
+        #expect(labels.contains("Your glasses snapshot from this sighting"), "\(labels)")
+        #expect(labels.contains("Rarity") && labels.contains("Identification"), "\(labels)")
+        #expect(!labels.contains { $0.contains("Model score") }, "closed: \(labels)")
+
+        let dove = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Zenaida macroura" })
+        let withPatch = try await Self.walk(SightingDetailView(id: dove.persistentModelID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch") }
+        }
+        #expect(withPatch.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch, seen once, sewn ") }, "\(withPatch)")
+    }
+
     @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)
     func notYetFound(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()

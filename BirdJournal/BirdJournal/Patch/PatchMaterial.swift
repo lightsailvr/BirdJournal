@@ -94,7 +94,7 @@ struct FeltBoard<Content: View>: View {
 /// backer a patch is sold on. Printed matter: no embossing, foil or glows. Everything on it reads in the light scheme.
 /// On the linen (the light appearance) the fibre is eased so the card measures lighter than the cloth under it, and a fine
 /// edge sets it off; on the felt it glows as it is (issue #150). A `.plate` is a page of the Atlas, printed rather than sold on a
-/// card: the same stock, without the backer's slot and inner keyline.
+/// card: the same stock with its fibre showing more on the dark page, the mock's warmer paper, without the backer's slot and inner keyline.
 struct CardStockSurface: ViewModifier {
     enum Kind {
         case backer, plate
@@ -120,7 +120,7 @@ struct CardStockSurface: ViewModifier {
                         Image("MaterialPaper")
                             .resizable(resizingMode: .tile)
                             .blendMode(.multiply)
-                            .opacity(onLinen ? 0.15 : 0.5)
+                            .opacity(onLinen ? 0.15 : (kind == .plate ? 0.72 : 0.5))
                     }
                     .clipShape(shape)
                     // On the stock, not the card: on the whole card the type would take it too.
