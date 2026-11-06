@@ -37,8 +37,8 @@ nonisolated enum GlanceInk {
         }
     }
 
-    /// The tint of a set's edition, the issue's table; a set the app doesn't know, or none, keeps today's aqua. Increase
-    /// Contrast takes the ink, which measures highest on every surface here.
+    /// The tint of a set's edition, `PatchEdition.tint`'s colorsets as the extension can reach them; a set the app doesn't know, or
+    /// none, keeps today's aqua. Increase Contrast takes the ink, which measures highest on every surface here.
     static func tint(setID: String?, _ scheme: ColorScheme, _ contrast: ColorSchemeContrast) -> Color {
         if contrast == .increased { return ink(scheme, contrast) }
         let dark = scheme == .dark
@@ -53,8 +53,8 @@ nonisolated enum GlanceInk {
     }
 }
 
-/// Progress outside the app's own screens: today's bar (`SpeciesCollected`'s) behind one small seam, until `ThreadProgress`
-/// lands (issue #150's slice 6) and takes this view's place. A widget draws one frame, so nothing here animates.
+/// A set's thread outside the app's own screens: the same stitches as `ThreadProgress`, at rest, since a widget draws one frame
+/// and has nothing to sew forward with.
 struct GlanceProgress: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.colorSchemeContrast) private var contrast
@@ -62,16 +62,19 @@ struct GlanceProgress: View {
     let total: Int
     let tint: Color
 
-    private var fraction: Double { total == 0 ? 0 : min(Double(sewn) / Double(total), 1) }
+    private static let height: CGFloat = 4
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule().fill(GlanceInk.rule(scheme, contrast).opacity(0.7))
-                Capsule().fill(tint).frame(width: max(sewn > 0 ? 6 : 0, geometry.size.width * fraction))
+        GeometryReader { proxy in
+            let count = Stitches.count(width: proxy.size.width, height: Self.height)
+            ZStack {
+                Stitches(count: count, sewn: Double(count))
+                    .fill(GlanceInk.ink(scheme, contrast).opacity(contrast == .increased ? 0.4 : 0.22))
+                Stitches(count: count, sewn: Double(Stitches.sewn(value: Double(sewn), total: Double(total), stitches: count, countsBirds: true)))
+                    .fill(tint)
             }
         }
-        .frame(height: 6)
+        .frame(height: Self.height)
         .accessibilityHidden(true)
     }
 }
