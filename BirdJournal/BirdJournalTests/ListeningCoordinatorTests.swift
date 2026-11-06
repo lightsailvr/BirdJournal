@@ -189,6 +189,153 @@ struct ListeningCoordinatorTests {
         #expect(SightingRow.caption(.reference(url)) == "Reference photo", "a reference photo never looks like your own")
     }
 
+    // The maintainer, issue #150: the list holds still around a touch.
+
+    static let holdStart = Date(timeIntervalSince1970: 1_800_000_000)
+
+    @Test("the order holds from a finger coming down until 1.5 s after it lifts, then takes the coordinator's")
+    func theOrderHoldsAroundATouch() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        #expect(held.shown(["a", "b", "c"]) == ["a", "b", "c"], "nothing holds it: as the coordinator has it")
+
+        held.hold(.finger, showing: ["a", "b", "c"], at: start)
+        #expect(held.isHeld)
+        #expect(held.frozenAt == start)
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "a re-sort under the finger moves nothing")
+        held.tick(at: start.addingTimeInterval(15))
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "however long the finger stays down")
+
+        let lifted = start.addingTimeInterval(15)
+        held.letGo(.finger, at: lifted)
+        #expect(held.releaseAt == lifted.addingTimeInterval(1.5))
+        held.tick(at: lifted.addingTimeInterval(1.4))
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "still holding, for the next tap")
+        held.tick(at: lifted.addingTimeInterval(1.5))
+        #expect(!held.isHeld)
+        #expect(held.frozenAt == nil)
+        #expect(held.shown(["c", "a", "b"]) == ["c", "a", "b"], "then it moves")
+    }
+
+    @Test("another touch inside the 1.5 s holds the same order, and starts the wait again when it lifts")
+    func aSecondTouchKeepsTheHold() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.letGo(.finger, at: start.addingTimeInterval(1))
+        held.hold(.finger, showing: ["b", "a"], at: start.addingTimeInterval(2))
+        #expect(held.releaseAt == nil)
+        #expect(held.frozenAt == start)
+        held.tick(at: start.addingTimeInterval(10))
+        #expect(held.shown(["b", "a"]) == ["a", "b"], "the order it was holding, not the one it's been told since")
+        held.letGo(.finger, at: start.addingTimeInterval(11))
+        #expect(held.releaseAt == start.addingTimeInterval(12.5))
+    }
+
+    @Test("scrolling and VoiceOver's focus hold it like a finger, and it moves only when the last of them lets go")
+    func everyHolderHolds() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.hold(.scroll, showing: ["b", "a"], at: start)
+        held.letGo(.finger, at: start.addingTimeInterval(1))
+        #expect(held.releaseAt == nil, "a flick still decelerating")
+        held.hold(.voiceOverFocus("a"), showing: ["b", "a"], at: start.addingTimeInterval(2))
+        held.letGo(.scroll, at: start.addingTimeInterval(3))
+        #expect(held.releaseAt == nil, "focus is on a row")
+        held.tick(at: start.addingTimeInterval(100))
+        #expect(held.shown(["b", "a"]) == ["a", "b"])
+
+        // Focus moving from one row to the next: whichever order the two reports come in, the wait doesn't finish in between.
+        held.letGo(.voiceOverFocus("a"), at: start.addingTimeInterval(101))
+        held.hold(.voiceOverFocus("b"), showing: ["b", "a"], at: start.addingTimeInterval(101))
+        held.tick(at: start.addingTimeInterval(200))
+        #expect(held.shown(["b", "a"]) == ["a", "b"])
+        held.letGo(.voiceOverFocus("b"), at: start.addingTimeInterval(201))
+        held.tick(at: start.addingTimeInterval(203))
+        #expect(!held.isHeld)
+    }
+
+    @Test("when the list leaves the screen everything lets go at once: a flick that's gone never says it's ended")
+    func leavingLetsGoOfEverything() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.hold(.scroll, showing: ["a", "b"], at: start)
+        held.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        held.letGoOfEverything(at: start.addingTimeInterval(1))
+        #expect(held.releaseAt == start.addingTimeInterval(2.5))
+        held.tick(at: start.addingTimeInterval(2.5))
+        #expect(!held.isHeld)
+        held.letGoOfEverything(at: start.addingTimeInterval(3))
+        #expect(held.releaseAt == nil, "nothing was held")
+    }
+
+    @Test("a finger or scroll that never says it's ended lets go after 20 s, and a report refreshes that; VoiceOver's focus can stay")
+    func theSafetyNet() {
+        let start = Self.holdStart
+        var held = HeldListOrder<String>()
+        held.hold(.scroll, showing: ["a", "b"], at: start)
+        held.tick(at: start.addingTimeInterval(19))
+        #expect(held.isHeld)
+        held.tick(at: start.addingTimeInterval(20))
+        #expect(!held.isHeld, "stale")
+
+        var moving = HeldListOrder<String>()
+        moving.hold(.finger, showing: ["a", "b"], at: start)
+        moving.hold(.finger, showing: ["a", "b"], at: start.addingTimeInterval(15))
+        moving.tick(at: start.addingTimeInterval(30))
+        #expect(moving.isHeld, "a finger that's still reporting")
+
+        var focused = HeldListOrder<String>()
+        focused.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        focused.hold(.scroll, showing: ["a", "b"], at: start)
+        focused.tick(at: start.addingTimeInterval(600))
+        #expect(focused.isHeld, "focus is still on a row")
+        focused.letGo(.voiceOverFocus("a"), at: start.addingTimeInterval(601))
+        focused.tick(at: start.addingTimeInterval(603))
+        #expect(!focused.isHeld, "the stale scroll went with the net")
+    }
+
+    @Test("VoiceOver turned off with its focus on a row lets that go, and leaves a finger's hold alone")
+    func voiceOverTurnedOff() {
+        let start = Self.holdStart
+        var held = HeldListOrder<String>()
+        held.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        held.tick(at: start.addingTimeInterval(5))
+        #expect(held.isHeld, "it's still running")
+        held.tick(at: start.addingTimeInterval(10), isVoiceOverRunning: false)
+        #expect(!held.isHeld)
+
+        var both = HeldListOrder<String>()
+        both.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        both.hold(.finger, showing: ["a", "b"], at: start)
+        both.tick(at: start.addingTimeInterval(5), isVoiceOverRunning: false)
+        #expect(both.isHeld, "the finger's still down")
+        both.letGo(.finger, at: start.addingTimeInterval(6))
+        both.tick(at: start.addingTimeInterval(7.5), isVoiceOverRunning: false)
+        #expect(!both.isHeld)
+    }
+
+    @Test("a bird first heard during a hold goes at the bottom, where it moves no row, and stays in the place it was shown")
+    func aNewBirdGoesAtTheBottom() {
+        var held = HeldListOrder<String>()
+        held.hold(.finger, showing: ["a", "b"], at: Self.holdStart)
+        // The coordinator would put a calling bird first.
+        #expect(held.shown(["new", "b", "a"]) == ["a", "b", "new"])
+        held.take(["new", "b", "a"])
+        #expect(held.shown(["other", "new", "b", "a"]) == ["a", "b", "new", "other"])
+        held.take(["other", "new", "b", "a"])
+        #expect(held.shown(["new", "other", "a", "b"]) == ["a", "b", "new", "other"], "the two new birds don't swap under the thumb either")
+    }
+
+    @Test("a bird gone from the order goes from the list, even during a hold")
+    func aBirdGoneFromTheOrderGoes() {
+        var held = HeldListOrder<String>()
+        held.hold(.finger, showing: ["a", "b"], at: Self.holdStart)
+        #expect(held.shown(["b"]) == ["b"])
+    }
+
     @Test("the summary leads with new patches waiting")
     func summaryLeadsWithWhatsWaiting() {
         #expect(RunHunt(newPatches: 1, alreadyHave: 2).text == "1 new patch waiting and 2 you already have")

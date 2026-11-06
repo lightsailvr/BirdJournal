@@ -22,6 +22,9 @@ struct CandidateRow: View {
     /// The row's position in the list, for the UI tests.
     var position: Int?
     let review: () -> Void
+    /// VoiceOver's focus has come to this row or left it. The list holds still around it, so that focus keeps its place.
+    var voiceOverFocused: (Bool) -> Void = { _ in }
+    @AccessibilityFocusState private var focus: RowElement?
     /// An add from this row is under way (a glasses run takes a photo first): a second tap isn't a second sighting.
     @State private var isAdding = false
 
@@ -36,11 +39,26 @@ struct CandidateRow: View {
             Button(action: review) {
                 AdaptiveRow(stacked: stacked) {
                     picture(look: look, patch: patch)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(name)
-                            .font(JournalFont.rowTitle)
-                            .foregroundStyle(Color.ink)
-                        statusLine(look: look, heard: heard)
+                    // Room for what the row says when its bird calls, so that a row doesn't change height, and move the ones
+                    // below it, when a bird starts calling or stops. The list holds its order around a touch; this holds its
+                    // rows' places. The words sit in the middle of that room, in line with the picture.
+                    ZStack(alignment: .leading) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(name)
+                                .font(JournalFont.rowTitle)
+                            HStack(spacing: 5) {
+                                Image(systemName: "waveform")
+                                Text("Calling now, \(look.note)")
+                                    .font(JournalFont.supporting.weight(.semibold))
+                            }
+                        }
+                        .hidden()
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(name)
+                                .font(JournalFont.rowTitle)
+                                .foregroundStyle(Color.ink)
+                            statusLine(look: look, heard: heard)
+                        }
                     }
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -55,9 +73,12 @@ struct CandidateRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier(position.map { "candidate-row-\($0)" } ?? "")
+            .accessibilityFocused($focus, equals: .row)
             action(look.offer(isDescribed: reference != nil), name: name, isDescribed: reference != nil)
+                .accessibilityFocused($focus, equals: .action)
                 .padding(.bottom, stacked ? 12 : 0)
         }
+        .onChange(of: focus != nil) { _, isFocused in voiceOverFocused(isFocused) }
         #if DEBUG
         .onAppear { Self.appearances += 1 }
         #endif
@@ -67,6 +88,10 @@ struct CandidateRow: View {
     /// Rows made since the test last set this to 0: a re-sort moves rows and makes none (`ScreenAccessibilityTests`).
     static var appearances = 0
     #endif
+
+    private enum RowElement: Hashable {
+        case row, action
+    }
 
     /// Your patch once you have it here, else the reference photo in a ring that says it isn't yours yet.
     @ViewBuilder
