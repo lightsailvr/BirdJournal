@@ -2,7 +2,8 @@
 # Issue #150 slice 11's evidence: the launch screen, the splash and the pages the finch is on, from the running app, at half
 # size, at the default text size (`large`) and the largest (ax5). Give it a build, and the prefix `before-` for one from before
 # the mascot. Leaves the simulator's text size at `large` and its appearance dark. The icons on the home screen come from a UI
-# test, which also takes the Settings page (`AppIconHomeScreenUITests`, `TEST_RUNNER_BIRDJOURNAL_ICON_SHOTS=<folder>`).
+# test, which also takes the Settings page (`AppIconHomeScreenUITests`, `TEST_RUNNER_BIRDJOURNAL_ICON_SHOTS=<folder>`), and
+# `icon-sheets.py` sets them side by side at true pixels.
 #
 #   docs/screenshots/150/mascot/capture.sh <simulator UDID> <app path> [before-]
 #   docs/screenshots/150/mascot/capture.sh --sheets
@@ -22,7 +23,6 @@ if [[ "${1:-}" == "--sheets" ]]; then
     sheet before-after-launch 4 before-launch-dark.jpg launch-dark.jpg before-splash-dark.jpg splash-dark.jpg before-launch-light.jpg launch-light.jpg before-splash-light.jpg splash-light.jpg
     sheet before-after-states 4 before-empty-dark.jpg empty-dark.jpg before-account-dark.jpg account-dark.jpg before-empty-light.jpg empty-light.jpg before-account-light.jpg account-light.jpg
     sheet before-after-ax5 4 before-empty-ax5.jpg empty-ax5.jpg before-account-ax5.jpg account-ax5.jpg
-    sheet before-after-icons 3 before-icons-dark.jpg icons-dark.jpg icons-light.jpg
     sheet home-screen 3 home-red-tailed-hawk.jpg home-blue-bird.jpg home-great-egret.jpg home-house-finch.jpg home-prothonotary-warbler.jpg home-stellers-jay.jpg
     exit 0
 fi
