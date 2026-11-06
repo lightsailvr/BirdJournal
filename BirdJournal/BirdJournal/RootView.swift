@@ -103,8 +103,8 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Collection tab at the top of the Patches view, on the newest patch's set: the new patch on the reveal (issues #51, #132, #150).
-    @Entry var openCollection: @MainActor () -> Void = {}
+    /// Opens the Collection tab at the top of the Patches view, on one board: the new patch on the reveal (issues #51, #132, #150).
+    @Entry var openCollection: @MainActor (BoardChoice) -> Void = { _ in }
     /// Opens the Listen tab: a species with no sightings yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
     /// Opens the Atlas tab: an empty collection's birds to find (issue #138).
@@ -147,24 +147,21 @@ struct RootView: View {
                     ListenView()
                         .appDestinations()
                 }
-                .patchLiftScope()
-                .environment(\.pushRoute) { listenPath.append($0) }
+                .patchStack { listenPath.append($0) }
             }
             SwiftUI.Tab("Collection", image: "stitched.ring", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
                     JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()
                 }
-                .patchLiftScope()
-                .environment(\.pushRoute) { journalPath.append($0) }
+                .patchStack { journalPath.append($0) }
             }
             SwiftUI.Tab("Atlas", systemImage: "map", value: Tab.guide) {
                 NavigationStack(path: $guidePath) {
                     FieldGuideView()
                         .appDestinations()
                 }
-                .patchLiftScope()
-                .environment(\.pushRoute) { guidePath.append($0) }
+                .patchStack { guidePath.append($0) }
             }
             // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
             // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
@@ -175,8 +172,7 @@ struct RootView: View {
                         CirclesView()
                             .appDestinations()
                     }
-                    .patchLiftScope()
-                    .environment(\.pushRoute) { circlesPath.append($0) }
+                    .patchStack { circlesPath.append($0) }
                 }
             }
         }
@@ -185,7 +181,8 @@ struct RootView: View {
         }
         .tint(Color.moss)
         // Here, so Start and both Stops say the same, and a run the glasses end does too.
-        .haptic(.startStop, trigger: run.isRunFelt)
+        // A run that failed says that, and only that.
+        .haptic(.startStop, trigger: run.isRunGoing) { _, _ in !run.hasFailed }
         .haptic(.error, trigger: run.hasFailed) { _, failed in failed }
         .haptic(.error, trigger: run.failedActions)
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
@@ -196,11 +193,11 @@ struct RootView: View {
         .onChange(of: scenePhase == .active && !isUnderSplash && run.hasCeremonyWaiting, initial: true) { _, ready in
             if ready { run.showNextCeremony() }
         }
-        .environment(\.openCollection) {
+        .environment(\.openCollection) { board in
             collection.mode = .cards
             collection.query = ""
             collection.offsets[.cards] = 0
-            collection.board = nil
+            collection.board = board
             journalPath = NavigationPath()
             tab = .journal
         }

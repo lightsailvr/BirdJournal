@@ -6,7 +6,8 @@
 #   docs/screenshots/150/feel/capture.sh <simulator name>
 #   docs/screenshots/150/feel/capture.sh --sheets
 #
-# The waits are fixed, so look over the shots afterwards; CAPTURE_SLOW=<seconds> adds to each wait.
+# The waits are fixed, so look over the shots afterwards; CAPTURE_SLOW=<seconds> adds to each wait. The Lift's frames are picked by
+# hand from the recording: CAPTURE_RAW=<folder> keeps them, LIFT_FRAMES="a b c d e f" copies those, LIFT_ONLY=1 does only this part.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -35,7 +36,7 @@ udid="$(xcrun simctl list devices | sed -n "s/^ *$name (\([0-9A-F-]*\)).*/\1/p" 
 bundle="com.matthewcelia.mybirdjournal"
 clip="$repo_root/fixtures/clips/birdnet-example-soundscape.wav"
 slow="${CAPTURE_SLOW:-0}"
-raw="$(mktemp -d)"
+raw="${CAPTURE_RAW:-$(mktemp -d)}"
 
 # Whatever stops this, the simulator goes back to its defaults: left at ax5, it fails UI tests that have nothing to do with it.
 restore() {
@@ -43,7 +44,7 @@ restore() {
     xcrun simctl ui "$udid" appearance dark
     xcrun simctl ui "$udid" increase_contrast disabled 2>/dev/null || true
     xcrun simctl status_bar "$udid" clear 2>/dev/null || true
-    rm -rf "$raw"
+    [[ -n "${CAPTURE_RAW:-}" ]] || rm -rf "$raw"
 }
 trap restore EXIT
 
@@ -53,15 +54,17 @@ half() {  # from, name
 }
 
 # What takes a finger, through the UI tests. They build and install the app, so this comes first.
-BIRDJOURNAL_SIMULATOR="$name" TEST_RUNNER_BIRDJOURNAL_FEEL_SHOTS="$raw" BIRDJOURNAL_QUIET_MINUTES=10 \
-    "$repo_root/scripts/build-and-test.sh" \
-    -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheSetsMenuAndThePeek \
-    -only-testing:BirdJournalUITests/FeelCaptureUITests/testAModePartWayThroughItsFade \
-    -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheRevealWithUndoOpen
+if [[ -z "${LIFT_ONLY:-}" ]]; then
+    BIRDJOURNAL_SIMULATOR="$name" TEST_RUNNER_BIRDJOURNAL_FEEL_SHOTS="$raw" BIRDJOURNAL_QUIET_MINUTES=10 \
+        "$repo_root/scripts/build-and-test.sh" \
+        -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheSetsMenuAndThePeek \
+        -only-testing:BirdJournalUITests/FeelCaptureUITests/testAModePartWayThroughItsFade \
+        -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheRevealWithUndoOpen
+    for shot in menu peek mode-fade reveal-undo; do
+        [[ -f "$raw/$shot.png" ]] && half "$raw/$shot.png" "$shot-dark"
+    done
+fi
 xcrun simctl boot "$udid" 2>/dev/null || true
-for shot in menu peek mode-fade reveal-undo; do
-    [[ -f "$raw/$shot.png" ]] && half "$raw/$shot.png" "$shot-dark"
-done
 
 # The Lift, from a recording: the board, the page growing out of the tile, a swipe, and back to the tile.
 xcrun simctl io "$udid" recordVideo --codec=h264 --force "$raw/lift.mp4" & recording=$!
@@ -78,6 +81,8 @@ if [[ -n "${LIFT_FRAMES:-}" ]]; then
         index=$((index + 1))
     done
 fi
+
+[[ -z "${LIFT_ONLY:-}" ]] || exit 0
 
 xcrun simctl privacy "$udid" grant location "$bundle"
 xcrun simctl privacy "$udid" grant microphone "$bundle"

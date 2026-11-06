@@ -3,11 +3,10 @@ import SwiftUI
 /// What the app's haptics mean (issue #150, audit R3), named here and nowhere else, and played only through `.haptic(_:trigger:)`,
 /// so they stay consistent. They all go through `sensoryFeedback`, so the system's haptics setting turns them off.
 ///
-/// A phone-microphone run keeps the audio session recording, and `AVAudioSession` silences haptics while it records unless
-/// `setAllowHapticsAndSystemSoundsDuringRecording` is on, which it isn't. So on such a run a stitch's ticks and a reaction are
-/// expected to be silent, and can't reach the microphone: DECISIONS.md, and it's for a phone check.
+/// A phone-microphone run keeps the audio session recording, and `AVAudioSession` would silence these during it, so
+/// `PhoneMicAudioSource` allows them. Whether they then reach the microphone as false detections is for a phone: DECISIONS.md.
 enum Haptic: String, CaseIterable, Sendable {
-    /// Touching or opening a patch.
+    /// A patch's page opening. The touch itself is the press's: a touch can also be the start of a scroll.
     case lift
     /// A patch going over to its paper card, or back.
     case turn

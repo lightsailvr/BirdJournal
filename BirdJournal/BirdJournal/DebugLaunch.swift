@@ -162,8 +162,8 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    // As an add would have, when the birder is signed in and sharing.
-                    findOutbox.added(newest.identifier, isNewPatch: true)
+                    // As an add would have, with the fake signed in and sharing. Never a real account's real find.
+                    if defaults.string(forKey: "fakeAccount") != nil { findOutbox.added(newest.identifier, isNewPatch: true) }
                     run.showRevealForScreenshot(of: newest, placement: CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier) ?? .uncharted)
                 }
             case "card", "card-back":

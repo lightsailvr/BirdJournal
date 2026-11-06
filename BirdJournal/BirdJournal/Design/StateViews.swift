@@ -108,12 +108,12 @@ struct HowThisWorks: View {
 struct InlineError: View {
     let text: String
     /// Plays the error haptic as it appears: for something the birder just tried, not a page that couldn't load.
-    let felt: Bool
+    let afterAction: Bool
     @State private var appeared = false
 
-    init(_ text: String, felt: Bool = false) {
+    init(_ text: String, afterAction: Bool = false) {
         self.text = text
-        self.felt = felt
+        self.afterAction = afterAction
     }
 
     var body: some View {
@@ -127,6 +127,6 @@ struct InlineError: View {
         .foregroundStyle(Color.alert)
         .accessibilityElement(children: .combine)
         .haptic(.error, trigger: appeared ? text : nil)
-        .onAppear { appeared = felt }
+        .onAppear { appeared = afterAction }
     }
 }

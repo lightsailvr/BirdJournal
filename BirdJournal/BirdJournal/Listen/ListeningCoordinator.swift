@@ -256,13 +256,9 @@ final class ListeningCoordinator {
 
     func isAdded(_ candidate: Candidate) -> Bool { sightings.isAdded(candidate.species) }
 
-    /// What Start's and Stop's haptic follows. It goes on as the run starts. It goes off at Stop on the glasses, but for a phone
-    /// run only once the microphone is let go, since a phone that's recording plays no haptics (`Haptic`).
-    var isRunFelt: Bool {
-        switch state {
-        case .stopping: runSource == .phone
-        default: state.isActive
-        }
+    /// What Start's and Stop's haptic follows: on as the run starts, off the moment it's told to stop.
+    var isRunGoing: Bool {
+        state.isActive && state != .stopping
     }
 
     /// The last run ended by failing.

@@ -31,6 +31,9 @@ nonisolated final class PhoneMicAudioSource: AudioSource {
         try await Task.detached(priority: .userInitiated) { [self] in
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.allowBluetoothA2DP, .defaultToSpeaker])
+            // The app's haptics during a run. If they raise false detections, take this out and they stay silent on a phone-mic
+            // run, as the system's default has them (DECISIONS.md, issue #150).
+            try? audioSession.setAllowHapticsAndSystemSoundsDuringRecording(true)
             try audioSession.setActive(true)
 
             let audioEngine = AVAudioEngine()

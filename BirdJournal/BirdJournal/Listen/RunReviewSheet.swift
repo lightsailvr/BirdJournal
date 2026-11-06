@@ -10,10 +10,11 @@ struct RunReviewSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openCollection) private var openCollection
     @State private var reviewing: Candidate?
+    @State private var path = NavigationPath()
     @Environment(CollectionStore.self) private var collectionStore
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(run.summary)
@@ -61,13 +62,14 @@ struct RunReviewSheet: View {
                 }
             }
         }
+        .patchStack { path.append($0) }
         .patchReveal()
         // Dragged away from under the page, it would have to start again over the tabs; Keep listening closes it first.
         .interactiveDismissDisabled(run.reveal != nil)
         // The patch tapped on a reveal over this sheet: the review closes, as Done does, so the collection shows.
-        .environment(\.openCollection) {
+        .environment(\.openCollection) { board in
             dismiss()
-            openCollection()
+            openCollection(board)
         }
         .onDisappear { run.dismissEnded() }
     }

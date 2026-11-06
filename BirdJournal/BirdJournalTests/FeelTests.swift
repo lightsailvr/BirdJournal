@@ -67,6 +67,17 @@ struct FeelTests {
         #expect(arts.allSatisfy { PatchTextures.cached($0, size: .thumbnail) != nil })
     }
 
+    @Test("a page opening over its tile starts from the tile's picture, not a blank")
+    func pageStartsFromTheTile() async throws {
+        let art = try #require(try arts(1).first)
+        #expect(PatchTextures.cachedOrSmaller(art, size: .full) == nil)
+        let tile = await PatchTextures.load(art, size: .thumbnail)
+        #expect(PatchTextures.cachedOrSmaller(art, size: .full) === tile)
+        let page = await PatchTextures.load(art, size: .full)
+        #expect(PatchTextures.cachedOrSmaller(art, size: .full) === page)
+        #expect(PatchTextures.cachedOrSmaller(art, size: .thumbnail) === tile, "and a tile never takes the larger one")
+    }
+
     @Test("leaving a board stops decoding its patches ahead")
     func stopsDecodingAhead() async throws {
         let arts = try arts(30)
@@ -88,15 +99,15 @@ struct FeelTests {
         await ahead.value
     }
 
-    @Test("Start's and Stop's haptic follows the run, and a phone run only lets go when its microphone has")
+    @Test("Start's and Stop's haptic follows the run")
     func runFelt() async throws {
         let harness = try ScreenAccessibilityTests.Harness()
-        #expect(!harness.run.isRunFelt)
+        #expect(!harness.run.isRunGoing)
         await harness.run.start()
         #expect(harness.run.state.isActive)
-        #expect(harness.run.isRunFelt)
+        #expect(harness.run.isRunGoing)
         await harness.run.stop()
-        #expect(!harness.run.isRunFelt)
+        #expect(!harness.run.isRunGoing)
         #expect(!harness.run.hasFailed)
     }
 

@@ -68,7 +68,7 @@ struct CircleFeedSection: View {
                 }
             }
             if let reactionError {
-                InlineError(reactionError, felt: true)
+                InlineError(reactionError, afterAction: true)
             }
             if feed.nextCursor != nil {
                 Button {

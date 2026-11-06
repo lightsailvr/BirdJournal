@@ -111,6 +111,11 @@ enum PatchTextures {
         cache.object(forKey: key(art, size))
     }
 
+    /// The pictures at `size`, or else the tile's smaller ones, which stand in until those arrive.
+    static func cachedOrSmaller(_ art: PatchArt, size: Size) -> Loaded? {
+        cached(art, size: size) ?? (size == .full ? cached(art, size: .thumbnail) : nil)
+    }
+
     /// - Parameter priority: `.low` waits behind every patch on screen for its turn.
     static func load(_ art: PatchArt, size: Size, priority: Operation.QueuePriority = .normal) async -> Loaded? {
         if let hit = cached(art, size: size) { return hit }

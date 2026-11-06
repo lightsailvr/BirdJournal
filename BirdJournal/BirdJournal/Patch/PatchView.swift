@@ -19,7 +19,8 @@ struct PatchView: View {
     let tag: String?
     /// The painting is on its way (`PatchArtState.beingSewn`); it fills in when it arrives.
     let beingSewn: Bool
-    /// What's already decoded shows at once: a patch scrolled back to doesn't flash its blank for a frame.
+    /// What's already decoded shows at once: a patch scrolled back to doesn't flash its blank for a frame, and one growing out of
+    /// its tile doesn't turn blank on the way, as it shows the tile's picture until its own arrives.
     @State private var loaded: PatchTextures.Loaded?
     /// `art` couldn't be read. A file that won't decode is a missing painting, not a patch left loading.
     @State private var failed = false
@@ -33,7 +34,7 @@ struct PatchView: View {
         self.size = size
         self.tag = tag
         beingSewn = false
-        _loaded = State(initialValue: decoded ?? art.flatMap { PatchTextures.cached($0, size: size) })
+        _loaded = State(initialValue: decoded ?? art.flatMap { PatchTextures.cachedOrSmaller($0, size: size) })
     }
 
     /// A found bird's patch, however its painting stands: `tag` is its name, for the blank's paper tag.
@@ -44,7 +45,7 @@ struct PatchView: View {
         self.size = size
         self.tag = tag
         beingSewn = state == .beingSewn
-        _loaded = State(initialValue: decoded ?? state.art.flatMap { PatchTextures.cached($0, size: size) })
+        _loaded = State(initialValue: decoded ?? state.art.flatMap { PatchTextures.cachedOrSmaller($0, size: size) })
     }
 
     private var sewnTo: Float {

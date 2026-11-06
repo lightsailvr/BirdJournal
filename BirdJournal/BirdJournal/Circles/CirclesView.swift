@@ -276,7 +276,7 @@ struct NewCircleSheet: View {
                     Text("Up to 40 characters. Everyone in the Guild sees it.")
                 }
                 if let error {
-                    Section { InlineError(error) }
+                    Section { InlineError(error, afterAction: true) }
                 }
             }
             .navigationTitle("New Guild")

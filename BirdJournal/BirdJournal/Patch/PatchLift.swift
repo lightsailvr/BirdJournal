@@ -21,9 +21,11 @@ extension EnvironmentValues {
 }
 
 extension View {
-    /// Gives a navigation stack its own namespace: the same tile id on two tabs mustn't compete.
-    func patchLiftScope() -> some View {
-        modifier(PatchLiftScope())
+    /// Gives a navigation stack what its patch tiles need: its own namespace, since the same tile id on two stacks mustn't compete,
+    /// and the way to put a route on it. Every stack that can reach a tile needs this, sheets included, or a tile's peek would push
+    /// onto the stack behind the sheet.
+    func patchStack(push: @escaping @MainActor (Route) -> Void) -> some View {
+        modifier(PatchLiftScope()).environment(\.pushRoute, push)
     }
 
     /// The tile `id`'s picture, which its page grows out of.

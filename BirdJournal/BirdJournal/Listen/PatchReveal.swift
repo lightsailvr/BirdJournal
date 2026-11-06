@@ -352,7 +352,7 @@ private struct NewPatchPage: View {
         .onAppear { appeared = true }
         // The Guilds may not have been read yet this launch: the Guilds tab hasn't been opened.
         .task {
-            if account.isSignedIn, circles.circles.isEmpty { await circles.refresh() }
+            if account.isSignedIn, circles.circles.isEmpty, circles.listState != .loaded { await circles.refresh() }
         }
         .sheet(item: $sharing) { sighting in
             ShareCardView(sighting: sighting)
@@ -380,7 +380,7 @@ private struct NewPatchPage: View {
         } else {
             Button {
                 run.dismissReveal()
-                openCollection()
+                openCollection(reveal.addition.placement.setID.map(BoardChoice.set(id:)) ?? .uncharted)
             } label: {
                 picture.contentShape(Rectangle())
             }

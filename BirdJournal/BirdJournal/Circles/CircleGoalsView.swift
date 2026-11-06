@@ -60,7 +60,7 @@ struct CircleGoalsSection: View {
                 }
                 #endif
                 if let error {
-                    InlineError(error)
+                    InlineError(error, afterAction: true)
                 }
             } else {
                 GuildPlaceholder(rows: 1)

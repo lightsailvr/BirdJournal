@@ -524,7 +524,7 @@ private struct SetProgressList: View {
     }
 }
 
-/// A set's progress as a bar, the one place that draws it for a set's rows and the board's header. `ThreadProgress` replaces it.
+/// A set's progress as a bar, on the Species list's rows and under a board's name. `ThreadProgress` replaces it.
 struct SetProgressBar: View {
     let progress: SetProgress
 
