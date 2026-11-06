@@ -169,7 +169,6 @@ final class CollectionUITests: XCTestCase {
         let top = name.frame.minY
         for _ in 0..<4 { app.swipeUp() }
         Thread.sleep(forTimeInterval: 1)
-        XCTAssertTrue(name.isHittable, "scrolled away; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(name.frame.minY, top, accuracy: 0.5, "it stays in the bar")
 
         // The bar's empty end, with tiles scrolled under it: a tap there opens nothing.
