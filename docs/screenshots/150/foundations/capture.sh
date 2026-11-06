@@ -38,6 +38,9 @@ bundle="com.matthewcelia.mybirdjournal"
 clip="$repo_root/fixtures/clips/birdnet-example-soundscape.wav"
 slow="${CAPTURE_SLOW:-0}"
 
+# Whatever stops this, the simulator goes back to its defaults: left at ax5, it fails UI tests that have nothing to do with it.
+trap 'xcrun simctl ui "$udid" content_size large; xcrun simctl ui "$udid" appearance dark; xcrun simctl status_bar "$udid" clear 2>/dev/null || true' EXIT
+
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl install "$udid" "$app"
 xcrun simctl privacy "$udid" grant location "$bundle"
@@ -114,7 +117,4 @@ shot profile-ax5     9 "${seeded[@]}" -autoScreen profile
 shot sightings-ax5   9 "${seeded[@]}" -autoScreen sightings
 shot guild-ax5      10 "${guilds[@]}" -autoScreen circle
 
-xcrun simctl ui "$udid" content_size large
-xcrun simctl ui "$udid" appearance dark
 xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-xcrun simctl status_bar "$udid" clear 2>/dev/null || true

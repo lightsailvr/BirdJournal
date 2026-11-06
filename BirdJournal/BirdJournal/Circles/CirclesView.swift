@@ -44,8 +44,8 @@ struct CirclesView: View {
         // Each card's members and this month's goal: read once per Guild, then kept by the store.
         .task(id: circles.circles.map(\.id)) {
             for circle in circles.circles {
-                if circles.details[circle.id] == nil { try? await circles.loadDetail(id: circle.id) }
-                if circles.goals[circle.id] == nil { await circles.loadGoals(circleID: circle.id) }
+                if circles.needsDetail(circle.id) { try? await circles.loadDetail(id: circle.id) }
+                if circles.needsGoals(circle.id) { await circles.loadGoals(circleID: circle.id) }
             }
         }
         // A notifications explanation that never got on screen gets one more chance (issue #107).
@@ -99,8 +99,7 @@ struct CirclesView: View {
     private var list: some View {
         switch circles.listState {
         case .idle, .loading where circles.circles.isEmpty:
-            Section { ProgressView().frame(maxWidth: .infinity) }
-                .listRowBackground(Color.clear)
+            Section { GuildPlaceholder(rows: 2) }
         case .failed(let message) where circles.circles.isEmpty:
             // Offline or the server out of reach (issue #119): say so plainly, with what still works and Try again.
             Section {

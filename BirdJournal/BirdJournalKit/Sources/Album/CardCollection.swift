@@ -267,3 +267,28 @@ public struct CollectionIntro {
         defaults.set(true, forKey: Self.defaultsKey)
     }
 }
+
+/// One collection kept between readings (issue #150): building it places every sighting in its set's polygons, so the app
+/// builds it when the sightings or the sets change, not whenever a screen draws. `update` compares what it's given with what
+/// the collection was built from, so whoever feeds it can do so on any save.
+public struct CardCollectionCache: Sendable {
+    public private(set) var collection: CardCollection
+    private var entries: [CardCollection.Entry]
+    private var sets: [CardSet]
+
+    public init(_ entries: [CardCollection.Entry], sets: [CardSet]) {
+        self.entries = entries
+        self.sets = sets
+        collection = CardCollection(entries, sets: sets)
+    }
+
+    /// Builds again if the sightings or the sets differ from the last time, and says whether it did.
+    @discardableResult
+    public mutating func update(_ entries: [CardCollection.Entry], sets: [CardSet]) -> Bool {
+        guard entries != self.entries || sets != self.sets else { return false }
+        self.entries = entries
+        self.sets = sets
+        collection = CardCollection(entries, sets: sets)
+        return true
+    }
+}

@@ -26,7 +26,7 @@ struct JoinCircleView: View {
             } else if let error {
                 Section { intro(title: "Can't open this invitation", text: error) }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder(rows: 1) }
             }
             if let message = account.errorMessage, !account.isSignedIn {
                 Section { InlineError(message) }

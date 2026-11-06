@@ -7,6 +7,7 @@ import SwiftUI
 /// A swipe always lands on the next patch's face, even from a paper card. Opening a patch shows the patch.
 struct PatchDetailView: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var allSightings: [Sighting]
     /// The patch showing: the one opened, until a swipe.
     @State private var current: CardCollection.Patch.Key
@@ -21,12 +22,14 @@ struct PatchDetailView: View {
     }
 
     var body: some View {
-        let order = library.collection(of: allSightings).browsingOrder
+        let order = collectionStore.collection.browsingOrder
         if let index = order.firstIndex(where: { $0.id == current }) {
+            // Every page takes its own from one table: filtering the album per patch is what made this page slow (issue #150).
+            let album = CardCollection.Patch.table(of: allSightings)
             TabView(selection: $current) {
                 ForEach(order) { patch in
                     PatchPage(
-                        patch: patch, sightings: patch.ownSightings(among: allSightings),
+                        patch: patch, sightings: patch.ownSightings(in: album),
                         showsCard: Binding(get: { turned == patch.id }, set: { turned = $0 ? patch.id : nil }),
                         previous: index > 0 ? { go(to: order[index - 1].id) } : nil,
                         next: index + 1 < order.count ? { go(to: order[index + 1].id) } : nil

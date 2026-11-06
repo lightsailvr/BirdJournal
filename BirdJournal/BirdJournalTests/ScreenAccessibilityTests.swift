@@ -24,6 +24,7 @@ struct ScreenAccessibilityTests {
         let album: ModelContainer
         let frames: FrameStore
         let library: PackLibrary
+        let collectionStore: CollectionStore
         let edits: JournalEdits
         let account: AccountSession
         let circles: CircleStore
@@ -43,6 +44,7 @@ struct ScreenAccessibilityTests {
             let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)"))
             if let index { try storage.cacheIndex(index) }
             library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, indexURL: PackIndex.defaultURL, session: session, availableCapacity: { .max })
+            collectionStore = CollectionStore(container: album, sets: { [library] in library.cardSets })
             edits = JournalEdits(container: album, frames: frames)
             account = FakeAccount.session(signedIn: true)
             let client = FakeCircleClient(seeded: true)
@@ -76,6 +78,7 @@ struct ScreenAccessibilityTests {
             .environment(edits)
             .environment(account)
             .environment(circles)
+            .environment(collectionStore)
             .environment(outbox)
             .environment(pushes)
             .environment(places)

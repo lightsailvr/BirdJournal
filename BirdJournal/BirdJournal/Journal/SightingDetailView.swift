@@ -15,6 +15,7 @@ struct SightingDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(PlaceNames.self) private var places
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(JournalEdits.self) private var edits
     let id: PersistentIdentifier
     @State private var note = ""
@@ -34,9 +35,7 @@ struct SightingDetailView: View {
     /// What removing the sighting does to its patch (issue #132): the last sighting of the bird in its place unpicks
     /// the patch, and the dialog says so; otherwise the patch keeps the others.
     private func removalMessage(for sighting: Sighting, commonName: String) -> String {
-        let speciesID = sighting.speciesID
-        let ofSpecies = (try? context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))) ?? []
-        let collection = library.collection(of: ofSpecies)
+        let collection = collectionStore.collection
         guard collection.isLastSighting(of: sighting.identifier), let patch = collection.patch(of: sighting.identifier) else {
             return "Its patch keeps your other sightings. You can undo this for a few seconds afterwards."
         }

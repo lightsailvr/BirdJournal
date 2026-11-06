@@ -1,6 +1,5 @@
 import Album
 import Pack
-import SwiftData
 import SwiftUI
 
 /// One set's page (issue #54): its species in collector order, each with its number; a species with a patch in the set
@@ -10,13 +9,13 @@ import SwiftUI
 /// Works for a set whose pack isn't downloaded: the names come from the set definition.
 struct SetView: View {
     @Environment(PackLibrary.self) private var library
-    @Query private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     let id: String
     @State private var query = ""
 
     var body: some View {
         if let set = library.sets.first(where: { $0.id == id }) {
-            let collection = library.collection(of: sightings)
+            let collection = collectionStore.collection
             let collected = collection.collected(in: set.id)
             let progress = collection.progress(of: set.id)
             ScrollView {
@@ -39,7 +38,7 @@ struct SetView: View {
                     if query.isEmpty {
                         SectionTitle(progress.stillOutThereText, top: 20)
                     }
-                    VStack(spacing: 0) {
+                    LazyVStack(spacing: 0) {
                         ForEach(shown, id: \.element.scientificName) { offset, species in
                             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: species.commonName)) {
                                 SetSpeciesRow(

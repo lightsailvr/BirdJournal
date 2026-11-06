@@ -63,7 +63,7 @@ struct CircleGoalsSection: View {
                     InlineError(error)
                 }
             } else {
-                ProgressView().frame(maxWidth: .infinity)
+                GuildPlaceholder(rows: 1)
             }
         } header: {
             Text("Goals")

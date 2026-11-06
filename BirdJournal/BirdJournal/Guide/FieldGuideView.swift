@@ -1,6 +1,5 @@
 import Album
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The Atlas tab (issue #28's Field Guide, reskinned as the Atlas in #118, design guide pages 4 and 14): the regional
@@ -10,7 +9,7 @@ import SwiftUI
 /// never birds: a bird joins the collection only with a sighting.
 struct FieldGuideView: View {
     @Environment(PackLibrary.self) private var library
-    @Query private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     @State private var query = ""
 
     /// Every species across the packs, bundled first, each once.
@@ -25,7 +24,7 @@ struct FieldGuideView: View {
         return entries
     }
 
-    private var shown: [(pack: SpeciesPack, species: PackSpecies)] {
+    private func shown(among entries: [(pack: SpeciesPack, species: PackSpecies)]) -> [(pack: SpeciesPack, species: PackSpecies)] {
         entries
             .filter { NameSearch.matches(query: query, in: [$0.species.commonName, $0.species.scientificName]) }
             .sorted { $0.species.commonName.localizedCaseInsensitiveCompare($1.species.commonName) == .orderedAscending }
@@ -38,8 +37,10 @@ struct FieldGuideView: View {
     }
 
     var body: some View {
-        let collection = library.collection(of: sightings)
+        let collection = collectionStore.collection
         let sets = shownSets
+        let entries = entries
+        let shown = shown(among: entries)
         let onPhone = sets.filter { library.pack(id: $0.id) != nil }
         let elsewhere = sets.filter { library.pack(id: $0.id) == nil }
         ScrollViewReader { proxy in
@@ -49,7 +50,7 @@ struct FieldGuideView: View {
                     OfflineNotice(hasIndex: library.index != nil) { Task { await library.refreshIndex() } }
                         .padding(.top, 8)
                 }
-                VStack(spacing: 16) {
+                LazyVStack(spacing: 16) {
                     ForEach(onPhone) { set in
                         SetTile(set: set, progress: collection.progress(of: set.id))
                     }
@@ -58,7 +59,7 @@ struct FieldGuideView: View {
                 if !elsewhere.isEmpty {
                     SectionTitle("Somewhere new")
                         .id("atlas-new")
-                    VStack(spacing: 16) {
+                    LazyVStack(spacing: 16) {
                         ForEach(elsewhere) { set in
                             SetTile(set: set, progress: collection.progress(of: set.id))
                         }
@@ -101,7 +102,7 @@ struct FieldGuideView: View {
                     }
                 } else {
                     if !query.isEmpty { SectionTitle("Birds") }
-                    VStack(spacing: 0) {
+                    LazyVStack(spacing: 0) {
                         ForEach(shown, id: \.species.scientificName) { entry in
                             NavigationLink(value: Route.species(scientificName: entry.species.scientificName, commonName: entry.species.commonName)) {
                                 GuideRow(pack: entry.pack, species: entry.species)

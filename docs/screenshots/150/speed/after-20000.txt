@@ -1,0 +1,23 @@
+SPEED album-fetch ms=246
+SPEED album sightings=20007 launch-builds=1 launch-build-ms=619
+SPEED guilds-at-launch circles=2 feeds=1
+SPEED engine-load ms=220
+SPEED settle worst-frame-ms=16 over-budget-ms=0 frames=246 builds=0 build-ms=0 cpu-ms=542
+SPEED idle-listen worst-frame-ms=16 over-budget-ms=0 frames=182 builds=0 build-ms=0 cpu-ms=26
+SPEED collection-tab worst-frame-ms=1708 over-budget-ms=1691 frames=78 builds=0 build-ms=0 cpu-ms=2312
+SPEED sightings-mode worst-frame-ms=855 over-budget-ms=838 frames=140 builds=0 build-ms=0 cpu-ms=1054
+SPEED species-mode worst-frame-ms=925 over-budget-ms=941 frames=124 builds=0 build-ms=0 cpu-ms=1425
+SPEED cards-mode worst-frame-ms=740 over-budget-ms=723 frames=78 builds=0 build-ms=0 cpu-ms=744
+SPEED patch-page worst-frame-ms=1388 over-budget-ms=1371 frames=104 builds=0 build-ms=0 cpu-ms=1855
+SPEED patch-back worst-frame-ms=1039 over-budget-ms=1073 frames=56 builds=0 build-ms=0 cpu-ms=1132
+SPEED add-sighting worst-frame-ms=1550 over-budget-ms=2388 frames=3 builds=1 build-ms=604 cpu-ms=3543
+SPEED atlas-tab worst-frame-ms=777 over-budget-ms=760 frames=133 builds=0 build-ms=0 cpu-ms=979
+SPEED set-page worst-frame-ms=87 over-budget-ms=70 frames=187 builds=0 build-ms=0 cpu-ms=246
+SPEED set-back worst-frame-ms=61 over-budget-ms=44 frames=122 builds=0 build-ms=0 cpu-ms=165
+SPEED listen-tab worst-frame-ms=93 over-budget-ms=76 frames=176 builds=0 build-ms=0 cpu-ms=140
+SPEED guild-list content-ms=0
+SPEED guild-page content-ms=1
+SPEED start-to-listening-1 worst-frame-ms=98 over-budget-ms=81 frames=2 builds=0 build-ms=0 cpu-ms=149 ms=102
+SPEED listening-30s worst-frame-ms=35 over-budget-ms=36 frames=1798 builds=0 build-ms=0 cpu-ms=9790
+SPEED start-to-listening-2 worst-frame-ms=16 over-budget-ms=0 frames=1 builds=0 build-ms=0 cpu-ms=55 ms=52
+SPEED done

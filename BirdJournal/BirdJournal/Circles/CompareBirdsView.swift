@@ -66,8 +66,10 @@ struct CompareBirdsView: View {
     @Query private var sightings: [Sighting]
     let friendID: String
     let friendName: String
-    @State private var friend: FriendBirds?
     @State private var error: String?
+
+    /// What was last read of the friend, drawn at once and refreshed in place.
+    private var friend: FriendBirds? { circles.friendBirds[friendID] }
 
     private var firstName: String { friendName.split(separator: " ").first.map(String.init) ?? friendName }
 
@@ -102,7 +104,7 @@ struct CompareBirdsView: View {
                     Button("Try again") { Task { await load() } }
                 }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder(rows: 4) }
             }
         }
         .navigationTitle("You and \(firstName)")
@@ -139,7 +141,7 @@ struct CompareBirdsView: View {
 
     private func load() async {
         do {
-            friend = try await circles.compare(friendID: friendID)
+            try await circles.compare(friendID: friendID)
             error = nil
         } catch {
             self.error = CircleStore.message(for: error, doing: "compare your birds")

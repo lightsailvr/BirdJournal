@@ -18,6 +18,7 @@ struct JournalView: View {
         var id: Self { self }
     }
 
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
@@ -42,7 +43,7 @@ struct JournalView: View {
             if sightings.isEmpty {
                 EmptyJournal()
             } else {
-                let collection = library.collection(of: sightings)
+                let collection = collectionStore.collection
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                         Text(state.mode == .cards ? collection.summary : Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))

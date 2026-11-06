@@ -20,6 +20,9 @@ import UIKit
 /// - `-fakeLibraryPhoto YES`: "Attach a photo" on a sighting hands over a generated picture instead of opening the system
 ///   picker, which XCUITest can't drive.
 /// - `-seedBoard YES` adds one sighting each of the bundled pack's first 30 birds in Griffith Park: a board that scrolls.
+/// - `-seedLarge <n>` fills the album to n sightings over three years, for profiling (issue #150). With `-albumFile <name>` it
+///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and
+///   prints what each cost (`SpeedTour`).
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
 ///   the species' patches (issue #134).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
@@ -52,7 +55,8 @@ import UIKit
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
 ///   opens; `-fakeGlasses unregistered|noneLinked|notConnected` gives the Listen page those glasses states;
-///   `-fakeCircles offline` makes the Guilds unreachable; `-autoScrollTo guild-settings` scrolls a Guild's page to its
+///   `-fakeCircles offline` makes the Guilds unreachable; `-fakeCircleLatency <seconds>` slows each of the fake's reads, and
+///   `-circleCacheFile <name>` gives its store a cache in tmp to relaunch over (issue #150); `-autoScrollTo guild-settings` scrolls a Guild's page to its
 ///   settings (issue #119's screenshots of the states).
 /// - `-autoScreen glasses-run` with `-autoGlassesListening <wav>` pairs the mock glasses and starts a real glasses run on the
 ///   Listen tab, the file standing in for the stream; `-autoLensAdd "House Finch,Dark-eyed Junco"` adds those birds on the
@@ -85,6 +89,16 @@ struct DebugLaunch: ViewModifier {
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
+            let large = defaults.integer(forKey: "seedLarge")
+            if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
+            if defaults.bool(forKey: "speedTour") {
+                let tour = SpeedTour(
+                    context: context, run: run, library: library, circles: circles,
+                    tab: $tab, journalMode: $journalMode, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath
+                )
+                Task { await tour.walk() }
+                return
+            }
             if let id = defaults.string(forKey: "autoDownloadPack") {
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -144,7 +158,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted)
+                    run.showRevealForScreenshot(of: newest, placement: CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier) ?? .uncharted)
                 }
             case "card", "card-back":
                 tab = .journal
@@ -152,7 +166,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    let placement = library.collection(of: all).placement(of: newest.identifier)
+                    let placement = CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier)
                     journalPath.append(Route.patch(CardCollection.Patch.Key(speciesID: newest.speciesID, setID: placement?.setID)))
                 }
                 if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }
@@ -463,6 +477,41 @@ enum DebugSeeds {
             context.insert(Sighting(speciesID: species.birdnetLabel, confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
         }
         try? context.save()
+    }
+
+    /// A big album for profiling (issue #150): `count` sightings of the bundled pack's birds over three years, most of them in
+    /// Los Angeles, some in San Diego and some far from every set, in a repeatable order. Does nothing to an album that's
+    /// already that big.
+    static func seedLarge(context: ModelContext, count: Int) {
+        let existing = (try? context.fetchCount(FetchDescriptor<Sighting>())) ?? 0
+        guard existing < count else { return }
+        let labels = ((try? SpeciesPack.bundled().species) ?? []).map(\.birdnetLabel)
+        guard !labels.isEmpty else { return }
+        var random = SplitMix(state: 150)
+        for index in existing..<count {
+            let label = labels[Int(random.next() % UInt64(labels.count))]
+            let jitter = { (random: inout SplitMix) in Double(random.next() % 1000) / 1000 * 0.1 - 0.05 }
+            let location: Coordinate? = switch index % 10 {
+            case 0...6: Coordinate(latitude: 34.1365 + jitter(&random), longitude: -118.2942 + jitter(&random), accuracy: 15)
+            case 7, 8: Coordinate(latitude: 32.7341 + jitter(&random), longitude: -117.1446 + jitter(&random), accuracy: 15)
+            default: index % 20 == 9 ? nil : Coordinate(latitude: 39.5 + jitter(&random), longitude: -116.9 + jitter(&random), accuracy: 15)
+            }
+            let hoursAgo = Double(random.next() % (3 * 365 * 24))
+            context.insert(Sighting(speciesID: label, confirmedAt: Date.now.addingTimeInterval(-hoursAgo * 3600), location: location, soundConfidence: 0.7, source: .phone))
+        }
+        try? context.save()
+    }
+
+    private struct SplitMix {
+        var state: UInt64
+
+        mutating func next() -> UInt64 {
+            state &+= 0x9E37_79B9_7F4A_7C15
+            var z = state
+            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+            return z ^ (z >> 31)
+        }
     }
 
     /// A stand-in camera frame at the glasses stream's portrait size (360 × 640, DECISIONS.md): a green field with
