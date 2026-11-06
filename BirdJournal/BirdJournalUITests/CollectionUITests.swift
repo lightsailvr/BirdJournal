@@ -53,7 +53,9 @@ final class CollectionUITests: XCTestCase {
     private func checkTheMagnifier(_ app: XCUIApplication) throws {
         let modes = app.segmentedControls["collection-mode"]
         XCTAssertTrue(modes.waitForExistence(timeout: 15))
-        let top = modes.frame.minY
+        Thread.sleep(forTimeInterval: 2)
+        let frame = modes.frame
+        let before = pickerWords(in: app.screenshot(), at: frame)
         let search = app.navigationBars["Collection"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search'")).firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 10), "no magnifier: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.searchFields.firstMatch.exists, "no field until asked for")
@@ -64,8 +66,7 @@ final class CollectionUITests: XCTestCase {
         let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch'")).firstMatch
         XCTAssertTrue(finch.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch.exists, "the search kept only the match")
-        // The open field stands 8 pt taller than the title's row, and only when asked for. No mode change moves it.
-        XCTAssertEqual(modes.frame.minY, top + 8, accuracy: 2, "the picker moved")
+        XCTAssertGreaterThan(correlation(before, pickerWords(in: app.screenshot(), at: frame)), 0.8, "the picker moved")
     }
 
     @MainActor

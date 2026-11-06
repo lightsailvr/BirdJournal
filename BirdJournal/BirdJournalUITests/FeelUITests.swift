@@ -269,31 +269,9 @@ final class FeelUITests: XCTestCase {
         XCTAssertTrue(modes.buttons["Sightings"].isSelected)
     }
 
-    /// A column of the picker's third segment, which stays unselected going from Patches to Sightings: its words, as light and dark
-    /// against the mean, so a surface fading behind them doesn't count and a picker moving does.
-    @MainActor
-    private func wordsOfTheThirdSegment(in screenshot: XCUIScreenshot, at frame: CGRect) -> [Double] {
-        let image = screenshot.image
-        let scale = image.scale
-        let box = CGRect(x: (frame.minX + frame.width * 0.72) * scale, y: frame.minY * scale, width: frame.width * 0.22 * scale, height: frame.height * scale)
-        guard let crop = image.cgImage?.cropping(to: box) else { return [] }
-        let (width, height) = (48, 16)
-        var pixels = [UInt8](repeating: 0, count: width * height)
-        let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)
-        context?.draw(crop, in: CGRect(x: 0, y: 0, width: width, height: height))
-        let mean = pixels.reduce(0.0) { $0 + Double($1) } / Double(pixels.count)
-        return pixels.map { Double($0) - mean }
-    }
-
-    private func correlation(_ a: [Double], _ b: [Double]) -> Double {
-        guard a.count == b.count, !a.isEmpty else { return 0 }
-        let top = zip(a, b).reduce(0.0) { $0 + $1.0 * $1.1 }
-        let bottom = (a.reduce(0.0) { $0 + $1 * $1 } * b.reduce(0.0) { $0 + $1 * $1 }).squareRoot()
-        return bottom > 0 ? top / bottom : 0
-    }
-
     /// From a scrolled board to a mode with nothing scrolled, the picker stays where it is all the way through, sampled during the
-    /// change on a slowed fade, and rests in the same place in every mode.
+    /// change on a slowed fade, and rests in the same place in every mode. Measured on pixels: with a set's menu in the bar its
+    /// reported frame reads 8 pt lower than without one, though not a pixel of it has moved.
     @MainActor
     private func checkThePickerStaysStill(_ extra: [String], file: StaticString = #filePath, line: UInt = #line) throws {
         let app = launch(["-seedBoard", "YES", "-autoScreen", "cards", "-modeFadeSeconds", "5"] + extra)
@@ -303,26 +281,33 @@ final class FeelUITests: XCTestCase {
         for _ in 0..<3 { app.swipeUp() }
         Thread.sleep(forTimeInterval: 1.5)
         let frame = modes.frame
-        let rest = wordsOfTheThirdSegment(in: app.screenshot(), at: frame)
+        let rest = pickerWords(in: app.screenshot(), at: frame)
         modes.buttons["Sightings"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         var worst = 1.0
         for _ in 0..<12 {
-            worst = min(worst, correlation(rest, wordsOfTheThirdSegment(in: app.screenshot(), at: frame)))
+            worst = min(worst, correlation(rest, pickerWords(in: app.screenshot(), at: frame)))
         }
         XCTAssertGreaterThan(worst, 0.6, "the picker moved during the change", file: file, line: line)
         Thread.sleep(forTimeInterval: 5)
-        XCTAssertEqual(modes.frame.minY, frame.minY, accuracy: 0.5, "and rests elsewhere in Sightings", file: file, line: line)
+        XCTAssertGreaterThan(correlation(rest, pickerWords(in: app.screenshot(), at: frame)), 0.8, "and rests elsewhere in Sightings", file: file, line: line)
+        let onSightings = pickerWords(in: app.screenshot(), at: frame, segment: 0)
         modes.buttons["Species"].tap()
         Thread.sleep(forTimeInterval: 5.5)
-        XCTAssertEqual(modes.frame.minY, frame.minY, accuracy: 0.5, "and in Species", file: file, line: line)
+        XCTAssertGreaterThan(correlation(onSightings, pickerWords(in: app.screenshot(), at: frame, segment: 0)), 0.8, "and in Species", file: file, line: line)
         modes.buttons["Patches"].tap()
         Thread.sleep(forTimeInterval: 5.5)
-        XCTAssertEqual(modes.frame.minY, frame.minY, accuracy: 0.5, "and back on the scrolled board", file: file, line: line)
+        XCTAssertGreaterThan(correlation(rest, pickerWords(in: app.screenshot(), at: frame)), 0.8, "and back on the scrolled board", file: file, line: line)
     }
 
     @MainActor
     func testThePickerStaysStillThroughAModeChange() throws {
         try checkThePickerStaysStill([])
+    }
+
+    /// With a set's menu under it too, which leaves with the mode.
+    @MainActor
+    func testThePickerStaysStillWithASetsMenu() throws {
+        try checkThePickerStaysStill(["-seedJournal", "YES"])
     }
 
     @MainActor
@@ -635,4 +620,30 @@ final class FeelUITests: XCTestCase {
         waitForHaptic("reaction", app)
     }
     #endif
+}
+
+extension XCTestCase {
+    /// One segment of the picker, by default the third, which stays unselected going from Patches to Sightings: its words, as light and
+    /// dark against the mean, so a surface fading behind them doesn't count and a picker moving does.
+    @MainActor
+    func pickerWords(in screenshot: XCUIScreenshot, at frame: CGRect, segment: Int = 2) -> [Double] {
+        let image = screenshot.image
+        let scale = image.scale
+        let left = frame.minX + frame.width * (CGFloat(segment) / 3 + 0.05)
+        let box = CGRect(x: left * scale, y: frame.minY * scale, width: frame.width * 0.22 * scale, height: frame.height * scale)
+        guard let crop = image.cgImage?.cropping(to: box) else { return [] }
+        let (width, height) = (48, 16)
+        var pixels = [UInt8](repeating: 0, count: width * height)
+        let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)
+        context?.draw(crop, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let mean = pixels.reduce(0.0) { $0 + Double($1) } / Double(pixels.count)
+        return pixels.map { Double($0) - mean }
+    }
+
+    func correlation(_ a: [Double], _ b: [Double]) -> Double {
+        guard a.count == b.count, !a.isEmpty else { return 0 }
+        let top = zip(a, b).reduce(0.0) { $0 + $1.0 * $1.1 }
+        let bottom = (a.reduce(0.0) { $0 + $1 * $1 } * b.reduce(0.0) { $0 + $1 * $1 }).squareRoot()
+        return bottom > 0 ? top / bottom : 0
+    }
 }
