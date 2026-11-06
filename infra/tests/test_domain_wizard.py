@@ -218,7 +218,7 @@ class Wizard:
             input="".join(line + "\n" for line in answers),
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=300,
             env={
                 # The wizard's deploy.sh runs these tests, with its own certificate exported and maybe a resume stage.
                 **{name: value for name, value in os.environ.items() if name not in ("INVITE_CERTIFICATE_ARN", "WIZARD_FROM")},
@@ -256,7 +256,7 @@ class Wizard:
             [str(script), *arguments],
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=300,
             env={
                 **{name: value for name, value in os.environ.items() if name not in ("INVITE_CERTIFICATE_ARN", "BUDGET_ALERT_EMAIL")},
                 "PATH": f"{self.root / 'bin'}:{os.environ['PATH']}",

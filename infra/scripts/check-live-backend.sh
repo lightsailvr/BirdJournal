@@ -6,9 +6,9 @@ set -euo pipefail
 
 backend="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/backend/src/birdjournal_api"
 missing=""
-needs() { grep -q "$2" "$backend/$1" 2>/dev/null || missing="$missing $1 ($2)"; }
+needs() { grep -qF "$2" "$backend/$1" 2>/dev/null || missing="$missing $1 ($2)"; }
 needs goals_api.py "class GoalSpecies"
-needs reactions_api.py "editions: list\[str\]"
+needs reactions_api.py "editions: list[str]"
 
 if [[ -n "$missing" ]]; then
     echo "This checkout lacks backend code that's already live:$missing."
