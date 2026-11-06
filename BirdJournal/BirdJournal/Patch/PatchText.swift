@@ -52,10 +52,14 @@ enum PatchText {
         return numberLine(number, of: total, in: setName)
     }
 
-    /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set.
+    /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set. It says nothing about the
+    /// count until there's a second sighting: "No. 003", or "Uncharted" outside every set (issue #150).
     static func tileLine(_ patch: CardCollection.Patch) -> String {
-        guard case .numbered(_, _, _, let number, let total) = patch.placement else { return "seen \(patch.count)×" }
-        return "No. \(CardPlacement.paddedNumber(number, of: total)) · seen \(patch.count)×"
+        guard case .numbered(_, _, _, let number, let total) = patch.placement else {
+            return patch.count == 1 ? CardPlacement.unchartedTitle : "seen \(patch.count)×"
+        }
+        let numbered = "No. \(CardPlacement.paddedNumber(number, of: total))"
+        return patch.count == 1 ? numbered : "\(numbered) · seen \(patch.count)×"
     }
 
     /// Under the patch on its page: "Seen 8 times in Los Angeles · sewn Sep 14".

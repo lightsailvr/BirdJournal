@@ -18,6 +18,44 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["System"].isSelected)
     }
 
+    /// A list's rows sit on the raised surface, not the system's near-black (issue #150): measured from the screen, since
+    /// the colour is what a birder sees and the view tree can't say.
+    @MainActor
+    func testSettingsRowsAreOnTheRaisedSurface() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-appearance", "dark", "-autoScreen", "settings"]
+        app.launch()
+        // By its words: a section's header is a cell too, on the page's colour.
+        let row = app.cells.containing(NSPredicate(format: "label == 'Listen with'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        let shot = XCUIScreen.main.screenshot()
+        let cg = try XCTUnwrap(shot.image.cgImage)
+        let scale = shot.image.scale
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let context = try XCTUnwrap(CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        // Between "Listen with" and its value.
+        let (x, y) = ((row.frame.minX + row.frame.width * 0.38) * scale, row.frame.midY * scale)
+        context.draw(cg, in: CGRect(x: -x, y: y - CGFloat(cg.height) + 1, width: CGFloat(cg.width), height: CGFloat(cg.height)))
+        // The raised surface, #193A3D.
+        for (channel, expected) in zip(pixel.prefix(3), [UInt8(0x19), 0x3A, 0x3D]) {
+            XCTAssertLessThan(abs(Int(channel) - Int(expected)), 14, "the row is \(pixel.prefix(3))")
+        }
+    }
+
+    /// The long explanation is a tap away, not gone (issue #150).
+    @MainActor
+    func testHowThisWorksOpens() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-autoScreen", "settings"]
+        app.launch()
+        let more = app.staticTexts["How this works"].firstMatch
+        XCTAssertTrue(more.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        let detail = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Featherguild registers with the Meta AI app'")).firstMatch
+        XCTAssertFalse(detail.exists, "it starts closed")
+        more.tap()
+        XCTAssertTrue(detail.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
     @MainActor
     func testPickingAnIconMovesTheCheck() {
         let app = XCUIApplication()

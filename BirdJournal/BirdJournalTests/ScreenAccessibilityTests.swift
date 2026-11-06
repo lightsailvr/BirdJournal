@@ -197,7 +197,7 @@ struct ScreenAccessibilityTests {
         let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
         let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
         let labels = try await Self.walk(PatchDetailView(key: key, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Turn back") && labels.contains { $0.hasPrefix("All 1 sighting") }
+            labels.contains("Turn back") && labels.contains { $0.hasPrefix("1 sighting") }
         }
         Self.expectClean(labels, screen: "Paper card")
         #expect(labels.contains("Black Phoebe"), "the name: \(labels)")
@@ -227,7 +227,7 @@ struct ScreenAccessibilityTests {
         var sources: NSObject?
         for _ in 0..<60 where all == nil || sources == nil {
             try await Task.sleep(for: .milliseconds(250))
-            all = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "All 1 sighting")
+            all = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "1 sighting")
             sources = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "Sources")
         }
         let top = try #require(all).accessibilityFrame
@@ -334,12 +334,12 @@ struct ScreenAccessibilityTests {
     func speciesPatches(typeSize: DynamicTypeSize) async throws {
         let harness = try Self.sanDiegoHarness()
         let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("House Finch, Coastal edition patch") } && labels.contains("Open in Field Guide")
+            labels.contains { $0.hasPrefix("House Finch, Coastal edition patch") } && labels.contains("Open in Atlas")
         }
         Self.expectClean(labels, screen: "Species patches")
         #expect(labels.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 9 times, sewn ") }, "\(labels)")
         #expect(labels.contains { $0.hasPrefix("House Finch, Coastal edition patch, seen 6 times, sewn ") }, "the blank: \(labels)")
-        #expect(labels.contains("Open in Field Guide"), "\(labels)")
+        #expect(labels.contains("Open in Atlas"), "\(labels)")
     }
 
     @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)
@@ -354,12 +354,12 @@ struct ScreenAccessibilityTests {
         #expect(rows.contains("001, \(first.commonName), not yet found here"), "\(rows)")
 
         let page = try await Self.walk(SpeciesPatchesView(scientificName: first.scientificName, commonName: first.commonName), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Open in Field Guide") && labels.contains("Start listening")
+            labels.contains("Open in Atlas") && labels.contains("Start listening")
         }
         Self.expectClean(page, screen: "A bird not yet found")
         #expect(page.contains("No sightings of \(first.commonName) yet"), "\(page)")
         #expect(page.contains("Number 1 of \(set.species.count) in \(set.name)"), "its number, in words: \(page)")
-        #expect(page.contains("Open in Field Guide"), "the path to its Atlas profile: \(page)")
+        #expect(page.contains("Open in Atlas"), "the path to its Atlas profile: \(page)")
         #expect(!page.contains { $0.contains(" patch,") }, "no patch for a bird you haven't found: \(page)")
     }
 

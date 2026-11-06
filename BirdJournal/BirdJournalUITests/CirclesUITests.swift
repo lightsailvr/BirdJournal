@@ -82,7 +82,12 @@ final class CirclesUITests: XCTestCase {
         XCTAssertTrue(code.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         let link = code.value as? String ?? ""
         XCTAssertTrue(link.hasPrefix("https://birdquest.matthewcelia.com/i/fake-"), link)
-        XCTAssertTrue(app.staticTexts[link].exists, "the link under the code isn't the code's URL")
+        // It goes by the code, Share link or Copy link, and isn't printed on the sheet (issue #150).
+        XCTAssertFalse(app.staticTexts[link].exists, "the link is printed on the sheet")
+        let copy = app.buttons["inviteCopyLink"]
+        XCTAssertTrue(copy.exists, "screen: \(app.debugDescription.prefix(3000))")
+        copy.tap()
+        XCTAssertTrue(app.buttons["Copied"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     /// The goal card (issue #65) heads a circle's page and the list draws only what's on screen: scroll down to the

@@ -10,7 +10,7 @@ struct CirclesView: View {
     @State private var creating = false
 
     var body: some View {
-        List {
+        PaperList {
             if !circles.isAvailable {
                 Section {
                     Text("Guilds aren't available in this build yet.")
@@ -25,7 +25,6 @@ struct CirclesView: View {
                 Section { InlineError(error) }
             }
         }
-        .paperList()
         .navigationTitle("Guilds")
         .toolbar {
             if circles.isAvailable, account.isSignedIn {
@@ -81,7 +80,7 @@ struct CirclesView: View {
             Section {
                 SignInButtons()
             } footer: {
-                Text("Your collection and cards stay on this iPhone either way. An account is needed only for Guilds.")
+                Text("Your collection stays on this iPhone either way. An account is needed only for Guilds.")
             }
         }
     }
@@ -153,7 +152,6 @@ struct CirclesView: View {
             Label("Guilds are invite-only.", systemImage: "lock")
                 .frame(maxWidth: .infinity)
         }
-        .listRowBackground(Color.raised)
     }
 
     private var empty: some View {
@@ -278,7 +276,7 @@ struct NewCircleSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            PaperList {
                 Section {
                     TextField("Guild name", text: $name)
                         .focused($focused)
@@ -291,7 +289,6 @@ struct NewCircleSheet: View {
                     Section { InlineError(error) }
                 }
             }
-            .paperList()
             .navigationTitle("New Guild")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

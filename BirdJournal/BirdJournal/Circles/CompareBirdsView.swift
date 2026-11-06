@@ -72,7 +72,7 @@ struct CompareBirdsView: View {
     private var firstName: String { friendName.split(separator: " ").first.map(String.init) ?? friendName }
 
     var body: some View {
-        List {
+        PaperList {
             if let friend {
                 let comparison = BirdComparison(mine: sightings.map { ($0.speciesID, $0.method) }, theirs: friend.species)
                 Section {
@@ -105,7 +105,6 @@ struct CompareBirdsView: View {
                 Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
             }
         }
-        .paperList()
         .navigationTitle("You and \(firstName)")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }

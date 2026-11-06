@@ -105,16 +105,19 @@ struct ActiveListeningView: View {
         }
         .navigationTitle(run.state.isActive ? "Listening" : "Last run")
         .navigationBarTitleDisplayMode(.large)
-        // Stop stays where a thumb can reach it, above the tab bar, however long the list grows.
-        .safeAreaInset(edge: .bottom) {
+        // Stop stays where a thumb can reach it, above the tab bar, however long the list grows; quieter than the birds it
+        // sits under (issue #150).
+        .scrollEdgeEffectStyle(.hard, for: .bottom)
+        .safeAreaBar(edge: .bottom) {
             Group {
                 if run.state.isActive {
                     Button {
                         Task { await run.stop() }
                     } label: {
                         Label(run.state == .stopping ? "Stopping…" : "Stop listening", systemImage: "stop.fill")
+                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.journalPrimary)
+                    .buttonStyle(.journalOutlined)
                     .disabled(run.state == .stopping || run.state == .starting)
                 } else {
                     Button("Done") { run.dismissEnded() }
@@ -123,7 +126,6 @@ struct ActiveListeningView: View {
             }
             .padding(.horizontal, JournalLayout.margin)
             .padding(.vertical, 10)
-            .background(.bar)
         }
     }
 }

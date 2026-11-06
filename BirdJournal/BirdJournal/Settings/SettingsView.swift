@@ -20,7 +20,7 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var run = run
-        List {
+        PaperList {
             Section {
                 Picker("Listen with", selection: $run.source) {
                     ForEach(ListeningCoordinator.Source.allCases) { Text($0.title).tag($0) }
@@ -50,10 +50,9 @@ struct SettingsView: View {
                 if let error = connection.errorMessage {
                     InlineError(error)
                 }
+                HowThisWorks("Featherguild registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             } header: {
                 Text("Glasses")
-            } footer: {
-                Text("Featherguild registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             }
 
             if AccountSession.isEnabledInThisBuild {
@@ -62,12 +61,11 @@ struct SettingsView: View {
                     Toggle("Share my finds automatically", isOn: $sharesFinds)
                         .tint(Color.moss)
                         .accessibilityIdentifier("shareFindsToggle")
+                    HowThisWorks(SharingWords.detail(sharesFinds))
                 } header: {
                     Text("Account")
                 } footer: {
-                    Text(sharesFinds
-                         ? "Birds you add while signed in reach your Guilds as finds: the bird, Heard or Seen, the city and the time, never the exact spot. Threatened birds show as at a secret spot."
-                         : "You're private: birds you add stay on this iPhone. Finds you already shared stay in your Guilds until you remove the sighting.")
+                    Text(SharingWords.line(sharesFinds))
                 }
             }
 
@@ -111,8 +109,9 @@ struct SettingsView: View {
             }
             #endif
         }
-        .paperList()
         .navigationTitle("Settings")
+        // Listen's bar, which this is pushed from, is inline.
+        .navigationBarTitleDisplayMode(.large)
         .onAppear { iconTitle = AppIconChoice.current?.title ?? "" }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }

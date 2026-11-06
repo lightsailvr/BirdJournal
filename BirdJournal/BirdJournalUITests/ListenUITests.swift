@@ -21,6 +21,48 @@ final class ListenUITests: XCTestCase {
         XCTAssertTrue(started, "the screen did not change after Start; screen: \(app.debugDescription.prefix(4000))")
     }
 
+    /// Listen's own bar is inline, so that only the gear sits over the painting (issue #150). A pushed page inherits that
+    /// unless it says otherwise, and these two have large titles.
+    @MainActor
+    func testPagesPushedFromListenKeepTheirLargeTitles() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        let gear = app.buttons["Settings"]
+        XCTAssertTrue(gear.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        gear.tap()
+        let settings = app.navigationBars["Settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertGreaterThan(settings.frame.height, 80, "inline is 54 pt, large 106 pt")
+        settings.buttons.element(boundBy: 0).tap()
+
+        let explore = app.buttons["Explore the Los Angeles set"]
+        XCTAssertTrue(explore.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        explore.tap()
+        let set = app.navigationBars["Los Angeles"]
+        XCTAssertTrue(set.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertGreaterThan(set.frame.height, 130, "with the search drawer, inline is 108 pt, large 160 pt")
+    }
+
+    /// Heard or Seen is on the review sheet itself (issue #150, guide board 03), Heard until the birder says otherwise.
+    @MainActor
+    func testTheReviewSheetAsksHeardOrSeen() throws {
+        let clip = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appending(path: "fixtures/clips/birdnet-example-soundscape.wav")
+        guard FileManager.default.fileExists(atPath: clip.path(percentEncoded: false)) else {
+            throw XCTSkip("no example soundscape at \(clip.path(percentEncoded: false))")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-autoPhoneListening", clip.path(percentEncoded: false), "-autoLocation", "griffith", "-autoScreen", "review"]
+        app.launch()
+        let method = app.segmentedControls["review-method"]
+        XCTAssertTrue(method.waitForExistence(timeout: 60), "no picker; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(method.buttons["Heard"].isSelected)
+        method.buttons["Seen"].tap()
+        XCTAssertTrue(method.buttons["Seen"].isSelected)
+    }
+
     /// Issue #42: a run over the example soundscape marks the bird calling now on row one, and the marker gives way
     /// to a heard time once the bird goes quiet. Skipped when the clip is not on disk (`scripts/download-clips.sh`).
     @MainActor

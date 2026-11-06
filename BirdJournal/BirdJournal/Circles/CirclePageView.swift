@@ -39,7 +39,7 @@ struct CirclePageView: View {
     }
 
     private var page: some View {
-        List {
+        PaperList {
             if let detail {
                 header(detail)
                 CircleGoalsSection(circleID: detail.circle.id, timeZone: detail.circle.timeZone)
@@ -79,7 +79,6 @@ struct CirclePageView: View {
                 Section { InlineError(error) }
             }
         }
-        .paperList()
         .navigationTitle(detail?.circle.name ?? circles.circles.first { $0.id == id }?.name ?? "Guild")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -155,7 +154,6 @@ struct CirclePageView: View {
                 Text("Each species Heard, Seen or not yet, for you and a friend: plan the next walk.")
             }
         }
-        .listRowBackground(Color.raised)
     }
 
     /// Belonging first: the habitat cover, the emblem and name, who is in it, and Invite.
@@ -220,14 +218,12 @@ struct CirclePageView: View {
             }
             .tint(Color.moss)
             .accessibilityIdentifier("guildShareFindsToggle")
+            HowThisWorks(SharingWords.detail(sharesFinds))
         } header: {
             Text("Your sharing")
         } footer: {
-            Text(sharesFinds
-                 ? "Birds you add reach your Guilds as finds: the bird, Heard or Seen, the city and the time, never the exact spot. Notes and original photos stay on this iPhone unless you share a card with them. Threatened birds show as at a secret spot."
-                 : "You're private: birds you add stay on this iPhone. Share a card by hand to show it here.")
+            Text(SharingWords.line(sharesFinds))
         }
-        .listRowBackground(Color.raised)
     }
 
     private func members(_ detail: CircleDetail) -> some View {
@@ -278,7 +274,6 @@ struct CirclePageView: View {
                      : "Swipe a friend to mute their finds' notifications. Touch and hold to report or block.")
             }
         }
-        .listRowBackground(Color.raised)
     }
 
     private func settings(_ detail: CircleDetail) -> some View {
@@ -298,7 +293,6 @@ struct CirclePageView: View {
                 Text("Muted: this Guild's finds still show here, without notifications.")
             }
         }
-        .listRowBackground(Color.raised)
     }
 
     /// Mute, and the way back to notifications when they are off (issue #63).
@@ -427,6 +421,19 @@ struct CirclePageView: View {
     }
 }
 
+/// What "Share my finds automatically" means, in one line and in full: the same words wherever the setting is.
+enum SharingWords {
+    static func line(_ sharing: Bool) -> String {
+        sharing ? "Birds you add reach your Guilds, never with the exact spot." : "You're private: birds you add stay on this iPhone."
+    }
+
+    static func detail(_ sharing: Bool) -> String {
+        sharing
+            ? "Birds you add while signed in reach your Guilds as finds: the bird, Heard or Seen, the city and the time. Notes and original photos stay on this iPhone unless you share a patch with them. Threatened birds show as at a secret spot."
+            : "Share a patch by hand to show it in a Guild. Finds you already shared stay in your Guilds until you remove the sighting."
+    }
+}
+
 private struct MemberRow: View {
     let member: CircleMember
     let isMe: Bool
@@ -472,6 +479,7 @@ struct InviteSheet: View {
     let circleName: String
     @State private var invite: CircleInvite?
     @State private var error: String?
+    @State private var copied = false
 
     var body: some View {
         NavigationStack {
@@ -493,15 +501,18 @@ struct InviteSheet: View {
                                 .accessibilityValue(invite.url.absoluteString)
                                 .accessibilityIdentifier("inviteQRCode")
                         }
-                        Text(invite.url.absoluteString)
-                            .font(.footnote.monospaced())
-                            .foregroundStyle(Color.inkSecondary)
-                            .textSelection(.enabled)
-                            .multilineTextAlignment(.center)
                         ShareLink(item: invite.url, subject: Text("Join \(circleName) on Featherguild"), message: Text("Join my Guild \(circleName) on Featherguild")) {
                             Label("Share link", systemImage: "square.and.arrow.up")
                         }
                         .buttonStyle(.journalPrimary)
+                        Button {
+                            UIPasteboard.general.url = invite.url
+                            copied = true
+                        } label: {
+                            Label(copied ? "Copied" : "Copy link", systemImage: copied ? "checkmark" : "link")
+                        }
+                        .buttonStyle(.journalOutlined)
+                        .accessibilityIdentifier("inviteCopyLink")
                         Text("Expires \(invite.expiresAt.formatted(date: .abbreviated, time: .shortened)). Anyone with the link can join until then, up to 20 members.")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)

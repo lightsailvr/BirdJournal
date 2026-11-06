@@ -162,12 +162,6 @@ struct JournalView: View {
                 }
                 SpeciesRows(entries: Journal.species(shown))
             }
-            Text("Your notes, one bird at a time.")
-                .multilineTextAlignment(.center)
-                .font(JournalFont.supporting)
-                .foregroundStyle(Color.inkSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 28)
         }
     }
 

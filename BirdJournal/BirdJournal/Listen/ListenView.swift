@@ -58,19 +58,22 @@ private struct ReadyToListenView: View {
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @State private var choosingSource = false
 
+    /// The status bar's height, which the cover runs under: the window's inset, since this page's own safe area also counts the
+    /// navigation bar, and the cover's words stay where they were without one.
+    private static var statusBarInset: CGFloat? {
+        UIApplication.shared.connectedScenes.lazy.compactMap { $0 as? UIWindowScene }.first?.keyWindow?.safeAreaInsets.top
+    }
+
     var body: some View {
         let collection = library.collection(of: sightings)
         let local = LocalSet.find(library: library, collection: collection, newest: sightings.first)
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ListenCoverHeader(local: local, topInset: proxy.safeAreaInsets.top)
+                    // The cover's words sit under the status bar, level with the gear on the navigation bar.
+                    ListenCoverHeader(local: local, topInset: Self.statusBarInset ?? proxy.safeAreaInsets.top)
                     VStack(alignment: .leading, spacing: 0) {
                         AudioSourceRow(source: run.source, status: sourceStatus, isConnected: isConnected) { choosingSource = true }
-                        Text(run.source.microphoneText)
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
-                            .padding(.top, 8)
 
                         if case .ended(.failed(let message)) = run.state {
                             ErrorNotice(Self.failureTitle(message), message: message, symbol: Self.failureSymbol(message)) {
@@ -99,13 +102,6 @@ private struct ReadyToListenView: View {
                         .padding(.top, 20)
                         .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
 
-                        Text(run.source == .glasses ? "You can lock your phone and look up." : "Keep your phone out where it can hear.")
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 12)
-
                         if let local {
                             LocalSetSection(local: local, collection: collection, sightings: sightings)
                         }
@@ -117,21 +113,12 @@ private struct ReadyToListenView: View {
             }
             .ignoresSafeArea(edges: .top)
             .background(Color.paper)
-            .overlay(alignment: .topTrailing) {
-                NavigationLink(value: Route.settings) {
-                    Image(systemName: "gearshape")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(.black.opacity(0.28), in: Circle())
-                }
-                .accessibilityLabel("Settings")
-                .padding(.trailing, JournalLayout.margin - 6)
-                .padding(.top, 4)
-            }
         }
         .navigationTitle("Listen")
-        .toolbar(.hidden, for: .navigationBar)
+        // The bar stays for the gear, on real glass over the painting (issue #150); the painting carries the screen's words.
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(removing: .title)
+        .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
         .sheet(isPresented: $choosingSource) {
             AudioSourceSheet()
         }

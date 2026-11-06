@@ -62,6 +62,30 @@ struct StateNotice<Actions: View>: View {
     }
 }
 
+/// The fuller explanation behind one plain line (issue #150): trust content stays word for word, a tap away, so it isn't a
+/// wall of text on the way to a setting.
+struct HowThisWorks: View {
+    let paragraphs: [String]
+
+    init(_ paragraphs: String...) {
+        self.paragraphs = paragraphs
+    }
+
+    var body: some View {
+        DisclosureGroup("How this works") {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(paragraphs, id: \.self) { Text($0) }
+            }
+            .font(JournalFont.supporting)
+            .foregroundStyle(Color.inkSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .font(JournalFont.supporting)
+        .tint(Color.moss)
+        .accessibilityIdentifier("how-this-works")
+    }
+}
+
 /// An error line inside a page or a list (issue #119): the alert token with a mark, so it reads as an error without
 /// leaning on colour alone, at the text contrast the system red missed.
 struct InlineError: View {

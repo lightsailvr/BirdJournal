@@ -106,7 +106,7 @@ struct SightingDetailView: View {
                     }
                     .pickerStyle(.segmented)
                     .padding(.top, 16)
-                    Text(sighting.method == .heard ? "Every sighting starts as Heard. Choose Seen if you saw the bird too." : "You saw this bird.")
+                    Text(sighting.method == .heard ? "Choose Seen if you saw the bird too." : "You saw this bird.")
                         .font(JournalFont.attribution)
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 6)
@@ -167,7 +167,7 @@ struct SightingDetailView: View {
                             .padding(.top, 12)
                     }
                     NavigationLink(value: Route.species(scientificName: sighting.scientificName, commonName: commonName)) {
-                        Label("Open in Field Guide", systemImage: "book")
+                        Label("Open in Atlas", systemImage: "book")
                     }
                     .buttonStyle(.journalOutlined)
                     .padding(.top, 12)

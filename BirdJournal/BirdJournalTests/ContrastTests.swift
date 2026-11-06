@@ -179,13 +179,10 @@ struct TokenPairingTests {
     enum Surface: String, CaseIterable {
         /// The toast ("Added to your collection").
         case regularMaterial
-        /// Stop listening's bar and the review sheet's actions.
-        case bar
 
         var style: AnyShapeStyle {
             switch self {
             case .regularMaterial: AnyShapeStyle(.regularMaterial)
-            case .bar: AnyShapeStyle(.bar)
             }
         }
     }

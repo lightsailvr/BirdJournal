@@ -55,6 +55,8 @@ struct SetView: View {
             }
             .background(Color.paper)
             .navigationTitle(set.name)
+            // Listen's bar, which this can be pushed from, is inline.
+            .navigationBarTitleDisplayMode(.large)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search \(set.name) birds")
         } else {
             ContentUnavailableView("Set not found", systemImage: "square.stack.3d.down.right", description: Text("The pack index no longer lists this set."))

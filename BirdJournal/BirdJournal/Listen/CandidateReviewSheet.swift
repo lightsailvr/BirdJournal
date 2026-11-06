@@ -32,6 +32,8 @@ struct CandidateReviewView: View {
     @Environment(\.dismiss) private var dismiss
     let candidate: Candidate
     @State private var isAdding = false
+    /// How the birder met the bird: Heard unless they say otherwise here (guide board 03) or later on the sighting.
+    @State private var method = SightingMethod.heard
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
 
     /// The sightings of the bird in the patch an add here would join; 0 when the add would sew a new patch.
@@ -45,7 +47,8 @@ struct CandidateReviewView: View {
                 commonName: candidate.species.commonName,
                 match: candidate
             )
-            .safeAreaInset(edge: .bottom) {
+            .scrollEdgeEffectStyle(.hard, for: .bottom)
+            .safeAreaBar(edge: .bottom) {
                 VStack(spacing: 8) {
                     if run.isAdded(candidate) {
                         Label("Added · seen \(CardCollection.Patch.times(seenHere)) here", systemImage: "checkmark.circle.fill")
@@ -55,6 +58,11 @@ struct CandidateReviewView: View {
                             .buttonStyle(.journalOutlined)
                             .disabled(isAdding)
                     } else {
+                        Picker("How you met it", selection: $method) {
+                            ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .accessibilityIdentifier("review-method")
                         Button {
                             add()
                         } label: {
@@ -62,8 +70,7 @@ struct CandidateReviewView: View {
                         }
                         .buttonStyle(.journalPrimary)
                         .disabled(isAdding)
-                        // Heard is the default; Seen is a deliberate change on the card's back (#52).
-                        Text(seenHere == 0 ? "New to you here. Added as Heard; you can mark it Seen on the card." : "Seen \(CardCollection.Patch.times(seenHere)) here. Added as Heard; you can mark it Seen on the card.")
+                        Text(seenHere == 0 ? "New to you here." : "Seen \(CardCollection.Patch.times(seenHere)) here.")
                             .font(JournalFont.attribution)
                             .foregroundStyle(Color.inkSecondary)
                             .multilineTextAlignment(.center)
@@ -71,14 +78,13 @@ struct CandidateReviewView: View {
                 }
                 .padding(.horizontal, JournalLayout.margin)
                 .padding(.vertical, 12)
-                .background(.bar)
             }
     }
 
     private func add() {
         isAdding = true
         Task {
-            await run.add(candidate)
+            await run.add(candidate, method: method)
             isAdding = false
             dismiss()
         }

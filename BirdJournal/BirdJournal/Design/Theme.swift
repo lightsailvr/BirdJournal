@@ -87,6 +87,12 @@ enum JournalLayout {
     static let thumbnailRadius: CGFloat = 10
     /// Primary actions are taller than the 44 pt minimum.
     static let primaryActionHeight: CGFloat = 54
+
+    /// An outlined label's corners: a capsule's while its words sit on one line, a rounded rectangle at accessibility sizes,
+    /// where they wrap and a capsule's ends would cut them off (issue #150).
+    static func outlineRadius(_ typeSize: DynamicTypeSize, wrapped: CGFloat = cornerRadius) -> CGFloat {
+        typeSize.isAccessibilitySize ? wrapped : 999
+    }
 }
 
 extension JournalFont {
@@ -117,20 +123,25 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
-/// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled.
+/// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
+/// rectangle, since its words wrap (issue #150).
 struct OutlinedButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
         configuration.label
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(Color.moss)
+            .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
-            .frame(minHeight: 40)
-            .background(Color.moss.opacity(configuration.isPressed ? 0.15 : 0), in: Capsule())
-            .overlay(Capsule().strokeBorder(Color.moss, lineWidth: 1))
+            .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
+            .frame(minHeight: 44)
+            .background(Color.moss.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(Color.moss, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
-            .contentShape(Capsule())
+            .contentShape(shape)
     }
 }
 
@@ -160,8 +171,34 @@ struct PaperPage<Content: View>: View {
 
 extension View {
     /// The paper background behind a list-based screen.
-    func paperList() -> some View {
+    fileprivate func paperList() -> some View {
         scrollContentBackground(.hidden).background(Color.paper)
+    }
+}
+
+/// A list on the paper page with its rows on the raised surface (issue #150): a screen can't forget the row colour and fall
+/// back to the system's, near-black on the petrol page and white on the ivory one. A row or section that sets its own
+/// background keeps it.
+struct PaperList<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        List {
+            Group { content }.listRowBackground(Color.raised)
+        }
+        .paperList()
+    }
+}
+
+/// A form on the paper page with its rows on the raised surface, like `PaperList`.
+struct PaperForm<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        Form {
+            Group { content }.listRowBackground(Color.raised)
+        }
+        .paperList()
     }
 }
 

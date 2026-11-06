@@ -53,6 +53,22 @@ struct ListeningCoordinatorTests {
         return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings, location: location, rarityPrior: rarityPrior, defaults: defaults)
     }
 
+    @Test("an add keeps the method chosen on the review sheet, and is Heard otherwise (issue #150)")
+    func addKeepsTheChosenMethod() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+
+        try #require(await run.add(run.candidates[0], method: .seen))
+        try #require(await run.add(run.candidates[1]))
+        #expect(harness.stored.filter { $0.method == .seen }.count == 1)
+        #expect(harness.stored.filter { $0.method == .heard }.count == 1)
+
+        await run.stop()
+    }
+
     @Test("an add records the latest fix of the run, not the one Start took (issue #44)")
     func addRecordsTheLatestFix() async throws {
         let harness = try Self.makeHarness()

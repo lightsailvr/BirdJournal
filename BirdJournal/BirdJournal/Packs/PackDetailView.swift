@@ -99,7 +99,7 @@ struct PackDetailView: View {
 
                 if isDownload || isBundledUpdate {
                     SectionTitle(text: "Storage")
-                    Text(isBundledUpdate ? "Removing this update goes back to the copy of the pack in the app. Your collection is not touched." : "Removing the pack frees its space. Your collection keeps every card, sighting, note and original photo; birds from this pack are then named without photos until it is downloaded again.")
+                    Text(isBundledUpdate ? "Removing this update goes back to the copy of the pack in the app. Your collection is not touched." : "Removing the pack frees its space. Your collection keeps every patch, sighting, note and original photo; birds from this pack are then named without photos until it is downloaded again.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 12)
@@ -127,7 +127,7 @@ struct PackDetailView: View {
                 }
             }
         } message: {
-            Text("Your cards, sightings, notes and original photos stay. The pack can be downloaded again.")
+            Text("Your patches, sightings, notes and original photos stay. The pack can be downloaded again.")
         }
         .alert("The pack could not be removed", isPresented: Binding(get: { removalError != nil }, set: { if !$0 { removalError = nil } })) {
             Button("OK") { removalError = nil }

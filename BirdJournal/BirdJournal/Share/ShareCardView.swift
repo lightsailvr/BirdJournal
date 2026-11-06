@@ -144,14 +144,15 @@ struct ShareCardView: View {
                 .padding(.bottom, JournalLayout.sectionGap)
             }
             .background(Color.paper)
-            .navigationTitle("A story to share")
+            .navigationTitle("Share this patch")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(sending.isSent ? "Done" : "Cancel") { dismiss() }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
+            .scrollEdgeEffectStyle(.hard, for: .bottom)
+            .safeAreaBar(edge: .bottom) {
                 // Both ways out stay in reach whatever the scroll: Send for the circles, the card image for anywhere.
                 VStack(spacing: 8) {
                     sendStatus
@@ -169,12 +170,12 @@ struct ShareCardView: View {
                     Group {
                         if let export {
                             ShareLink(item: export, message: Text(export.text), preview: SharePreview(export.title, image: Image(uiImage: export.image))) {
-                                Label("Share card image…", systemImage: "square.and.arrow.up")
+                                Label("Share image", systemImage: "square.and.arrow.up")
                                     .frame(maxWidth: .infinity)
                             }
                             .accessibilityIdentifier("share-system")
                         } else {
-                            Label("Preparing the card…", systemImage: "square.and.arrow.up")
+                            Label("Preparing the image…", systemImage: "square.and.arrow.up")
                                 .foregroundStyle(Color.inkSecondary)
                         }
                     }
@@ -183,7 +184,6 @@ struct ShareCardView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, JournalLayout.margin)
                 .padding(.vertical, 12)
-                .background(.bar)
             }
             .task(id: patchArt) {
                 patchLoad = .loading
@@ -211,7 +211,7 @@ struct ShareCardView: View {
             .padding(.top, JournalLayout.sectionGap)
             .accessibilityAddTraits(.isHeader)
         if !account.isSignedIn {
-            Text("Sign in under Settings → Account to share cards with your Guilds.")
+            Text("Sign in under Settings → Account to share patches with your Guilds.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 8)
@@ -241,7 +241,7 @@ struct ShareCardView: View {
             .padding(.top, 8)
             Text(originalPhotoPath == nil
                 ? "No original photo with this sighting."
-                : "Faces are blurred and the location and camera details removed before the photo leaves your iPhone. It goes to your Guilds only, never in the card image.")
+                : "Faces are blurred and the location and camera details removed before the photo leaves your iPhone. It goes to your Guilds only, never in the image.")
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 4)
@@ -326,8 +326,8 @@ struct ShareCardView: View {
         switch error {
         case ShareFailure.findWaiting: "This bird is still on its way to your Guilds. Try again once you're online."
         case ShareFailure.photoUnavailable, is SharedPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
-        case CircleError.rejected: "The server turned this card down. Try again without the photo."
-        default: CircleStore.message(for: error, doing: "share your card")
+        case CircleError.rejected: "The server turned this down. Try again without the photo."
+        default: CircleStore.message(for: error, doing: "share your patch")
         }
     }
 
@@ -335,15 +335,15 @@ struct ShareCardView: View {
 
     private var previewLabel: String {
         let name = library.commonName(for: sighting)
-        return ["Preview of the card", name, place].compactMap { $0 }.joined(separator: ", ")
+        return ["Preview of the image", name, place].compactMap { $0 }.joined(separator: ", ")
     }
 
     private var placeExplanation: String {
         if sighting.location == nil { return "No location was recorded with this sighting." }
-        if !choices.includeCity { return "No place goes with the card." }
-        if place == FindPolicy.secretSpot { return "This bird is sensitive, so the card says \"a secret spot\" instead of a city." }
-        if place == nil { return "No city is known for this sighting, so no place goes with the card." }
-        return "Only the city goes with the card, never the exact spot."
+        if !choices.includeCity { return "No place goes with it." }
+        if place == FindPolicy.secretSpot { return "This bird is sensitive, so it says \"a secret spot\" instead of a city." }
+        if place == nil { return "No city is known for this sighting, so no place goes with it." }
+        return "Only the city goes with it, never the exact spot."
     }
 
     private var isReady: Bool {

@@ -115,6 +115,19 @@ final class SafetyUITests: XCTestCase {
         app.buttons["Done"].tap()
     }
 
+    /// Report and Block are in plain sight on a find (issue #150), without knowing about touch and hold.
+    @MainActor
+    func testReportingAFindFromItsMenu() {
+        let app = circlePage()
+        let menu = app.buttons["menu-find-00000000-0000-4000-8000-000000000000"]
+        XCTAssertTrue(app.scrolledTo(menu, limit: 24), "no menu; screen: \(app.debugDescription.prefix(3000))")
+        menu.tap()
+        let report = app.buttons["Report this find…"]
+        XCTAssertTrue(report.waitForExistence(timeout: 5), "no Report; screen: \(app.debugDescription.prefix(3000))")
+        report.tap()
+        XCTAssertTrue(app.buttons["reportSend"].waitForExistence(timeout: 5), "no sheet; screen: \(app.debugDescription.prefix(3000))")
+    }
+
     /// Every find row's label, scrolling the page from top to bottom: the list builds only the rows on screen.
     private func findLabels(_ app: XCUIApplication) -> [String] {
         let list = app.collectionViews.firstMatch
@@ -142,8 +155,8 @@ final class SafetyUITests: XCTestCase {
         let confirm = (app.sheets.firstMatch.exists ? app.sheets.firstMatch : app.alerts.firstMatch).buttons["Block Maya Ortiz"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 5), "no confirmation; screen: \(app.debugDescription.prefix(3000))")
         confirm.tap()
-        XCTAssertTrue(app.images["Blocked"].waitForExistence(timeout: 5) || app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Blocked'")).firstMatch.exists,
-                      "not marked blocked; screen: \(app.debugDescription.prefix(3000))")
+        // The feed's reload moves the page, so the member's row can land below the tab bar: scroll to the mark.
+        XCTAssertTrue(app.scrolledTo(app.images["Blocked"], limit: 8), "not marked blocked; screen: \(app.debugDescription.prefix(3000))")
         let remaining = findLabels(app)
         XCTAssertFalse(remaining.isEmpty, "the other friends' finds should stay")
         XCTAssertEqual(byMaya(remaining), [], "Maya's finds still show")

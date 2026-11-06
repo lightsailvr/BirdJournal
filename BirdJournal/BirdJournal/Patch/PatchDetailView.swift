@@ -38,7 +38,7 @@ struct PatchDetailView: View {
             .onChange(of: current) { turned = nil }
             .patchSheetBackground()
             .holdsPatchLight()
-            .navigationTitle("\(index + 1) of \(order.count)")
+            .navigationTitle("\(order[index].placement.setName), \(index + 1) of \(order.count)")
             .navigationBarTitleDisplayMode(.inline)
             // The object gets the whole height (design guide page 10); back returns to the tabs.
             .toolbar(.hidden, for: .tabBar)

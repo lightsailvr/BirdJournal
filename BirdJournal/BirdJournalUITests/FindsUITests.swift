@@ -43,7 +43,7 @@ final class FindsUITests: XCTestCase {
         let toggle = app.switches["shareFindsToggle"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(toggle.value as? String, "1", "on by default")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'never the exact spot'")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'never with the exact spot'")).firstMatch.exists)
 
         // The setting is the app's own default: put it back however the test ends.
         defer { if toggle.value as? String == "0" { toggle.switches.firstMatch.tap() } }

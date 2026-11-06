@@ -13,12 +13,12 @@ struct JoinCircleView: View {
     @State private var joining = false
 
     var body: some View {
-        List {
+        PaperList {
             if !circles.isAvailable {
                 Section { Text("Guilds aren't available in this build yet.").foregroundStyle(Color.inkSecondary) }
             } else if !account.isSignedIn {
                 Section {
-                    intro(title: "You're invited to a Guild", text: "Sign in with Apple or Google to see the invitation and join. Your collection and cards stay on this iPhone either way.")
+                    intro(title: "You're invited to a Guild", text: "Sign in with Apple or Google to see the invitation and join. Your collection stays on this iPhone either way.")
                 }
                 Section { SignInButtons() }
             } else if let preview {
@@ -32,7 +32,6 @@ struct JoinCircleView: View {
                 Section { InlineError(message) }
             }
         }
-        .paperList()
         .navigationTitle("Join a Guild")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: account.status) { await load() }

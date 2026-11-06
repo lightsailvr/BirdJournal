@@ -67,7 +67,7 @@ final class PatchStatesUITests: XCTestCase {
         XCTAssertTrue(element(app, "species-set-number").exists, "its number")
         XCTAssertEqual(element(app, "species-set-number").label, "Number 1 of 160 in Los Angeles")
         XCTAssertFalse(app.buttons["board-patch"].exists, "no patch for a bird you haven't found")
-        app.buttons["Open in Field Guide"].tap()
+        app.buttons["Open in Atlas"].tap()
         XCTAssertTrue(app.staticTexts["Branta canadensis"].waitForExistence(timeout: 10), "its Atlas profile: \(app.debugDescription.prefix(3000))")
     }
 

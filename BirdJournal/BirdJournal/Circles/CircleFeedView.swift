@@ -33,15 +33,39 @@ struct CircleFeedSection: View {
                 }
             }
             ForEach(feed.items) { item in
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
                     FindRow(item: item)
+                        // Clear of the menu at the row's corner.
+                        .padding(.trailing, item.isMine ? 0 : 30)
                     ReactionBar(item: item) { kind, given in react(kind, given: given, to: item) }
                 }
+                // The whole row's width, so the menu sits in one place on every row.
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 6)
+                .overlay(alignment: .topTrailing) {
+                    if !item.isMine {
+                        // Report and Block in plain sight (issue #150); touch and hold still works.
+                        Menu {
+                            menuItems(item)
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(Color.inkSecondary)
+                                .frame(width: 44, height: 44)
+                                .contentShape(.rect)
+                        }
+                        .menuStyle(.button)
+                        // In a list row every button would otherwise take the row's tap.
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("More about \(item.owner.name)'s \(item.commonName)")
+                        // Not "find-…": that's how the tests pick out the find rows themselves.
+                        .accessibilityIdentifier("menu-find-\(item.sightingID)")
+                        .offset(x: 10, y: -6)
+                    }
+                }
                 .contextMenu {
                     if !item.isMine {
-                        Button("Report this find…", systemImage: "exclamationmark.bubble") { onReport(item) }
-                        Button("Block \(item.owner.name)…", systemImage: "hand.raised", role: .destructive) { onBlock(item.owner) }
+                        menuItems(item)
                     }
                 }
             }
@@ -63,7 +87,11 @@ struct CircleFeedSection: View {
         } header: {
             Text("Recent finds")
         }
-        .listRowBackground(Color.raised)
+    }
+
+    @ViewBuilder private func menuItems(_ item: FeedItem) -> some View {
+        Button("Report this find…", systemImage: "exclamationmark.bubble") { onReport(item) }
+        Button("Block \(item.owner.name)…", systemImage: "hand.raised", role: .destructive) { onBlock(item.owner) }
     }
 
     private func react(_ kind: ReactionKind, given: Bool, to item: FeedItem) {
@@ -125,6 +153,9 @@ struct ReactionBar: View {
                     .padding(.vertical, 5)
                     .background(count.mine ? Color.moss : Color.moss.opacity(0.1), in: .capsule)
                     .fixedSize()
+                    // The pill stays small; what a thumb can hit is 44 pt tall (issue #150).
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
                 }
                 // In a list row every button would otherwise take the row's tap.
                 .buttonStyle(.borderless)
@@ -312,16 +343,19 @@ private struct SharedCardExtras: View {
 
 /// A find's label. First for the Guild is a small aqua one; a rarity is just its word. No gold (#132).
 private struct FindMark: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let title: String
 
     var body: some View {
         let first = title == FindRow.firstForTheGuild
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize, wrapped: 8), style: .continuous)
         Text(title)
             .font(.caption.weight(.semibold))
             .foregroundStyle(first ? Color.moss : Color.inkSecondary)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)
-            .overlay(Capsule().strokeBorder(first ? Color.moss : Color.rule, lineWidth: 1))
+            .overlay(shape.strokeBorder(first ? Color.moss : Color.rule, lineWidth: 1))
     }
 }
 

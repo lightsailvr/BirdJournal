@@ -172,24 +172,24 @@ final class CardFlipUITests: XCTestCase {
         let app = launch("card")
         XCTAssertTrue(face(app).waitForExistence(timeout: 15), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
-        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "dove, phoebe, finch, then the two Uncharted; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "dove, phoebe, finch, then the two Uncharted; screen: \(app.debugDescription.prefix(3000))")
 
         // From the patch: the next patch, the first Uncharted.
         app.swipeLeft()
-        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5), "the swipe did not move on; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("4 of 5").waitForExistence(timeout: 5), "the swipe did not move on; screen: \(app.debugDescription.prefix(3000))")
         assertShowing(card: false, app)
 
         // From its card: back to the finch, on the finch's face.
         turn(app).tap()
         assertShowing(card: true, app)
         app.swipeRight()
-        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "the swipe from the card did not move; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "the swipe from the card did not move; screen: \(app.debugDescription.prefix(3000))")
         assertShowing(card: false, app)
         XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
 
         // And coming back to the one turned over, it's the patch again.
         app.swipeLeft()
-        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.patchPage("4 of 5").waitForExistence(timeout: 5))
         assertShowing(card: false, app)
     }
 
@@ -214,11 +214,11 @@ final class CardFlipUITests: XCTestCase {
 
         // A swipe moves on from the patch, and from over the card, whose own scrolling is vertical.
         patch.swipeLeft()
-        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5), "the swipe from the patch; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("4 of 5").waitForExistence(timeout: 5), "the swipe from the patch; screen: \(app.debugDescription.prefix(3000))")
         let cards = app.descendants(matching: .any).matching(identifier: "card-back-scroll").allElementsBoundByIndex
         let card = try XCTUnwrap(cards.first { $0.isHittable }, "no card in reach; screen: \(app.debugDescription.prefix(3000))")
         card.swipeRight()
-        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "the swipe from over the card; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "the swipe from over the card; screen: \(app.debugDescription.prefix(3000))")
 
         // And the page comes back upright with its Turn over.
         XCUIDevice.shared.orientation = .portrait
@@ -313,5 +313,12 @@ final class CardFlipUITests: XCTestCase {
         for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
         XCTAssertTrue(attach.isHittable, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(attach.label, "Attach a photo")
+    }
+}
+
+private extension XCUIApplication {
+    /// A patch's page by its position: its title also names the place, "Los Angeles, 3 of 5" (issue #150).
+    func patchPage(_ position: String) -> XCUIElement {
+        navigationBars.matching(NSPredicate(format: "identifier ENDSWITH %@", ", \(position)")).firstMatch
     }
 }

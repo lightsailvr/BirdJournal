@@ -83,7 +83,7 @@ struct ReportSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            PaperForm {
                 if sent {
                     Section {
                         Label("Thanks. Your report was sent.", systemImage: "checkmark.circle")
@@ -154,7 +154,7 @@ struct BlockedAccountsView: View {
     @State private var error: String?
 
     var body: some View {
-        List {
+        PaperList {
             Section {
                 if circles.blocked.isEmpty {
                     Text("You haven't blocked anyone.")
@@ -177,7 +177,6 @@ struct BlockedAccountsView: View {
                 Section { InlineError(error) }
             }
         }
-        .paperList()
         .navigationTitle("Blocked accounts")
         .task { await circles.loadBlocks() }
     }

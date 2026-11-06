@@ -64,8 +64,8 @@ final class RunSightings {
 
     /// Writes a new sighting of `candidate` to the album.
     @discardableResult
-    func add(_ candidate: Candidate, confirmedAt: Date, location: Coordinate?, frame: Data?, source: SightingSource) throws -> Addition {
-        let recorded = try recorder.record(candidate, confirmedAt: confirmedAt, location: location, frame: frame, source: source)
+    func add(_ candidate: Candidate, confirmedAt: Date, location: Coordinate?, frame: Data?, source: SightingSource, method: SightingMethod = .heard) throws -> Addition {
+        let recorded = try recorder.record(candidate, confirmedAt: confirmedAt, location: location, frame: frame, source: source, method: method)
         let sighting = recorded.sighting
         records[sighting.persistentModelID] = sighting
         entries.append(Entry(id: sighting.persistentModelID, candidate: candidate, hasFrame: frame != nil))

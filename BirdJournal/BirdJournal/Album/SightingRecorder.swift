@@ -46,7 +46,8 @@ final class SightingRecorder {
         confirmedAt: Date,
         location: Coordinate?,
         frame: Data?,
-        source: SightingSource
+        source: SightingSource,
+        method: SightingMethod = .heard
     ) throws -> Recorded {
         let speciesID = candidate.species.birdnetLabel
         let context = container.mainContext
@@ -60,7 +61,7 @@ final class SightingRecorder {
             soundConfidence: Double(candidate.score),
             frameImagePath: try frame.map { try frames.write(jpeg: $0) },
             source: source,
-            method: .heard
+            method: method
         )
         sighting.rarity = raritySnapshot(scientificName: candidate.species.scientificName, location: location, at: confirmedAt)
         context.insert(sighting)

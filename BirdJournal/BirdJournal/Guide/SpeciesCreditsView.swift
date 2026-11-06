@@ -16,7 +16,7 @@ struct SpeciesCreditsView: View {
 
     var body: some View {
         if let found = library.species(scientificName: scientificName) {
-            List {
+            PaperList {
                 Section {
                     ForEach(found.species.photos) { photo in
                         PhotoCreditRow(pack: found.pack, photo: photo)
@@ -77,7 +77,6 @@ struct SpeciesCreditsView: View {
                     NavigationLink("All sources & credits", value: Route.credits)
                 }
             }
-            .paperList()
             .navigationTitle("Sources & credits")
             .navigationBarTitleDisplayMode(.inline)
         } else {

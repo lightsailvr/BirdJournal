@@ -222,7 +222,7 @@ struct PaperCardAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("Wherever the black phoebe keeps house") || $0.hasPrefix("Where water runs") }, "the excerpt: \(labels)")
         #expect(labels.contains { $0.hasPrefix("Wingspan") }, "the biology: \(labels)")
         #expect(labels.contains { $0.hasPrefix("1 sighting here, sewn ") }, "the history: \(labels)")
-        #expect(labels.contains { $0.hasPrefix("All 1 sighting") }, "the footer: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("1 sighting") }, "the footer: \(labels)")
         #expect(labels.contains("AI illustration"), "the footer: \(labels)")
         #expect(labels.contains("Sources"), "the footer: \(labels)")
         #expect(!labels.contains { $0.hasPrefix("Black Phoebe, Citrus") }, "\(labels)")
@@ -274,6 +274,9 @@ struct PatchWordsTests {
         let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
         #expect(PatchText.tileLine(try Self.patch(count: 8, at: griffith)) == "No. 002 · seen 8×")
         #expect(PatchText.tileLine(try Self.patch(count: 3, at: nil)) == "seen 3×")
+        // Nothing about the count until there's a second sighting (issue #150).
+        #expect(PatchText.tileLine(try Self.patch(count: 1, at: griffith)) == "No. 002")
+        #expect(PatchText.tileLine(try Self.patch(count: 1, at: nil)) == "Uncharted")
         #expect(PatchText.editionLine(try Self.patch(count: 1, at: griffith).placement) == "Citrus edition · No. 002")
         #expect(PatchText.editionLine(.uncharted) == "Uncharted")
     }

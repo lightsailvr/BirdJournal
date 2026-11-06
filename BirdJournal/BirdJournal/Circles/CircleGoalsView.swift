@@ -72,7 +72,6 @@ struct CircleGoalsSection: View {
                 Text("Goals count different species, not repeat sightings, among everyone's finds.")
             }
         }
-        .listRowBackground(Color.raised)
     }
 
     private func delete(_ goal: CircleGoal) {
@@ -266,7 +265,7 @@ struct NewGoalSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            PaperForm {
                 Section {
                     TextField("Big Day in Ojai", text: $title)
                         .accessibilityIdentifier("goalTitle")
@@ -295,8 +294,6 @@ struct NewGoalSheet: View {
                 }
             }
             .environment(\.timeZone, zone)
-            .scrollContentBackground(.hidden)
-            .background(Color.paper)
             .navigationTitle("New goal")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

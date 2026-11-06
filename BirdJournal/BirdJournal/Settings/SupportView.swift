@@ -11,7 +11,7 @@ struct SupportView: View {
     @State private var tipJar = TipJar()
 
     var body: some View {
-        List {
+        PaperList {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     Label("Support Featherguild", systemImage: "heart")
@@ -42,7 +42,6 @@ struct SupportView: View {
                 }
             }
         }
-        .paperList()
         .navigationTitle("Support")
         .navigationBarTitleDisplayMode(.inline)
         .task {

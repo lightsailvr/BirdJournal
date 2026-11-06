@@ -30,6 +30,8 @@ final class ReactionsUITests: XCTestCase {
         app.scrolledTo(lovely, limit: 24)
         XCTAssertTrue(lovely.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(lovely.value as? String, "2 reactions", "Jo's and Sam's, seeded")
+        // A real target for a thumb, whatever the pill looks like (issue #150).
+        XCTAssertGreaterThanOrEqual(lovely.frame.height, 44)
         XCTAssertFalse(lovely.isSelected)
         screenshot(app, "64-feed-reactions")
 

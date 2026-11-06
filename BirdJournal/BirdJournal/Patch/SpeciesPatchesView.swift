@@ -28,7 +28,7 @@ struct SpeciesPatchesView: View {
                 } else {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 18) {
                         ForEach(patches) { patch in
-                            SewnPatchTile(patch: patch, name: patch.placement.editionLabel, line: "\(patch.placement.setName) · seen \(patch.count)×", spokenName: name)
+                            SewnPatchTile(patch: patch, name: patch.placement.editionLabel, line: patch.count == 1 ? patch.placement.setName : "\(patch.placement.setName) · seen \(patch.count)×", spokenName: name)
                         }
                     }
                     .padding(.horizontal, 12)
@@ -42,13 +42,13 @@ struct SpeciesPatchesView: View {
                             .boardLabel()
                             .accessibilityIdentifier("species-latest")
                         NavigationLink(value: Route.sightings(.species(speciesID: latest.speciesID))) {
-                            Label("All \(PatchText.sightings(ofSpecies.count))", systemImage: "list.bullet")
+                            Label(ofSpecies.count == 1 ? PatchText.sightings(1) : "All \(PatchText.sightings(ofSpecies.count))", systemImage: "list.bullet")
                         }
                         .buttonStyle(.journalOutlined)
                         .accessibilityIdentifier("species-all-sightings")
                     }
                     NavigationLink(value: Route.species(scientificName: scientificName, commonName: name)) {
-                        Label("Open in Field Guide", systemImage: "book")
+                        Label("Open in Atlas", systemImage: "book")
                     }
                     .buttonStyle(.journalOutlined)
                 }

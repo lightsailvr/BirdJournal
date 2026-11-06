@@ -319,11 +319,11 @@ final class ListeningCoordinator {
     /// first in a placement sews the species' patch there and opens its ceremony, and the rest tick its count in the
     /// acknowledgment, with nothing to tap (the maintainer, 2026-11-04). Either way the sighting is saved before anything shows.
     @discardableResult
-    func add(_ candidate: Candidate) async -> RunSightings.Addition? {
+    func add(_ candidate: Candidate, method: SightingMethod = .heard) async -> RunSightings.Addition? {
         let confirmedAt = Date.now
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
-            let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone)
+            let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone, method: method)
             if addition.sewsPatch {
                 let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
                 self.reveal = reveal
