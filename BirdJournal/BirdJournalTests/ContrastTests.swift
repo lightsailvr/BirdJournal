@@ -177,14 +177,23 @@ struct TokenPairingTests {
         }
     }
 
-    @Test("the stock on felt keeps its fibre: the easing is only on linen")
+    @Test("on felt the stock is drawn as before #150: the fibre at full strength, and no added edge")
     func cardOnFeltIsUnchanged() async throws {
         let dark = UITraitCollection(userInterfaceStyle: .dark)
-        let light = UITraitCollection(userInterfaceStyle: .light)
-        let onFelt = try #require(Self.mean(try await Self.renderImage(Color.clear.modifier(CardStockSurface()), traits: dark, size: 200), in: CGRect(x: 50, y: 50, width: 100, height: 100)))
-        let onLinen = try #require(Self.mean(try await Self.renderImage(Color.clear.modifier(CardStockSurface()), traits: light, size: 200), in: CGRect(x: 50, y: 50, width: 100, height: 100)))
-        func level(_ color: UIColor) -> Double { DesignTokenTests.contrast(color, .black) }
-        #expect(level(onLinen) > level(onFelt), "linen \(Self.hex(onLinen)), felt \(Self.hex(onFelt))")
+        let before = Color.cardStock.overlay {
+            Image("MaterialPaper").resizable(resizingMode: .tile).blendMode(.multiply).opacity(0.5)
+        }
+        let middle = CGRect(x: 120, y: 120, width: 60, height: 60)
+        let expected = try #require(Self.mean(try await Self.renderImage(before, traits: dark, size: 300), in: middle))
+        let card = ZStack {
+            BoardMaterial()
+            Color.clear.frame(width: 200, height: 200).modifier(CardStockSurface())
+        }
+        let image = try await Self.renderImage(card, traits: dark, size: 300)
+        let stock = try #require(Self.mean(image, in: middle))
+        #expect(Self.distance(stock, expected) < 0.05, "\(Self.hex(stock)), and before \(Self.hex(expected))")
+        let edge = try #require(Self.mean(image, in: CGRect(x: 51, y: 110, width: 1, height: 80)))
+        #expect(DesignTokenTests.contrast(stock, edge) < 1.15, "no edge: \(Self.hex(edge)) against the stock \(Self.hex(stock))")
     }
 
     @Test("a member's initials clear 4.5:1 on every tone")
@@ -198,10 +207,40 @@ struct TokenPairingTests {
         }
     }
 
-    @Test("Collection's tab icon is a custom symbol, so it takes the tab bar's tint")
+    /// The ink a symbol draws, in pixels: an image that loads can still draw nothing, as one with only a Regular-M master did
+    /// at the small and large scales.
+    static func ink(ofSymbol name: String, weight: UIImage.SymbolWeight, scale: UIImage.SymbolScale) throws -> Int {
+        let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: weight, scale: scale)
+        let symbol = try #require(UIImage(named: name, in: .main, with: configuration), "no \(name) at \(weight), \(scale)")
+        #expect(symbol.isSymbolImage)
+        let (width, height) = (200, 200)
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let context = try #require(CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        UIGraphicsPushContext(context)
+        symbol.withTintColor(.black, renderingMode: .alwaysOriginal).draw(at: CGPoint(x: 10, y: 10))
+        UIGraphicsPopContext()
+        return stride(from: 3, to: bytes.count, by: 4).count { bytes[$0] > 127 }
+    }
+
+    @Test("Collection's tab icon is a custom symbol that draws at every scale and follows the weight, as Bold Text asks")
     func stitchedRing() throws {
-        let ring = try #require(UIImage(named: "stitched.ring"), "the symbol isn't in the asset catalog")
-        #expect(ring.isSymbolImage)
+        let scales = try [UIImage.SymbolScale.small, .medium, .large].map { try Self.ink(ofSymbol: "stitched.ring", weight: .regular, scale: $0) }
+        #expect(scales[0] > 0, "\(scales)")
+        #expect(scales[0] < scales[1] && scales[1] < scales[2], "each scale is larger: \(scales)")
+        let weights = try [UIImage.SymbolWeight.ultraLight, .regular, .bold, .black].map { try Self.ink(ofSymbol: "stitched.ring", weight: $0, scale: .medium) }
+        #expect(weights[0] < weights[1] && weights[1] < weights[2] && weights[2] < weights[3], "each weight has more ink: \(weights)")
+    }
+
+    @Test("The downloads page's large title fits on one line at every text size, so it's never cut short")
+    func downloadsTitleFits() throws {
+        let sizes: [UIContentSizeCategory] = [.large, .extraExtraExtraLarge, .accessibilityMedium, .accessibilityExtraExtraExtraLarge]
+        for size in sizes {
+            let style = UIFont.preferredFont(forTextStyle: .largeTitle, compatibleWith: UITraitCollection(preferredContentSizeCategory: size))
+            let serif = try #require(style.fontDescriptor.withDesign(.serif))
+            let width = (BirdPacksView.title as NSString).size(withAttributes: [.font: UIFont(descriptor: serif, size: 0)]).width
+            // iPhone 17 Pro, inside the bar's 16 pt margins.
+            #expect(width <= 402 - 32, "\(size.rawValue): \(width) pt")
+        }
     }
 
     @Test("the card stock's ink, secondary ink and edge clear 4.5:1 against the fibre's worst pixel, with and without Increase Contrast")

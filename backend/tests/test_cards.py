@@ -276,6 +276,7 @@ def test_the_s3_upload_is_a_post_capped_at_5_mb_tagged_pending() -> None:
         "photos/ada/{sighting}/short.jpg",
         "photos/ada/{sighting}/abcdefghijklmnopqrstuvwx.png",
         "photos/ada/abcdefghijklmnopqrstuvwx.jpg",
+        "photos/ada/{sighting}/abcdefghijklmnopqrstuvwx.jpg\n",
     ],
 )
 def test_a_photo_key_must_be_the_birders_own_upload(
