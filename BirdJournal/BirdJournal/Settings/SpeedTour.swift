@@ -6,18 +6,19 @@ import QuartzCore
 import SwiftData
 import SwiftUI
 
-/// Counts what issue #150's speed work is about: how often the collection is built, and how long that takes.
+/// Counts what issue #150's speed work is about: how often the collection is built, and how long that takes (reading the
+/// album and comparing, built or not).
 enum SpeedProbe {
     private(set) static var builds = 0
     private(set) static var buildTime = Duration.zero
 
-    static func build<T>(_ body: () -> T) -> T {
-        let started = ContinuousClock.now
-        defer {
-            builds += 1
-            buildTime += ContinuousClock.now - started
-        }
-        return body()
+    /// A read of the album by the store, whether or not it built anything.
+    static func refreshed(in time: Duration) {
+        buildTime += time
+    }
+
+    static func built() {
+        builds += 1
     }
 
     static func reset() {

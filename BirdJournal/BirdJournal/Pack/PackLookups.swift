@@ -71,15 +71,6 @@ extension PackLibrary {
         sets.map(CardSet.init)
     }
 
-    /// The birder's collection over every set the phone knows: what each screen reads patches, sets and progress from.
-    func collection(of sightings: [Sighting]) -> CardCollection {
-        #if DEBUG
-        return SpeedProbe.build { CardCollection(sightings: sightings, sets: cardSets) }
-        #else
-        return CardCollection(sightings: sightings, sets: cardSets)
-        #endif
-    }
-
     /// The lens crop of the first photo any pack has of the species, the thumbnail the lists show.
     func thumbnailURL(scientificName: String) -> URL? {
         species(scientificName: scientificName).flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) }

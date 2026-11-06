@@ -73,7 +73,7 @@ struct CirclePageView: View {
                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder() }
             }
             if let error, detail != nil {
                 Section { InlineError(error) }

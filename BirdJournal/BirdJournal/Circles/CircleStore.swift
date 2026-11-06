@@ -12,9 +12,19 @@ final class CircleStore {
         /// Where the next page starts; nil once the last is read.
         var nextCursor: String?
         var isLoading = false
-        /// The first page has come back.
+        /// The first page has come back, this launch or from the cache.
         var isLoaded = false
         var error: String?
+        /// How much of `items` is the first page, the part the cache keeps, and where its next page starts.
+        var firstPageCount = 0
+        var firstPageCursor: String?
+
+        /// Takes these accounts' finds out, keeping the first page's count true.
+        mutating func removeFinds(of accounts: [String]) {
+            guard !accounts.isEmpty else { return }
+            firstPageCount = items.prefix(firstPageCount).count { !accounts.contains($0.owner.id) }
+            items.removeAll { accounts.contains($0.owner.id) }
+        }
     }
 
     enum ListState: Equatable {
@@ -30,6 +40,8 @@ final class CircleStore {
     private(set) var feeds: [String: Feed] = [:]
     /// Each circle's goals (issue #65), by circle id: this month's goal first, then the custom goals.
     private(set) var goals: [String: [CircleGoal]] = [:]
+    /// Each friend's side of Compare birds as last read (issue #150), by friend id: this launch only.
+    private(set) var friendBirds: [String: FriendBirds] = [:]
     private(set) var listState: ListState = .idle
     /// The token of an invite link opened from outside the app, for the join screen.
     var pendingInvite: String?
@@ -41,17 +53,32 @@ final class CircleStore {
     @ObservationIgnored var joinedCircle: (() async -> Void)?
     /// The latest reaction tap on each feed item, by item id.
     @ObservationIgnored private var reactionTurns: [String: Int] = [:]
+    /// The Guilds whose detail and goals have been read this launch, rather than coming from the cache.
+    @ObservationIgnored private var freshDetails: Set<String> = []
+    @ObservationIgnored private var freshGoals: Set<String> = []
+    /// Bumped by `clear`, so an answer on its way when the birder signed out is dropped, not stored.
+    @ObservationIgnored private var session = 0
+    @ObservationIgnored private var isCacheWriteWaiting = false
 
     let account: AccountSession
     /// The circle server's client; the find outbox (issue #62) sends through the same one.
     let client: CircleClient?
     private let timeZone: () -> String
+    private let cache: CircleCache?
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "circles")
 
-    init(account: AccountSession, client: CircleClient?, timeZone: @escaping () -> String = { TimeZone.current.identifier }) {
+    /// - Parameter cache: where the last-known content lives between launches (issue #150). What it holds is drawn at once if
+    ///   the birder is signed in. A cache found while signed out (the app quit before it could clear) goes.
+    init(account: AccountSession, client: CircleClient?, timeZone: @escaping () -> String = { TimeZone.current.identifier }, cache: CircleCache? = nil) {
         self.account = account
         self.client = client
         self.timeZone = timeZone
+        self.cache = cache
+        guard account.isSignedIn else {
+            cache?.remove()
+            return
+        }
+        if let snapshot = cache?.load() { restore(snapshot) }
     }
 
     /// Whether this build talks to a circle server at all (it needs the account's).
@@ -59,15 +86,20 @@ final class CircleStore {
 
     func refresh() async {
         guard let client, account.isSignedIn else { return }
-        if circles.isEmpty { listState = .loading }
+        if circles.isEmpty, listState != .loaded { listState = .loading }
+        let session = session
         do {
-            circles = try await account.withAccessToken(doing: "load your Guilds") { try await client.circles(accessToken: $0) }
+            let circles = try await account.withAccessToken(doing: "load your Guilds") { try await client.circles(accessToken: $0) }
+            guard session == self.session else { return }
+            self.circles = circles
             listState = .loaded
-            if let mutes = try? await account.withAccessToken(doing: "load your Guilds", { try await client.mutes(accessToken: $0) }) {
+            cacheLater()
+            if let mutes = try? await account.withAccessToken(doing: "load your Guilds", { try await client.mutes(accessToken: $0) }), session == self.session {
                 self.mutes = mutes
             }
             await loadBlocks()
         } catch {
+            guard session == self.session else { return }
             log.error("couldn't load circles: \(String(describing: error))")
             listState = .failed(Self.message(for: error, doing: "load your Guilds"))
         }
@@ -83,8 +115,11 @@ final class CircleStore {
     }
 
     func loadDetail(id: String) async throws {
+        let session = session
         do {
-            remember(try await call { try await $0.circle(id: id, accessToken: $1) })
+            let detail = try await call { try await $0.circle(id: id, accessToken: $1) }
+            guard session == self.session else { return }
+            remember(detail)
         } catch CircleError.notFound {
             // Removed, or left on another device: it is no longer the birder's.
             forget(id)
@@ -147,28 +182,43 @@ final class CircleStore {
     }
 
     private func readFeed(circleID: String, cursor: String?) async {
-        var feed = feeds[circleID] ?? Feed()
-        feed.isLoading = true
-        feeds[circleID] = feed
+        feeds[circleID, default: Feed()].isLoading = true
+        let session = session
         do {
             let page = try await call { try await $0.feed(circleID: circleID, cursor: cursor, accessToken: $1) }
+            guard session == self.session else { return }
+            // As it is now: a reaction or a block may have changed it while this page was on its way.
+            var feed = feeds[circleID] ?? Feed()
             feed.items = cursor == nil ? page.items : feed.items + page.items.filter { item in !feed.items.contains { $0.id == item.id } }
             feed.nextCursor = page.nextCursor
             feed.isLoaded = true
             feed.error = nil
+            if cursor == nil {
+                feed.firstPageCount = page.items.count
+                feed.firstPageCursor = page.nextCursor
+                cacheLater()
+            }
+            feed.removeFinds(of: blocked.map(\.id))
+            feed.isLoading = false
+            feeds[circleID] = feed
         } catch {
+            guard session == self.session else { return }
             log.error("couldn't load the feed: \(String(describing: error))")
-            feed.error = Self.message(for: error, doing: "load the finds")
+            feeds[circleID]?.error = Self.message(for: error, doing: "load the finds")
+            feeds[circleID]?.isLoading = false
         }
-        feed.isLoading = false
-        feeds[circleID] = feed
     }
 
     /// Reads the circle's goals and their progress again. A failure keeps what was read; the card has nothing to say
     /// about it beyond the feed's own error.
     func loadGoals(circleID: String) async {
+        let session = session
         do {
-            goals[circleID] = try await call { try await $0.goals(circleID: circleID, accessToken: $1) }
+            let read = try await call { try await $0.goals(circleID: circleID, accessToken: $1) }
+            guard session == self.session else { return }
+            goals[circleID] = read
+            freshGoals.insert(circleID)
+            cacheLater()
         } catch {
             log.error("couldn't load the goals: \(String(describing: error))")
         }
@@ -187,6 +237,7 @@ final class CircleStore {
     func deleteGoal(id: String, circleID: String) async throws {
         try await call { try await $0.deleteGoal(id: id, circleID: circleID, accessToken: $1) }
         goals[circleID]?.removeAll { $0.id == id }
+        cacheLater()
     }
 
     /// A push came (issue #63): the list again, and the feeds of the circles it names (every feed the phone has read
@@ -228,6 +279,7 @@ final class CircleStore {
             }
             if reactionTurns[item.id] == turn {
                 update(item.id) { var item = $0; item.reactions = counts; return item }
+                cacheLater()
             }
         } catch {
             log.error("couldn't react: \(String(describing: error))")
@@ -244,7 +296,8 @@ final class CircleStore {
     }
 
     func loadBlocks() async {
-        if let blocked = try? await call({ try await $0.blocks(accessToken: $1) }) {
+        let session = session
+        if let blocked = try? await call({ try await $0.blocks(accessToken: $1) }), session == self.session {
             self.blocked = blocked
         }
     }
@@ -253,13 +306,22 @@ final class CircleStore {
     func setBlocked(_ isBlocked: Bool, accountID: String, name: String?) async throws {
         try await call { try await $0.setBlocked(isBlocked, accountID: accountID, accessToken: $1) }
         blocked.removeAll { $0.id == accountID }
-        if isBlocked { blocked.append(BlockedAccount(id: accountID, displayName: name)) }
+        if isBlocked {
+            blocked.append(BlockedAccount(id: accountID, displayName: name))
+            // At once, and on disk: their finds don't wait on the reload, which could fail.
+            for id in feeds.keys { feeds[id]?.removeFinds(of: [accountID]) }
+            cacheLater()
+        }
         for id in feeds.keys { await loadFeed(circleID: id) }
     }
 
     /// A friend's side of Compare birds (issue #64).
+    @discardableResult
     func compare(friendID: String) async throws -> FriendBirds {
-        try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
+        let session = session
+        let birds = try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
+        if session == self.session { friendBirds[friendID] = birds }
+        return birds
     }
 
     private func update(_ itemID: String, _ change: (FeedItem) -> FeedItem) {
@@ -269,15 +331,71 @@ final class CircleStore {
         }
     }
 
-    /// Signed out: nothing of the circles stays on the phone (the root calls it whenever the account signs out).
+    /// Whether a screen should read the Guild's detail: it hasn't been read this launch, though the cache may have drawn one.
+    func needsDetail(_ circleID: String) -> Bool { !freshDetails.contains(circleID) }
+
+    /// Whether a screen should read the Guild's goals: as for its detail.
+    func needsGoals(_ circleID: String) -> Bool { !freshGoals.contains(circleID) }
+
+    /// Signed out or the account deleted: nothing of the circles stays on the phone, in memory or on disk (the root calls it
+    /// whenever the account signs out).
     func clear() {
+        session += 1
         circles = []
         details = [:]
         feeds = [:]
         goals = [:]
+        friendBirds = [:]
         mutes = Mutes()
         blocked = []
         listState = .idle
+        freshDetails = []
+        freshGoals = []
+        cache?.remove()
+    }
+
+    // MARK: - The cache
+
+    private func restore(_ snapshot: CircleSnapshot) {
+        circles = snapshot.circles
+        details = snapshot.details
+        goals = snapshot.goals
+        feeds = snapshot.feeds.mapValues { page in
+            Feed(items: page.items, nextCursor: page.nextCursor, isLoaded: true, firstPageCount: page.items.count, firstPageCursor: page.nextCursor)
+        }
+        listState = .loaded
+    }
+
+    /// What goes on disk: the Guilds the birder is in now, and the first page of each feed.
+    var snapshot: CircleSnapshot {
+        let ids = Set(circles.map(\.id))
+        return CircleSnapshot(
+            circles: circles,
+            details: details.filter { ids.contains($0.key) },
+            feeds: feeds.filter { ids.contains($0.key) && $0.value.isLoaded }.mapValues { feed in
+                FeedPage(items: Array(feed.items.prefix(feed.firstPageCount)), nextCursor: feed.firstPageCursor)
+            },
+            goals: goals.filter { ids.contains($0.key) }
+        )
+    }
+
+    /// Writes the snapshot shortly: a refresh of several Guilds asks many times over and writes once.
+    private func cacheLater() {
+        guard cache != nil, !isCacheWriteWaiting else { return }
+        isCacheWriteWaiting = true
+        let session = session
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard let self else { return }
+            isCacheWriteWaiting = false
+            if session == self.session { writeCache() }
+        }
+    }
+
+    /// Writes the snapshot now, signed in. The store's own writes come through here.
+    func writeCache() {
+        guard account.isSignedIn else { return }
+        cache?.save(snapshot)
     }
 
     private func call<T>(_ body: (CircleClient, String) async throws -> T) async throws -> T {
@@ -287,7 +405,11 @@ final class CircleStore {
     }
 
     private func remember(_ detail: CircleDetail) {
+        // An answer that lands after the sign-out isn't kept.
+        guard account.isSignedIn else { return }
         details[detail.circle.id] = detail
+        freshDetails.insert(detail.circle.id)
+        cacheLater()
         if let index = circles.firstIndex(where: { $0.id == detail.circle.id }) {
             circles[index] = detail.circle
         } else {
@@ -301,6 +423,9 @@ final class CircleStore {
         details[id] = nil
         feeds[id] = nil
         goals[id] = nil
+        freshDetails.remove(id)
+        freshGoals.remove(id)
+        cacheLater()
     }
 
     /// The words for a failure, on the screen where it happened.
@@ -334,10 +459,12 @@ extension CircleStore {
         if let mode = defaults.string(forKey: "fakeCircles") ?? defaults.string(forKey: "fakeAccount").map({ _ in "empty" }) {
             let client = FakeCircleClient(seeded: mode == "some", offline: mode == "offline")
             client.latency = .seconds(defaults.double(forKey: "fakeCircleLatency"))
-            return CircleStore(account: account, client: client)
+            // `-circleCacheFile <name>` keeps the fakes' last-known content in tmp, so a UI test can relaunch over it.
+            let cache = defaults.string(forKey: "circleCacheFile").map { CircleCache(fileURL: URL.temporaryDirectory.appending(path: "\($0).json")) }
+            return CircleStore(account: account, client: client, cache: cache)
         }
         #endif
         guard let server = AccountServer.bundled() else { return CircleStore(account: account, client: nil) }
-        return CircleStore(account: account, client: HTTPCircleClient(baseURL: server.apiURL))
+        return CircleStore(account: account, client: HTTPCircleClient(baseURL: server.apiURL), cache: .forApp())
     }
 }

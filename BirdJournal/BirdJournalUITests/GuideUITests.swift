@@ -83,6 +83,23 @@ extension XCUIElement {
         XCTAssertTrue(app.staticTexts["Sayornis nigricans"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
+    /// Issue #150: a set's page makes its rows as they come on screen, not all 160 when it opens (XCUITest lists what's off
+    /// screen too, so the count is what was made), and the last bird is still there at the end of a scroll.
+    @MainActor
+    func testASetsPageMakesItsRowsAsTheyScrollIn() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoScreen", "set"]
+        app.launch()
+        let rows = app.buttons.matching(identifier: "set-species-silhouette")
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertLessThan(rows.count, 40, "made at open")
+        let last = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '160, '")).firstMatch
+        for _ in 0..<40 where !last.exists {
+            app.swipeUp(velocity: .fast)
+        }
+        XCTAssertTrue(last.exists, "screen: \(app.debugDescription.prefix(3000))")
+    }
+
     /// Issue #134: a set's page searches its own birds, by name, keeping their collector numbers.
     @MainActor
     func testASetsPageSearchesItsBirds() {

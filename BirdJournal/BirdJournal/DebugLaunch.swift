@@ -55,7 +55,8 @@ import UIKit
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
 ///   opens; `-fakeGlasses unregistered|noneLinked|notConnected` gives the Listen page those glasses states;
-///   `-fakeCircles offline` makes the Guilds unreachable; `-autoScrollTo guild-settings` scrolls a Guild's page to its
+///   `-fakeCircles offline` makes the Guilds unreachable; `-fakeCircleLatency <seconds>` slows each of the fake's reads, and
+///   `-circleCacheFile <name>` gives its store a cache in tmp to relaunch over (issue #150); `-autoScrollTo guild-settings` scrolls a Guild's page to its
 ///   settings (issue #119's screenshots of the states).
 /// - `-autoScreen glasses-run` with `-autoGlassesListening <wav>` pairs the mock glasses and starts a real glasses run on the
 ///   Listen tab, the file standing in for the stream; `-autoLensAdd "House Finch,Dark-eyed Junco"` adds those birds on the
@@ -157,7 +158,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted)
+                    run.showRevealForScreenshot(of: newest, placement: CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier) ?? .uncharted)
                 }
             case "card", "card-back":
                 tab = .journal
@@ -165,7 +166,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    let placement = library.collection(of: all).placement(of: newest.identifier)
+                    let placement = CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier)
                     journalPath.append(Route.patch(CardCollection.Patch.Key(speciesID: newest.speciesID, setID: placement?.setID)))
                 }
                 if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }

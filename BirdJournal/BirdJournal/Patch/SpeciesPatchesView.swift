@@ -9,12 +9,13 @@ struct SpeciesPatchesView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     let scientificName: String
     let commonName: String
 
     var body: some View {
-        let collection = library.collection(of: sightings)
+        let collection = collectionStore.collection
         let ofSpecies = sightings.filter { $0.scientificName == scientificName }
         let patches = collection.patches.filter { $0.scientificName == scientificName }.sorted { $0.sewn.confirmedAt < $1.sewn.confirmedAt }
         let name = library.species(scientificName: scientificName)?.species.commonName ?? ofSpecies.first?.commonName ?? commonName
@@ -141,16 +142,25 @@ enum SightingsScope: Hashable {
 }
 
 extension CardCollection.Patch {
-    /// This patch's sightings among `sightings`, in their order.
+    /// The album by identifier, for finding many patches' sightings in it.
+    static func table(of sightings: [Sighting]) -> [UUID: Sighting] {
+        Dictionary(sightings.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// This patch's sightings from the album's `table`, newest first.
+    func ownSightings(in table: [UUID: Sighting]) -> [Sighting] {
+        sightings.compactMap { table[$0.identifier] }
+    }
+
+    /// This patch's sightings among `sightings`, newest first.
     func ownSightings(among sightings: [Sighting]) -> [Sighting] {
-        let own = Set(self.sightings.map(\.identifier))
-        return sightings.filter { own.contains($0.identifier) }
+        ownSightings(in: Self.table(of: sightings))
     }
 }
 
 /// The sightings behind a patch, or behind every patch of a species: newest first, each opening its sighting.
 struct PatchSightingsView: View {
-    @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     let scope: SightingsScope
 
@@ -175,7 +185,7 @@ struct PatchSightingsView: View {
     private var shownSightings: [Sighting] {
         switch scope {
         case .species(let speciesID): sightings.filter { $0.speciesID == speciesID }
-        case .patch(let key): library.collection(of: sightings).patch(key: key)?.ownSightings(among: sightings) ?? []
+        case .patch(let key): collectionStore.collection.patch(key: key)?.ownSightings(among: sightings) ?? []
         }
     }
 }

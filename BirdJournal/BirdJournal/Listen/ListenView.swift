@@ -12,6 +12,7 @@ import SwiftUI
 struct ListenView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.warmEngine) private var warmEngine
 
     var body: some View {
         @Bindable var run = run
@@ -45,7 +46,17 @@ struct ListenView: View {
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: run.acknowledgment)
+        // After the first frame, so Start is ready before it's tapped (issue #150).
+        .task {
+            try? await Task.sleep(for: .milliseconds(300))
+            if !Task.isCancelled { warmEngine() }
+        }
     }
+}
+
+extension EnvironmentValues {
+    /// Loads the identification engine ahead of a run. The app's root sets it; elsewhere nothing happens.
+    @Entry var warmEngine: () -> Void = {}
 }
 
 /// The calm ready state (issue #117, design guide page 11): the local set's cover as the atmosphere, the connection
@@ -55,6 +66,7 @@ private struct ReadyToListenView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @State private var choosingSource = false
 
@@ -65,7 +77,7 @@ private struct ReadyToListenView: View {
     }
 
     var body: some View {
-        let collection = library.collection(of: sightings)
+        let collection = collectionStore.collection
         let local = LocalSet.find(library: library, collection: collection, newest: sightings.first)
         GeometryReader { proxy in
             ScrollView {
