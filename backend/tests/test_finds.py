@@ -508,6 +508,7 @@ def test_the_time_is_kept_to_the_minute_in_utc(client: TestClient, issuer: TestI
         {"kind": "pack", "key": "packs/../secrets.jpg"},
         {"kind": "pack", "key": "https://example.com/x.jpg"},
         {"kind": "pack", "key": "packs/us-ca-la/x.gif"},
+        {"kind": "pack", "key": "packs/us-ca-la/x.jpg\n"},
         {"kind": "sticker", "key": "packs/us-ca-la/x.jpg"},
     ],
 )

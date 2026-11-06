@@ -231,7 +231,7 @@ def clean_edition(raw: str | None) -> str | None:
 
 
 def clean_art(kind: ArtKind, key: str) -> ArtReference:
-    if ".." in key or not _ART_KEY.match(key):
+    if ".." in key or not _ART_KEY.fullmatch(key):
         raise ValueError("The art key isn't a patch's key on the art CDN")
     return ArtReference(kind=kind, key=key)
 
