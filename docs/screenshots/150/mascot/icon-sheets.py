@@ -3,14 +3,14 @@
 # ///
 """Issue #150 slice 11's icon sheets, at the simulator's true pixels, so an icon is seen at the size it is on a phone.
 
-uv run docs/screenshots/150/mascot/icon-sheets.py <folder of shots> <out folder> <art/mascot/icons> <AppIconPreview folder>
+uv run docs/screenshots/150/mascot/icon-sheets.py <folder of shots> <out folder> <art/mascot/icons> <AppIconPreview folder> <art/mascot/approved>
 """
 import pathlib
 import sys
 
 from PIL import Image, ImageDraw
 
-shots, out, old_icons, previews = map(pathlib.Path, sys.argv[1:])
+shots, out, old_icons, previews, approved = map(pathlib.Path, sys.argv[1:])
 BIRDS = ["red-tailed-hawk", "blue-bird", "great-egret", "house-finch", "prothonotary-warbler", "stellers-jay"]
 ICON = (880, 540, 1206, 840)  # the Featherguild icon and its label on the home screen, in pixels of a 402 pt screen at 3x
 
@@ -42,3 +42,13 @@ thumbnails = Image.new("RGB", (before.width, before.height + after.height), "#1b
 thumbnails.paste(before, (0, 0))
 thumbnails.paste(after, (0, before.height))
 thumbnails.save(out / "icon-thumbnails.jpg", quality=88)
+
+# The finch's pale rim, four times size, on the felt's colour: lower left and lower right of the approved picture, with no shadow.
+patch = Image.open(approved / "perched-finch.png").convert("RGBA")
+felt = Image.new("RGBA", patch.size, (20, 50, 58, 255))
+felt.alpha_composite(patch)
+felt = felt.convert("RGB")
+rim = Image.new("RGB", (1290, 640), "white")
+rim.paste(felt.crop((0, 700, 160, 860)).resize((640, 640), Image.LANCZOS), (0, 0))
+rim.paste(felt.crop((felt.width - 200, 720, felt.width - 40, 880)).resize((640, 640), Image.LANCZOS), (650, 0))
+rim.save(out / "finch-edge-sliver.jpg", quality=90)

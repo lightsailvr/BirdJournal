@@ -2,7 +2,8 @@
 # Issue #150 slice 11's evidence, from the running app, at the size the other slices keep, at the default text size (`large`) and
 # the largest (ax5): the launch screen, the splash and the pages the finch is on, the icons on the home screen and the finch at
 # true pixels. ICON_SHOTS is a folder for the full-size pictures the icon sheets are made from. Leaves the simulator's text size at
-# `large` and its appearance dark. Needs uv and ffmpeg.
+# `large` and its appearance dark. Needs uv and ffmpeg. Both apps are debug builds, the before one from the branch this slice
+# started on, kept aside because a later build overwrites it. ICON_SHOTS has to be an absolute path, for the UI test.
 #
 #   ICON_SHOTS=<folder> docs/screenshots/150/mascot/capture.sh <simulator UDID> <before app> before-
 #   ICON_SHOTS=<folder> docs/screenshots/150/mascot/capture.sh <simulator UDID> <app>
@@ -31,7 +32,7 @@ if [[ "${1:-}" == "--sheets" ]]; then
         "$ictool" "$repo_root/BirdJournal/MyBirdJournal-HouseFinch.icon" --export-image --output-file "$icon_shots/r-$rendition.png" \
             --platform iOS --rendition "$rendition" --width 180 --height 180 --scale 1 --tint-color 0.25 --tint-strength 0.75 >/dev/null
     done
-    uv run -q "$out/icon-sheets.py" "$icon_shots" "$out" "$repo_root/art/mascot/icons" "$repo_root/BirdJournal/BirdJournal/Assets.xcassets/AppIconPreview"
+    uv run -q "$out/icon-sheets.py" "$icon_shots" "$out" "$repo_root/art/mascot/icons" "$repo_root/BirdJournal/BirdJournal/Assets.xcassets/AppIconPreview" "$repo_root/art/mascot/approved"
     sheet before-after-launch 4 before-launch-dark.jpg launch-dark.jpg before-splash-dark.jpg splash-dark.jpg before-launch-light.jpg launch-light.jpg before-splash-light.jpg splash-light.jpg
     sheet before-after-states 4 before-empty-dark.jpg empty-dark.jpg before-account-dark.jpg account-dark.jpg before-empty-light.jpg empty-light.jpg before-account-light.jpg account-light.jpg
     sheet before-after-ax5 6 before-splash-ax5.jpg splash-ax5.jpg before-empty-ax5.jpg empty-ax5.jpg before-account-ax5.jpg account-ax5.jpg
@@ -60,7 +61,7 @@ xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --ba
 # Just after a restart, or under load, the system can refuse a launch as busy for a while.
 launch() {  # simctl launch's arguments
     local attempt
-    for attempt in 1 2 3 4 5 6; do
+    for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18; do
         xcrun simctl launch "$@" >/dev/null 2>&1 && return 0
         sleep 10
     done
@@ -144,6 +145,6 @@ xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
 # The build's icon on the home screen, for the sheet that has the new ones beside it.
 if [[ -n "$prefix" ]]; then
     xcrun simctl ui "$udid" content_size large
-    sleep 3
+    sleep 15  # the home screen takes a while to lay its labels out again at the new size
     xcrun simctl io "$udid" screenshot --type=png "$icon_shots/before-home.png" >/dev/null 2>&1
 fi
