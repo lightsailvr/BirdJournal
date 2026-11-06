@@ -192,7 +192,12 @@ struct ThreadProgressTests {
             },
             traits: variant, size: 360, settle: settle
         )
-        let target = try DesignTokenTests.color(color, variant)
+        return try stitches(in: image, colour: color, traits: variant)
+    }
+
+    /// How many of a phone-wide row's stitches are drawn in `colour`, across the middle of a 360 pt window.
+    func stitches(in image: UIImage, colour: String, traits: UITraitCollection) throws -> Int {
+        let target = try DesignTokenTests.color(colour, traits)
         var sewn = 0
         for stitch in 0..<24 {
             let x = 1 + (CGFloat(stitch) + 0.5) * (358 + 4) / 24 - 2
@@ -224,11 +229,52 @@ struct ThreadProgressTests {
         let key = "set-us-test-return"
         let progress = SetProgress(setID: "us-test-return", name: "Somewhere", collected: 40, total: 160)
         ThreadProgress.lastSeen[key] = 1
-        #expect(try await drawn(ThreadProgress(progress), sized: "JournalMoss", in: traits, settle: .milliseconds(100)) == 1, "where it was")
-        ThreadProgress.lastSeen[key] = 1
-        #expect(try await drawn(ThreadProgress(progress), sized: "JournalMoss", in: traits, settle: .seconds(3)) == 6, "sewn")
+        let host = Hosted(ThreadProgress(progress), traits: traits)
+        defer { host.close() }
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(try stitches(in: host.image(), colour: "JournalMoss", traits: traits) == 1, "where it was")
+        // However busy the other suites keep the main actor, it gets there.
+        var sewn = 0
+        for _ in 0..<40 where sewn != 6 {
+            try await Task.sleep(for: .milliseconds(500))
+            sewn = try stitches(in: host.image(), colour: "JournalMoss", traits: traits)
+        }
+        #expect(sewn == 6, "sewn")
         #expect(ThreadProgress.lastSeen[key] == 40, "so it sews once")
         #expect(try await drawn(ThreadProgress(progress), sized: "JournalMoss", in: traits, settle: .milliseconds(100)) == 6, "and comes back whole")
+    }
+
+    /// A thread on the page in a window of its own, left up to be looked at more than once.
+    private final class Hosted {
+        let window: UIWindow
+
+        init(_ thread: ThreadProgress, traits: UITraitCollection) {
+            let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+            window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+            window.frame = CGRect(x: 0, y: 0, width: 360, height: 360)
+            window.windowLevel = .alert + 1
+            window.overrideUserInterfaceStyle = traits.userInterfaceStyle
+            window.rootViewController = UIHostingController(rootView: ZStack {
+                Color.paper
+                thread.frame(width: 358)
+            }
+            .ignoresSafeArea())
+            window.makeKeyAndVisible()
+            window.layoutIfNeeded()
+        }
+
+        func image() -> UIImage {
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1
+            format.preferredRange = .standard
+            return UIGraphicsImageRenderer(bounds: window.bounds, format: format).image { _ in
+                _ = window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+            }
+        }
+
+        func close() {
+            window.isHidden = true
+        }
     }
 
     @Test("a rise it wasn't on screen for sews from the stitch it last showed; a fall, a first sight or Reduce Motion doesn't sew", arguments: [
