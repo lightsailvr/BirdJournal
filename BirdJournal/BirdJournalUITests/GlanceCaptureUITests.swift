@@ -55,4 +55,57 @@ final class GlanceCaptureUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["run-recap"].waitForExistence(timeout: 20), "no recap after Stop on the Lock Screen; screen: \(app.debugDescription.prefix(4000))")
         try save("activity-recap-after-lock-stop", to: folder)
     }
+
+    /// The widget added to the Home Screen as a person adds it, and a tap on it. The widget gallery isn't anyone's interface to
+    /// promise, so a step it can't find ends the capture rather than failing anything.
+    @MainActor
+    func testTheWidgetOnTheHomeScreen() throws {
+        guard let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_CAPTURE_DIR"] else { throw XCTSkip("no capture folder") }
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-autoScreen", "listen"]
+        app.launch()
+        sleep(6)  // The files are written once the app is in front.
+        XCUIDevice.shared.press(.home)
+        sleep(2)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        func step(_ name: String) { print("WIDGET STEP \(name): \(springboard.debugDescription.prefix(2500))") }
+        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72)).press(forDuration: 1.5)
+        sleep(2)
+        step("after press")
+        let edit = springboard.buttons["Edit"]
+        if edit.waitForExistence(timeout: 3) { edit.tap(); sleep(1) }
+        let addWidget = springboard.buttons["Add Widget"]
+        guard addWidget.waitForExistence(timeout: 5) else { step("no Add Widget"); throw XCTSkip("no Add Widget") }
+        addWidget.tap()
+        sleep(3)
+        step("gallery")
+        let search = springboard.searchFields.firstMatch
+        guard search.waitForExistence(timeout: 5) else { throw XCTSkip("no search") }
+        search.tap()
+        search.typeText("Featherguild")
+        sleep(2)
+        step("searched")
+        let result = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Featherguild'")).element(boundBy: 1)
+        guard result.waitForExistence(timeout: 5) else { throw XCTSkip("no result") }
+        result.tap()
+        sleep(3)
+        try save("widget-gallery", to: folder)
+        step("detail")
+        let add = springboard.buttons.matching(NSPredicate(format: "label CONTAINS 'Add Widget'")).firstMatch
+        guard add.waitForExistence(timeout: 5) else { throw XCTSkip("no add button") }
+        add.tap()
+        sleep(2)
+        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72)).tap()
+        sleep(1)
+        let done = springboard.buttons["Done"]
+        if done.waitForExistence(timeout: 2) { done.tap() }
+        sleep(4)
+        try save("widget-home", to: folder)
+        step("home")
+        let widget = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Latest patch'")).firstMatch
+        guard widget.waitForExistence(timeout: 5) else { throw XCTSkip("the widget isn't readable") }
+        widget.tap()
+        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the widget didn't open its patch; screen: \(app.debugDescription.prefix(3000))")
+        try save("widget-opened", to: folder)
+    }
 }

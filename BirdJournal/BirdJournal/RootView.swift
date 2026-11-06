@@ -173,7 +173,7 @@ struct RootView: View {
                 }
             }
             // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
-            // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
+            // turns it on in Release, add what's in `BirdJournal.entitlements` to `BirdJournal-Release.entitlements`: the invite
             // links' associated domain is Debug-only until then, so a release build leaves them to the browser.
             if AccountSession.isEnabledInThisBuild {
                 SwiftUI.Tab("Guilds", systemImage: "person.3", value: Tab.circles) {

@@ -33,7 +33,7 @@ struct RunReviewSheet: View {
     }
 
     private func name(of patch: CardCollection.Patch) -> String {
-        library.species(scientificName: patch.scientificName)?.species.commonName ?? String(patch.speciesID.drop { $0 != "_" }.dropFirst())
+        patch.commonName(in: library)
     }
 
     private var place: String? {

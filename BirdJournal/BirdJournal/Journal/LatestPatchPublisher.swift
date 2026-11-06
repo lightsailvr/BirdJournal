@@ -20,6 +20,13 @@ extension WidgetSnapshot {
     }
 }
 
+extension CardCollection.Patch {
+    /// The bird's name, as a sighting's is: the pack's, else the common half of its BirdNET label.
+    func commonName(in library: PackLibrary) -> String {
+        library.species(scientificName: scientificName)?.species.commonName ?? speciesID.split(separator: "_").last.map(String.init) ?? speciesID
+    }
+}
+
 /// Keeps the widget's two files in step with the collection: the words and the flat picture of the patch, in the App Group, as
 /// the rule in `WidgetSnapshot.rewrite` says. The picture needs the GPU, which an app behind a locked phone can't have, so a
 /// patch the lens sews there reaches the widget when the app is next in front.
@@ -62,7 +69,7 @@ final class LatestPatchPublisher {
         return WidgetSnapshot(
             collection: collection,
             localSetID: local?.set.id,
-            name: { patch in packs.species(scientificName: patch.scientificName)?.species.commonName ?? String(patch.speciesID.drop { $0 != "_" }.dropFirst()) },
+            name: { $0.commonName(in: packs) },
             hasPainting: { packs.patchArt(scientificName: $0.scientificName, setID: $0.placement.setID) != nil }
         )
     }
