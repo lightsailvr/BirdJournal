@@ -71,7 +71,7 @@ struct AppIconView: View {
                             if choice == current {
                                 Image(systemName: "checkmark")
                                     .font(.body.weight(.semibold))
-                                    .foregroundStyle(Color.moss)
+                                    .foregroundStyle(.tint)
                             }
                         }
                         .contentShape(Rectangle())

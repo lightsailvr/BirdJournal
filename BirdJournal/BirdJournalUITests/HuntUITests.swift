@@ -219,6 +219,25 @@ final class HuntUITests: XCTestCase {
         wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 8)
     }
 
+    /// Tapping the tab you're on scrolls to the top, which with the list already there never reports that it's over: only a
+    /// finger or a deceleration holds the list, not that.
+    @MainActor
+    func testRetappingTheListenTabDoesNotHoldTheList() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1",
+            "-fakeRunBirds", Self.movingBirds,
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+
+        app.tabBars.buttons["Listen"].tap()
+        let held = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 8)
+    }
+
     /// A sheet landing under a finger takes the touch away, so the list can't wait to hear it end.
     @MainActor
     func testASheetLandingMidTouchLetsTheListGo() throws {

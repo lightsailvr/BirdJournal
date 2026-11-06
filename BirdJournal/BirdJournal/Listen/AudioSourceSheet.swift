@@ -31,7 +31,7 @@ struct AudioSourceSheet: View {
                                 if run.source == source {
                                     Image(systemName: "checkmark")
                                         .font(.body.weight(.semibold))
-                                        .foregroundStyle(Color.moss)
+                                        .foregroundStyle(.tint)
                                 }
                             }
                         }

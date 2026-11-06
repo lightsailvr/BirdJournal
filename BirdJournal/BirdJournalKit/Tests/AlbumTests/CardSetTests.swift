@@ -62,6 +62,16 @@ struct CardSetTests {
         UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))!
     }
 
+    @Test("a place's set is the one whose smallest part contains it, whatever birds it lists; outside them all there's none")
+    func aPlacesSet() {
+        let sets = [Self.sanDiego, Self.deserts, Self.losAngeles]
+        #expect(CardSet.containing(Self.griffithPark, in: sets)?.id == "us-ca-la")
+        #expect(CardSet.containing(Self.balboaPark, in: sets)?.id == "us-ca-sd")
+        #expect(CardSet.containing(Self.borregoSprings, in: sets)?.id == "us-ca-desert", "Anza-Borrego wins over the county")
+        #expect(CardSet.containing(Self.portland, in: sets) == nil)
+        #expect(CardSet.containing(Self.griffithPark, in: []) == nil)
+    }
+
     @Test("an Anza-Borrego point inside San Diego County goes to the Deserts set: the smallest region wins")
     func smallestRegionWins() {
         let collection = CardCollection([Self.card(Self.finch, at: Self.borregoSprings, id: 1)], sets: Self.sets)

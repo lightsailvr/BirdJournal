@@ -38,10 +38,20 @@ struct LaunchSplash: View {
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .task {
-            withAnimation(.easeOut(duration: 0.6)) { showsTitle = true }
+            withAnimation(.easeOut(duration: Self.titleSeconds)) { showsTitle = true }
             try? await Task.sleep(for: .milliseconds(1100))
             onFinished()
         }
+    }
+
+    /// How long the name takes to set. `-splashTitleSeconds <n>` in debug builds moves the splash's end against what's running
+    /// when it comes (`LaunchUITests`).
+    private static var titleSeconds: Double {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "splashTitleSeconds")
+        if seconds > 0 { return seconds }
+        #endif
+        return 0.6
     }
 
     /// The appearance the launch screen was drawn in: the screen's, which the window's override does not change.

@@ -329,7 +329,6 @@ private struct SightingMatchDetails: View {
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
         }
-        .tint(Color.moss)
     }
 }
 
