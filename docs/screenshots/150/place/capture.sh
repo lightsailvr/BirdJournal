@@ -18,10 +18,22 @@ if [[ "${1:-}" == "--sheets" ]]; then
         local name="$1" columns="$2"; shift 2
         uv run -q "$repo_root/docs/screenshots/138/sheet.py" "$out/sheets/$name.jpg" "$columns" "$@"
     }
-    # The mock's lower half against Listen with three patches, scrolled so the section shows.
-    sips -c 960 900 --cropOffset 960 0 "$reference/3-listen-rejected-hoop.png" --out "$out/sheets/mock-listen-lower-half.png" >/dev/null
-    sheet reference-listen 3 "$out/sheets/mock-listen-lower-half.png" "$out/section-dark.jpg" "$out/section-light.jpg"
-    sheet reference-thread 4 "$reference/4-set-page.png" "$out/set-desert-dark.jpg" "$reference/1-guild-page.png" "$out/goals-dark.jpg"
+    # The mock's lower half against Listen's, at the same scale. Thread on paper and lavender are the mocks' own, whole.
+    uv run -q --with pillow python - "$reference" "$out" <<'PY'
+import sys
+from PIL import Image
+reference, out = sys.argv[1:3]
+mock = Image.open(f"{reference}/3-listen-rejected-hoop.png").convert("RGB").crop((0, 1130, 900, 1500))
+shots = [Image.open(f"{out}/section-{appearance}.jpg").convert("RGB") for appearance in ("dark", "light")]
+crops = [shot.crop((0, round(shot.height * 0.555), shot.width, round(shot.height * 0.75))).resize((900, round(900 * (shot.height * 0.195) / shot.width))) for shot in shots]
+sheet = Image.new("RGB", (900, mock.height + sum(crop.height for crop in crops) + 40), "#1b2b2e")
+y = 10
+for picture in [mock, *crops]:
+    sheet.paste(picture, (0, y))
+    y += picture.height + 10
+sheet.save(f"{out}/sheets/reference-listen.jpg", quality=84)
+PY
+    sheet reference-thread 4 "$reference/4-set-page.png" "$out/set-la-dark.jpg" "$reference/1-guild-page.png" "$out/goals-dark.jpg"
     sheet places-dark 3 "$out"/listen-{griffith,joshua-tree,san-diego,oakland,orlando,kansas}-dark.jpg
     sheet places-light 3 "$out"/listen-{griffith,joshua-tree,san-diego,oakland,orlando,kansas}-light.jpg
     sheet tint-dark 4 "$out"/{set-la,set-desert,set-coastal,patch,atlas,species-list,goals,download}-dark.jpg
