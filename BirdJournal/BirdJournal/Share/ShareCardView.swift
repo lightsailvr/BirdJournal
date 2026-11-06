@@ -359,7 +359,7 @@ struct ShareCardView: View {
         let lore = species?.lore
         let credits = photoCredits.isEmpty ? nil : "Patch: AI illustration from a reference photo (\(photoCredits.joined(separator: "; ")))"
         let text = [SharePolicy.text(for: content), credits, lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
-        export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName) · Featherguild")
+        export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName), Featherguild")
     }
 
     /// The credit of the lore the image takes its story title from (issue #116; design guide page 17: lore licenses and

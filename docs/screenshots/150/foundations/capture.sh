@@ -26,7 +26,7 @@ if [[ "${1:-}" == "--sheets" ]]; then
     shots=("$references/5-compare.png"); mapfile_compat < <(in_out sightings-dark profile-dark); sheet reference-headings 3 "${shots[@]}"
     shots=("$references/1-guild-page.png"); mapfile_compat < <(in_out guild-dark members-dark); sheet reference-faces 3 "${shots[@]}"
     shots=(); mapfile_compat < <(in_out board-light patch-light card-light card-dark listen-light atlas-light); sheet light-page-and-card 6 "${shots[@]}"
-    shots=(); mapfile_compat < <(in_out reveal-dark patch-dark goal-dark packs-dark pack-dark settings-light); sheet caps-dots-words 6 "${shots[@]}"
+    shots=(); mapfile_compat < <(in_out share-dark reveal-dark patch-dark goal-dark packs-dark packs-xxxl settings-light); sheet caps-dots-words 7 "${shots[@]}"
     shots=(); mapfile_compat < <(in_out set-ax5 atlas-ax5 profile-ax5 guild-ax5 sightings-ax5 packs-ax5); sheet ax5 6 "${shots[@]}"
     shots=(); mapfile_compat < <(in_out empty-guilds-dark empty-profile-dark sign-in-dark); sheet states 3 "${shots[@]}"
     exit 0
@@ -85,6 +85,7 @@ shot set-dark        9 "${seeded[@]}" -autoScreen set
 shot atlas-dark      9 "${seeded[@]}" -autoScreen guide
 shot packs-dark      9 "${seeded[@]}" -autoScreen packs
 shot pack-dark       9 "${seeded[@]}" -autoScreen pack
+shot share-dark     10 "${seeded[@]}" "${phoebe[@]}" -autoScreen share
 shot profile-dark    9 "${seeded[@]}" -autoScreen profile
 shot sightings-dark  9 "${seeded[@]}" -autoScreen sightings
 shot board-dark     10 "${seeded[@]}" -autoScreen cards
@@ -108,6 +109,9 @@ shot patch-light    10 "${seeded[@]}" "${phoebe[@]}" -autoScreen card
 shot card-light     11 "${seeded[@]}" "${phoebe[@]}" -autoScreen card-back
 shot settings-light  8 "${empty[@]}" -autoScreen settings
 shot guild-light    10 "${guilds[@]}" -autoScreen circle
+
+xcrun simctl ui "$udid" content_size extra-extra-extra-large
+shot packs-xxxl      9 "${seeded[@]}" -autoScreen packs
 
 xcrun simctl ui "$udid" content_size accessibility-extra-extra-extra-large
 shot set-ax5         9 "${seeded[@]}" -autoScreen set
