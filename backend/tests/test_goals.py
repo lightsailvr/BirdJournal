@@ -397,6 +397,91 @@ def test_a_delete_reduces_progress(client: TestClient, issuer: TestIssuer) -> No
     assert _custom(client, issuer, circle_id, goal_id)["progress"] == 1
 
 
+# The species a goal counted (issue #150).
+
+
+def _species(goal: dict[str, Any]) -> list[tuple[str, str | None]]:
+    """The goal's species, by common name, with the edition each came with. They are its progress, so they must agree."""
+    assert len(goal["species"]) == goal["progress"]
+    return [(species["common_name"], species["edition"]) for species in goal["species"]]
+
+
+def test_a_goal_names_the_species_it_counted_with_an_edition_each(client: TestClient, issuer: TestIssuer) -> None:
+    circle_id = _circle(client, issuer)
+    _join(client, issuer, circle_id, "bo")
+    goal_id = _goal_ok(client, issuer, circle_id, target=10, start_date="2026-11-01", end_date="2026-11-07")["id"]
+    # Found first, so it comes first and takes the edition: Bo's later one in New York is the same species.
+    _put_ok(client, issuer, "ada", _find(SPECIES[2], found_at="2026-11-02T16:00:00Z", edition="us-ca-la"))
+    _put_ok(client, issuer, "bo", _find(SPECIES[2], found_at="2026-11-02T17:00:00Z", edition="us-ny-nyc"))
+    # Outside every set, and that's all it has.
+    _put_ok(client, issuer, "ada", _find(SPECIES[0], found_at="2026-11-03T16:00:00Z"))
+    # Outside every set first, then in one: the edition is there to show.
+    _put_ok(client, issuer, "ada", _find(SPECIES[1], found_at="2026-11-04T16:00:00Z"))
+    _put_ok(client, issuer, "bo", _find(SPECIES[1], found_at="2026-11-04T17:00:00Z", edition="us-ny-nyc"))
+    # After the goal's last day in Los Angeles: not counted, not named.
+    _put_ok(client, issuer, "ada", _find(SPECIES[3], found_at="2026-11-08T08:00:00Z", edition="us-ca-la"))
+
+    goal = _custom(client, issuer, circle_id, goal_id)
+    assert goal["progress"] == 3
+    assert _species(goal) == [("Bird 2", "us-ca-la"), ("Bird 0", None), ("Bird 1", "us-ny-nyc")]
+    assert goal["species"][0] == {
+        "species_id": SPECIES[2]["species_id"],
+        "scientific_name": SPECIES[2]["scientific_name"],
+        "common_name": "Bird 2",
+        "edition": "us-ca-la",
+    }
+
+
+def test_a_new_goal_and_the_monthly_goal_name_their_species(client: TestClient, issuer: TestIssuer) -> None:
+    circle_id = _circle(client, issuer)
+    assert _monthly(client, issuer, circle_id)["species"] == []
+    assert _goal_ok(client, issuer, circle_id, title="Empty")["species"] == []
+    _put_ok(client, issuer, "ada", _find(SPECIES[0], found_at="2026-11-01T16:00:00Z", edition="us-ca-la"))
+    assert _species(_monthly(client, issuer, circle_id)) == [("Bird 0", "us-ca-la")]
+    assert _species(_goal_ok(client, issuer, circle_id, title="Later")) == [("Bird 0", "us-ca-la")]
+
+
+def test_a_goal_names_only_the_circle_s_own_finds(client: TestClient, issuer: TestIssuer) -> None:
+    sunday = _circle(client, issuer)
+    other = _circle(client, issuer, sub="bo")
+    _put_ok(client, issuer, "bo", _find(SPECIES[0], found_at="2026-11-02T16:00:00Z", edition="us-ca-la"))
+    assert _monthly(client, issuer, sunday)["species"] == []
+    assert _species(_monthly(client, issuer, other, sub="bo")) == [("Bird 0", "us-ca-la")]
+
+
+def test_a_delete_takes_a_species_off_the_goal_and_passes_its_edition_on(client: TestClient, issuer: TestIssuer) -> None:
+    circle_id = _circle(client, issuer)
+    _join(client, issuer, circle_id, "bo")
+    first = _put_ok(client, issuer, "ada", _find(SPECIES[0], found_at="2026-11-02T16:00:00Z", edition="us-ca-la"))
+    _put_ok(client, issuer, "bo", _find(SPECIES[0], found_at="2026-11-03T16:00:00Z", edition="us-ny-nyc"))
+    only = _put_ok(client, issuer, "ada", _find(SPECIES[1], found_at="2026-11-04T16:00:00Z", edition="us-ca-la"))
+    for sighting in (first, only):
+        assert client.delete(f"/v1/finds/{sighting}", headers=issuer.headers(sub="ada")).status_code == 204
+    assert _species(_monthly(client, issuer, circle_id)) == [("Bird 0", "us-ny-nyc")]
+
+
+def test_a_goal_still_names_a_blocked_member_s_species_as_it_counts_them(client: TestClient, issuer: TestIssuer) -> None:
+    # A circle's goal is the circle's (#71): the blocker's progress still counts them, so the list says which, unowned.
+    circle_id = _circle(client, issuer)
+    _join(client, issuer, circle_id, "bo")
+    _put_ok(client, issuer, "bo", _find(SPECIES[0], found_at="2026-11-02T16:00:00Z", edition="us-ca-la"))
+    assert client.put("/v1/blocks/bo", headers=issuer.headers(sub="ada")).status_code == 204
+    goal = _monthly(client, issuer, circle_id)
+    assert _species(goal) == [("Bird 0", "us-ca-la")]
+    assert set(goal["species"][0]) == {"species_id", "scientific_name", "common_name", "edition"}
+
+
+def test_a_goal_reads_a_find_stored_without_an_edition_from_its_patch_s_art_key(
+    client: TestClient, issuer: TestIssuer
+) -> None:
+    circle_id = _circle(client, issuer)
+    patch = {"kind": "pack", "key": "packs/us-ca-la/patch/bird-0.png"}
+    watercolour = {"kind": "pack", "key": "packs/us-ca-la/bird-1.jpg"}
+    _put_ok(client, issuer, "ada", _find(SPECIES[0], found_at="2026-11-02T16:00:00Z", art=patch))
+    _put_ok(client, issuer, "ada", _find(SPECIES[1], found_at="2026-11-03T16:00:00Z", art=watercolour))
+    assert _species(_monthly(client, issuer, circle_id)) == [("Bird 0", "us-ca-la"), ("Bird 1", None)]
+
+
 def test_a_member_who_left_still_counts(client: TestClient, issuer: TestIssuer) -> None:
     circle_id = _circle(client, issuer)
     _join(client, issuer, circle_id, "bo")
