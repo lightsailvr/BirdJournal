@@ -527,7 +527,7 @@ final class FeelUITests: XCTestCase {
     func testASewnPatchTicksThenSucceeds() throws {
         guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
         let app = launch(["-hapticLog", "YES", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
-        let review = app.buttons["Review House Finch"]
+        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
         let add = app.buttons["Add and sew patch"]
         for _ in 0..<5 {
             XCTAssertTrue(review.waitForExistence(timeout: 90), "\(app.debugDescription.prefix(3000))")
@@ -554,7 +554,7 @@ final class FeelUITests: XCTestCase {
     func testUnderReduceMotionASewnPatchSucceedsOnce() throws {
         guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
         let app = launch(["-hapticLog", "YES", "-reduceMotion", "YES", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
-        let review = app.buttons["Review House Finch"]
+        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
         let add = app.buttons["Add and sew patch"]
         for _ in 0..<5 {
             XCTAssertTrue(review.waitForExistence(timeout: 90), "\(app.debugDescription.prefix(3000))")

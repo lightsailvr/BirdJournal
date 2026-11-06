@@ -135,7 +135,7 @@ final class FeelCaptureUITests: XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "fixtures/clips/birdnet-example-soundscape.wav").path(percentEncoded: false)
         let app = launch(["-reduceMotion", "YES", "-autoPhoneListening", clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
-        let review = app.buttons["Review House Finch"]
+        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
         let add = app.buttons["Add and sew patch"]
         for _ in 0..<5 {
             XCTAssertTrue(review.waitForExistence(timeout: 90))
