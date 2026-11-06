@@ -64,7 +64,8 @@ final class CollectionUITests: XCTestCase {
         let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch'")).firstMatch
         XCTAssertTrue(finch.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch.exists, "the search kept only the match")
-        XCTAssertEqual(modes.frame.minY, top, accuracy: 0.5, "the picker moved")
+        // The open field stands 8 pt taller than the title's row, and only when asked for. No mode change moves it.
+        XCTAssertEqual(modes.frame.minY, top + 8, accuracy: 2, "the picker moved")
     }
 
     @MainActor
