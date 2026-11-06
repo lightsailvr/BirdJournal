@@ -72,6 +72,7 @@ struct CandidateRow: View {
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius + 3, style: .continuous)
+                        // The `TransferPen` colorset: what's marked out on the cloth and not sewn yet. Never words.
                         .strokeBorder(Color.transferPen, style: StrokeStyle(lineWidth: 2, dash: [5, 3.5]))
                         .padding(-3.5)
                 }

@@ -26,8 +26,6 @@ extension Color {
     static let sharedGoal = Color("JournalSharedGoal")
     /// Text and marks on a `sharedGoal` fill.
     static let onSharedGoal = Color("JournalOnSharedGoal")
-    /// What a bird not yet sewn is marked with, as a pattern is on cloth (issue #150): #9DB4EE dark, #3F5FA8 light. Never words.
-    static let transferPen = Color("TransferPen")
     /// Errors and destructive actions in a page (issue #119): brick #A3322A light, salmon #F4A79B dark, at least 5.5:1
     /// on the page and a raised surface. The system red measured 3.2:1 on the light page and 3.6:1 on the dark raised
     /// surface, under the 4.5:1 text needs.

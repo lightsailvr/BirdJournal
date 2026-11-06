@@ -213,8 +213,20 @@ final class ListeningCoordinator {
         }
     }
 
+    private var stack: CandidateStack {
+        #if DEBUG
+        if let fakeStack { return fakeStack }
+        #endif
+        return listening.stack
+    }
+
+    #if DEBUG
+    /// `-fakeRunBirds` (issue #150): the birds a run has heard, standing still, for the UI tests and the screenshots.
+    var fakeStack: CandidateStack?
+    #endif
+
     /// Every species heard this run, in the order they were admitted: the order the stack and the lens pages keep.
-    var candidates: [Candidate] { listening.stack.candidates }
+    var candidates: [Candidate] { stack.candidates }
     /// The same species as the Listen tab lists them: calling now first (newest caller, then the one calling the
     /// longest), then the rest most recently heard first. Computed from the current stack over the remembered
     /// order, so a species that just arrived is placed at once.
@@ -238,7 +250,7 @@ final class ListeningCoordinator {
     /// The remembered order brought up to the current stack and clock; nothing is calling once the run has ended.
     private func currentOrder() -> SpeciesListOrder {
         var order = listOrder
-        order.update(with: listening.stack, at: state.isActive ? sessionTime : .infinity)
+        order.update(with: stack, at: state.isActive ? sessionTime : .infinity)
         return order
     }
     var startedAt: Date? { listening.startedAt }

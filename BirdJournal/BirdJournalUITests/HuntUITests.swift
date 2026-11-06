@@ -13,12 +13,16 @@ final class HuntUITests: XCTestCase {
         return clip
     }
 
+    /// A run that's heard these birds and holds still: an acorn woodpecker you haven't got here, the seeds' House Finch and Black
+    /// Phoebe, and a Common Blackbird no pack describes.
+    private static let birds = "Melanerpes formicivorus_Acorn Woodpecker,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Turdus merula_Common Blackbird"
+
     @MainActor
-    private func launchRun(location: String = "griffith", _ extra: [String] = []) throws -> XCUIApplication {
+    private func launchRun(_ extra: [String] = []) throws -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES",
-            "-autoPhoneListening", try Self.clip(), "-autoLocation", location, "-autoScreen", "listening",
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-fakeRunBirds", Self.birds,
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening", "-stitchInSeconds", "60",
         ] + extra
         app.launch()
         return app
@@ -29,51 +33,65 @@ final class HuntUITests: XCTestCase {
     }
 
     @MainActor
-    func testSewItOnARowStitchesRevealsAndUndoTakesItBack() throws {
-        let app = try launchRun(["-stitchInSeconds", "60"])
-        let sew = button(app, beginning: "Sew it, ")
-        XCTAssertTrue(sew.waitForExistence(timeout: 90), "no Sew it; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'waiting'")).firstMatch.exists, "the summary leads with what's waiting; screen: \(app.debugDescription.prefix(3000))")
+    func testEachLookHasItsButtonAndTheSummaryLeadsWithWhatsWaiting() throws {
+        let app = try launchRun()
+        let sew = app.buttons["Sew it, Acorn Woodpecker"]
+        XCTAssertTrue(sew.waitForExistence(timeout: 60), "no Sew it; screen: \(app.debugDescription.prefix(3000))")
+        // The blackbird has no patch in Los Angeles either: its review can still sew one.
+        XCTAssertTrue(app.staticTexts["2 new patches waiting and 2 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["Possible matches. Add the birds you recognize."].exists)
+        XCTAssertEqual(button(app, beginning: "Acorn Woodpecker, ").label, "Acorn Woodpecker, calling now, new patch waiting")
+        XCTAssertTrue(app.buttons["Add House Finch"].exists)
+        XCTAssertEqual(button(app, beginning: "House Finch, ").label, "House Finch, heard 3 min ago, you have this patch, seen 2 times")
+        XCTAssertTrue(app.buttons["Add Black Phoebe"].exists)
+        XCTAssertTrue(app.buttons["Review Common Blackbird"].exists, "a bird no pack describes keeps Review")
+        XCTAssertFalse(app.buttons["Sew it, Common Blackbird"].exists)
         XCTAssertFalse(app.buttons["Review House Finch"].exists, "no Review on a bird a pack describes")
+        XCTAssertFalse(app.buttons["Stop listening"].frame.width > 300, "Stop is quieter than the birds: not the screen's width")
+    }
+
+    @MainActor
+    func testSewItStitchesRevealsAndUndoTakesItBack() throws {
+        let app = try launchRun()
+        let sew = app.buttons["Sew it, Acorn Woodpecker"]
+        XCTAssertTrue(sew.waitForExistence(timeout: 60), "no Sew it; screen: \(app.debugDescription.prefix(3000))")
         sew.tap()
 
-        // The list can reorder under a tap: the stitch-in says which bird it was.
         let stitching = app.buttons["stitch-in"]
         XCTAssertTrue(stitching.waitForExistence(timeout: 10), "no stitch-in; screen: \(app.debugDescription.prefix(4000))")
-        let name = stitching.label.replacingOccurrences(of: "Sewing your ", with: "").replacingOccurrences(of: " patch", with: "")
+        XCTAssertEqual(stitching.label, "Sewing your Acorn Woodpecker patch")
         stitching.tap()
         let reveal = app.staticTexts["New patch, Citrus edition"]
         XCTAssertTrue(reveal.waitForExistence(timeout: 5), "no reveal; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["Your first \(name) in Los Angeles"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first Acorn Woodpecker in Los Angeles"].exists, "screen: \(app.debugDescription.prefix(4000))")
 
-        let undo = app.buttons["Undo adding \(name)"]
+        let undo = app.buttons["Undo adding Acorn Woodpecker"]
         XCTAssertTrue(undo.waitForExistence(timeout: 5), "no Undo; screen: \(app.debugDescription.prefix(4000))")
         undo.tap()
         XCTAssertFalse(reveal.waitForExistence(timeout: 2), "Undo closes the reveal")
-        XCTAssertTrue(app.buttons["Sew it, \(name)"].waitForExistence(timeout: 10), "the bird is new again; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(sew.waitForExistence(timeout: 10), "the bird is new again; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["2 new patches waiting and 2 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
 
-        // Sewn and kept, the row shows it.
-        app.buttons["Sew it, \(name)"].tap()
+        // Sewn and kept, the row shows it: the patch and a check, and one fewer waiting.
+        sew.tap()
         XCTAssertTrue(stitching.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
-        let sewnName = stitching.label.replacingOccurrences(of: "Sewing your ", with: "").replacingOccurrences(of: " patch", with: "")
         stitching.tap()
         let keepListening = app.buttons["Keep listening"]
         XCTAssertTrue(keepListening.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
         keepListening.tap()
-        XCTAssertTrue(app.buttons["Added. Review \(sewnName)"].waitForExistence(timeout: 10), "patch and check; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(button(app, beginning: "\(sewnName), added, you have this patch").exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons["Added. Review Acorn Woodpecker"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(button(app, beginning: "Acorn Woodpecker, ").label, "Acorn Woodpecker, added, you have this patch, seen once")
+        XCTAssertTrue(app.staticTexts["1 new patch waiting and 3 you already have"].exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
-    func testAddOnARowWithAPatchTicksTheCountAndUndoTakesItBack() throws {
-        let app = try launchRun(["-seedJournal", "YES", "-stitchInSeconds", "60"])
+    func testAddTicksTheCountAndUndoTakesItBack() throws {
+        let app = try launchRun()
         let add = app.buttons["Add House Finch"]
-        XCTAssertTrue(add.waitForExistence(timeout: 90), "no Add on the seeded bird; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(add.waitForExistence(timeout: 60), "no Add on the seeded bird; screen: \(app.debugDescription.prefix(3000))")
         add.tap()
 
-        // The list can reorder under a tap; a bird with no patch would stitch instead, and that's another test.
-        let seenAgain = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Seen again'")).firstMatch
+        let seenAgain = app.staticTexts["Seen again, 3 times in Los Angeles"]
         XCTAssertTrue(seenAgain.waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "a repeat stitches nothing")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "and opens no page")
@@ -82,25 +100,49 @@ final class HuntUITests: XCTestCase {
         app.buttons["Undo"].firstMatch.tap()
         XCTAssertTrue(add.waitForExistence(timeout: 5), "it can be added again; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(seenAgain.exists, "the count went with it")
+        XCTAssertEqual(button(app, beginning: "House Finch, ").label, "House Finch, heard 3 min ago, you have this patch, seen 2 times")
     }
 
     @MainActor
-    func testTappingARowOpensTheReviewAndAddsNothing() throws {
-        let app = try launchRun(["-stitchInSeconds", "60"])
+    func testARowItselfOpensTheReviewAndAddsNothingWithThePhotoFirst() throws {
+        let app = try launchRun()
         let row = button(app, beginning: "House Finch, ")
-        XCTAssertTrue(row.waitForExistence(timeout: 90), "no row; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
         row.tap()
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "no review; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.segmentedControls["review-method"].waitForExistence(timeout: 5), "Heard or Seen is on the review; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
+        XCTAssertFalse(app.buttons["profile-patch"].exists, "in a review the photo comes first; screen: \(app.debugDescription.prefix(3000))")
         app.buttons["Close"].tap()
-        XCTAssertTrue(button(app, beginning: "Sew it, ").waitForExistence(timeout: 10), "still waiting; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["Add House Finch"].waitForExistence(timeout: 10), "still not added; screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    @MainActor
+    func testABirdNoPackDescribesOpensItsReview() throws {
+        let app = try launchRun()
+        let review = app.buttons["Review Common Blackbird"]
+        XCTAssertTrue(review.waitForExistence(timeout: 60), "no Review; screen: \(app.debugDescription.prefix(3000))")
+        review.tap()
+        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "no review; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
+    }
+
+    @MainActor
+    func testRowsShowPatchesAndTheRowsStillTakeTheirTaps() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoScreen", "species-list"]
+        app.launch()
+        // A row with a patch on it still opens: the patch takes no touches of its own.
+        let row = button(app, beginning: "Mourning Dove")
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "no species row; screen: \(app.debugDescription.prefix(3000))")
+        row.tap()
+        XCTAssertTrue(app.navigationBars["Mourning Dove"].waitForExistence(timeout: 10) || app.staticTexts["Mourning Dove"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
     func testTheProfileOfABirdYouveFoundLeadsWithItsPatchWhichOpens() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "profile"]
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoScreen", "profile"]
         app.launch()
         let patch = app.buttons["profile-patch"].firstMatch
         XCTAssertTrue(patch.waitForExistence(timeout: 15), "no patch; screen: \(app.debugDescription.prefix(3000))")
@@ -111,15 +153,5 @@ final class HuntUITests: XCTestCase {
         XCTAssertLessThan(patch.frame.minY, name.frame.minY, "the patch comes first")
         patch.tap()
         XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the patch didn't open; screen: \(app.debugDescription.prefix(3000))")
-    }
-
-    @MainActor
-    func testTheReviewOfABirdYouveFoundLeadsWithThePhotoNotThePatch() throws {
-        let app = try launchRun(["-seedJournal", "YES"])
-        let row = button(app, beginning: "House Finch, ")
-        XCTAssertTrue(row.waitForExistence(timeout: 90), "no row; screen: \(app.debugDescription.prefix(3000))")
-        row.tap()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "no review; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertFalse(app.buttons["profile-patch"].waitForExistence(timeout: 2), "the photo comes first; screen: \(app.debugDescription.prefix(3000))")
     }
 }

@@ -51,6 +51,10 @@ import UIKit
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
 /// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
 ///   prompting, for the UI tests; `griffith` answers with a fix in Griffith Park.
+/// - `-fakeRunBirds "Haemorhous mexicanus_House Finch,…"` makes a run's list these BirdNET labels and hold still, the first
+///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
+///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
+///   reveal; `-autoRunStops YES` stops the run, for the review. `-patchDecodeLog YES` logs each patch decode under `patch-decode`.
 /// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
@@ -119,7 +123,16 @@ struct DebugLaunch: ViewModifier {
             case "listening", "review":
                 tab = .listen
                 run.source = .phone
+                run.fakeStack = FakeRunBirds.stack
                 await run.start()
+                if let name = defaults.string(forKey: "autoRowAdd"), let bird = run.candidates.first(where: { $0.species.commonName == name }) {
+                    await run.addFromRow(bird, isDescribed: true)
+                    run.finishCeremony()
+                    run.dismissReveal()
+                }
+                if defaults.bool(forKey: "autoRunStops") {
+                    await run.stop()
+                }
                 if screen == "review" {
                     // The WAV's first admissions take a few windows; wait for a bird the packs describe, so the
                     // review shows a photo, else take the first.
@@ -531,6 +544,19 @@ enum DebugSeeds {
             border.stroke()
         }
         return image.jpegData(compressionQuality: 0.85) ?? Data()
+    }
+}
+/// `-fakeRunBirds`: a run's list from the launch arguments.
+enum FakeRunBirds {
+    static var stack: CandidateStack? {
+        guard let labels = UserDefaults.standard.string(forKey: "fakeRunBirds") else { return nil }
+        return CandidateStack(candidates: labels.split(separator: ",").enumerated().map { position, label in
+            let parts = label.split(separator: "_", maxSplits: 1).map(String.init)
+            let species = Species(index: position, scientificName: parts[0], commonName: parts.last ?? parts[0], taxonomicClass: "Aves")
+            // A clock far ahead keeps the first calling for good; the others fell quiet before the run began.
+            let heard = position == 0 ? 1_000_000 : Double(-60 * (2 * position + 1))
+            return Candidate(species: species, score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: heard, admittedAt: Double(position))
+        })
     }
 }
 #endif

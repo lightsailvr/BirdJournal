@@ -1,4 +1,5 @@
 import ImageIO
+import OSLog
 import Pack
 import SwiftUI
 
@@ -164,6 +165,13 @@ enum PatchTextures {
     }
 
     private nonisolated static func decode(_ url: URL, maxPixels: Int) -> CGImage? {
+        #if DEBUG
+        // Issue #150: what a sweep counts, with patches on rows that refresh every second. A thumbnail that's stayed lazy shows up
+        // in the same log as the decoder's own lines.
+        if UserDefaults.standard.bool(forKey: "patchDecodeLog") {
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "patch-decode").info("decode \(url.lastPathComponent, privacy: .public)")
+        }
+        #endif
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
