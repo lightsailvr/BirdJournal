@@ -10,12 +10,15 @@ import numpy as np
 import pytest
 from PIL import Image, ImageDraw
 
-from packbuilder import cli
+from packbuilder import cli, pipeline
+from packbuilder.detector import Detection
+from packbuilder.geometry import Box
 from packbuilder.definition import PackDefinition
 from packbuilder.pack_art import ArtLock
 from packbuilder.patch_art import PatchLock, _isolate_prompt
 from packbuilder.silhouettes import APPROVED, GAP, PENDING, REJECTED, SIZE, SilhouetteLock, SilhouetteMaker, derive, review, sources
 from packbuilder.writer import write_pack
+from tests.conftest import make_candidate, synthetic_photo
 from tests.test_writer import definition, result_for
 
 PACKS = Path(__file__).resolve().parents[1] / "packs"
@@ -152,6 +155,21 @@ def maker_without_birds(tmp_path) -> SilhouetteMaker:
                            sources={PHOEBE: (1, 49, "Black Phoebe")}, cache_dir=tmp_path / "cache")
 
 
+def test_a_new_recipe_that_comes_out_the_same_keeps_its_review_and_one_that_differs_is_reviewed_again(tmp_path):
+    first = maker(tmp_path)
+    first.make([PHOEBE, HUMMINGBIRD])
+    review(first.lock, approve=[PHOEBE], reject=[HUMMINGBIRD], why="no legs")
+    newer = maker(tmp_path)
+    newer.version = "silhouette@2"
+    made = newer.make([PHOEBE, HUMMINGBIRD])
+    assert newer.derived == 2 and made[PHOEBE].review == APPROVED and made[HUMMINGBIRD].review == REJECTED
+    assert newer.lock.species[PHOEBE]["workflow"] == "silhouette@2" and newer.lock.species[HUMMINGBIRD]["why"] == "no legs"
+    changed = maker(tmp_path)
+    changed.version = "silhouette@3"
+    changed.lock.species[PHOEBE]["sha256"] = "an older picture"
+    assert changed.make([PHOEBE])[PHOEBE].review == PENDING
+
+
 def test_a_new_reference_means_a_new_review(tmp_path):
     first = maker(tmp_path)
     first.make([PHOEBE])
@@ -227,7 +245,8 @@ def built(tmp_path, approve):
     pack = definition()
     made = maker(tmp_path)
     species = [entry.id for entry in pack.species]
-    review(made.lock, approve=approve) if made.make(species) and approve else None
+    made.make(species)
+    review(made.lock, approve=approve)
     results = [result_for(pack.species[0], [1, 10, 11], tmp_path), result_for(pack.species[1], [2, 4, 5], tmp_path)]
     written = write_pack(pack, results, tmp_path / "out", built_at="2026-11-05T00:00:00Z", silhouettes=made.make(species), silhouette_version="silhouette@1")
     return written, sqlite3.connect(written.database), tmp_path / "out"
@@ -316,6 +335,48 @@ def test_the_command_line_derives_draws_and_reviews_by_the_sheets_numbers(tmp_pa
     assert cli.main(["silhouette-review", str(folder), "--gap", "1,Anna's Hummingbird"]) == 0
     assert SilhouetteLock.load(folder / "silhouette.lock.json").species[HUMMINGBIRD]["review"] == GAP
     assert cli.main(["silhouette-review", str(folder), "--approve", "3"]) == 1
+
+
+def test_a_pack_without_art_locks_gets_no_step_and_no_stray_lock(tmp_path):
+    folder = definition_folder(tmp_path)
+    (folder / "patch.lock.json").unlink()
+    assert cli.main(["silhouettes", str(folder), "--cache", str(tmp_path / "cache"), "--sheets", str(tmp_path / "sheets")]) == 1
+    assert not (folder / "silhouette.lock.json").exists()
+
+
+def test_a_build_derives_them_draws_their_sheets_and_ships_the_approved(tmp_path):
+    """Through build_pack: nothing ships before the review, the sheets are there, and an approved silhouette is in the rebuilt pack."""
+    pack = definition()
+    entry = pack.species[0]
+    pack = PackDefinition(id=pack.id, name=pack.name, region=pack.region, version=1, place_ids=(1,), bounding_box=pack.bounding_box, species=[entry])
+
+    class Metadata:
+        def candidates_for(self, taxon_id):
+            return [make_candidate(photo_id=i, observation_id=i * 10, license="CC0", width=2048, height=1536) for i in (1, 2)]
+
+    class Detector:
+        def detect(self, image):
+            return [Detection(Box(0.3, 0.3, 0.7, 0.7), 0.9)]
+
+    def fetch(candidate, cache_dir, size):
+        path = tmp_path / f"{candidate.photo_id}-{size}.jpg"
+        if not path.exists():
+            synthetic_photo(size=(1600, 1200)).save(path)
+        return path
+
+    (tmp_path / "overrides.json").write_text(json.dumps({entry.scientific_name: {"include": [1, 2]}}))
+    options = pipeline.BuildOptions(cache_dir=tmp_path / "cache", out_dir=tmp_path / "pack", fetch=fetch, min_photos=1)
+
+    def build():
+        return pipeline.build_pack(pack, tmp_path / "overrides.json", Metadata(), Detector(), options, art_sheets=tmp_path / "sheets",
+                                   silhouette_maker=maker(tmp_path, {PHOEBE: (1, 49, "Black Phoebe")}))
+
+    assert sqlite3.connect(build().database).execute("SELECT COUNT(*) FROM silhouette").fetchone() == (0,)
+    assert (tmp_path / "sheets" / "silhouettes" / "sheet-01.jpg").exists() and (tmp_path / "sheets" / "silhouettes" / "overview.jpg").exists()
+    review(SilhouetteLock.load(tmp_path / "silhouette.lock.json"), approve_all=True)
+    rows = sqlite3.connect(build().database).execute("SELECT species_id, file, workflow_version FROM silhouette").fetchall()
+    assert rows == [(PHOEBE, f"silhouette/{PHOEBE}.png", "silhouette@1")]
+    assert (tmp_path / "pack" / rows[0][1]).exists()
 
 
 def test_the_command_line_takes_a_pin_from_the_overrides(tmp_path):

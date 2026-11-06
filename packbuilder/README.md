@@ -262,6 +262,7 @@ uv run packbuilder silhouette-review packs/us-ca-la --gap 154 --why "a blob: kee
 - **The bird**: `art.silhouette.reference` in `overrides.json` (another of the pack's photos with a cached isolation, for a bird whose pose makes a poor shape), else the patch's reference in `patch.lock.json`, else the pack art's in `art.lock.json`. A species painted from text has none.
 - **The lock**: `silhouette.lock.json` pins the photo, isolation seed, recipe version, the picture's SHA-256 (its file in `<cache>/art/silhouettes/`), size, what the recipe noticed and the review. A warm lock derives nothing; a new reference or recipe derives again, and anything that comes out different is pending again.
 - **Reviewed by number**: the sheets in `build/pack-art/<pack id>/silhouettes/` show the isolated bird beside its silhouette in the set page's tile and tint, numbered as in `pack.json`, plus an overview; they say when the frame cuts the bird or it was small in its photo. Unlike a painting, a rejected silhouette would come back the same, so it stays rejected, and out of the pack, until `art.silhouette.reference` gives another bird. A gap keeps the app's glyph on purpose.
+- **In a build**: `packbuilder build` derives what the lock lacks and draws the sheets after the patches; `--no-silhouettes` skips the step (`--no-art` too), and a pack with no art lock yet has no step.
 - **In the pack**: an approved silhouette is written as `silhouette/<species id>.png` with a `silhouette` row (the file, its size, its source photo), about 1.8 KB a species. It came within schema 5, as `cover` did within 4: a reader that doesn't know the table never opens it, and an older pack has no such table, which reads as no silhouettes. Its LICENSE line credits the photo, so one whose photo left the pack stays out and is listed in `report.json`'s `unreviewed.silhouettes`.
 
 ## Hero photos
@@ -276,9 +277,10 @@ uv run packbuilder hero-review packs/us-ca-la --propose 4=636417717 --why "the h
 uv run packbuilder hero-review packs/us-ca-la --accept-all --decline 24,157    # the maintainer's answer, by the sheets' numbers
 ```
 
-- **The flags**: the detector's box against the slot and the photo's frame ("slot: top", "frame: right", "no bird found"). It is a hint: its box is loose, and it can't tell a head from a tail. On Los Angeles 19 of the 44 it flagged were fine, and it missed 8 of the 33 that needed replacing (a bird behind a branch has an uncut box), so the proposals come from looking at the sheets.
+- **The flags**: the detector's box against the slot and the photo's frame ("slot: top", "frame: right", "no bird found"). It is a hint: its box is loose, and it can't tell a head from a tail. On Los Angeles 7 of the 44 it flagged were fine, and it missed 8 of the 45 that needed replacing (a bird behind a branch has an uncut box), so the proposals come from looking at the sheets.
 - **The pool**: `hero-candidates` ranks the species' cleared photos already in `<cache>/photos/large`, under the build's own rules (license, excluded observations, size, sharpness), keeping only a whole bird in the slot, by the light on it and its sharpness. Look at them: it can't see a hand or a dead bird.
 - **A proposal is not a pin**: `"hero": {"proposed": <photo id>, "_why": ...}` in `overrides.json`, which the build ignores. `--accept` puts the photo first in `include` and leaves `"hero": {"pinned": ...}`, with the species' patch and silhouette photos pinned after it: a pack holds five photos, a sixth would push out the last, and their credits name those photos. `--decline` removes the proposal. Then rebuild the pack.
+- **It moves more than the profile**: the first photo's lens crop is also what the glasses, the Atlas rows and the journal show, and the lens score that used to pick it prefers a dark background, since the lens's display is additive. A photo on bright sand or sky reads less well there.
 
 ## Rarity calibration
 

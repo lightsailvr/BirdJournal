@@ -25,13 +25,15 @@ import io
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 from PIL import Image
 from scipy import ndimage
 
 from packbuilder.contact_sheets import grid
-from packbuilder.pack_art import APPROVED, GAP, PENDING, REJECTED, UNPAINTED, ArtLock, _find
+from packbuilder.definition import PackDefinition
+from packbuilder.pack_art import APPROVED, GAP, PENDING, REJECTED, UNPAINTED, ArtLock
 from packbuilder.patch_art import cached_isolations
 
 log = logging.getLogger("packbuilder.silhouettes")
@@ -76,6 +78,15 @@ class Derived:
     """The sides of the picture the bird runs into: its reference is cut off there."""
 
 
+class Source(NamedTuple):
+    """The bird a species' silhouette is taken from."""
+
+    photo_id: int
+    seed: int | None
+    """The isolation's seed; None for a pin, which takes whichever isolation is cached."""
+    common_name: str
+
+
 @dataclass(frozen=True)
 class Silhouette:
     """One species' silhouette as the step has it."""
@@ -108,14 +119,14 @@ class SilhouetteLock(ArtLock):
 def derive(bird_on_white: Image.Image) -> Derived:
     """The silhouette of a bird isolated on white. Raises ValueError when the picture is blank."""
     rgb = np.asarray(bird_on_white.convert("RGB")).astype(int)
-    lightest = rgb.min(-1)
-    bird = lightest < PAPER
+    darkest = rgb.min(-1)
+    bird = darkest < PAPER
     if not bird.any():
         raise ValueError("no bird on the white")
     labels, count = ndimage.label(bird)
     sizes = ndimage.sum(bird, labels, range(1, count + 1))
     bird = np.isin(labels, 1 + np.flatnonzero(sizes >= SPECK * sizes.max()))
-    bird, holes = _fill_plumage(bird, lightest)
+    bird, holes = _fill_plumage(bird, darkest)
     ys, xs = np.nonzero(bird)
     height, width = bird.shape
     cut = [side for side, reached in (("top", ys.min() == 0), ("bottom", ys.max() == height - 1), ("left", xs.min() == 0), ("right", xs.max() == width - 1)) if reached]
@@ -125,7 +136,7 @@ def derive(bird_on_white: Image.Image) -> Derived:
     return Derived(image, _png(image), int(longest), holes, cut)
 
 
-def _fill_plumage(bird: np.ndarray, lightest: np.ndarray) -> tuple[np.ndarray, int]:
+def _fill_plumage(bird: np.ndarray, darkest: np.ndarray) -> tuple[np.ndarray, int]:
     """`bird` with its plumage holes filled and its air holes left open, and how many it filled."""
     enclosed = ndimage.binary_fill_holes(bird) & ~bird
     labels, count = ndimage.label(enclosed)
@@ -142,7 +153,7 @@ def _fill_plumage(bird: np.ndarray, lightest: np.ndarray) -> tuple[np.ndarray, i
             near = ndimage.binary_dilation(hole, iterations=RING[0])
             far = ndimage.binary_dilation(near, iterations=RING[1] - RING[0])
             ring = far & ~near & bird[y0:y1, x0:x1]
-            if not ring.any() or (lightest[y0:y1, x0:x1][ring] > PALE).mean() < PALE_SHARE:
+            if not ring.any() or (darkest[y0:y1, x0:x1][ring] > PALE).mean() < PALE_SHARE:
                 continue
         filled[y0:y1, x0:x1] |= hole
         done += 1
@@ -168,17 +179,29 @@ def _png(image: Image.Image) -> bytes:
     return buffer.getvalue()
 
 
-def sources(patch_lock: ArtLock, art_lock: ArtLock, pins: dict[str, int]) -> dict[str, tuple[int, int | None, str]]:
-    """Each species' bird as (photo id, isolation seed, common name): its pin, with whichever isolation is cached; else
-    its patch's reference; else its pack art's. A species painted from text has no bird."""
+def pins_in(definition: PackDefinition, overrides: dict) -> dict[str, int]:
+    """`art.silhouette.reference` from the overrides, by species id."""
+    pins = {}
+    for entry in definition.species:
+        data = overrides.get(entry.scientific_name)
+        art = data.get("art") if isinstance(data, dict) else None
+        reference = ((art or {}).get("silhouette") or {}).get("reference")
+        if reference is not None:
+            pins[entry.id] = int(reference)
+    return pins
+
+
+def sources(patch_lock: ArtLock, art_lock: ArtLock, pins: dict[str, int]) -> dict[str, Source]:
+    """Each species' bird: its pin, with whichever isolation is cached; else its patch's reference; else its pack art's.
+    A species painted from text has no bird."""
     found = {}
     for species_id in {*art_lock.species, *patch_lock.species}:
         entry = patch_lock.species.get(species_id) or art_lock.species[species_id]
         name = entry.get("common_name", species_id)
         if species_id in pins:
-            found[species_id] = (pins[species_id], None, name)
+            found[species_id] = Source(pins[species_id], None, name)
         elif entry.get("photos"):
-            found[species_id] = (entry["photos"][0], entry.get("isolate_seed"), name)
+            found[species_id] = Source(entry["photos"][0], entry.get("isolate_seed"), name)
     return found
 
 
@@ -189,7 +212,7 @@ class SilhouetteMaker:
 
     pack_id: str
     lock: SilhouetteLock
-    sources: dict[str, tuple[int, int | None, str]]
+    sources: dict[str, Source]
     cache_dir: Path
     version: str = VERSION
     derived: int = field(default=0, init=False)
@@ -219,11 +242,10 @@ class SilhouetteMaker:
         if species_id not in self.sources:
             raise KeyError(f"{species_id}: its art was painted from text, so there is no bird to take a shape from")
         photo_id, seed, name = self.sources[species_id]
-        same = entry is not None and entry["workflow"] == self.version and entry["photos"] == [photo_id] and (seed is None or entry["isolate_seed"] == seed)
-        if same and entry["review"] == REJECTED:
-            return Silhouette(species_id, REJECTED, self._file(entry["sha256"]), (photo_id,))
-        if same and self._file(entry["sha256"]).exists():
-            return Silhouette(species_id, entry["review"], self._file(entry["sha256"]), (photo_id,))
+        same_bird = entry is not None and entry["photos"] == [photo_id] and (seed is None or entry["isolate_seed"] == seed)
+        if same_bird and entry["workflow"] == self.version:
+            if entry["review"] == REJECTED or self._file(entry["sha256"]).exists():
+                return Silhouette(species_id, entry["review"], self._file(entry["sha256"]), (photo_id,))
         isolations = cached_isolations(self.cache_dir, photo_id)
         seed = min(isolations) if seed is None and isolations else seed
         if seed not in isolations:
@@ -235,12 +257,14 @@ class SilhouetteMaker:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(made.png)
         self.derived += 1
-        review_state = APPROVED if same and entry["review"] == APPROVED and entry["sha256"] == digest else PENDING
+        # What comes out the same keeps its review, whatever made it run again (a new recipe, a lost cache).
+        review_state = entry["review"] if same_bird and entry["sha256"] == digest and entry["review"] in (APPROVED, REJECTED) else PENDING
         self.lock.species[species_id] = {
             "common_name": name, "photos": [photo_id], "isolate_seed": seed, "workflow": self.version, "sha256": digest,
             "width": made.image.width, "height": made.image.height, "bytes": len(made.png),
             "measure": {"bird_pixels": made.bird_pixels, "holes_filled": made.holes_filled, "cut": made.cut},
             "review": review_state,
+            **({"why": entry["why"]} if review_state == REJECTED and entry.get("why") else {}),
         }
         return Silhouette(species_id, review_state, target, (photo_id,))
 
@@ -257,10 +281,11 @@ class SilhouetteMaker:
         cells = []
         for number, species_id in enumerate(species_ids, start=1):
             entry = self.lock.species.get(species_id, {})
-            name = entry.get("common_name") or self.sources.get(species_id, (0, 0, species_id))[2]
+            source = self.sources.get(species_id)
+            name = entry.get("common_name") or (source.common_name if source else species_id)
             silhouette = made.get(species_id)
             picture = _in_tile(silhouette.file) if silhouette and silhouette.file and silhouette.file.exists() else None
-            cells.append(((self._bird(species_id, entry), f"{number:03d} {name}\n{(silhouette.review if silhouette else UNPAINTED).upper()}"),
+            cells.append(((self._bird(entry), f"{number:03d} {name}\n{(silhouette.review if silhouette else UNPAINTED).upper()}"),
                           (picture, _noticed(entry))))
         sheets = []
         for start in range(0, len(cells), per_sheet):
@@ -276,10 +301,11 @@ class SilhouetteMaker:
             sheets.append(target)
         return sheets
 
-    def _bird(self, species_id: str, entry: dict) -> Image.Image | None:
+    def _bird(self, entry: dict) -> Image.Image | None:
         """The isolated bird cropped close, so the sheet compares like with like."""
-        photo_id, seed = (entry["photos"][0], entry["isolate_seed"]) if entry.get("photos") else self.sources.get(species_id, (None, None, ""))[:2]
-        path = cached_isolations(self.cache_dir, photo_id).get(seed) if photo_id else None
+        if not entry.get("photos"):
+            return None
+        path = cached_isolations(self.cache_dir, entry["photos"][0]).get(entry["isolate_seed"])
         if path is None:
             return None
         with Image.open(path) as opened:
@@ -318,21 +344,20 @@ def _noticed(entry: dict) -> str:
 
 
 def review(lock: SilhouetteLock, approve: list[str] = (), reject: list[str] = (), gap: list[str] = (), approve_all: bool = False, why: str | None = None) -> None:
-    """Records the maintainer's review. `approve_all` approves whatever is still pending once the rest are recorded, so
-    one answer can reject a few by name and approve the rest. Names are checked before anything changes."""
-    resolved = {name: _find(lock, name) for name in (*approve, *reject, *gap)}
-    for name in reject:
-        entry = lock.species[resolved[name]]
-        entry["review"] = REJECTED
-        if why:
-            entry["why"] = why
-    for name in gap:
-        entry = lock.species[resolved[name]]
-        entry["review"] = GAP
-        if why:
-            entry["why"] = why
-    for name in approve:
-        entry = lock.species[resolved[name]]
+    """Records the maintainer's review of these species ids. `approve_all` approves whatever is still pending once the
+    rest are recorded, so one answer can reject a few and approve the rest. Raises KeyError, having changed nothing, on a
+    species the lock doesn't have."""
+    for species_id in (*approve, *reject, *gap):
+        if species_id not in lock.species:
+            raise KeyError(f"no silhouette for {species_id} in {lock.path}")
+    for states, review_state in ((reject, REJECTED), (gap, GAP)):
+        for species_id in states:
+            entry = lock.species[species_id]
+            entry["review"] = review_state
+            if why:
+                entry["why"] = why
+    for species_id in approve:
+        entry = lock.species[species_id]
         entry["review"] = APPROVED
         entry.pop("why", None)
     if approve_all:

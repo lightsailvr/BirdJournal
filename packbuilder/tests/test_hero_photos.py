@@ -73,6 +73,12 @@ def test_first_photos_are_numbered_in_the_packs_order(tmp_path):
     assert firsts[0].file.exists()
 
 
+def test_a_species_with_no_photo_keeps_the_numbers_of_the_rest_as_in_pack_json(tmp_path):
+    built = definition()
+    write_pack(built, [result_for(built.species[0], [], tmp_path), result_for(built.species[1], [4], tmp_path)], tmp_path / "out", built_at="2026-11-05T00:00:00Z")
+    assert [(f.number, f.species_id) for f in first_photos(tmp_path / "out")] == [(2, HUMMINGBIRD)]
+
+
 def test_the_sheets_show_every_first_photo_and_each_proposal(tmp_path):
     built, out = pack(tmp_path)
     (tmp_path / "cache" / "photos" / "large").mkdir(parents=True)
@@ -134,11 +140,21 @@ def test_accepting_pins_it_first_and_keeps_the_photos_that_are_credited(tmp_path
     propose(built, overrides, HUMMINGBIRD, 10, "better light")
     assert review(built, overrides, folder, accept=[PHOEBE], decline=[HUMMINGBIRD]) == ([PHOEBE], [HUMMINGBIRD])
     phoebe = overrides["Sayornis nigricans"]
-    assert phoebe["include"] == [9, 7, 1, 6], "the proposal, what was pinned, the patch's photo and the silhouette's"
+    assert phoebe["include"] == [9, 1, 6, 7], "the proposal, the patch's photo and the silhouette's, what was pinned"
     assert phoebe["hero"] == {"pinned": 9, "_why": "the whole bird"}
     assert "Calypte anna" not in overrides, "a declined proposal leaves nothing behind"
     with pytest.raises(KeyError):
         review(built, overrides, folder, accept=[HUMMINGBIRD])
+
+
+def test_one_species_cant_be_both_accepted_and_declined(tmp_path):
+    folder = definition_folder(tmp_path)
+    built = PackDefinition.load(folder / "pack.json")
+    overrides = {}
+    propose(built, overrides, PHOEBE, 9, "a")
+    with pytest.raises(ValueError):
+        review(built, overrides, folder, accept=[PHOEBE], decline=[PHOEBE])
+    assert overrides["Sayornis nigricans"]["hero"]["proposed"] == 9
 
 
 def test_accept_all_leaves_what_this_answer_declines(tmp_path):
@@ -157,6 +173,8 @@ def test_the_command_line_applies_the_answer_by_the_sheets_numbers(tmp_path):
     overrides = json.loads((folder / "overrides.json").read_text())
     assert overrides["Sayornis nigricans"]["hero"]["proposed"] == 9
     assert cli.main(["hero-review", str(folder), "--accept", "9"]) == 1, "no such number"
+    assert cli.main(["hero-review", str(folder), "--propose", "Foo=1"]) == 1, "no such bird"
+    assert cli.main(["hero-candidates", str(folder), "--species", "999", "--out", str(tmp_path / "c.jpg")]) == 1
     assert cli.main(["hero-review", str(folder), "--accept", "1", "--decline", "2"]) == 0
     overrides = json.loads((folder / "overrides.json").read_text())
     assert overrides["Sayornis nigricans"]["include"] == [9, 1] and overrides["Sayornis nigricans"]["hero"]["pinned"] == 9

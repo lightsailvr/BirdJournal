@@ -19,7 +19,6 @@ import sqlite3
 from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
 
 from PIL import Image
 
@@ -27,12 +26,13 @@ from packbuilder.candidates import filter_candidates
 from packbuilder.contact_sheets import grid
 from packbuilder.crops import phone_crop_box, render_phone, upright
 from packbuilder.definition import PackDefinition, SpeciesEntry
-from packbuilder.detector import Detection
 from packbuilder.geometry import Box
-from packbuilder.pack_art import lighting
-from packbuilder.pipeline import MIN_BIRD_AREA, MIN_BIRD_PIXELS, MIN_SHARPNESS, bird_pixels, per_observation, shared_photo_ids, too_small_for_lens
+from packbuilder.pack_art import ArtLock, lighting
+from packbuilder.patch_art import LOCK_FILE as PATCH_LOCK
+from packbuilder.pipeline import MIN_BIRD_AREA, MIN_BIRD_PIXELS, MIN_SHARPNESS, Detector, MetadataSource, bird_pixels, per_observation, shared_photo_ids, too_small_for_lens
 from packbuilder.scoring import score_crop
 from packbuilder.selection import Overrides
+from packbuilder.silhouettes import LOCK_FILE as SILHOUETTE_LOCK
 
 SLOT_ASPECT = 3 / 2
 """The profile's photo slot: `AttributedImage.aspectRatio` in the app."""
@@ -41,14 +41,6 @@ FRAME_MARGIN = 0.012
 SLOT_MARGIN = 0.04
 """A box past the slot's edge by this share of the bird's own size has lost part of the bird there."""
 CELL = (330, 220)
-
-
-class Detector(Protocol):
-    def detect(self, image: Image.Image) -> list[Detection]: ...
-
-
-class MetadataSource(Protocol):
-    def candidates_for(self, taxon_id: int) -> list: ...
 
 
 @dataclass(frozen=True)
@@ -63,13 +55,13 @@ class FirstPhoto:
 
 
 def first_photos(pack_dir: Path) -> list[FirstPhoto]:
-    """Every species' first photo, in the pack's order."""
+    """Every species' first photo, in the pack's order, numbered as in pack.json: a species with no photo keeps its number."""
     pack_dir = Path(pack_dir)
     with closing(sqlite3.connect(pack_dir / "pack.sqlite")) as db:
         rows = db.execute(
-            "SELECT s.id, s.common_name, p.inat_photo_id, p.file_phone FROM species s JOIN photo p ON p.species_id = s.id AND p.rank = 0 ORDER BY s.sort_order"
+            "SELECT s.sort_order, s.id, s.common_name, p.inat_photo_id, p.file_phone FROM species s JOIN photo p ON p.species_id = s.id AND p.rank = 0 ORDER BY s.sort_order"
         ).fetchall()
-    return [FirstPhoto(number, species_id, name, photo_id, pack_dir / file) for number, (species_id, name, photo_id, file) in enumerate(rows, start=1)]
+    return [FirstPhoto(order + 1, species_id, name, photo_id, pack_dir / file) for order, species_id, name, photo_id, file in rows]
 
 
 def slot_of(size: tuple[int, int]) -> tuple[int, int, int, int]:
@@ -124,16 +116,15 @@ class Candidate:
     light: float
     sharpness: float
     rank: float
-    observation: str | None
 
 
-def candidates(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: Detector, cache_dir: Path, shared: frozenset[int] = frozenset(), top: int = 6, skip: frozenset[int] = frozenset()) -> list[Candidate]:
+def candidates(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSource, detector: Detector, cache_dir: Path, shared: frozenset[int] = frozenset(), top: int = 6) -> list[Candidate]:
     """The species' best photos for a hero among the cleared ones already in the cache: the rules the build applies to
     any photo, then only a whole bird in the slot, ranked by the light on it and its sharpness (the lens score prefers a
     dark background, which is no reason here)."""
     kept = filter_candidates(metadata.candidates_for(entry.inat_taxon_id)).kept
     excluded_observations = {c.source_url for c in kept if c.photo_id in overrides.exclude}
-    pool = per_observation([c for c in kept if c.photo_id not in overrides.exclude and c.source_url not in excluded_observations and c.photo_id not in shared and c.photo_id not in skip])
+    pool = per_observation([c for c in kept if c.photo_id not in overrides.exclude and c.source_url not in excluded_observations and c.photo_id not in shared])
     found = []
     for candidate in pool:
         path = Path(cache_dir) / "photos" / "large" / f"{candidate.photo_id}.{candidate.extension}"
@@ -158,17 +149,13 @@ def candidates(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataSour
         if cuts(inside, crop_size) or box.x0 < FRAME_MARGIN or box.y0 < FRAME_MARGIN or box.x1 > 1 - FRAME_MARGIN or box.y1 > 1 - FRAME_MARGIN:
             continue
         light = lighting(image, box)
-        found.append(Candidate(candidate.photo_id, as_shown(render_phone(image, box)), light, sharpness, light * sharpness, candidate.source_url))
+        found.append(Candidate(candidate.photo_id, as_shown(render_phone(image, box)), light, sharpness, light * sharpness))
     return sorted(found, key=lambda c: -c.rank)[:top]
-
-
-def _large(photo_id: int, cache_dir: Path) -> Path | None:
-    return next(iter(sorted((Path(cache_dir) / "photos" / "large").glob(f"{photo_id}.*"))), None)
 
 
 def _as_the_build_would(photo_id: int, cache_dir: Path, detector: Detector) -> Image.Image | None:
     """A proposed photo as the profile would show it, from its cached rendition."""
-    path = _large(photo_id, cache_dir)
+    path = next(iter(sorted((Path(cache_dir) / "photos" / "large").glob(f"{photo_id}.*"))), None)
     if path is None:
         return None
     with Image.open(path) as opened:
@@ -227,12 +214,13 @@ def sheets(definition: PackDefinition, overrides: dict, firsts: list[FirstPhoto]
     return made, flags
 
 
-def candidate_sheet(definition: PackDefinition, overrides: dict, numbers: list[int], metadata: MetadataSource, detector: Detector, cache_dir: Path, target: Path, top: int = 6) -> Path:
-    """For choosing a proposal: each numbered species' best photos from the wider pool, with their ids."""
+def candidate_sheet(definition: PackDefinition, overrides: dict, species: list[str], metadata: MetadataSource, detector: Detector, cache_dir: Path, target: Path, top: int = 6) -> Path:
+    """For choosing a proposal: each of these species ids' best photos from the wider pool, with their ids."""
     shared = shared_photo_ids(definition.species, metadata)
+    numbered = {entry.id: (number, entry) for number, entry in enumerate(definition.species, start=1)}
     rows = []
-    for number in numbers:
-        entry = definition.species[number - 1]
+    for species_id in species:
+        number, entry = numbered[species_id]
         found = candidates(entry, Overrides.from_mapping(overrides.get(entry.scientific_name, {})), metadata, detector, cache_dir, shared, top)
         row = [(c.picture, f"{number:03d} {entry.common_name}\n{c.photo_id} light {c.light:.2f} sharp {c.sharpness:.2f}") for c in found]
         rows.append(row or [(None, f"{number:03d} {entry.common_name}\nnothing cached shows the whole bird")])
@@ -247,8 +235,8 @@ def write_overrides(path: Path, overrides: dict) -> None:
 
 
 def propose(definition: PackDefinition, overrides: dict, species_id: str, photo_id: int, why: str) -> None:
-    """Records a proposal, which changes nothing in a build until `review` accepts it. Raises ValueError on a photo the
-    overrides already exclude: the build would drop it."""
+    """Records a proposal for this species id, which changes nothing in a build until `review` accepts it. Raises ValueError
+    on a photo the overrides already exclude: the build would drop it."""
     entry = next(e for e in definition.species if e.id == species_id)
     data = overrides.setdefault(entry.scientific_name, {})
     if photo_id in data.get("exclude", []):
@@ -259,8 +247,11 @@ def propose(definition: PackDefinition, overrides: dict, species_id: str, photo_
 def review(definition: PackDefinition, overrides: dict, definition_dir: Path, accept: list[str] = (), decline: list[str] = (), accept_all: bool = False) -> tuple[list[str], list[str]]:
     """The maintainer's answer: `accept` pins a proposal, first in `include` with the species' patch and silhouette photos
     kept after it; `decline` drops one, which stays out of the build as it always was; `accept_all` accepts whatever
-    this answer doesn't decline. Raises KeyError, having changed nothing, when a species named has no proposal."""
+    this answer doesn't decline. Raises KeyError, having changed nothing, when a species named has no proposal, and
+    ValueError when one is both accepted and declined."""
     proposals = proposals_in(definition, overrides)
+    if both := set(accept) & set(decline):
+        raise ValueError(f"both accepted and declined: {', '.join(sorted(both))}")
     for species_id in (*accept, *decline):
         if species_id not in proposals:
             raise KeyError(f"no proposal for {species_id} in the overrides")
@@ -270,8 +261,8 @@ def review(definition: PackDefinition, overrides: dict, definition_dir: Path, ac
         data = overrides[by_id[species_id].scientific_name]
         hero = data["hero"]
         photo_id = int(hero["proposed"])
-        kept = [*data.get("include", []), *_credited_photos(definition_dir, species_id)]
-        data["include"] = list(dict.fromkeys([photo_id, *kept]))
+        # The credited ones come straight after it: a long `include` must push out anything but them.
+        data["include"] = list(dict.fromkeys([photo_id, *_credited_photos(definition_dir, species_id), *data.get("include", [])]))
         data["hero"] = {"pinned": photo_id, "_why": hero.get("_why", "")}
     for species_id in decline:
         name = by_id[species_id].scientific_name
@@ -284,10 +275,6 @@ def review(definition: PackDefinition, overrides: dict, definition_dir: Path, ac
 def _credited_photos(definition_dir: Path, species_id: str) -> list[int]:
     """The photos the species' patch and silhouette credit: they have to stay in the pack."""
     photos = []
-    for lock in ("patch.lock.json", "silhouette.lock.json"):
-        path = Path(definition_dir) / lock
-        if path.exists():
-            photos += json.loads(path.read_text())["species"].get(species_id, {}).get("photos", [])
+    for lock in (PATCH_LOCK, SILHOUETTE_LOCK):
+        photos += ArtLock.load(Path(definition_dir) / lock).species.get(species_id, {}).get("photos", [])
     return photos
-
-

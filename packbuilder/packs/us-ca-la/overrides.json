@@ -237,6 +237,10 @@
   "_why": "open-license review (#50): out 183220671: domestic form, grey and white patches; out 178089912: domestic form, mostly white; out 462971121: domestic form, white and black patches; out 107102096: head close-up",
   "art": {
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 570864575,
+   "_why": "the tail runs off the frame; whole on grass, in the pack already"
   }
  },
  "Pheucticus melanocephalus": {
@@ -288,6 +292,10 @@
    "reference": 294156439,
    "_why": "a bird with drooping wings against the sky; one perched side-on",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 117701899,
+   "_why": "the tail is cut; whole on a cable"
   }
  },
  "Catharus guttatus": {
@@ -448,6 +456,10 @@
   "_why": "open-license review (#50): out 271488622: half hidden at a nest hole and a blur",
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 179653275,
+   "_why": "the tail and feet are cut; whole on a branch, in the pack already"
   }
  },
  "Plegadis chihi": {
@@ -488,6 +500,10 @@
   "_why": "open-license review (#50): out 554763880: blurry and grainy",
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 172820656,
+   "_why": "the tail is cut; whole on a branch"
   }
  },
  "Archilochus alexandri": {
@@ -608,6 +624,10 @@
   "_why": "open-license review (#50): out 677562203: backlit silhouette, no colour",
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 605153262,
+   "_why": "the feet and tail are cut; a whole male"
   }
  },
  "Columba livia": {
@@ -649,6 +669,10 @@
    "reference": 475706597,
    "_why": "a flight shot became a hawk flapping over a rock; a perched adult with the rufous barring",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 636434534,
+   "_why": "the wing is cut; a whole adult on a wire"
   }
  },
  "Cathartes aura": {
@@ -684,6 +708,10 @@
    "reference": 570865806,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 459998856,
+   "_why": "the tail is cut; whole on a branch"
   }
  },
  "Sturnus vulgaris": {
@@ -879,6 +907,10 @@
    "reference": 615582387,
    "_why": "the reference is a group drying their wings, painted as several birds; one bird standing on sand",
    "setting": "ground"
+  },
+  "hero": {
+   "proposed": 615582387,
+   "_why": "the tail is cut; whole, feet showing, in the pack already"
   }
  },
  "Pelecanus occidentalis": {
@@ -917,8 +949,8 @@
    "setting": "ground"
   },
   "hero": {
-   "proposed": 689499230,
-   "_why": "only the head; the whole bird standing"
+   "proposed": 339946195,
+   "_why": "only the head; the whole bird, alone"
   }
  },
  "Toxostoma redivivum": {
@@ -1029,6 +1061,10 @@
  "Mimus polyglottos": {
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 677927552,
+   "_why": "the tail runs off the frame, the feet are in the leaves; whole on a wire, in the pack already"
   }
  },
  "Larus occidentalis": {
@@ -1057,6 +1093,10 @@
  "Selasphorus sasin": {
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 605762845,
+   "_why": "the tail is cut; whole on a branch"
   }
  },
  "Egretta thula": {
@@ -1211,6 +1251,10 @@
  "Pycnonotus jocosus": {
   "art": {
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 602847841,
+   "_why": "the tail is cut and a branch crosses it; whole in the leaves"
   }
  },
  "Pelecanus erythrorhynchos": {
@@ -1238,6 +1282,10 @@
    "reference": 266115017,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
    "setting": "perch"
+  },
+  "hero": {
+   "proposed": 184996224,
+   "_why": "the wing is cut; whole, perched"
   }
  },
  "Geothlypis trichas": {
@@ -1364,7 +1412,7 @@
   },
   "hero": {
    "proposed": 427510885,
-   "_why": "the head is cut off; head and neck clear on water"
+   "_why": "the head is cut off; the head, neck and back on water, the best cached: none shows one whole bird alone"
   }
  },
  "Lophodytes cucullatus": {

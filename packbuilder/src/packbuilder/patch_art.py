@@ -206,17 +206,14 @@ class PatchArtist:
         if not art.get("photos"):
             raise KeyError(f"{species_id}: its pack art was painted from text; a patch needs a reference bird")
         photo_id, seed = art["photos"][0], art.get("isolate_seed") or ISOLATE_SEED
-        found = self._cached_isolations(photo_id)
+        found = cached_isolations(self.cache_dir, photo_id)
         if seed in found:
             return Reference(photo_id, seed, Image.open(found[seed]).convert("RGB"))
         raise KeyError(f"{species_id}: no isolated bird for photo {photo_id} seed {seed} in {self.cache_dir / 'isolated'}; run the pack build to make it")
 
-    def _cached_isolations(self, photo_id: int) -> dict[int, Path]:
-        return cached_isolations(self.cache_dir, photo_id)
-
     def _isolated(self, photo_id: int, box: tuple[float, float, float, float] | None = None) -> Reference:
         """A pinned photo's isolated bird, from the cache or isolated now from its original, as pack art does."""
-        found = self._cached_isolations(photo_id)
+        found = cached_isolations(self.cache_dir, photo_id)
         if found:
             seed = min(found)
             return Reference(photo_id, seed, Image.open(found[seed]).convert("RGB"))

@@ -390,20 +390,15 @@ def _make_patch_artist(args: argparse.Namespace, definition: PackDefinition, cli
 
 
 def _silhouette_maker(args: argparse.Namespace, definition: PackDefinition):
-    """The silhouette step (#150) over the pack's locks, with the pins of `art.silhouette.reference` in overrides.json."""
+    """The silhouette step (#150) over the pack's locks; None for a pack whose art has no lock yet, so no reference birds."""
     from packbuilder.definition import load_overrides
     from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
     from packbuilder.patch_art import LOCK_FILE as PATCH_LOCK, PatchLock
-    from packbuilder.silhouettes import LOCK_FILE, SilhouetteLock, SilhouetteMaker, sources
+    from packbuilder.silhouettes import LOCK_FILE, SilhouetteLock, SilhouetteMaker, pins_in, sources
 
-    overrides = load_overrides(args.definition / "overrides.json")
-    pins = {}
-    for entry in definition.species:
-        art = data.get("art") if isinstance(data := overrides.get(entry.scientific_name), dict) else None
-        reference = ((art or {}).get("silhouette") or {}).get("reference")
-        if reference is not None:
-            pins[entry.id] = int(reference)
-    birds = sources(PatchLock.load(args.definition / PATCH_LOCK), ArtLock.load(args.definition / ART_LOCK), pins)
+    if not (args.definition / PATCH_LOCK).exists() and not (args.definition / ART_LOCK).exists():
+        return None
+    birds = sources(PatchLock.load(args.definition / PATCH_LOCK), ArtLock.load(args.definition / ART_LOCK), pins_in(definition, load_overrides(args.definition / "overrides.json")))
     return SilhouetteMaker(pack_id=definition.id, lock=SilhouetteLock.load(args.definition / LOCK_FILE), sources=birds, cache_dir=args.cache / "art")
 
 
@@ -413,6 +408,9 @@ def _silhouettes(args: argparse.Namespace) -> int:
     definition = PackDefinition.load(args.definition / "pack.json")
     species = [entry.id for entry in definition.species]
     maker = _silhouette_maker(args, definition)
+    if maker is None:
+        print(f"{definition.id} has no patch.lock.json or art.lock.json, so no reference birds", file=sys.stderr)
+        return 1
     made = maker.make(species)
     sheets = maker.sheets(species, made, args.sheets or _art_sheets_path(definition.id) / "silhouettes")
     kilobytes = sum(entry["bytes"] for entry in maker.lock.species.values()) / 1024
@@ -420,33 +418,34 @@ def _silhouettes(args: argparse.Namespace) -> int:
     return 0
 
 
-def _species_by_number(definition: PackDefinition, values: list[str]) -> list[str]:
-    """What a review names, as species ids where it gives the contact sheets' numbers (`4`, `004`, `4,12`): the Nth species
-    in pack.json. Anything else stays as it is, a species id or a common name. Raises KeyError on a number out of range."""
+def _named_species(definition: PackDefinition, values: list[str]) -> list[str]:
+    """What a review names, as species ids: the contact sheets' numbers (`4`, `004`, `4,12`, the Nth species in pack.json),
+    or a species id or common name. Raises KeyError on anything else."""
+    by_name = {key: entry.id for entry in definition.species for key in (entry.id, entry.common_name.lower())}
     found = []
     for value in values:
         for token in filter(None, (part.strip() for part in value.split(","))):
-            if not token.isdigit():
-                found.append(token)
-            elif 1 <= int(token) <= len(definition.species):
+            if token.isdigit() and 1 <= int(token) <= len(definition.species):
                 found.append(definition.species[int(token) - 1].id)
+            elif token.lower() in by_name:
+                found.append(by_name[token.lower()])
             else:
-                raise KeyError(f"no number {token} on the sheets: {definition.id} has {len(definition.species)} species")
+                raise KeyError(f"{token!r} isn't on the sheets: {definition.id} has {len(definition.species)} species, numbered as in pack.json")
     return found
 
 
 def _silhouette_review(args: argparse.Namespace) -> int:
-    from packbuilder.silhouettes import LOCK_FILE, SilhouetteLock, review
+    from packbuilder.silhouettes import APPROVED, GAP, LOCK_FILE, PENDING, REJECTED, SilhouetteLock, review
 
     definition = PackDefinition.load(args.definition / "pack.json")
     lock = SilhouetteLock.load(args.definition / LOCK_FILE)
     try:
-        review(lock, approve=_species_by_number(definition, args.approve), reject=_species_by_number(definition, args.reject),
-               gap=_species_by_number(definition, args.gap), approve_all=args.approve_all, why=args.why)
+        review(lock, approve=_named_species(definition, args.approve), reject=_named_species(definition, args.reject),
+               gap=_named_species(definition, args.gap), approve_all=args.approve_all, why=args.why)
     except KeyError as error:
         print(error.args[0], file=sys.stderr)
         return 1
-    counts = {state: sum(entry["review"] == state for entry in lock.species.values()) for state in ("approved", "pending", "rejected", "gap")}
+    counts = {state: sum(entry["review"] == state for entry in lock.species.values()) for state in (APPROVED, PENDING, REJECTED, GAP)}
     print(f"{lock.path}: " + ", ".join(f"{count} {state}" for state, count in counts.items()), file=sys.stderr)
     return 0
 
@@ -473,10 +472,13 @@ def _hero_candidates(args: argparse.Namespace) -> int:
     from packbuilder.metadata_api import APIMetadata
 
     definition = PackDefinition.load(args.definition / "pack.json")
-    ids = [species_id for species_id in _species_by_number(definition, args.species)]
-    numbers = [next(i for i, entry in enumerate(definition.species, start=1) if entry.id == species_id) for species_id in ids]
+    try:
+        species = _named_species(definition, args.species)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
     metadata = APIMetadata(definition.place_ids, args.cache, created_before=definition.created_before)
-    print(candidate_sheet(definition, load_overrides(args.definition / "overrides.json"), numbers, metadata, BirdDetector(ensure_model(args.cache)), args.cache, args.out, args.top), file=sys.stderr)
+    print(candidate_sheet(definition, load_overrides(args.definition / "overrides.json"), species, metadata, BirdDetector(ensure_model(args.cache)), args.cache, args.out, args.top), file=sys.stderr)
     return 0
 
 
@@ -490,10 +492,10 @@ def _hero_review(args: argparse.Namespace) -> int:
     try:
         for proposal in args.propose:
             number, _, photo = proposal.partition("=")
-            species_id, = _species_by_number(definition, [number])
+            species_id, = _named_species(definition, [number])
             propose(definition, overrides, species_id, int(photo), args.why)
-        accepted, declined = review(definition, overrides, args.definition, accept=_species_by_number(definition, args.accept),
-                                    decline=_species_by_number(definition, args.decline), accept_all=args.accept_all)
+        accepted, declined = review(definition, overrides, args.definition, accept=_named_species(definition, args.accept),
+                                    decline=_named_species(definition, args.decline), accept_all=args.accept_all)
     except (KeyError, ValueError) as error:
         print(error.args[0], file=sys.stderr)
         return 1
