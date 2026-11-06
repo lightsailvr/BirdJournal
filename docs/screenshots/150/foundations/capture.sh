@@ -56,6 +56,19 @@ shot() {  # name seconds flags...
     echo "$name"
 }
 
+# The tab bar at full size, from the screen `shot` left up: the stitched ring beside the system's symbols.
+tab_bar() {  # name
+    xcrun simctl io "$udid" screenshot --type=png "$out/$1.png" >/dev/null 2>&1
+    uv run -q --with pillow python - "$out/$1.png" "$out/$1.jpg" <<'PY'
+import sys
+from PIL import Image
+image = Image.open(sys.argv[1]).convert("RGB")
+image.crop((0, image.height - 280, image.width, image.height)).save(sys.argv[2], quality=85)
+PY
+    rm "$out/$1.png"
+    echo "$1"
+}
+
 empty=(-inMemoryAlbum YES)
 seeded=(-inMemoryAlbum YES -seedJournal YES -collectionIntroShown YES)
 guilds=(-inMemoryAlbum YES -seedJournal YES -collectionIntroShown YES -fakeAccount signedIn -fakeCircles some)
@@ -64,6 +77,7 @@ phoebe=(-autoCardSpecies "Sayornis nigricans")
 xcrun simctl ui "$udid" content_size large
 xcrun simctl ui "$udid" appearance dark
 shot listen-dark     8 "${empty[@]}" -autoScreen listen
+tab_bar tab-bar-dark
 shot set-dark        9 "${seeded[@]}" -autoScreen set
 shot atlas-dark      9 "${seeded[@]}" -autoScreen guide
 shot packs-dark      9 "${seeded[@]}" -autoScreen packs
@@ -83,6 +97,7 @@ shot empty-profile-dark 9 "${seeded[@]}" -autoCardSpecies "Branta canadensis" -a
 
 xcrun simctl ui "$udid" appearance light
 shot listen-light    8 "${empty[@]}" -autoScreen listen
+tab_bar tab-bar-light
 shot atlas-light     9 "${seeded[@]}" -autoScreen guide
 shot set-light       9 "${seeded[@]}" -autoScreen set
 shot board-light    10 "${seeded[@]}" -autoScreen cards

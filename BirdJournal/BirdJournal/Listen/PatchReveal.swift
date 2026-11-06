@@ -244,7 +244,7 @@ private struct SewingPage: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Sewing your \(reveal.commonName) patch")
-        .accessibilityValue(caption)
+        .accessibilityValue(caption.replacing(" · ", with: ", "))
         .accessibilityHint("Finishes it.")
         .accessibilityIdentifier("stitch-in")
         // A light, optional tick at each thread: the system's haptics setting turns it off.

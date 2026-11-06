@@ -127,7 +127,7 @@ struct ScreenAccessibilityTests {
     }
 
     /// What every screen owes VoiceOver: no unlabelled element, nothing that reads like a developer diagnostic, and no middle
-    /// dot (issue #150: a dot stays only as `ShortFacts`, which VoiceOver reads with a comma).
+    /// dot (issue #150: where one stays on screen, as in `ShortFacts`, VoiceOver reads a comma or a sentence of its own).
     static func expectClean(_ labels: [String], screen: String, sourceLocation: SourceLocation = #_sourceLocation) {
         #expect(!labels.isEmpty, "\(screen): nothing reached", sourceLocation: sourceLocation)
         let unlabelled = labels.filter { $0.hasPrefix("<unlabelled") }

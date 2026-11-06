@@ -89,7 +89,7 @@ struct FieldGuideView: View {
                     if entries.isEmpty {
                         StateNotice(
                             "No field guide yet",
-                            message: "No field guide is on this iPhone, so there are no pages to browse. Download a set for its photos, sounds and stories. Listening and identification work without one.",
+                            message: "No field guide is on this iPhone, so there are no pages to browse. Download a set's field guide for its photos, sounds and stories. Listening and identification work without one.",
                             mark: .symbol("map")
                         ) {
                             NavigationLink("See field-guide downloads", value: Route.packs)
@@ -259,7 +259,7 @@ struct SpeciesCollected: View {
             .frame(height: 6)
             .accessibilityHidden(true)
             HStack(alignment: .firstTextBaseline) {
-                Text("\(progress.collected) of \(progress.total) sewn")
+                Text(progress.sewnText)
                 Spacer(minLength: 8)
                 Text(fraction.formatted(.percent.precision(.fractionLength(0))))
                     .monospacedDigit()

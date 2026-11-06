@@ -97,17 +97,6 @@ struct PackFailureTests {
     }
 }
 
-@Suite("The count on a set's page")
-struct SetCountTests {
-    @Test("one count of what's left, and what it says when nothing is")
-    func stillOutThere() {
-        func progress(_ collected: Int) -> SetProgress { SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: collected, total: 160) }
-        #expect(SetView.stillOutThere(progress(3)) == "157 still out there")
-        #expect(SetView.stillOutThere(progress(159)) == "1 still out there")
-        #expect(SetView.stillOutThere(progress(160)) == "All 160 sewn")
-    }
-}
-
 /// The Atlas's designed fallback names its landscape from the edition, and a Guild's look comes from its ID alone.
 @Suite("Set and Guild identity")
 struct AtlasIdentityTests {

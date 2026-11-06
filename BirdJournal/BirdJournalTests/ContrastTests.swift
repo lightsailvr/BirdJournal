@@ -185,7 +185,7 @@ struct TokenPairingTests {
         #expect(level(onLinen) > level(onFelt), "linen \(Self.hex(onLinen)), felt \(Self.hex(onFelt))")
     }
 
-    @Test("a member's initials clear 4.5:1 on every tone, and a member keeps one tone")
+    @Test("a member's initials clear 4.5:1 on every tone")
     func memberFaces() {
         func color(_ hex: UInt32) -> UIColor {
             UIColor(red: CGFloat(hex >> 16 & 0xFF) / 255, green: CGFloat(hex >> 8 & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
@@ -196,7 +196,7 @@ struct TokenPairingTests {
         }
     }
 
-    @Test("Collection's tab icon is a custom symbol, so it takes the tab bar's tint and weight")
+    @Test("Collection's tab icon is a custom symbol, so it takes the tab bar's tint")
     func stitchedRing() throws {
         let ring = try #require(UIImage(named: "stitched.ring"), "the symbol isn't in the asset catalog")
         #expect(ring.isSymbolImage)

@@ -145,7 +145,7 @@ private struct PhotoCreditSections: View {
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
             }
-            NavigationLink("Pack license (\(pack.info.id) v\(pack.info.version))", value: Route.packLicense(id: pack.info.id))
+            NavigationLink("Field guide license (\(pack.info.id) v\(pack.info.version))", value: Route.packLicense(id: pack.info.id))
         } header: {
             Text(pack.sounds.isEmpty ? "Photos and text: \(pack.info.name)" : "Photos, sounds and text: \(pack.info.name)")
         }

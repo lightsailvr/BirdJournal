@@ -14,12 +14,6 @@ struct SetView: View {
     let id: String
     @State private var query = ""
 
-    /// The one count on a set's page (issue #150): "157 still out there", or "All 160 sewn" once none are.
-    static func stillOutThere(_ progress: SetProgress) -> String {
-        let left = progress.total - progress.collected
-        return left > 0 ? "\(left) still out there" : "All \(progress.total) sewn"
-    }
-
     var body: some View {
         if let set = library.sets.first(where: { $0.id == id }) {
             let collection = library.collection(of: sightings)
@@ -43,7 +37,7 @@ struct SetView: View {
                             .padding(.top, 12)
                     }
                     if query.isEmpty {
-                        SectionTitle(Self.stillOutThere(progress), top: 20)
+                        SectionTitle(progress.stillOutThereText, top: 20)
                     }
                     VStack(spacing: 0) {
                         ForEach(shown, id: \.element.scientificName) { offset, species in

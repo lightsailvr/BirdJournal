@@ -111,11 +111,7 @@ struct ShareCardView: View {
                         .accessibilityIdentifier("share-preview")
                         .padding(.top, 4)
 
-                    Text("Include")
-                        .font(JournalFont.section)
-                        .foregroundStyle(Color.ink)
-                        .padding(.top, JournalLayout.sectionGap)
-                        .accessibilityAddTraits(.isHeader)
+                    SectionTitle("Include")
                     VStack(spacing: 0) {
                         Toggle(isOn: $choices.includeNote) { Label("Your note", systemImage: "note.text") }
                             .padding(.vertical, 10)
@@ -205,11 +201,7 @@ struct ShareCardView: View {
     // The circles.
 
     @ViewBuilder private var circlesSection: some View {
-        Text("Your Guilds")
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .padding(.top, JournalLayout.sectionGap)
-            .accessibilityAddTraits(.isHeader)
+        SectionTitle("Your Guilds")
         if !account.isSignedIn {
             Text("Sign in under Settings → Account to share patches with your Guilds.")
                 .font(JournalFont.supporting)

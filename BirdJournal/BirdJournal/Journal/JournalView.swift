@@ -218,12 +218,8 @@ struct JournalView: View {
                 .padding(.top, 24)
         } else {
             ForEach(groups, id: \.board) { group in
-                Text(boardTitle(group.board))
-                    .font(JournalFont.rowTitle)
-                    .foregroundStyle(Color.ink)
-                    .boardLabel()
-                    .padding(.vertical, 10)
-                    .accessibilityAddTraits(.isHeader)
+                SectionTitle(boardTitle(group.board), top: 10, onBoard: true)
+                    .padding(.bottom, 10)
                 PatchBoard(patches: group.patches)
             }
         }
@@ -511,7 +507,7 @@ struct SetProgressRow: View {
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel([progress.name, "\(progress.collected) of \(progress.total) sewn", detail].compactMap { $0 }.joined(separator: ", "))
+        .accessibilityLabel([progress.name, progress.sewnText, detail].compactMap { $0 }.joined(separator: ", "))
     }
 }
 

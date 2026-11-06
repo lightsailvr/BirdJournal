@@ -229,7 +229,7 @@ extension FindRowTests {
         seen.method = .seen
         seen.commonName = "Acorn Woodpecker"
         #expect(FindRow.seenAgainLine(seen).hasPrefix("You saw an Acorn Woodpecker again, "))
-        #expect(!FindRow.seenAgainLine(seen).contains("· ·"))
+        #expect(!FindRow.seenAgainLine(seen).contains(", ,"))
         #expect(FindRow.spoken(item).contains("Heard again by Maya Ortiz"))
         #expect(!FindRow.spoken(item).contains("New patch"))
         #expect(FindRow.marks(item) == ["First for the Guild"])

@@ -150,11 +150,11 @@ struct PaperCardView: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text(sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted)).fixedSize()
                             Spacer(minLength: 8)
-                            Text(places.methodAndPlace(of: sighting)).multilineTextAlignment(.trailing).lineLimit(1)
+                            ShortFacts(sighting.method.title, places.cardPlace(for: sighting.location)).multilineTextAlignment(.trailing).lineLimit(1)
                         }
                         VStack(alignment: .leading, spacing: 1) {
                             Text(sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted))
-                            Text(places.methodAndPlace(of: sighting)).fixedSize(horizontal: false, vertical: true)
+                            ShortFacts(sighting.method.title, places.cardPlace(for: sighting.location)).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     .font(.caption)
@@ -162,7 +162,7 @@ struct PaperCardView: View {
                     .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
                     .contentShape(Rectangle())
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(sighting.confirmedAt.formatted(date: .long, time: .omitted)), \(places.methodAndPlace(of: sighting, separator: ", "))")
+                    .accessibilityLabel("\(sighting.confirmedAt.formatted(date: .long, time: .omitted)), \(sighting.method.title), \(places.cardPlace(for: sighting.location))")
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Opens this sighting.")

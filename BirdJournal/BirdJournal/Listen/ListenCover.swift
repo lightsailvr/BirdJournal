@@ -23,7 +23,7 @@ struct LocalSet {
     /// "Los Angeles, Citrus edition".
     var title: String { "\(set.name), \(set.edition.name)" }
     /// "18 of 160 sewn".
-    var progressText: String { "\(progress.collected) of \(progress.total) sewn" }
+    var progressText: String { progress.sewnText }
 }
 
 /// The calm ready state's atmosphere (page 11): the local set's cover (issue #114) under the status bar, fading into the

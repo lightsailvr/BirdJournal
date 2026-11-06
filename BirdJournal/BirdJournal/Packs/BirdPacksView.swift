@@ -32,7 +32,7 @@ struct BirdPacksView: View {
                         NavigationLink(value: Route.pack(id: bundled.info.id)) {
                             PackRow(
                                 name: shown.info.name, region: shown.info.region, setID: bundled.info.id, edition: shown.set?.edition.name,
-                                facts: "\(shown.species.count) species, included with the app",
+                                facts: "\(shown.species.count) birds, included with the app",
                                 status: library.index?.descriptor(id: bundled.info.id).map(library.status(of:)) ?? .bundled,
                                 descriptor: library.index?.descriptor(id: bundled.info.id)
                             )
@@ -45,7 +45,7 @@ struct BirdPacksView: View {
                             NavigationLink(value: Route.pack(id: installed.id)) {
                                 PackRow(
                                     name: installed.pack.info.name, region: installed.pack.info.region, setID: installed.id, edition: installed.pack.set?.edition.name,
-                                    facts: "\(installed.pack.species.count) species, \(installed.descriptor.byteCount.formatted(.byteCount(style: .file))) download",
+                                    facts: "\(installed.pack.species.count) birds, \(installed.descriptor.byteCount.formatted(.byteCount(style: .file))) download",
                                     status: library.index?.descriptor(id: installed.id).map(library.status(of:)) ?? .installed(version: installed.descriptor.version),
                                     descriptor: library.index?.descriptor(id: installed.id) ?? installed.descriptor
                                 )
@@ -73,7 +73,7 @@ struct BirdPacksView: View {
                     }
                     .padding(.top, 12)
                 } else if library.available.isEmpty, library.index != nil {
-                    Text("Every set there is has been downloaded.")
+                    Text("Every field guide there is has been downloaded.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 12)
@@ -83,7 +83,7 @@ struct BirdPacksView: View {
                             NavigationLink(value: Route.pack(id: descriptor.id)) {
                                 PackRow(
                                     name: descriptor.name, region: descriptor.region, setID: descriptor.id, edition: descriptor.set?.edition.name,
-                                    facts: [descriptor.speciesCount.map { "\($0) species" }, "\(descriptor.byteCount.formatted(.byteCount(style: .file))) download"].compactMap { $0 }.joined(separator: ", "),
+                                    facts: [descriptor.speciesCount.map { "\($0) birds" }, "\(descriptor.byteCount.formatted(.byteCount(style: .file))) download"].compactMap { $0 }.joined(separator: ", "),
                                     status: library.status(of: descriptor), descriptor: descriptor
                                 )
                             }
@@ -378,7 +378,7 @@ struct PackStatesPreview: View {
                         .padding(.top, 18)
                     PackRow(
                         name: Self.sample.name, region: Self.sample.region, setID: Self.sample.id, edition: "Coastal edition",
-                        facts: "159 species, 173 MB download", status: status, descriptor: Self.sample
+                        facts: "159 birds, 173 MB download", status: status, descriptor: Self.sample
                     )
                     RowRule()
                 }

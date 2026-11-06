@@ -205,7 +205,10 @@ struct PaperForm<Content: View>: View {
 /// them."). `top` is the space above it, and on felt or linen `onBoard` gives it a solid surface under Increase Contrast.
 struct SectionTitle: View {
     enum Size {
-        case section, lead
+        /// Title 3, about 20 pt: the mock's "You both have".
+        case section
+        /// Title 2, about 22 pt.
+        case lead
     }
 
     let text: String
@@ -232,7 +235,7 @@ struct SectionTitle: View {
     }
 }
 
-/// Two short facts sharing a line at a small size: the one place a middle dot stays (issue #150). VoiceOver reads a comma.
+/// Two short facts sharing a line at a small size, where a middle dot may stay (issue #150). VoiceOver reads a comma.
 struct ShortFacts: View {
     let first: String
     let second: String

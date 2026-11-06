@@ -22,9 +22,7 @@ struct CircleFeedSection: View {
         Section {
             if feed.items.isEmpty {
                 if feed.isLoaded {
-                    Text("No finds yet. Birds your Guild adds while sharing show here.")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
+                    StateNotice("No finds yet", message: "Birds your Guild adds while sharing show here.")
                         .accessibilityIdentifier("feedEmpty")
                 } else if let error = feed.error {
                     Text(error).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)

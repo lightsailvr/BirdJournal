@@ -302,7 +302,7 @@ struct LensCardRendererTests {
     func problemPages() {
         #expect(Self.render(.problem(.noLocation)).elements == [
             .heading("No location"),
-            .body("Species are not filtered by your place. Allow location for Featherguild in Settings on the phone."),
+            .body("Species are not filtered by place. Allow location for Featherguild in Settings on the phone."),
             .meta("Swipe right to continue"),
         ])
         #expect(Self.render(.problem(.connectionLost)).elements == [

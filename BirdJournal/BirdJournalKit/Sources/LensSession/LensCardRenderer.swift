@@ -174,7 +174,7 @@ public enum LensCardRenderer {
     static func problem(_ problem: LensProblem) -> LensCard {
         let (heading, body) = switch problem {
         case .noLocation:
-            ("No location", "Species are not filtered by your place. Allow location for Featherguild in Settings on the phone.")
+            ("No location", "Species are not filtered by place. Allow location for Featherguild in Settings on the phone.")
         case .connectionLost:
             ("Connection lost", "The glasses were out of range. Featherguild kept listening and is back on the lens.")
         }
