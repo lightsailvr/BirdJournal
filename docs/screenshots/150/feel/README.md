@@ -20,7 +20,7 @@ Every picture is the running app on an iPhone 17 Pro simulator at half size, tak
 These are frames of recordings at 20 frames a second, since a still can't show them:
 
 - `lift-1` to `lift-6`: the Black Phoebe's page grows out of its tile, a swipe reaches the House Finch, and it goes back onto the Black Phoebe's tile, where it was opened. Sheet: `lift`.
-- `lift-reduced-1` to `lift-reduced-6`: the same under the system's Reduce Motion, both ways, a cross-fade with nothing moving. It's the system's own, so `-reduceMotion` doesn't reach it. Sheet: `lift-reduce-motion`.
+- `lift-reduced-1` to `lift-reduced-6`: the way in under the system's Reduce Motion, a cross-fade with nothing moving; the test samples the way back too. It's the system's own, so `-reduceMotion` doesn't reach it. Sheet: `lift-reduce-motion`.
 - `modes-1` to `modes-6`: from a scrolled board to Sightings and on to Patches. The picker stays put. Sheet: `modes-from-a-scrolled-board`. The title does swap, from small and centred to large, within its row, as `.inlineLarge` does at the top of a scroll.
 - `foot-1` to `foot-6`: back to a tile at the foot of a board, landing where it left. Sheet: `foot-of-the-board`.
 - `sheet-1` to `sheet-4`: in the map sheet's own stack it's a plain push, on purpose, with nothing showing through. Sheet: `plain-push-in-a-sheet`.
