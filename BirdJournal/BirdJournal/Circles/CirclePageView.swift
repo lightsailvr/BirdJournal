@@ -216,7 +216,6 @@ struct CirclePageView: View {
             Toggle(isOn: $sharesFinds) {
                 Label("Share my finds automatically", systemImage: sharesFinds ? "person.2.wave.2" : "lock")
             }
-            .tint(Color.moss)
             .accessibilityIdentifier("guildShareFindsToggle")
             HowThisWorks(SharingWords.detail(sharesFinds))
         } header: {
@@ -314,7 +313,6 @@ struct CirclePageView: View {
         )) {
             Label("Mute this Guild", systemImage: "bell.slash")
         }
-        .tint(Color.moss)
     }
 
     private func setCircleMuted(_ muted: Bool, _ circleID: String) {

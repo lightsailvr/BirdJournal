@@ -99,7 +99,7 @@ struct PackSetTests {
         ])
         let indexURL = root.appending(path: "index.json")
         try JSONEncoder().encode(index).write(to: indexURL)
-        let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL, availableCapacity: { nil })
+        let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL, availableCapacity: { nil }, bundledCovers: .none)
 
         #expect(library.sets.map(\.id) == [PackIndex.bundledPackID], "before the index, the bundled pack's own set")
         await library.refreshIndex()
@@ -121,15 +121,43 @@ struct PackSetTests {
         try JSONEncoder().encode(PackIndex(packs: [PackDescriptor(id: "us-ca-sd", name: "San Diego", version: 1, url: zip, sha256: "x", byteCount: 1, schemaVersion: 4, set: set)]))
             .write(to: indexURL)
         let storage = PackStorage(directory: root.appending(path: "Packs"))
-        let online = PackLibrary(bundled: nil, storage: storage, indexURL: indexURL, availableCapacity: { nil })
+        let online = PackLibrary(bundled: nil, storage: storage, indexURL: indexURL, availableCapacity: { nil }, bundledCovers: .none)
         await online.refreshIndex()
         #expect(online.sets.map(\.id) == ["us-ca-sd"])
 
-        let offline = PackLibrary(bundled: nil, storage: storage, indexURL: root.appending(path: "missing.json"), availableCapacity: { nil })
+        let offline = PackLibrary(bundled: nil, storage: storage, indexURL: root.appending(path: "missing.json"), availableCapacity: { nil }, bundledCovers: .none)
         #expect(offline.sets == [set], "known at launch, before any fetch")
         await offline.refreshIndex()
         #expect(offline.indexError != nil)
         #expect(offline.sets == [set], "a failed fetch keeps the last good index")
         #expect(storage.installed().isEmpty, "the kept index is not taken for a pack")
+    }
+
+    @Test("a phone that has never read the index still knows every set, from what shipped with the app; anything newer wins")
+    func setsThatShipped() async throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let shipped = BundledCovers.shipped.sets
+        #expect(Set(shipped.map(\.id)) == ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"])
+        #expect(shipped.allSatisfy { !$0.regions.isEmpty && !$0.species.isEmpty }, "whole definitions, with boundaries and birds")
+
+        let unreachable = PackLibrary(
+            bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: root.appending(path: "missing.json"), availableCapacity: { nil }
+        )
+        await unreachable.refreshIndex()
+        #expect(unreachable.indexError != nil && unreachable.index == nil)
+        #expect(unreachable.sets.first?.id == PackIndex.bundledPackID, "the pack on the phone comes first")
+        #expect(Set(unreachable.sets.map(\.id)) == Set(shipped.map(\.id)), "and each set once")
+        #expect(unreachable.sets.count == shipped.count)
+        #expect(unreachable.cover(setID: "us-ca-desert") == BundledCovers.shipped.cover(setID: "us-ca-desert"))
+
+        let newer = PackSet(id: "us-ca-desert", name: "Deserts, redrawn", edition: .init(name: "Desert edition", theme: "x"), taxonomy: "x", regions: [], species: [])
+        let zip = try Fixtures.testPackZip()
+        let indexURL = root.appending(path: "index.json")
+        try JSONEncoder().encode(PackIndex(packs: [PackDescriptor(id: "us-ca-desert", name: "Deserts", version: 1, url: zip, sha256: "x", byteCount: 1, schemaVersion: 4, set: newer)])).write(to: indexURL)
+        let online = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs2")), indexURL: indexURL, availableCapacity: { nil })
+        await online.refreshIndex()
+        #expect(online.sets.first { $0.id == "us-ca-desert" } == newer, "the index's copy over the one that shipped")
+        #expect(online.sets.count == shipped.count)
     }
 }

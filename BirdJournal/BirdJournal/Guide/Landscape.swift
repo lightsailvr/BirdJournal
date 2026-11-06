@@ -2,22 +2,12 @@ import Pack
 import SwiftUI
 import UIKit
 
-/// A designed landscape (issue #118, design guide pages 3–4, 13 and 14): the Atlas's fallback for a set without a
-/// painted cover, drawn from its edition (Citrus, Coastal, Fog, Desert, Wetland), and each Guild's habitat cover.
+/// A designed landscape (issue #118, design guide pages 3–4, 13 and 14): each Guild's habitat cover.
 /// Flat watercolour-toned layers (sky, a soft sun, ridges and the habitat's own marks) in natural colours that stay
 /// the same in both appearances, as the bird art does. Illustrative only: never a map, never a sighting's place.
 /// Still: no parallax, no motion.
 enum Landscape: String, CaseIterable, Sendable {
     case citrus, coastal, fog, desert, wetland, forest, meadow, hills
-
-    /// The landscape an edition's name points to ("Citrus edition" → citrus), hills when it names none.
-    init(edition: String) {
-        let words = edition.lowercased()
-        self = Self.allCases.first { words.contains($0.rawValue) }
-            ?? (words.contains("coast") || words.contains("sea") ? .coastal
-                : words.contains("marsh") || words.contains("lake") ? .wetland
-                : words.contains("woods") ? .forest : .hills)
-    }
 
     fileprivate var palette: LandscapePalette {
         switch self {
@@ -278,26 +268,24 @@ struct LandscapeArt: View {
     }
 }
 
-/// A set's cover for the Atlas (issue #118 over #114's `PackLibrary.cover(setID:)`): the pack's painted cover when it
-/// is on the phone, else the index's thumbnail, else the landscape its edition names. Scaled to fill the frame it is
-/// given and cropped from the middle, as the covers were painted to be.
+/// A set's cover for the Atlas (issue #118 over #114's `PackLibrary.cover(setID:)`): the bundled cover, else the pack's, else
+/// the index's thumbnail. Scaled to fill the frame it is given and cropped from the middle, as the covers were painted to be.
+/// All five sets ship their covers (issue #150), so a set the app has no cover for, which none is today, shows the raised
+/// surface rather than a drawn landscape.
 struct SetCoverImage: View {
     @Environment(PackLibrary.self) private var library
     let setID: String
-    let edition: String
     @State private var image: UIImage?
 
     var body: some View {
         let cover = library.cover(setID: setID)
-        Color.clear
+        Color.raised
             .overlay {
                 if let image {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
                         .allowsHitTesting(false)  // a clipped picture still takes touches outside its clip
-                } else {
-                    LandscapeArt(landscape: Landscape(edition: edition), seed: SeededRandom.seed(setID))
                 }
             }
             .clipped()
@@ -307,13 +295,18 @@ struct SetCoverImage: View {
             }
     }
 
-    /// Decodes the cover off the main actor: an AVIF file in the pack, or the index's JPEG.
+    /// Decodes the cover off the main actor.
     static func load(_ cover: SetCover?) async -> UIImage? {
+        await Task.detached(priority: .userInitiated) { decoded(cover) }.value
+    }
+
+    /// The cover's pixels, decoded now rather than at its first draw: a JPEG in the app, an AVIF in a pack, or the index's JPEG.
+    nonisolated static func decoded(_ cover: SetCover?) -> UIImage? {
         switch cover {
-        case let .pack(_, url):
-            await Task.detached(priority: .userInitiated) { UIImage(contentsOfFile: url.path(percentEncoded: false)) }.value
+        case let .bundled(_, url), let .pack(_, url):
+            UIImage(contentsOfFile: url.path(percentEncoded: false))?.preparingForDisplay()
         case let .thumbnail(thumbnail):
-            await Task.detached(priority: .userInitiated) { UIImage(data: thumbnail.thumbnail) }.value
+            UIImage(data: thumbnail.thumbnail)?.preparingForDisplay()
         case nil:
             nil
         }

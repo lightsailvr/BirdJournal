@@ -50,8 +50,6 @@ struct PatchBoard: View {
 /// at it with its quick actions.
 struct SewnPatchTile: View {
     @Environment(PackLibrary.self) private var library
-    @Environment(\.modelContext) private var context
-    @Environment(\.pushRoute) private var pushRoute
     let patch: CardCollection.Patch
     let name: String
     /// Under the name, in place of the number and count.
@@ -60,15 +58,6 @@ struct SewnPatchTile: View {
     var spokenName: String? = nil
     /// Where this tile is: its page's way back.
     var surface = PatchLiftSurface.board
-    @State private var sharing: Sighting?
-
-    /// The newest sighting: what the patch page's Share shares. Fetched when asked for: a board of tiles shouldn't each hold the album.
-    private var newestSighting: Sighting? {
-        guard let identifier = patch.sightings.first?.identifier else { return nil }
-        var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })
-        descriptor.fetchLimit = 1
-        return try? context.fetch(descriptor).first
-    }
 
     var body: some View {
         let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
@@ -81,28 +70,7 @@ struct SewnPatchTile: View {
             )
         }
         .buttonStyle(.patchLift)
-        .contextMenu {
-            Button {
-                pushRoute(.patch(patch.id, from: surface, turned: true))
-            } label: {
-                Label("Turn over", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
-            }
-            Button {
-                sharing = newestSighting
-            } label: {
-                Label("Share", systemImage: "square.and.arrow.up")
-            }
-            Button {
-                pushRoute(.sightings(.patch(patch.id)))
-            } label: {
-                Label(PatchText.allSightings(patch.count), systemImage: "list.bullet")
-            }
-        } preview: {
-            PatchPeek(state: state, edition: edition, tag: spokenName ?? name)
-        }
-        .sheet(item: $sharing) { sighting in
-            ShareCardView(sighting: sighting)
-        }
+        .modifier(PatchPeekActions(patch: patch, surface: surface, state: state, edition: edition, tag: spokenName ?? name))
         .accessibilityHint("Opens the patch. Turn it over for its story.")
         .accessibilityIdentifier("board-patch")
     }

@@ -150,10 +150,10 @@ struct ReactionBar: View {
                         if count.count > 0 { Text("\(count.count)").monospacedDigit() }
                     }
                     .font(.caption.weight(count.mine ? .semibold : .regular))
-                    .foregroundStyle(count.mine ? Color.mossText : Color.moss)
+                    .foregroundStyle(count.mine ? AnyShapeStyle(Color.mossText) : AnyShapeStyle(TintShapeStyle.tint))
                     .padding(.horizontal, symbols ? 9 : 8)
                     .padding(.vertical, 5)
-                    .background(count.mine ? Color.moss : Color.moss.opacity(0.1), in: .capsule)
+                    .background(count.mine ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(TintShapeStyle.tint.opacity(0.1)), in: .capsule)
                     .fixedSize()
                     // The pill stays small; what a thumb can hit is 44 pt tall (issue #150).
                     .frame(minHeight: 44)
@@ -358,11 +358,11 @@ private struct FindMark: View {
         let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize, wrapped: 8), style: .continuous)
         Text(title)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(first ? Color.moss : Color.inkSecondary)
+            .foregroundStyle(first ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color.inkSecondary))
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)
-            .overlay(shape.strokeBorder(first ? Color.moss : Color.rule, lineWidth: 1))
+            .overlay(shape.strokeBorder(first ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color.rule), lineWidth: 1))
     }
 }
 

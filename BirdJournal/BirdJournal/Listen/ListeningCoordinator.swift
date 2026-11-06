@@ -454,10 +454,19 @@ final class ListeningCoordinator {
         self.acknowledgment = acknowledgment
         acknowledgmentTask?.cancel()
         acknowledgmentTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(6))
+            try? await Task.sleep(for: .seconds(Self.acknowledgmentSeconds))
             guard !Task.isCancelled, let self, self.acknowledgment == acknowledgment else { return }
             self.acknowledgment = nil
         }
+    }
+
+    /// How long an add's toast and its Undo stay. `-acknowledgmentSeconds <n>` holds them, for a test to get to them.
+    private static var acknowledgmentSeconds: Double {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "acknowledgmentSeconds")
+        if seconds > 0 { return seconds }
+        #endif
+        return 6
     }
 
     // MARK: - Waveform

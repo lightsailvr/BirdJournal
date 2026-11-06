@@ -1,4 +1,5 @@
 import Album
+import SwiftData
 import SwiftUI
 
 /// Which kind of tile a patch was opened from. The same patch can have a tile on several pages of one stack (the board, and a
@@ -76,6 +77,52 @@ private struct PatchLiftTransition: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+/// A long press on a patch tile: a peek at the patch, with Turn over, Share and its sightings. Every tile has it.
+struct PatchPeekActions: ViewModifier {
+    @Environment(\.modelContext) private var context
+    @Environment(\.pushRoute) private var pushRoute
+    let patch: CardCollection.Patch
+    let surface: PatchLiftSurface
+    let state: PatchArtState
+    let edition: PatchEdition
+    let tag: String
+    @State private var sharing: Sighting?
+
+    /// The newest sighting: what the patch page's Share shares. Fetched when asked for: a board of tiles shouldn't each hold the album.
+    private var newestSighting: Sighting? {
+        guard let identifier = patch.sightings.first?.identifier else { return nil }
+        var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })
+        descriptor.fetchLimit = 1
+        return try? context.fetch(descriptor).first
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .contextMenu {
+                Button {
+                    pushRoute(.patch(patch.id, from: surface, turned: true))
+                } label: {
+                    Label("Turn over", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
+                }
+                Button {
+                    sharing = newestSighting
+                } label: {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+                Button {
+                    pushRoute(.sightings(.patch(patch.id)))
+                } label: {
+                    Label(PatchText.allSightings(patch.count), systemImage: "list.bullet")
+                }
+            } preview: {
+                PatchPeek(state: state, edition: edition, tag: tag)
+            }
+            .sheet(item: $sharing) { sighting in
+                ShareCardView(sighting: sighting)
+            }
     }
 }
 

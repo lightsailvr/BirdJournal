@@ -57,7 +57,7 @@ struct ActiveListeningView: View {
 
                 if run.candidates.isEmpty {
                     HStack(spacing: 10) {
-                        if run.state == .starting { ProgressView().tint(Color.moss) }
+                        if run.state == .starting { ProgressView() }
                         Text(emptyText)
                     }
                     .font(JournalFont.body)
@@ -120,6 +120,8 @@ struct ActiveListeningView: View {
                         Label(run.state == .stopping ? "Stopping…" : "Stop listening", systemImage: "stop.fill")
                             .padding(.horizontal, 8)
                             .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : nil)
+                            // Its words wrap rather than truncate, whatever a toast above it leaves of the page.
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .buttonStyle(.journalQuiet)
                     .frame(maxWidth: .infinity)
@@ -171,8 +173,8 @@ private struct StatusLine: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(isWaiting ? Color.clear : color)
-                .overlay(Circle().strokeBorder(isWaiting ? color : Color.clear, lineWidth: 1.5))
+                .fill(isWaiting ? AnyShapeStyle(Color.clear) : color)
+                .overlay(Circle().strokeBorder(isWaiting ? color : AnyShapeStyle(Color.clear), lineWidth: 1.5))
                 .frame(width: 9, height: 9)
             Text(text)
                 .font(JournalFont.body)
@@ -181,11 +183,11 @@ private struct StatusLine: View {
         .accessibilityElement(children: .combine)
     }
 
-    private var color: Color {
+    private var color: AnyShapeStyle {
         switch run.state {
-        case .listening: .moss
-        case .starting, .interrupted, .paused, .resuming, .stopping: .ink
-        case .idle, .ended: .inkSecondary
+        case .listening: AnyShapeStyle(TintShapeStyle.tint)
+        case .starting, .interrupted, .paused, .resuming, .stopping: AnyShapeStyle(Color.ink)
+        case .idle, .ended: AnyShapeStyle(Color.inkSecondary)
         }
     }
 
@@ -256,7 +258,7 @@ struct Waveform: View {
             HStack(alignment: .center, spacing: gap) {
                 ForEach(Array(levels.enumerated()), id: \.offset) { _, level in
                     Capsule()
-                        .fill(Color.moss.opacity(isLive ? 0.9 : 0.35))
+                        .fill(.tint.opacity(isLive ? 0.9 : 0.35))
                         .frame(width: width, height: 4 + CGFloat(level) * (geometry.size.height - 4))
                 }
             }

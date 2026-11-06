@@ -36,9 +36,12 @@ struct PatchDetailView: View {
                         next: index + 1 < order.count ? { go(to: order[index + 1].id) } : nil
                     )
                     .tag(patch.id)
+                    // Each page is in its own edition, the Uncharted ones too (issue #150).
+                    .tint(PatchEdition.tint(setID: patch.placement.setID))
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .tint(PatchEdition.tint(setID: order[index].placement.setID))
             .onChange(of: current) { turned = nil }
             .patchSheetBackground()
             .holdsPatchLight()

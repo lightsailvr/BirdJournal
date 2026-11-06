@@ -75,7 +75,7 @@ struct FieldGuideView: View {
                     Label {
                         Text("Collect through real discoveries. A download adds field-guide pages, never birds: a bird joins your collection only when you add a sighting.")
                     } icon: {
-                        Image(systemName: "map").foregroundStyle(Color.moss)
+                        Image(systemName: "map").foregroundStyle(.tint)
                     }
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
@@ -156,7 +156,7 @@ struct OfflineNotice: View {
     }
 }
 
-/// One regional set (design guide page 4): its cover, or the landscape its edition names; the name and edition;
+/// One regional set (design guide page 4): its cover; the name and edition;
 /// "Ready offline" or its download; and the birder's own progress, "18 of 160 sewn". The tile opens the
 /// set's page; the download control sits apart from the link.
 struct SetTile: View {
@@ -198,7 +198,7 @@ struct SetTile: View {
 
     private func face(installed: Bool, status: PackLibrary.Status) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            SetCoverImage(setID: set.id, edition: set.edition.name)
+            SetCoverImage(setID: set.id)
                 .frame(height: 148)
                 .frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: 8) {
@@ -240,11 +240,11 @@ struct ReadyOffline: View {
         Label("Ready offline", systemImage: "checkmark.circle.fill")
             .font(JournalFont.supporting.weight(.medium))
             .fixedSize(horizontal: false, vertical: true)
-            .foregroundStyle(Color.moss)
+            .foregroundStyle(.tint)
     }
 }
 
-/// Personal progress in a set: a bar and "18 of 160 sewn", with the share.
+/// Personal progress in a set: the thread and "18 of 160 sewn", with the share.
 struct SpeciesCollected: View {
     let progress: SetProgress
 
@@ -252,14 +252,8 @@ struct SpeciesCollected: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.rule.opacity(0.7))
-                    Capsule().fill(Color.moss).frame(width: max(progress.collected > 0 ? 6 : 0, geometry.size.width * fraction))
-                }
-            }
-            .frame(height: 6)
-            .accessibilityHidden(true)
+            ThreadProgress(progress)
+                .accessibilityHidden(true)
             HStack(alignment: .firstTextBaseline) {
                 Text(progress.sewnText)
                 Spacer(minLength: 8)
@@ -281,7 +275,7 @@ private struct PacksCard: View {
         HStack(spacing: 14) {
             Image(systemName: "square.stack.3d.down.right")
                 .font(.title2)
-                .foregroundStyle(Color.moss)
+                .foregroundStyle(.tint)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 3) {
                 Text("Field-guide downloads")

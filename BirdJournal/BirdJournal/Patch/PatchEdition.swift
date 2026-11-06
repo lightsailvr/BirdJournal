@@ -39,6 +39,23 @@ struct PatchEdition: Equatable {
     }
 }
 
+extension PatchEdition {
+    /// The thread of an edition by its set's pack id: the accent where the birder is, and on a set's or a patch's own page
+    /// (issue #150). Uncharted (nil) has its own; a set the app doesn't know keeps today's aqua. A colorset for each, with its
+    /// Increase Contrast variants; `EditionTintTests` measures them. Unlike the cord and twill, these follow the appearance.
+    static func tint(setID: String?) -> Color {
+        switch setID {
+        case "us-ca-la": Color("EditionCitrus")
+        case "us-ca-sd": Color("EditionCoastal")
+        case "us-ca-bay": Color("EditionFog")
+        case "us-ca-desert": Color("EditionDesert")
+        case "us-fl-orlando": Color("EditionWetland")
+        case nil: Color("EditionUncharted")
+        default: .moss
+        }
+    }
+}
+
 extension Color {
     /// A colour from its fixed sRGB value: for the materials and the editions, which don't change with the appearance.
     init(hex: UInt32) {

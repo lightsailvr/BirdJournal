@@ -495,6 +495,54 @@ final class FeelUITests: XCTestCase {
         XCTAssertEqual(hapticLog(app).filter { $0 == "lift" }.count, 1, "\(hapticLog(app))")
     }
 
+    /// A toast over the page at the largest text: Stop's words still fit in its shape, and it still stops the run.
+    @MainActor
+    func testStopWrapsAndWorksUnderAToastAtTheLargestText() throws {
+        guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
+        let app = launch(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL", "-acknowledgmentSeconds", "40", "-seedJournal", "YES", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
+        // A repeat add, from its review: a row is hard to catch at this size while the list re-sorts.
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
+        let close = app.buttons["Close"]
+        let addAgain = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Add'")).firstMatch
+        var added = false
+        for _ in 0..<6 where !added {
+            XCTAssertTrue(row.waitForExistence(timeout: 90), "no row: \(app.debugDescription.prefix(3000))")
+            if !row.isHittable { app.swipeUp() }
+            row.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.2)).tap()
+            guard close.waitForExistence(timeout: 5) else { continue }
+            if app.staticTexts["House Finch"].exists, addAgain.waitForExistence(timeout: 5) {
+                addAgain.tap()
+                added = true
+            } else {
+                close.tap()
+            }
+        }
+        XCTAssertTrue(added, "never reached its review: \(app.debugDescription.prefix(3000))")
+        let toast = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Seen again'")).firstMatch
+        XCTAssertTrue(toast.waitForExistence(timeout: 10), "no toast: \(app.debugDescription.prefix(3000))")
+        let stop = app.buttons["Stop listening"]
+        XCTAssertTrue(stop.exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        if let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_FEEL_SHOTS"] {
+            try app.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: folder).appending(path: "stop-toast-ax5.png"))
+        }
+        XCTAssertGreaterThan(stop.frame.height, 70, "one squeezed line: \(stop.frame)")
+        stop.tap()
+        XCTAssertTrue(app.navigationBars["Last run"].waitForExistence(timeout: 20) || app.buttons["Done"].firstMatch.waitForExistence(timeout: 5), "Stop didn't stop: \(app.debugDescription.prefix(3000))")
+    }
+
+    /// A Guild's goal sewing: a tick a stitch, then the last stitch's success.
+    @MainActor
+    func testASewingThreadTicksThenSucceeds() throws {
+        let app = launch(["-hapticLog", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circles", "-launchSplashShown", "NO"])
+        XCTAssertTrue(app.navigationBars["Guilds"].waitForExistence(timeout: 20))
+        waitForHaptic("stitchDone", app)
+        let log = hapticLog(app)
+        XCTAssertLessThan(log.lastIndex(of: "stitchTick") ?? -1, log.firstIndex(of: "stitchDone") ?? 0, "\(log)")
+    }
+
     /// The mock's compact pill, and across the page once its words need the room.
     @MainActor
     func testStopIsACompactCentredPill() throws {

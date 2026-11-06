@@ -53,7 +53,7 @@ struct CandidateReviewView: View {
                     if run.isAdded(candidate) {
                         Label("Added, seen \(CardCollection.Patch.times(seenHere)) here", systemImage: "checkmark.circle.fill")
                             .font(JournalFont.supporting.weight(.medium))
-                            .foregroundStyle(Color.moss)
+                            .foregroundStyle(.tint)
                         Button(isAdding ? "Adding…" : "Add another sighting") { add() }
                             .buttonStyle(.journalOutlined)
                             .disabled(isAdding)
@@ -114,7 +114,6 @@ struct MatchDetails: View {
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
         }
-        .tint(Color.moss)
     }
 
     static func offset(_ seconds: Double) -> String {

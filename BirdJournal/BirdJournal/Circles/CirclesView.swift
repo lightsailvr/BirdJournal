@@ -139,7 +139,7 @@ struct CirclesView: View {
                         .foregroundStyle(Color.inkSecondary)
                 }
             } icon: {
-                Image(systemName: "qrcode").foregroundStyle(Color.moss)
+                Image(systemName: "qrcode").foregroundStyle(.tint)
             }
             .accessibilityElement(children: .combine)
         } footer: {
@@ -208,7 +208,7 @@ private struct GuildCard: View {
                         Image(systemName: "arrow.right").accessibilityHidden(true)
                     }
                     .font(JournalFont.supporting.weight(.semibold))
-                    .foregroundStyle(Color.moss)
+                    .foregroundStyle(.tint)
                     .accessibilityHidden(true)
                 }
                 if let goal {
@@ -244,7 +244,8 @@ private struct GoalStrip: View {
                     .font(JournalFont.attribution.monospacedDigit())
                     .accessibilityHidden(true)
             }
-            GoalBar(goal: goal, height: 6, onLavender: true)
+            ThreadProgress(goal: goal, thread: .onLavender)
+                .accessibilityHidden(true)
         }
         .foregroundStyle(Color.onSharedGoal)
         .padding(.horizontal, 12)

@@ -39,6 +39,14 @@ struct JournalView: View {
     @State private var coverRoomGoing: Task<Void, Never>?
     /// More than any tab bar.
     private static let coverRoom: CGFloat = 140
+    /// How long the room stays after the way back. `-coverRoomSeconds <n>` holds it, for a test to flick into it.
+    private static var coverRoomSeconds: Double {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "coverRoomSeconds")
+        if seconds > 0 { return seconds }
+        #endif
+        return 1.5
+    }
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
     /// meanwhile are not the birder's.
     var isCovered = false
@@ -96,8 +104,15 @@ struct JournalView: View {
                     if !isCovered, !restoring { state.offsets[state.mode] = max(newOffset, 0) }
                 }
                 .onScrollPhaseChange { _, phase in
-                    // The birder's own scroll wins over putting one back.
-                    if phase == .interacting { stopRestoring() }
+                    // The birder's own scroll wins over putting one back. The room goes too: the bar's back by the time a finger can be
+                    // on the board, and a flick mustn't reach empty felt, then be pulled back when the room goes.
+                    if phase == .interacting {
+                        stopRestoring()
+                        if !isCovered {
+                            coverRoomGoing?.cancel()
+                            hasCoverRoom = false
+                        }
+                    }
                 }
                 .onChange(of: isCovered) { _, covered in
                     coverRoomGoing?.cancel()
@@ -107,7 +122,7 @@ struct JournalView: View {
                     } else {
                         // Once the tab bar is surely back, when the room can go without anything moving.
                         coverRoomGoing = Task { @MainActor in
-                            try? await Task.sleep(for: .seconds(1.5))
+                            try? await Task.sleep(for: .seconds(Self.coverRoomSeconds))
                             if !Task.isCancelled { hasCoverRoom = false }
                         }
                     }
@@ -118,8 +133,9 @@ struct JournalView: View {
                     restore(0)
                 }
                 .background { ModeSurface(mode: state.mode).ignoresSafeArea() }
-                // Always showing: a drawer that hides as the page scrolls would take the picker up and down with it.
-                .searchable(text: $state.query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search birds")
+                // A magnifier in the title's row, so nothing moves the picker: as a drawer it hid on scroll and took the picker with it.
+                .searchable(text: $state.query, placement: .toolbar, prompt: "Search birds")
+                .searchToolbarBehavior(.minimize)
                 #if DEBUG
                 .task {
                     // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
@@ -452,7 +468,7 @@ private struct CollectionIntroCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.moss.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .background(.tint.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
         .boardLabel(horizontal: 0, vertical: 0)
     }
 }
@@ -579,17 +595,6 @@ private struct SetProgressList: View {
     }
 }
 
-/// A set's progress as a bar, on the Species list's rows and under a board's name. `ThreadProgress` replaces it.
-struct SetProgressBar: View {
-    let progress: SetProgress
-
-    var body: some View {
-        ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
-            .tint(Color.moss)
-            .accessibilityHidden(true)
-    }
-}
-
 /// Under a board's name: its thread and count, "3 of 160 sewn, Citrus edition", opening the set's page.
 private struct SetThreadRow: View {
     let progress: SetProgress
@@ -598,7 +603,10 @@ private struct SetThreadRow: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
-                SetProgressBar(progress: progress)
+                // Another set's thread is another thread: it doesn't sew from this one's count. The row says the count.
+                ThreadProgress(progress)
+                    .id(progress.setID)
+                    .accessibilityHidden(true)
                 Text("\(progress.sewnText), \(edition)")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.ink)
@@ -634,7 +642,8 @@ struct SetProgressRow: View {
                         .font(JournalFont.supporting)
                         .foregroundStyle(detailInk)
                 }
-                SetProgressBar(progress: progress)
+                ThreadProgress(progress)
+                    .accessibilityHidden(true)
             }
             Image(systemName: "chevron.right")
                 .font(.subheadline.weight(.semibold))

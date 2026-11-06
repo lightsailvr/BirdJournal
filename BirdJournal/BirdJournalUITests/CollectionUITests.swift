@@ -104,6 +104,25 @@ final class CollectionUITests: XCTestCase {
         }
     }
 
+    /// The room that holds the offset while a patch's page is up can't be flicked into on the way back: no empty felt, then a jolt.
+    @MainActor
+    func testAFlickRightAfterComingBackFindsTheFootWhereItWas() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES", "-coverRoomSeconds", "20"])
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 15))
+        for _ in 0..<8 { app.swipeUp() }
+        let tiles = app.buttons.matching(identifier: "board-patch").allElementsBoundByIndex
+        let shown = try XCTUnwrap(tiles.last { Self.isClearOfBars($0, in: app) }, "no patch in view; screen: \(app.debugDescription.prefix(3000))")
+        let tile = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
+        let before = Self.settledMinY(of: tile)
+        tile.tap()
+        XCTAssertTrue(app.buttons["card-flip"].firstMatch.waitForExistence(timeout: 10))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(tile.waitForExistence(timeout: 10))
+        Thread.sleep(forTimeInterval: 1)
+        app.swipeUp()
+        XCTAssertEqual(Self.settledMinY(of: tile), before, accuracy: 3, "the flick went on past the foot into empty felt")
+    }
+
     /// Each mode's list, scrolled, comes back where it was left, through other modes and a quick run of changes.
     @MainActor
     func testEachModeKeepsItsScrollPositionThroughChanges() throws {
