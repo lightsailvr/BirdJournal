@@ -15,14 +15,19 @@ reference="${REFERENCE_ART:-/Users/matthewcelia/Documents/repos/BirdJournal/outp
 
 if [[ "${1:-}" == "--sheets" ]]; then
     mkdir -p "$out/sheets"
-    sips -Z 800 -s format jpeg -s formatOptions 78 "$reference/4-set-page.png" --out "$out/sheets/reference-4-set-page.jpg" >/dev/null
+    # The mock's phone alone, at the running app's proportions, so the two compare at one scale.
+    uv run -q --with pillow python - "$reference/4-set-page.png" "$out/sheets/reference-4-set-page.jpg" <<'PY'
+import sys
+from PIL import Image
+Image.open(sys.argv[1]).convert("RGB").crop((8, 0, 891, 1920)).resize((368, 800)).save(sys.argv[2], quality=84)
+PY
     sheet() {  # name, columns, shots
         local name="$1" columns="$2"; shift 2
         uv run -q "$repo_root/docs/screenshots/138/sheet.py" "$out/sheets/$name.jpg" "$columns" "$@"
     }
     sheet set-against-reference 3 "$out/sheets/reference-4-set-page.jpg" "$out/set-dark.jpg" "$out/set-light.jpg"
     sheet plates 4 "$out/atlas-dark.jpg" "$out/atlas-light.jpg" "$out/pack-dark.jpg" "$out/packs-dark.jpg"
-    sheet silhouettes 4 "$out/set-rows-dark.jpg" "$out/set-mixed-dark.jpg" "$out/set-no-pack-dark.jpg" "$out/set-search-dark.jpg"
+    sheet silhouettes 3 "$out/set-rows-dark.jpg" "$out/set-mixed-dark.jpg" "$out/set-no-pack-dark.jpg"
     sheet map 4 "$out/map-dark.jpg" "$out/map-light.jpg" "$out/map-cluster-dark.jpg" "$out/map-editions-dark.jpg"
     sheet record 4 "$out/record-patch-dark.jpg" "$out/record-patch-light.jpg" "$out/record-photo-dark.jpg" "$out/record-disclosures-dark.jpg"
     sheet first-photos 4 "$out/photo-black-phoebe-dark.jpg" "$out/photo-red-tailed-hawk-dark.jpg" "$out/photo-peregrine-falcon-dark.jpg" "$out/photo-western-screech-owl-dark.jpg"
