@@ -91,7 +91,7 @@ class StubComfy:
         size = (canvas["width"], canvas["height"])
         if job.filename_prefix == "birdjournal/set-cover":
             return png(landscape(size, job.seed + self.cover_drift))
-        if job.filename_prefix == "birdjournal/patch-art":
+        if job.filename_prefix in ("birdjournal/patch-art", "birdjournal/mascot-patch"):
             return png(patch_on_card(size, Image.open(io.BytesIO(job.images[0])).convert("RGB")))
         if job.kind == "text":
             return png(bird_on(Image.new("RGB", size, "white")))

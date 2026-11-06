@@ -1,0 +1,461 @@
+{
+  "comment": "The mascot patches (issue #150, slice 11), written by `packbuilder mascot` and `packbuilder mascot-review`; review on the contact sheets in build/mascot/. Per bird: the icon's SHA-256, the workflow and prompts versions, the round, each candidate's number (as on the sheet, never reused), composition, ground, seed and SHA-256 (its file in <cache>/mascot/patches/), and the review: pending, approved (candidate number `chosen` ships as `approved.file` beside this lock) or rejected (a new round from new seeds next run).",
+  "next_number": 43,
+  "birds": {
+    "house-finch": {
+      "title": "House Finch",
+      "icon_sha256": "382f102ce18079edb925378686478c321c2e627d00d7339073352a7742ed7586",
+      "workflow": "mascot-patch@1",
+      "prompts": 1,
+      "round": 0,
+      "candidates": [
+        {
+          "number": 1,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 536171074,
+          "sha256": "4955741d09403cc2d8ad747ae94ed59a794d2c4e4f51d49bf5d45a383e78b803",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 2,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 1760715476,
+          "sha256": "7f43f06cf8d71662b4d9c39217b69ebc2cb28ebd65ce164ce36cc24f97219367",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 3,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 4059771758,
+          "sha256": "69675063ad61470619eb40856e98f85ae53620bff41891be48dff1fd424784da",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 4,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 2264663032,
+          "sha256": "103340ad9b021e0cf175eff4f3e619702263f800615324802656ce705cba344a",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 5,
+          "composition": "whole",
+          "ground": "tan",
+          "seed": 412653147,
+          "sha256": "b63b13959f29035db82fb37c585b6d9557f0c61169c82ffa49cb14bc94a4148b",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 6,
+          "composition": "whole",
+          "ground": "peach",
+          "seed": 1872733901,
+          "sha256": "5d4140bdbfb0f693239d7c0fd60c417f34928c92a70dd203ec4875d9abd03f7d",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        }
+      ],
+      "review": "pending",
+      "chosen": null
+    },
+    "perched-finch": {
+      "title": "House Finch on its branch",
+      "icon_sha256": "382f102ce18079edb925378686478c321c2e627d00d7339073352a7742ed7586",
+      "workflow": "mascot-patch@1",
+      "prompts": 1,
+      "round": 0,
+      "candidates": [
+        {
+          "number": 7,
+          "composition": "perched",
+          "ground": "tan",
+          "seed": 1295531441,
+          "sha256": "7e4bf58b4e76a95379a0f46c567ec2556401bed65f20cba5e5c1aa39231a4db6",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 8,
+          "composition": "perched",
+          "ground": "tan",
+          "seed": 977210663,
+          "sha256": "1b6b7f5e8f92ca0cda57fa984a72b2ebad96d0c81cec61275d118353720d020d",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 9,
+          "composition": "perched",
+          "ground": "tan",
+          "seed": 2738248861,
+          "sha256": "843e386e32996a10c4591089fc747c3a5d5bd9222ae935066620c770e4ad83fc",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 10,
+          "composition": "perched",
+          "ground": "peach",
+          "seed": 3560008715,
+          "sha256": "8c639ad6b4087e7ed8efc70589e02112fec940c19b7a3558966721d82414089a",
+          "card_at_edge": 0.0003,
+          "attempts": 1
+        },
+        {
+          "number": 11,
+          "composition": "perched",
+          "ground": "peach",
+          "seed": 1247148456,
+          "sha256": "2919222d73f453855fb3151e92f28f7b7ccd270fbcebec36d4577af61822b8b6",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 12,
+          "composition": "perched",
+          "ground": "peach",
+          "seed": 1028835646,
+          "sha256": "4a89ba41f0ee56e4849961749bc7a1622742f649cb5c7ffd11914214b880c97a",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        }
+      ],
+      "review": "pending",
+      "chosen": null
+    },
+    "blue-bird": {
+      "title": "Blue Bird",
+      "icon_sha256": "205fab4215ca2062b5fa8db1bdcdc9d02c69538acd844468de529dd88ddebcb0",
+      "workflow": "mascot-patch@1",
+      "prompts": 1,
+      "round": 0,
+      "candidates": [
+        {
+          "number": 13,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 1337012422,
+          "sha256": "2736a4e09f586afd0812880e1ecdff62feedbf739cdb8fe5c758e8ba09caab14",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 14,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 951451728,
+          "sha256": "69d1417ad86cfef33ce7980b5a5e38786f895b925e590f61b72b932cbaad4286",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 15,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 2713670122,
+          "sha256": "fc64e0b5d15ec2b7515c3ebe8ceec6162f5fb1e980ae93b4215d6ef9571fc098",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 16,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 3602407804,
+          "sha256": "7f2d3a0cc2747b81640df6773d5f1c11ad8177ef48e140d96d13e5d63423c8d4",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 17,
+          "composition": "whole",
+          "ground": "tan",
+          "seed": 1222440159,
+          "sha256": "28df13ef8eda9c4107cb07332735e77a3d0900b15a2e9356de3639b261efe14c",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 18,
+          "composition": "whole",
+          "ground": "peach",
+          "seed": 1071367241,
+          "sha256": "6c6f5937ec44afa9bb849de822e203c33f13235a0b57965bd0581d060e01597b",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        }
+      ],
+      "review": "pending",
+      "chosen": null
+    },
+    "great-egret": {
+      "title": "Great Egret",
+      "icon_sha256": "0478c450f3668c7e42e22b5b9ecb20aed150c3313aac4d0ab1f9f5d202f95690",
+      "workflow": "mascot-patch@1",
+      "prompts": 1,
+      "round": 0,
+      "candidates": [
+        {
+          "number": 19,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 1582912137,
+          "sha256": "8e608ec6d5d809933dcc31b1a533c9f4a2814d7548197548e9506db966f7adc0",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 20,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 694051359,
+          "sha256": "dee2015762b1b66ce90ff831a3a75c87b683f24f7f0562b8fdb255849f7b684f",
+          "card_at_edge": 0.0006,
+          "attempts": 1
+        },
+        {
+          "number": 21,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 2958504869,
+          "sha256": "fdfa22e67c8e2334da8c93cc88d418ccf8bffc8c17ad4b600a4db6e79ed80474",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 22,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 3343909683,
+          "sha256": "7968d7d5830af4ae2f0b90119e48ad22b4afb32a14a30e9ea067bc37022b1df0",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 23,
+          "composition": "whole",
+          "ground": "tan",
+          "seed": 1496618640,
+          "sha256": "ef2f0e49249bbf392ee8e43f6786ead50d0ce7bc0c1ead364477726a702ee656",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 24,
+          "composition": "whole",
+          "ground": "peach",
+          "seed": 775136774,
+          "sha256": "e144fbb10cd2e930e733a7a36194f0615cdf77da21e3b53d231273e42925beb6",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        }
+      ],
+      "review": "pending",
+      "chosen": null
+    },
+    "prothonotary-warbler": {
+      "title": "Prothonotary Warbler",
+      "icon_sha256": "684fadaba68b0e0427d2d23c91abe544bf300f394ed2962fae1cb59515c2583a",
+      "workflow": "mascot-patch@1",
+      "prompts": 1,
+      "round": 0,
+      "candidates": [
+        {
+          "number": 25,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 136079077,
+          "sha256": "e11b1019e3e5dbb9413ecb8296e8a6eec38073fd01900c78f132b02aaf392869",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 26,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 2132498035,
+          "sha256": "20135785d04298afaa70a2e3993a7f7a38ee344e802a75a7ebe950bf8f40447a",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 27,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 3859941321,
+          "sha256": "e5845376039c11a1b1aff86b19bc4b463f4442ae55bb0e0f87028bb115ba6354",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 28,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 2434086751,
+          "sha256": "b8f45d0f5641cb5b68d99a50b6ffc8736d97ad7015b626f7792e8ad044fd65c8",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 29,
+          "composition": "whole",
+          "ground": "tan",
+          "seed": 259105532,
+          "sha256": "4875a9caef939efcd11d8171d80ab736fae607b1597fd3af5c6e5e3ef079b459",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 30,
+          "composition": "whole",
+          "ground": "peach",
+          "seed": 2021036650,
+          "sha256": "e11cfeabcfab4f2a164374c09d97ac1af566ac94b59334c89efb77ad0ed48652",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        }
+      ],
+      "review": "pending",
+      "chosen": null
+    },
+    "red-tailed-hawk": {
+      "title": "Red-tailed Hawk",
+      "icon_sha256": "d97fe4d8603cd8bece6be177a63e700d9a9e580385dfeaa65a03df54c02f016c",
+      "workflow": "mascot-patch@1",
+      "prompts": 1,
+      "round": 0,
+      "candidates": [
+        {
+          "number": 31,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 45707740,
+          "sha256": "1bab3988ec94f0fa8c907b9d3f00ee806b8039072ca2e452362792c231e25fa4",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 32,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 1975402826,
+          "sha256": "aed42bb2b9539eb6f5a959b4e6f847a61037474978295eda389cf5ba83f51e89",
+          "card_at_edge": 0.0001,
+          "attempts": 1
+        },
+        {
+          "number": 33,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 3971420400,
+          "sha256": "c7d73cb765a1d9d22ab97f9c3514a30bd037e0c72096b784f810daec690ac470",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 34,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 2612011110,
+          "sha256": "bac819352d76801f719c6eab0afe0ebca00f6a1f7ed63bf4da61b15030ef3d36",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 35,
+          "composition": "whole",
+          "ground": "tan",
+          "seed": 97826245,
+          "sha256": "460864aeaf238ad73812a199fbc2ae23a98febad75e6941afc217d83d41c36dd",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 36,
+          "composition": "whole",
+          "ground": "peach",
+          "seed": 1926464851,
+          "sha256": "2d7e72695cba226f5f0547de78aa5e38200f7acf0c0bef2863435ee87e6a747c",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        }
+      ],
+      "review": "pending",
+      "chosen": null
+    },
+    "stellers-jay": {
+      "title": "Steller's Jay",
+      "icon_sha256": "6477a87f36238c8046813c92bfdbc03ee05663f0271fc1d15a3cc3ebae38f047",
+      "workflow": "mascot-patch@1",
+      "prompts": 1,
+      "round": 0,
+      "candidates": [
+        {
+          "number": 37,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 700187900,
+          "sha256": "e5064102c0967cfb2255ab3574cf802f84767bab4a40c6a5b6ef812374dc18f0",
+          "card_at_edge": 0.0001,
+          "attempts": 1
+        },
+        {
+          "number": 38,
+          "composition": "bust",
+          "ground": "tan",
+          "seed": 1589326954,
+          "sha256": "e6348182a03f6b2486d3f21aa5e30166d4b1ffad1aa5220697893f5e3a48ea98",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 39,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 3350357456,
+          "sha256": "8fef157b0793d2405e47242728eca4998d4d56ec4f981a334a8a33f0efc80920",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 40,
+          "composition": "bust",
+          "ground": "peach",
+          "seed": 2964673862,
+          "sha256": "57e8e7bd1a3a5bdb5cada85c466f51a43ce9e095806e6e169d283a4f7604deca",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 41,
+          "composition": "whole",
+          "ground": "tan",
+          "seed": 785498341,
+          "sha256": "f5d2c298d9f32ca6f08ab397ef01431f72f9ac5de6ca3c192d6dd6e199cfa0db",
+          "card_at_edge": 0.0,
+          "attempts": 1
+        },
+        {
+          "number": 42,
+          "composition": "whole",
+          "ground": "peach",
+          "seed": 1507258483,
+          "sha256": "d72e6476a5ade9b55dce5df1af54a8ef3d82b00585c127b6d3098bbf83cea006",
+          "card_at_edge": 0.0001,
+          "attempts": 1
+        }
+      ],
+      "review": "pending",
+      "chosen": null
+    }
+  }
+}

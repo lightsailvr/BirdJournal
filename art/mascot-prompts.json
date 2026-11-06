@@ -1,0 +1,84 @@
+{
+ "version": 1,
+ "comment": "The mascot patches (issue #150, slice 11): the app's six birds in glasses, plus the House Finch on its branch for the places PerchedBirdDrawing is today, as embroidered patches in the language of the real ones (`patch-prompts.json`), painted by FLUX.3 Image Klein from the app icon's bird cut out on white (<ref_image_0>). FLUX.3 reads a caption of the finished picture. No template names the species: the icon is the identity. The glasses and binoculars are spelled out, since they are what makes the bird this bird. `markings` are the colours the thread drifts on, found in the trials: a finch's red goes salmon, an egret picks up the ground's colour, a jay's glasses vanish into its black head. The feet are spelled out because thread otherwise wraps them round the branch like knotted cord. `grounds`: `tan` is the Los Angeles edition's twill and cord, `peach` is the icon's own ground. `round` is what one round paints for a bird, in the sheet's order; a bird's `compositions` swaps one for its own (the egret wades). A new version doesn't repaint a pending or approved round (the review is the costly part); a rejected bird's next round takes the current templates. Bump the version when a template, a ground, a composition or a bird's words change.",
+ "template": "A product photograph of an embroidered merit badge shaped like a perfect circle, photographed from directly above, lying flat in the middle of plain white card under soft, even, diffuse light, with only a faint shadow. The badge is {twill} finished with a thick raised merrowed border of overlocked {cord} thread all the way around its edge. On it is embroidered the cartoon bird character from <ref_image_0>, exactly as it appears there: the same character, the same head angle and friendly expression, the same big round eyes, the same feather colours and markings and bill, wearing the same thick black rectangular glasses across its eyes and the same small black binoculars hanging on a strap round its neck, nothing added and nothing taken away, rendered entirely in thread as flat, raised needlework, not as a 3D model and not as fur.{markings} Its feathers are laid in dense long-and-short satin stitches whose direction follows each feather tract, the thread colours matched to the bird's own. The glasses are solid black satin stitch with a thin white highlight stitch, and its eyes are satin-stitched discs inside them, each with one white highlight stitch. The binoculars are black satin stitch with small teal lenses. {composition} Every thread is visible: the soft sheen of rayon, the raised stitches, the woven twill between them. The whole badge is in the frame with a margin of white card all around it, in sharp focus. No text, letters, numbers or logos anywhere. No other birds, animals or people.",
+ "grounds": {
+  "tan": {
+   "twill": "tan cotton twill",
+   "cord": "olive-green"
+  },
+  "peach": {
+   "twill": "solid warm peach cotton twill, a soft mid-toned apricot like a ripe peach's skin, the same colour everywhere inside the border,",
+   "cord": "deep terracotta-brown"
+  }
+ },
+ "compositions": {
+  "bust": "The bird is a head-and-shoulders portrait, as in <ref_image_0>: its shoulders and chest run down to the bottom of the badge and end at the merrowed border. Behind it, the bare twill with only a few simple fill-stitched green leaves.",
+  "whole": "The whole bird is shown, small and complete with its body, tail and two small feet gripping a small embroidered branch that runs across the badge beneath it, each foot a short thin dark-brown leg ending in three separate slender pointed toes with tiny claws that curl over the top of the branch, never a knot, a loop or a wrap of cord; it does not float. Behind it, a few simple fill-stitched green leaves on the bare twill.",
+  "wade": "The whole bird is shown, complete with its long neck, slim body and long black legs, wading in shallow water stitched in bands of blue thread with a few reeds beside it; there is no branch.",
+  "perched": "The whole bird is shown perched in profile-three-quarter view, complete with its round body, folded wing, long tail pointing down and to the left, and two small feet gripping a long thin brown embroidered branch that slants across the whole badge from the lower left to the upper right, each foot a short thin dark-brown leg ending in three separate slender pointed toes with tiny claws that curl over the top of the branch, never a knot, a loop or a wrap of cord, with two small twigs carrying a few small pale green leaves. The bird is about half the height of the badge."
+ },
+ "round": [
+  ["bust", "tan"],
+  ["bust", "tan"],
+  ["bust", "peach"],
+  ["bust", "peach"],
+  ["whole", "tan"],
+  ["whole", "peach"]
+ ],
+ "birds": [
+  {
+   "id": "house-finch",
+   "title": "House Finch",
+   "icon": "BirdJournal/MyBirdJournal-HouseFinch.icon/Assets/house-finch-1024.png",
+   "markings": "The red on its forehead, cheeks and throat is a vivid rose-red thread, not salmon."
+  },
+  {
+   "id": "perched-finch",
+   "title": "House Finch on its branch",
+   "icon": "BirdJournal/MyBirdJournal-HouseFinch.icon/Assets/house-finch-1024.png",
+   "markings": "The red on its forehead, cheeks and throat is a vivid rose-red thread, not salmon.",
+   "round": [
+    ["perched", "tan"],
+    ["perched", "tan"],
+    ["perched", "tan"],
+    ["perched", "peach"],
+    ["perched", "peach"],
+    ["perched", "peach"]
+   ]
+  },
+  {
+   "id": "blue-bird",
+   "title": "Blue Bird",
+   "icon": "BirdJournal/MyBirdJournal-Default.icon/Assets/my-bird-journal-icon-1024.png",
+   "markings": "Its crest, back and wings are a clear sky-blue thread and its face and breast a warm cream."
+  },
+  {
+   "id": "great-egret",
+   "title": "Great Egret",
+   "icon": "BirdJournal/MyBirdJournal-GreatEgret.icon/Assets/great-egret-1024.png",
+   "markings": "It is pure white all over, stitched in clean white thread with pale grey shading and no orange or pink in the feathers, with a long yellow-orange dagger bill that stays inside the badge.",
+   "compositions": {
+    "whole": "wade"
+   }
+  },
+  {
+   "id": "prothonotary-warbler",
+   "title": "Prothonotary Warbler",
+   "icon": "BirdJournal/MyBirdJournal-ProthonotaryWarbler.icon/Assets/prothonotary-warbler-1024.png",
+   "markings": "Its head and breast are a saturated golden yellow, its wings blue-grey with an olive shoulder."
+  },
+  {
+   "id": "red-tailed-hawk",
+   "title": "Red-tailed Hawk",
+   "icon": "BirdJournal/MyBirdJournal-RedTailedHawk.icon/Assets/red-tailed-hawk-1024.png",
+   "markings": "Its back and wings are dark chocolate brown, its breast cream with dark brown streaks, its bill dark with a yellow base, and a little of its rust-red tail shows at the lower left."
+  },
+  {
+   "id": "stellers-jay",
+   "title": "Steller's Jay",
+   "icon": "BirdJournal/MyBirdJournal-StellersJay.icon/Assets/stellers-jay-1024.png",
+   "markings": "Its head and crest are sooty black with a bright blue streak on the crown, and its body and wings are a vivid cobalt blue. The glasses stand out from the black head with a thin grey outline stitch."
+  }
+ ]
+}
