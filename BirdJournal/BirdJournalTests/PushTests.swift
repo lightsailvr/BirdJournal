@@ -88,7 +88,7 @@ struct PushPayloadTests {
     @Test("a notable push carries the find for the lens banner")
     func notable() throws {
         let userInfo: [AnyHashable: Any] = [
-            "aps": ["content-available": 1, "alert": ["title": "Maya found a Black Phoebe", "body": "New patch · Pasadena"]],
+            "aps": ["content-available": 1, "alert": ["title": "Maya found a Black Phoebe", "body": "New patch, Pasadena"]],
             "kind": "notable",
             "find": [
                 "owner": "maya", "owner_name": "Maya Ortiz", "sighting_id": "s1", "species_id": "Sayornis nigricans_Black Phoebe",

@@ -204,7 +204,7 @@ def test_reactions_within_ten_minutes_collapse_into_one_push(
     first, second = apns.to(ADA_PHONE)
     # It replaces the first on the phone, so it names the first's reaction too.
     assert second.payload()["aps"]["alert"] == {
-        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find · Jealous! · Let's go together",
+        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find, Jealous! Let's go together",
     }
     # It replaces the first on the phone.
     assert first.collapse_id == second.collapse_id
@@ -225,7 +225,7 @@ def test_a_reaction_after_the_window_pushes_at_once_with_anything_waiting(
     pushes = _reaction_alerts(apns, ADA_PHONE)
     assert len(pushes) == 2
     assert pushes[1].payload()["aps"]["alert"] == {
-        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find · Jealous!",
+        "title": "Bo and Cy reacted to your Black Phoebe", "body": "Lovely find, Jealous!",
     }
     assert _flush(client).sent == 0
 
@@ -330,7 +330,7 @@ def test_a_failing_apns_never_fails_the_reaction(
 def test_the_words() -> None:
     lovely, jealous, together = ReactionKind.LOVELY, ReactionKind.JEALOUS, ReactionKind.TOGETHER
     assert reaction_words(["Bo"], "Oak Titmouse", [lovely]) == ("Bo reacted to your Oak Titmouse", "Lovely find")
-    assert reaction_words(["Bo", "Cy"], "Oak Titmouse", [together, lovely])[1] == "Lovely find · Let's go together"
+    assert reaction_words(["Bo", "Cy"], "Oak Titmouse", [together, lovely])[1] == "Lovely find, Let's go together"
     assert reaction_words(["Bo", "Cy", "Di"], "Oak Titmouse", [jealous])[0] == "Bo and 2 others reacted to your Oak Titmouse"
     assert reaction_words([], "Oak Titmouse", [jealous])[0] == "A friend reacted to your Oak Titmouse"
 

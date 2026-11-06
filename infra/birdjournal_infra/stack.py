@@ -33,6 +33,8 @@ class BirdJournalStack(Stack):
             self,
             "InviteSite",
             domain=config.invite_domain,
+            former_domains=config.invite_former_domains,
+            new_host_first=config.invite_new_host_first,
             certificate_arn=config.invite_certificate_arn,
             app_ids=list(config.ios_app_ids),
         )
@@ -48,7 +50,7 @@ class BirdJournalStack(Stack):
                 "TABLE_NAME": data.table.table_name,
                 "COGNITO_ISSUER": auth.issuer,
                 "COGNITO_CLIENT_IDS": auth.app_client.user_pool_client_id,
-                "INVITE_BASE_URL": invites.url,
+                "INVITE_BASE_URL": invites.link_url,
                 "ART_BUCKET": self.art.bucket.bucket_name,
                 "ART_CDN_BASE_URL": self.art.url,
                 "APNS_SECRET_NAME": config.apns_secret_name,
@@ -79,9 +81,9 @@ class BirdJournalStack(Stack):
             # Both Google's authorized redirect URI and Apple's Services ID return URL.
             "IdpResponseUrl": f"https://{domain}/oauth2/idpresponse",
             "TableName": data.table.table_name,
-            # The invite domain's CNAME target at SiteGround (the circles wizard).
+            # The invite domain's CNAME target at SiteGround (the domain wizard).
             "InviteDistributionDomain": invites.distribution.distribution_domain_name,
-            "InviteBaseUrl": invites.url,
+            "InviteBaseUrl": invites.link_url,
             # The art CDN's host (#68; finds' thumbnails, #62, use it too).
             "ArtCdnDomain": self.art.domain,
             # Where scripts/publish-pack-thumbnails.sh uploads.
