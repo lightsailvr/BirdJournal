@@ -23,9 +23,10 @@ final class CardsUITests: XCTestCase {
         app.launch()
 
         // The first species heard, reviewed and added.
-        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Review '")).firstMatch
+        let review = app.buttons["candidate-row-0"]
         XCTAssertTrue(review.waitForExistence(timeout: 60), "no species to review; screen: \(app.debugDescription.prefix(3000))")
-        let name = String(review.label.dropFirst("Review ".count))
+        // "House Finch, calling now, new patch waiting".
+        let name = String(review.label.prefix { $0 != "," })
         review.tap()
         let add = app.buttons["Add and sew patch"]
         XCTAssertTrue(add.waitForExistence(timeout: 10), "no Add and sew patch; screen: \(app.debugDescription.prefix(3000))")
@@ -53,7 +54,7 @@ final class CardsUITests: XCTestCase {
         let addAnother = app.buttons["Add another sighting"]
         XCTAssertTrue(addAnother.waitForExistence(timeout: 10))
         addAnother.tap()
-        XCTAssertTrue(app.staticTexts["Seen again, 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["\(name) seen again, 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "a repeat add stitches nothing")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "and opens no page")

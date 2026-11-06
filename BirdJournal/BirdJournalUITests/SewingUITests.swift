@@ -30,11 +30,11 @@ final class SewingUITests: XCTestCase {
     /// Reviews the House Finch and taps its add button. The live list re-sorts as birds call, so a tap can land on the row
     /// that has just moved under it: that bird's sheet is closed and the row tried again.
     @MainActor
-    private func add(_ app: XCUIApplication, button: String, row: String = "Review \(SewingUITests.name)") {
-        let review = app.buttons[row]
+    private func add(_ app: XCUIApplication, button: String, row: String? = nil) {
+        let review = row.map { app.buttons[$0] } ?? app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.name), ")).firstMatch
         let add = app.buttons[button]
         for _ in 0..<5 {
-            XCTAssertTrue(review.waitForExistence(timeout: 90), "no \(row); screen: \(app.debugDescription.prefix(3000))")
+            XCTAssertTrue(review.waitForExistence(timeout: 90), "no \(row ?? Self.name); screen: \(app.debugDescription.prefix(3000))")
             review.tap()
             XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "no sheet; screen: \(app.debugDescription.prefix(3000))")
             if app.staticTexts[Self.name].exists, add.waitForExistence(timeout: 10) {
@@ -70,7 +70,7 @@ final class SewingUITests: XCTestCase {
 
         // The same bird again: the sighting and its count, with no page and nothing to tap (the maintainer, 2026-11-04).
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        let seenAgain = app.staticTexts["Seen again, 2 times in Los Angeles"]
+        let seenAgain = app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"]
         XCTAssertTrue(seenAgain.waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(stitching.exists, "a repeat stitches nothing")
         XCTAssertFalse(reveal.exists, "a repeat is not a new patch")
@@ -108,7 +108,7 @@ final class SewingUITests: XCTestCase {
         app.buttons["Keep listening"].tap()
 
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        XCTAssertTrue(app.staticTexts["Seen again, 2 times in Los Angeles"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "no page")
     }
 

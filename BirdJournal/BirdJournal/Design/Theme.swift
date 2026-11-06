@@ -123,26 +123,62 @@ struct PrimaryButtonStyle: ButtonStyle {
 }
 
 /// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
-/// rectangle, since its words wrap (issue #150).
+/// rectangle, since its words wrap (issue #150). `colour` makes it quieter: Stop, in the ink, doesn't speak over the birds.
 struct OutlinedButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.dynamicTypeSize) private var typeSize
+    var colour = Color.moss
 
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color.moss)
+            .foregroundStyle(colour)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
             .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
             .frame(minHeight: 44)
-            .background(Color.moss.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
-            .overlay(shape.strokeBorder(Color.moss, lineWidth: 1))
+            .background(colour.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(colour, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
             .contentShape(shape)
             .pressResponse(isPressed: configuration.isPressed)
     }
+}
+
+/// A row's button: Sew it filled with the tint, Add outlined in the ink, both smaller than the 44 pt they answer to, so the
+/// bird stays the main thing on the row. At accessibility sizes it's a rounded rectangle, since its words can wrap.
+struct RowPillStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let isFilled: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        configuration.label
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(isFilled ? Color.mossText : Color.ink)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
+            .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
+            .frame(minHeight: 36)
+            .background {
+                if isFilled {
+                    shape.fill(.tint)
+                } else {
+                    shape.fill(Color.ink.opacity(configuration.isPressed ? 0.15 : 0))
+                    shape.strokeBorder(Color.ink, lineWidth: 1)
+                }
+            }
+            .opacity(isEnabled ? (configuration.isPressed && isFilled ? 0.85 : 1) : 0.4)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .pressResponse(isPressed: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == RowPillStyle {
+    static func journalRowPill(isFilled: Bool) -> RowPillStyle { RowPillStyle(isFilled: isFilled) }
 }
 
 extension ButtonStyle where Self == PrimaryButtonStyle {
@@ -151,6 +187,7 @@ extension ButtonStyle where Self == PrimaryButtonStyle {
 
 extension ButtonStyle where Self == OutlinedButtonStyle {
     static var journalOutlined: OutlinedButtonStyle { OutlinedButtonStyle() }
+    static var journalQuiet: OutlinedButtonStyle { OutlinedButtonStyle(colour: .ink) }
 }
 
 /// Lays a screen out on paper with the journal's margins: the standard scroll container for the tabs.

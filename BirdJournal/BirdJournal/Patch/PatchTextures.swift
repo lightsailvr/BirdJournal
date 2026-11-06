@@ -1,4 +1,5 @@
 import ImageIO
+import OSLog
 import Pack
 import SwiftUI
 
@@ -101,7 +102,8 @@ enum PatchTextures {
         }
     }
 
-    /// NSCache is safe from any thread: an operation looks in it just before decoding.
+    /// Safe from the decoding queue, which reads and fills it there: a screen of rows showing one patch asks for it once per row,
+    /// and only the two decoding at once can miss each other.
     private nonisolated(unsafe) static let cache = NSCache<NSString, Loaded>()
 
     /// From blank to lit, when the patch had to be waited for.
@@ -134,7 +136,9 @@ enum PatchTextures {
                         continuation.resume(returning: nil)
                         return
                     }
-                    continuation.resume(returning: Loaded(colour: colour, layers: layers))
+                    let loaded = Loaded(colour: colour, layers: layers)
+                    cache.setObject(loaded, forKey: cacheKey)
+                    continuation.resume(returning: loaded)
                 }
                 operation.queuePriority = priority
                 if priority == .low { operation.qualityOfService = .utility }
@@ -143,7 +147,6 @@ enum PatchTextures {
         } onCancel: {
             flag.cancel()
         }
-        if let loaded { cache.setObject(loaded, forKey: key(art, size)) }
         return loaded
     }
 
@@ -199,6 +202,13 @@ enum PatchTextures {
     }
 
     private nonisolated static func decode(_ url: URL, maxPixels: Int) -> CGImage? {
+        #if DEBUG
+        // Issue #150: what a sweep counts, with patches on rows that refresh every second. A thumbnail that's stayed lazy shows up
+        // in the same log as the decoder's own lines.
+        if UserDefaults.standard.bool(forKey: "patchDecodeLog") {
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "patch-decode").info("decode \(url.lastPathComponent, privacy: .public)")
+        }
+        #endif
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,

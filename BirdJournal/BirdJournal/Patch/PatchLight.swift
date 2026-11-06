@@ -4,6 +4,7 @@ import Observation
 import OSLog
 import QuartzCore
 import simd
+import SwiftUI
 import UIKit
 
 /// Where a patch's light is (issue #134, guide page 13), from gravity in the device's frame: pure, so its feel is tested
@@ -117,6 +118,11 @@ final class PatchLight {
     /// What a surface draws with: under Reduce Motion the light stays upper-left.
     nonisolated static func shown(_ direction: SIMD2<Double>, reduceMotion: Bool) -> SIMD2<Double> {
         reduceMotion ? PatchLightModel.rest : direction
+    }
+
+    /// Whether a surface should be holding the light: on screen, in a scene that isn't in the background.
+    nonisolated static func isWanted(isOnScreen: Bool, phase: ScenePhase) -> Bool {
+        isOnScreen && phase != .background
     }
 
     /// A lit surface came on screen: starts the motion updates for the first one.
