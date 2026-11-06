@@ -20,9 +20,9 @@ The screen refreshes every second and on the waveform, and built the collection 
 
 | Sightings | Builds | Build ms | CPU ms | Time over budget |
 |---|---|---|---|---|
-| 1,000 | 301 → **0** | 5,205 → **0** | 12,559 → **8,703** | 1,213 → **0** ms |
-| 5,000 | 232 → **0** | 20,965 → **0** | 28,989 → **10,119** | 21,463 → **20** ms |
-| 20,000 | 57 → **0** | 21,569 → **0** | 29,297 → **9,645** | 23,670 → **0** ms |
+| 1,000 | 301 → **0** | 5,205 → **0** | 12,559 → **9,499** | 1,213 → **0** ms |
+| 5,000 | 232 → **0** | 20,965 → **0** | 28,989 → **7,760** | 21,463 → **29** ms |
+| 20,000 | 57 → **0** | 21,569 → **0** | 29,297 → **9,790** | 23,670 → **36** ms |
 
 Before, at 5,000 sightings, the main thread spent 21 s of 30 s building the collection. The count falls at 20,000 only because each build takes so long that few fit.
 
@@ -30,11 +30,11 @@ Before, at 5,000 sightings, the main thread spent 21 s of 30 s building the coll
 
 | Step | Builds (5k) | CPU ms (5k) | Worst frame (5k) | CPU ms (20k) | Worst frame (20k) |
 |---|---|---|---|---|---|
-| Collection tab | 2 → 0 | 1,305 → 1,147 | 738 → 562 ms | 3,416 → 2,618 | past the window → 1,761 ms |
-| A patch's page | 2 → 0 | 8,245 → 1,045 | past the window → 691 ms | 39,510 → 1,717 | past the window → 1,400 ms |
-| Adding a sighting, on the Collection tab | 8 → 1 | 1,950 → 1,184 | 1,435 → 552 ms | 29,176 → 3,384 | past the window → 1,756 ms |
-| Atlas tab | 3 → 0 | 1,411 → 483 | 831 → 287 ms | 6,758 → 942 | past the window → 2,111 ms |
-| A set's page (R5) | 1 → 0 | 1,044 → 255 | 472 → 85 ms | 2,441 → 231 | 15,431 → 74 ms |
+| Collection tab | 2 → 0 | 1,305 → 1,172 | 738 → 569 ms | 3,416 → 2,312 | past the window → 1,708 ms |
+| A patch's page | 2 → 0 | 8,245 → 1,111 | past the window → 683 ms | 39,510 → 1,855 | past the window → 1,388 ms |
+| Adding a sighting, on the Collection tab | 8 → 1 | 1,950 → 1,047 | 1,435 → 480 ms | 29,176 → 3,543 | past the window → 1,550 ms |
+| Atlas tab | 3 → 0 | 1,411 → 485 | 831 → 287 ms | 6,758 → 979 | past the window → 777 ms |
+| A set's page (R5) | 1 → 0 | 1,044 → 179 | 472 → 69 ms | 2,441 → 246 | 15,431 → 87 ms |
 
 At 20,000 before, the 29 s beside "Adding a sighting" is mostly the patch page still paying off from the step ahead of it. A set's 15 s frame is the same kind of leftover.
 
@@ -44,10 +44,10 @@ A set's page made all 160 rows at open and now makes what's on screen: `testASet
 
 | | Before | After |
 |---|---|---|
-| First Start to listening, 5,000 sightings | 230 ms | **84 ms** |
+| First Start to listening, 5,000 sightings | 230 ms | **63 ms** |
 | When the models load | on Start | on Listen, before Start |
 
-The load itself takes 220 to 580 ms on this simulator, depending on the Mac's load, against a fixed location fix and a Mac's disk. The audit's "Starting: finding your location and loading the models" may be mostly the location on a phone, and only a phone can say.
+The load itself takes about 220 ms on this simulator, against a fixed location fix and a Mac's disk. The audit's "Starting: finding your location and loading the models" may be mostly the location on a phone, and only a phone can say.
 
 ### Guilds (R8)
 
@@ -61,12 +61,14 @@ The fake server was slowed to 1 s a read (`-fakeCircleLatency 1`; in the before 
 
 ## What the launch pays
 
-The collection is built once at launch, in the app's init instead of Listen's first body. Reading and building takes 64 ms at 1,000 sightings, 166 ms at 5,000 and 666 ms at 20,000, against 27, 114 and 595 before. The two aren't the same work (the store's also reads the album). It's once per launch, and the first of what used to be many, but it's on the main thread before the first frame, so check it on a phone.
+The collection is built once at launch, in the app's init instead of Listen's first body, and both come before the first frame. The `launch-build-ms` figures are 40, 167 and 619 ms at 1,000, 5,000 and 20,000 sightings, against 27, 114 and 595 before, **but they don't measure the same work**: before, the album had already been fetched by Listen's `@Query`, outside the timer, and now the store's fetch is inside it.
+
+The first version of this slice did fetch the album twice at launch, once for the store and once for Listen's `@Query`. Listen now reads the kept collection, so a launch fetches it once, as it did before. A launch before and after therefore does the same fetch and the same build, and this slice has no like-for-like launch number. That's the phone's check, below.
 
 ## Still slow, not in this slice
 
 - **The Collection tab** at 20,000 sightings still holds a frame for about 1.7 s, with no builds left in it. `JournalView`'s `@Query` of the album, its search filter and `Journal.days` run over every sighting. The same goes for an add, which redraws it.
-- **A save** reads the whole album to compare (the 32, 152 and 608 ms under "Adding a sighting"). A note or a caption pays that too, though no screen draws again. Fetching only the four columns it reads didn't help (627 to 608 ms at 20,000, within the noise), so the after runs had that and the code no longer does.
+- **A save** reads the whole album to compare (the 31, 149 and 604 ms under "Adding a sighting"). A note or a caption pays that too, though no screen draws again. Fetching only the four columns it reads didn't help (627 to 608 ms at 20,000, within the noise), so the code does not.
 
 ## Screenshots
 

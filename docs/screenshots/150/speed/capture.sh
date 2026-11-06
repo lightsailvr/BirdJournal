@@ -39,7 +39,7 @@ all() {  # suffix
     local suffix="$1"
     shot "placeholder-list-$suffix"  6 "${base[@]}" -fakeCircles some -fakeCircleLatency 60 -autoScreen circles
     # Compare opens over a Guild's page, so with the slow server its own read is the one still out.
-    shot "placeholder-compare-$suffix" ${COMPARE_WAIT:-23} "${base[@]}" -fakeCircles some -fakeCircleLatency 5 -autoScreen compare
+    shot "placeholder-compare-$suffix" ${COMPARE_WAIT:-26} "${base[@]}" -fakeCircles some -fakeCircleLatency 5 -autoScreen compare
     # Reads the page once so it's in the cache, then draws it again offline.
     shot "cached-fill-$suffix"      10 "${base[@]}" -fakeCircles some "${cache[@]}" -autoScreen circle
     shot "cached-list-$suffix"       6 "${base[@]}" -fakeCircles offline "${cache[@]}" -autoScreen circles
