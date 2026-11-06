@@ -39,11 +39,26 @@ struct CandidateRow: View {
             Button(action: review) {
                 AdaptiveRow(stacked: stacked) {
                     picture(look: look, patch: patch)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(name)
-                            .font(JournalFont.rowTitle)
-                            .foregroundStyle(Color.ink)
-                        statusLine(look: look, heard: heard)
+                    // Room for what the row says when its bird calls, so that a row doesn't change height, and move the ones
+                    // below it, when a bird starts calling or stops. The list holds its order around a touch; this holds its
+                    // rows' places. The words sit in the middle of that room, in line with the picture.
+                    ZStack(alignment: .leading) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(name)
+                                .font(JournalFont.rowTitle)
+                            HStack(spacing: 5) {
+                                Image(systemName: "waveform")
+                                Text("Calling now, \(look.note)")
+                                    .font(JournalFont.supporting.weight(.semibold))
+                            }
+                        }
+                        .hidden()
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(name)
+                                .font(JournalFont.rowTitle)
+                                .foregroundStyle(Color.ink)
+                            statusLine(look: look, heard: heard)
+                        }
                     }
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -102,22 +117,7 @@ struct CandidateRow: View {
     /// "Calling now, new here", "3 min ago, seen 7 times" or "Added, seen 8 times": what's new and what's calling in the tint.
     private func statusLine(look: CandidateLook, heard: String) -> some View {
         let isNew = look == .newHere
-        return ZStack(alignment: .topLeading) {
-            // Room for the line this row says when its bird calls, so that a row doesn't change height, and move the ones below it,
-            // when a bird starts calling or stops. The list holds its order around a touch; this holds its rows' places.
-            HStack(spacing: 5) {
-                Image(systemName: "waveform")
-                Text("Calling now, \(look.note)")
-                    .font(JournalFont.supporting.weight(.semibold))
-            }
-            .hidden()
-            .accessibilityHidden(true)
-            statusWords(look: look, heard: heard, isNew: isNew)
-        }
-    }
-
-    private func statusWords(look: CandidateLook, heard: String, isNew: Bool) -> some View {
-        HStack(spacing: 5) {
+        return HStack(spacing: 5) {
             if isCalling {
                 Image(systemName: "waveform")
                     .symbolEffect(.variableColor.iterative.reversing, isActive: !reduceMotion)
