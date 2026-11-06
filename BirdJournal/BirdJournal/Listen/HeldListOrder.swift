@@ -16,8 +16,12 @@ struct HeldListOrder<ID: Hashable>: Equatable {
     }
 
     static var settle: TimeInterval { 1.5 }
+    /// The last resort for a finger or scroll that never said it ended, however that came about. Long, because a finger can
+    /// really stay still. VoiceOver's focus can stay as long as it likes, so this leaves it alone.
+    static var staleAfter: TimeInterval { 20 }
 
     private var holders: Set<Holder> = []
+    private var lastTouch: Date?
     private var frozen: [ID]?
     /// When the hold began, for whatever else above the rows must hold still with it; nil when it isn't holding.
     private(set) var frozenAt: Date?
@@ -41,6 +45,8 @@ struct HeldListOrder<ID: Hashable>: Equatable {
             frozen = order
             frozenAt = now
         }
+        // Not every report: a finger moving reports at the display's rate, and each change here redraws the list.
+        if lastTouch.map({ now.timeIntervalSince($0) >= 5 }) ?? true { lastTouch = now }
         holders.insert(holder)
         releaseAt = nil
     }
@@ -51,6 +57,13 @@ struct HeldListOrder<ID: Hashable>: Equatable {
         if holders.isEmpty, frozen != nil { releaseAt = now.addingTimeInterval(Self.settle) }
     }
 
+    /// The list has left the screen, a sheet has covered it or the phone has locked: whatever was holding it may never say it
+    /// ended. A flick still decelerating when another tab opens doesn't.
+    mutating func letGoOfEverything(at now: Date) {
+        holders = []
+        if frozen != nil { releaseAt = now.addingTimeInterval(Self.settle) }
+    }
+
     /// During a hold, birds new to the order keep the place they were first shown in, whatever the order does with them later.
     mutating func take(_ order: [ID]) {
         guard frozen != nil else { return }
@@ -59,9 +72,14 @@ struct HeldListOrder<ID: Hashable>: Equatable {
 
     /// The clock's turn: the list is let go once it's due.
     mutating func tick(at now: Date) {
+        if !holders.isEmpty, let lastTouch, now.timeIntervalSince(lastTouch) >= Self.staleAfter {
+            holders = holders.filter { if case .voiceOverFocus = $0 { true } else { false } }
+            if holders.isEmpty { releaseAt = now }
+        }
         guard holders.isEmpty, let releaseAt, now >= releaseAt else { return }
         frozen = nil
         frozenAt = nil
+        lastTouch = nil
         self.releaseAt = nil
     }
 }
@@ -121,7 +139,7 @@ struct FingerDown: UIGestureRecognizerRepresentable {
 
     func handleUIGestureRecognizerAction(_ recognizer: Recognizer, context: Context) {
         switch recognizer.state {
-        case .began: changed(true)
+        case .began, .changed: changed(true)
         case .ended, .cancelled, .failed: changed(false)
         default: break
         }

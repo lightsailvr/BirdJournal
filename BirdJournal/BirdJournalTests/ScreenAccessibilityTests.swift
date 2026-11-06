@@ -257,6 +257,18 @@ struct ScreenAccessibilityTests {
         #expect(!review.contains { $0.contains("edition patch") }, "\(review)")
     }
 
+    /// The longest toast a repeat makes, at the largest text: its words wrap whole, and Undo keeps its line.
+    @Test("A named toast at the largest text keeps all its words and a whole Undo", arguments: sizes)
+    func toastFits(typeSize: DynamicTypeSize) async throws {
+        let text = "Anna's Hummingbird seen again, 12 times in Los Angeles"
+        let toast = UIHostingController(rootView: Toast(text: text, undo: {}).environment(\.dynamicTypeSize, typeSize))
+        let line = UIHostingController(rootView: Text("Undo").font(JournalFont.supporting.weight(.semibold)).environment(\.dynamicTypeSize, typeSize))
+        let oneLine = line.sizeThatFits(in: CGSize(width: 2_000, height: 2_000)).height
+        let height = toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).height
+        #expect(height >= oneLine * 2, "\(text) needs more than a line beside Undo at \(typeSize): toast \(height), a line \(oneLine)")
+        #expect(toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).width <= 402)
+    }
+
     @Test("An Atlas row shows your patch of the bird in that pack's set, by its scientific name, whatever label the pack spells")
     func atlasRowsFindYourPatch() throws {
         let harness = try Harness()

@@ -339,6 +339,7 @@ struct Toast: View {
     var ticksFrom: String?
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var ticked = false
 
     /// Long enough for a review sheet to have finished closing, so the tick is seen.
@@ -353,24 +354,32 @@ struct Toast: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.moss)
-            Text(shown)
-                .font(JournalFont.supporting.weight(.medium))
-                .foregroundStyle(Color.ink)
-                .contentTransition(.numericText())
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
+            HStack(alignment: typeSize.stacksRows ? .firstTextBaseline : .center, spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(Color.moss)
+                // The words wrap, however long a bird's name; at accessibility sizes Undo has the line below them.
+                Text(shown)
+                    .font(JournalFont.supporting.weight(.medium))
+                    .foregroundStyle(Color.ink)
+                    .contentTransition(.numericText())
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let undo {
-                Spacer(minLength: 8)
+                if !typeSize.stacksRows { Spacer(minLength: 8) }
                 Button("Undo", action: undo)
                     .font(JournalFont.supporting.weight(.semibold))
                     .foregroundStyle(Color.moss)
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.regularMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.rule, lineWidth: 1))
+        .frame(maxWidth: typeSize.stacksRows ? .infinity : nil, alignment: .leading)
+        .background(.regularMaterial, in: shape)
+        .overlay(shape.strokeBorder(Color.rule, lineWidth: 1))
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
         // A light, optional haptic as the count changes: the system's haptics setting turns it off.

@@ -12,6 +12,7 @@ struct ActiveListeningView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// For the summary's count of what's new and what you have.
     @Environment(CollectionStore.self) private var collectionStore
+    @Environment(\.scenePhase) private var scenePhase
     #if DEBUG
     @Environment(\.openCollection) private var openCollection
     #endif
@@ -124,7 +125,24 @@ struct ActiveListeningView: View {
             try? await Task.sleep(for: .seconds(max(releaseAt.timeIntervalSinceNow, 0)))
             guard !Task.isCancelled else { return }
             held.tick(at: .now)
-            if !held.isHeld { heldHunt = nil }
+        }
+        // The safety net's clock, only while something holds.
+        .task(id: held.isHeld) {
+            while held.isHeld, !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                if !Task.isCancelled { held.tick(at: .now) }
+            }
+        }
+        .onChange(of: held.isHeld) { _, isHeld in
+            if !isHeld { heldHunt = nil }
+        }
+        // Whatever was holding the list may never say it ended once one of these has happened to it.
+        .onDisappear { held.letGoOfEverything(at: .now) }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { held.letGoOfEverything(at: .now) }
+        }
+        .onChange(of: run.reviewing != nil || run.isReviewing || run.reveal != nil) { _, isCovered in
+            if isCovered { held.letGoOfEverything(at: .now) }
         }
         #if DEBUG
         .debugScroll(proxy, to: UserDefaults.standard.string(forKey: "autoScrollTo") ?? "run-rows", when: !run.candidates.isEmpty)
