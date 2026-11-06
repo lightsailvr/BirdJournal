@@ -2,7 +2,6 @@ import Album
 import Identification
 import MWDATCore
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The Listen tab (issue #28; issue #117's ready and active states): one Start listening action over the chosen audio
@@ -12,6 +11,7 @@ import SwiftUI
 struct ListenView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.warmEngine) private var warmEngine
 
     var body: some View {
         @Bindable var run = run
@@ -45,7 +45,18 @@ struct ListenView: View {
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: run.acknowledgment)
+        // After the first frame, so Start is ready before it's tapped (issue #150). Not during a run: it holds its own engine,
+        // and if a memory warning has dropped the shared one, this would load a second beside it.
+        .task {
+            try? await Task.sleep(for: .milliseconds(300))
+            if !Task.isCancelled, !run.state.isActive { warmEngine() }
+        }
     }
+}
+
+extension EnvironmentValues {
+    /// Loads the identification engine ahead of a run. The app's root sets it; elsewhere nothing happens.
+    @Entry var warmEngine: () -> Void = {}
 }
 
 /// The calm ready state (issue #117, design guide page 11): the local set's cover as the atmosphere, the connection
@@ -55,7 +66,7 @@ private struct ReadyToListenView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
-    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     @State private var choosingSource = false
 
     /// The status bar's height, which the cover runs under: the window's inset, since this page's own safe area also counts the
@@ -65,8 +76,8 @@ private struct ReadyToListenView: View {
     }
 
     var body: some View {
-        let collection = library.collection(of: sightings)
-        let local = LocalSet.find(library: library, collection: collection, newest: sightings.first)
+        let collection = collectionStore.collection
+        let local = LocalSet.find(library: library, collection: collection, newest: collection.cards.first)
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -103,7 +114,7 @@ private struct ReadyToListenView: View {
                         .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
 
                         if let local {
-                            LocalSetSection(local: local, collection: collection, sightings: sightings)
+                            LocalSetSection(local: local, collection: collection)
                         }
                     }
                     .padding(.horizontal, JournalLayout.margin)

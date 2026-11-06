@@ -3,7 +3,6 @@ import CoreTransferable
 import ImageIO
 import OSLog
 import Pack
-import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -22,7 +21,7 @@ struct ShareCardView: View {
     @Environment(AccountSession.self) private var account
     @Environment(CircleStore.self) private var circles
     @Environment(FindOutbox.self) private var outbox
-    @Query private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     let sighting: Sighting
     @State private var choices = FindPolicy.Choices()
     @State private var chosenCircles: Set<String> = []
@@ -46,7 +45,7 @@ struct ShareCardView: View {
 
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "share")
 
-    private var collection: CardCollection { library.collection(of: sightings) }
+    private var collection: CardCollection { collectionStore.collection }
     /// Whether this sighting sewed its patch.
     private var sewedPatch: Bool { collection.sewedItsPatch(sighting.identifier) }
     private var input: FindPolicy.Input {

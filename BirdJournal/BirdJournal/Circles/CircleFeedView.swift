@@ -29,7 +29,7 @@ struct CircleFeedSection: View {
                 } else if let error = feed.error {
                     Text(error).font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
                 } else {
-                    ProgressView().frame(maxWidth: .infinity)
+                    GuildPlaceholder()
                 }
             }
             ForEach(feed.items) { item in

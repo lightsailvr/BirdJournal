@@ -1,6 +1,5 @@
 import Album
 import Pack
-import SwiftData
 import SwiftUI
 
 /// One pack in detail (issue #28; restyled for the Atlas in #118): its set's cover, a preview of its birds, what it
@@ -11,7 +10,7 @@ import SwiftUI
 struct PackDetailView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dismiss) private var dismiss
-    @Query private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     let id: String
     @State private var confirmingRemoval = false
     @State private var removalError: String?
@@ -39,7 +38,7 @@ struct PackDetailView: View {
                         .padding(.top, 12)
                 }
                 if library.sets.contains(where: { $0.id == id }) {
-                    SpeciesCollected(progress: library.collection(of: sightings).progress(of: id))
+                    SpeciesCollected(progress: collectionStore.collection.progress(of: id))
                         .padding(.top, 12)
                 }
                 if let installed {

@@ -1,7 +1,6 @@
 import Album
 import Identification
 import Pack
-import SwiftData
 import SwiftUI
 
 /// Reviewing a candidate (issue #28): the bird's profile with the match details, and the explicit add: "Add and sew
@@ -28,17 +27,16 @@ struct CandidateReviewSheet: View {
 /// review, presented as a sheet from the live list.
 struct CandidateReviewView: View {
     @Environment(ListeningCoordinator.self) private var run
-    @Environment(PackLibrary.self) private var library
     @Environment(\.dismiss) private var dismiss
     let candidate: Candidate
     @State private var isAdding = false
     /// How the birder met the bird: Heard unless they say otherwise here (guide board 03) or later on the sighting.
     @State private var method = SightingMethod.heard
-    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
 
     /// The sightings of the bird in the patch an add here would join; 0 when the add would sew a new patch.
     private var seenHere: Int {
-        library.collection(of: sightings).count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)
+        collectionStore.collection.count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)
     }
 
     var body: some View {
