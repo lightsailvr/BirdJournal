@@ -95,8 +95,10 @@ final class CollectionUITests: XCTestCase {
         for _ in 0..<3 {
             tile.tap()
             XCTAssertTrue(app.buttons["card-flip"].firstMatch.waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
+            // Read as soon as it's back and again later: right the first time, with nothing put right afterwards.
             app.navigationBars.buttons.element(boundBy: 0).tap()
             XCTAssertTrue(tile.waitForExistence(timeout: 10))
+            XCTAssertEqual(tile.frame.minY, before, accuracy: 2, "the page landed elsewhere")
             Thread.sleep(forTimeInterval: 3)
             XCTAssertEqual(Self.settledMinY(of: tile), before, accuracy: 2, "the board's foot moved")
         }
@@ -168,7 +170,7 @@ final class CollectionUITests: XCTestCase {
         for _ in 0..<4 { app.swipeUp() }
         Thread.sleep(forTimeInterval: 1)
         XCTAssertTrue(name.isHittable, "scrolled away; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertLessThanOrEqual(name.frame.minY, top, "it pins under the title")
+        XCTAssertEqual(name.frame.minY, top, accuracy: 0.5, "it stays in the bar")
 
         // The bar's empty end, with tiles scrolled under it: a tap there opens nothing.
         let frame = name.frame

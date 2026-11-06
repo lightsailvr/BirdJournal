@@ -32,6 +32,13 @@ struct JournalView: View {
     @State private var restoring = false
     /// The restore under way.
     @State private var settling: Task<Void, Never>?
+    /// A patch's page hides the tab bar, and the scroll view underneath gets taller. At the foot of a board that would pull the offset
+    /// back by the bar's height, so the page would land short of its tile. Room below the content for as long as that lasts keeps
+    /// the offset where it was, and nothing has to be put back. It's never seen: the page covers it.
+    @State private var hasCoverRoom = false
+    @State private var coverRoomGoing: Task<Void, Never>?
+    /// More than any tab bar.
+    private static let coverRoom: CGFloat = 140
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
     /// meanwhile are not the birder's.
     var isCovered = false
@@ -47,38 +54,40 @@ struct JournalView: View {
             } else {
                 let collection = collectionStore.collection
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            // One mode fading out over the next: in a stack they'd sit one above the other meanwhile.
-                            ZStack(alignment: .topLeading) {
-                                LazyVStack(alignment: .leading, spacing: 0) {
-                                    content(collection)
-                                }
-                                .id(state.mode)
-                                .transition(modeContentTransition)
-                            }
-                        } header: {
-                            // Pinned, so another set is in reach from anywhere on a board.
-                            VStack(alignment: .leading, spacing: 0) {
-                                Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
-                                    ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
-                                }
-                                .pickerStyle(.segmented)
-                                .padding(.vertical, 8)
-                                .accessibilityIdentifier("collection-mode")
-                                if state.mode == .cards, state.query.isEmpty, boards(collection).count > 1 {
-                                    setMenu(shownBoard(collection), collection)
-                                        .transition(.opacity)
-                                }
-                            }
-                            .background { ModeSurface(mode: state.mode) }
-                            // The bar's empty parts don't reach the tiles scrolling under them.
-                            .contentShape(Rectangle())
+                    // One mode fading out over the next: in a stack they'd sit one above the other meanwhile.
+                    ZStack(alignment: .topLeading) {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            content(collection)
+                        }
+                        .id(state.mode)
+                        .transition(modeContentTransition)
+                    }
+                    .padding(.horizontal, JournalLayout.margin)
+                    .padding(.bottom, JournalLayout.sectionGap + (hasCoverRoom ? Self.coverRoom : 0))
+                }
+                // Outside the scrolling content, under a title that doesn't collapse: the picker has nothing to ride on, so whatever a
+                // mode change does to the content or the offset, it stays exactly where it is.
+                .safeAreaBar(edge: .top) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
+                            ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.vertical, 8)
+                        .accessibilityIdentifier("collection-mode")
+                        if state.mode == .cards, state.query.isEmpty, boards(collection).count > 1 {
+                            // In reach from anywhere on a board.
+                            setMenu(shownBoard(collection), collection)
+                                .transition(.opacity)
                         }
                     }
                     .padding(.horizontal, JournalLayout.margin)
-                    .padding(.bottom, JournalLayout.sectionGap)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background { ModeSurface(mode: state.mode).ignoresSafeArea(edges: .top) }
+                    // The bar's empty parts don't reach the tiles scrolling under them.
+                    .contentShape(Rectangle())
                 }
+                .scrollEdgeEffectHidden(true, for: .top)
                 .scrollPosition($position)
                 .onScrollGeometryChange(for: CGFloat.self) { geometry in
                     geometry.contentOffset.y + geometry.contentInsets.top
@@ -91,10 +100,16 @@ struct JournalView: View {
                     if phase == .interacting { stopRestoring() }
                 }
                 .onChange(of: isCovered) { _, covered in
+                    coverRoomGoing?.cancel()
                     if covered {
                         stopRestoring()
+                        hasCoverRoom = true
                     } else {
-                        settleAfterCover()
+                        // Once the tab bar is surely back, when the room can go without anything moving.
+                        coverRoomGoing = Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(1.5))
+                            if !Task.isCancelled { hasCoverRoom = false }
+                        }
                     }
                 }
                 .onChange(of: state.board) {
@@ -115,6 +130,7 @@ struct JournalView: View {
             }
         }
         .navigationTitle("Collection")
+        .toolbarTitleDisplayMode(.inlineLarge)
         .task(id: sightings.isEmpty) {
             // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()
@@ -201,7 +217,7 @@ struct JournalView: View {
             .padding(.top, 28)
     }
 
-    /// The set's name is the menu for the others (issue #150, audit F9), pinned with the modes. The menu carries the total across all
+    /// The set's name is the menu for the others (issue #150, audit F9), in the bar with the modes. The menu carries the total across all
     /// of them: on the page, "5 patches" over "3 of 160 sewn" would seem to disagree. Being pinned it stops growing at the first
     /// accessibility size, or at the largest it would take a third of the page from the patches.
     private func setMenu(_ shown: BoardChoice, _ collection: CardCollection) -> some View {
@@ -334,28 +350,6 @@ struct JournalView: View {
             }
             restoring = false
             state.offsets[state.mode] = max(offset, 0)
-        }
-    }
-
-    /// The way back from a page that hid the tab bar, or from another tab. At the foot of a board the offset was clamped to the taller
-    /// page, and it can move again as the bar comes back, so what it reports meanwhile isn't where the birder left it: nothing is
-    /// saved until it has settled, and it's put back as many times as that takes.
-    private func settleAfterCover() {
-        let saved = state.offsets[state.mode] ?? 0
-        restoring = true
-        settling?.cancel()
-        settling = Task { @MainActor in
-            var target = saved
-            for wait in [450, 350, 400] {
-                try? await Task.sleep(for: .milliseconds(wait))
-                guard !Task.isCancelled else { return }
-                let missed = saved - offset
-                if abs(missed) > 1 {
-                    position.scrollTo(y: target)
-                    target += missed
-                }
-            }
-            restoring = false
         }
     }
 

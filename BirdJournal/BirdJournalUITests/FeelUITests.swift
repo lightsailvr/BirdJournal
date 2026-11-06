@@ -112,17 +112,6 @@ final class FeelUITests: XCTestCase {
         XCTAssertTrue(element(species, "patch-face").waitForExistence(timeout: 10), "from a species: \(species.debugDescription.prefix(3000))")
     }
 
-    @MainActor
-    func testUnderReduceMotionAPatchStillOpensAndGoesBack() {
-        let app = board(["-reduceMotion", "YES"])
-        let phoebe = tile(app, "Black Phoebe")
-        XCTAssertTrue(phoebe.waitForExistence(timeout: 15))
-        phoebe.tap()
-        XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 10))
-        app.navigationBars.buttons.element(boundBy: 0).tap()
-        XCTAssertTrue(phoebe.waitForExistence(timeout: 10))
-    }
-
     // MARK: - The peek
 
     @MainActor
@@ -194,6 +183,17 @@ final class FeelUITests: XCTestCase {
         let sighting = app.buttons["patch-sighting"].firstMatch
         XCTAssertTrue(sighting.waitForExistence(timeout: 10), "All sightings did nothing here: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(sighting.isHittable, "All sightings went behind the sheet")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        XCTAssertTrue(finch.waitForExistence(timeout: 10))
+        finch.press(forDuration: 1.2)
+        // The page behind the sheet has its own Share: the menu's is the one in front.
+        let shares = app.buttons.matching(NSPredicate(format: "label == 'Share'"))
+        XCTAssertTrue(shares.firstMatch.waitForExistence(timeout: 5))
+        try XCTUnwrap(shares.allElementsBoundByIndex.first { $0.isHittable }, "no Share in the menu").tap()
+        let sharing = app.navigationBars["Share this patch"]
+        XCTAssertTrue(sharing.waitForExistence(timeout: 10), "Share did nothing here: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(sharing.isHittable, "Share went behind the sheet")
     }
 
     // MARK: - The set's menu
@@ -267,6 +267,132 @@ final class FeelUITests: XCTestCase {
 
         XCTAssertFalse(tile(app, "House Finch").exists, "the board has gone")
         XCTAssertTrue(modes.buttons["Sightings"].isSelected)
+    }
+
+    /// A column of the picker's third segment, which stays unselected going from Patches to Sightings: its words, as light and dark
+    /// against the mean, so a surface fading behind them doesn't count and a picker moving does.
+    @MainActor
+    private func wordsOfTheThirdSegment(in screenshot: XCUIScreenshot, at frame: CGRect) -> [Double] {
+        let image = screenshot.image
+        let scale = image.scale
+        let box = CGRect(x: (frame.minX + frame.width * 0.72) * scale, y: frame.minY * scale, width: frame.width * 0.22 * scale, height: frame.height * scale)
+        guard let crop = image.cgImage?.cropping(to: box) else { return [] }
+        let (width, height) = (48, 16)
+        var pixels = [UInt8](repeating: 0, count: width * height)
+        let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)
+        context?.draw(crop, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let mean = pixels.reduce(0.0) { $0 + Double($1) } / Double(pixels.count)
+        return pixels.map { Double($0) - mean }
+    }
+
+    private func correlation(_ a: [Double], _ b: [Double]) -> Double {
+        guard a.count == b.count, !a.isEmpty else { return 0 }
+        let top = zip(a, b).reduce(0.0) { $0 + $1.0 * $1.1 }
+        let bottom = (a.reduce(0.0) { $0 + $1 * $1 } * b.reduce(0.0) { $0 + $1 * $1 }).squareRoot()
+        return bottom > 0 ? top / bottom : 0
+    }
+
+    /// From a scrolled board to a mode with nothing scrolled, the picker stays where it is all the way through, sampled during the
+    /// change on a slowed fade, and rests in the same place in every mode.
+    @MainActor
+    private func checkThePickerStaysStill(_ extra: [String], file: StaticString = #filePath, line: UInt = #line) throws {
+        let app = launch(["-seedBoard", "YES", "-autoScreen", "cards", "-modeFadeSeconds", "5"] + extra)
+        let modes = app.segmentedControls["collection-mode"]
+        XCTAssertTrue(modes.waitForExistence(timeout: 15), file: file, line: line)
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 10), file: file, line: line)
+        for _ in 0..<3 { app.swipeUp() }
+        Thread.sleep(forTimeInterval: 1.5)
+        let frame = modes.frame
+        let rest = wordsOfTheThirdSegment(in: app.screenshot(), at: frame)
+        modes.buttons["Sightings"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        var worst = 1.0
+        for _ in 0..<12 {
+            worst = min(worst, correlation(rest, wordsOfTheThirdSegment(in: app.screenshot(), at: frame)))
+        }
+        XCTAssertGreaterThan(worst, 0.6, "the picker moved during the change", file: file, line: line)
+        Thread.sleep(forTimeInterval: 5)
+        XCTAssertEqual(modes.frame.minY, frame.minY, accuracy: 0.5, "and rests elsewhere in Sightings", file: file, line: line)
+        modes.buttons["Species"].tap()
+        Thread.sleep(forTimeInterval: 5.5)
+        XCTAssertEqual(modes.frame.minY, frame.minY, accuracy: 0.5, "and in Species", file: file, line: line)
+        modes.buttons["Patches"].tap()
+        Thread.sleep(forTimeInterval: 5.5)
+        XCTAssertEqual(modes.frame.minY, frame.minY, accuracy: 0.5, "and back on the scrolled board", file: file, line: line)
+    }
+
+    @MainActor
+    func testThePickerStaysStillThroughAModeChange() throws {
+        try checkThePickerStaysStill([])
+    }
+
+    @MainActor
+    func testThePickerStaysStillThroughAModeChangeUnderReduceMotion() throws {
+        try checkThePickerStaysStill(["-reduceMotion", "YES"])
+    }
+
+    /// Grey, small, without the foot of the page, where the tab bar comes and goes outright: enough to tell a fade from a move.
+    private func thumbnail(of screenshot: XCUIScreenshot) -> [Double] {
+        guard let image = screenshot.image.cgImage else { return [] }
+        let (width, height) = (40, 87)
+        var pixels = [UInt8](repeating: 0, count: width * height)
+        let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)
+        context?.interpolationQuality = .medium
+        context?.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return pixels.prefix(width * 72).map(Double.init)
+    }
+
+    /// Every sample is a mix of the two ends, each pixel in the same proportion, with nothing shifted: a slide or a zoom leaves
+    /// pixels no mix explains.
+    private func assertCrossFade(from start: [Double], to end: [Double], samples: [[Double]], file: StaticString = #filePath, line: UInt = #line) {
+        var partWay = 0
+        var worst = 0.0
+        let across = zip(start, end).map { $0 - $1 }
+        for sample in samples {
+            let along = zip(sample, end).map { $0 - $1 }
+            let mix = zip(along, across).reduce(0.0) { $0 + $1.0 * $1.1 } / max(across.reduce(0.0) { $0 + $1 * $1 }, 1)
+            let left = zip(along, across).map { $0 - mix * $1 }
+            let residual = (left.reduce(0.0) { $0 + $1 * $1 } / Double(left.count)).squareRoot()
+            if mix > 0.1, mix < 0.9 { partWay += 1 }
+            worst = max(worst, residual)
+        }
+        XCTAssertGreaterThan(partWay, 0, "never caught part way, so this proved nothing", file: file, line: line)
+        XCTAssertLessThan(worst, 9, "pixels no mix of the two explains: it moved", file: file, line: line)
+    }
+
+    /// Turns the simulator's own Reduce Motion on or off: the Lift's cross-fade is the system's, so the debug flag can't stand in. The
+    /// test target's reach into the accessibility library, on a simulator only.
+    private func setSystemReduceMotion(_ on: Bool) throws {
+        guard let library = dlopen("/usr/lib/libAccessibility.dylib", RTLD_NOW), let symbol = dlsym(library, "_AXSSetReduceMotionEnabled") else {
+            throw XCTSkip("no way to set Reduce Motion here")
+        }
+        typealias Setter = @convention(c) (Int32) -> Void
+        unsafeBitCast(symbol, to: Setter.self)(on ? 1 : 0)
+    }
+
+    /// Under the system's Reduce Motion a patch's page cross-fades both ways. Animations are slowed so the way can be sampled.
+    @MainActor
+    func testUnderReduceMotionAPatchPageCrossFadesWithNothingMoving() throws {
+        try setSystemReduceMotion(true)
+        addTeardownBlock { [self] in try? setSystemReduceMotion(false) }
+        let app = board(["-UIAnimationDragCoefficient", "10"])
+        let phoebe = tile(app, "Black Phoebe")
+        XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
+        Thread.sleep(forTimeInterval: 3)
+        let boardShown = thumbnail(of: app.screenshot())
+        phoebe.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
+        var opening: [[Double]] = []
+        for _ in 0..<14 { opening.append(thumbnail(of: app.screenshot())) }
+        XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 20))
+        Thread.sleep(forTimeInterval: 8)
+        let pageShown = thumbnail(of: app.screenshot())
+        assertCrossFade(from: boardShown, to: pageShown, samples: opening)
+
+        app.navigationBars.buttons.element(boundBy: 0).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        var closing: [[Double]] = []
+        for _ in 0..<14 { closing.append(thumbnail(of: app.screenshot())) }
+        XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
+        Thread.sleep(forTimeInterval: 8)
+        assertCrossFade(from: pageShown, to: thumbnail(of: app.screenshot()), samples: closing)
     }
 
     // MARK: - Splash
@@ -417,6 +543,33 @@ final class FeelUITests: XCTestCase {
         let ticks = log.indices.filter { log[$0] == "stitchTick" }
         XCTAssertGreaterThan(ticks.count, 2, "a tick a thread: \(log)")
         XCTAssertLessThan(ticks.last ?? 0, log.firstIndex(of: "stitchDone") ?? 0, "the ticks, then the last stitch: \(log)")
+    }
+
+    /// The page is one page, however it's reached: a first add's success plays once with no stitching too.
+    @MainActor
+    func testUnderReduceMotionASewnPatchSucceedsOnce() throws {
+        guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
+        let app = launch(["-hapticLog", "YES", "-reduceMotion", "YES", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
+        let review = app.buttons["Review House Finch"]
+        let add = app.buttons["Add and sew patch"]
+        for _ in 0..<5 {
+            XCTAssertTrue(review.waitForExistence(timeout: 90), "\(app.debugDescription.prefix(3000))")
+            review.tap()
+            XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10))
+            if app.staticTexts["House Finch"].exists, add.waitForExistence(timeout: 10) {
+                add.tap()
+                break
+            }
+            app.buttons["Close"].tap()
+        }
+        let keepListening = app.buttons["Keep listening"]
+        XCTAssertTrue(keepListening.waitForExistence(timeout: 20), "\(app.debugDescription.prefix(3000))")
+        Thread.sleep(forTimeInterval: 2)
+        keepListening.tap()
+        waitForHaptic("stitchDone", app)
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(hapticLog(app).filter { $0 == "stitchDone" }.count, 1, "\(hapticLog(app))")
+        XCTAssertFalse(hapticLog(app).contains("stitchTick"), "no stitching, so no ticks: \(hapticLog(app))")
     }
 
     #if ACCOUNTS_ENABLED

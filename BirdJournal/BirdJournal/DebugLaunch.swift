@@ -48,7 +48,8 @@ import UIKit
 ///   the Collection's cross-fade between modes the same way (issue #150).
 /// - `-autoMapSpeciesPatches YES` with `-autoScreen map` goes on to the bird's patches in the map sheet's own stack (issue #150).
 /// - `-reduceMotion YES` makes the card flip switch faces and the stitch-in not happen, as with the system's Reduce
-///   Motion, which a UI test cannot turn on. `-voiceOverPath YES` skips the stitch-in as VoiceOver does (issue #135).
+///   Motion. The Lift doesn't read it: its cross-fade is the system's own, so it takes the real setting
+///   (`simctl spawn <udid> defaults write com.apple.Accessibility ReduceMotionEnabled -bool true`, then relaunch). `-voiceOverPath YES` skips the stitch-in as VoiceOver does (issue #135).
 /// - `-stitchInSeconds <n>` makes the stitch-in that long, so a UI test or a screenshot can catch it part way;
 ///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).
 /// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without

@@ -24,8 +24,10 @@ extension View {
     /// Gives a navigation stack what its patch tiles need: its own namespace, since the same tile id on two stacks mustn't compete,
     /// and the way to put a route on it. Every stack that can reach a tile needs this, sheets included, or a tile's peek would push
     /// onto the stack behind the sheet.
-    func patchStack(push: @escaping @MainActor (Route) -> Void) -> some View {
-        modifier(PatchLiftScope()).environment(\.pushRoute, push)
+    /// - Parameter lifts: false in a sheet, where a zoom cuts straight to the page and shows the page behind the sheet for a few
+    ///   frames (seen on the map's sheet): there it's a plain push, on purpose.
+    func patchStack(lifts: Bool = true, push: @escaping @MainActor (Route) -> Void) -> some View {
+        modifier(PatchLiftScope(lifts: lifts)).environment(\.pushRoute, push)
     }
 
     /// The tile `id`'s picture, which its page grows out of.
@@ -34,8 +36,9 @@ extension View {
     }
 
     /// A patch's page opened from the tile `id`: it grows out of it and shrinks back to it, whichever patch a swipe has reached
-    /// by then, since the tile opened is where the birder's eye left the board. Under Reduce Motion, a cross-fade. Opened some
-    /// other way, a plain push.
+    /// by then, since the tile opened is where the birder's eye left the board. Under the system's Reduce Motion the zoom itself
+    /// is a cross-fade with nothing moving, seen frame by frame; `.crossFade` is for sheets, and on a push draws a slide. Opened
+    /// some other way, or in a sheet's stack, a plain push.
     func patchLiftTransition(from id: PatchLiftID?) -> some View {
         modifier(PatchLiftTransition(id: id))
     }
@@ -43,9 +46,10 @@ extension View {
 
 private struct PatchLiftScope: ViewModifier {
     @Namespace private var namespace
+    let lifts: Bool
 
     func body(content: Content) -> some View {
-        content.environment(\.patchLiftNamespace, namespace)
+        content.environment(\.patchLiftNamespace, lifts ? namespace : nil)
     }
 }
 
@@ -64,16 +68,11 @@ private struct PatchLiftSource: ViewModifier {
 
 private struct PatchLiftTransition: ViewModifier {
     @Environment(\.patchLiftNamespace) private var namespace
-    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     let id: PatchLiftID?
 
     func body(content: Content) -> some View {
         if let id, let namespace {
-            if PatchMotion.reduces(system: systemReduceMotion) {
-                content.navigationTransition(.crossFade)
-            } else {
-                content.navigationTransition(.zoom(sourceID: id, in: namespace))
-            }
+            content.navigationTransition(.zoom(sourceID: id, in: namespace))
         } else {
             content
         }

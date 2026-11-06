@@ -21,7 +21,7 @@ struct CandidateReviewSheet: View {
                     }
                 }
         }
-        .patchStack { path.append($0) }
+        .patchStack(lifts: false) { path.append($0) }
     }
 }
 

@@ -62,7 +62,7 @@ struct RunReviewSheet: View {
                 }
             }
         }
-        .patchStack { path.append($0) }
+        .patchStack(lifts: false) { path.append($0) }
         .patchReveal()
         // Dragged away from under the page, it would have to start again over the tabs; Keep listening closes it first.
         .interactiveDismissDisabled(run.reveal != nil)

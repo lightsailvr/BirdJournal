@@ -110,7 +110,7 @@ struct SightingMapView: View {
             }
             .appDestinations()
         }
-        .patchStack { path.append($0) }
+        .patchStack(lifts: false) { path.append($0) }
         #if DEBUG
         .task {
             if UserDefaults.standard.bool(forKey: "autoMapSpeciesPatches"), let focus = located.first(where: { $0.persistentModelID == focusID }) {

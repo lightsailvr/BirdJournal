@@ -143,15 +143,15 @@ private struct NewPatchReveal: View {
 
     var body: some View {
         Group {
-            if reveal.hasPlayed {
+            // One branch for the finished page, however it's reached: going straight there, then marked as played, it stays the
+            // same page, and its success plays once.
+            if reveal.hasPlayed || (prepared == nil && !stitches) {
                 NewPatchPage(reveal: reveal, decoded: prepared?.loaded)
             } else if let prepared {
                 SewingPage(reveal: reveal, art: prepared.art, decoded: prepared.loaded, timeline: prepared.timeline)
-            } else if stitches {
+            } else {
                 // A moment, while the patch decodes: its cloth.
                 SewingPage(reveal: reveal, art: nil, decoded: nil, timeline: StitchTimeline(threads: []))
-            } else {
-                NewPatchPage(reveal: reveal, decoded: nil)
             }
         }
         .patchSheetBackground()
