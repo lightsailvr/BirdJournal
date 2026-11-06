@@ -510,6 +510,13 @@ struct ScreenAccessibilityTests {
         Self.expectClean(credits, screen: "Credits for a bird no download describes")
     }
 
+    @Test("The mascot is decoration: VoiceOver goes straight past it to the words", arguments: sizes)
+    func mascotIsSkipped(typeSize: DynamicTypeSize) async throws {
+        let notice = StateNotice("Your first patch is a bird away.", message: "Start listening.", mark: .drawing)
+        let labels = try await Self.walk(notice, harness: try Harness(), typeSize: typeSize) { !$0.isEmpty }
+        #expect(labels == ["Your first patch is a bird away.", "Start listening."], "\(labels)")
+    }
+
     @Test("Two short facts keep their dot on screen, and VoiceOver reads a comma")
     func shortFacts() async throws {
         let labels = try await Self.walk(ShortFacts("8 sec", "Jonathon Jongsma"), harness: try Harness()) { !$0.isEmpty }

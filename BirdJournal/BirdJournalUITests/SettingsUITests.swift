@@ -80,6 +80,65 @@ final class SettingsUITests: XCTestCase {
     }
 }
 
+/// The birds in glasses on the home screen (issue #150, slice 11). `TEST_RUNNER_BIRDJOURNAL_ICON_SHOTS=<folder>` also saves what each
+/// looks like there, which is the evidence for how an icon reads at that size.
+final class AppIconHomeScreenUITests: XCTestCase {
+    private let birds = ["Red-tailed Hawk", "Blue Bird", "Great Egret", "House Finch", "Prothonotary Warbler", "Steller's Jay"]
+
+    private func openIcons(_ app: XCUIApplication) {
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        app.buttons["Settings"].tap()
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "no App icon row; screen: \(app.debugDescription.prefix(3000))")
+        row.tap()
+    }
+
+    private func choose(_ title: String, in app: XCUIApplication) {
+        let choice = app.buttons[title]
+        XCTAssertTrue(choice.waitForExistence(timeout: 10), "no \(title); screen: \(app.debugDescription.prefix(3000))")
+        guard !choice.isSelected else { return }
+        choice.tap()
+        let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
+        if alert.waitForExistence(timeout: 5) { alert.buttons.firstMatch.tap() }
+        XCTAssertTrue(choice.waitForSelected(), "\(title) is not checked")
+    }
+
+    @MainActor
+    func testEachBirdReachesTheHomeScreenAndAChoiceSurvivesARelaunch() throws {
+        let app = XCUIApplication()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_ICON_SHOTS"]
+        var pictures = Set<Data>()
+        openIcons(app)
+        for bird in birds {
+            choose(bird, in: app)
+            XCUIDevice.shared.press(.home)
+            let icon = springboard.icons["Featherguild"]
+            XCTAssertTrue(icon.waitForExistence(timeout: 10), "no icon on the home screen: \(springboard.debugDescription.prefix(2000))")
+            for _ in 0..<4 where !icon.isHittable { springboard.swipeLeft(); sleep(1) }
+            XCTAssertTrue(icon.isHittable, "the icon is on no page reached: \(springboard.debugDescription.prefix(2000))")
+            sleep(1)
+            pictures.insert(icon.screenshot().pngRepresentation)
+            if let folder {
+                let name = bird.lowercased().replacing(" ", with: "-").replacing("'", with: "")
+                try XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(filePath: folder).appending(path: "home-\(name).png"))
+            }
+            app.activate()
+            XCTAssertTrue(app.buttons[bird].waitForExistence(timeout: 10))
+        }
+
+        XCTAssertEqual(pictures.count, birds.count, "some choices left the same picture on the home screen")
+
+        // The one chosen last is still the one chosen after the app starts again, as it is after an update: iOS keeps it by name.
+        app.terminate()
+        openIcons(app)
+        XCTAssertTrue(app.buttons["Steller's Jay"].waitForSelected(), "the choice didn't survive")
+
+        choose("Red-tailed Hawk", in: app)
+    }
+}
+
 /// The account's build-time switch (issue #88): on in Debug, Settings has the Account row; off in Release, it has none.
 /// The Release case runs in the `BirdJournal-Release` scheme (`scripts/build-and-test.sh --release`). The expectation
 /// keys on DEBUG, not on the switch, so turning the account on in Release fails here until #71 updates this test.

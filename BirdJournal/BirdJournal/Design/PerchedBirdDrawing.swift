@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// A pencil-sketch bird perched on a leafy branch: warmth for the empty page, never in the way of the action.
+/// A pencil-sketch bird perched on a leafy branch, now only in the Listen hero's fallback for a set without a cover: the
+/// hero stays as it was when the mascot replaced this everywhere else (issue #150).
 /// Drawn in a 200 × 120 design space and scaled to fit; the bird in the ink colour with a faint wash and hatching,
-/// the branch in the secondary colour. The postcard passes its own fixed palette so the export ignores the appearance.
+/// the branch in the secondary colour.
 struct PerchedBirdDrawing: View {
     var ink: Color = .ink
     var secondary: Color = .inkSecondary

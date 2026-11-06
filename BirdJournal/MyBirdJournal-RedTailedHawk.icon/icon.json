@@ -1,24 +1,28 @@
 {
-  "features": [
-    "specular-location"
-  ],
   "fill": {
-    "automatic-gradient": "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+    "solid": "extended-srgb:0.05490,0.20392,0.23529,1.00000"
   },
   "groups": [
     {
       "layers": [
         {
-          "image-name": "red-tailed-hawk-1024.png",
-          "name": "RedTailedHawk"
+          "image-name": "red-tailed-hawk.png",
+          "name": "red-tailed-hawk",
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
         }
       ],
       "name": "Group",
       "shadow": {
-        "kind": "neutral",
+        "kind": "none",
         "opacity": 0.5
       },
-      "specular": "inside",
+      "specular": false,
       "translucency": {
         "enabled": false,
         "value": 0.3

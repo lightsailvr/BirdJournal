@@ -246,6 +246,25 @@ uv run packbuilder patch-review packs/us-ca-la --gap "Black Phoebe" --why "threa
 - **In the pack (schema 5)**: an approved patch is written, without the pale rim of card its cut can leave along one side (`trim_rim`: that only changes the alpha, so the lock stands), as `patch/<species id>.avif`, its colour on transparency at 720 px on its longest side, and `patch/<species id>-layers.avif` at half size, its height map (thread relief plus the raised cord) in red, the cord's mask (25 px deep at 720 px) in green and the stitch order (one thread colour at a time, the largest first, the cord last) in blue (`patch_art.layers`), with a `patch` row: the files, its size, the bare twill's colour, the stitch layers' starts and its source photo. About 120 KB a species; a build with patches writes no pack art, which keeps Los Angeles inside its 200 MB budget.
 - **Running it**: about 20 s a patch on the box itself; from the Mac it waits on the tailnet (about a minute a patch on 2026-11-03). To run it on the box, copy `packbuilder/src`, `art/`, the pack's definition and locks and the isolated birds to a checkout-shaped folder there and run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli patches packbuilder/packs/<id> --comfy http://127.0.0.1:8189 --cache packbuilder/cache`, then copy `patch.lock.json`, `<cache>/art/patches/` and the sheets back.
 
+## Mascot patches
+
+The app's six birds in glasses (the app icon choices) and the House Finch on its branch, for the launch screen, the splash, the sign-in page and the empty pages (#150, slice 11). They belong to the app, not a pack, so the prompts (`art/mascot-prompts.json`), the workflow (`art/workflows/mascot-patch.json`) and the lock (`art/mascot/mascot.lock.json`) are under `art/`.
+
+```sh
+uv run packbuilder mascot                                   # paint what the lock lacks, then the sheets in build/mascot/
+uv run packbuilder mascot --only perched-finch              # a trial
+uv run packbuilder mascot-review --approve 3 --approve 9    # the numbers on the sheets, one per bird
+uv run packbuilder mascot-review --reject great-egret --why "the bill leaves the badge"
+uv run packbuilder mascot-assets                            # the app's art from the approved patches
+```
+
+- **What it's painted from**: the app icon it replaces, kept in `art/mascot/icons/`, the bird cut out of the icon's ground by BiRefNet and laid on white. No prompt names the species; the glasses and binoculars are spelled out, and each bird's `markings` hold the colours the thread drifts on. Each round paints the looks in the prompts' `round`: a head-and-shoulders portrait or the whole bird, on the Los Angeles edition's tan twill and olive cord or on the icon's own peach.
+- **Cut at 1024 px**, the size of an app icon, from a 1152 px square canvas (`cut_from_card`, retried as a pack's patch is when a corner of the card peels into the cut). There's no measure against the reference: a thread rendering of a 3D cartoon is meant to move from it.
+- **Reviewed by number**: numbers are unique across rounds, so a number on an old sheet never means another painting. Approving writes `art/mascot/approved/<bird>.png`, with its pale rim trimmed (`trim_rim`; a thin line can survive), and records its SHA-256; `mascot_art.approved` refuses a file that isn't the one chosen. Commit the lock and the approved file together. A rejected bird paints a new round next run with the current templates; a new prompts version alone leaves pending and approved rounds alone; a new icon or workflow starts a round and takes the approval back.
+- **What ships**: `mascot-assets` writes each `.icon`'s picture and document, its Settings thumbnail and the `PerchedFinch` imageset from `mascot_art.approved`, and refuses a bird without an approved patch. `test_mascot_art.py` compares what it makes, pictures and documents, with what's committed. Each patch is first trimmed to its cord (`trimmed_to_cord`), in the app's copy only, since the approved file can keep a little card outside it. An icon is the patch and its shadow on the app's felt in petrol, flattened, with no alpha channel; the primary is 1024 px for the App Store and the alternates 512 px. Run it after approving a new patch, and commit the result with the lock.
+- **The cache** is `packbuilder/cache/mascot/` and gitignored; `mascot-review` needs the candidate you pick in it, and `mascot` paints a lost one again from its seed.
+- **Running it**: about 12 s a painting, plus a peeled retry now and then. On the box itself: copy `packbuilder/src`, the `art` files and the icons to a checkout-shaped folder (`~/birdjournal-art/mascot-run`), run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli mascot --comfy http://127.0.0.1:8189 --cache packbuilder/cache/mascot`, then copy `art/mascot/mascot.lock.json`, the cache and `build/mascot/` back.
+
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
