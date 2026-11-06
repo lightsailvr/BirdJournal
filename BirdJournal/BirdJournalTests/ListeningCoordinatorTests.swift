@@ -69,6 +69,124 @@ struct ListeningCoordinatorTests {
         await run.stop()
     }
 
+    // Issue #150: Sew it and Add on a row are the review sheet's own add.
+
+    @Test("Sew it on a row sews like the review sheet: Heard, the reveal, the acknowledgment with Undo, and Undo takes it all back")
+    func sewItFromTheRow() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let finch = run.candidates[0]
+        func collection() -> CardCollection { CardCollection(sightings: harness.stored) }
+        #expect(CandidateLook(seenHere: collection().count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch)) == .newHere)
+
+        let addition = try #require(await run.addFromRow(finch, isDescribed: true))
+        #expect(addition.sewsPatch)
+        #expect(harness.stored.count == 1)
+        #expect(harness.stored.first?.method == .heard, "changeable on its sighting")
+        #expect(run.reveal?.addition == addition, "the same reveal")
+        #expect(run.reveal?.title == "Your first House Finch")
+        #expect(run.acknowledgment?.undo == addition, "the same Undo")
+        #expect(run.isAdded(finch))
+        #expect(CandidateLook(seenHere: collection().count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch)) == .added(count: 1))
+        #expect(run.hunt(in: collection()).text == "1 new patch waiting and 1 you already have")
+
+        run.undo(addition)
+        #expect(harness.stored.isEmpty)
+        #expect(run.reveal == nil)
+        #expect(run.acknowledgment == nil)
+        #expect(!run.isAdded(finch))
+        #expect(CandidateLook(seenHere: collection().count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch)) == .newHere)
+        #expect(run.hunt(in: collection()).text == "2 new patches waiting")
+
+        await run.stop()
+    }
+
+    @Test("Add on a row with a patch ticks its count like the review sheet: no reveal, the count, and Undo")
+    func addFromTheRow() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        try await waitUntil("a location") { run.coordinate != nil }
+        let finch = run.candidates[0]
+        // From an earlier run, here.
+        harness.album.mainContext.insert(Sighting(speciesID: finch.species.birdnetLabel, confirmedAt: .now.addingTimeInterval(-3_600), location: run.coordinate, soundConfidence: 0.5, source: .phone))
+        try harness.album.mainContext.save()
+        func look() -> CandidateLook {
+            CandidateLook(seenHere: CardCollection(sightings: harness.stored).count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch))
+        }
+        #expect(look() == .sewn(count: 1))
+        #expect(look().offer(isDescribed: true) == .add)
+
+        let addition = try #require(await run.addFromRow(finch, isDescribed: true))
+        #expect(!addition.sewsPatch)
+        #expect(run.reveal == nil, "a repeat isn't a new patch")
+        #expect(run.acknowledgment?.text == "Seen again, 2 times")
+        #expect(run.acknowledgment?.ticksFrom == "Seen again, 1 time")
+        #expect(run.acknowledgment?.undo == addition)
+        #expect(look() == .added(count: 2))
+        #expect(look().offer(isDescribed: true) == .added)
+
+        run.undo(addition)
+        #expect(look() == .sewn(count: 1))
+        #expect(harness.stored.count == 1)
+
+        await run.stop()
+    }
+
+    @Test("a bird no installed pack describes goes to its review from the row, and nothing is written")
+    func aBirdNoPackDescribesKeepsItsReview() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let finch = run.candidates[0]
+
+        #expect(CandidateLook.newHere.offer(isDescribed: false) == .review)
+        #expect(CandidateLook.sewn(count: 3).offer(isDescribed: false) == .review)
+        #expect(await run.addFromRow(finch, isDescribed: false) == nil)
+        #expect(harness.stored.isEmpty)
+        #expect(run.reveal == nil)
+        #expect(run.acknowledgment == nil)
+        #expect(run.reviewing == finch)
+
+        await run.stop()
+    }
+
+    @Test("a row added on this run reads as new again where its patch doesn't reach, since an add there sews one")
+    func looks() {
+        #expect(CandidateLook(seenHere: 0, isAdded: false) == .newHere)
+        #expect(CandidateLook(seenHere: 7, isAdded: false) == .sewn(count: 7))
+        #expect(CandidateLook(seenHere: 8, isAdded: true) == .added(count: 8))
+        #expect(CandidateLook(seenHere: 0, isAdded: true) == .newHere)
+        #expect(CandidateLook.newHere.offer(isDescribed: true) == .sewIt)
+    }
+
+    @Test("the summary leads with new patches waiting")
+    func summaryLeadsWithWhatsWaiting() {
+        #expect(RunHunt(newPatches: 1, alreadyHave: 2).text == "1 new patch waiting and 2 you already have")
+        #expect(RunHunt(newPatches: 2, alreadyHave: 0).text == "2 new patches waiting")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 1).text == "1 bird you already have")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 3).text == "3 birds you already have")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 0).text == "Nothing heard yet")
+        #expect(RunHunt(newPatches: 1, alreadyHave: 2).waiting == "1 new patch waiting")
+        #expect(RunHunt(newPatches: 1, alreadyHave: 2).short == "1 new patch waiting")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 2).short == "2 birds you already have")
+    }
+
+    @Test("VoiceOver hears what a row shows in pictures and tint")
+    func rowsSpeak() {
+        #expect(CandidateLook.newHere.spoken(name: "Acorn Woodpecker", heard: "just now", isCalling: true) == "Acorn Woodpecker, calling now, new patch waiting")
+        #expect(CandidateLook.newHere.spoken(name: "Acorn Woodpecker", heard: "3 min ago", isCalling: false) == "Acorn Woodpecker, heard 3 min ago, new patch waiting")
+        #expect(CandidateLook.sewn(count: 7).spoken(name: "House Finch", heard: "3 min ago", isCalling: false) == "House Finch, heard 3 min ago, you have this patch, seen 7 times")
+        #expect(CandidateLook.added(count: 1).spoken(name: "Black Phoebe", heard: "just now", isCalling: true) == "Black Phoebe, added, you have this patch, seen once")
+    }
+
     @Test("an add records the latest fix of the run, not the one Start took (issue #44)")
     func addRecordsTheLatestFix() async throws {
         let harness = try Self.makeHarness()
@@ -119,13 +237,13 @@ struct ListeningCoordinatorTests {
         harness.source.feed(seconds: 4.5)
         try await waitUntil("candidates appear") { run.candidates.count == 2 }
         #expect(run.candidates.map(\.species.commonName) == ["House Finch", "Blue Jay"])
-        #expect(run.summary == "2 species heard, 0 added")
+        #expect(run.hunt(in: CardCollection(sightings: harness.stored)).text == "2 new patches waiting")
         #expect(harness.stored.isEmpty, "hearing a bird saves nothing")
 
         let finch = run.candidates[0]
         let addition = try #require(await run.add(finch))
         #expect(run.isAdded(finch))
-        #expect(run.summary == "2 species heard, 1 added")
+        #expect(run.hunt(in: CardCollection(sightings: harness.stored)).text == "1 new patch waiting and 1 you already have")
         #expect(run.acknowledgment?.text == "Your first House Finch")
         #expect(run.acknowledgment?.undo == addition)
         let stored = harness.stored

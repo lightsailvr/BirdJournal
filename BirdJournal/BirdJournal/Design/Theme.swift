@@ -26,6 +26,8 @@ extension Color {
     static let sharedGoal = Color("JournalSharedGoal")
     /// Text and marks on a `sharedGoal` fill.
     static let onSharedGoal = Color("JournalOnSharedGoal")
+    /// What a bird not yet sewn is marked with, as a pattern is on cloth (issue #150): #9DB4EE dark, #3F5FA8 light. Never words.
+    static let transferPen = Color("TransferPen")
     /// Errors and destructive actions in a page (issue #119): brick #A3322A light, salmon #F4A79B dark, at least 5.5:1
     /// on the page and a raised surface. The system red measured 3.2:1 on the light page and 3.6:1 on the dark raised
     /// surface, under the 4.5:1 text needs.
@@ -122,22 +124,23 @@ struct PrimaryButtonStyle: ButtonStyle {
 }
 
 /// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
-/// rectangle, since its words wrap (issue #150).
+/// rectangle, since its words wrap (issue #150). `ink` makes it quieter: Stop, which shouldn't speak over the birds.
 struct OutlinedButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.dynamicTypeSize) private var typeSize
+    var ink = Color.moss
 
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color.moss)
+            .foregroundStyle(ink)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
             .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
             .frame(minHeight: 44)
-            .background(Color.moss.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
-            .overlay(shape.strokeBorder(Color.moss, lineWidth: 1))
+            .background(ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(ink, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
             .contentShape(shape)
     }
@@ -149,6 +152,7 @@ extension ButtonStyle where Self == PrimaryButtonStyle {
 
 extension ButtonStyle where Self == OutlinedButtonStyle {
     static var journalOutlined: OutlinedButtonStyle { OutlinedButtonStyle() }
+    static var journalQuiet: OutlinedButtonStyle { OutlinedButtonStyle(ink: .ink) }
 }
 
 /// Lays a screen out on paper with the journal's margins: the standard scroll container for the tabs.

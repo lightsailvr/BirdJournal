@@ -30,11 +30,11 @@ final class SewingUITests: XCTestCase {
     /// Reviews the House Finch and taps its add button. The live list re-sorts as birds call, so a tap can land on the row
     /// that has just moved under it: that bird's sheet is closed and the row tried again.
     @MainActor
-    private func add(_ app: XCUIApplication, button: String, row: String = "Review \(SewingUITests.name)") {
-        let review = app.buttons[row]
+    private func add(_ app: XCUIApplication, button: String, row: String? = nil) {
+        let review = row.map { app.buttons[$0] } ?? app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.name), ")).firstMatch
         let add = app.buttons[button]
         for _ in 0..<5 {
-            XCTAssertTrue(review.waitForExistence(timeout: 90), "no \(row); screen: \(app.debugDescription.prefix(3000))")
+            XCTAssertTrue(review.waitForExistence(timeout: 90), "no \(row ?? Self.name); screen: \(app.debugDescription.prefix(3000))")
             review.tap()
             XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "no sheet; screen: \(app.debugDescription.prefix(3000))")
             if app.staticTexts[Self.name].exists, add.waitForExistence(timeout: 10) {

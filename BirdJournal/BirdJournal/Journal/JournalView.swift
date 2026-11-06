@@ -157,6 +157,7 @@ struct JournalView: View {
         } else {
             if state.mode == .sightings {
                 SightingsByDay(sightings: shown)
+                    .holdsPatchLight()
             } else {
                 if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
                     SetProgressList(collection: collection)
@@ -399,27 +400,33 @@ private struct SightingsByDay: View {
     }
 }
 
-/// One sighting: the glasses snapshot when there is one, else the reference photo, then the name, the time and the
-/// source, and which kind of picture it is.
+/// One sighting: your own photo when there is one, since that's evidence, else its patch, else the reference photo for the
+/// moment before the collection has it (issue #150, V2). Then the name, the time and the source, and whose photo it is.
 struct SightingRow: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let sighting: Sighting
     var showsDate = false
 
     var body: some View {
         let reference = library.species(scientificName: sighting.scientificName)
+        let photo = CardText.originalPhotoPath(sighting)
+        let patch = collectionStore.collection.patch(of: sighting.identifier)
         AdaptiveRow(stacked: typeSize.stacksRows) {
             Group {
-                if sighting.frameImagePath != nil {
-                    FrameImage(frameImagePath: sighting.frameImagePath)
+                if let photo {
+                    FrameImage(frameImagePath: photo)
+                        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                } else if let patch {
+                    RowPatch(scientificName: patch.scientificName, setID: patch.placement.setID)
                 } else {
                     PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
+                        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 }
             }
             .frame(width: 84, height: 84)
-            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(library.commonName(for: sighting))
@@ -428,9 +435,11 @@ struct SightingRow: View {
                 Text("\(showsDate ? sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened) : sighting.confirmedAt.formatted(date: .omitted, time: .shortened)), \(sighting.source == .glasses ? "added from glasses" : "added from iPhone")")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
-                Text(sighting.frameImagePath != nil ? "Your glasses snapshot" : (reference?.species.photos.isEmpty == false ? "Reference photo" : "No photo"))
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
+                if photo != nil {
+                    Text(sighting.attachedPhotoPaths.isEmpty ? "Your glasses snapshot" : "Your photo")
+                        .font(JournalFont.attribution)
+                        .foregroundStyle(Color.inkSecondary)
+                }
                 if let note = sighting.note, !note.isEmpty {
                     Text(note)
                         .font(JournalFont.attribution)
@@ -512,22 +521,31 @@ struct SetProgressRow: View {
     }
 }
 
-/// The Species list: one row per bird added, with how many sightings and when last, each opening its patches (issue #134).
+/// The Species list: one row per bird added, with your newest patch of it, how many sightings and when last, each opening its
+/// patches (issues #134, #150). Lazy, so a long list asks for only the patches on screen.
 private struct SpeciesRows: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let entries: [Journal.SpeciesEntry]
 
     var body: some View {
-        VStack(spacing: 0) {
+        LazyVStack(spacing: 0) {
             ForEach(entries) { entry in
                 let reference = library.species(scientificName: entry.scientificName)
+                let patch = collectionStore.collection.patch(of: entry.latest.identifier)
                 NavigationLink(value: Route.speciesPatches(scientificName: entry.scientificName, commonName: reference?.species.commonName ?? entry.commonName)) {
                     AdaptiveRow(stacked: typeSize.stacksRows) {
-                        PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
-                            .frame(width: 64, height: 64)
-                            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                            .accessibilityHidden(true)
+                        Group {
+                            if let patch {
+                                RowPatch(scientificName: patch.scientificName, setID: patch.placement.setID)
+                            } else {
+                                PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
+                                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                            }
+                        }
+                        .rowPicture()
+                        .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 3) {
                             Text(reference?.species.commonName ?? entry.commonName)
                                 .font(JournalFont.rowTitle)
@@ -553,6 +571,7 @@ private struct SpeciesRows: View {
             }
         }
         .padding(.top, 16)
+        .holdsPatchLight()
     }
 }
 

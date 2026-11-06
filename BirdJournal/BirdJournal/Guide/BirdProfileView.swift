@@ -9,17 +9,26 @@ import SwiftUI
 /// stats at a glance (#55), the other photos, and the sources with the full credits a tap away; sections the pack has
 /// no text or sound for are left out rather than filled. Reached from the guide, the journal and a candidate review
 /// (with `match`, the live detection). Outside a review it links to the bird's gallery of cards (issue #53).
+/// A bird you've found leads with your patch, then its story on card stock, and only then the photos (issue #150, A2); in a
+/// review the photo stays first, because identifying the bird comes before anything else.
 struct BirdProfileView: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     let scientificName: String
     let commonName: String
     var match: Candidate?
 
     var body: some View {
         let reference = library.species(scientificName: scientificName)
+        let patches = match == nil ? BirdProfilePatches.ofSpecies(scientificName, in: collectionStore.collection) : []
         ScrollViewReader { proxy in
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
+                if !patches.isEmpty {
+                    ProfilePatches(patches: patches, name: reference?.species.commonName ?? commonName)
+                        .padding(.top, 4)
+                        .padding(.bottom, 12)
+                }
                 Text(reference?.species.commonName ?? commonName)
                     .font(JournalFont.largeTitle)
                     .foregroundStyle(Color.ink)
@@ -44,7 +53,7 @@ struct BirdProfileView: View {
                 }
 
                 if let reference {
-                    ProfileContent(pack: reference.pack, species: reference.species, match: match)
+                    ProfileContent(pack: reference.pack, species: reference.species, match: match, leadsWithStory: !patches.isEmpty)
                 } else {
                     NameOnlyProfile(match: match)
                 }
@@ -74,12 +83,114 @@ private struct YourSightingsLink: View {
     }
 }
 
+enum BirdProfilePatches {
+    /// The species' patches, the one with the newest sighting first: that's the one the profile leads with.
+    static func ofSpecies(_ scientificName: String, in collection: CardCollection) -> [CardCollection.Patch] {
+        collection.patches
+            .filter { $0.scientificName == scientificName }
+            .sorted { $0.latest.confirmedAt > $1.latest.confirmedAt }
+    }
+}
+
+/// Your patch of this bird, large, in the edition of your newest sighting, with any others beside it, each opening its page. On
+/// the felt or linen every patch sits on (the guide's rule: what you earned is an object you could hold).
+private struct ProfilePatches: View {
+    @Environment(PackLibrary.self) private var library
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let patches: [CardCollection.Patch]
+    let name: String
+
+    var body: some View {
+        FeltBoard {
+            let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 16)) : AnyLayout(HStackLayout(spacing: 16))
+            layout {
+                if let newest = patches.first {
+                    link(to: newest, size: .full, width: 190)
+                }
+                let others = patches.dropFirst().prefix(3)
+                if !others.isEmpty {
+                    VStack(spacing: 10) {
+                        ForEach(others) { patch in
+                            link(to: patch, size: .thumbnail, width: 78)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .holdsPatchLight()
+    }
+
+    private func link(to patch: CardCollection.Patch, size: PatchTextures.Size, width: CGFloat) -> some View {
+        let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
+        return NavigationLink(value: Route.patch(patch.id)) {
+            PatchView(state: state, edition: PatchEdition.of(setID: patch.placement.setID), size: size, tag: name)
+                .frame(width: width)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(PatchText.spoken(patch, name: name, beingSewn: state == .beingSewn))
+        .accessibilityHint("Opens the patch")
+        .accessibilityIdentifier("profile-patch")
+    }
+}
+
+/// The story title and its lore as printed matter, on the paper card's stock: right under your patch, since it's your bird.
+private struct ProfileStoryCard: View {
+    let lore: PackLore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(lore.title ?? "The story")
+                .font(CardFont.storyTitle)
+                .foregroundStyle(Color.cardInk)
+                .accessibilityAddTraits(.isHeader)
+            ProfileLore(lore: lore, ink: .cardInk, secondary: .cardInkSecondary)
+        }
+        .padding(.top, 26)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .modifier(CardStockSurface())
+    }
+}
+
+/// The lore and where it came from.
+private struct ProfileLore: View {
+    let lore: PackLore
+    var ink = Color.ink
+    var secondary = Color.inkSecondary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(lore.text)
+                .font(CardFont.lore)
+                .lineSpacing(CardFont.loreLeading)
+                .foregroundStyle(ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Lore written from this bird's sourced fact sheet and reviewed by hand. CC BY-SA 4.0.")
+                .font(JournalFont.attribution)
+                .foregroundStyle(secondary)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 private struct ProfileContent: View {
     let pack: SpeciesPack
     let species: PackSpecies
     let match: Candidate?
+    /// Your patch is above: the story goes right under it, and the photo after that.
+    var leadsWithStory = false
 
     var body: some View {
+        if leadsWithStory, let lore = species.lore {
+            ProfileStoryCard(lore: lore)
+                .id("profile-tale")
+                .padding(.top, 16)
+        }
+
         if let hero = species.photos.first {
             AttributedImage(pack: pack, photo: hero)
                 .padding(.top, 16)
@@ -99,22 +210,12 @@ private struct ProfileContent: View {
                 .padding(.top, 12)
         }
 
-        if let lore = species.lore {
+        if !leadsWithStory, let lore = species.lore {
             // The story's own title is its heading (issue #150), so the lore needs no other.
             SectionTitle(lore.title ?? "The story")
                 .id("profile-tale")
-            VStack(alignment: .leading, spacing: 8) {
-                Text(lore.text)
-                    .font(CardFont.lore)
-                    .lineSpacing(CardFont.loreLeading)
-                    .foregroundStyle(Color.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("Lore written from this bird's sourced fact sheet and reviewed by hand. CC BY-SA 4.0.")
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
-            }
-            .padding(.top, 12)
-            .accessibilityElement(children: .combine)
+            ProfileLore(lore: lore)
+                .padding(.top, 12)
         }
 
         if let stats = species.stats {

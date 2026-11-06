@@ -23,9 +23,10 @@ final class CardsUITests: XCTestCase {
         app.launch()
 
         // The first species heard, reviewed and added.
-        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Review '")).firstMatch
+        let review = app.buttons["candidate-row-0"]
         XCTAssertTrue(review.waitForExistence(timeout: 60), "no species to review; screen: \(app.debugDescription.prefix(3000))")
-        let name = String(review.label.dropFirst("Review ".count))
+        // "House Finch, calling now, new patch waiting".
+        let name = String(review.label.prefix { $0 != "," })
         review.tap()
         let add = app.buttons["Add and sew patch"]
         XCTAssertTrue(add.waitForExistence(timeout: 10), "no Add and sew patch; screen: \(app.debugDescription.prefix(3000))")

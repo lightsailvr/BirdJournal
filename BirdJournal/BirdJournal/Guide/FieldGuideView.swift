@@ -112,6 +112,7 @@ struct FieldGuideView: View {
                         }
                     }
                     .padding(.top, 12)
+                    .holdsPatchLight()
                 }
             }
             .padding(.horizontal, JournalLayout.margin)
@@ -302,18 +303,26 @@ private struct PacksCard: View {
     }
 }
 
-/// One bird in the guide: lens thumbnail, names, a hint of habitat.
+/// One bird in the guide: your patch of it in this pack's set if you have one, else the reference photo (issue #150, V2), then
+/// its names and a hint of habitat.
 private struct GuideRow: View {
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let pack: SpeciesPack
     let species: PackSpecies
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            PackImage(url: species.photos.first.map(pack.lensImageURL(for:)))
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                .accessibilityHidden(true)
+            Group {
+                if collectionStore.collection.patch(key: .init(speciesID: species.birdnetLabel, setID: pack.info.id)) != nil {
+                    RowPatch(scientificName: species.scientificName, setID: pack.info.id)
+                } else {
+                    PackImage(url: species.photos.first.map(pack.lensImageURL(for:)))
+                        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                }
+            }
+            .rowPicture()
+            .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(species.commonName)
                     .font(JournalFont.rowTitle)

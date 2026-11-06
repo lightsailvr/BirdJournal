@@ -254,9 +254,9 @@ final class ListeningCoordinator {
 
     func isAdded(_ candidate: Candidate) -> Bool { sightings.isAdded(candidate.species) }
 
-    /// The summary line: "3 species heard, 1 added".
-    var summary: String {
-        "\(candidates.count) species heard, \(addedCount) added"
+    /// The summary line's counts, against the patches an add here would join: "1 new patch waiting and 2 you already have".
+    func hunt(in collection: CardCollection) -> RunHunt {
+        RunHunt(candidates: candidates, collection: collection, at: coordinate)
     }
 
     // MARK: - Lifecycle
@@ -341,6 +341,18 @@ final class ListeningCoordinator {
             acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
             return nil
         }
+    }
+
+    /// The Sew it or Add on a bird's row (issue #150, L2): the review sheet's own add, with its reveal, count and Undo, as Heard,
+    /// which the sighting's page can change. A bird no installed pack describes goes to its review and nothing is written: it
+    /// isn't added with nothing to compare it against.
+    @discardableResult
+    func addFromRow(_ candidate: Candidate, isDescribed: Bool) async -> RunSightings.Addition? {
+        guard isDescribed else {
+            reviewing = candidate
+            return nil
+        }
+        return await add(candidate, method: .heard)
     }
 
     #if DEBUG
