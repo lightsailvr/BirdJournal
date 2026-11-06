@@ -3,7 +3,7 @@ import Pack
 import SwiftUI
 
 /// The Atlas tab (issue #28's Field Guide, reskinned as the Atlas in #118, design guide pages 4 and 14): the regional
-/// sets as tiles with their covers, the ones on this iPhone first and then "Somewhere new", each keeping "Species
+/// sets as printed plates (issue #150), the ones on this iPhone first and then "Somewhere new", each keeping "Species
 /// collected" (the birder's progress) apart from "Ready offline" (the pack on the phone); the way to the bird packs; and
 /// every bird the installed packs describe, searchable with the sets by name. A download adds field-guide material,
 /// never birds: a bird joins the collection only with a sighting.
@@ -156,12 +156,11 @@ struct OfflineNotice: View {
     }
 }
 
-/// One regional set (design guide page 4): its cover; the name and edition;
-/// "Ready offline" or its download; and the birder's own progress, "18 of 160 sewn". The tile opens the
-/// set's page; the download control sits apart from the link.
+/// One regional set as a plate on card stock (issue #150, A1): its painting, name and edition, the birder's own progress, "18 of
+/// 160 sewn", and "Ready offline" on the Atlas. The tile opens the set's page. The download control is plain iOS, so it sits
+/// under the plate, on the page and apart from the link.
 struct SetTile: View {
     @Environment(PackLibrary.self) private var library
-    @Environment(\.dynamicTypeSize) private var typeSize
     let set: PackSet
     let progress: SetProgress
     var opensSet = true
@@ -170,23 +169,26 @@ struct SetTile: View {
         let descriptor = library.index?.descriptor(id: set.id)
         let installed = library.pack(id: set.id) != nil
         let status = descriptor.map(library.status(of:)) ?? (installed ? .bundled : .notInstalled)
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 10) {
             if opensSet {
-                NavigationLink(value: Route.set(id: set.id)) { face(installed: installed, status: status) }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("guide-set-\(set.id)")
+                NavigationLink(value: Route.set(id: set.id)) {
+                    SetPlate(set: set, progress: progress, showsReadyOffline: installed)
+                        .contentShape(Rectangle())
+                        .accessibilityElement(children: .combine)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("guide-set-\(set.id)")
             } else {
-                face(installed: installed, status: status)
+                SetPlate(set: set, progress: progress)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("set-plate")
             }
             if !installed || Self.isTransferring(status) {
                 PackTransferStatus(status: status, descriptor: descriptor)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 14)
             }
         }
-        .background(Color.raised)
-        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous).strokeBorder(Color.rule, lineWidth: 1))
+        // The set's own edition, wherever the Atlas's tile is shown from: its thread, and its download.
+        .tint(PatchEdition.tint(setID: set.id))
     }
 
     static func isTransferring(_ status: PackLibrary.Status) -> Bool {
@@ -194,43 +196,6 @@ struct SetTile: View {
         case .downloading, .installing, .failed, .updateAvailable: true
         default: false
         }
-    }
-
-    private func face(installed: Bool, status: PackLibrary.Status) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SetCoverImage(setID: set.id)
-                .frame(height: 148)
-                .frame(maxWidth: .infinity)
-            VStack(alignment: .leading, spacing: 8) {
-                Text(set.name)
-                    .font(JournalFont.title)
-                    .foregroundStyle(Color.ink)
-                if typeSize.stacksRows {
-                    VStack(alignment: .leading, spacing: 4) {
-                        editionLine
-                        if installed { ReadyOffline() }
-                    }
-                } else {
-                    HStack(alignment: .firstTextBaseline) {
-                        editionLine
-                        Spacer(minLength: 8)
-                        if installed { ReadyOffline() }
-                    }
-                }
-                SpeciesCollected(progress: progress)
-            }
-            .padding(14)
-        }
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
-    }
-
-    /// "Citrus edition, 160 birds".
-    private var editionLine: some View {
-        Text("\(set.edition.name), \(set.species.count) birds")
-            .font(JournalFont.supporting)
-            .foregroundStyle(Color.inkSecondary)
-            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -241,29 +206,6 @@ struct ReadyOffline: View {
             .font(JournalFont.supporting.weight(.medium))
             .fixedSize(horizontal: false, vertical: true)
             .foregroundStyle(.tint)
-    }
-}
-
-/// Personal progress in a set: the thread and "18 of 160 sewn", with the share.
-struct SpeciesCollected: View {
-    let progress: SetProgress
-
-    private var fraction: Double { progress.total == 0 ? 0 : Double(progress.collected) / Double(progress.total) }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            ThreadProgress(progress)
-                .accessibilityHidden(true)
-            HStack(alignment: .firstTextBaseline) {
-                Text(progress.sewnText)
-                Spacer(minLength: 8)
-                Text(fraction.formatted(.percent.precision(.fractionLength(0))))
-                    .monospacedDigit()
-                    .accessibilityHidden(true)
-            }
-            .font(JournalFont.supporting)
-            .foregroundStyle(Color.inkSecondary)
-        }
     }
 }
 

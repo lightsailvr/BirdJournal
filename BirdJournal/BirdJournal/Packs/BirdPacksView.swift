@@ -139,10 +139,10 @@ struct PackRow: View {
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            SetCoverImage(setID: setID)
-                .frame(width: 96, height: 72)
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                .accessibilityHidden(true)
+            PlatePicture(setID: setID, aspect: 4 / 3)
+                .padding(5)
+                .frame(width: 104)
+                .modifier(CardStockSurface(.plate))
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(JournalFont.rowTitle)

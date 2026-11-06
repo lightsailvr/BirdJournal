@@ -5,11 +5,11 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// One sighting in full (issue #28): the glasses snapshot and the reference photo kept apart and labelled, the record
-/// (species, when, roughly where, source), Heard or Seen with the caption written for it, the spot on a map card that
-/// opens the full map (issue #44), the birder's note, the evidence with their own photo (issue #137), the rarity
-/// in words, the explained match, and the way to the bird's profile, to sharing and to a recoverable removal. Since #134
-/// the paper card holds the species and the patch's history, and each of its sightings opens here.
+/// One sighting as a record (issue #150, A6, from #28): it leads with your original photo where there is one, else its patch. When,
+/// where and how sit on a paper record. Heard or Seen, the caption written for it, the spot on a map card that opens the full map
+/// (issue #44), your note and your photos (issue #137) stay in view. The rest is a bird's page and a tap away: a reference photo
+/// kept apart and labelled, and the rarity and the explained match in disclosures. Sharing is in the toolbar, and a removal is
+/// confirmed and recoverable. Since #134 the paper card holds the species and the patch's history, and each of its sightings opens here.
 struct SightingDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -47,58 +47,15 @@ struct SightingDetailView: View {
         if let sighting {
             let reference = library.species(scientificName: sighting.scientificName)
             let commonName = library.commonName(for: sighting)
+            let patch = collectionStore.collection.patch(of: sighting.identifier)
+            let leadPhoto = sighting.attachedPhotoPaths.first
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
-                    if sighting.frameImagePath != nil {
-                        VStack(alignment: .leading, spacing: 6) {
-                            FrameImage(frameImagePath: sighting.frameImagePath)
-                                .aspectRatio(4 / 3, contentMode: .fit)
-                                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                                .accessibilityLabel("Your glasses snapshot from this sighting")
-                            Text("Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
-                                .font(JournalFont.attribution)
-                                .foregroundStyle(Color.inkSecondary)
-                        }
+                    RecordLead(sighting: sighting, patch: patch, name: commonName)
                         .padding(.top, 4)
-                    }
+                        .padding(.bottom, 16)
 
-                    Text(commonName)
-                        .font(JournalFont.title)
-                        .foregroundStyle(Color.ink)
-                        .padding(.top, sighting.frameImagePath != nil ? 18 : 4)
-                    Text(sighting.scientificName)
-                        .font(JournalFont.scientific)
-                        .foregroundStyle(Color.inkSecondary)
-
-                    VStack(spacing: 0) {
-                        FactRow(label: "When", value: sighting.confirmedAt.formatted(date: .long, time: .shortened))
-                        RowRule()
-                        FactRow(label: "Where", value: placeText(for: sighting))
-                        RowRule()
-                        FactRow(label: "Heard with", value: sighting.source == .glasses ? "Ray-Ban Display" : "iPhone microphone")
-                    }
-                    .padding(.top, 16)
-
-                    if let location = sighting.location {
-                        // The map is a UIKit view underneath and keeps a tap even with hit testing off, so the
-                        // control sits over it rather than around it.
-                        SightingMapCard(location: location, name: commonName)
-                            .overlay {
-                                Button {
-                                    showingMap = true
-                                } label: {
-                                    Color.clear.contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Map of where you heard this bird. Opens every sighting on a map.")
-                                .accessibilityIdentifier("sighting-map-card")
-                            }
-                            .padding(.top, 12)
-                        Text("Where you were when you added the bird. Tap the map to see every sighting.")
-                            .font(JournalFont.attribution)
-                            .foregroundStyle(Color.inkSecondary)
-                            .padding(.top, 6)
-                    }
+                    SightingRecord(name: commonName, sighting: sighting, place: placeText(for: sighting))
 
                     Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
                         ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
@@ -120,6 +77,27 @@ struct SightingDetailView: View {
                             .accessibilityIdentifier("card-caption")
                     }
 
+                    if let location = sighting.location {
+                        // The map is a UIKit view underneath and keeps a tap even with hit testing off, so the
+                        // control sits over it rather than around it.
+                        SightingMapCard(location: location, name: commonName, setID: patch?.placement.setID)
+                            .overlay {
+                                Button {
+                                    showingMap = true
+                                } label: {
+                                    Color.clear.contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Map of where you heard this bird. Opens every sighting on a map.")
+                                .accessibilityIdentifier("sighting-map-card")
+                            }
+                            .padding(.top, 16)
+                        Text("Where you were when you added the bird. Tap the map to see every sighting.")
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 6)
+                    }
+
                     SectionTitle("Your note")
                     TextField("Add a note", text: $note, axis: .vertical)
                         .font(JournalFont.body)
@@ -134,24 +112,15 @@ struct SightingDetailView: View {
                         }
                         .accessibilityLabel("Your note")
 
-                    SectionTitle("Evidence")
+                    SectionTitle("Your photos")
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(CardText.evidence(sighting))
-                            .font(JournalFont.body)
-                            .foregroundStyle(Color.ink)
                         if CardText.originalPhotoPath(sighting) != nil {
                             Button("View original photo", systemImage: "photo") { showingOriginal = true }
                                 .buttonStyle(.journalOutlined)
                         }
-                        SightingPhotos(sighting: sighting)
+                        SightingPhotos(sighting: sighting, leadPath: leadPhoto)
                     }
                     .padding(.top, 12)
-
-                    if let reference, let photo = reference.species.photos.first {
-                        SectionTitle("Reference photo")
-                        AttributedImage(pack: reference.pack, photo: photo, caption: "Reference photo, not your bird")
-                            .padding(.top, 12)
-                    }
 
                     SectionTitle("About this bird")
                     if let summary = reference?.species.summary, !summary.isEmpty {
@@ -165,28 +134,35 @@ struct SightingDetailView: View {
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 12)
                     }
+                    if let reference, let photo = reference.species.photos.first {
+                        AttributedImage(pack: reference.pack, photo: photo, caption: "Reference photo, not your bird")
+                            .padding(.top, 12)
+                    }
                     NavigationLink(value: Route.species(scientificName: sighting.scientificName, commonName: commonName)) {
                         Label("Open in Atlas", systemImage: "book")
                     }
                     .buttonStyle(.journalOutlined)
                     .padding(.top, 12)
 
-                    SectionTitle("Rarity")
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(CardText.rarityLine(sighting.rarity))
-                            .font(JournalFont.supporting.weight(.semibold))
-                            .foregroundStyle(Color.ink)
-                            .accessibilityIdentifier("card-rarity")
-                        Text(CardText.rarityExplanation(sighting.rarity, commonName: commonName, hasLocation: sighting.location != nil))
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.ink)
-                            .fixedSize(horizontal: false, vertical: true)
+                    VStack(spacing: 0) {
+                        RecordDisclosure("Rarity", identifier: "record-rarity") {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(CardText.rarityLine(sighting.rarity))
+                                    .font(JournalFont.supporting.weight(.semibold))
+                                    .foregroundStyle(Color.ink)
+                                    .accessibilityIdentifier("card-rarity")
+                                Text(CardText.rarityExplanation(sighting.rarity, commonName: commonName, hasLocation: sighting.location != nil))
+                                    .font(JournalFont.supporting)
+                                    .foregroundStyle(Color.ink)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        RowRule()
+                        RecordDisclosure("Identification", identifier: "record-identification") {
+                            SightingMatchDetails(sighting: sighting)
+                        }
                     }
-                    .padding(.top, 12)
-
-                    SectionTitle("Identification")
-                    SightingMatchDetails(sighting: sighting)
-                        .padding(.top, 8)
+                    .padding(.top, JournalLayout.sectionGap)
 
                     Button(role: .destructive) {
                         confirmingRemoval = true
@@ -199,6 +175,8 @@ struct SightingDetailView: View {
                     .padding(.top, JournalLayout.sectionGap)
                 }
             }
+            // A sighting's page is in its patch's edition, like the patch's own.
+            .tint(patch.map { PatchEdition.tint(setID: $0.placement.setID) })
             .navigationTitle(commonName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -261,21 +239,131 @@ struct SightingDetailView: View {
     }
 }
 
-/// The spot on a small map (issue #44): a kilometre across, the moss marker on the fix and a faint circle for its
-/// accuracy. Not interactive, and like every picture in the detail it takes no touches (DECISIONS.md "Clipped images
+/// What a record leads with: your original photo where there is one, since it's evidence, else its patch on felt, which opens the
+/// patch's page. A sighting always has a patch, but one that's just gone from the collection shows nothing here.
+private struct RecordLead: View {
+    @Environment(PackLibrary.self) private var library
+    let sighting: Sighting
+    let patch: CardCollection.Patch?
+    let name: String
+
+    var body: some View {
+        if let path = sighting.attachedPhotoPaths.first {
+            AttachedPhoto(path: path)
+                .frame(maxWidth: .infinity)
+                .accessibilityIdentifier("record-photo")
+        } else if sighting.frameImagePath != nil {
+            VStack(alignment: .leading, spacing: 6) {
+                FrameImage(frameImagePath: sighting.frameImagePath)
+                    .aspectRatio(4 / 3, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                    .accessibilityLabel("Your glasses snapshot from this sighting")
+                    .accessibilityIdentifier("record-photo")
+                Text("Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
+                    .font(JournalFont.attribution)
+                    .foregroundStyle(Color.inkSecondary)
+            }
+        } else if let patch {
+            let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
+            FeltBoard {
+                NavigationLink(value: Route.patch(patch.id)) {
+                    PatchView(state: state, edition: PatchEdition.of(setID: patch.placement.setID), size: .full, tag: name)
+                        .frame(width: 190)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(PatchText.spoken(patch, name: name, beingSewn: state == .beingSewn))
+                .accessibilityHint("Opens the patch")
+                .accessibilityIdentifier("record-patch")
+                .frame(maxWidth: .infinity)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .holdsPatchLight()
+        }
+    }
+}
+
+/// When, where and how, printed: the rule's "if you read it, it's printed on paper".
+private struct SightingRecord: View {
+    let name: String
+    let sighting: Sighting
+    let place: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(name)
+                .font(CardFont.birdName)
+                .foregroundStyle(Color.cardInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Text(sighting.scientificName)
+                .font(CardFont.scientific)
+                .foregroundStyle(Color.cardInkSecondary)
+                .padding(.bottom, 8)
+            FactRow(label: "When", value: sighting.confirmedAt.formatted(date: .long, time: .shortened), ink: .cardInk, secondary: .cardInkSecondary)
+            PaperRule()
+            FactRow(label: "Where", value: place, ink: .cardInk, secondary: .cardInkSecondary)
+            PaperRule()
+            FactRow(label: "How", value: CardText.how(sighting), ink: .cardInk, secondary: .cardInkSecondary)
+        }
+        .padding(.top, 28)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .modifier(CardStockSurface())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("sighting-record")
+    }
+}
+
+/// Something a record keeps until you ask for it. VoiceOver hears a button that says whether it's open.
+private struct RecordDisclosure<Content: View>: View {
+    let title: String
+    let identifier: String
+    @ViewBuilder var content: Content
+    @State private var isExpanded = false
+
+    init(_ title: String, identifier: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.identifier = identifier
+        self.content = content()
+    }
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            content
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 4)
+                .padding(.bottom, 12)
+        } label: {
+            Text(title)
+                .font(JournalFont.heading)
+                .foregroundStyle(Color.ink)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .accessibilityIdentifier(identifier)
+    }
+}
+
+/// The spot on a small map (issue #44): a kilometre across, a marker on the fix in the place's tint (issue #150) and a faint circle
+/// for its accuracy. Not interactive, and like every picture in the detail it takes no touches (DECISIONS.md "Clipped images
 /// take no touches"): the button over it is what opens the full map.
 struct SightingMapCard: View {
     let location: Coordinate
     let name: String
+    /// The patch's set, nil for Uncharted.
+    let setID: String?
 
     var body: some View {
         let centre = location.clCoordinate
+        let tint = PatchEdition.tint(setID: setID)
         Map(initialPosition: .region(MKCoordinateRegion(center: centre, latitudinalMeters: 1_000, longitudinalMeters: 1_000)), interactionModes: []) {
             MapCircle(center: centre, radius: max(location.accuracy, 0))
-                .foregroundStyle(Color.moss.opacity(0.15))
-                .stroke(Color.moss.opacity(0.5), lineWidth: 1)
+                .foregroundStyle(tint.opacity(0.15))
+                .stroke(tint.opacity(0.5), lineWidth: 1)
             Marker(name, coordinate: centre)
-                .tint(Color.moss)
+                .tint(tint)
         }
         .mapStyle(.standard)
         .mapControlVisibility(.hidden)
@@ -290,17 +378,19 @@ struct SightingMapCard: View {
 struct FactRow: View {
     let label: String
     let value: String
+    var ink = Color.ink
+    var secondary = Color.inkSecondary
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(label).font(JournalFont.body).foregroundStyle(Color.ink).fixedSize()
+                Text(label).font(JournalFont.body).foregroundStyle(ink).fixedSize()
                 Spacer(minLength: 16)
-                Text(value).font(JournalFont.body).foregroundStyle(Color.inkSecondary).multilineTextAlignment(.trailing).fixedSize()
+                Text(value).font(JournalFont.body).foregroundStyle(secondary).multilineTextAlignment(.trailing).fixedSize()
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(label).font(JournalFont.body).foregroundStyle(Color.ink)
-                Text(value).font(JournalFont.body).foregroundStyle(Color.inkSecondary)
+                Text(label).font(JournalFont.body).foregroundStyle(ink)
+                Text(value).font(JournalFont.body).foregroundStyle(secondary)
             }
         }
         .padding(.vertical, 11)
@@ -308,27 +398,20 @@ struct FactRow: View {
     }
 }
 
-/// The saved score, in the same disclosure as the live one.
+/// The saved score, explained, and whether there's a photo to go with it.
 private struct SightingMatchDetails: View {
     let sighting: Sighting
-    @State private var isExpanded = false
 
     var body: some View {
-        DisclosureGroup(isExpanded: $isExpanded) {
-            VStack(alignment: .leading, spacing: 8) {
-                LabeledContent("Model score", value: sighting.soundConfidence.formatted(.number.precision(.fractionLength(2))))
-                Text("BirdNET's best single-window score for this species when it was added, between 0 and 1. It is not a calibrated probability, and it does not make the sighting certain: you did, when you added it.")
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .font(JournalFont.supporting)
-            .padding(.top, 6)
-        } label: {
-            Label("About this match", systemImage: "waveform.badge.magnifyingglass")
-                .font(JournalFont.body)
-                .foregroundStyle(Color.ink)
+        VStack(alignment: .leading, spacing: 8) {
+            LabeledContent("Model score", value: sighting.soundConfidence.formatted(.number.precision(.fractionLength(2))))
+            Text("BirdNET's best single-window score for this species when it was added, between 0 and 1. It is not a calibrated probability, and it does not make the sighting certain: you did, when you added it.")
+                .font(JournalFont.attribution)
+                .foregroundStyle(Color.inkSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            LabeledContent("Evidence", value: CardText.evidence(sighting))
         }
+        .font(JournalFont.supporting)
     }
 }
 

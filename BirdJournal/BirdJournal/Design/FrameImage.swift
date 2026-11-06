@@ -1,4 +1,5 @@
 import Album
+import ImageIO
 import Pack
 import SwiftUI
 
@@ -73,18 +74,48 @@ struct PackImage: View {
     }
 }
 
+/// The slot a reference photo gets (issue #150, F12): the photo's own shape, so a bird isn't cut off by a fixed one. A 3:2 slot
+/// filled from the middle took the head and feet off the portrait crops. Los Angeles's first photos run from 0.8 to 2.2 wide over tall,
+/// and a slot this side of `tallest` shows them whole. Only the file's header is read, once, so the page lays out at the
+/// photo's size the first time, before the picture has decoded.
+enum PhotoSlot {
+    /// As tall as a slot gets on a phone's page, 4:5: anything narrower is cropped from the middle.
+    static let tallest: CGFloat = 4 / 5
+    static let widest: CGFloat = 2.4
+    /// A photo whose size can't be read.
+    static let standard: CGFloat = 3 / 2
+
+    private nonisolated(unsafe) static let cache = NSCache<NSURL, NSNumber>()
+
+    static func aspect(width: CGFloat, height: CGFloat) -> CGFloat {
+        guard width > 0, height > 0 else { return standard }
+        return min(max(width / height, tallest), widest)
+    }
+
+    static func aspect(of url: URL) -> CGFloat {
+        if let known = cache.object(forKey: url as NSURL) { return CGFloat(known.doubleValue) }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? CGFloat, let height = properties[kCGImagePropertyPixelHeight] as? CGFloat
+        else { return standard }
+        let aspect = aspect(width: width, height: height)
+        cache.setObject(NSNumber(value: Double(aspect)), forKey: url as NSURL)
+        return aspect
+    }
+}
+
 /// A pack photo with its credit under it: the attributed image. The credit names the observer and the license and
 /// opens the observation, so attribution stays next to the picture wherever it appears.
 struct AttributedImage: View {
     let pack: SpeciesPack
     let photo: PackPhoto
-    var aspectRatio: CGFloat = 3 / 2
     var caption = "Reference photo"
 
     var body: some View {
+        let url = pack.phoneImageURL(for: photo)
         VStack(alignment: .leading, spacing: 6) {
-            PackImage(url: pack.phoneImageURL(for: photo))
-                .aspectRatio(aspectRatio, contentMode: .fit)
+            PackImage(url: url)
+                .aspectRatio(PhotoSlot.aspect(of: url), contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                 .accessibilityLabel("\(caption): \(photo.creditLine)")
             HStack(alignment: .firstTextBaseline) {

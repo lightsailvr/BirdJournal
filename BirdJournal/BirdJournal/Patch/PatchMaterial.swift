@@ -93,9 +93,20 @@ struct FeltBoard<Content: View>: View {
 /// Paper card stock: the ivory under its fibre texture, a fine inner keyline, and a slot punched at the top, like the
 /// backer a patch is sold on. Printed matter: no embossing, foil or glows. Everything on it reads in the light scheme.
 /// On the linen (the light appearance) the fibre is eased so the card measures lighter than the cloth under it, and a fine
-/// edge sets it off; on the felt it glows as it is (issue #150).
+/// edge sets it off; on the felt it glows as it is (issue #150). A `.plate` is a page of the Atlas, printed rather than sold on a
+/// card: the same stock, without the backer's slot and inner keyline.
 struct CardStockSurface: ViewModifier {
+    enum Kind {
+        case backer, plate
+    }
+
     static let radius: CGFloat = 8
+    private let kind: Kind
+
+    init(_ kind: Kind = .backer) {
+        self.kind = kind
+    }
+
     /// The page's appearance: this modifier reads it from outside the light scheme it sets below.
     @Environment(\.colorScheme) private var pageScheme
 
@@ -120,18 +131,22 @@ struct CardStockSurface: ViewModifier {
                     .accessibilityHidden(true)
             }
             .overlay {
-                RoundedRectangle(cornerRadius: max(Self.radius - 5, 2), style: .continuous)
-                    .strokeBorder(Color.cardEdge.opacity(0.4), lineWidth: 0.75)
-                    .padding(7)
-                    .accessibilityHidden(true)
+                if kind == .backer {
+                    RoundedRectangle(cornerRadius: max(Self.radius - 5, 2), style: .continuous)
+                        .strokeBorder(Color.cardEdge.opacity(0.4), lineWidth: 0.75)
+                        .padding(7)
+                        .accessibilityHidden(true)
+                }
             }
             .overlay(alignment: .top) {
-                Capsule()
-                    .fill(Color.black.opacity(0.32))
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5))
-                    .frame(width: 26, height: 7)
-                    .padding(.top, 12)
-                    .accessibilityHidden(true)
+                if kind == .backer {
+                    Capsule()
+                        .fill(Color.black.opacity(0.32))
+                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5))
+                        .frame(width: 26, height: 7)
+                        .padding(.top, 12)
+                        .accessibilityHidden(true)
+                }
             }
             .environment(\.colorScheme, .light)
     }

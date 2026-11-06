@@ -26,21 +26,10 @@ struct PackDetailView: View {
         let edition = installed?.set?.edition.name ?? descriptor?.set?.edition.name
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
-                SetCoverImage(setID: id)
-                    .frame(height: 150)
-                    .frame(maxWidth: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                let line = [edition, installed?.info.region ?? descriptor?.region].compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: ", ").nilIfEmpty
+                let progress = library.sets.contains { $0.id == id } ? collectionStore.collection.progress(of: id) : nil
+                PackPlate(setID: id, line: line, progress: progress)
                     .padding(.top, 4)
-                if let line = [edition, installed?.info.region ?? descriptor?.region].compactMap({ $0?.isEmpty == false ? $0 : nil }).joined(separator: ", ").nilIfEmpty {
-                    Text(line)
-                        .font(JournalFont.body)
-                        .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 12)
-                }
-                if library.sets.contains(where: { $0.id == id }) {
-                    SpeciesCollected(progress: collectionStore.collection.progress(of: id))
-                        .padding(.top, 12)
-                }
                 if let installed {
                     PackPreview(pack: installed)
                         .padding(.top, 16)
@@ -144,6 +133,40 @@ struct PackDetailView: View {
         case let (nil, available?): "\(available)"
         default: "Unknown"
         }
+    }
+}
+
+/// The pack's set as a plate: its painting, what it is, and the birder's own progress apart from "Ready offline" below.
+private struct PackPlate: View {
+    let setID: String
+    let line: String?
+    let progress: SetProgress?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            PlatePicture(setID: setID)
+            if let line {
+                Text(line)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.cardInk)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
+            }
+            if let progress {
+                ThreadProgress(progress)
+                    .accessibilityHidden(true)
+                    .padding(.top, 13)
+                Text(progress.sewnText)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.cardInkSecondary)
+                    .padding(.top, 8)
+            }
+        }
+        .padding(.horizontal, 11)
+        .padding(.top, 11)
+        .padding(.bottom, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .modifier(CardStockSurface(.plate))
     }
 }
 
