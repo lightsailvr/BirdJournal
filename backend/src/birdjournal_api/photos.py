@@ -60,7 +60,7 @@ def new_photo_key(owner: str, sighting_id: str) -> str:
 def is_photo_key_of(key: str, owner: str, sighting_id: str) -> bool:
     """A key this account's upload URL could have made for this sighting, so one photo never ends up on two finds
     (deleting one would take the other's picture)."""
-    return ".." not in key and bool(_PHOTO_KEY.match(key)) and key.startswith(f"{PHOTOS_PREFIX}{owner}/{sighting_id}/")
+    return ".." not in key and bool(_PHOTO_KEY.fullmatch(key)) and key.startswith(f"{PHOTOS_PREFIX}{owner}/{sighting_id}/")
 
 
 class S3PhotoStore:

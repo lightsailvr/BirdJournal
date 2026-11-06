@@ -9,17 +9,26 @@ import SwiftUI
 /// stats at a glance (#55), the other photos, and the sources with the full credits a tap away; sections the pack has
 /// no text or sound for are left out rather than filled. Reached from the guide, the journal and a candidate review
 /// (with `match`, the live detection). Outside a review it links to the bird's gallery of cards (issue #53).
+/// A bird you've found leads with your patch, then its story on card stock, and only then the photos (issue #150, A2); in a
+/// review the photo stays first, because identifying the bird comes before anything else.
 struct BirdProfileView: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     let scientificName: String
     let commonName: String
     var match: Candidate?
 
     var body: some View {
         let reference = library.species(scientificName: scientificName)
+        let patches = match == nil ? Self.patches(of: scientificName, in: collectionStore.collection) : []
         ScrollViewReader { proxy in
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
+                if !patches.isEmpty {
+                    ProfilePatches(patches: patches, name: reference?.species.commonName ?? commonName)
+                        .padding(.top, 4)
+                        .padding(.bottom, 12)
+                }
                 Text(reference?.species.commonName ?? commonName)
                     .font(JournalFont.largeTitle)
                     .foregroundStyle(Color.ink)
@@ -44,7 +53,7 @@ struct BirdProfileView: View {
                 }
 
                 if let reference {
-                    ProfileContent(pack: reference.pack, species: reference.species, match: match)
+                    ProfileContent(pack: reference.pack, species: reference.species, match: match, leadsWithStory: !patches.isEmpty)
                 } else {
                     NameOnlyProfile(match: match)
                 }
@@ -55,6 +64,13 @@ struct BirdProfileView: View {
         #endif
         }
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// The species' patches, the one with the newest sighting first: that's the one the profile leads with.
+    private static func patches(of scientificName: String, in collection: CardCollection) -> [CardCollection.Patch] {
+        collection.patches
+            .filter { $0.scientificName == scientificName }
+            .sorted { $0.latest.confirmedAt > $1.latest.confirmedAt }
     }
 }
 
@@ -67,10 +83,99 @@ private struct YourSightingsLink: View {
     var body: some View {
         let count = sightings.count { $0.scientificName == scientificName }
         NavigationLink(value: Route.speciesPatches(scientificName: scientificName, commonName: commonName)) {
-            Label(count == 0 ? "Your sightings · none yet" : "Your sightings · \(count)", systemImage: "rectangle.stack")
+            Label(count == 0 ? "No sightings yet" : "\(count) \(count == 1 ? "sighting" : "sightings")", systemImage: "rectangle.stack")
         }
         .buttonStyle(.journalOutlined)
         .accessibilityIdentifier("profile-your-cards")
+    }
+}
+
+/// Your patch of this bird, large, in the edition of your newest sighting, with every other beside it, each opening its page. On
+/// the felt or linen every patch sits on (the guide's rule: what you earned is an object you could hold).
+private struct ProfilePatches: View {
+    @Environment(PackLibrary.self) private var library
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let patches: [CardCollection.Patch]
+    let name: String
+
+    var body: some View {
+        FeltBoard {
+            let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 16)) : AnyLayout(HStackLayout(spacing: 16))
+            layout {
+                if let newest = patches.first {
+                    link(to: newest, size: .full, width: 190)
+                }
+                let others = Array(patches.dropFirst())
+                if !others.isEmpty {
+                    // One column, or two for a bird found in most of the sets: a set is one patch, so there are never many.
+                    let columns = others.count > 3 && !typeSize.isAccessibilitySize ? 2 : 1
+                    let width: CGFloat = columns == 2 ? 58 : 78
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(width), spacing: 8), count: columns), spacing: 10) {
+                        ForEach(others) { patch in
+                            link(to: patch, size: .thumbnail, width: width)
+                        }
+                    }
+                    .fixedSize()
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .holdsPatchLight()
+    }
+
+    private func link(to patch: CardCollection.Patch, size: PatchTextures.Size, width: CGFloat) -> some View {
+        let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
+        return NavigationLink(value: Route.patch(patch.id)) {
+            PatchView(state: state, edition: PatchEdition.of(setID: patch.placement.setID), size: size, tag: name)
+                .frame(width: width)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(PatchText.spoken(patch, name: name, beingSewn: state == .beingSewn))
+        .accessibilityHint("Opens the patch")
+        .accessibilityIdentifier("profile-patch")
+    }
+}
+
+/// The story title and its lore as printed matter, on the paper card's stock: right under your patch, since it's your bird.
+private struct ProfileStoryCard: View {
+    let lore: PackLore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(lore.title ?? "The story")
+                .font(CardFont.storyTitle)
+                .foregroundStyle(Color.cardInk)
+                .accessibilityAddTraits(.isHeader)
+            ProfileLore(lore: lore, ink: .cardInk, secondary: .cardInkSecondary)
+        }
+        .padding(.top, 26)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .modifier(CardStockSurface())
+    }
+}
+
+/// The lore and where it came from.
+private struct ProfileLore: View {
+    let lore: PackLore
+    var ink = Color.ink
+    var secondary = Color.inkSecondary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(lore.text)
+                .font(CardFont.lore)
+                .lineSpacing(CardFont.loreLeading)
+                .foregroundStyle(ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Lore written from this bird's sourced fact sheet and reviewed by hand. CC BY-SA 4.0.")
+                .font(JournalFont.attribution)
+                .foregroundStyle(secondary)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -78,53 +183,47 @@ private struct ProfileContent: View {
     let pack: SpeciesPack
     let species: PackSpecies
     let match: Candidate?
+    /// Your patch is above: the story goes right under it, and the photo after that.
+    var leadsWithStory = false
 
     var body: some View {
+        if leadsWithStory, let lore = species.lore {
+            ProfileStoryCard(lore: lore)
+                .id("profile-tale")
+                .padding(.top, 16)
+        }
+
         if let hero = species.photos.first {
             AttributedImage(pack: pack, photo: hero)
                 .padding(.top, 16)
         }
 
         if !species.sounds.isEmpty {
-            SectionTitle(text: "Hear it")
+            SectionTitle("Hear it")
             SoundRows(pack: pack, sounds: species.sounds)
                 .padding(.top, 8)
         }
 
         if let summary = species.summary, !summary.isEmpty {
-            SectionTitle(text: "Get to know this bird")
+            SectionTitle("About this bird")
             Text(summary)
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
                 .padding(.top, 12)
         }
 
-        if let lore = species.lore {
-            SectionTitle(text: "The tale")
+        if !leadsWithStory, let lore = species.lore {
+            // The story's own title is its heading (issue #150), so the lore needs no other.
+            SectionTitle(lore.title ?? "The story")
                 .id("profile-tale")
-            VStack(alignment: .leading, spacing: 8) {
-                if let title = lore.title {
-                    Text(title)
-                        .font(CardFont.storyTitle)
-                        .foregroundStyle(Color.ink)
-                }
-                Text(lore.text)
-                    .font(CardFont.lore)
-                    .lineSpacing(CardFont.loreLeading)
-                    .foregroundStyle(Color.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("Lore written from this bird's sourced fact sheet and reviewed by hand · CC BY-SA 4.0")
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
-            }
-            .padding(.top, 12)
-            .accessibilityElement(children: .combine)
+            ProfileLore(lore: lore)
+                .padding(.top, 12)
         }
 
         if let stats = species.stats {
             let rows = CardStatsText.front(stats) + CardStatsText.back(stats)
             if !rows.isEmpty {
-                SectionTitle(text: "At a glance")
+                SectionTitle("At a glance")
                 if let typeLine = species.typeLine {
                     Text(typeLine.text)
                         .font(JournalFont.supporting)
@@ -159,7 +258,7 @@ private struct ProfileContent: View {
             ("Often near", (species.habitat ?? "").capitalizedFirst),
         ].filter { !$0.1.isEmpty }
         if !facts.isEmpty {
-            SectionTitle(text: "In the field")
+            SectionTitle("In the field")
             VStack(spacing: 0) {
                 ForEach(Array(facts.enumerated()), id: \.offset) { position, fact in
                     if position > 0 { RowRule() }
@@ -181,13 +280,13 @@ private struct ProfileContent: View {
         }
 
         if let match {
-            SectionTitle(text: "This detection")
+            SectionTitle("This detection")
             MatchDetails(candidate: match)
                 .padding(.top, 8)
         }
 
         if species.photos.count > 1 {
-            SectionTitle(text: "More photos")
+            SectionTitle("More photos")
             Text("Different birds, ages and lights; every photo is credited to the observer who took it.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
@@ -198,7 +297,7 @@ private struct ProfileContent: View {
             }
         }
 
-        SectionTitle(text: "Sources & credits")
+        SectionTitle("Sources & credits")
         VStack(alignment: .leading, spacing: 10) {
             if species.descriptionSource != nil {
                 Text("The text is adapted from the English Wikipedia article on this species, by Wikipedia contributors, under CC BY-SA 4.0.")
@@ -227,7 +326,7 @@ private struct ProfileContent: View {
                 Link(destination: wikipedia) {
                     Label("Read more on Wikipedia", systemImage: "arrow.up.right.square")
                         .font(JournalFont.supporting)
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                 }
             }
             Text("Powered by BirdNET")
@@ -271,12 +370,12 @@ private struct SoundRow: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.mossText)
                     .frame(width: 44, height: 44)
-                    .background(Color.moss, in: Circle())
+                    .background(.tint, in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
                     Text(isPlaying ? "Playing \(sound.kind.title.lowercased())…" : sound.kind.title)
                         .font(JournalFont.rowTitle)
                         .foregroundStyle(Color.ink)
-                    Text("\(sound.duration.formatted(.units(allowed: [.seconds]))) · \(sound.shortCredit)")
+                    ShortFacts(sound.duration.formatted(.units(allowed: [.seconds])), sound.shortCredit)
                         .font(JournalFont.attribution)
                         .foregroundStyle(Color.inkSecondary)
                         .multilineTextAlignment(.leading)
@@ -316,20 +415,20 @@ private struct NameOnlyProfile: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 30)
                 .accessibilityHidden(true)
-            Text("No photos or field notes for this bird are on your iPhone. BirdNET can still identify it by name; a bird pack that covers its region adds the rest.")
+            Text("No photos or field notes for this bird are on your iPhone. BirdNET can still identify it by name; a field-guide download that covers it adds the rest.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
             NavigationLink(value: Route.packs) {
-                Label("Bird packs", systemImage: "square.stack.3d.down.right")
+                Label("Field-guide downloads", systemImage: "square.stack.3d.down.right")
             }
             .buttonStyle(.journalOutlined)
             .frame(maxWidth: .infinity)
         }
         .padding(.top, 8)
         if let match {
-            SectionTitle(text: "This detection")
+            SectionTitle("This detection")
             MatchDetails(candidate: match)
                 .padding(.top, 8)
         }

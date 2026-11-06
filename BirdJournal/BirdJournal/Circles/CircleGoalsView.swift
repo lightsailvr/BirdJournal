@@ -63,7 +63,7 @@ struct CircleGoalsSection: View {
                     InlineError(error)
                 }
             } else {
-                ProgressView().frame(maxWidth: .infinity)
+                GuildPlaceholder(rows: 1)
             }
         } header: {
             Text("Goals")
@@ -95,9 +95,8 @@ struct MonthlyGoalCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text(goal.title.uppercased())
-                    .font(CardFont.edition)
-                    .tracking(CardFont.editionTracking)
+                Text(goal.title)
+                    .font(JournalFont.supporting.weight(.semibold))
                 Spacer()
                 if goal.isReached {
                     Label("Reached", systemImage: "checkmark.circle")
@@ -106,7 +105,8 @@ struct MonthlyGoalCard: View {
             }
             Text(GoalWords.headline(goal))
                 .font(JournalFont.section)
-            GoalBar(goal: goal, height: 8, onLavender: true)
+            ThreadProgress(goal: goal, thread: .onLavender)
+                .accessibilityHidden(true)
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(GoalWords.count(goal)).font(.subheadline.weight(.semibold))
@@ -140,14 +140,15 @@ struct CustomGoalRow: View {
                 Spacer()
                 if goal.isReached {
                     Image(systemName: "checkmark.circle")
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                         .accessibilityLabel("Reached")
                 }
                 Text(GoalWords.count(goal, short: true))
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(Color.ink)
             }
-            GoalBar(goal: goal, height: 6)
+            ThreadProgress(goal: goal)
+                .accessibilityHidden(true)
             Text(GoalWords.customNote(goal, timeZone: timeZone))
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
@@ -159,30 +160,14 @@ struct CustomGoalRow: View {
     }
 }
 
-/// The progress bar: lavender on the page, or the deep ink of a lavender card on one. Reaching the target fills it;
-/// nothing glints or turns gold.
-struct GoalBar: View {
-    let goal: CircleGoal
-    let height: CGFloat
-    var onLavender = false
-
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule().fill(onLavender ? Color.onSharedGoal.opacity(0.18) : Color.rule.opacity(0.6))
-                Capsule()
-                    .fill(onLavender ? Color.onSharedGoal : Color.moss)
-                    .frame(width: geometry.size.width * GoalWords.fraction(goal))
-            }
-        }
-        .frame(height: height)
-        .accessibilityHidden(true)
-    }
-}
-
 /// What the goal card says, apart from the views so the tests read it. Goals count distinct species (the server's
 /// `progress`), never repeat cards.
 enum GoalWords {
+    /// What the thread reads when nothing beside it says the count: "9 of 14 species so far".
+    static func sentence(_ goal: CircleGoal) -> String {
+        "\(count(goal)) so far"
+    }
+
     static func fraction(_ goal: CircleGoal) -> Double {
         guard goal.target > 0 else { return 0 }
         return min(1, Double(goal.progress) / Double(goal.target))
@@ -218,7 +203,7 @@ enum GoalWords {
         "\(max(0, goal.target - goal.progress)) still to discover"
     }
 
-    /// "7 Nov · by Maya Ortiz · starts in 5 days", "12 Oct – 9 Nov · by Maya Ortiz · 3 still to discover", or ending in
+    /// "7 Nov, by Maya Ortiz, starts in 5 days", "12 Oct – 9 Nov, by Maya Ortiz, 3 still to discover", or ending in
     /// "Reached" or "Ended". No countdown while it runs (design guide page 13: calm progress).
     static func customNote(_ goal: CircleGoal, timeZone: String, now: Date = .now) -> String {
         var parts = [days(goal, timeZone: timeZone)]
@@ -233,7 +218,7 @@ enum GoalWords {
         case .ended:
             parts.append(goal.isReached ? "Reached" : "Ended")
         }
-        return parts.joined(separator: " · ")
+        return parts.joined(separator: ", ")
     }
 
     /// "7 Nov", or "12 Oct – 9 Nov", in the Guild's zone.

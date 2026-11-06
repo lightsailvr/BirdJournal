@@ -1,0 +1,42 @@
+{
+  "us-ca-bay": {
+    "file": "us-ca-bay.jpg",
+    "set": "us-ca-bay.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 1849353107,
+    "painting": "6bb8824a4a97e43fdf8cc7f8e402ec6a258e6de217d5e1dcebf1121f2e17af68"
+  },
+  "us-ca-desert": {
+    "file": "us-ca-desert.jpg",
+    "set": "us-ca-desert.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 2349655602,
+    "painting": "ee94e3b6e384a2d2558791ca3b5e17232cc41eec63ce97d81e60b8baebf5d48e"
+  },
+  "us-ca-la": {
+    "file": "us-ca-la.jpg",
+    "set": "us-ca-la.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 2471396767,
+    "painting": "34106792cc842798bfb20add8983d0ae1b3da9d4237d26c4ab78c65589f65c38"
+  },
+  "us-ca-sd": {
+    "file": "us-ca-sd.jpg",
+    "set": "us-ca-sd.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 259791541,
+    "painting": "da557d6489280dec7359fda2b83b8945fd82c3ab2e0320d0eb809762c8c68612"
+  },
+  "us-fl-orlando": {
+    "file": "us-fl-orlando.jpg",
+    "set": "us-fl-orlando.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 2635883174,
+    "painting": "a79f8f550a5e4e31351f6b1fd2ee86a323aa9cfc260d9c3b6c801a8101e16a78"
+  }
+}

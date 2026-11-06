@@ -21,7 +21,10 @@
       "http://localhost:48765/signout"
     ],
     "monthlyBudgetUsd": 10,
-    "inviteDomain": "birdquest.matthewcelia.com",
+    "inviteDomain": "featherguild.matthewcelia.com",
+    "inviteFormerDomains": [
+      "birdquest.matthewcelia.com"
+    ],
     "iosAppIds": [
       "647FZYVR5Q.com.matthewcelia.mybirdjournal"
     ],

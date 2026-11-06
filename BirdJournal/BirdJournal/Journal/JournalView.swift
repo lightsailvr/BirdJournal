@@ -18,6 +18,7 @@ struct JournalView: View {
         var id: Self { self }
     }
 
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
@@ -42,7 +43,7 @@ struct JournalView: View {
             if sightings.isEmpty {
                 EmptyJournal()
             } else {
-                let collection = library.collection(of: sightings)
+                let collection = collectionStore.collection
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                         Text(state.mode == .cards ? collection.summary : Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
@@ -107,13 +108,13 @@ struct JournalView: View {
                         ToolbarItem(placement: .topBarTrailing) {
                             let shown = shownBoard(collection)
                             Menu {
-                                Picker("Board", selection: Binding(get: { shown }, set: { state.board = $0 })) {
+                                Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
                                     ForEach(boards(collection), id: \.self) { board in
                                         Text(boardMenuTitle(board, collection)).tag(board)
                                     }
                                 }
                             } label: {
-                                Label("Board", systemImage: "square.stack")
+                                Label("Set", systemImage: "square.stack")
                             }
                             .accessibilityValue(boardTitle(shown))
                             .accessibilityIdentifier("collection-board")
@@ -156,6 +157,7 @@ struct JournalView: View {
         } else {
             if state.mode == .sightings {
                 SightingsByDay(sightings: shown)
+                    .holdsPatchLight()
             } else {
                 if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
                     SetProgressList(collection: collection)
@@ -181,7 +183,7 @@ struct JournalView: View {
                     PatchBoard(patches: collection.patches(in: set.id))
                 }
             case .uncharted:
-                Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedPatches.count) outside every set")
+                Text("\(CardPlacement.unchartedTitle), \(collection.unchartedPatches.count) outside every set")
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
                     .boardLabel()
@@ -218,12 +220,8 @@ struct JournalView: View {
                 .padding(.top, 24)
         } else {
             ForEach(groups, id: \.board) { group in
-                Text(boardTitle(group.board))
-                    .font(JournalFont.rowTitle)
-                    .foregroundStyle(Color.ink)
-                    .boardLabel()
-                    .padding(.vertical, 10)
-                    .accessibilityAddTraits(.isHeader)
+                SectionTitle(boardTitle(group.board), top: 10, onBoard: true)
+                    .padding(.bottom, 10)
                 PatchBoard(patches: group.patches)
             }
         }
@@ -246,8 +244,8 @@ struct JournalView: View {
 
     private func boardMenuTitle(_ board: BoardChoice, _ collection: CardCollection) -> String {
         switch board {
-        case .set(let id): "\(boardTitle(board)) · \(collection.progress(of: id).collected)"
-        case .uncharted: "\(boardTitle(board)) · \(collection.unchartedPatches.count)"
+        case .set(let id): "\(boardTitle(board)), \(collection.progress(of: id).collected)"
+        case .uncharted: "\(boardTitle(board)), \(collection.unchartedPatches.count)"
         }
     }
 
@@ -352,16 +350,7 @@ private struct CollectionIntroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label {
-                Text("Your collection so far")
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-            } icon: {
-                Image(systemName: "sparkles")
-                    .foregroundStyle(Color.moss)
-                    .accessibilityHidden(true)
-            }
-            .accessibilityAddTraits(.isHeader)
+            SectionTitle("Your collection so far", top: 0)
             Text("\(collection.patchesText) of \(collection.speciesCount) species. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
@@ -371,7 +360,7 @@ private struct CollectionIntroCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.moss.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .background(.tint.opacity(0.1), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
         .boardLabel(horizontal: 0, vertical: 0)
     }
 }
@@ -384,10 +373,7 @@ private struct SightingsByDay: View {
     var body: some View {
         ForEach(Journal.days(sightings)) { day in
             VStack(alignment: .leading, spacing: 2) {
-                Text(Journal.title(for: day.start))
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-                    .accessibilityAddTraits(.isHeader)
+                SectionTitle(Journal.title(for: day.start), top: 0)
                 if let place = sharedPlace(day) {
                     Text(place)
                         .font(JournalFont.supporting)
@@ -414,38 +400,36 @@ private struct SightingsByDay: View {
     }
 }
 
-/// One sighting: the glasses snapshot when there is one, else the reference photo, then the name, the time and the
-/// source, and which kind of picture it is.
+/// One sighting: your own photo when there is one, since that's evidence, else its patch, else the reference photo for the
+/// moment before the collection has it (issue #150, V2). Then the name, the time and the source, and whose photo it is.
 struct SightingRow: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let sighting: Sighting
     var showsDate = false
 
     var body: some View {
-        let reference = library.species(scientificName: sighting.scientificName)
+        let source = RowPictureSource.of(
+            sighting: sighting,
+            patch: collectionStore.collection.patch(of: sighting.identifier),
+            reference: library.thumbnailURL(scientificName: sighting.scientificName)
+        )
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            Group {
-                if sighting.frameImagePath != nil {
-                    FrameImage(frameImagePath: sighting.frameImagePath)
-                } else {
-                    PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
-                }
-            }
-            .frame(width: 84, height: 84)
-            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-            .accessibilityHidden(true)
+            RowPicture(source: source, side: 84)
             VStack(alignment: .leading, spacing: 3) {
                 Text(library.commonName(for: sighting))
                     .font(JournalFont.heading)
                     .foregroundStyle(Color.ink)
-                Text("\(showsDate ? sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened) : sighting.confirmedAt.formatted(date: .omitted, time: .shortened)) · \(sighting.source == .glasses ? "Added from glasses" : "Added from iPhone")")
+                Text("\(showsDate ? sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened) : sighting.confirmedAt.formatted(date: .omitted, time: .shortened)), \(sighting.source == .glasses ? "added from glasses" : "added from iPhone")")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
-                Text(sighting.frameImagePath != nil ? "Your glasses snapshot" : (reference?.species.photos.isEmpty == false ? "Reference photo" : "No photo"))
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
+                if let caption = Self.caption(source) {
+                    Text(caption)
+                        .font(JournalFont.attribution)
+                        .foregroundStyle(Color.inkSecondary)
+                }
                 if let note = sighting.note, !note.isEmpty {
                     Text(note)
                         .font(JournalFont.attribution)
@@ -465,20 +449,25 @@ struct SightingRow: View {
         }
         .accessibilityElement(children: .combine)
     }
+
+    /// Whose picture it is, so a reference photo never looks like your own. A patch needs no caption.
+    static func caption(_ source: RowPictureSource) -> String? {
+        switch source {
+        case .ownPhoto(_, let isGlassesFrame): isGlassesFrame ? "Your glasses snapshot" : "Your photo"
+        case .patch: nil
+        case .reference(let url): url == nil ? "No photo" : "Reference photo"
+        }
+    }
 }
 
-/// Set progress above the Species list (issue #54): each set the birder has a card in, "Los Angeles · 87 of 160" with
+/// Set progress above the Species list (issue #54): each set the birder has a patch in, "Los Angeles, 87 of 160" with
 /// a bar, opening the set's page; then how many species are Uncharted.
 private struct SetProgressList: View {
     let collection: CardCollection
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Sets")
-                .font(JournalFont.section)
-                .foregroundStyle(Color.ink)
-                .accessibilityAddTraits(.isHeader)
-                .padding(.top, JournalLayout.sectionGap)
+            SectionTitle("Sets")
             ForEach(collection.progress) { progress in
                 NavigationLink(value: Route.set(id: progress.setID)) {
                     SetProgressRow(progress: progress)
@@ -488,7 +477,7 @@ private struct SetProgressList: View {
                 RowRule()
             }
             if collection.unchartedSpeciesCount > 0 {
-                Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedSpeciesCount) species outside every set")
+                Text("\(CardPlacement.unchartedTitle), \(collection.unchartedSpeciesCount) species outside every set")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.vertical, 12)
@@ -498,7 +487,7 @@ private struct SetProgressList: View {
     }
 }
 
-/// One set's progress: "Los Angeles · 87 of 160" over a bar.
+/// One set's progress: "Los Angeles, 87 of 160" over a bar.
 struct SetProgressRow: View {
     let progress: SetProgress
     var detail: String?
@@ -516,8 +505,7 @@ struct SetProgressRow: View {
                         .font(JournalFont.supporting)
                         .foregroundStyle(detailInk)
                 }
-                ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
-                    .tint(Color.moss)
+                ThreadProgress(progress)
                     .accessibilityHidden(true)
             }
             Image(systemName: "chevron.right")
@@ -527,26 +515,25 @@ struct SetProgressRow: View {
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel([progress.name, "\(progress.collected) of \(progress.total) species collected", detail].compactMap { $0 }.joined(separator: ", "))
+        .accessibilityLabel([progress.name, progress.sewnText, detail].compactMap { $0 }.joined(separator: ", "))
     }
 }
 
-/// The Species list: one row per bird added, with how many sightings and when last, each opening its patches (issue #134).
+/// The Species list: one row per bird added, with your newest patch of it, how many sightings and when last, each opening its
+/// patches (issues #134, #150). Lazy, so a long list asks for only the patches on screen.
 private struct SpeciesRows: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let entries: [Journal.SpeciesEntry]
 
     var body: some View {
-        VStack(spacing: 0) {
+        LazyVStack(spacing: 0) {
             ForEach(entries) { entry in
                 let reference = library.species(scientificName: entry.scientificName)
                 NavigationLink(value: Route.speciesPatches(scientificName: entry.scientificName, commonName: reference?.species.commonName ?? entry.commonName)) {
                     AdaptiveRow(stacked: typeSize.stacksRows) {
-                        PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
-                            .frame(width: 64, height: 64)
-                            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                            .accessibilityHidden(true)
+                        RowPicture(source: .of(patch: collectionStore.collection.patch(of: entry.latest.identifier), reference: library.thumbnailURL(scientificName: entry.scientificName)))
                         VStack(alignment: .leading, spacing: 3) {
                             Text(reference?.species.commonName ?? entry.commonName)
                                 .font(JournalFont.rowTitle)
@@ -554,7 +541,7 @@ private struct SpeciesRows: View {
                             Text(entry.scientificName)
                                 .font(JournalFont.scientific)
                                 .foregroundStyle(Color.inkSecondary)
-                            Text("\(entry.count) \(entry.count == 1 ? "sighting" : "sightings") · last \(SpeciesRowsText.lastSeen(entry.latest.confirmedAt))")
+                            Text("\(entry.count) \(entry.count == 1 ? "sighting" : "sightings"), last \(SpeciesRowsText.lastSeen(entry.latest.confirmedAt))")
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }
@@ -572,6 +559,7 @@ private struct SpeciesRows: View {
             }
         }
         .padding(.top, 16)
+        .holdsPatchLight()
     }
 }
 

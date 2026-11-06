@@ -20,6 +20,10 @@ import UIKit
 /// - `-fakeLibraryPhoto YES`: "Attach a photo" on a sighting hands over a generated picture instead of opening the system
 ///   picker, which XCUITest can't drive.
 /// - `-seedBoard YES` adds one sighting each of the bundled pack's first 30 birds in Griffith Park: a board that scrolls.
+/// - `-seedLarge <n>` fills the album to n sightings over three years, for profiling (issue #150). With `-albumFile <name>` it
+///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and
+///   prints what each cost (`SpeedTour`).
+/// - `-seedNewestAt <place>` adds a sighting just now at one of `-autoLocation`'s places, so its set is the newest sighting's.
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
 ///   the species' patches (issue #134).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
@@ -29,8 +33,8 @@ import UIKit
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the patches of the newest sighting's species, or `-autoCardSpecies`'s, found or not), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
-///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe),
-///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
+///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe, or `-autoCardSpecies`'s),
+///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `app-icon`, `account` (Settings → Account; `-fakeAccount
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
 ///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
@@ -46,13 +50,22 @@ import UIKit
 ///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).
 /// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
-/// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
-///   prompting, for the UI tests; `griffith` answers with a fix in Griffith Park.
+/// - `-autoLocation denied` answers the location request as denied instead of prompting, for the UI tests; `griffith` answers
+///   with a fix in Griffith Park. `san-diego`, `oakland`, `joshua-tree` and `orlando` are places in the other sets, and `kansas`
+///   is outside every set (`DebugPlace`). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
+///   picks the Listen painting (issue #150).
+/// - `-freshPackStorage YES` starts with no downloads and no index read yet, as a fresh install does; with `-packIndexURL
+///   http://127.0.0.1:9/index.json` the index stays out of reach (issue #150).
+/// - `-fakeRunBirds "Haemorhous mexicanus_House Finch,…"` makes a run's list these BirdNET labels and hold still, the first
+///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
+///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
+///   reveal; `-autoRunStops YES` stops the run, for the review. `-patchDecodeLog YES` logs each patch decode under `patch-decode`.
 /// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
 ///   opens; `-fakeGlasses unregistered|noneLinked|notConnected` gives the Listen page those glasses states;
-///   `-fakeCircles offline` makes the Guilds unreachable; `-autoScrollTo guild-settings` scrolls a Guild's page to its
+///   `-fakeCircles offline` makes the Guilds unreachable; `-fakeCircleLatency <seconds>` slows each of the fake's reads, and
+///   `-circleCacheFile <name>` gives its store a cache in tmp to relaunch over (issue #150); `-autoScrollTo guild-settings` scrolls a Guild's page to its
 ///   settings (issue #119's screenshots of the states).
 /// - `-autoScreen glasses-run` with `-autoGlassesListening <wav>` pairs the mock glasses and starts a real glasses run on the
 ///   Listen tab, the file standing in for the stream; `-autoLensAdd "House Finch,Dark-eyed Junco"` adds those birds on the
@@ -85,6 +98,17 @@ struct DebugLaunch: ViewModifier {
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
+            if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
+            let large = defaults.integer(forKey: "seedLarge")
+            if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
+            if defaults.bool(forKey: "speedTour") {
+                let tour = SpeedTour(
+                    context: context, run: run, library: library, circles: circles,
+                    tab: $tab, journalMode: $journalMode, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath
+                )
+                Task { await tour.walk() }
+                return
+            }
             if let id = defaults.string(forKey: "autoDownloadPack") {
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -105,7 +129,18 @@ struct DebugLaunch: ViewModifier {
             case "listening", "review":
                 tab = .listen
                 run.source = .phone
+                run.fakeStack = FakeRunBirds.stack
                 await run.start()
+                if let name = defaults.string(forKey: "autoRowAdd"), let bird = run.candidates.first(where: { $0.species.commonName == name }) {
+                    // `-autoRowAddAfter <seconds>`: late enough for a screenshot to catch its acknowledgment.
+                    try? await Task.sleep(for: .seconds(defaults.double(forKey: "autoRowAddAfter")))
+                    await run.addFromRow(bird, isDescribed: true)
+                    run.finishCeremony()
+                    run.dismissReveal()
+                }
+                if defaults.bool(forKey: "autoRunStops") {
+                    await run.stop()
+                }
                 if screen == "review" {
                     // The WAV's first admissions take a few windows; wait for a bird the packs describe, so the
                     // review shows a photo, else take the first.
@@ -144,7 +179,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    run.showRevealForScreenshot(of: newest, placement: library.collection(of: all).placement(of: newest.identifier) ?? .uncharted)
+                    run.showRevealForScreenshot(of: newest, placement: CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier) ?? .uncharted)
                 }
             case "card", "card-back":
                 tab = .journal
@@ -152,7 +187,7 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
-                    let placement = library.collection(of: all).placement(of: newest.identifier)
+                    let placement = CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier)
                     journalPath.append(Route.patch(CardCollection.Patch.Key(speciesID: newest.speciesID, setID: placement?.setID)))
                 }
                 if screen == "card-back" { defaults.set(true, forKey: "autoCardBack") }
@@ -183,7 +218,8 @@ struct DebugLaunch: ViewModifier {
                 tab = .guide
             case "profile":
                 tab = .guide
-                guidePath.append(Route.species(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"))
+                let scientificName = defaults.string(forKey: "autoCardSpecies") ?? "Sayornis nigricans"
+                guidePath.append(Route.species(scientificName: scientificName, commonName: library.species(scientificName: scientificName)?.species.commonName ?? scientificName))
             case "packs":
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -198,6 +234,10 @@ struct DebugLaunch: ViewModifier {
             case "settings":
                 tab = .listen
                 listenPath.append(Route.settings)
+            case "app-icon":
+                tab = .listen
+                listenPath.append(Route.settings)
+                listenPath.append(Route.appIcon)
             case "account", "account-delete", "blocked":
                 tab = .listen
                 listenPath.append(Route.settings)
@@ -265,15 +305,35 @@ struct DeniedLocationProvider: LocationProvider {
     }
 }
 
-/// Stands in for Core Location with a fix in Griffith Park (`-autoLocation griffith`, issue #135): a run in the Los Angeles
-/// set, so an add there sews a patch with a painting, with no permission prompt for a UI test to answer.
-struct GriffithParkLocationProvider: LocationProvider {
+/// The places `-autoLocation` names: one in each set, and one outside them all.
+enum DebugPlace: String {
+    case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas
+
+    var coordinate: Coordinate {
+        switch self {
+        case .griffith: Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 10)
+        case .sanDiego: Coordinate(latitude: 32.7157, longitude: -117.1611, accuracy: 10)
+        case .oakland: Coordinate(latitude: 37.8044, longitude: -122.2712, accuracy: 10)
+        case .joshuaTree: Coordinate(latitude: 33.8734, longitude: -115.9010, accuracy: 10)
+        case .orlando: Coordinate(latitude: 28.5384, longitude: -81.3789, accuracy: 10)
+        case .kansas: Coordinate(latitude: 38.5, longitude: -98.5, accuracy: 10)
+        }
+    }
+}
+
+/// Stands in for Core Location with a fix in one place (`-autoLocation griffith`, issue #135: a run in the Los Angeles set, so
+/// an add there sews a patch with a painting), with no permission prompt for a UI test to answer.
+struct FixedLocationProvider: LocationProvider {
+    let place: DebugPlace
+
     func fixes() -> AsyncStream<LocationFix> {
         AsyncStream { continuation in
-            continuation.yield(.fix(latitude: 34.1365, longitude: -118.2942, accuracy: 10, at: .now))
+            continuation.yield(.fix(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude, accuracy: place.coordinate.accuracy, at: .now))
             continuation.finish()
         }
     }
+
+    func lastKnownCoordinate() -> Coordinate? { place.coordinate }
 }
 
 /// Hands a file's chunks out at the pace they were recorded, so a WAV drives the Listen tab like a microphone would
@@ -456,13 +516,60 @@ enum DebugSeeds {
         try? context.save()
     }
 
+    /// A House Finch just now at `place`, on top of any other seed: the newest sighting's set, for the painting's fallback (issue #150).
+    static func seedNewest(at place: DebugPlace, context: ModelContext) {
+        context.insert(Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, location: place.coordinate, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
+        try? context.save()
+    }
+
+    /// The label an add writes for this bird, the identification model's: a pack's own `birdnetLabel` is only its scientific name,
+    /// so a run's rows and the sightings it adds would be different birds.
+    static func sightingLabel(_ species: PackSpecies) -> String {
+        "\(species.scientificName)_\(species.commonName)"
+    }
+
     /// One sighting of each of the bundled pack's first 30 birds, a minute apart.
     static func seedBoard(context: ModelContext) {
         let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
         for (index, species) in ((try? SpeciesPack.bundled().species) ?? []).prefix(30).enumerated() {
-            context.insert(Sighting(speciesID: species.birdnetLabel, confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
+            context.insert(Sighting(speciesID: sightingLabel(species), confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
         }
         try? context.save()
+    }
+
+    /// A big album for profiling (issue #150): `count` sightings of the bundled pack's birds over three years, most of them in
+    /// Los Angeles, some in San Diego and some far from every set, in a repeatable order. Does nothing to an album that's
+    /// already that big.
+    static func seedLarge(context: ModelContext, count: Int) {
+        let existing = (try? context.fetchCount(FetchDescriptor<Sighting>())) ?? 0
+        guard existing < count else { return }
+        let labels = ((try? SpeciesPack.bundled().species) ?? []).map(sightingLabel)
+        guard !labels.isEmpty else { return }
+        var random = SplitMix(state: 150)
+        for index in existing..<count {
+            let label = labels[Int(random.next() % UInt64(labels.count))]
+            let jitter = { (random: inout SplitMix) in Double(random.next() % 1000) / 1000 * 0.1 - 0.05 }
+            let location: Coordinate? = switch index % 10 {
+            case 0...6: Coordinate(latitude: 34.1365 + jitter(&random), longitude: -118.2942 + jitter(&random), accuracy: 15)
+            case 7, 8: Coordinate(latitude: 32.7341 + jitter(&random), longitude: -117.1446 + jitter(&random), accuracy: 15)
+            default: index % 20 == 9 ? nil : Coordinate(latitude: 39.5 + jitter(&random), longitude: -116.9 + jitter(&random), accuracy: 15)
+            }
+            let hoursAgo = Double(random.next() % (3 * 365 * 24))
+            context.insert(Sighting(speciesID: label, confirmedAt: Date.now.addingTimeInterval(-hoursAgo * 3600), location: location, soundConfidence: 0.7, source: .phone))
+        }
+        try? context.save()
+    }
+
+    private struct SplitMix {
+        var state: UInt64
+
+        mutating func next() -> UInt64 {
+            state &+= 0x9E37_79B9_7F4A_7C15
+            var z = state
+            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+            return z ^ (z >> 31)
+        }
     }
 
     /// A stand-in camera frame at the glasses stream's portrait size (360 × 640, DECISIONS.md): a green field with
@@ -482,6 +589,19 @@ enum DebugSeeds {
             border.stroke()
         }
         return image.jpegData(compressionQuality: 0.85) ?? Data()
+    }
+}
+/// `-fakeRunBirds`: a run's list from the launch arguments.
+enum FakeRunBirds {
+    static var stack: CandidateStack? {
+        guard let labels = UserDefaults.standard.string(forKey: "fakeRunBirds") else { return nil }
+        return CandidateStack(candidates: labels.split(separator: ",").enumerated().map { position, label in
+            let parts = label.split(separator: "_", maxSplits: 1).map(String.init)
+            let species = Species(index: position, scientificName: parts[0], commonName: parts.last ?? parts[0], taxonomicClass: "Aves")
+            // A clock far ahead keeps the first calling for good; the others fell quiet before the run began.
+            let heard = position == 0 ? 1_000_000 : Double(-60 * (2 * position + 1))
+            return Candidate(species: species, score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: heard, admittedAt: Double(position))
+        })
     }
 }
 #endif

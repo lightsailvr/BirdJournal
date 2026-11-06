@@ -13,9 +13,9 @@ struct PatchShareImage: View {
         var name: String
         /// The pack's reviewed story title; the app never invents one.
         var storyTitle: String?
-        /// "Citrus edition · Pasadena · Nov 3, 2026".
+        /// "Citrus edition, Pasadena, Nov 3, 2026".
         var line: String
-        /// "AI illustration · Featherguild", the wordmark small.
+        /// "AI illustration, Featherguild", the wordmark small.
         var imprint: String
         /// "Patch from a reference photo: © Name (CC BY). Story text: CC BY-SA 4.0."; nil when nothing needs crediting.
         var credits: String?
@@ -107,8 +107,8 @@ extension PatchShareImage.Facts {
         let date = sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted)
         self.name = name
         storyTitle = lore?.title?.nilIfEmpty
-        line = [placement?.editionLabel, place, date].compactMap { $0 }.joined(separator: " · ")
-        imprint = hasPainting ? "AI illustration · Featherguild" : "Featherguild"
+        line = [placement?.editionLabel, place, date].compactMap { $0 }.joined(separator: ", ")
+        imprint = hasPainting ? "AI illustration, Featherguild" : "Featherguild"
         var credits: [String] = []
         if !photoCredits.isEmpty { credits.append("Patch from a reference photo: \(photoCredits.joined(separator: "; ")).") }
         if storyTitle != nil { credits.append("Story text: CC BY-SA 4.0.") }

@@ -91,6 +91,13 @@ def test_unregistering_stops_the_account_s_pushes_and_leaves_another_s(
     assert "Item" not in table.get_item(Key={"pk": f"DEVICE#{ADA_PHONE}", "sk": "DEVICE"})
 
 
+def test_a_token_s_trailing_newline_is_trimmed_before_it_is_checked(
+    client: TestClient, issuer: TestIssuer, table: Any
+) -> None:
+    assert _register(client, issuer, "ada", f"{ADA_PHONE}%0A").status_code == 204
+    assert table.get_item(Key={"pk": "ACCOUNT#ada", "sk": f"DEVICE#{ADA_PHONE}"})["Item"]["token"] == ADA_PHONE
+
+
 @pytest.mark.parametrize("token", ["xyz", "a" * 63, "g" * 64, "a" * 201])
 def test_a_bad_token_is_refused(client: TestClient, issuer: TestIssuer, token: str) -> None:
     assert _register(client, issuer, "ada", token).status_code == 422
@@ -114,7 +121,7 @@ def test_a_new_patch_pushes_at_once_to_every_friend_with_the_find(
         assert push.kind is PushKind.NOTABLE
     push = apns.to(BO_PHONE)[0]
     payload = push.payload()
-    assert payload["aps"]["alert"] == {"title": "Ada Lovelace found a Black Phoebe", "body": "New patch · Pasadena"}
+    assert payload["aps"]["alert"] == {"title": "Ada Lovelace found a Black Phoebe", "body": "New patch, Pasadena"}
     assert payload["aps"]["content-available"] == 1
     assert payload["aps"]["thread-id"] == "friend-ada"
     assert payload["find"] == {
@@ -144,7 +151,7 @@ def test_a_new_patch_push_says_its_edition_for_the_phone_and_new_patch_for_the_b
 ) -> None:
     _put_ok(client, issuer, "ada", _find(PHOEBE, new_patch=True, edition="us-ca-la"))
     (push,) = apns.to(BO_PHONE)
-    assert push.body == "New patch · Pasadena"
+    assert push.body == "New patch, Pasadena"
     assert "Legendary" not in str(push.title) + str(push.body)
     assert push.data["find"]["new_patch"] is True
     assert push.data["find"]["edition"] == "us-ca-la"
@@ -167,7 +174,7 @@ def test_an_old_beta_clients_legendary_still_makes_a_notable_find(
     sighting = _put_ok(client, issuer, "ada", body)
     (push,) = apns.to(BO_PHONE)
     assert push.kind is PushKind.NOTABLE
-    assert push.body == "New patch · Pasadena"
+    assert push.body == "New patch, Pasadena"
     assert push.data["find"]["sighting_id"] == sighting and push.data["find"]["new_patch"] is True
 
 
@@ -189,7 +196,7 @@ def test_rare_and_exceptional_are_notable(
     (push,) = apns.to(BO_PHONE)
     assert push.kind is (PushKind.NOTABLE if notable else PushKind.REFRESH)
     if notable:
-        assert push.payload()["aps"]["alert"]["body"] == f"{rarity.capitalize()} · Pasadena"  # type: ignore[union-attr]
+        assert push.payload()["aps"]["alert"]["body"] == f"{rarity.capitalize()}, Pasadena"  # type: ignore[union-attr]
 
 
 def test_a_circle_first_is_notable_and_the_next_of_its_species_is_not(

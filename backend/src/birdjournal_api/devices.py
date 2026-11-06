@@ -52,7 +52,7 @@ class Mutes:
 def clean_token(raw: str) -> str:
     """The token as stored: lower-case hex. Raises ValueError otherwise."""
     token = raw.strip().lower()
-    if not _TOKEN.match(token):
+    if not _TOKEN.fullmatch(token):
         raise ValueError("bad_device_token")
     return token
 

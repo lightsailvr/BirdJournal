@@ -66,8 +66,10 @@ struct CompareBirdsView: View {
     @Query private var sightings: [Sighting]
     let friendID: String
     let friendName: String
-    @State private var friend: FriendBirds?
     @State private var error: String?
+
+    /// What was last read of the friend, drawn at once and refreshed in place.
+    private var friend: FriendBirds? { circles.friendBirds[friendID] }
 
     private var firstName: String { friendName.split(separator: " ").first.map(String.init) ?? friendName }
 
@@ -102,7 +104,7 @@ struct CompareBirdsView: View {
                     Button("Try again") { Task { await load() } }
                 }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder(rows: 4) }
             }
         }
         .navigationTitle("You and \(firstName)")
@@ -128,7 +130,7 @@ struct CompareBirdsView: View {
                 }
             } header: {
                 HStack {
-                    Text("\(header) · \(rows.count)")
+                    Text("\(header), \(rows.count)")
                     Spacer()
                     Text("You").frame(width: CompareRow.column)
                     Text(firstName).lineLimit(1).frame(width: CompareRow.column)
@@ -139,7 +141,7 @@ struct CompareBirdsView: View {
 
     private func load() async {
         do {
-            friend = try await circles.compare(friendID: friendID)
+            try await circles.compare(friendID: friendID)
             error = nil
         } catch {
             self.error = CircleStore.message(for: error, doing: "compare your birds")
@@ -175,13 +177,13 @@ private struct MethodBadge: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.mossText)
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(Color.moss, in: .capsule)
+                .background(.tint, in: .capsule)
         case .heard:
             Text("Heard")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.moss)
+                .foregroundStyle(.tint)
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .overlay(Capsule().strokeBorder(Color.moss, lineWidth: 1))
+                .overlay(Capsule().strokeBorder(.tint, lineWidth: 1))
         case nil:
             Text("Not yet")
                 .font(.caption)

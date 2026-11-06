@@ -56,11 +56,11 @@ enum SharePolicy {
         let attribution: String?
         if choices.useSnapshot, let frame = sighting.frameImagePath {
             picture = .snapshot(framePath: frame)
-            caption = "My glasses snapshot · Featherguild"
+            caption = "My glasses snapshot, Featherguild"
             attribution = nil
         } else if let reference, mayShare(reference) {
             picture = .reference(reference)
-            caption = "Reference photo · \(reference.shortCredit)"
+            caption = "Reference photo. \(reference.shortCredit)"
             attribution = "Photo: \(reference.creditLine), via iNaturalist \(reference.sourceURL.absoluteString)"
         } else {
             picture = .none
@@ -80,15 +80,14 @@ enum SharePolicy {
         )
     }
 
-    /// The text that goes with the card: the sighting in a line, the note, and the credit.
+    /// The text that goes with the image: the bird, then when and where on their own line, the note, and the credit.
     static func text(for content: Content) -> String {
         var lines: [String] = []
-        var first = "\(content.commonName) (\(content.scientificName))"
-        if let date = content.dateText { first += " · \(date)" }
-        if let area = content.areaText { first += " · \(area)" }
-        lines.append(first)
+        lines.append("\(content.commonName) (\(content.scientificName))")
+        let whenAndWhere = [content.dateText, content.areaText].compactMap { $0 }
+        if !whenAndWhere.isEmpty { lines.append(whenAndWhere.joined(separator: ", ")) }
         if let note = content.note { lines.append("“\(note)”") }
-        lines.append("Heard with Featherguild · Powered by BirdNET")
+        lines.append("Heard with Featherguild. Powered by BirdNET.")
         if let attribution = content.attribution { lines.append(attribution) }
         return lines.joined(separator: "\n")
     }

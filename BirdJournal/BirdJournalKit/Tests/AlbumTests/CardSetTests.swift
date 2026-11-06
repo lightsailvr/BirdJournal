@@ -62,6 +62,16 @@ struct CardSetTests {
         UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))!
     }
 
+    @Test("a place's set is the one whose smallest part contains it, whatever birds it lists; outside them all there's none")
+    func aPlacesSet() {
+        let sets = [Self.sanDiego, Self.deserts, Self.losAngeles]
+        #expect(CardSet.containing(Self.griffithPark, in: sets)?.id == "us-ca-la")
+        #expect(CardSet.containing(Self.balboaPark, in: sets)?.id == "us-ca-sd")
+        #expect(CardSet.containing(Self.borregoSprings, in: sets)?.id == "us-ca-desert", "Anza-Borrego wins over the county")
+        #expect(CardSet.containing(Self.portland, in: sets) == nil)
+        #expect(CardSet.containing(Self.griffithPark, in: []) == nil)
+    }
+
     @Test("an Anza-Borrego point inside San Diego County goes to the Deserts set: the smallest region wins")
     func smallestRegionWins() {
         let collection = CardCollection([Self.card(Self.finch, at: Self.borregoSprings, id: 1)], sets: Self.sets)
@@ -114,7 +124,10 @@ struct CardSetTests {
         )
         let losAngeles = collection.progress(of: "us-ca-la")
         #expect(losAngeles == SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: 2, total: 160))
-        #expect(losAngeles.text == "Los Angeles · 2 of 160")
+        #expect(losAngeles.text == "Los Angeles, 2 of 160")
+        #expect(losAngeles.sewnText == "2 of 160 sewn")
+        #expect(losAngeles.stillOutThereText == "158 still out there")
+        #expect(SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: 160, total: 160).stillOutThereText == "All 160 sewn")
         #expect(collection.progress(of: "us-ca-sd").collected == 1, "the phoebe; the finch was never added in San Diego")
         #expect(collection.progress(of: "us-ca-desert").collected == 0)
         #expect(collection.progress.map(\.setID) == ["us-ca-la", "us-ca-sd"], "only sets with a card, most collected first")

@@ -8,6 +8,29 @@ The approved direction for the collection (November 3, 2026), built by #131 and 
 
 The PDF, the clickable prototype (13 journey steps, the lighting, the stitch-in and the flip) and the sample patches stay on the maintainer's machine, in `~/Desktop/featherguild-design-guide-v2-patches.pdf` and `build/badge-guide/`. Their art was painted on comfybox with FLUX.3 Image Klein from the Los Angeles pack's isolated reference birds.
 
+## Amendment: the widened material rule (November 5, 2026, #150)
+
+Guide 2.0 limited material to the objects you collect, and kept guide 1.0 as the reference for everything it didn't redraw. So a few screens spoke 2.0 and the rest still spoke 1.0. The maintainer has widened the rule. It decides how anything looks, and where it differs from a page of this guide or of 1.0, it wins:
+
+> If you earned it or belong to it, it's an object you could hold. If you read it, it's printed on paper. If you operate it, it's plain iOS.
+
+- **Objects**: patches, felt and linen, and a Guild's page. A feed of finds is a run of objects, so it may sit on felt.
+- **Printed matter**: the paper card, the Atlas's plates and the share image. Tracked capitals stay on the paper card's edition line and the wordmark, and nowhere else.
+- **Plain iOS**: controls, navigation, and the lists that operate something, such as Settings and a Guild's Info sheet.
+
+One picture grammar runs through every screen: a patch means someone found this bird, a photo is reference, and a silhouette means it's still out there.
+
+These bans stay, with this rule in force:
+
+- No fake stitching on buttons. A progress bar isn't a button, so thread may show progress.
+- No stitched or embossed type.
+- No felt behind lists of controls.
+- No wood grain or brushed metal on chrome.
+- No idle glints: the light moves only when you move.
+- No heraldry, confetti, XP or scarcity.
+
+The light page moved from ivory `#F4F2E9` to a pale sage-grey `#EEF1EC` in the same issue, and page 16's value is superseded. Card stock keeps its colour, with its fibre eased on linen so that the paper measures lighter than the cloth. The words are in `CONTEXT.md`, "Words a birder reads".
+
 ## Pages
 
 | Page | Content |

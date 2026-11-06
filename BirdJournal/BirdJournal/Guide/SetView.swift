@@ -1,22 +1,21 @@
 import Album
 import Pack
-import SwiftData
 import SwiftUI
 
 /// One set's page (issue #54): its species in collector order, each with its number; a species with a patch in the set
-/// shows its photo, and one not yet found there shows as a silhouette (guide page 15's state, without the pattern: see
+/// shows the patch, and one not yet found there shows as a silhouette (guide page 15's state, without the pattern: see
 /// DECISIONS.md, issue #138), so the page reads as what is still out there. Reached from the Atlas's set tiles and the Collection's set progress; every row opens the bird's
 /// profile. It leads with the set's tile (#118): the cover, "Ready offline" or the download, and "Species collected".
 /// Works for a set whose pack isn't downloaded: the names come from the set definition.
 struct SetView: View {
     @Environment(PackLibrary.self) private var library
-    @Query private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     let id: String
     @State private var query = ""
 
     var body: some View {
         if let set = library.sets.first(where: { $0.id == id }) {
-            let collection = library.collection(of: sightings)
+            let collection = collectionStore.collection
             let collected = collection.collected(in: set.id)
             let progress = collection.progress(of: set.id)
             ScrollView {
@@ -26,7 +25,7 @@ struct SetView: View {
                             .padding(.top, 4)
                     }
                     if query.isEmpty, library.pack(id: set.id) == nil {
-                        Text("This pack isn't on your iPhone yet: downloading it adds photos, sounds and field notes, not birds. Patches you sew in its region count toward the set either way.")
+                        Text("This set's field guide isn't on your iPhone yet: downloading it adds photos, sounds and field notes, not birds. Patches you sew here count toward the set either way.")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 8)
@@ -36,11 +35,14 @@ struct SetView: View {
                         NoSearchMatch(query: query) { query = "" }
                             .padding(.top, 12)
                     }
-                    VStack(spacing: 0) {
+                    if query.isEmpty {
+                        SectionTitle(progress.stillOutThereText, top: 20)
+                    }
+                    LazyVStack(spacing: 0) {
                         ForEach(shown, id: \.element.scientificName) { offset, species in
                             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: species.commonName)) {
                                 SetSpeciesRow(
-                                    number: CardPlacement.paddedNumber(offset + 1, of: set.species.count), species: species,
+                                    number: CardPlacement.paddedNumber(offset + 1, of: set.species.count), species: species, setID: set.id,
                                     isCollected: collected.contains(species.scientificName)
                                 )
                             }
@@ -48,45 +50,48 @@ struct SetView: View {
                             RowRule()
                         }
                     }
-                    .padding(.top, 12)
+                    .padding(.top, 4)
                 }
                 .padding(.horizontal, JournalLayout.margin)
                 .padding(.bottom, JournalLayout.sectionGap)
             }
             .background(Color.paper)
+            .holdsPatchLight()
             .navigationTitle(set.name)
             // Listen's bar, which this can be pushed from, is inline.
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search \(set.name) birds")
+            // A set's page is in its own edition, wherever the birder is (issue #150).
+            .tint(PatchEdition.tint(setID: set.id))
         } else {
-            ContentUnavailableView("Set not found", systemImage: "square.stack.3d.down.right", description: Text("The pack index no longer lists this set."))
-                .background(Color.paper)
+            StateNotice("Set not found", message: "The list of sets no longer includes this one.", mark: .symbol("square.stack.3d.down.right"))
+                .statePage()
         }
     }
 }
 
-/// One species of a set: its collector number, its photo once collected (a collected bird whose pack isn't on the
-/// phone has no photo, so the row also says Collected) or a silhouette, and its names.
+/// One species of a set: its collector number, your patch in this set's edition once sewn (a bird whose pack isn't on the phone
+/// has only the blank, so the row also says Sewn) or a silhouette, and its names. A silhouette needs no words: the heading
+/// above counts them.
 private struct SetSpeciesRow: View {
-    @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
     /// e.g. "021".
     let number: String
     let species: PackSet.Species
+    /// The set's id.
+    let setID: String
     let isCollected: Bool
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            Group {
-                if isCollected {
-                    PackImage(url: library.thumbnailURL(scientificName: species.scientificName))
-                } else {
-                    SpeciesSilhouette()
-                }
+            if isCollected {
+                RowPicture(source: .patch(scientificName: species.scientificName, setID: setID))
+            } else {
+                SpeciesSilhouette()
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                    .rowPicture()
+                    .accessibilityHidden(true)
             }
-            .frame(width: 64, height: 64)
-            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-            .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(number)
                     .font(JournalFont.attribution.monospacedDigit())
@@ -98,13 +103,9 @@ private struct SetSpeciesRow: View {
                     .font(JournalFont.scientific)
                     .foregroundStyle(Color.inkSecondary)
                 if isCollected {
-                    Label("Collected", systemImage: "checkmark")
+                    Label("Sewn", systemImage: "checkmark")
                         .font(JournalFont.attribution.weight(.semibold))
-                        .foregroundStyle(Color.mossText)
-                } else {
-                    Text("Not yet found here")
-                        .font(JournalFont.attribution)
-                        .foregroundStyle(Color.inkSecondary)
+                        .foregroundStyle(Color.ink)
                 }
             }
             Spacer(minLength: 4)
@@ -115,7 +116,7 @@ private struct SetSpeciesRow: View {
         .padding(.vertical, 10)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel([number, species.commonName, isCollected ? "collected" : "not yet found here"].joined(separator: ", "))
+        .accessibilityLabel([number, species.commonName, isCollected ? "sewn" : "still out there"].joined(separator: ", "))
         .accessibilityIdentifier(isCollected ? "set-species-collected" : "set-species-silhouette")
     }
 }

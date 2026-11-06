@@ -6,23 +6,25 @@ import SwiftUI
 /// the ivory inks measured 1.5–2.2:1 on it; on the page they keep the 4.5:1 `TokenPairingTests` measures.
 struct ListeningAccessory: View {
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let showListen: () -> Void
 
     var body: some View {
+        let hunt = run.hunt(in: collectionStore.collection)
         HStack(spacing: 12) {
             Button(action: showListen) {
                 HStack(spacing: 10) {
                     Image(systemName: run.state == .listening ? "waveform" : "pause.circle")
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                         .symbolEffect(.variableColor.iterative, isActive: run.state == .listening && !reduceMotion)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(title)
                             .font(JournalFont.supporting.weight(.semibold))
                             .foregroundStyle(Color.ink)
                         if placement != .inline {
-                            Text(run.summary)
+                            Text(hunt.short)
                                 .font(.caption)
                                 .foregroundStyle(Color.inkSecondary)
                         }
@@ -33,7 +35,7 @@ struct ListeningAccessory: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(title). \(run.summary). Show the Listen tab.")
+            .accessibilityLabel("\(title). \(hunt.text). Show the Listen tab.")
 
             Button {
                 Task { await run.stop() }
@@ -42,7 +44,7 @@ struct ListeningAccessory: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.mossText)
                     .frame(width: 40, height: 40)
-                    .background(Color.moss, in: Circle())
+                    .background(.tint, in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(run.state == .stopping || run.state == .starting)

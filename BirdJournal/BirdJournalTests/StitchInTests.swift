@@ -269,7 +269,7 @@ struct SewingCeremonyAccessibilityTests {
         let context = harness.album.mainContext
         let all = try context.fetch(Sighting.newestFirst())
         let phoebe = try #require(all.first { $0.scientificName == "Sayornis nigricans" })
-        let placement = try #require(harness.library.collection(of: all).placement(of: phoebe.identifier))
+        let placement = try #require(CardCollection(sightings: all, sets: harness.library.cardSets).placement(of: phoebe.identifier))
         #expect(placement.setID != nil, "in the Los Angeles set")
         harness.run.showRevealForScreenshot(of: phoebe, placement: placement)
         return harness
@@ -291,7 +291,7 @@ struct SewingCeremonyAccessibilityTests {
         }
         ScreenAccessibilityTests.expectClean(labels, screen: "New patch")
         #expect(!labels.contains { $0.hasPrefix("Sewing") }, "no stitching: \(labels)")
-        #expect(labels.contains("New patch · Citrus edition"), "\(labels)")
+        #expect(labels.contains("New patch, Citrus edition"), "\(labels)")
         #expect(labels.contains("Your first Black Phoebe in Los Angeles"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn ") }, "the patch in words: \(labels)")
         #expect(labels.contains("Done"), "no run: back to where the add was: \(labels)")
@@ -316,7 +316,7 @@ struct SewingCeremonyAccessibilityTests {
         ScreenAccessibilityTests.expectClean(labels, screen: "New patch, more waiting")
         #expect(labels.contains { $0.hasPrefix("Your first Black Phoebe") }, "\(labels)")
         #expect(labels.contains("Next patch"), "\(labels)")
-        #expect(labels.contains("Skip the rest · 1 more"), "\(labels)")
+        #expect(labels.contains("Skip the rest, 1 more"), "\(labels)")
         #expect(!labels.contains("See it in my collection"), "\(labels)")
         #expect(!labels.contains("Undo adding Black Phoebe"), "\(labels)")
     }
@@ -377,7 +377,7 @@ struct RevealWordsTests {
 
     @Test("the number line under the name, in a set; none outside every set")
     func numberLine() {
-        #expect(PatchText.revealNumberLine(Self.placement) == "No. 019 of 160 · Los Angeles")
+        #expect(PatchText.revealNumberLine(Self.placement) == "No. 019 of 160, Los Angeles")
         #expect(PatchText.revealNumberLine(.uncharted) == nil)
     }
 }

@@ -12,8 +12,8 @@ first on the phone (`apns-collapse-id` per find) and so names the first's reacti
 again. Mutes hold: a muted friend's reactions never push, nor do those that reach the owner only through muted
 circles.
 
-**Compare birds**: a friend's species with their best method (Seen beats Heard), from their finds that went to the
-circles the two share now. The phone merges in its own collection.
+**Compare birds**: a friend's species with their best method (Seen beats Heard) and the editions they found each in,
+from their finds that went to the circles the two share now. The phone merges in its own collection.
 
 Items, beside the finds' (finds.py):
 
@@ -28,8 +28,9 @@ Items, beside the finds' (finds.py):
 """
 
 import logging
+from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Any
@@ -47,6 +48,7 @@ from birdjournal_api.finds import (
     reaction_buffer_key,
     reaction_push_key,
     reactor_copy_key,
+    stored_edition,
 )
 from birdjournal_api.pushes import FRIEND_FALLBACK, Push, PushKind, PushService
 
@@ -91,6 +93,8 @@ class ComparedSpecies:
     scientific_name: str
     common_name: str
     method: Method
+    # The sets the friend found it in, by pack id, earliest found first; finds outside every set name none.
+    editions: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -102,7 +106,7 @@ class ReactionFlushReport:
 
 def reaction_words(reactor_names: list[str], common_name: str, kinds: list[ReactionKind]) -> tuple[str, str]:
     """"Bo reacted to your Black Phoebe" / "Lovely find"; "Bo and Cy …", "Bo and 2 others …"; the kinds in their
-    fixed order, joined by " · "."""
+    fixed order: "Lovely find, Jealous! Let's go together"."""
     names = list(dict.fromkeys(reactor_names)) or [FRIEND_FALLBACK]
     if len(names) == 1:
         who = names[0]
@@ -111,7 +115,11 @@ def reaction_words(reactor_names: list[str], common_name: str, kinds: list[React
     else:
         who = f"{names[0]} and {len(names) - 1} others"
     ordered = [kind for kind in KINDS if kind in set(kinds)]
-    return f"{who} reacted to your {common_name}", " · ".join(kind.words for kind in ordered)
+    body = ""
+    for kind in ordered:
+        # A comma after "Jealous!" would read wrongly, so its exclamation mark is the only break there.
+        body += kind.words if not body else (" " if body.endswith("!") else ", ") + kind.words
+    return f"{who} reacted to your {common_name}", body
 
 
 def counts_of(reactions: list[tuple[str, ReactionKind]], reader: str) -> list[ReactionCount]:
@@ -195,16 +203,18 @@ class ReactionStore:
     # Compare birds.
 
     def compare(self, subject: str, friend: str) -> list[ComparedSpecies]:
-        """The friend's species, best method first (Seen beats Heard), from their finds in the circles the two share
-        now. NotFound when they share none."""
+        """The friend's species with their best method (Seen beats Heard) and every edition they found it in, from
+        their finds in the circles the two share now, by common name. NotFound when they share none."""
         shared = set(self._circles.circle_ids_of(subject)) & set(self._circles.circle_ids_of(friend))
         if not shared or friend in self._mutes.blocked_by(subject):
             # A blocked friend's birds are hidden like their finds (#71).
             raise NotFound()
         best: dict[str, ComparedSpecies] = {}
+        # By species, each edition's earliest found minute (sortable as text).
+        editions: defaultdict[str, dict[str, str]] = defaultdict(dict)
         kwargs: dict[str, Any] = {
             "KeyConditionExpression": Key("pk").eq(f"ACCOUNT#{friend}") & Key("sk").begins_with("FIND#"),
-            "ProjectionExpression": "species_id, scientific_name, common_name, #method, circle_ids",
+            "ProjectionExpression": "species_id, scientific_name, common_name, #method, circle_ids, edition, art_key, found_at",
             "ExpressionAttributeNames": {"#method": "method"},
             "ConsistentRead": True,
         }
@@ -220,10 +230,19 @@ class ReactionStore:
                 current = best.get(species.scientific_name)
                 if current is None or (current.method is Method.HEARD and species.method is Method.SEEN):
                     best[species.scientific_name] = species
+                if edition := stored_edition(item):
+                    found = editions[species.scientific_name]
+                    found[edition] = min(found.get(edition, item["found_at"]), item["found_at"])
             if "LastEvaluatedKey" not in response:
                 break
             kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
-        return sorted(best.values(), key=lambda species: species.common_name)
+        return sorted(
+            (
+                replace(species, editions=tuple(sorted(editions[name], key=lambda e: (editions[name][e], e))))
+                for name, species in best.items()
+            ),
+            key=lambda species: species.common_name,
+        )
 
     # The owner's push.
 

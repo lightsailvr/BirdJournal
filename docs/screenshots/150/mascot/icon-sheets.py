@@ -1,0 +1,54 @@
+# /// script
+# dependencies = ["pillow"]
+# ///
+"""Issue #150 slice 11's icon sheets, at the simulator's true pixels, so an icon is seen at the size it is on a phone.
+
+uv run docs/screenshots/150/mascot/icon-sheets.py <folder of shots> <out folder> <art/mascot/icons> <AppIconPreview folder> <art/mascot/approved>
+"""
+import pathlib
+import sys
+
+from PIL import Image, ImageDraw
+
+shots, out, old_icons, previews, approved = map(pathlib.Path, sys.argv[1:])
+BIRDS = ["red-tailed-hawk", "blue-bird", "great-egret", "house-finch", "prothonotary-warbler", "stellers-jay"]
+ICON = (880, 540, 1206, 840)  # the Featherguild icon and its label on the home screen, in pixels of a 402 pt screen at 3x
+
+
+def labelled(pictures):
+    width = sum(p.width for _, p in pictures) + 8 * (len(pictures) + 1)
+    sheet = Image.new("RGB", (width, max(p.height for _, p in pictures) + 34), "#1b2b2e")
+    draw = ImageDraw.Draw(sheet)
+    x = 8
+    for name, picture in pictures:
+        draw.text((x + 2, 6), name, fill="#e8e4d8")
+        sheet.paste(picture.convert("RGB"), (x, 26))
+        x += picture.width + 8
+    return sheet
+
+
+def screen(name):
+    return Image.open(shots / f"{name}.png").crop(ICON)
+
+
+labelled([("before: hawk", screen("before-home")), *[(bird, screen(f"home-{bird}")) for bird in BIRDS]]).save(out / "home-icons.jpg", quality=88)
+labelled([(r, Image.open(shots / f"r-{r}.png")) for r in ("Default", "Dark", "TintedLight", "TintedDark", "ClearLight", "ClearDark")]).save(out / "icon-appearances.jpg", quality=88)
+
+# The Settings page's thumbnails, the pictures they replace above them: the pictures, since the old build has no way to that page.
+NAMES = dict(zip(BIRDS, ["RedTailedHawk", "Default", "GreatEgret", "HouseFinch", "ProthonotaryWarbler", "StellersJay"]))
+before = labelled([(f"before: {bird}", Image.open(old_icons / f"{bird}.png").convert("RGB").resize((180, 180), Image.LANCZOS)) for bird in BIRDS])
+after = labelled([(bird, Image.open(previews / f"MyBirdJournal-{NAMES[bird]}.imageset" / f"MyBirdJournal-{NAMES[bird]}.png")) for bird in BIRDS])
+thumbnails = Image.new("RGB", (before.width, before.height + after.height), "#1b2b2e")
+thumbnails.paste(before, (0, 0))
+thumbnails.paste(after, (0, before.height))
+thumbnails.save(out / "icon-thumbnails.jpg", quality=88)
+
+# The finch's pale rim, four times size, on the felt's colour: lower left and lower right of the approved picture, with no shadow.
+patch = Image.open(approved / "perched-finch.png").convert("RGBA")
+felt = Image.new("RGBA", patch.size, (20, 50, 58, 255))
+felt.alpha_composite(patch)
+felt = felt.convert("RGB")
+rim = Image.new("RGB", (1290, 640), "white")
+rim.paste(felt.crop((0, 700, 160, 860)).resize((640, 640), Image.LANCZOS), (0, 0))
+rim.paste(felt.crop((felt.width - 200, 720, felt.width - 40, 880)).resize((640, 640), Image.LANCZOS), (650, 0))
+rim.save(out / "finch-edge-sliver.jpg", quality=90)

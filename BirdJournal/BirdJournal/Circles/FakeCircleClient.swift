@@ -47,8 +47,20 @@ final class FakeCircleClient: CircleClient {
     /// Every reaction given or taken back, for the tests: `put lovely maya/<id>` or `delete …`.
     private(set) var reactionLog: [String] = []
 
-    /// `-fakeCircles offline` (issue #119): the list can't be read, as with no connection.
+    /// `-fakeCircles offline` (issue #119): nothing can be read, as with no connection.
     var isOffline = false
+    /// `-fakeCircleLatency <seconds>` (issue #150): how long each read takes, as on a slow connection, so the screens' waiting
+    /// states can be seen and measured.
+    var latency: Duration = .zero
+
+    /// How long Compare's answer takes to come back once the server has read it, for the tests of what lands meanwhile.
+    var compareAnswerLatency: Duration = .zero
+
+    /// A read's time on the wire, which offline ends in no answer.
+    private func wire() async throws {
+        if latency > .zero { try? await Task.sleep(for: latency) }
+        if isOffline { throw URLError(.notConnectedToInternet) }
+    }
 
     init(seeded: Bool, offline: Bool = false, now: @escaping () -> Date = Date.init) {
         self.now = now
@@ -70,7 +82,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func circles(accessToken: String) async throws -> [CircleSummary] {
-        if isOffline { throw URLError(.notConnectedToInternet) }
+        try await wire()
         return order.compactMap { circlesByID[$0] }.filter { $0.members.contains { $0.id == Self.me } }.map { summary($0) }
     }
 
@@ -82,6 +94,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func circle(id: String, accessToken: String) async throws -> CircleDetail {
+        try await wire()
         guard let detail = circlesByID[id], detail.members.contains(where: { $0.id == Self.me }) else { throw CircleError.notFound }
         return withViewer(detail)
     }
@@ -96,6 +109,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func invitePreview(token: String, accessToken: String) async throws -> InvitePreview {
+        try await wire()
         let (detail, expires) = try live(token)
         return InvitePreview(
             circle: summary(detail),
@@ -238,7 +252,10 @@ final class FakeCircleClient: CircleClient {
         deviceLog.append("unregister \(token)")
     }
 
-    func mutes(accessToken: String) async throws -> Mutes { muted }
+    func mutes(accessToken: String) async throws -> Mutes {
+        try await wire()
+        return muted
+    }
 
     func report(_ report: ReportDraft, accessToken: String) async throws {
         guard report.accountID != Self.me else { throw CircleError.ownAccount }
@@ -250,7 +267,8 @@ final class FakeCircleClient: CircleClient {
     }
 
     func blocks(accessToken: String) async throws -> [BlockedAccount] {
-        blockedIDs.map { id in BlockedAccount(id: id, displayName: name(of: id)) }
+        try await wire()
+        return blockedIDs.map { id in BlockedAccount(id: id, displayName: name(of: id)) }
     }
 
     func setBlocked(_ blocked: Bool, accountID: String, accessToken: String) async throws {
@@ -417,11 +435,12 @@ final class FakeCircleClient: CircleClient {
     }
 
     func compare(friendID: String, accessToken: String) async throws -> FriendBirds {
+        try await wire()
         let shared = order.filter { id in
             let members = circlesByID[id]?.members ?? []
             return members.contains { $0.id == Self.me } && members.contains { $0.id == friendID }
         }
-        guard friendID != Self.me, !shared.isEmpty else { throw CircleError.notFound }
+        guard friendID != Self.me, !shared.isEmpty, !blockedIDs.contains(friendID) else { throw CircleError.notFound }
         var best: [String: FriendBirds.Species] = [:]
         for item in shared.flatMap({ feedItems[$0] ?? [] }) where item.owner.id == friendID {
             if best[item.scientificName]?.method != .seen {
@@ -429,7 +448,9 @@ final class FakeCircleClient: CircleClient {
             }
         }
         let name = shared.lazy.compactMap { self.circlesByID[$0]?.members.first { $0.id == friendID }?.displayName }.first
-        return FriendBirds(friend: .init(id: friendID, displayName: name), species: best.values.sorted { $0.commonName < $1.commonName })
+        let birds = FriendBirds(friend: .init(id: friendID, displayName: name), species: best.values.sorted { $0.commonName < $1.commonName })
+        if compareAnswerLatency > .zero { try? await Task.sleep(for: compareAnswerLatency) }
+        return birds
     }
 
     private func counts(of itemID: String) -> [ReactionCount] {

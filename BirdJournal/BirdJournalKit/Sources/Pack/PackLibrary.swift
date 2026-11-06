@@ -38,15 +38,17 @@ public final class PackLibrary {
     @ObservationIgnored private let downloader: PackDownloader
     @ObservationIgnored private let session: URLSession
     @ObservationIgnored private let availableCapacity: () -> Int64?
+    @ObservationIgnored private let bundledCovers: BundledCovers
 
     /// Free space a download must leave besides the zip and its unpacked copy.
     public static let storageHeadroom: Int64 = 100 << 20
 
     /// - Parameter availableCapacity: free bytes on the phone before a download, nil when unknown; the storage's
     ///   own reading by default.
+    /// - Parameter bundledCovers: the set covers and definitions that ship with the app.
     public init(
         bundled: SpeciesPack?, storage: PackStorage, indexURL: URL = PackIndex.defaultURL, session: URLSession = .shared,
-        availableCapacity: (() -> Int64?)? = nil
+        availableCapacity: (() -> Int64?)? = nil, bundledCovers: BundledCovers = .shipped
     ) {
         self.bundled = bundled
         self.storage = storage
@@ -54,6 +56,7 @@ public final class PackLibrary {
         self.session = session
         self.downloader = PackDownloader(session: session)
         self.availableCapacity = availableCapacity ?? { storage.availableCapacity() }
+        self.bundledCovers = bundledCovers
         self.installed = storage.installed()
         // The last good index until a fetch replaces it, so its sets work offline from launch (issue #54).
         self.index = storage.cachedIndex()
@@ -125,9 +128,9 @@ public final class PackLibrary {
         return nil
     }
 
-    /// Every set the phone knows (issue #54): each readable pack's own, then the index's for packs not on the phone, one
-    /// per pack id. A set therefore works before its pack is downloaded, and an installed pack's set is the one its
-    /// cards and Field Guide read.
+    /// Every set the phone knows (issue #54): each readable pack's own, then the index's for packs not on the phone, then the
+    /// ones that shipped with the app (issue #150), one per pack id. A set therefore works before its pack is downloaded and
+    /// before the index has ever been read, and an installed pack's set is the one its cards and Field Guide read.
     public var sets: [PackSet] {
         var sets = packs.compactMap(\.set)
         var known = Set(sets.map(\.id))
@@ -135,13 +138,16 @@ public final class PackLibrary {
             guard let set = descriptor.set, known.insert(set.id).inserted else { continue }
             sets.append(set)
         }
+        for set in bundledCovers.sets where known.insert(set.id).inserted {
+            sets.append(set)
+        }
         return sets
     }
 
-    /// A set's cover (issue #114) for the Atlas and the Listen tab: the full cover of the pack on the phone whose set it
-    /// is, else the index's thumbnail, so a set shows its landscape before its pack is downloaded; nil when neither has
-    /// one, which the app shows with its designed fallback.
+    /// A set's cover (issue #114) for the Atlas and the Listen tab: the one that ships with the app (issue #150), else the full
+    /// cover of the pack on the phone whose set it is, else the index's thumbnail; nil when none has one.
     public func cover(setID: String) -> SetCover? {
+        if let cover = bundledCovers.cover(setID: setID) { return cover }
         if let pack = pack(id: setID) {
             if let cover = pack.cover, let url = pack.coverURL { return .pack(cover, url) }
         }
@@ -304,10 +310,10 @@ public final class PackLibrary {
     static func message(for error: any Error) -> String {
         switch error {
         case PackInstallError.checksumMismatch: "The download's checksum did not match the index, so it was not installed. Try again."
-        case PackInstallError.wrongPack(let expected, let actual): "The download holds the pack \(actual), not \(expected)."
-        case PackDownloadError.httpStatus(let code): "The pack server answered \(code). Try again later."
-        case let error as ZipError: "The download is not a pack zip (\(error))."
-        case let error as PackError: "The download is not a readable pack (\(error))."
+        case PackInstallError.wrongPack(let expected, let actual): "The download holds \(actual), not \(expected)."
+        case PackDownloadError.httpStatus(let code): "The download server answered \(code). Try again later."
+        case let error as ZipError: "The download is not a field guide (\(error))."
+        case let error as PackError: "The download is not a readable field guide (\(error))."
         case let error as URLError:
             switch error.code {
             case .notConnectedToInternet, .internationalRoamingOff, .dataNotAllowed:
@@ -317,7 +323,7 @@ public final class PackLibrary {
             case .timedOut:
                 "The download timed out. Try again."
             case .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed:
-                "The pack server could not be reached. Try again later."
+                "The download server could not be reached. Try again later."
             default:
                 error.localizedDescription
             }

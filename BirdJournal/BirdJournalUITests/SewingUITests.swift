@@ -30,11 +30,11 @@ final class SewingUITests: XCTestCase {
     /// Reviews the House Finch and taps its add button. The live list re-sorts as birds call, so a tap can land on the row
     /// that has just moved under it: that bird's sheet is closed and the row tried again.
     @MainActor
-    private func add(_ app: XCUIApplication, button: String, row: String = "Review \(SewingUITests.name)") {
-        let review = app.buttons[row]
+    private func add(_ app: XCUIApplication, button: String, row: String? = nil) {
+        let review = row.map { app.buttons[$0] } ?? app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.name), ")).firstMatch
         let add = app.buttons[button]
         for _ in 0..<5 {
-            XCTAssertTrue(review.waitForExistence(timeout: 90), "no \(row); screen: \(app.debugDescription.prefix(3000))")
+            XCTAssertTrue(review.waitForExistence(timeout: 90), "no \(row ?? Self.name); screen: \(app.debugDescription.prefix(3000))")
             review.tap()
             XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "no sheet; screen: \(app.debugDescription.prefix(3000))")
             if app.staticTexts[Self.name].exists, add.waitForExistence(timeout: 10) {
@@ -56,7 +56,7 @@ final class SewingUITests: XCTestCase {
         XCTAssertTrue(stitching.waitForExistence(timeout: 10), "no stitch-in; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(stitching.label, "Sewing your \(Self.name) patch")
         // The page's own line: "Your first …" is also the acknowledgment's, in the toast under the page.
-        let reveal = app.staticTexts["New patch · Citrus edition"]
+        let reveal = app.staticTexts["New patch, Citrus edition"]
         XCTAssertFalse(reveal.exists, "the reveal waits for the stitching")
 
         stitching.tap()
@@ -70,7 +70,7 @@ final class SewingUITests: XCTestCase {
 
         // The same bird again: the sighting and its count, with no page and nothing to tap (the maintainer, 2026-11-04).
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        let seenAgain = app.staticTexts["Seen again · 2 times in Los Angeles"]
+        let seenAgain = app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"]
         XCTAssertTrue(seenAgain.waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(stitching.exists, "a repeat stitches nothing")
         XCTAssertFalse(reveal.exists, "a repeat is not a new patch")
@@ -95,7 +95,7 @@ final class SewingUITests: XCTestCase {
     func testTheStitchInFinishesOnItsOwn() throws {
         let app = try launch([])
         add(app, button: "Add and sew patch")
-        XCTAssertTrue(app.staticTexts["New patch · Citrus edition"].waitForExistence(timeout: 15), "the stitch-in didn't end; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "the stitch-in didn't end; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists)
     }
 
@@ -103,12 +103,12 @@ final class SewingUITests: XCTestCase {
     func testReduceMotionShowsTheFinishedPatchAndTheNewCountAtOnce() throws {
         let app = try launch(["-reduceMotion", "YES", "-stitchInSeconds", "60"])
         add(app, button: "Add and sew patch")
-        XCTAssertTrue(app.staticTexts["New patch · Citrus edition"].waitForExistence(timeout: 10), "no finished patch under a 60 s stitch-in; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 10), "no finished patch under a 60 s stitch-in; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "no stitching")
         app.buttons["Keep listening"].tap()
 
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        XCTAssertTrue(app.staticTexts["Seen again · 2 times in Los Angeles"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "no page")
     }
 
@@ -153,7 +153,7 @@ final class SewingUITests: XCTestCase {
         waitForLensAdd(of: Self.name, app)
 
         let stitching = app.buttons["stitch-in"]
-        let reveal = app.staticTexts["New patch · Citrus edition"]
+        let reveal = app.staticTexts["New patch, Citrus edition"]
         XCTAssertFalse(stitching.waitForExistence(timeout: 4), "nothing on the phone mid-run; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "nothing on the phone mid-run")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "nothing on the phone mid-run")
@@ -173,7 +173,7 @@ final class SewingUITests: XCTestCase {
 
         let again = relaunch(album: album, extra: ["-stitchInSeconds", "60"])
         XCTAssertFalse(again.buttons["stitch-in"].waitForExistence(timeout: 6), "it plays once; screen: \(again.debugDescription.prefix(4000))")
-        XCTAssertFalse(again.staticTexts["New patch · Citrus edition"].exists, "it plays once")
+        XCTAssertFalse(again.staticTexts["New patch, Citrus edition"].exists, "it plays once")
         again.tabBars.buttons["Collection"].tap()
         let patch = again.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS 'seen once'", Self.name)).firstMatch
         XCTAssertTrue(patch.waitForExistence(timeout: 10), "the patch is there all the same; screen: \(again.debugDescription.prefix(4000))")
@@ -190,12 +190,12 @@ final class SewingUITests: XCTestCase {
         XCTAssertTrue(stitching.waitForExistence(timeout: 15), "no ceremony after the kill; screen: \(next.debugDescription.prefix(4000))")
         XCTAssertEqual(stitching.label, "Sewing your \(Self.name) patch", "the order sewn")
         stitching.tap()
-        let skip = next.buttons["Skip the rest · 1 more"]
+        let skip = next.buttons["Skip the rest, 1 more"]
         XCTAssertTrue(skip.waitForExistence(timeout: 5), "no way to skip the rest; screen: \(next.debugDescription.prefix(4000))")
         XCTAssertTrue(next.buttons["Next patch"].exists)
         XCTAssertFalse(next.buttons["See it in my collection"].exists, "the rest first")
         skip.tap()
-        XCTAssertFalse(next.staticTexts["New patch · Citrus edition"].waitForExistence(timeout: 2), "the page closed")
+        XCTAssertFalse(next.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 2), "the page closed")
         XCTAssertFalse(stitching.exists, "and the junco's never started")
 
         let third = relaunch(album: album, extra: ["-stitchInSeconds", "60"])
@@ -216,9 +216,9 @@ final class SewingUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Your first Dark-eyed Junco in Los Angeles"].waitForExistence(timeout: 5), "no second patch; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(nextPatch.exists, "the last one")
         XCTAssertTrue(app.buttons["See it in my collection"].exists, "the last one offers the collection")
-        XCTAssertFalse(app.buttons["Skip the rest · 1 more"].exists)
+        XCTAssertFalse(app.buttons["Skip the rest, 1 more"].exists)
         app.buttons["Done"].firstMatch.tap()
-        XCTAssertFalse(app.staticTexts["New patch · Citrus edition"].waitForExistence(timeout: 2), "nothing more; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 2), "nothing more; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor

@@ -59,7 +59,6 @@ struct SettingsView: View {
                 Section {
                     AccountRow()
                     Toggle("Share my finds automatically", isOn: $sharesFinds)
-                        .tint(Color.moss)
                         .accessibilityIdentifier("shareFindsToggle")
                     HowThisWorks(SharingWords.detail(sharesFinds))
                 } header: {
@@ -79,9 +78,9 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Field guide") {
+            Section("Atlas") {
                 NavigationLink(value: Route.packs) {
-                    LabeledContent("Bird packs", value: library.packs.map(\.info.name).joined(separator: ", "))
+                    LabeledContent("Field-guide downloads", value: library.packs.map(\.info.name).joined(separator: ", "))
                 }
             }
 
@@ -134,9 +133,9 @@ struct GlassesDeviceRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(device.name).font(.headline)
-            Text("\(device.linkText) · \(device.state.compatibility.displayString)")
+            ShortFacts(device.linkText, device.state.compatibility.displayString)
                 .font(JournalFont.supporting)
-                .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? Color.moss : Color.inkSecondary)
+                .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color.inkSecondary))
             if let battery = device.state.batteryLevel {
                 Text("Battery \(battery)%\(device.state.chargingState == .charging ? ", charging" : "")")
                     .font(JournalFont.attribution)
@@ -156,6 +155,6 @@ struct GlassesDeviceRow: View {
 
 /// The privacy policy and terms (issue #71), on the invite domain's site (`infra/site/`).
 enum SiteLinks {
-    static let privacy = URL(string: "https://birdquest.matthewcelia.com/privacy")!
-    static let terms = URL(string: "https://birdquest.matthewcelia.com/terms")!
+    static let privacy = URL(string: "https://featherguild.matthewcelia.com/privacy")!
+    static let terms = URL(string: "https://featherguild.matthewcelia.com/terms")!
 }

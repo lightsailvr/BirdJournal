@@ -76,7 +76,7 @@ private struct RouteDestination: View {
         case .modelLicense(let fileName):
             LicenseTextView(title: fileName) { try ModelCredits.licenseText(fileName: fileName) }
         case .packLicense(let id):
-            LicenseTextView(title: "Pack license") {
+            LicenseTextView(title: "Field guide license") {
                 guard let pack = library.pack(id: id) else { throw PackError.notInstalled(id) }
                 return pack.info.licenseText
             }
@@ -124,6 +124,7 @@ struct RootView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(AccountSession.self) private var account
     @Environment(FindOutbox.self) private var findOutbox
+    @Environment(CurrentPlace.self) private var place
     @Environment(PushCenter.self) private var pushes
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
@@ -146,7 +147,7 @@ struct RootView: View {
                         .appDestinations()
                 }
             }
-            SwiftUI.Tab("Collection", systemImage: "leaf", value: Tab.journal) {
+            SwiftUI.Tab("Collection", image: "stitched.ring", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
                     JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()
@@ -173,11 +174,12 @@ struct RootView: View {
         .tabViewBottomAccessory(isEnabled: run.state.isActive && tab != .listen) {
             ListeningAccessory { tab = .listen }
         }
-        .tint(Color.moss)
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
         // it's up this one waits: two pages would sew the patch twice, each with its own haptics. The sheet is the Listen tab's:
         // on another tab, after Stop on the listening strip, it isn't up until the birder comes back.
         .patchReveal(isCovered: run.isReviewing && tab == .listen)
+        // The accent follows the place (issue #150), over the reveal too; a set's page and a patch's page set their own.
+        .tint(place.setID.map(PatchEdition.tint(setID:)) ?? .moss)
         // The patches a glasses run sewed: once it's over and the app is in front, which may be a launch or two later.
         .onChange(of: scenePhase == .active && !isUnderSplash && run.hasCeremonyWaiting, initial: true) { _, ready in
             if ready { run.showNextCeremony() }

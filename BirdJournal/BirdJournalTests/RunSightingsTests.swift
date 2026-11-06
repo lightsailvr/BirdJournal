@@ -96,6 +96,25 @@ struct RunSightingsTests {
         #expect(!(try nextRun.add(Self.candidate(score: 0.9), confirmedAt: start, location: nil, frame: nil, source: .phone).sewsPatch))
     }
 
+    @Test("a bird added from a row is Heard, and saying Seen on its sighting leaves its patch alone (issue #150)")
+    func aRowsAddIsHeardAndChangeable() throws {
+        let album = try AlbumSchema.makeContainer(inMemory: true)
+        let folder = URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let frames = FrameStore(directory: folder)
+        let ledger = RunSightings(recorder: SightingRecorder(container: album, frames: frames))
+        let addition = try ledger.add(Self.candidate(score: 0.5), confirmedAt: .now, location: nil, frame: nil, source: .phone)
+        let sighting = try #require(try album.mainContext.fetch(Sighting.newestFirst()).first)
+        #expect(sighting.method == .heard)
+        let before = CardCollection(sightings: [sighting]).patch(of: addition.identifier)
+
+        JournalEdits(container: album, frames: frames).setMethod(.seen, on: sighting)
+        let edited = try #require(try album.mainContext.fetch(Sighting.newestFirst()).first)
+        #expect(edited.method == .seen)
+        #expect(CardCollection(sightings: [edited]).patch(of: addition.identifier)?.count == before?.count)
+        #expect(ledger.isAdded(Self.finch), "still added on this run")
+    }
+
     @Test("a sighting names its species from the packs, else from its label, so a removed pack leaves the journal readable")
     func namesFallBack() throws {
         let library = PackLibrary.forApp()

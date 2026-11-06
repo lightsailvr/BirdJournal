@@ -115,7 +115,7 @@ def test_any_member_can_invite_with_a_link_that_expires_in_seven_days(
 ) -> None:
     circle = _create(client, issuer)
     invite = _invite(client, issuer, circle["id"])
-    assert invite["url"] == f"https://birdquest.matthewcelia.com/i/{invite['token']}"
+    assert invite["url"] == f"https://featherguild.matthewcelia.com/i/{invite['token']}"
     assert invite["expires_at"] == "2026-11-08T09:30:00Z"
     assert len(invite["token"]) >= 22
     _join(client, issuer, circle["id"], "bea")

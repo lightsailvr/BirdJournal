@@ -32,7 +32,7 @@ enum PatchText {
         let spoken: String
     }
 
-    /// A bird not yet found, by its place in every set that lists it: "No. 021 of 160 · Los Angeles".
+    /// A bird not yet found, by its place in every set that lists it: "No. 021 of 160, Los Angeles".
     static func setNumbers(of scientificName: String, in sets: [PackSet]) -> [SetNumber] {
         sets.compactMap { set in
             set.species.firstIndex { $0.scientificName == scientificName }.map { index in
@@ -41,12 +41,12 @@ enum PatchText {
         }
     }
 
-    /// "No. 021 of 160 · Los Angeles".
+    /// "No. 021 of 160, Los Angeles".
     private static func numberLine(_ number: Int, of total: Int, in setName: String) -> String {
-        "No. \(CardPlacement.paddedNumber(number, of: total)) of \(total) · \(setName)"
+        "No. \(CardPlacement.paddedNumber(number, of: total)) of \(total), \(setName)"
     }
 
-    /// Under the name on the reveal: "No. 019 of 160 · Los Angeles"; nil outside every set.
+    /// Under the name on the reveal: "No. 019 of 160, Los Angeles"; nil outside every set.
     static func revealNumberLine(_ placement: CardPlacement) -> String? {
         guard case .numbered(_, let setName, _, let number, let total) = placement else { return nil }
         return numberLine(number, of: total, in: setName)
@@ -62,15 +62,15 @@ enum PatchText {
         return patch.count == 1 ? numbered : "\(numbered) · seen \(patch.count)×"
     }
 
-    /// Under the patch on its page: "Seen 8 times in Los Angeles · sewn Sep 14".
+    /// Under the patch on its page: "Seen 8 times in Los Angeles, sewn Sep 14".
     static func pageLine(_ patch: CardCollection.Patch) -> String {
-        "\(patch.seenAgainText) · sewn \(patch.sewn.confirmedAt.formatted(.dateTime.month(.abbreviated).day()))"
+        "\(patch.seenAgainText), sewn \(patch.sewn.confirmedAt.formatted(.dateTime.month(.abbreviated).day()))"
     }
 
-    /// The edition line over the name: "CITRUS EDITION · NO. 003", or "UNCHARTED" (the view sets the capitals).
+    /// The edition line over the name: "Citrus edition, No. 003", or "Uncharted".
     static func editionLine(_ placement: CardPlacement) -> String {
         guard case .numbered(_, _, let edition, let number, let total) = placement else { return CardPlacement.unchartedTitle }
-        return "\(edition) · No. \(CardPlacement.paddedNumber(number, of: total))"
+        return "\(edition), No. \(CardPlacement.paddedNumber(number, of: total))"
     }
 
     /// The name a patch goes by: a pack's, else the label's own, so a bird no pack describes is still named.

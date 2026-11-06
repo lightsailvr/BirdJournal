@@ -205,7 +205,7 @@ finish() {
 #   infra/scripts/push-wizard.sh                  # from the start
 #   WIZARD_FROM=3 infra/scripts/push-wizard.sh    # resume at stage 3 (e.g. after the key is stored)
 #
-# Run infra/scripts/accounts-wizard.sh first (and circles-wizard.sh: every deploy needs its certificate). The key
+# Run infra/scripts/accounts-wizard.sh first (and domain-wizard.sh: every deploy needs its certificate). The key
 # never goes into the stack, the repo or ~/keys/birdjournal.env: only its Key ID and Team ID are saved there, and
 # the .p8 itself goes straight into Secrets Manager. Apple lets you download it once; keep the file safe or revoke
 # it and make another.
@@ -337,7 +337,10 @@ if begin "Deploy the stack with pushes"; then
   say "infra/scripts/deploy.sh runs the template tests, checks the shared us-west-2 bootstrap (it never"
   say "bootstraps), and deploys the 15-minute digest schedule and the API's read access to $SECRET_NAME."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
-    "$INFRA_DIR/scripts/deploy.sh"
+    "$INFRA_DIR/scripts/deploy.sh" || {
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=4 infra/scripts/push-wizard.sh, or WIZARD_FROM=5 if you then deployed by hand with deploy.sh --new-host-first" >&2
+      exit 1
+    }
   else
     SKIPPED+=("deploy: infra/scripts/deploy.sh, then WIZARD_FROM=5 infra/scripts/push-wizard.sh")
     finish; exit 0
