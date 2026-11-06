@@ -121,7 +121,8 @@ struct SightingMapView: View {
 final class SightingPin: NSObject, MKAnnotation {
     let id: PersistentIdentifier
     let coordinate: CLLocationCoordinate2D
-    let title: String?
+    /// Not the annotation's `title`, which would have MapKit draw a callout of its own over the patch: ours is under the map.
+    let name: String
     let confirmedAt: Date
     let art: PatchArt?
     /// The patch's set, nil for Uncharted: its shape, and the place's tint.
@@ -131,7 +132,7 @@ final class SightingPin: NSObject, MKAnnotation {
     init(id: PersistentIdentifier, coordinate: CLLocationCoordinate2D, name: String, confirmedAt: Date, art: PatchArt?, setID: String?, isFocus: Bool) {
         self.id = id
         self.coordinate = coordinate
-        title = name
+        self.name = name
         self.confirmedAt = confirmedAt
         self.art = art
         self.setID = setID
@@ -154,7 +155,13 @@ private struct SightingMap: UIViewRepresentable {
         map.delegate = context.coordinator
         map.register(PatchPinView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultAnnotationViewReuseIdentifier)
         map.register(PatchClusterView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
-        map.setRegion(MKCoordinateRegion(center: centre, latitudinalMeters: 1_000, longitudinalMeters: 1_000), animated: false)
+        var across: CLLocationDistance = 1_000
+        #if DEBUG
+        // `-autoMapAcross <metres>`: a wider map to begin with, for the screenshots of more than one edition.
+        let wider = UserDefaults.standard.double(forKey: "autoMapAcross")
+        if wider > 0 { across = wider }
+        #endif
+        map.setRegion(MKCoordinateRegion(center: centre, latitudinalMeters: across, longitudinalMeters: across), animated: false)
         map.showsCompass = true
         map.showsUserLocation = showsUser
         map.showsUserTrackingButton = showsUser
@@ -237,7 +244,7 @@ private final class PatchPinView: MKAnnotationView {
         clusteringIdentifier = pin.isFocus ? nil : Self.clusterID
         displayPriority = pin.isFocus ? .required : .defaultHigh
         zPriority = pin.isFocus ? .max : .defaultUnselected
-        accessibilityLabel = "\(pin.title ?? "A bird"), \(pin.confirmedAt.formatted(date: .abbreviated, time: .omitted))"
+        accessibilityLabel = "\(pin.name), \(pin.confirmedAt.formatted(date: .abbreviated, time: .omitted))"
         accessibilityIdentifier = "map-patch"
         let edition = PatchEdition.of(setID: pin.setID)
         let side = pin.isFocus ? MapPatchThumbnail.focusSide : MapPatchThumbnail.side
@@ -293,7 +300,7 @@ private final class PatchClusterView: MKAnnotationView {
         guard let cluster = annotation as? MKClusterAnnotation else { return }
         let members = cluster.memberAnnotations.compactMap { $0 as? SightingPin }
         guard let newest = members.max(by: { $0.confirmedAt < $1.confirmedAt }) else { return }
-        accessibilityLabel = "\(members.count) sightings, the newest \(newest.title ?? "a bird"). Zooms in."
+        accessibilityLabel = "\(members.count) sightings, the newest \(newest.name). Zooms in."
         accessibilityIdentifier = "map-patch-cluster"
         accessibilityTraits = .button
         let edition = PatchEdition.of(setID: newest.setID)

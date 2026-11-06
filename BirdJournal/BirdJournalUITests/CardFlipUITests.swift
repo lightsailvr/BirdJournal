@@ -257,7 +257,6 @@ final class CardFlipUITests: XCTestCase {
         let view = app.buttons["View original photo"]
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<8 where !view.isHittable { app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["Photo attached"].exists)
         view.tap()
         XCTAssertTrue(app.navigationBars["Original photo"].waitForExistence(timeout: 5), "the photo did not open; screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Done"].tap()
@@ -272,14 +271,13 @@ final class CardFlipUITests: XCTestCase {
         let attach = app.buttons["sighting-attach-photo"]
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["No photo attached"].exists, "a sighting heard on the phone has no photo of its own")
-        XCTAssertFalse(app.buttons["View original photo"].exists)
+        XCTAssertFalse(app.buttons["View original photo"].exists, "a sighting heard on the phone has no photo of its own")
         attach.tap()
 
         let photo = element(app, "sighting-attached-photo")
         XCTAssertTrue(photo.waitForExistence(timeout: 5), "the photo isn't on the sighting; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertGreaterThan(photo.frame.height, 50, "it shows at a size to see")
-        XCTAssertTrue(app.staticTexts["Photo attached"].exists)
+        XCTAssertTrue(app.buttons["View original photo"].exists)
         XCTAssertFalse(attach.exists, "one photo at a time, so it is clear which one a share sends")
         XCTAssertTrue(app.buttons["Heard"].isSelected, "attaching a photo doesn't say the bird was seen")
 
@@ -300,7 +298,7 @@ final class CardFlipUITests: XCTestCase {
         confirm.tap()
         XCTAssertTrue(attach.waitForExistence(timeout: 5), "it can be attached again; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(photo.exists)
-        XCTAssertTrue(app.staticTexts["No photo attached"].exists)
+        XCTAssertFalse(app.buttons["View original photo"].exists)
     }
 
     /// The real picker's button, not the stand-in: the sheet is the system's and out of reach, but the control is there

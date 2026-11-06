@@ -257,7 +257,6 @@ private struct RecordLead: View {
         if let path = sighting.attachedPhotoPaths.first {
             AttachedPhoto(path: path)
                 .frame(maxWidth: .infinity)
-                .accessibilityIdentifier("record-photo")
         } else if sighting.frameImagePath != nil {
             VStack(alignment: .leading, spacing: 6) {
                 FrameImage(frameImagePath: sighting.frameImagePath)
@@ -353,8 +352,8 @@ private struct RecordDisclosure<Content: View>: View {
                 .foregroundStyle(Color.ink)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .contentShape(Rectangle())
+                .accessibilityIdentifier(identifier)
         }
-        .accessibilityIdentifier(identifier)
     }
 }
 

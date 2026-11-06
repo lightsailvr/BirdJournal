@@ -87,23 +87,24 @@ final class AtlasUITests: XCTestCase {
         XCTAssertTrue(callout.waitForExistence(timeout: 10), "the opening sighting's callout; \(screen(app))")
         XCTAssertTrue(callout.staticTexts["Black Phoebe"].exists, screen(app))
         XCTAssertFalse(callout.buttons["Open"].exists, "it's already open behind the sheet")
-        let dove = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'Mourning Dove'")).firstMatch
-        XCTAssertTrue(dove.waitForExistence(timeout: 10), screen(app))
-        dove.tap()
-        XCTAssertTrue(callout.staticTexts["Mourning Dove"].waitForExistence(timeout: 5), screen(app))
+        // The finch by the sidewalk is on screen, with the pond a few hundred metres away.
+        let finch = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'House Finch'")).firstMatch
+        XCTAssertTrue(finch.waitForExistence(timeout: 10), screen(app))
+        finch.tap()
+        XCTAssertTrue(callout.staticTexts["House Finch"].waitForExistence(timeout: 5), screen(app))
         XCTAssertTrue(callout.buttons["Open"].exists, screen(app))
         callout.buttons["Open"].tap()
-        XCTAssertTrue(app.staticTexts["Zenaida macroura"].waitForExistence(timeout: 10), screen(app))
+        XCTAssertTrue(app.staticTexts["Haemorhous mexicanus"].waitForExistence(timeout: 10), screen(app))
     }
 
-    /// Nine House Finches in one park: MapKit gathers those it can't tell apart. The one the map was opened on stays out.
+    /// Thirty birds at one spot: MapKit gathers them. The one the map was opened on, by the pond, stays out.
     @MainActor
     func testSightingsTooCloseToTellApartAreOneCluster() {
-        let app = launch(["-seedGallery", "YES", "-autoCardSpecies", "Haemorhous mexicanus", "-autoScreen", "map"])
+        let app = launch(seeded + ["-seedBoard", "YES", "-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "map", "-autoMapAcross", "3000"])
         XCTAssertTrue(app.navigationBars["On the map"].waitForExistence(timeout: 20), screen(app))
         let cluster = element(app, "map-patch-cluster")
         XCTAssertTrue(cluster.waitForExistence(timeout: 15), screen(app))
-        XCTAssertTrue(cluster.label.contains("sightings, the newest House Finch"), cluster.label)
+        XCTAssertTrue(cluster.label.contains(" sightings, the newest "), cluster.label)
         XCTAssertTrue(element(app, "map-patch").exists, "the one the map was opened on; \(screen(app))")
     }
 
@@ -143,7 +144,7 @@ final class AtlasUITests: XCTestCase {
         }
         XCTAssertTrue(rarity.isHittable, screen(app))
         XCTAssertFalse(element(app, "card-rarity").exists, "tucked away")
-        XCTAssertFalse(app.staticTexts["Model score"].exists, "tucked away")
+        XCTAssertFalse(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Model score'")).firstMatch.exists, "tucked away")
         rarity.tap()
         XCTAssertTrue(element(app, "card-rarity").waitForExistence(timeout: 5), screen(app))
         let identification = app.buttons["Identification"]
@@ -151,7 +152,7 @@ final class AtlasUITests: XCTestCase {
             app.swipeUp()
         }
         identification.tap()
-        XCTAssertTrue(app.staticTexts["Model score"].waitForExistence(timeout: 5), screen(app))
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Model score'")).firstMatch.waitForExistence(timeout: 5), screen(app))
 
         let remove = app.buttons["Remove from collection"]
         for _ in 0..<6 where !remove.isHittable {

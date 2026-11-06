@@ -28,6 +28,7 @@ struct SetView: View {
             let collection = collectionStore.collection
             let progress = collection.progress(of: set.id)
             let pack = library.pack(id: set.id)
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if query.isEmpty {
@@ -47,6 +48,7 @@ struct SetView: View {
                     }
                     if query.isEmpty {
                         SectionTitle(progress.stillOutThereText, top: 20)
+                            .id("set-rows")
                     }
                     LazyVStack(spacing: 0) {
                         ForEach(shown, id: \.element.scientificName) { offset, species in
@@ -66,10 +68,14 @@ struct SetView: View {
                 .padding(.horizontal, JournalLayout.margin)
                 .padding(.bottom, JournalLayout.sectionGap)
             }
+            #if DEBUG
+            .debugScroll(proxy, to: "set-rows")
+            #endif
             .onScrollGeometryChange(for: Bool.self) { geometry in
                 geometry.contentOffset.y + geometry.contentInsets.top > 200
             } action: { _, isGone in
                 isPlateGone = isGone
+            }
             }
             .background(Color.paper)
             .holdsPatchLight()
