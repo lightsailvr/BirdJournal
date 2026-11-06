@@ -12,6 +12,9 @@ struct ActiveListeningView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// For the summary's count of what's new and what you have.
     @Environment(CollectionStore.self) private var collectionStore
+    /// The rows hold still around a touch; so does what's above them, while it would push them about.
+    @State private var held = HeldListOrder<Species>()
+    @State private var heldHunt: RunHunt?
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -20,7 +23,7 @@ struct ActiveListeningView: View {
                 StatusLine()
                     .padding(.top, 2)
                 if let coordinate = run.coordinate {
-                    PlaceLine(coordinate: coordinate, fixedAt: run.locationFixedAt, isRunning: run.state.isActive)
+                    PlaceLine(coordinate: coordinate, fixedAt: run.locationFixedAt, isRunning: run.state.isActive, heldAt: held.frozenAt)
                         .padding(.top, 2)
                 }
 
@@ -63,20 +66,25 @@ struct ActiveListeningView: View {
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 16)
                 } else {
-                    HuntSummary(hunt: run.hunt(in: collectionStore.collection))
+                    HuntSummary(hunt: heldHunt ?? run.hunt(in: collectionStore.collection))
                         .padding(.top, 16)
                         .id("run-rows")
                     // Once a second while listening, so "just now" ages and a calling marker lapses on time; rows move with
                     // the order (issue #42), animated unless motion is reduced. Patches on these rows are plain bitmaps, and
-                    // the waveform has its own view so that its dozen updates a second don't reach them.
+                    // the waveform has its own view so that its dozen updates a second don't reach them. The order holds still
+                    // around a touch; what's on a row doesn't.
                     TimelineView(.periodic(from: .now, by: run.state.isActive ? 1 : 3_600)) { context in
-                        let ordered = run.orderedCandidates
+                        let order = run.orderedCandidates
+                        let birds = order.map(\.species)
+                        let ordered = held.shown(birds).compactMap { bird in order.first { $0.species == bird } }
                         let calling = run.callingSpecies
                         VStack(spacing: 0) {
                             ForEach(Array(ordered.enumerated()), id: \.element.id) { position, candidate in
                                 let isCalling = calling.contains(candidate.species)
                                 CandidateRow(candidate: candidate, isCalling: isCalling, now: context.date, position: position) {
                                     run.reviewing = candidate
+                                } voiceOverFocused: { isFocused in
+                                    setHolding(.voiceOverFocus(candidate.species), isFocused)
                                 }
                                 .padding(.horizontal, 10)
                                 // Keyed to the bird: an id with the row's position in it would make new rows at each re-sort.
@@ -87,6 +95,8 @@ struct ActiveListeningView: View {
                             }
                         }
                         .animation(reduceMotion ? nil : .snappy(duration: 0.4), value: ordered.map(\.id))
+                        .gesture(FingerDown { isDown in setHolding(.finger, isDown) })
+                        .onChange(of: birds) { _, birds in held.take(birds) }
                     }
                     .padding(.top, 12)
                     Text("Possible matches. Add the birds you recognize.")
@@ -98,6 +108,14 @@ struct ActiveListeningView: View {
                 }
 
             }
+        }
+        .onScrollPhaseChange { _, phase in setHolding(.scroll, phase != .idle) }
+        .task(id: held.releaseAt) {
+            guard let releaseAt = held.releaseAt else { return }
+            try? await Task.sleep(for: .seconds(max(releaseAt.timeIntervalSinceNow, 0)))
+            guard !Task.isCancelled else { return }
+            held.tick(at: .now)
+            if !held.isHeld { heldHunt = nil }
         }
         #if DEBUG
         .debugScroll(proxy, to: UserDefaults.standard.string(forKey: "autoScrollTo") ?? "run-rows", when: !run.candidates.isEmpty)
@@ -133,6 +151,16 @@ struct ActiveListeningView: View {
 }
 
 extension ActiveListeningView {
+    /// A finger, a scroll or VoiceOver's focus has come to the list, or left it.
+    fileprivate func setHolding(_ holder: HeldListOrder<Species>.Holder, _ isHolding: Bool) {
+        if isHolding {
+            if !held.isHeld { heldHunt = run.hunt(in: collectionStore.collection) }
+            held.hold(holder, showing: run.orderedCandidates.map(\.species), at: .now)
+        } else {
+            held.letGo(holder, at: .now)
+        }
+    }
+
     /// What the empty list says: what the run is doing until a bird is heard.
     fileprivate var emptyText: String {
         switch run.state {
@@ -271,6 +299,8 @@ private struct PlaceLine: View {
     let coordinate: Coordinate
     let fixedAt: Date?
     let isRunning: Bool
+    /// While the list holds still, the line's age does too: it can wrap as it grows, which would push the rows down.
+    var heldAt: Date?
     /// The coordinate the name was looked up for, within a kilometre of the current one.
     @State private var lookedUp: Coordinate?
 
@@ -287,7 +317,7 @@ private struct PlaceLine: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: isRunning ? 1 : 3_600)) { context in
-            Text(Self.text(place: placeText, fixedAt: fixedAt, now: context.date))
+            Text(Self.text(place: placeText, fixedAt: fixedAt, now: heldAt ?? context.date))
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
                 .accessibilityIdentifier("place-line")
