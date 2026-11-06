@@ -177,13 +177,13 @@ private struct MethodBadge: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.mossText)
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(Color.moss, in: .capsule)
+                .background(.tint, in: .capsule)
         case .heard:
             Text("Heard")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.moss)
+                .foregroundStyle(.tint)
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .overlay(Capsule().strokeBorder(Color.moss, lineWidth: 1))
+                .overlay(Capsule().strokeBorder(.tint, lineWidth: 1))
         case nil:
             Text("Not yet")
                 .font(.caption)

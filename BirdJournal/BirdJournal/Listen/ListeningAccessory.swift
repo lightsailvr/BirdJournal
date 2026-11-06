@@ -17,7 +17,7 @@ struct ListeningAccessory: View {
             Button(action: showListen) {
                 HStack(spacing: 10) {
                     Image(systemName: run.state == .listening ? "waveform" : "pause.circle")
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                         .symbolEffect(.variableColor.iterative, isActive: run.state == .listening && !reduceMotion)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(title)
@@ -44,7 +44,7 @@ struct ListeningAccessory: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.mossText)
                     .frame(width: 40, height: 40)
-                    .background(Color.moss, in: Circle())
+                    .background(.tint, in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(run.state == .stopping || run.state == .starting)

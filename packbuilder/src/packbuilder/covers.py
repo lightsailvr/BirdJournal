@@ -30,6 +30,7 @@ import hashlib
 import io
 import json
 import logging
+import shutil
 import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -61,6 +62,9 @@ THUMBNAIL_QUALITY = 72
 """The index's thumbnail: about 30 KB of JPEG (40 KB in base64) per set, since the phone fetches the index (84 KB before
 covers) on every refresh; enough for an Atlas tile until the pack, and its full cover, is downloaded. 512 x 288 at
 quality 78 was 39 KB."""
+BUNDLED_QUALITY = 90
+"""About 480 KB a cover, the five about 2.4 MB together in the app (issue #150)."""
+BUNDLE_FILE = "covers.json"
 MODEL = "FLUX.3 Image Klein"
 CROP_GUIDES = (("Atlas", 2.4), ("Listen", 1.5))
 """The app's crops of a cover, as width over height, drawn faintly on the contact sheet."""
@@ -316,6 +320,43 @@ def write_thumbnail(painting: Path, target: Path) -> str:
     data = buffer.getvalue()
     Path(target).write_bytes(data)
     return hashlib.sha256(data).hexdigest()
+
+
+def bundle_covers(definitions_dir: Path, cache_dir: Path, out_dir: Path, quality: int = BUNDLED_QUALITY) -> dict:
+    """The approved covers the app ships (issue #150, slice 6), so the Listen painting works before a set's pack is on the
+    phone and offline: `<pack id>.jpg` at the pack cover's size, `<pack id>.set.json` (the set's boundary and birds, so a phone
+    that has never read the index still knows which set it's in), and `covers.json` with each one's credit and the painting it
+    came from. JPEG rather than the pack's AVIF, since AV1 decodes hold their thread and this one is decoded at launch. A set
+    with no approved cover is left out; a chosen painting gone from the cache stops the run, rather than ship less."""
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    covers = {}
+    for lock_path in sorted(Path(definitions_dir).glob(f"*/{LOCK_FILE}")):
+        entry = CoverLock.load(lock_path).cover
+        if not entry or entry.get("review") != APPROVED:
+            continue
+        chosen = entry["candidates"][entry["chosen"] - 1]
+        painting = painting_path(cache_dir, chosen["sha256"])
+        if not painting.exists():
+            raise FileNotFoundError(f"{painting}: the approved cover of {lock_path.parent.name} isn't in the cache (`packbuilder cover {lock_path.parent}` paints it again from its seed)")
+        with Image.open(painting) as opened:
+            image = opened.convert("RGB")
+        if image.size != COVER_SIZE:
+            image = image.resize(COVER_SIZE, Image.Resampling.LANCZOS)
+        file = f"{lock_path.parent.name}.jpg"
+        image.save(out_dir / file, "JPEG", quality=quality, optimize=True, progressive=True)
+        definition = f"{lock_path.parent.name}.set.json"
+        shutil.copyfile(lock_path.parent / "set.json", out_dir / definition)
+        covers[lock_path.parent.name] = {
+            "file": file, "set": definition, "model": entry["model"], "workflowVersion": workflow_version(entry), "seed": chosen["seed"], "painting": chosen["sha256"],
+        }
+    # A cover that's since been turned down leaves the app.
+    shipped = {name for cover in covers.values() for name in (cover["file"], cover["set"])}
+    for stale in [*out_dir.glob("*.jpg"), *out_dir.glob("*.set.json")]:
+        if stale.name not in shipped:
+            stale.unlink()
+    (out_dir / BUNDLE_FILE).write_text(json.dumps(covers, indent=2) + "\n")
+    return covers
 
 
 class StaleThumbnail(ValueError):

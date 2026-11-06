@@ -64,7 +64,17 @@ private struct ReadyToListenView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
+    @Environment(CurrentPlace.self) private var place
+    @Environment(\.scenePhase) private var scenePhase
     @State private var choosingSource = false
+
+    /// What a new read of the place answers to: Listen appearing (a task always starts then), coming back to the front, a set
+    /// the phone has just learned, or a sighting that moves the fallback.
+    private struct PlaceRead: Equatable {
+        let sets: [String]
+        let newest: String?
+        let inFront: Bool
+    }
 
     /// The status bar's height, which the cover runs under: the window's inset, since this page's own safe area also counts the
     /// navigation bar, and the cover's words stay where they were without one.
@@ -74,8 +84,9 @@ private struct ReadyToListenView: View {
 
     var body: some View {
         let collection = collectionStore.collection
-        let local = LocalSet.find(library: library, collection: collection, newest: collection.cards.first)
+        let local = LocalSet(setID: place.setID, library: library, collection: collection)
         GeometryReader { proxy in
+            ScrollViewReader { scroll in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     // The cover's words sit under the status bar, level with the gear on the navigation bar.
@@ -112,6 +123,7 @@ private struct ReadyToListenView: View {
 
                         if let local {
                             LocalSetSection(local: local, collection: collection)
+                                .id("local-set")
                         }
                     }
                     .padding(.horizontal, JournalLayout.margin)
@@ -121,6 +133,10 @@ private struct ReadyToListenView: View {
             }
             .ignoresSafeArea(edges: .top)
             .background(Color.paper)
+            #if DEBUG
+            .debugScroll(scroll, to: "local-set")
+            #endif
+            }
         }
         .navigationTitle("Listen")
         // The bar stays for the gear, on real glass over the painting (issue #150); the painting carries the screen's words.
@@ -129,6 +145,9 @@ private struct ReadyToListenView: View {
         .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
         .sheet(isPresented: $choosingSource) {
             AudioSourceSheet()
+        }
+        .task(id: PlaceRead(sets: collection.sets.map(\.id), newest: LocalSet.newestSetID(in: collection), inFront: scenePhase != .background)) {
+            if scenePhase != .background { await place.refresh() }
         }
         #if DEBUG
         .task {
@@ -250,7 +269,7 @@ struct RecoveryActions: View {
 struct AudioSourceRow: View {
     let source: ListeningCoordinator.Source
     let status: String
-    /// A dot before the status: the moss of a source ready to listen, or a hollow ring.
+    /// A dot before the status: the tint for a source ready to listen, or a hollow ring.
     var isConnected: Bool?
     var isEnabled = true
     let action: () -> Void
@@ -269,7 +288,7 @@ struct AudioSourceRow: View {
                     HStack(spacing: 6) {
                         if let isConnected {
                             Circle()
-                                .fill(isConnected ? Color.moss : Color.clear)
+                                .fill(isConnected ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color.clear))
                                 .overlay(Circle().strokeBorder(isConnected ? Color.clear : Color.inkSecondary, lineWidth: 1.5))
                                 .frame(width: 8, height: 8)
                                 .accessibilityHidden(true)

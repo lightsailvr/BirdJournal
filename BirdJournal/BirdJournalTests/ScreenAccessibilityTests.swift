@@ -34,6 +34,7 @@ struct ScreenAccessibilityTests {
         let outbox: FindOutbox
         let pushes: PushCenter
         let places = PlaceNames()
+        let place: CurrentPlace
 
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
@@ -45,6 +46,7 @@ struct ScreenAccessibilityTests {
             if let index { try storage.cacheIndex(index) }
             library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, indexURL: PackIndex.defaultURL, session: session, availableCapacity: { .max })
             collectionStore = CollectionStore(container: album, sets: { [library] in library.cardSets })
+            place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: ScriptedLocationProvider([.denied]), defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
             edits = JournalEdits(container: album, frames: frames)
             account = FakeAccount.session(signedIn: true)
             let client = FakeCircleClient(seeded: true)
@@ -79,6 +81,7 @@ struct ScreenAccessibilityTests {
             .environment(account)
             .environment(circles)
             .environment(collectionStore)
+            .environment(place)
             .environment(outbox)
             .environment(pushes)
             .environment(places)
@@ -171,17 +174,18 @@ struct ScreenAccessibilityTests {
     func listen(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(ListenView(), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Start listening") && labels.contains("Your local set")
+            labels.contains("Start listening") && labels.contains { $0.hasPrefix("Your local set") }
         }
         Self.expectClean(labels, screen: "Listen")
         Self.expectOneWordPerThing(labels, screen: "Listen")
         #expect(labels.contains("Start listening"), "\(labels)")
         #expect(labels.contains("Settings"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("iPhone microphone") }, "the source row: \(labels)")
-        #expect(labels.contains("Your local set"), "\(labels)")
-        #expect(labels.contains { $0.contains("of 160 sewn") }, "the set's progress: \(labels)")
+        #expect(labels.contains("Your local set, Los Angeles"), "\(labels)")
+        #expect(labels.contains { $0.contains("of 160 sewn in Los Angeles") }, "the thread reads a sentence: \(labels)")
+        #expect(labels.contains("Los Angeles cover, AI illustration"), "\(labels)")
         let start = try #require(labels.firstIndex(of: "Start listening"))
-        let local = try #require(labels.firstIndex(of: "Your local set"))
+        let local = try #require(labels.firstIndex(of: "Your local set, Los Angeles"))
         #expect(start < local, "Start listening comes before the local set")
     }
 
@@ -265,6 +269,18 @@ struct ScreenAccessibilityTests {
         let candidate = Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
         let review = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe", match: candidate), harness: harness, typeSize: typeSize) { $0.contains("About this bird") }
         #expect(!review.contains { $0.contains("edition patch") }, "\(review)")
+    }
+
+    /// The longest toast a repeat makes, at the largest text: its words wrap whole, and Undo keeps its line.
+    @Test("A named toast at the largest text keeps all its words and a whole Undo", arguments: sizes)
+    func toastFits(typeSize: DynamicTypeSize) async throws {
+        let text = "Anna's Hummingbird seen again, 12 times in Los Angeles"
+        let toast = UIHostingController(rootView: Toast(text: text, undo: {}).environment(\.dynamicTypeSize, typeSize))
+        let line = UIHostingController(rootView: Text("Undo").font(JournalFont.supporting.weight(.semibold)).environment(\.dynamicTypeSize, typeSize))
+        let oneLine = line.sizeThatFits(in: CGSize(width: 2_000, height: 2_000)).height
+        let height = toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).height
+        #expect(height >= oneLine * 2, "\(text) needs more than a line beside Undo at \(typeSize): toast \(height), a line \(oneLine)")
+        #expect(toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).width <= 402)
     }
 
     @Test("An Atlas row shows your patch of the bird in that pack's set, by its scientific name, whatever label the pack spells")

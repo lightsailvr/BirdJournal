@@ -3,7 +3,7 @@ import Pack
 import SwiftUI
 
 /// Bird packs (issue #28, over #13's library; the Atlas's storage page since #118): what is on the phone and what the
-/// index offers, each row with its set cover (or the landscape its edition names), species and size from real
+/// index offers, each row with its set cover, species and size from real
 /// metadata, and every transfer state with its recovery: offline, interrupted, failed install and low storage.
 struct BirdPacksView: View {
     /// Short, so the large title is never cut short (issue #150); the links to this page say "Field-guide downloads".
@@ -125,7 +125,7 @@ struct BirdPacksView: View {
     }
 }
 
-/// One pack: its set's cover (painted, from the index, or the landscape its edition names), name, edition and region,
+/// One pack: its set's cover, name, edition and region,
 /// facts, and the transfer control.
 struct PackRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -139,7 +139,7 @@ struct PackRow: View {
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            SetCoverImage(setID: setID, edition: edition ?? "")
+            SetCoverImage(setID: setID)
                 .frame(width: 96, height: 72)
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 .accessibilityHidden(true)
@@ -209,7 +209,7 @@ struct PackTransferStatus: View {
             }
         case .downloading(let received):
             if let descriptor {
-                DownloadProgress(name: descriptor.name, received: received, total: Int64(descriptor.byteCount)) {
+                DownloadProgress(setID: descriptor.id, name: descriptor.name, received: received, total: Int64(descriptor.byteCount)) {
                     library.cancelDownload(id: descriptor.id)
                 }
                 .padding(.top, 4)
@@ -233,8 +233,9 @@ struct PackTransferStatus: View {
     }
 }
 
-/// A download under way: a bar, "41.2 MB of 173 MB, 24%", and Cancel.
+/// A download under way: the set's thread, "41.2 MB of 173 MB, 24%", and Cancel.
 struct DownloadProgress: View {
+    let setID: String
     let name: String
     let received: Int64
     let total: Int64
@@ -246,8 +247,8 @@ struct DownloadProgress: View {
         let words = "\(shown.formatted(.byteCount(style: .file))) of \(total.formatted(.byteCount(style: .file))), \(fraction.formatted(.percent.precision(.fractionLength(0))))"
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 10) {
-                ProgressView(value: Double(shown), total: Double(max(total, 1)))
-                    .tint(Color.moss)
+                ThreadProgress(value: Double(shown), total: Double(max(total, 1)), sentence: "Downloading \(name), \(words)", thread: .edition(setID: setID))
+                    .accessibilityHidden(true)
                 Button(action: cancel) {
                     Image(systemName: "xmark.circle")
                         .font(.title3)

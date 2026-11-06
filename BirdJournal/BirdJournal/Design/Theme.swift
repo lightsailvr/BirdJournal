@@ -16,9 +16,10 @@ extension Color {
     static let ink = Color("JournalInk")
     /// Supporting text, at least 4.5:1 on the page and on a raised surface.
     static let inkSecondary = Color("JournalInkSecondary")
-    /// Primary actions, links and the selected tab: aqua #BCE3D9 dark, teal #15363A light.
+    /// Today's aqua: #BCE3D9 dark, teal #15363A light. It's what a set the app doesn't know keeps. Everything else reads the
+    /// accent through `.tint`, since it follows the place (issue #150): `PatchEdition.tint(setID:)`, at the root.
     static let moss = Color("JournalMoss")
-    /// Text on a primary action's fill.
+    /// Text on the accent's fill, in every edition's tint.
     static let mossText = Color("JournalMossText")
     /// Fine separators; decorative, stronger under Increase Contrast.
     static let rule = Color("JournalRule")
@@ -26,6 +27,8 @@ extension Color {
     static let sharedGoal = Color("JournalSharedGoal")
     /// Text and marks on a `sharedGoal` fill.
     static let onSharedGoal = Color("JournalOnSharedGoal")
+    /// Lavender thread on the page, in `ThreadProgress`: `sharedGoal` itself, which is a pale fill in the light appearance, wouldn't show there.
+    static let togetherThread = Color("ThreadTogether")
     /// Errors and destructive actions in a page (issue #119): brick #A3322A light, salmon #F4A79B dark, at least 5.5:1
     /// on the page and a raised surface. The system red measured 3.2:1 on the light page and 3.6:1 on the dark raised
     /// surface, under the 4.5:1 text needs.
@@ -107,7 +110,7 @@ extension JournalFont {
     }
 }
 
-/// The primary action of a page: a full-width moss button with the label centred, 54 pt tall.
+/// The primary action of a page: a full-width button in the accent with the label centred, 54 pt tall.
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
@@ -116,29 +119,31 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(.body.weight(.semibold))
             .foregroundStyle(Color.mossText)
             .frame(maxWidth: .infinity, minHeight: JournalLayout.primaryActionHeight)
-            .background(Color.moss.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .background(.tint.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
     }
 }
 
-/// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
+/// A secondary action: a capsule outlined in the accent, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
 /// rectangle, since its words wrap (issue #150). `colour` makes it quieter: Stop, in the ink, doesn't speak over the birds.
 struct OutlinedButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.dynamicTypeSize) private var typeSize
-    var colour = Color.moss
+    /// The accent when nil.
+    var colour: Color?
 
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        let ink = colour.map(AnyShapeStyle.init) ?? AnyShapeStyle(TintShapeStyle.tint)
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(colour)
+            .foregroundStyle(ink)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
             .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
             .frame(minHeight: 44)
-            .background(colour.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
-            .overlay(shape.strokeBorder(colour, lineWidth: 1))
+            .background(ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(ink, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
             .contentShape(shape)
     }
@@ -339,6 +344,7 @@ struct Toast: View {
     var ticksFrom: String?
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var ticked = false
 
     /// Long enough for a review sheet to have finished closing, so the tick is seen.
@@ -353,24 +359,32 @@ struct Toast: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.moss)
-            Text(shown)
-                .font(JournalFont.supporting.weight(.medium))
-                .foregroundStyle(Color.ink)
-                .contentTransition(.numericText())
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
+            HStack(alignment: typeSize.stacksRows ? .firstTextBaseline : .center, spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.tint)
+                // The words wrap, however long a bird's name; at accessibility sizes Undo has the line below them.
+                Text(shown)
+                    .font(JournalFont.supporting.weight(.medium))
+                    .foregroundStyle(Color.ink)
+                    .contentTransition(.numericText())
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let undo {
-                Spacer(minLength: 8)
+                if !typeSize.stacksRows { Spacer(minLength: 8) }
                 Button("Undo", action: undo)
                     .font(JournalFont.supporting.weight(.semibold))
-                    .foregroundStyle(Color.moss)
+                    .foregroundStyle(.tint)
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.regularMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.rule, lineWidth: 1))
+        .frame(maxWidth: typeSize.stacksRows ? .infinity : nil, alignment: .leading)
+        .background(.regularMaterial, in: shape)
+        .overlay(shape.strokeBorder(Color.rule, lineWidth: 1))
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
         // A light, optional haptic as the count changes: the system's haptics setting turns it off.

@@ -20,6 +20,7 @@ struct BirdJournalApp: App {
     @State private var places: PlaceNames
     @State private var packs: PackLibrary
     @State private var collectionStore: CollectionStore
+    @State private var place: CurrentPlace
     @State private var journalEdits: JournalEdits
     @State private var account: AccountSession
     @State private var circles: CircleStore
@@ -27,8 +28,6 @@ struct BirdJournalApp: App {
     @State private var pushes: PushCenter
     /// A patch the widget opened, until the root has shown it.
     @State private var pendingPatch: CardCollection.Patch.Key?
-    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
-    @State private var showingSplash = true
     private let album: ModelContainer
     private let frames: FrameStore
     private let runActivity: RunActivityController
@@ -84,6 +83,7 @@ struct BirdJournalApp: App {
         _packs = State(initialValue: packs)
         let collectionStore = CollectionStore(container: album, sets: { packs.cardSets })
         _collectionStore = State(initialValue: collectionStore)
+        _place = State(initialValue: CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation()))
         // The run on the Lock Screen, and the patch on the Home Screen (issue #150). Neither waits for a view: a run goes on
         // behind a locked phone.
         runActivity = RunActivityController(host: ActivityKitRunHost())
@@ -244,35 +244,40 @@ struct BirdJournalApp: App {
         return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) }, suppression: suppression)
     }
 
+    /// What picks the Listen painting's set (issue #150): the phone's last known position, which never prompts. `-autoLocation`
+    /// stands in for it in debug builds.
+    private static func makePlaceLocation() -> any LocationProvider {
+        #if DEBUG
+        return debugLocationProvider()
+        #else
+        return CoreLocationProvider()
+        #endif
+    }
+
     #if DEBUG
-    /// `-autoLocation denied|griffith` answers without a permission prompt a UI test couldn't answer.
+    /// `-autoLocation denied|griffith|…` answers without a permission prompt a UI test couldn't answer.
     private static func debugLocationProvider() -> any LocationProvider {
         switch UserDefaults.standard.string(forKey: "autoLocation") {
         case "denied": DeniedLocationProvider()
-        case "griffith": GriffithParkLocationProvider()
-        default: CoreLocationProvider()
+        case let name?: DebugPlace(rawValue: name).map(FixedLocationProvider.init) ?? CoreLocationProvider()
+        case nil: CoreLocationProvider()
         }
     }
     #endif
 
     var body: some Scene {
+        // Nothing this closure reads may change after launch: SwiftUI can call it from the thread that draws animation frames, and
+        // Swift 6 traps it there, since it belongs to the main actor (issue #150). So what changes lives in `AppSurface`, a view,
+        // whose body SwiftUI keeps on the main thread. `LaunchUITests` holds it.
         WindowGroup {
-            ZStack {
-                root
-                if showingSplash {
-                    LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
-                        .transition(.opacity)
-                        .zIndex(1)
-                }
-            }
-            .preferredColorScheme(appearance.colorScheme)
+            AppSurface { isUnderSplash in root(isUnderSplash: isUnderSplash) }
         }
         .modelContainer(album)
     }
 
     /// The app with its shared objects, under the launch splash.
-    private var root: some View {
-        RootView(isUnderSplash: showingSplash, pendingPatch: $pendingPatch)
+    private func root(isUnderSplash: Bool) -> some View {
+        RootView(isUnderSplash: isUnderSplash, pendingPatch: $pendingPatch)
             .environment(connection)
             .environment(spike)
             .environment(lens)
@@ -288,6 +293,7 @@ struct BirdJournalApp: App {
             .environment(places)
             .environment(packs)
             .environment(collectionStore)
+            .environment(place)
             .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
             .onOpenURL { url in
@@ -306,5 +312,24 @@ struct BirdJournalApp: App {
                     circles.pendingInvite = token
                 }
             }
+    }
+}
+
+/// The window's content, with the two things at this level that change: the launch splash going, and the appearance from Settings.
+private struct AppSurface<Root: View>: View {
+    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
+    @State private var showingSplash = true
+    @ViewBuilder let root: (_ isUnderSplash: Bool) -> Root
+
+    var body: some View {
+        ZStack {
+            root(showingSplash)
+            if showingSplash {
+                LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+        .preferredColorScheme(appearance.colorScheme)
     }
 }
