@@ -141,6 +141,7 @@ private struct SetSpeciesRow: View {
             }
             Spacer(minLength: 4)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)

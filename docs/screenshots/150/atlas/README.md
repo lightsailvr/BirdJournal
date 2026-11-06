@@ -21,4 +21,16 @@ Every picture is the running app on an iPhone 17 Pro simulator at half size, tak
 
 ## Decodes under a moving light
 
-`decode-counts.txt`, from `capture.sh`, as in `../hunt/README.md`: each surface with the light sweeping, counting two 8 s windows of the log. A silhouette and a map marker aren't patches under a shader at all.
+`decode-counts.txt`, from `capture.sh`, as in `../hunt/README.md`: each surface with the light sweeping, counting two 8 s windows of the log, then the patch decodes in the last minute. `count-*.jpg` shows what was on screen.
+
+```
+A set's rows, silhouettes and patches (`count-set`): first window: 5 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 22 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 4.
+The map's markers (`count-map`): first window: 9 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 1 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 6.
+A record's patch (`count-record`): first window: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 22 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 2.
+```
+
+Each patch is two decodes, its colour and its layers, once each: 2 patches on the set's rows, 3 on the map and 1 on the record. Both windows show 0 decodes and 0 AV1 or ImageIO lines, where a thumbnail re-decoding under a moving shader would log about the frame rate. A silhouette and a map marker aren't under a shader at all.
+
+## Not proven here
+
+By hand on a phone, as the issue lists them: panning and pinching the map with hundreds of sightings, the map's clusters as they form and part, and the feel of scrolling a set's rows at 120 Hz.
