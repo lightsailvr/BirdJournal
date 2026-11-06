@@ -332,7 +332,9 @@ extension CircleStore {
         #if DEBUG
         let defaults = UserDefaults.standard
         if let mode = defaults.string(forKey: "fakeCircles") ?? defaults.string(forKey: "fakeAccount").map({ _ in "empty" }) {
-            return CircleStore(account: account, client: FakeCircleClient(seeded: mode == "some", offline: mode == "offline"))
+            let client = FakeCircleClient(seeded: mode == "some", offline: mode == "offline")
+            client.latency = .seconds(defaults.double(forKey: "fakeCircleLatency"))
+            return CircleStore(account: account, client: client)
         }
         #endif
         guard let server = AccountServer.bundled() else { return CircleStore(account: account, client: nil) }

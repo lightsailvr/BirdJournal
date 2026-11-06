@@ -49,6 +49,14 @@ final class FakeCircleClient: CircleClient {
 
     /// `-fakeCircles offline` (issue #119): the list can't be read, as with no connection.
     var isOffline = false
+    /// `-fakeCircleLatency <seconds>` (issue #150): how long each read takes, as on a slow connection, so the screens' waiting
+    /// states can be seen and measured.
+    var latency: Duration = .zero
+
+    /// A read's time on the wire.
+    private func wire() async {
+        if latency > .zero { try? await Task.sleep(for: latency) }
+    }
 
     init(seeded: Bool, offline: Bool = false, now: @escaping () -> Date = Date.init) {
         self.now = now
@@ -70,6 +78,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func circles(accessToken: String) async throws -> [CircleSummary] {
+        await wire()
         if isOffline { throw URLError(.notConnectedToInternet) }
         return order.compactMap { circlesByID[$0] }.filter { $0.members.contains { $0.id == Self.me } }.map { summary($0) }
     }
@@ -82,6 +91,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func circle(id: String, accessToken: String) async throws -> CircleDetail {
+        await wire()
         guard let detail = circlesByID[id], detail.members.contains(where: { $0.id == Self.me }) else { throw CircleError.notFound }
         return withViewer(detail)
     }
@@ -96,6 +106,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func invitePreview(token: String, accessToken: String) async throws -> InvitePreview {
+        await wire()
         let (detail, expires) = try live(token)
         return InvitePreview(
             circle: summary(detail),
@@ -210,6 +221,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage {
+        await wire()
         _ = try await circle(id: circleID, accessToken: accessToken)
         // A blocked account's finds are left out, as the server does (issue #71).
         let items = (feedItems[circleID] ?? []).filter { !blockedIDs.contains($0.owner.id) }
@@ -288,6 +300,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func goals(circleID: String, accessToken: String) async throws -> [CircleGoal] {
+        await wire()
         let detail = try await circle(id: circleID, accessToken: accessToken)
         let zone = TimeZone(identifier: detail.circle.timeZone) ?? .gmt
         ensureMonthly(detail.circle, zone: zone)
@@ -417,6 +430,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func compare(friendID: String, accessToken: String) async throws -> FriendBirds {
+        await wire()
         let shared = order.filter { id in
             let members = circlesByID[id]?.members ?? []
             return members.contains { $0.id == Self.me } && members.contains { $0.id == friendID }

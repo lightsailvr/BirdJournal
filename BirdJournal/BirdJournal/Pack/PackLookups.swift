@@ -73,7 +73,11 @@ extension PackLibrary {
 
     /// The birder's collection over every set the phone knows: what each screen reads patches, sets and progress from.
     func collection(of sightings: [Sighting]) -> CardCollection {
-        CardCollection(sightings: sightings, sets: cardSets)
+        #if DEBUG
+        return SpeedProbe.build { CardCollection(sightings: sightings, sets: cardSets) }
+        #else
+        return CardCollection(sightings: sightings, sets: cardSets)
+        #endif
     }
 
     /// The lens crop of the first photo any pack has of the species, the thumbnail the lists show.

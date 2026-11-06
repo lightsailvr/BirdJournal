@@ -13,7 +13,11 @@ enum BundledIdentification {
     static func engine() async throws -> IdentificationEngine {
         if let loading { return try await loading.value }
         let task = Task.detached(priority: .userInitiated) {
-            IdentificationEngine(model: try ONNXBirdModel.bundled(), occurrenceModel: try geoModel.loaded())
+            #if DEBUG
+            let started = ContinuousClock.now
+            defer { print("SPEED engine-load ms=\((ContinuousClock.now - started).speedMilliseconds)") }
+            #endif
+            return IdentificationEngine(model: try ONNXBirdModel.bundled(), occurrenceModel: try geoModel.loaded())
         }
         loading = task
         do {
