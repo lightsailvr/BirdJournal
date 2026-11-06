@@ -4,10 +4,10 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 
 | Pick | The change | Shots |
 |---|---|---|
-| L1 | The summary leads with new patches waiting; three looks on a run's rows; quiet Stop | `sheets/run-against-reference`, `run-dark`, `run-light`, `run-ax5` |
-| L2 | Sew it and Add on rows, with the review's reveal and Undo; a tap on the row opens the review | `run-dark`, `run-added-dark`, `run-after-stop-dark`, `review-dark`, `review-light`, and `HuntUITests` for the taps |
+| L1 | The summary leads with new patches waiting; three looks on a run's rows; quiet Stop | `sheets/run-against-reference`, `run-dark`, `run-light`, `run-ax5`, `run-row-ax5`, `sheets/contrast` |
+| L2 | Sew it and Add on rows, with the review's reveal and Undo; a tap on the row opens the review; a bird no pack describes keeps Review | `sheets/rows-after-add`: `run-added-dark`, `run-no-pack-dark`, `run-after-stop-dark`, `review-dark`; `review-light`; `HuntUITests` for the taps |
 | V2 | Your patch on rows: species, sightings without a photo, sets, the Atlas, a run | `sheets/grammar-dark`, `sheets/grammar-light`, `species-*`, `sightings-*`, `set-*` |
-| A2 | A found bird's profile leads with your patch and its story on card stock | `sheets/profile`, `profile-dark`, `profile-light`, `profile-gallery-dark`, `profile-ax5` |
+| A2 | A found bird's profile leads with your patch and its story on card stock | `sheets/profile`: `profile-dark`, `profile-light`, `profile-gallery-dark` (two patches, one with no painting on this phone), `profile-none-dark` (no sighting, as before); `profile-ax5` |
 
 ## Where it differs from the reference
 
@@ -16,7 +16,7 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 - The hoop and its stitched waveform are rejected (L3, L4): today's timer and waveform stay.
 - The dashed ring is the transfer pen, and "new here" the tint. The mock uses the accent for both; the issue decides.
 - The tint is today's aqua until slice 6 sets the edition's. The mock's is Citrus.
-- Calling now stays as it was, per the issue: the raised row and the level glyph, which the mock doesn't draw.
+- Calling now stays as it was, per the issue: the raised row, the level glyph and an outline on a patch, which the mock doesn't draw.
 - Stop is pinned in the `safeAreaBar`, per the issue, so "Possible matches" is above it rather than below.
 - Stop stays at the 44 pt minimum, against the mock's 41 at scale. Add and Sew it are drawn at the mock's 36 and answer to 44.
 
@@ -24,7 +24,14 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 
 `decode-counts.txt`, from `capture.sh`: each surface after 12 s, with the light sweeping (`-patchLightSweep YES`), counting the last 8 s of the app's log. A thumbnail that had stayed a lazy provider would log AV1 lines at about the frame rate per patch, as #134 found.
 
-DECODE_COUNTS
+```
+A run, three rows holding still: 8 s after settling: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+A run over the clip, with 30 patches sewn: 8 s after settling: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+Species rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+Set rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+```
+
+The first run has only seeded patches, decoded before the windows start, and no frame re-decodes any of them. An AV1 line per frame would be hundreds in 8 s.
 
 ## Not proven here
 

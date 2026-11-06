@@ -1,4 +1,4 @@
-A run, three rows holding still: 8 s after settling: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 28 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
-A run over the clip, with 30 patches sewn: 8 s after settling: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 33 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
-Species rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 23 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
-Set rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 23 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+A run, three rows holding still: 8 s after settling: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+A run over the clip, with 30 patches sewn: 8 s after settling: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 13 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+Species rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
+Set rows, 30 patches: 8 s after settling: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines.
