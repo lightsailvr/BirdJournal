@@ -253,7 +253,7 @@ class GoalStore:
                 # This find is the one that crossed: its species is new to the period, and with it the count reaches
                 # the target. A repeat bird after a goal reached otherwise (a moved find) takes no credit.
                 counted = species.get(find.content.scientific_name)
-                crossed = counted is not None and counted.finds == 1 and len(species) == goal.target
+                crossed = counted is not None and counted.find_count == 1 and len(species) == goal.target
                 if crossed and self._note_completed(goal, find, now):
                     completed.append(CompletedGoal(goal=goal, progress=len(species)))
         return completed

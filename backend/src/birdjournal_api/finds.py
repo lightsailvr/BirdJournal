@@ -126,7 +126,7 @@ class CountedSpecies:
     common_name: str
     # The edition of its earliest find that has one; None when no find names a set.
     edition: str | None
-    finds: int
+    find_count: int
 
 
 @dataclass(frozen=True)
@@ -515,10 +515,10 @@ class FindStore:
                 species[name] = (
                     CountedSpecies(
                         species_id=item["species_id"], scientific_name=name, common_name=item["common_name"],
-                        edition=edition, finds=1,
+                        edition=edition, find_count=1,
                     )
                     if counted is None
-                    else replace(counted, edition=counted.edition or edition, finds=counted.finds + 1)
+                    else replace(counted, edition=counted.edition or edition, find_count=counted.find_count + 1)
                 )
             if "LastEvaluatedKey" not in response:
                 return species
@@ -666,7 +666,8 @@ def stored_edition(item: dict[str, Any]) -> str | None:
     if "edition" in item:
         return str(item["edition"])
     parts = str(item.get("art_key", "")).split("/")
-    return parts[1] if len(parts) == 4 and parts[0] == "packs" and parts[2] == "patch" else None
+    is_patch = len(parts) == 4 and parts[0] == "packs" and parts[2] == "patch" and _EDITION.match(parts[1])
+    return parts[1] if is_patch else None
 
 
 def _item_keys(owner: str, sighting_id: str, content: FindContent, circle_ids: list[str]) -> list[dict[str, str]]:

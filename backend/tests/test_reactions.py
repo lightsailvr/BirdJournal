@@ -386,14 +386,15 @@ def _editions(client: TestClient, issuer: TestIssuer, sub: str, friend: str) -> 
 def test_compare_gives_the_editions_the_friend_found_each_species_in(
     client: TestClient, issuer: TestIssuer, circle: str
 ) -> None:
-    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ny-nyc"))
-    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-10-30T07:00:00Z"))
-    # A second find in an edition names it once.
+    # Earliest first, so the first is the patch to show (#150): New York, though Los Angeles sorts ahead of it and came
+    # later twice.
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-11-01T07:00:00Z"))
+    _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ny-nyc", found_at="2026-10-30T07:00:00Z"))
     _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-10-31T07:00:00Z"))
     # Outside every set: the species is on the list, with no edition to name.
     _put_ok(client, issuer, "bo", _find(WREN, edition=None))
     assert _editions(client, issuer, "ada", "bo") == {
-        "Black Phoebe": ["us-ca-la", "us-ny-nyc"],
+        "Black Phoebe": ["us-ny-nyc", "us-ca-la"],
         "Northern House Wren": [],
     }
 
@@ -410,7 +411,7 @@ def test_compare_s_editions_come_only_from_finds_in_circles_the_two_share(
     _join(client, issuer, circle, "bo")
     _put_ok(client, issuer, "bo", _find(PHOEBE, edition="us-ca-la", found_at="2026-11-01T09:00:00Z"))
     assert _editions(client, issuer, "ada", "bo") == {"Black Phoebe": ["us-ca-la"]}
-    assert _editions(client, issuer, "dee", "bo") == {"Black Phoebe": ["us-ca-la", "us-ny-nyc"]}
+    assert _editions(client, issuer, "dee", "bo") == {"Black Phoebe": ["us-ny-nyc", "us-ca-la"]}
 
 
 def test_compare_s_editions_stop_at_a_circle_no_longer_shared(
@@ -451,7 +452,11 @@ def test_compare_reads_a_find_stored_without_an_edition_from_its_patch_s_art_key
     # Pack art doesn't: it can come from any pack that has the bird, even for a find outside every set.
     _put_ok(client, issuer, "bo", _find(PHOEBE, art={"kind": "pack", "key": "packs/us-ca-la/patch/sayornis-nigricans.png"}))
     _put_ok(client, issuer, "bo", _find(WREN, art={"kind": "pack", "key": "packs/us-ca-la/troglodytes-aedon.jpg"}))
-    assert _editions(client, issuer, "ada", "bo") == {"Black Phoebe": ["us-ca-la"], "Northern House Wren": []}
+    # An art key is looser than a pack id: what couldn't be an edition isn't read as one.
+    _put_ok(client, issuer, "bo", _find(GNATCATCHER, art={"kind": "pack", "key": "packs/Not_A_Pack/patch/polioptila.png"}))
+    assert _editions(client, issuer, "ada", "bo") == {
+        "Black Phoebe": ["us-ca-la"], "California Gnatcatcher": [], "Northern House Wren": [],
+    }
 
 
 def test_compare_needs_a_shared_circle(client: TestClient, issuer: TestIssuer, circle: str) -> None:

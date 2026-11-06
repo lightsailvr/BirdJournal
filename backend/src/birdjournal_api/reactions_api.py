@@ -24,8 +24,9 @@ class ComparedSpeciesResponse(BaseModel):
     common_name: str
     # The friend's best: seen beats heard.
     method: Method
-    # Issue #150: the editions (pack ids, sorted) the friend found it in, from finds in circles the two share. Empty
-    # when none names a set: found outside every set (Uncharted), or a find too old to say.
+    # Issue #150: the editions (pack ids) the friend found it in, from finds in circles the two share, earliest found
+    # first, so the first is the patch to show. Empty when none names a set: found outside every set (Uncharted), or a
+    # find too old to say.
     editions: list[str]
 
 

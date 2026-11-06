@@ -93,7 +93,7 @@ class ComparedSpecies:
     scientific_name: str
     common_name: str
     method: Method
-    # The sets the friend found it in, by pack id, sorted; finds outside every set name none.
+    # The sets the friend found it in, by pack id, earliest found first; finds outside every set name none.
     editions: tuple[str, ...] = ()
 
 
@@ -206,10 +206,11 @@ class ReactionStore:
             # A blocked friend's birds are hidden like their finds (#71).
             raise NotFound()
         best: dict[str, ComparedSpecies] = {}
-        editions: defaultdict[str, set[str]] = defaultdict(set)
+        # By species, each edition's earliest found minute (sortable as text).
+        editions: defaultdict[str, dict[str, str]] = defaultdict(dict)
         kwargs: dict[str, Any] = {
             "KeyConditionExpression": Key("pk").eq(f"ACCOUNT#{friend}") & Key("sk").begins_with("FIND#"),
-            "ProjectionExpression": "species_id, scientific_name, common_name, #method, circle_ids, edition, art_key",
+            "ProjectionExpression": "species_id, scientific_name, common_name, #method, circle_ids, edition, art_key, found_at",
             "ExpressionAttributeNames": {"#method": "method"},
             "ConsistentRead": True,
         }
@@ -226,12 +227,16 @@ class ReactionStore:
                 if current is None or (current.method is Method.HEARD and species.method is Method.SEEN):
                     best[species.scientific_name] = species
                 if edition := stored_edition(item):
-                    editions[species.scientific_name].add(edition)
+                    found = editions[species.scientific_name]
+                    found[edition] = min(found.get(edition, item["found_at"]), item["found_at"])
             if "LastEvaluatedKey" not in response:
                 break
             kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
         return sorted(
-            (replace(species, editions=tuple(sorted(editions[name]))) for name, species in best.items()),
+            (
+                replace(species, editions=tuple(sorted(editions[name], key=lambda e: (editions[name][e], e))))
+                for name, species in best.items()
+            ),
             key=lambda species: species.common_name,
         )
 
