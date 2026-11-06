@@ -215,14 +215,24 @@ private struct SightingMap: UIViewRepresentable {
 
 /// A sighting's patch: a plain picture, its ring in the place's tint while selected.
 private final class PatchPinView: MKAnnotationView {
-    private static let clusterID = "sightings"
     private let ring = CAShapeLayer()
     private var loading: Task<Void, Never>?
+
+    /// The map's opening sighting stays out of every cluster, so it can always be found. MapKit reads this as the view is given its
+    /// annotation, before `prepareForDisplay`, which would be too late.
+    private static func clusterID(for annotation: (any MKAnnotation)?) -> String? {
+        (annotation as? SightingPin)?.isFocus == true ? nil : "sightings"
+    }
+
+    override var annotation: (any MKAnnotation)? {
+        didSet { clusteringIdentifier = Self.clusterID(for: annotation) }
+    }
 
     override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         collisionMode = .circle
         canShowCallout = false
+        clusteringIdentifier = Self.clusterID(for: annotation)
         ring.fillColor = nil
         ring.lineWidth = 2.5
         ring.isHidden = true
@@ -240,8 +250,6 @@ private final class PatchPinView: MKAnnotationView {
     override func prepareForDisplay() {
         super.prepareForDisplay()
         guard let pin = annotation as? SightingPin else { return }
-        // The map's opening sighting stays out of every cluster, so it can always be found.
-        clusteringIdentifier = pin.isFocus ? nil : Self.clusterID
         displayPriority = pin.isFocus ? .required : .defaultHigh
         zPriority = pin.isFocus ? .max : .defaultUnselected
         accessibilityLabel = "\(pin.name), \(pin.confirmedAt.formatted(date: .abbreviated, time: .omitted))"

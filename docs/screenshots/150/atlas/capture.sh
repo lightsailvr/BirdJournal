@@ -23,7 +23,7 @@ if [[ "${1:-}" == "--sheets" ]]; then
     sheet set-against-reference 3 "$out/sheets/reference-4-set-page.jpg" "$out/set-dark.jpg" "$out/set-light.jpg"
     sheet plates 4 "$out/atlas-dark.jpg" "$out/atlas-light.jpg" "$out/pack-dark.jpg" "$out/packs-dark.jpg"
     sheet silhouettes 4 "$out/set-rows-dark.jpg" "$out/set-mixed-dark.jpg" "$out/set-no-pack-dark.jpg" "$out/set-search-dark.jpg"
-    sheet map 4 "$out/map-dark.jpg" "$out/map-light.jpg" "$out/map-cluster-dark.jpg" "$out/map-satellite-editions-dark.jpg"
+    sheet map 4 "$out/map-dark.jpg" "$out/map-light.jpg" "$out/map-cluster-dark.jpg" "$out/map-editions-dark.jpg"
     sheet record 4 "$out/record-patch-dark.jpg" "$out/record-patch-light.jpg" "$out/record-photo-dark.jpg" "$out/record-disclosures-dark.jpg"
     sheet first-photos 4 "$out/photo-black-phoebe-dark.jpg" "$out/photo-red-tailed-hawk-dark.jpg" "$out/photo-peregrine-falcon-dark.jpg" "$out/photo-western-screech-owl-dark.jpg"
     sheet ax5 4 "$out/set-ax5.jpg" "$out/set-rows-ax5.jpg" "$out/atlas-ax5.jpg" "$out/record-ax5.jpg" "$out/record-disclosures-ax5.jpg" "$out/map-ax5.jpg" "$out/pack-ax5.jpg" "$out/packs-ax5.jpg"
@@ -92,7 +92,7 @@ shot set-no-pack-dark              9 "${seeded[@]}" -autoScreen set -autoSet us-
 shot pack-dark                     9 "${seeded[@]}" -autoScreen pack
 shot packs-dark                    9 "${seeded[@]}" -autoScreen packs
 shot map-cluster-dark             12 "${base[@]}" -seedGallery YES -autoCardSpecies "Haemorhous mexicanus" -autoScreen map
-shot map-satellite-editions-dark  12 "${base[@]}" -seedGallery YES -seedJournal YES "${phoebe[@]}" -autoScreen map -autoMapZoomOut YES
+shot map-editions-dark  12 "${base[@]}" -seedGallery YES -seedJournal YES "${phoebe[@]}" -autoScreen map -autoMapAcross 500000
 shot record-photo-dark            10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting
 shot record-disclosures-dark      10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting -autoRecordOpen YES -autoScrollTo record-disclosures
 for bird in "Sayornis nigricans:black-phoebe" "Buteo jamaicensis:red-tailed-hawk" "Falco peregrinus:peregrine-falcon" "Megascops kennicottii:western-screech-owl"; do

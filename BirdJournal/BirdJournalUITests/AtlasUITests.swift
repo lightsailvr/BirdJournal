@@ -80,7 +80,7 @@ final class AtlasUITests: XCTestCase {
     // MARK: - The map
 
     @MainActor
-    func testTheMapShowsPatchesAndATapOnOneShowsItsCallout() {
+    func testTheMapShowsPatchesAndATapOnOneShowsItsCallout() throws {
         let app = launch(seeded + ["-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "map"])
         XCTAssertTrue(app.navigationBars["On the map"].waitForExistence(timeout: 20), screen(app))
         let callout = app.otherElements["sighting-map-callout"]
@@ -88,8 +88,10 @@ final class AtlasUITests: XCTestCase {
         XCTAssertTrue(callout.staticTexts["Black Phoebe"].exists, screen(app))
         XCTAssertFalse(callout.buttons["Open"].exists, "it's already open behind the sheet")
         // The finch by the sidewalk is on screen, with the pond a few hundred metres away.
-        let finch = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'House Finch'")).firstMatch
-        XCTAssertTrue(finch.waitForExistence(timeout: 10), screen(app))
+        let finches = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'House Finch'"))
+        XCTAssertTrue(finches.firstMatch.waitForExistence(timeout: 10), screen(app))
+        let window = app.windows.firstMatch.frame
+        let finch = try XCTUnwrap(finches.allElementsBoundByIndex.first { window.contains($0.frame) }, "no finch on screen; \(screen(app))")
         finch.tap()
         XCTAssertTrue(callout.staticTexts["House Finch"].waitForExistence(timeout: 5), screen(app))
         XCTAssertTrue(callout.buttons["Open"].exists, screen(app))
@@ -105,7 +107,9 @@ final class AtlasUITests: XCTestCase {
         let cluster = element(app, "map-patch-cluster")
         XCTAssertTrue(cluster.waitForExistence(timeout: 15), screen(app))
         XCTAssertTrue(cluster.label.contains(" sightings, the newest "), cluster.label)
-        XCTAssertTrue(element(app, "map-patch").exists, "the one the map was opened on; \(screen(app))")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'Black Phoebe'")).firstMatch.exists, "the one the map was opened on; \(screen(app))")
+        // A tap on a cluster zooms into it rather than opening a callout of its own.
+        XCTAssertTrue(app.otherElements["sighting-map-callout"].staticTexts["Black Phoebe"].exists, screen(app))
     }
 
     // MARK: - The record

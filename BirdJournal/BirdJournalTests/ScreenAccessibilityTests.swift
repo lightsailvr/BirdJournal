@@ -458,19 +458,26 @@ struct ScreenAccessibilityTests {
 
     @Test("A set's page: the plate is one labelled image and the set's name a heading, and a found bird's row says it's yours", arguments: sizes)
     func setPage(typeSize: DynamicTypeSize) async throws {
-        let harness = try Harness()
+        let harness = try Harness(seeded: false)
         let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let first = set.species[0], second = set.species[1]
+        for (species, minutesAgo) in [(first, 1.0), (first, 2.0), (second, 3.0)] {
+            harness.album.mainContext.insert(Sighting(speciesID: "\(species.scientificName)_\(species.commonName)", confirmedAt: .now.addingTimeInterval(-minutesAgo * 60), location: griffith, soundConfidence: 0.7, source: .phone))
+        }
+        try harness.album.mainContext.save()
         let labels = try await Self.walk(SetView(id: set.id), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Painted plate, AI illustration") && labels.contains { $0.hasSuffix("Mourning Dove, yours, seen once") }
+            labels.contains("Painted plate, AI illustration") && labels.contains("002, \(second.commonName), yours, seen once")
         }
         Self.expectClean(labels, screen: "Set page")
         #expect(labels.contains("Painted plate, AI illustration"), "\(labels)")
         #expect(!labels.contains("AI illustration"), "said once, with the picture: \(labels)")
         #expect(labels.contains(set.name), "\(labels)")
         #expect(labels.contains("\(set.edition.name), \(set.species.count) birds"), "\(labels)")
-        #expect(labels.contains("3 of \(set.species.count) sewn"), "the thread's count, once: \(labels)")
-        #expect(labels.contains { $0.hasSuffix("Mourning Dove, yours, seen once") }, "\(labels)")
-        #expect(labels.contains { $0.hasSuffix("House Finch, yours, seen 2 times") }, "\(labels)")
+        #expect(labels.contains("2 of \(set.species.count) sewn"), "the thread's count, once: \(labels)")
+        #expect(labels.contains("001, \(first.commonName), yours, seen 2 times"), "\(labels)")
+        #expect(labels.contains("002, \(second.commonName), yours, seen once"), "\(labels)")
+        #expect(labels.contains("003, \(set.species[2].commonName), still out there"), "\(labels)")
     }
 
     @Test("A record: the facts, Heard and Seen, and two closed disclosures that VoiceOver can find", arguments: sizes)

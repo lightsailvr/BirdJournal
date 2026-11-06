@@ -99,8 +99,11 @@ final class GuideUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoScreen", "set"]
         app.launch()
+        XCTAssertTrue(app.buttons.matching(identifier: "set-species-silhouette").firstMatch.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        // As the reference draws it, the page opens on its plate: the search is a pull away.
         let search = app.searchFields.firstMatch
-        XCTAssertTrue(search.waitForExistence(timeout: 15), "no search field in view; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<3 where !search.exists { app.swipeDown(velocity: .slow) }
+        XCTAssertTrue(search.waitForExistence(timeout: 5), "no search field in view; screen: \(app.debugDescription.prefix(3000))")
         search.tap()
         search.typeText("House Finch")
         let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '130, House Finch'")).firstMatch

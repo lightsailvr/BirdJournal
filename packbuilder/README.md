@@ -287,6 +287,7 @@ uv run packbuilder hero-review packs/us-ca-la --accept-all --decline 24,157    #
 - **The pool**: `hero-candidates` ranks the species' cleared photos already in `<cache>/photos/large`, under the build's own rules (license, excluded observations, size, sharpness), keeping only a whole bird in the slot, by the light on it and its sharpness. Look at them: it can't see a hand or a dead bird.
 - **A proposal is not a pin**: `"hero": {"proposed": <photo id>, "_why": ...}` in `overrides.json`, which the build ignores. `--accept` puts the photo first in `include` and leaves `"hero": {"pinned": ...}`, with the species' patch and silhouette photos pinned after it: a pack holds five photos, a sixth would push out the last, and their credits name those photos. `--decline` removes the proposal. Then rebuild the pack.
 - **It moves more than the profile**: the first photo's lens crop is also what the glasses, the Atlas rows and the journal show, and the lens score that used to pick it prefers a dark background, since the lens's display is additive. A photo on bright sand or sky reads less well there.
+
 ## Mascot patches
 
 The app's six birds in glasses (the app icon choices) and the House Finch on its branch, for the launch screen, the splash, the sign-in page and the empty pages (#150, slice 11). They belong to the app, not a pack, so the prompts (`art/mascot-prompts.json`), the workflow (`art/workflows/mascot-patch.json`) and the lock (`art/mascot/mascot.lock.json`) are under `art/`.

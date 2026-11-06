@@ -161,9 +161,11 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("Place not recorded"), row.label)
         row.tap()
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 10))
+        let opens = app.buttons["Rarity"]
+        for _ in 0..<6 where !opens.isHittable { app.swipeUp() }
+        opens.tap()
         let rarity = app.staticTexts["Rarity unavailable for this place and season. No location was saved with this sighting, and rarity is never guessed."]
-        for _ in 0..<6 where !rarity.exists { app.swipeUp() }
-        XCTAssertTrue(rarity.exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(rarity.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["View original photo"].exists, "no original, no entry")
     }
 
