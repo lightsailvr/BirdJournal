@@ -28,18 +28,7 @@ extension RunSnapshot {
         self.pausedAt = pausedAt
         birdsHeard = hunt.newPatches + hunt.alreadyHave
         newPatchesWaiting = hunt.newPatches
-        setID = Self.setID(at: coordinate, in: sets)
-    }
-
-    /// The set whose boundary holds the place, the smallest part winning as for a patch's placement; nil outside every set.
-    /// Slice 6's "a coordinate's set" can take this over.
-    static func setID(at coordinate: Coordinate?, in sets: [CardSet]) -> String? {
-        guard let coordinate else { return nil }
-        let holding = sets.compactMap { set -> (id: String, area: Double)? in
-            let areas = set.regions.filter { $0.contains(latitude: coordinate.latitude, longitude: coordinate.longitude) }.map(\.area)
-            return areas.min().map { (set.id, $0) }
-        }
-        return holding.min { $0.area != $1.area ? $0.area < $1.area : $0.id < $1.id }?.id
+        setID = coordinate.flatMap { CardSet.containing($0, in: sets)?.id }
     }
 }
 

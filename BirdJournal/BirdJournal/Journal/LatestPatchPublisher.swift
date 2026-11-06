@@ -75,10 +75,9 @@ final class LatestPatchPublisher {
     private func snapshot() -> WidgetSnapshot {
         let collection = collection.collection
         let packs = packs
-        let local = LocalSet.find(library: packs, collection: collection, newest: collection.cards.first)
         return WidgetSnapshot(
             collection: collection,
-            localSetID: local?.set.id,
+            localSetID: LocalSet.choose(coordinate: nil, in: collection),
             name: { PatchText.name(of: $0, library: packs) },
             hasPainting: { packs.patchArt(scientificName: $0.scientificName, setID: $0.placement.setID) != nil }
         )
