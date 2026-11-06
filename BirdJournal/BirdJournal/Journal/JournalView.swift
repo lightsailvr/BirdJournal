@@ -411,9 +411,8 @@ struct SightingRow: View {
     var showsDate = false
 
     var body: some View {
-        let photo = CardText.originalPhotoPath(sighting)
         let source = RowPictureSource.of(
-            ownPhoto: photo,
+            sighting: sighting,
             patch: collectionStore.collection.patch(of: sighting.identifier),
             reference: library.thumbnailURL(scientificName: sighting.scientificName)
         )
@@ -426,7 +425,7 @@ struct SightingRow: View {
                 Text("\(showsDate ? sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened) : sighting.confirmedAt.formatted(date: .omitted, time: .shortened)), \(sighting.source == .glasses ? "added from glasses" : "added from iPhone")")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
-                if let caption = Self.caption(source, hasAttachedPhoto: !sighting.attachedPhotoPaths.isEmpty) {
+                if let caption = Self.caption(source) {
                     Text(caption)
                         .font(JournalFont.attribution)
                         .foregroundStyle(Color.inkSecondary)
@@ -452,9 +451,9 @@ struct SightingRow: View {
     }
 
     /// Whose picture it is, so a reference photo never looks like your own. A patch needs no caption.
-    static func caption(_ source: RowPictureSource, hasAttachedPhoto: Bool) -> String? {
+    static func caption(_ source: RowPictureSource) -> String? {
         switch source {
-        case .ownPhoto: hasAttachedPhoto ? "Your photo" : "Your glasses snapshot"
+        case .ownPhoto(_, let isGlassesFrame): isGlassesFrame ? "Your glasses snapshot" : "Your photo"
         case .patch: nil
         case .reference(let url): url == nil ? "No photo" : "Reference photo"
         }

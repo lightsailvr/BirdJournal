@@ -313,10 +313,7 @@ private struct GuideRow: View {
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            RowPicture(source: .of(
-                patch: collectionStore.collection.patch(key: .init(speciesID: species.birdnetLabel, setID: pack.info.id)),
-                reference: species.photos.first.map(pack.lensImageURL(for:))
-            ))
+            RowPicture(source: .of(species: species, in: pack, collection: collectionStore.collection))
             VStack(alignment: .leading, spacing: 3) {
                 Text(species.commonName)
                     .font(JournalFont.rowTitle)

@@ -70,7 +70,7 @@ final class SewingUITests: XCTestCase {
 
         // The same bird again: the sighting and its count, with no page and nothing to tap (the maintainer, 2026-11-04).
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        let seenAgain = app.staticTexts["Seen again, 2 times in Los Angeles"]
+        let seenAgain = app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"]
         XCTAssertTrue(seenAgain.waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(stitching.exists, "a repeat stitches nothing")
         XCTAssertFalse(reveal.exists, "a repeat is not a new patch")
@@ -108,7 +108,7 @@ final class SewingUITests: XCTestCase {
         app.buttons["Keep listening"].tap()
 
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        XCTAssertTrue(app.staticTexts["Seen again, 2 times in Los Angeles"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "no page")
     }
 

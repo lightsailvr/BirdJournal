@@ -144,6 +144,40 @@ struct OutlinedButtonStyle: ButtonStyle {
     }
 }
 
+/// A row's button: Sew it filled with the tint, Add outlined in the ink, both smaller than the 44 pt they answer to, so the
+/// bird stays the main thing on the row. At accessibility sizes it's a rounded rectangle, since its words can wrap.
+struct RowPillStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let isFilled: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        configuration.label
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(isFilled ? Color.mossText : Color.ink)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
+            .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
+            .frame(minHeight: 36)
+            .background {
+                if isFilled {
+                    shape.fill(.tint)
+                } else {
+                    shape.fill(Color.ink.opacity(configuration.isPressed ? 0.15 : 0))
+                    shape.strokeBorder(Color.ink, lineWidth: 1)
+                }
+            }
+            .opacity(isEnabled ? (configuration.isPressed && isFilled ? 0.85 : 1) : 0.4)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+    }
+}
+
+extension ButtonStyle where Self == RowPillStyle {
+    static func journalRowPill(isFilled: Bool) -> RowPillStyle { RowPillStyle(isFilled: isFilled) }
+}
+
 extension ButtonStyle where Self == PrimaryButtonStyle {
     static var journalPrimary: PrimaryButtonStyle { PrimaryButtonStyle() }
 }

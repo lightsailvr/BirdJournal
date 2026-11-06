@@ -23,6 +23,16 @@ struct CardCollectionTests {
         UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))!
     }
 
+    @Test("a patch can be found by scientific name and set, whichever label its sightings carry (issue #150)")
+    func patchByScientificName() {
+        let collection = CardCollection([Self.card(Self.finch, minutes: 0, id: 1, at: Self.la)], sets: Self.sets)
+        let setID = collection.patches.first?.placement.setID
+        #expect(setID != nil)
+        #expect(collection.patch(scientificName: "Haemorhous mexicanus", setID: setID)?.speciesID == Self.finch)
+        #expect(collection.patch(scientificName: "Haemorhous mexicanus", setID: "elsewhere") == nil)
+        #expect(collection.patch(scientificName: "Sayornis nigricans", setID: setID) == nil)
+    }
+
     @Test("one patch per species per placement, counting its sightings, sewn by the earliest")
     func onePatchPerSpeciesPerPlacement() throws {
         let cards = [

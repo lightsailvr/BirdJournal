@@ -109,11 +109,12 @@ final class ListeningCoordinator {
         var eyebrow: String { "New patch, \(addition.placement.editionLabel)" }
     }
 
-    /// What a repeat add says: "Seen again, 8 times in Los Angeles", or "Seen again, 8 times" outside every set. In digits
-    /// even for 1, unlike `Patch.times`'s "once": it's what the count ticks up from.
-    private static func seenAgainText(_ placement: CardPlacement, count: Int) -> String {
+    /// What a repeat add says: "House Finch seen again, 8 times in Los Angeles", or "House Finch seen again, 8 times" outside
+    /// every set. It names the bird because nothing else does: a repeat has no reveal, and a live list can move another bird's
+    /// Add under a thumb (issue #150). In digits even for 1, unlike `Patch.times`'s "once": it's what the count ticks up from.
+    private static func seenAgainText(_ name: String, _ placement: CardPlacement, count: Int) -> String {
         let times = "\(count) \(count == 1 ? "time" : "times")"
-        return placement.setID == nil ? "Seen again, \(times)" : "Seen again, \(times) in \(placement.setName)"
+        return placement.setID == nil ? "\(name) seen again, \(times)" : "\(name) seen again, \(times) in \(placement.setName)"
     }
 
     static let waveformLength = 40
@@ -341,8 +342,8 @@ final class ListeningCoordinator {
                 acknowledge(reveal.title, undo: addition)
             } else {
                 acknowledge(
-                    Self.seenAgainText(addition.placement, count: addition.patchCount),
-                    ticksFrom: Self.seenAgainText(addition.placement, count: addition.patchCount - 1),
+                    Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount),
+                    ticksFrom: Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount - 1),
                     undo: addition
                 )
             }

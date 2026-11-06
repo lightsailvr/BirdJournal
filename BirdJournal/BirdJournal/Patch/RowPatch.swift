@@ -5,15 +5,31 @@ import SwiftUI
 /// What stands for a bird on a row (issue #150, V2): your own photo where the row is about a sighting, since that's evidence; else
 /// your patch if you have one in this row's context; else the reference photo.
 enum RowPictureSource: Equatable {
-    case ownPhoto(path: String)
+    /// A glasses frame is cropped to the bird, as the album crops it; a photo the birder chose isn't.
+    case ownPhoto(path: String, isGlassesFrame: Bool)
     case patch(scientificName: String, setID: String?)
     case reference(URL?)
 
-    /// - Parameter ownPhoto: the sighting's original photo; nil on a row that isn't about a sighting.
-    static func of(ownPhoto: String? = nil, patch: CardCollection.Patch?, reference: URL?) -> RowPictureSource {
-        if let ownPhoto { return .ownPhoto(path: ownPhoto) }
+    /// A row about something other than a sighting.
+    static func of(patch: CardCollection.Patch?, reference: URL?) -> RowPictureSource {
         if let patch { return .patch(scientificName: patch.scientificName, setID: patch.placement.setID) }
         return .reference(reference)
+    }
+
+    /// A row about a sighting.
+    static func of(sighting: Sighting, patch: CardCollection.Patch?, reference: URL?) -> RowPictureSource {
+        if let path = CardText.originalPhotoPath(sighting) {
+            return .ownPhoto(path: path, isGlassesFrame: path == sighting.frameImagePath)
+        }
+        return of(patch: patch, reference: reference)
+    }
+
+    /// An Atlas row: your patch in this pack's set. By scientific name, since a pack's label isn't always the one a sighting has.
+    static func of(species: PackSpecies, in pack: SpeciesPack, collection: CardCollection) -> RowPictureSource {
+        of(
+            patch: collection.patch(scientificName: species.scientificName, setID: pack.info.id),
+            reference: species.photos.first.map(pack.lensImageURL(for:))
+        )
     }
 }
 
@@ -25,8 +41,8 @@ struct RowPicture: View {
     var body: some View {
         Group {
             switch source {
-            case .ownPhoto(let path):
-                FrameImage(frameImagePath: path)
+            case .ownPhoto(let path, let isGlassesFrame):
+                FrameImage(frameImagePath: path, zoom: isGlassesFrame ? FrameCrop.albumZoom : 1)
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
             case .patch(let scientificName, let setID):
                 RowPatch(scientificName: scientificName, setID: setID)

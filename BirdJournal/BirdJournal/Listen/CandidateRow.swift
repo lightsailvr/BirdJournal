@@ -38,7 +38,7 @@ struct CandidateRow: View {
                     picture(look: look, patch: patch)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(name)
-                            .font(JournalFont.heading)
+                            .font(JournalFont.rowTitle)
                             .foregroundStyle(Color.ink)
                         statusLine(look: look, heard: heard)
                     }
@@ -58,7 +58,15 @@ struct CandidateRow: View {
             action(look.offer(isDescribed: reference != nil), name: name, isDescribed: reference != nil)
                 .padding(.bottom, stacked ? 12 : 0)
         }
+        #if DEBUG
+        .onAppear { Self.appearances += 1 }
+        #endif
     }
+
+    #if DEBUG
+    /// Rows made since the test last set this to 0: a re-sort moves rows and makes none (`ScreenAccessibilityTests`).
+    static var appearances = 0
+    #endif
 
     /// Your patch once you have it here, else the reference photo in a ring that says it isn't yours yet.
     @ViewBuilder
@@ -95,12 +103,12 @@ struct CandidateRow: View {
                 if case .added = look, !isCalling {
                     Text(look.note.capitalizedFirst).foregroundStyle(Color.inkSecondary)
                 } else {
-                    let when = isCalling ? Text("Calling now").foregroundStyle(.tint) : Text(heard.capitalizedFirst).foregroundStyle(Color.inkSecondary)
+                    let when = isCalling ? Text("Calling now").foregroundStyle(.tint).fontWeight(.semibold) : Text(heard.capitalizedFirst).foregroundStyle(Color.inkSecondary)
                     let note = Text(", \(look.note)")
-                    Text("\(when)\(isNew ? note.foregroundStyle(.tint) : note.foregroundStyle(Color.inkSecondary))")
+                    Text("\(when)\(isNew ? note.foregroundStyle(.tint).fontWeight(.semibold) : note.foregroundStyle(Color.inkSecondary))")
                 }
             }
-            .font(JournalFont.supporting.weight(isNew || isCalling ? .medium : .regular))
+            .font(JournalFont.supporting)
         }
     }
 
@@ -109,19 +117,19 @@ struct CandidateRow: View {
         switch offer {
         case .sewIt:
             Button("Sew it") { add(isDescribed: isDescribed) }
-                .buttonStyle(RowPillStyle(isFilled: true))
+                .buttonStyle(.journalRowPill(isFilled: true))
                 .disabled(isAdding)
                 .accessibilityLabel("Sew it, \(name)")
                 .accessibilityHint("Adds it as Heard. You can change that on its sighting.")
         case .add:
             Button("Add") { add(isDescribed: isDescribed) }
-                .buttonStyle(RowPillStyle(isFilled: false))
+                .buttonStyle(.journalRowPill(isFilled: false))
                 .disabled(isAdding)
                 .accessibilityLabel("Add \(name)")
                 .accessibilityHint("Adds it as Heard. You can change that on its sighting.")
         case .review:
             Button("Review", action: review)
-                .buttonStyle(RowPillStyle(isFilled: false))
+                .buttonStyle(.journalRowPill(isFilled: false))
                 .accessibilityLabel("Review \(name)")
         case .added:
             Button(action: review) {
@@ -146,36 +154,6 @@ struct CandidateRow: View {
     static func heardText(_ candidate: Candidate, startedAt: Date?, now: Date) -> String {
         guard let startedAt else { return "just now" }
         return AgeText.text(seconds: now.timeIntervalSince(startedAt) - candidate.lastHeardAt)
-    }
-}
-
-/// A row's button: Sew it filled with the tint, Add outlined in the ink, both smaller than the 44 pt they answer to, so the
-/// bird stays the main thing on the row. At accessibility sizes it's a rounded rectangle, since its words can wrap.
-private struct RowPillStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.dynamicTypeSize) private var typeSize
-    let isFilled: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
-        configuration.label
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(isFilled ? Color.mossText : Color.ink)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 16)
-            .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
-            .frame(minHeight: 36)
-            .background {
-                if isFilled {
-                    shape.fill(.tint)
-                } else {
-                    shape.fill(Color.ink.opacity(configuration.isPressed ? 0.15 : 0))
-                    shape.strokeBorder(Color.ink, lineWidth: 1)
-                }
-            }
-            .opacity(isEnabled ? (configuration.isPressed && isFilled ? 0.85 : 1) : 0.4)
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
     }
 }
 

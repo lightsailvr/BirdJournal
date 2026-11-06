@@ -54,7 +54,7 @@ final class CardsUITests: XCTestCase {
         let addAnother = app.buttons["Add another sighting"]
         XCTAssertTrue(addAnother.waitForExistence(timeout: 10))
         addAnother.tap()
-        XCTAssertTrue(app.staticTexts["Seen again, 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["\(name) seen again, 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "a repeat add stitches nothing")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "and opens no page")

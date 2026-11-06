@@ -126,6 +126,8 @@ struct DebugLaunch: ViewModifier {
                 run.fakeStack = FakeRunBirds.stack
                 await run.start()
                 if let name = defaults.string(forKey: "autoRowAdd"), let bird = run.candidates.first(where: { $0.species.commonName == name }) {
+                    // `-autoRowAddAfter <seconds>`: late enough for a screenshot to catch its acknowledgment.
+                    try? await Task.sleep(for: .seconds(defaults.double(forKey: "autoRowAddAfter")))
                     await run.addFromRow(bird, isDescribed: true)
                     run.finishCeremony()
                     run.dismissReveal()
@@ -484,11 +486,17 @@ enum DebugSeeds {
         try? context.save()
     }
 
+    /// The label an add writes for this bird, the identification model's: a pack's own `birdnetLabel` is only its scientific name,
+    /// so a run's rows and the sightings it adds would be different birds.
+    static func sightingLabel(_ species: PackSpecies) -> String {
+        "\(species.scientificName)_\(species.commonName)"
+    }
+
     /// One sighting of each of the bundled pack's first 30 birds, a minute apart.
     static func seedBoard(context: ModelContext) {
         let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
         for (index, species) in ((try? SpeciesPack.bundled().species) ?? []).prefix(30).enumerated() {
-            context.insert(Sighting(speciesID: species.birdnetLabel, confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
+            context.insert(Sighting(speciesID: sightingLabel(species), confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
         }
         try? context.save()
     }
@@ -499,7 +507,7 @@ enum DebugSeeds {
     static func seedLarge(context: ModelContext, count: Int) {
         let existing = (try? context.fetchCount(FetchDescriptor<Sighting>())) ?? 0
         guard existing < count else { return }
-        let labels = ((try? SpeciesPack.bundled().species) ?? []).map(\.birdnetLabel)
+        let labels = ((try? SpeciesPack.bundled().species) ?? []).map(sightingLabel)
         guard !labels.isEmpty else { return }
         var random = SplitMix(state: 150)
         for index in existing..<count {

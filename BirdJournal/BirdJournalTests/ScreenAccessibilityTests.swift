@@ -199,6 +199,44 @@ struct ScreenAccessibilityTests {
         #expect(!labels.contains("Add Common Blackbird"), "\(labels)")
     }
 
+    /// Rows slide when the list re-sorts (issue #42), and a row's add stays under way (a glasses add waits for its photo), so a
+    /// re-sort has to move the row it already has. A list that made new rows would cross-fade them and could add a bird twice.
+    @Test("A re-sort moves a run's rows: it doesn't make new ones")
+    func aResortKeepsEachRow() async throws {
+        let harness = try Harness()
+        func stack(_ heard: [Double]) -> CandidateStack {
+            let birds = [("Haemorhous mexicanus", "House Finch"), ("Sayornis nigricans", "Black Phoebe"), ("Zenaida macroura", "Mourning Dove")]
+            return CandidateStack(candidates: zip(birds, heard).enumerated().map { index, bird in
+                Candidate(species: Species(index: index, scientificName: bird.0.0, commonName: bird.0.1, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: bird.1, admittedAt: Double(index))
+            })
+        }
+        func names(_ labels: [String]) -> [String] {
+            labels.filter { $0.contains(", heard ") }.map { String($0.prefix { $0 != "," }) }
+        }
+        harness.run.fakeStack = stack([30, 20, 10])
+        CandidateRow.appearances = 0
+        CardFlipAccessibilityTests.enableAccessibility()
+        let host = UIHostingController(rootView: harness.hosted(ActiveListeningView(), typeSize: .large))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = CGRect(x: 0, y: 0, width: 402, height: 2400)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        func wait(for order: [String]) async throws {
+            for _ in 0..<60 where names(Self.spoken(host.view)) != order {
+                try await Task.sleep(for: .milliseconds(250))
+            }
+            #expect(names(Self.spoken(host.view)) == order)
+        }
+        try await wait(for: ["House Finch", "Black Phoebe", "Mourning Dove"])
+        #expect(CandidateRow.appearances == 3, "one each")
+
+        harness.run.fakeStack = stack([30, 20, 40])
+        try await wait(for: ["Mourning Dove", "House Finch", "Black Phoebe"])
+        #expect(CandidateRow.appearances == 3, "the same three rows, moved")
+    }
+
     @Test("A bird you've found: its profile leads with your patch and its story; in a review, the patch doesn't", arguments: sizes)
     func profileLeadsWithYourPatch(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
@@ -217,6 +255,17 @@ struct ScreenAccessibilityTests {
         let candidate = Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
         let review = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe", match: candidate), harness: harness, typeSize: typeSize) { $0.contains("About this bird") }
         #expect(!review.contains { $0.contains("edition patch") }, "\(review)")
+    }
+
+    @Test("An Atlas row shows your patch of the bird in that pack's set, by its scientific name, whatever label the pack spells")
+    func atlasRowsFindYourPatch() throws {
+        let harness = try Harness()
+        let pack = try SpeciesPack.bundled()
+        let collection = harness.collectionStore.collection
+        let finch = try #require(pack.species(scientificName: "Haemorhous mexicanus"))
+        let goose = try #require(pack.species(scientificName: "Branta canadensis"))
+        #expect(RowPictureSource.of(species: finch, in: pack, collection: collection) == .patch(scientificName: "Haemorhous mexicanus", setID: pack.info.id))
+        #expect(RowPictureSource.of(species: goose, in: pack, collection: collection) == .reference(goose.photos.first.map(pack.lensImageURL(for:))))
     }
 
     @Test("Collection: the summary, the modes and the patches, each with how often it was seen", arguments: sizes)

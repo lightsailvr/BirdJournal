@@ -91,7 +91,7 @@ final class HuntUITests: XCTestCase {
         XCTAssertTrue(add.waitForExistence(timeout: 60), "no Add on the seeded bird; screen: \(app.debugDescription.prefix(3000))")
         add.tap()
 
-        let seenAgain = app.staticTexts["Seen again, 3 times in Los Angeles"]
+        let seenAgain = app.staticTexts["House Finch seen again, 3 times in Los Angeles"]
         XCTAssertTrue(seenAgain.waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "a repeat stitches nothing")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "and opens no page")

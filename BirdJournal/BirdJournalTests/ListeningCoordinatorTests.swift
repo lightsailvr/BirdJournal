@@ -125,8 +125,8 @@ struct ListeningCoordinatorTests {
         let addition = try #require(await run.addFromRow(finch, isDescribed: true))
         #expect(!addition.sewsPatch)
         #expect(run.reveal == nil, "a repeat isn't a new patch")
-        #expect(run.acknowledgment?.text == "Seen again, 2 times")
-        #expect(run.acknowledgment?.ticksFrom == "Seen again, 1 time")
+        #expect(run.acknowledgment?.text == "House Finch seen again, 2 times")
+        #expect(run.acknowledgment?.ticksFrom == "House Finch seen again, 1 time")
         #expect(run.acknowledgment?.undo == addition)
         #expect(look() == .added(count: 2))
         #expect(look().offer(isDescribed: true) == .added)
@@ -173,13 +173,20 @@ struct ListeningCoordinatorTests {
         let entry = CardCollection.Entry(identifier: UUID(), speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now)
         let patch = CardCollection([entry]).patch(of: entry.identifier)
         let patchSource = RowPictureSource.patch(scientificName: "Haemorhous mexicanus", setID: nil)
-        #expect(RowPictureSource.of(ownPhoto: "mine.jpg", patch: patch, reference: url) == .ownPhoto(path: "mine.jpg"))
+        let sighting = Sighting(speciesID: entry.speciesID, confirmedAt: .now, soundConfidence: 0.5, source: .glasses)
+        #expect(RowPictureSource.of(sighting: sighting, patch: patch, reference: url) == patchSource, "no photo of yours")
+        sighting.frameImagePath = "frame.jpg"
+        let frame = RowPictureSource.of(sighting: sighting, patch: patch, reference: url)
+        #expect(frame == .ownPhoto(path: "frame.jpg", isGlassesFrame: true))
+        sighting.attachedPhotoPaths = ["mine.jpg"]
+        let attached = RowPictureSource.of(sighting: sighting, patch: patch, reference: url)
+        #expect(attached == .ownPhoto(path: "mine.jpg", isGlassesFrame: false), "the one you chose first, and it isn't cropped")
         #expect(RowPictureSource.of(patch: patch, reference: url) == patchSource)
         #expect(RowPictureSource.of(patch: nil, reference: url) == .reference(url))
-        #expect(SightingRow.caption(.ownPhoto(path: "mine.jpg"), hasAttachedPhoto: true) == "Your photo")
-        #expect(SightingRow.caption(.ownPhoto(path: "mine.jpg"), hasAttachedPhoto: false) == "Your glasses snapshot")
-        #expect(SightingRow.caption(patchSource, hasAttachedPhoto: false) == nil, "a patch needs no caption")
-        #expect(SightingRow.caption(.reference(url), hasAttachedPhoto: false) == "Reference photo", "a reference photo never looks like your own")
+        #expect(SightingRow.caption(attached) == "Your photo")
+        #expect(SightingRow.caption(frame) == "Your glasses snapshot")
+        #expect(SightingRow.caption(patchSource) == nil, "a patch needs no caption")
+        #expect(SightingRow.caption(.reference(url)) == "Reference photo", "a reference photo never looks like your own")
     }
 
     @Test("the summary leads with new patches waiting")
@@ -312,7 +319,7 @@ struct ListeningCoordinatorTests {
 
         #expect(again.sightingID != first.sightingID)
         #expect(harness.stored.count == 2)
-        #expect(run.acknowledgment?.text == "Seen again, 2 times", "no place: the Uncharted patch, seen again")
+        #expect(run.acknowledgment?.text == "Blue Jay seen again, 2 times", "no place: the Uncharted patch, seen again")
         #expect(run.sightings.entries.count == 2)
         #expect(run.sightings.count(of: jay.species) == 2)
 
@@ -379,8 +386,8 @@ struct ListeningCoordinatorTests {
         #expect(again.patchCount == 2)
         #expect(run.reveal == nil, "a repeat add opens no page")
         #expect(harness.stored.count == 2, "and the sighting is saved")
-        #expect(run.acknowledgment?.text == "Seen again, 2 times")
-        #expect(run.acknowledgment?.ticksFrom == "Seen again, 1 time", "what it says before it ticks")
+        #expect(run.acknowledgment?.text == "House Finch seen again, 2 times")
+        #expect(run.acknowledgment?.ticksFrom == "House Finch seen again, 1 time", "what it says before it ticks")
         #expect(run.acknowledgment?.undo == again)
 
         // A first of another species, taken back inside the window: the sighting and its reveal are gone.
