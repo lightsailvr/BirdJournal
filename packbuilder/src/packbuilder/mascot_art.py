@@ -17,8 +17,9 @@ SHA-256 (its file in `<cache>/mascot/patches/`), and the review:
   them back, and refuses a file that isn't the one the review chose.
 - `rejected`: the next run paints a new round from new seeds with the current templates.
 
-`write_app_assets` makes the app's art from the approved patches: the app icons on felt, the Settings thumbnails and the
-perched finch. Nothing else writes those files, and it refuses a bird without an approved patch.
+`write_app_assets` makes the app's art from the approved patches, each trimmed to its cord (`trimmed_to_cord`): the app icons on
+felt, the Settings thumbnails and the perched finch. Nothing else writes those files, and it refuses a bird without an approved
+patch.
 
 A warm lock paints nothing. A candidate no longer in the cache is painted again from its seed, which gives the same
 picture on the same prompts version. A new icon or workflow starts a new round, since the review no longer applies; new
@@ -35,7 +36,10 @@ import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from scipy import ndimage
+from scipy.spatial import ConvexHull
 
 from packbuilder.art import ART_DIR, Workflow
 from packbuilder.comfy import ComfyClient, PaintingFailed
@@ -74,6 +78,14 @@ APP_ICONS = {
 PRIMARY_ICON = "red-tailed-hawk"
 """The icon the build installs, and so the one the App Store shows at 1024 px."""
 PERCHED_FINCH = "perched-finch"
+CORD_BAND = 45
+"""How far in from a cut patch's edge its cord can start, past the card outside it, in pixels of 1024."""
+CORD_SATURATION = 0.38
+"""Thread's colour, as (largest channel less smallest) over the largest: the olive and terracotta cords have it even in their
+shadows, and pale card and the shadow painted on it don't. As an amount rather than a share, it took the shaded side of the cord."""
+CORD_DARKEST = 45
+"""Below this the largest channel is too dark for a share to mean anything."""
+CORD_EDGE_SOFTENING = 0.9
 ALTERNATE_ICON_SIDE = 512
 """An alternate icon's picture: never seen above 180 px, and a 1024 px one costs the app about 1.3 MB more per icon."""
 ICON_CANVAS = 1024
@@ -412,6 +424,28 @@ def _rgba(path: Path) -> Image.Image:
         return opened.convert("RGBA")
 
 
+def trimmed_to_cord(patch: Image.Image) -> Image.Image:
+    """The patch as far as its cord, cropped to it. Outside the cord an approved file can still hold pale card and the shadow
+    painted on it, up to about 11 px of 1024, which `trim_rim` was too careful to take: on felt it reads as a paper disc under the patch.
+    The convex hull of the saturated thread near the edge is the patch's outline, since card and shadow have no colour. Only the
+    alpha changes, here at build time, so the maintainer's approved file and its hash stay as reviewed."""
+    pixels = np.asarray(patch.convert("RGBA"), dtype=float)
+    rgb, alpha = pixels[..., :3], pixels[..., 3]
+    solid = alpha > 128
+    distance = ndimage.distance_transform_edt(solid)
+    largest = rgb.max(-1)
+    thread = solid & (distance <= CORD_BAND) & (largest - rgb.min(-1) >= CORD_SATURATION * largest) & (largest >= CORD_DARKEST)
+    thread = ndimage.binary_opening(thread, iterations=2)  # takes a thin warm sliver of card, which isn't thread
+    ys, xs = np.nonzero(ndimage.binary_erosion(thread) ^ thread)
+    points = np.column_stack([xs, ys])
+    outline = Image.new("L", patch.size, 0)
+    ImageDraw.Draw(outline).polygon([tuple(map(float, point)) for point in points[ConvexHull(points).vertices]], fill=255)
+    # The soft edge sits just inside the outline, so the pixel of card against the cord goes too.
+    edge = np.clip(ndimage.gaussian_filter(np.asarray(outline, dtype=float) / 255, CORD_EDGE_SOFTENING) * 1.6 - 0.6, 0, 1)
+    trimmed = Image.fromarray(np.dstack([rgb, edge * alpha]).round().astype(np.uint8), "RGBA")
+    return trimmed.crop(trimmed.getchannel("A").getbbox())
+
+
 def _on_shadow(patch: Image.Image, canvas: Image.Image, size: int) -> Image.Image:
     """`patch` resized to fit `size` in the middle of `canvas`, with its soft drop shadow. `canvas` keeps its mode's alpha."""
     placed = patch.copy()
@@ -485,7 +519,7 @@ def write_app_assets(lock: MascotLock, repo: Path = REPO) -> list[Path]:
         written.append(path)
 
     for bird, icon in APP_ICONS.items():
-        patch = _rgba(patches[bird])
+        patch = trimmed_to_cord(_rgba(patches[bird]))
         side = ICON_CANVAS if bird == PRIMARY_ICON else ALTERNATE_ICON_SIDE
         bundle = repo / "BirdJournal" / f"{icon}.icon"
         put(bundle / "Assets" / f"{bird}.png", png(app_icon(patch, felt, side)))
@@ -493,7 +527,7 @@ def write_app_assets(lock: MascotLock, repo: Path = REPO) -> list[Path]:
         thumbnail = app_icon(patch, felt, ICON_THUMBNAIL)
         put(catalog / "AppIconPreview" / f"{icon}.imageset" / f"{icon}.png", png(thumbnail))
         put(catalog / "AppIconPreview" / f"{icon}.imageset" / "Contents.json", _imageset([(f"{icon}.png", "1x")]))
-    patch = _rgba(patches[PERCHED_FINCH])
+    patch = trimmed_to_cord(_rgba(patches[PERCHED_FINCH]))
     finch = catalog / "PerchedFinch.imageset"
     for scale in (2, 3):
         put(finch / f"PerchedFinch@{scale}x.png", png(perched_finch(patch, scale)))

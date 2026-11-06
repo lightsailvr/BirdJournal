@@ -32,6 +32,7 @@ if [[ "${1:-}" == "--sheets" ]]; then
         "$ictool" "$repo_root/BirdJournal/MyBirdJournal-HouseFinch.icon" --export-image --output-file "$icon_shots/r-$rendition.png" \
             --platform iOS --rendition "$rendition" --width 180 --height 180 --scale 1 --tint-color 0.25 --tint-strength 0.75 >/dev/null
     done
+    (cd "$repo_root/packbuilder" && uv run python "$out/icon-edges.py" "$out/icon-edges-before-after.jpg")
     uv run -q "$out/icon-sheets.py" "$icon_shots" "$out" "$repo_root/art/mascot/icons" "$repo_root/BirdJournal/BirdJournal/Assets.xcassets/AppIconPreview" "$repo_root/art/mascot/approved"
     sheet before-after-launch 4 before-launch-dark.jpg launch-dark.jpg before-splash-dark.jpg splash-dark.jpg before-launch-light.jpg launch-light.jpg before-splash-light.jpg splash-light.jpg
     sheet before-after-states 4 before-empty-dark.jpg empty-dark.jpg before-account-dark.jpg account-dark.jpg before-empty-light.jpg empty-light.jpg before-account-light.jpg account-light.jpg
@@ -49,8 +50,8 @@ slow="${CAPTURE_SLOW:-0}"
 
 trap 'xcrun simctl ui "$udid" content_size large; xcrun simctl ui "$udid" appearance dark; xcrun simctl status_bar "$udid" clear 2>/dev/null || true' EXIT
 
-# Installed over another build, the launch screen draws from the last build's asset catalog until the simulator restarts: a
-# picture under a new name comes up blank. So restart it after the install, with the app in place.
+# Installed over another build, the launch screen draws from the system's copy of the last build's asset catalog: a picture under a
+# new name comes up blank, and once launched that way it stays blank through a restart. So restart before the first launch.
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl install "$udid" "$app"
 xcrun simctl shutdown "$udid"

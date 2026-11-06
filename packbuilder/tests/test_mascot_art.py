@@ -9,10 +9,11 @@ import shutil
 import numpy as np
 import pytest
 from PIL import Image, ImageDraw
+from scipy import ndimage
 
 from packbuilder import cli
 from packbuilder.comfy import ComfyClient
-from packbuilder.mascot_art import APP_ICONS, FELT_PICTURE, PERCHED_FINCH, PRIMARY_ICON, REPO, SIZE, MascotArtist, MascotBird, MascotLock, MascotPrompts, StaleApproval, approved, draw_sheets, review, shipped, write_app_assets
+from packbuilder.mascot_art import APP_ICONS, FELT_PICTURE, PERCHED_FINCH, PRIMARY_ICON, REPO, SIZE, MascotArtist, MascotBird, MascotLock, MascotPrompts, StaleApproval, approved, draw_sheets, review, shipped, trimmed_to_cord, write_app_assets
 from tests.comfy_stub import BACKGROUND, bird_on, serve
 
 FINCH, EGRET = "house-finch", "great-egret"
@@ -287,6 +288,93 @@ def test_the_finch_keeps_its_transparency_and_gains_a_soft_shadow(tmp_path):
         assert 0 < below < 255 and below > above, "the shadow falls below the patch, opposite the light"
         edges = (alpha[0, :], alpha[-1, :], alpha[:, 0], alpha[:, -1])
         assert max(edge.max() for edge in edges) <= 3, "the shadow is cut off at the picture's edge"
+
+
+def patch_on_its_card() -> Image.Image:
+    """A cut patch as the art has them: an olive cord round tan twill, and outside the cord at the lower left a crescent of
+    pale card and the painted shadow, which `cut_from_card` kept."""
+    patch = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(patch)
+    draw.ellipse((3, 33, 973, 1021), fill=(222, 216, 204, 255))
+    draw.ellipse((33, 33, 993, 993), fill=(112, 120, 40, 255))
+    draw.ellipse((63, 63, 963, 963), fill=(205, 175, 125, 255))
+    return patch
+
+
+def test_what_ships_stops_at_the_cord_and_stays_centred():
+    trimmed = trimmed_to_cord(patch_on_its_card())
+    alpha = np.asarray(trimmed.getchannel("A"), dtype=int)
+    pixels = np.asarray(trimmed.convert("RGB"), dtype=int)
+    assert abs(trimmed.width - 960) <= 4 and abs(trimmed.height - 960) <= 4, "cropped to the cord, so the cord is what gets centred"
+    assert trimmed.width == trimmed.height
+    pale = (pixels.max(-1) - pixels.min(-1) < 30) & (alpha > 200)  # under the soft edge, a pixel of card has gone
+    assert not pale.any(), "card is left outside the cord"
+    middle = trimmed.width // 2
+    assert alpha[middle, 12] == 255 and abs(pixels[middle, 12] - (112, 120, 40)).max() <= 2, "the cord went with it"
+
+
+def test_the_shaded_outer_part_of_the_cord_stays():
+    """A cord's outer side is in shadow, dark but still olive. A test of colour by the amount alone took it for the painted
+    shadow, and thinned the cord by half on the hawk, the egret, the warbler and the jay."""
+    patch = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(patch)
+    draw.ellipse((3, 33, 973, 1021), fill=(92, 86, 74, 255))  # the painted shadow on the card
+    draw.ellipse((33, 33, 993, 993), fill=(62, 66, 22, 255))  # the cord's shaded side
+    draw.ellipse((48, 48, 978, 978), fill=(112, 120, 40, 255))
+    draw.ellipse((63, 63, 963, 963), fill=(205, 175, 125, 255))
+    trimmed = trimmed_to_cord(patch)
+    assert abs(trimmed.width - 960) <= 4 and abs(trimmed.height - 960) <= 4
+    pixels = np.asarray(trimmed.convert("RGB"), dtype=int)
+    alpha = np.asarray(trimmed.getchannel("A"), dtype=int)
+    middle = trimmed.width // 2
+    assert alpha[middle, 6] == 255 and abs(pixels[middle, 6] - (62, 66, 22)).max() <= 2, "the shaded side of the cord went"
+
+
+def test_a_patch_with_nothing_outside_its_cord_loses_nothing():
+    patch = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    ImageDraw.Draw(patch).ellipse((3, 3, 1020, 1020), fill=(112, 120, 40, 255))
+    before = (np.asarray(patch.getchannel("A")) > 128).sum()
+    after = (np.asarray(trimmed_to_cord(patch).getchannel("A")) > 128).sum()
+    assert after > before * 0.995
+
+
+@pytest.mark.parametrize("bird", [*APP_ICONS, PERCHED_FINCH])
+def test_no_approved_bird_keeps_card_outside_its_cord_and_none_loses_its_cord(bird):
+    """Along each ray in from the edge: how far before thread, which even in its shadows has some colour. The approved files
+    keep their rims, up to about 11 px of 1024; a ray that lands in a dark stitch counts a few, so it's the 99th percentile."""
+    with Image.open(REPO / "art/mascot/approved" / f"{bird}.png") as opened:
+        patch = opened.convert("RGBA")
+    before, after = rim_widths(patch), rim_widths(trimmed_to_cord(patch))
+    assert np.percentile(after, 99) <= 3, f"{bird}: {np.percentile(after, 99)} px outside the cord"
+    assert np.percentile(after, 99) <= np.percentile(before, 99)
+    trimmed = trimmed_to_cord(patch)
+    assert min(trimmed.size) >= 960, f"{bird}: the trim took more than the rim"
+    assert ndimage.label(np.asarray(trimmed.getchannel("A")) > 0)[1] == 1, f"{bird}: a stray pixel outside the patch"
+
+
+def test_the_approved_files_are_not_touched(tmp_path):
+    felt_in(tmp_path)
+    lock = approved_tree(tmp_path)
+    before = {path.name: path.read_bytes() for path in (tmp_path / "mascot" / "approved").iterdir()}
+    write_app_assets(lock, tmp_path)
+    assert before == {path.name: path.read_bytes() for path in (tmp_path / "mascot" / "approved").iterdir()}
+
+
+def rim_widths(patch: Image.Image) -> np.ndarray:
+    pixels = np.asarray(patch, dtype=float)
+    solid = pixels[..., 3] > 128
+    saturation = pixels[..., :3].max(-1) - pixels[..., :3].min(-1)
+    ys, xs = np.nonzero(solid)
+    centre_y, centre_x = (ys.min() + ys.max()) / 2, (xs.min() + xs.max()) / 2
+    widths = []
+    for angle in np.linspace(0, 2 * np.pi, 720, endpoint=False):
+        radii = np.arange(max(patch.size) / 2 + 8, 300, -0.5)
+        along_x = np.clip((centre_x + radii * np.cos(angle)).astype(int), 0, patch.width - 1)
+        along_y = np.clip((centre_y + radii * np.sin(angle)).astype(int), 0, patch.height - 1)
+        first = int(np.argmax(solid[along_y, along_x]))
+        thread = int(np.argmax(saturation[along_y[first:], along_x[first:]] >= 30))
+        widths.append(radii[first] - radii[first + thread])
+    return np.array(widths)
 
 
 def test_nothing_is_written_from_a_file_the_review_did_not_choose(tmp_path):
