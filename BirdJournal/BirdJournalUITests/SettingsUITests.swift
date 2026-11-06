@@ -73,8 +73,14 @@ final class SettingsUITests: XCTestCase {
             XCTAssertTrue(choice.waitForExistence(timeout: 10))
             choice.tap()
             // The system's "You have changed the icon" alert belongs to SpringBoard.
+            // Under load a tap on its button can come before it takes taps, and the check moves only once it's closed.
             let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
-            if alert.waitForExistence(timeout: 5) { alert.buttons.firstMatch.tap() }
+            if alert.waitForExistence(timeout: 5) {
+                for _ in 0..<10 where alert.exists {
+                    alert.buttons.firstMatch.tap()
+                    sleep(1)
+                }
+            }
             XCTAssertTrue(choice.waitForSelected(), "\(title) is not checked")
         }
     }

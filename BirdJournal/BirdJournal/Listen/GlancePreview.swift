@@ -77,9 +77,7 @@ struct GlancePreview: View {
                 HStack {
                     RunIslandExpandedLeading(snapshot: Self.run)
                     Spacer()
-                    Text(Self.run.statusText)
-                        .font(.subheadline)
-                        .foregroundStyle(GlanceInk.secondary(.dark, .standard))
+                    RunIslandStatus(snapshot: Self.run)
                 }
                 RunIslandExpandedBottom(snapshot: Self.run)
             }

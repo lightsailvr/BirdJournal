@@ -13,11 +13,7 @@ struct RunLiveActivity: Widget {
                     RunIslandExpandedLeading(snapshot: context.state)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.state.statusText)
-                        .font(.subheadline)
-                        .foregroundStyle(GlanceInk.secondary(.dark, .standard))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                    RunIslandStatus(snapshot: context.state)
                         .frame(maxHeight: .infinity)
                         .padding(.trailing, 4)
                 }

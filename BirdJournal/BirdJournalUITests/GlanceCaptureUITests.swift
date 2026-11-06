@@ -23,6 +23,8 @@ final class GlanceCaptureUITests: XCTestCase {
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Review '")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 120), "no bird heard; screen: \(app.debugDescription.prefix(3000))")
 
+        // Collection showing: the recap has to find the birder wherever they were.
+        app.tabBars.buttons["Collection"].tap()
         XCUIDevice.shared.press(.home)
         sleep(3)
         try save("activity-island-compact", to: folder)

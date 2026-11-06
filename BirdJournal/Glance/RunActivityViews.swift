@@ -13,7 +13,7 @@ struct RunActivityClock: View {
     var body: some View {
         Group {
             if let startedAt = snapshot.startedAt {
-                Text(timerInterval: startedAt...Date.distantFuture, countsDown: false)
+                Text(timerInterval: startedAt...Date.distantFuture, pauseTime: snapshot.pausedAt, countsDown: false)
             } else {
                 Text("–:––")
                     .accessibilityLabel(snapshot.statusText)
@@ -115,6 +115,21 @@ struct RunIslandExpandedLeading: View {
             RunActivityClock(snapshot: snapshot, font: .system(.title2, design: .serif))
         }
         .padding(.leading, 4)
+    }
+}
+
+/// The Island's other corner: what the run is doing, in its own contrast.
+struct RunIslandStatus: View {
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.colorSchemeContrast) private var contrast
+    let snapshot: RunSnapshot
+
+    var body: some View {
+        Text(snapshot.statusText)
+            .font(.subheadline)
+            .foregroundStyle(GlanceInk.secondary(scheme, contrast))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
     }
 }
 

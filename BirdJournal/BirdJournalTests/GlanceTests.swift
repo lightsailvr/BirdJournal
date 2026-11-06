@@ -36,7 +36,7 @@ struct RunSnapshotTests {
 
     @Test("each state of a run reads as a phase, and only a run under way has an activity")
     func phases() {
-        let snapshot = { (state: ListeningCoordinator.State) in RunSnapshot(state: state, startedAt: nil, hunt: RunHunt(newPatches: 0, alreadyHave: 0), at: nil, sets: []) }
+        let snapshot = { (state: ListeningCoordinator.State) in RunSnapshot(state: state, clockStart: nil, hunt: RunHunt(newPatches: 0, alreadyHave: 0), at: nil, sets: []) }
         #expect(snapshot(.idle).phase == .idle)
         #expect(!snapshot(.idle).isRunning)
         #expect(snapshot(.starting).phase == .starting)
@@ -54,7 +54,7 @@ struct RunSnapshotTests {
     @Test("it counts what the run's hunt counts, and the place picks the edition")
     func newPatchesAndEdition() {
         let start = Date(timeIntervalSince1970: 1_000)
-        var snapshot = RunSnapshot(state: .listening, startedAt: start, hunt: RunHunt(newPatches: 2, alreadyHave: 0), at: Self.griffith, sets: [Self.la])
+        var snapshot = RunSnapshot(state: .listening, clockStart: start, hunt: RunHunt(newPatches: 2, alreadyHave: 0), at: Self.griffith, sets: [Self.la])
         #expect(snapshot.startedAt == start)
         #expect(snapshot.birdsHeard == 2)
         #expect(snapshot.newPatchesWaiting == 2)
@@ -62,13 +62,13 @@ struct RunSnapshotTests {
         #expect(snapshot.birdsHeardText == "2 birds heard")
         #expect(snapshot.newPatchesText == RunHunt(newPatches: 2, alreadyHave: 0).waiting)
 
-        snapshot = RunSnapshot(state: .listening, startedAt: start, hunt: RunHunt(newPatches: 1, alreadyHave: 1), at: Self.griffith, sets: [Self.la])
+        snapshot = RunSnapshot(state: .listening, clockStart: start, hunt: RunHunt(newPatches: 1, alreadyHave: 1), at: Self.griffith, sets: [Self.la])
         #expect(snapshot.birdsHeard == 2)
         #expect(snapshot.newPatchesText == "1 new patch waiting")
         #expect(snapshot.newPatchesText == RunHunt(newPatches: 1, alreadyHave: 1).waiting)
         #expect(snapshot.spokenText == "Listening, 2 birds heard, 1 new patch waiting")
 
-        snapshot = RunSnapshot(state: .listening, startedAt: start, hunt: RunHunt(newPatches: 0, alreadyHave: 2), at: Self.griffith, sets: [Self.la])
+        snapshot = RunSnapshot(state: .listening, clockStart: start, hunt: RunHunt(newPatches: 0, alreadyHave: 2), at: Self.griffith, sets: [Self.la])
         #expect(snapshot.newPatchesText == nil, "the line says nothing with none waiting")
         #expect(snapshot.spokenText == "Listening, 2 birds heard")
     }
@@ -76,8 +76,8 @@ struct RunSnapshotTests {
     @Test("outside every set, or before a fix, the run has no edition")
     func noEdition() {
         let hunt = RunHunt(newPatches: 0, alreadyHave: 0)
-        #expect(RunSnapshot(state: .listening, startedAt: nil, hunt: hunt, at: nil, sets: [Self.la]).setID == nil)
-        #expect(RunSnapshot(state: .listening, startedAt: nil, hunt: hunt, at: Coordinate(latitude: 40.7, longitude: -74, accuracy: 10), sets: [Self.la]).setID == nil)
+        #expect(RunSnapshot(state: .listening, clockStart: nil, hunt: hunt, at: nil, sets: [Self.la]).setID == nil)
+        #expect(RunSnapshot(state: .listening, clockStart: nil, hunt: hunt, at: Coordinate(latitude: 40.7, longitude: -74, accuracy: 10), sets: [Self.la]).setID == nil)
     }
 
     private final class FakeHost: RunActivityHost {
@@ -288,10 +288,11 @@ struct WidgetSnapshotTests {
 
     @Test("the extension's pictures stay under what WidgetKit will archive, or the widget silently stays on its placeholder")
     func picturesFitAWidget() throws {
-        // From the system's log on an iPhone 17 Pro's small widget: "image being too large ... max[1069415.6]", in pixels of area.
-        let limit = 1_069_415
+        // From the system's log for a small widget on an iPhone SE, the lowest iOS 27 runs on: "totalArea: 518400 > max[375161.6]".
+        // A 17 Pro's is 1,069,415. Counted together, in case the system does.
+        let limit = 375_161
         let catalog = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appending(path: "BirdJournalWidgets/Assets.xcassets")
-        let patch = 188 * 3  // `LatestPatchPublisher`: 160 points and the shadow's room, at three times.
+        let patch = Int(((LatestPatchPublisher.patchWidth + FlatPatch.room * 2) * LatestPatchPublisher.patchScale).rounded(.up))
         for name in ["MaterialFelt.imageset/felt.jpg", "MaterialLinen.imageset/linen.jpg"] {
             let source = try #require(CGImageSourceCreateWithURL(catalog.appending(path: name) as CFURL, nil))
             let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
@@ -299,6 +300,34 @@ struct WidgetSnapshotTests {
             let height = try #require(properties[kCGImagePropertyPixelHeight] as? Int)
             #expect(width * height + patch * patch < limit, "\(name) is \(width)×\(height)")
         }
+    }
+
+    @Test("behind a locked phone a new patch goes up as its plain painting, cut to shape, and is lit once the app is in front")
+    func lockedThenLit() async throws {
+        let album = try AlbumSchema.makeContainer(inMemory: true)
+        let library = PackLibrary.forApp()
+        let collection = CollectionStore(container: album, sets: { library.cardSets })
+        let store = WidgetStore(directory: URL.temporaryDirectory.appending(path: "widget-\(UUID().uuidString)", directoryHint: .isDirectory))
+        var inFront = false
+        let publisher = LatestPatchPublisher(store: store, collection: collection, packs: library, isInFront: { inFront })
+
+        album.mainContext.insert(Sighting(speciesID: Self.finch, confirmedAt: .now, location: Self.griffith, soundConfidence: 0.9, source: .phone))
+        try album.mainContext.save()
+        await publisher.write()
+        #expect(store.snapshot()?.latest?.name == "House Finch", "the widget has the bird with the app in the background")
+        #expect(store.snapshot()?.latest?.hasPainting == false, "marked to be lit later")
+        let plain = try #require(store.patchImage())
+        let (bytes, width, height) = try ShareCardTests.rgba(try #require(UIImage(data: plain)))
+        #expect(bytes[3] == 0, "the corner is clear")
+        #expect(bytes[(height / 2 * width + width / 2) * 4 + 3] == 255, "the patch is solid")
+
+        await publisher.write()
+        #expect(store.patchImage() == plain, "still in the background: the same picture")
+
+        inFront = true
+        await publisher.write()
+        #expect(store.snapshot()?.latest?.hasPainting == true)
+        #expect(store.patchImage() != plain, "lit")
     }
 
     @Test("the store hands the extension what the app wrote, and the old picture goes with the last patch")
@@ -390,7 +419,8 @@ struct WidgetSnapshotTests {
         let png = try #require(store.patchImage())
         let image = try #require(UIImage(data: png))
         let (bytes, width, height) = try ShareCardTests.rgba(image)
-        #expect(width >= 480 && height >= 480, "a widget's patch at three times its points")
+        #expect(width >= 440 && height >= 440, "sharp at a widget's size")
+        #expect(width * height < 375_161 - 160_000, "and under what the smallest phone's widget can hold, with the felt")
         #expect(bytes[3] == 0, "the corner is clear: the patch sits on the widget's own felt")
         let middle = (height / 2 * width + width / 2) * 4
         #expect(bytes[middle + 3] == 255, "and the patch itself is solid")
@@ -401,6 +431,82 @@ struct WidgetSnapshotTests {
         let after = try FileManager.default.attributesOfItem(atPath: store.directory.appending(path: "latest-patch.png").path(percentEncoded: false))
         #expect(attributes[.modificationDate] as? Date == after[.modificationDate] as? Date, "a repeat doesn't draw it again")
     }
+}
+
+@Suite("A run's clock and its end")
+@MainActor
+struct RunEndTests {
+    @Test("time paused isn't time listened, finished or under way, and a clock reads it by starting later")
+    func clock() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        var clock = ListeningClock()
+        #expect(clock.listened(from: start, to: start.addingTimeInterval(60)) == 60)
+        #expect(clock.listened(from: nil, to: start) == 0)
+
+        clock.note(isPaused: true, at: start.addingTimeInterval(60))
+        clock.note(isPaused: true, at: start.addingTimeInterval(90))
+        #expect(clock.pausedSince == start.addingTimeInterval(60), "the first of a pause's states starts it")
+        #expect(clock.listened(from: start, to: start.addingTimeInterval(200)) == 60, "stopped during a pause, or read during one")
+
+        clock.note(isPaused: false, at: start.addingTimeInterval(240))
+        #expect(clock.pausedSince == nil)
+        #expect(clock.listened(from: start, to: start.addingTimeInterval(300)) == 120)
+        #expect(clock.shownStart(from: start) == start.addingTimeInterval(180))
+    }
+
+    @Test("a run that ends without Stop goes to its review, and the time stops there")
+    func endsOnItsOwn() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+
+        harness.source.giveOut()
+        try await waitUntil("the run's own end reaches the review") { run.isReviewing }
+        let ended = try #require(run.endedAt)
+        #expect(!run.state.isActive)
+        #expect(run.clockStoppedAt == ended)
+        run.dismissEnded()
+    }
+
+    @Test("killed with its review waiting, the next launch opens on it, with the birds, the place, the time and the adds; Done forgets it")
+    func reviewOutlivesTheApp() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let heard = run.candidates
+        await run.stop()
+        let addition = try #require(await run.add(run.candidates[0]))
+        let (startedAt, endedAt, listened) = (run.startedAt, run.endedAt, run.listened)
+
+        let again = harness.relaunched()
+        #expect(again.isReviewing)
+        #expect(again.state == .ended(.stopped))
+        #expect(again.candidates == heard)
+        #expect(again.startedAt == startedAt)
+        #expect(again.endedAt == endedAt)
+        #expect(abs(again.listened - listened) < 0.001)
+        #expect(again.coordinate == run.coordinate)
+        #expect(again.isAdded(heard[0]))
+        #expect(!again.isAdded(heard[1]))
+
+        // Still the real review: a skipped bird can be added, and an add from before can be undone.
+        try #require(await again.add(again.candidates[1]))
+        #expect(harness.stored.count == 2)
+        again.undo(RunSightings.Addition(species: heard[0].species, sightingID: again.sightings.entries[0].id, identifier: addition.identifier, sewsPatch: true, patchCount: 1, placement: addition.placement))
+        #expect(harness.stored.count == 1)
+
+        let third = harness.relaunched()
+        #expect(third.isAdded(heard[1]), "the adds made there are kept for the next launch too")
+        #expect(!third.isAdded(heard[0]))
+        third.dismissEnded()
+        #expect(third.state == .idle)
+        #expect(!harness.relaunched().isReviewing, "seen and done")
+    }
+
 }
 
 @Suite("The run recap")
@@ -414,7 +520,7 @@ struct RunRecapTests {
     }()
 
     private func recap(minutes: Double = 42, place: String? = "Los Angeles", heard: Int = 3, patches: [String] = ["House Finch"]) -> RunRecap {
-        RunRecap(startedAt: Self.start, endedAt: Self.start.addingTimeInterval(minutes * 60), place: place, birdsHeard: heard, patchNames: patches, calendar: Self.losAngeles, locale: Locale(identifier: "en_US"))
+        RunRecap(startedAt: Self.start, listened: minutes * 60, place: place, birdsHeard: heard, patchNames: patches, calendar: Self.losAngeles, locale: Locale(identifier: "en_US"))
     }
 
     @Test("it says the date, the place, the time listened, the birds heard and the patches sewn, in plain words")

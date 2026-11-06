@@ -159,6 +159,9 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.page == .list }
                 input.back()
                 try await waitUntil(timeout: .seconds(5)) { run.state == .ended(.endedByGlasses) }
+                // Back on the lens is an end like Stop: the recap and its time.
+                try await waitUntil(timeout: .seconds(5)) { run.isReviewing }
+                #expect(run.endedAt != nil)
                 #expect(run.hasCeremonyWaiting)
                 run.showNextCeremony()
                 #expect(run.reveal?.commonName == "House Finch")

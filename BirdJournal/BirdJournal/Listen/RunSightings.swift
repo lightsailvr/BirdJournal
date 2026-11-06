@@ -55,6 +55,17 @@ final class RunSightings {
         records = [:]
     }
 
+    /// Reads back a run's adds from the album, for its review after the app was killed: Undo still works on them. A sighting
+    /// deleted meanwhile is left out.
+    func restore(_ added: [(identifier: UUID, candidate: Candidate)]) {
+        let context = recorder.container.mainContext
+        for (identifier, candidate) in added {
+            guard let sighting = try? context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })).first else { continue }
+            records[sighting.persistentModelID] = sighting
+            entries.append(Entry(id: sighting.persistentModelID, identifier: identifier, candidate: candidate, hasFrame: sighting.frameImagePath != nil))
+        }
+    }
+
     func isAdded(_ species: Species) -> Bool {
         entries.contains { $0.candidate.species == species }
     }

@@ -187,11 +187,16 @@ struct RootView: View {
         .tabViewBottomAccessory(isEnabled: run.state.isActive && tab != .listen) {
             ListeningAccessory { tab = .listen }
         }
+        // The end of a run, from whichever tab it finds the birder on (issue #150). On the Listen tab's own view it could only be
+        // presented with that tab showing: on another, SwiftUI gave up on it and the birds heard went with it. It waits for a
+        // candidate's sheet to close, since only one can be up.
+        .sheet(isPresented: Binding(get: { run.isReviewing && run.reviewing == nil }, set: { if !$0 { run.isReviewing = false } })) {
+            RunReviewSheet()
+        }
         .tint(Color.moss)
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
-        // it's up this one waits: two pages would sew the patch twice, each with its own haptics. The sheet is the Listen tab's:
-        // on another tab, after Stop on the listening strip, it isn't up until the birder comes back.
-        .patchReveal(isCovered: run.isReviewing && tab == .listen)
+        // it's up this one waits: two pages would sew the patch twice, each with its own haptics.
+        .patchReveal(isCovered: run.isReviewing)
         // The patches a glasses run sewed: once it's over and the app is in front, which may be a launch or two later.
         .onChange(of: scenePhase == .active && !isUnderSplash && run.hasCeremonyWaiting, initial: true) { _, ready in
             if ready { run.showNextCeremony() }

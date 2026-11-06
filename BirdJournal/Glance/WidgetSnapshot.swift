@@ -9,7 +9,8 @@ nonisolated struct WidgetSnapshot: Codable, Hashable, Sendable {
         var name: String
         /// "Los Angeles", or "Uncharted" outside every set.
         var setName: String
-        /// Whether the picture is its painting or the edition's blank: a pack arriving later paints it.
+        /// Whether the picture is its lit painting. Written as false for anything else, a blank or a plain painting drawn behind
+        /// a locked phone, so the picture is drawn again whenever the phone has a painting to light.
         var hasPainting: Bool
     }
 
@@ -48,7 +49,7 @@ nonisolated struct WidgetSnapshot: Codable, Hashable, Sendable {
     }
 
     /// The rule for when it's rewritten: nothing while the newest patch and the set's progress stand, the words when they
-    /// move, and the picture too when the patch is a different one, its painting has come or gone, or the picture is missing.
+    /// move, and the picture too when the patch is a different one, its painting has come or isn't lit yet, or the picture is missing.
     static func rewrite(from old: WidgetSnapshot?, to new: WidgetSnapshot, hasPatchImage: Bool) -> Rewrite {
         if let latest = new.latest, latest.link != old?.latest?.link || latest.hasPainting != old?.latest?.hasPainting || !hasPatchImage {
             return .wordsAndPatch

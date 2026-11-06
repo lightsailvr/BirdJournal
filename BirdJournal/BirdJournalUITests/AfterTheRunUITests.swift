@@ -70,6 +70,59 @@ final class AfterTheRunUITests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
 
+    /// Stop on the strip with another tab showing, which is where Stop on the Island or the Lock Screen also finds a birder.
+    @MainActor
+    func testStopFromAnotherTabLandsOnTheRecapWithItsBirds() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening"]
+        app.launch()
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 120), "no bird heard; screen: \(app.debugDescription.prefix(3000))")
+
+        app.tabBars.buttons["Collection"].tap()
+        let stop = app.buttons["Stop listening"]
+        XCTAssertTrue(stop.waitForExistence(timeout: 10), "no strip; screen: \(app.debugDescription.prefix(3000))")
+        stop.tap()
+
+        let card = recap(app)
+        XCTAssertTrue(card.waitForExistence(timeout: 15), "no recap on Collection; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(card.label.contains("0 birds heard"), card.label)
+        XCTAssertTrue(app.staticTexts["What you heard"].exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch.exists, "its birds are listed; screen: \(app.debugDescription.prefix(4000))")
+
+        app.buttons["Done"].firstMatch.tap()
+        XCTAssertFalse(card.waitForExistence(timeout: 3), "Done closes it")
+        XCTAssertTrue(app.navigationBars["Collection"].exists, "and the birder is where they were")
+    }
+
+    /// Stop on the Lock Screen leaves a suspended app that iOS can kill. Coming back after that, the recap is still there.
+    @MainActor
+    func testARecapWaitingWhenTheAppIsKilledIsThereAtTheNextLaunch() throws {
+        let album = "recap-\(UUID().uuidString)"
+        let app = try launchRecap(["-albumFile", album])
+        // Not the helper's in-memory album: this one is on disk, as a birder's is.
+        app.terminate()
+        app.launchArguments = ["-albumFile", album, "-collectionIntroShown", "YES", "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "recap"]
+        app.launch()
+        XCTAssertTrue(recap(app).waitForExistence(timeout: 120), "no recap; screen: \(app.debugDescription.prefix(4000))")
+        let label = recap(app).label
+        app.terminate()
+
+        app.launchArguments = ["-albumFile", album, "-collectionIntroShown", "YES", "-autoLocation", "griffith"]
+        app.launch()
+        let card = recap(app)
+        XCTAssertTrue(card.waitForExistence(timeout: 30), "the review didn't come back; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(card.label.contains("birds heard") || card.label.contains("bird heard"), card.label)
+        XCTAssertEqual(card.label.components(separatedBy: "Listened for").last, label.components(separatedBy: "Listened for").last, "the same run")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch.exists, "with its birds; screen: \(app.debugDescription.prefix(4000))")
+
+        app.buttons["Done"].firstMatch.tap()
+        XCTAssertFalse(card.waitForExistence(timeout: 3))
+        app.terminate()
+        app.launch()
+        XCTAssertFalse(card.waitForExistence(timeout: 8), "seen and done")
+    }
+
     @MainActor
     func testTheCityCanBeLeftOffAndShareOpensTheSystemShare() throws {
         let app = try launchRecap()

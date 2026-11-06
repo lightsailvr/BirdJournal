@@ -141,8 +141,12 @@ final class ListeningCoordinator {
     private(set) var pendingCeremonies: [UUID] {
         didSet { defaults.set(pendingCeremonies.map(\.uuidString), forKey: Self.pendingCeremoniesKey) }
     }
-    /// When Stop finished the run: what the recap counts the time to, however long the review waits to be seen.
+    /// When the run ended, by Stop or on its own: what the recap counts the time to, however long the review waits to be seen.
     private(set) var endedAt: Date?
+    /// The time the run has spent paused, so "listened" doesn't count it.
+    private(set) var clock = ListeningClock()
+    /// A run that had ended and was waiting for its review when the app was killed: the birds heard, read back at launch.
+    private(set) var restored: EndedRun?
     /// Set when a run that heard something ends, until the review is dismissed.
     var isReviewing = false
     /// The candidate the birder is reviewing, nil when none.
@@ -160,12 +164,15 @@ final class ListeningCoordinator {
     @ObservationIgnored private var acknowledgmentTask: Task<Void, Never>?
     /// From Stop until the run's end has been dealt with, so a ceremony starts over the review rather than just before it.
     private var isEnding = false
+    @ObservationIgnored private let archive: UserDefaults?
     static let sourceKey = "listeningSource"
+    private static let endedRunKey = "endedRunAwaitingReview"
     private static let pendingCeremoniesKey = "pendingPatchCeremonies"
 
     /// - Parameters:
     ///   - defaultSource: the source for a phone that has not chosen one: the glasses when a pair is linked.
-    init(phone: ListeningSession, glasses: GlassesListeningSession, sightings: RunSightings, levels: LevelSink, defaultSource: Source, defaults: UserDefaults = .standard) {
+    ///   - archive: where a review waiting to be seen outlives the app; by default `defaults`, and with nil it doesn't.
+    init(phone: ListeningSession, glasses: GlassesListeningSession, sightings: RunSightings, levels: LevelSink, defaultSource: Source, defaults: UserDefaults = .standard, archive: UserDefaults?? = .none) {
         self.phone = phone
         self.glasses = glasses
         self.sightings = sightings
@@ -173,7 +180,10 @@ final class ListeningCoordinator {
         self.defaults = defaults
         source = defaults.string(forKey: Self.sourceKey).flatMap(Source.init(rawValue:)) ?? defaultSource
         pendingCeremonies = defaults.stringArray(forKey: Self.pendingCeremoniesKey)?.compactMap(UUID.init(uuidString:)) ?? []
+        self.archive = archive ?? defaults
         glasses.onPatchSewn = { [weak self] identifier in self?.pendingCeremonies.append(identifier) }
+        restoreEndedRun()
+        followState()
     }
 
     // MARK: - What the screens read
@@ -256,10 +266,16 @@ final class ListeningCoordinator {
         order.update(with: stack, at: state.isActive ? sessionTime : .infinity)
         return order
     }
-    var startedAt: Date? { listening.startedAt }
+    var startedAt: Date? { restored?.startedAt ?? listening.startedAt }
+    /// Where a clock counting only the time listened starts: the start, moved on by the time paused.
+    var clockStart: Date? { startedAt.map(clock.shownStart(from:)) }
+    /// Where that clock stands still: while the run is paused, and once it has ended.
+    var clockStoppedAt: Date? { clock.pausedSince ?? endedAt }
+    /// The time the run spent listening, up to its end or now.
+    var listened: TimeInterval { clock.listened(from: startedAt, to: endedAt ?? .now) }
     var locationState: ListeningSession.LocationState { listening.locationState }
     /// The location the next add records.
-    var coordinate: Coordinate? { listening.coordinate }
+    var coordinate: Coordinate? { restored?.coordinate ?? listening.coordinate }
     /// When that location was fixed.
     var locationFixedAt: Date? { listening.locationFixedAt }
     /// Whether a phone-microphone run holds the audio session, which a reference clip then plays in (issue #41).
@@ -281,6 +297,8 @@ final class ListeningCoordinator {
         guard !state.isActive else { return }
         lastEnd = nil
         endedAt = nil
+        clock = ListeningClock()
+        forgetEndedRun()
         isReviewing = false
         acknowledgment = nil
         hasRun = true
@@ -312,16 +330,40 @@ final class ListeningCoordinator {
         case nil: break
         }
         lastEnd = lastEnd ?? .stopped
+        settleEnd()
+    }
+
+    /// What every end of a run comes to, by Stop or on its own (Back on the lens, the source giving out): the clock stops, and
+    /// what was heard goes to the review. Once per run.
+    private func settleEnd() {
+        guard endedAt == nil else { return }
         endedAt = .now
+        stopWaveform()
         listOrder = currentOrder()
         isReviewing = !candidates.isEmpty
         // The page moves to over the review: it picks up as finished rather than starting again.
         if isReviewing { finishCeremony() }
+        keepEndedRun()
+    }
+
+    /// Every change of state from launch on, wherever it came from and whatever's on screen: the paused time, and a run that
+    /// ended without Stop.
+    private func followState() {
+        let state = withObservationTracking { self.state } onChange: { [weak self] in
+            Task { @MainActor in self?.followState() }
+        }
+        switch state {
+        case .interrupted, .paused, .resuming: clock.note(isPaused: true, at: .now)
+        default: clock.note(isPaused: false, at: .now)
+        }
+        // Stop settles the end itself, with its reason.
+        if case .ended = state, !isEnding { settleEnd() }
     }
 
     /// Clears the last run's species from the screen.
     func dismissEnded() {
         guard !state.isActive else { return }
+        forgetEndedRun()
         isReviewing = false
         runSource = nil
         hasRun = false
@@ -340,6 +382,7 @@ final class ListeningCoordinator {
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone, method: method)
+            keepEndedRun()
             if addition.sewsPatch {
                 let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
                 self.reveal = reveal
@@ -398,6 +441,38 @@ final class ListeningCoordinator {
         showNextCeremony()
     }
 
+    // MARK: - A review that outlives the app
+
+    /// Writes the ended run down while its review waits. Stop on the Lock Screen leaves the app suspended, holding a model in
+    /// memory, and iOS may well kill it before the birder is back: their birds shouldn't go with it.
+    private func keepEndedRun() {
+        guard isReviewing, let archive, let startedAt, let endedAt, let runSource else { return }
+        let run = EndedRun(
+            source: runSource.rawValue, startedAt: startedAt, endedAt: endedAt, listened: clock.listened(from: startedAt, to: endedAt),
+            coordinate: coordinate, birds: candidates.map(EndedRun.Bird.init), added: sightings.entries.map { .init(identifier: $0.identifier, bird: .init($0.candidate)) }
+        )
+        archive.set(try? JSONEncoder().encode(run), forKey: Self.endedRunKey)
+    }
+
+    private func forgetEndedRun() {
+        restored = nil
+        archive?.removeObject(forKey: Self.endedRunKey)
+    }
+
+    /// At launch: the review a killed app was waiting to show, with what it had added.
+    private func restoreEndedRun() {
+        guard let data = archive?.data(forKey: Self.endedRunKey), let run = try? JSONDecoder().decode(EndedRun.self, from: data), !run.birds.isEmpty else { return }
+        restored = run
+        runSource = Source(rawValue: run.source)
+        hasRun = true
+        lastEnd = .stopped
+        endedAt = run.endedAt
+        clock = ListeningClock(alreadyPaused: run.endedAt.timeIntervalSince(run.startedAt) - run.listened)
+        sightings.restore(run.added.map { ($0.identifier, $0.bird.candidate) })
+        listOrder = currentOrder()
+        isReviewing = true
+    }
+
     // MARK: - Ceremonies after a glasses run
 
     /// A ceremony is waiting and could start: the run is over and nothing is showing, or about to, that it would play under.
@@ -431,6 +506,7 @@ final class ListeningCoordinator {
     func undo(_ addition: RunSightings.Addition) {
         do {
             try sightings.undo(addition)
+            keepEndedRun()
             acknowledgment = nil
             if reveal?.addition == addition { reveal = nil }
         } catch {
@@ -474,6 +550,87 @@ final class ListeningCoordinator {
         waveformTask = nil
         waveform = [Float](repeating: 0, count: Self.waveformLength)
     }
+}
+
+/// The time a run has spent paused, so a clock can count only the time it spent listening (issue #150). Glasses off or out of
+/// range isn't listening. A pure value, fed each change of the run's state.
+struct ListeningClock: Equatable {
+    private var pausedTotal: TimeInterval
+    /// Since when it's been paused; nil while it isn't.
+    private(set) var pausedSince: Date?
+
+    init(alreadyPaused: TimeInterval = 0) {
+        pausedTotal = max(alreadyPaused, 0)
+    }
+
+    mutating func note(isPaused: Bool, at date: Date) {
+        if isPaused {
+            pausedSince = pausedSince ?? date
+        } else if let since = pausedSince {
+            pausedTotal += max(date.timeIntervalSince(since), 0)
+            pausedSince = nil
+        }
+    }
+
+    /// The time listened from `start` up to `end`, or up to the pause `end` fell in.
+    func listened(from start: Date?, to end: Date) -> TimeInterval {
+        guard let start else { return 0 }
+        return max(min(end, pausedSince ?? end).timeIntervalSince(start) - pausedTotal, 0)
+    }
+
+    /// Where to start a clock that reads the time listened, for now.
+    func shownStart(from start: Date) -> Date {
+        start.addingTimeInterval(pausedTotal)
+    }
+}
+
+/// A run that has ended, as far as its review needs it, written down until the review has been seen.
+nonisolated struct EndedRun: Codable, Equatable, Sendable {
+    struct Bird: Codable, Equatable, Sendable {
+        let index: Int
+        let scientificName: String
+        let commonName: String
+        let taxonomicClass: String
+        let score: Float
+        let windowsAboveThreshold: Int
+        let firstHeardAt: Double
+        let lastHeardAt: Double
+        let admittedAt: Double
+
+        init(_ candidate: Candidate) {
+            index = candidate.species.index
+            scientificName = candidate.species.scientificName
+            commonName = candidate.species.commonName
+            taxonomicClass = candidate.species.taxonomicClass
+            score = candidate.score
+            windowsAboveThreshold = candidate.windowsAboveThreshold
+            firstHeardAt = candidate.firstHeardAt
+            lastHeardAt = candidate.lastHeardAt
+            admittedAt = candidate.admittedAt
+        }
+
+        var candidate: Candidate {
+            Candidate(
+                species: Species(index: index, scientificName: scientificName, commonName: commonName, taxonomicClass: taxonomicClass),
+                score: score, windowsAboveThreshold: windowsAboveThreshold, firstHeardAt: firstHeardAt, lastHeardAt: lastHeardAt, admittedAt: admittedAt
+            )
+        }
+    }
+
+    struct Added: Codable, Equatable, Sendable {
+        let identifier: UUID
+        let bird: Bird
+    }
+
+    let source: String
+    let startedAt: Date
+    let endedAt: Date
+    let listened: TimeInterval
+    let coordinate: Coordinate?
+    let birds: [Bird]
+    let added: [Added]
+
+    var candidates: [Candidate] { birds.map(\.candidate) }
 }
 
 extension GlassesListeningSession.PauseReason {

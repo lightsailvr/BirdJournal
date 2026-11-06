@@ -42,7 +42,7 @@ struct RunReviewSheet: View {
     }
 
     private var recap: RunRecap {
-        RunRecap(startedAt: run.startedAt, endedAt: run.endedAt ?? .now, place: place, birdsHeard: run.candidates.count, patchNames: sewn.map { PatchText.name(of: $0, library: library) })
+        RunRecap(startedAt: run.startedAt ?? .now, listened: run.listened, place: place, birdsHeard: run.candidates.count, patchNames: sewn.map { PatchText.name(of: $0, library: library) })
     }
 
     /// Who took the photos the pictured patches were stitched from, for the image and its text.
@@ -74,6 +74,14 @@ struct RunReviewSheet: View {
         NavigationStack {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
+                    if case .ended(.failed(let reason)) = run.state {
+                        Text(reason)
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.alert)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 8)
+                            .accessibilityIdentifier("recap-failure")
+                    }
                     RunRecapCard(recap: recap, pictures: pictures)
                         .padding(.top, 8)
                     if run.coordinate != nil {

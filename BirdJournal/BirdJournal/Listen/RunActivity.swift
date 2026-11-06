@@ -9,7 +9,7 @@ extension RunSnapshot {
     /// The pure reading of a run (issue #150): what the Live Activity shows, from the coordinator's state and the run's hunt. A
     /// bird heard is a new patch waiting until an add would only tick an existing patch's count, so an add takes it off, and
     /// an undo puts it back.
-    init(state: ListeningCoordinator.State, startedAt: Date?, hunt: RunHunt, at coordinate: Coordinate?, sets: [CardSet]) {
+    init(state: ListeningCoordinator.State, clockStart: Date?, pausedAt: Date? = nil, hunt: RunHunt, at coordinate: Coordinate?, sets: [CardSet]) {
         switch state {
         case .idle: phase = .idle
         case .starting: phase = .starting
@@ -24,7 +24,8 @@ extension RunSnapshot {
         case .resuming: pausedTitle = "Picking up the glasses"
         default: pausedTitle = nil
         }
-        self.startedAt = startedAt
+        startedAt = clockStart
+        self.pausedAt = pausedAt
         birdsHeard = hunt.newPatches + hunt.alreadyHave
         newPatchesWaiting = hunt.newPatches
         setID = Self.setID(at: coordinate, in: sets)
@@ -45,7 +46,7 @@ extension RunSnapshot {
 extension ListeningCoordinator {
     /// The run as the Live Activity shows it.
     func snapshot(in collection: CardCollection) -> RunSnapshot {
-        RunSnapshot(state: state, startedAt: startedAt, hunt: hunt(in: collection), at: coordinate, sets: collection.sets)
+        RunSnapshot(state: state, clockStart: clockStart, pausedAt: clock.pausedSince, hunt: hunt(in: collection), at: coordinate, sets: collection.sets)
     }
 }
 

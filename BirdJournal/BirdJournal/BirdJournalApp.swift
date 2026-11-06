@@ -60,7 +60,8 @@ struct BirdJournalApp: App {
         let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels, suppression: suppression)
         let listening = ListeningCoordinator(
             phone: phone, glasses: glasses, sightings: sightings, levels: levels,
-            defaultSource: connection.devices.isEmpty ? .phone : .glasses
+            defaultSource: connection.devices.isEmpty ? .phone : .glasses,
+            archive: Self.endedRunArchive()
         )
         self.album = album
         self.frames = frames
@@ -131,6 +132,16 @@ struct BirdJournalApp: App {
         } catch {
             fatalError("album store unavailable: \(error)")
         }
+    }
+
+    /// Where a review waiting to be seen outlives the app. In debug builds it goes with the album: nothing for one in memory,
+    /// which is gone by the next launch, and a suite of its own for `-albumFile`.
+    private static func endedRunArchive() -> UserDefaults? {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "inMemoryAlbum") { return nil }
+        if let name = UserDefaults.standard.string(forKey: "albumFile") { return UserDefaults(suiteName: "album-\(name)") }
+        #endif
+        return .standard
     }
 
     /// The caption writer every add uses (issue #56): Apple's on-device model over the packs' fact sheets, with the

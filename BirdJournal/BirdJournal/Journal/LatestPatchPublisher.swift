@@ -21,8 +21,8 @@ extension WidgetSnapshot {
 }
 
 /// Keeps the widget's two files in step with the collection: the words and the flat picture of the patch, in the App Group, as
-/// the rule in `WidgetSnapshot.rewrite` says. The picture needs the GPU, which an app behind a locked phone can't have, so a
-/// patch the lens sews there reaches the widget when the app is next in front.
+/// the rule in `WidgetSnapshot.rewrite` says. Lighting a patch needs the GPU, which an app behind a locked phone can't have, so a
+/// patch the lens sews there goes up as its plain painting, and is lit when the app is next in front.
 @MainActor
 final class LatestPatchPublisher {
     private let store: WidgetStore
@@ -33,18 +33,26 @@ final class LatestPatchPublisher {
     private var publishing: Task<Void, Never>?
     private var activation: (any NSObjectProtocol)?
 
-    /// The patch as a picture, and whether that picture is its painting: one that wouldn't decode is the blank.
+    /// The patch as a picture, and whether it's the painting, lit. A blank, or a plain painting behind a locked phone, gets
+    /// another go once there's a painting to light.
     struct DrawnPatch {
         let png: Data
-        let isPainted: Bool
+        let isLit: Bool
     }
 
-    /// - Parameter draw: draws the picture; nil when it couldn't. By default `FlatPatch`.
-    init(store: WidgetStore, collection: CollectionStore, packs: PackLibrary, draw: (@MainActor (WidgetSnapshot.Latest) async -> DrawnPatch?)? = nil) {
+    /// The patch's points on the picture and pixels per point, with the shadow's `FlatPatch.room` around it. A small widget on
+    /// a 2x phone can hold 375,161 px of image in all, with the felt (`picturesFitAWidget`).
+    static let patchWidth: CGFloat = 160
+    static let patchScale: CGFloat = 2.4
+
+    /// - Parameters:
+    ///   - draw: draws the picture; nil when it couldn't. By default `FlatPatch`.
+    ///   - isInFront: whether the GPU is there to light a patch with.
+    init(store: WidgetStore, collection: CollectionStore, packs: PackLibrary, draw: (@MainActor (WidgetSnapshot.Latest) async -> DrawnPatch?)? = nil, isInFront: @escaping @MainActor () -> Bool = { UIApplication.shared.applicationState == .active }) {
         self.store = store
         self.collection = collection
         self.packs = packs
-        self.draw = draw ?? { await Self.drawPatch($0, packs: packs) }
+        self.draw = draw ?? { await Self.drawPatch($0, packs: packs, isInFront: isInFront) }
     }
 
     /// From now on, whenever the collection changes and whenever the app comes to the front.
@@ -77,14 +85,13 @@ final class LatestPatchPublisher {
     }
 
     private func publish() {
-        guard UIApplication.shared.applicationState == .active else { return }
         publishing?.cancel()
         publishing = Task { await write() }
     }
 
     /// Brings the files up to date, if the rule says they need it. With no picture of a new patch nothing is written, since the
     /// words would then name a bird the old picture isn't of, and the rule tries again next time. A painting that wouldn't
-    /// decode is written as the blank it drew, marked unpainted, so the rule tries that again too.
+    /// decode is written as the blank it drew, marked as no painting, so the rule tries that again too, as for a plain one.
     func write() async {
         var new = snapshot()
         let rewrite = WidgetSnapshot.rewrite(from: store.snapshot(), to: new, hasPatchImage: store.hasPatchImage)
@@ -98,7 +105,7 @@ final class LatestPatchPublisher {
                 return
             }
             png = drawn.png
-            new.latest?.hasPainting = drawn.isPainted
+            new.latest?.hasPainting = drawn.isLit
         }
         do {
             try store.write(new, patchPNG: png)
@@ -108,13 +115,18 @@ final class LatestPatchPublisher {
         }
     }
 
-    private static func drawPatch(_ latest: WidgetSnapshot.Latest, packs: PackLibrary) async -> DrawnPatch? {
+    private static func drawPatch(_ latest: WidgetSnapshot.Latest, packs: PackLibrary, isInFront: @MainActor () -> Bool) async -> DrawnPatch? {
         let name = Sighting.scientificName(ofLabel: latest.link.speciesID)
+        let edition = PatchEdition.of(setID: latest.link.setID)
         var loaded: PatchTextures.Loaded?
-        if let art = packs.patchArt(scientificName: name, setID: latest.link.setID) {
-            loaded = await PatchTextures.load(art, size: .full)
+        if let art = packs.patchArt(scientificName: name, setID: latest.link.setID) { loaded = await PatchTextures.load(art, size: .full) }
+        // Asked after the decode, which can outlast the app's moment in front.
+        if isInFront() {
+            let image = FlatPatch.render(loaded: loaded, edition: edition, tag: latest.name, width: patchWidth, scale: patchScale)
+            return image?.pngData().map { DrawnPatch(png: $0, isLit: loaded != nil) }
         }
-        let image = FlatPatch.render(loaded: loaded, edition: PatchEdition.of(setID: latest.link.setID), tag: latest.name, width: 160, scale: 3)
-        return image?.pngData().map { DrawnPatch(png: $0, isPainted: loaded != nil) }
+        guard let loaded else { return nil }
+        let image = FlatPatch.unlit(loaded: loaded, edition: edition, width: patchWidth, scale: patchScale)
+        return image.pngData().map { DrawnPatch(png: $0, isLit: false) }
     }
 }

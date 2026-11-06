@@ -24,14 +24,13 @@ struct RunRecap: Equatable {
         let image: UIImage
     }
 
-    init(startedAt: Date?, endedAt: Date, place: String?, birdsHeard: Int, patchNames: [String], calendar: Calendar = .current, locale: Locale = .current) {
-        let start = startedAt ?? endedAt
+    /// - Parameter listened: the time spent listening: time paused with the glasses off isn't.
+    init(startedAt: Date, listened: TimeInterval, place: String?, birdsHeard: Int, patchNames: [String], calendar: Calendar = .current, locale: Locale = .current) {
         var style = Date.FormatStyle(locale: locale, calendar: calendar).month(.wide).day().year()
         style.timeZone = calendar.timeZone
-        dateText = start.formatted(style)
+        dateText = startedAt.formatted(style)
         self.place = place
-        let seconds = max(Int(endedAt.timeIntervalSince(start)), 0)
-        (listenedText, listenedSpoken) = Self.listened(seconds: seconds)
+        (listenedText, listenedSpoken) = Self.listened(seconds: max(Int(listened), 0))
         self.birdsHeard = birdsHeard
         self.patchNames = patchNames
     }
