@@ -324,13 +324,17 @@ final class CircleStore {
     }
 
     /// A friend's side of Compare birds (issue #64). The server answers not found for someone blocked, or no longer in a Guild
-    /// with the birder, and what was last read of them goes with that answer.
+    /// with the birder, and what was last read of them goes with that answer. An answer otherwise is the truth, even about
+    /// someone `blocked` still lists (unblocked on another device), unless the block landed while the answer was on its way,
+    /// which reads as the server would now answer.
     @discardableResult
     func compare(friendID: String) async throws -> FriendBirds {
         let session = session
+        let wasBlocked = blocked.contains { $0.id == friendID }
         do {
             let birds = try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
-            if session == self.session, !blocked.contains(where: { $0.id == friendID }) { friendBirds[friendID] = birds }
+            if !wasBlocked, blocked.contains(where: { $0.id == friendID }) { throw CircleError.notFound }
+            if session == self.session { friendBirds[friendID] = birds }
             return birds
         } catch CircleError.notFound {
             if session == self.session { friendBirds[friendID] = nil }

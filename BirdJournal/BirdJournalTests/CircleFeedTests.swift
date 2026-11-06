@@ -516,6 +516,31 @@ struct CircleCacheTests {
         #expect(store.friendBirds["maya"] == nil)
     }
 
+    @Test("a block out of date here, lifted on another device, doesn't strand Compare: the server's answer is kept")
+    func staleBlockKeepsTheAnswer() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
+        try await client.setBlocked(false, accountID: "maya", accessToken: "t")
+        #expect(store.blocked.contains { $0.id == "maya" }, "still listed here")
+
+        let birds = try await store.compare(friendID: "maya")
+        #expect(!birds.species.isEmpty)
+        #expect(store.friendBirds["maya"] == birds, "there for the screen to draw")
+    }
+
+    @Test("a block landing while Compare's answer is on its way drops the answer, and says so")
+    func blockMidCallDropsTheAnswer() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let (store, _) = try await filled(at: file(), client: client)
+        client.compareAnswerLatency = .milliseconds(300)
+        let answer = Task { try await store.compare(friendID: "maya") }
+        try await Task.sleep(for: .milliseconds(50))
+        try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
+        await #expect(throws: CircleError.notFound) { try await answer.value }
+        #expect(store.friendBirds["maya"] == nil)
+    }
+
     @Test("a friend's side of Compare is there the next time it's opened")
     func compareIsKept() async throws {
         let (store, _) = try await filled(at: file())

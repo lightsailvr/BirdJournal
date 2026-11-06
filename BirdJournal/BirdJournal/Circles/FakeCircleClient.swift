@@ -53,6 +53,9 @@ final class FakeCircleClient: CircleClient {
     /// states can be seen and measured.
     var latency: Duration = .zero
 
+    /// How long Compare's answer takes to come back once the server has read it, for the tests of what lands meanwhile.
+    var compareAnswerLatency: Duration = .zero
+
     /// A read's time on the wire, which offline ends in no answer.
     private func wire() async throws {
         if latency > .zero { try? await Task.sleep(for: latency) }
@@ -445,7 +448,9 @@ final class FakeCircleClient: CircleClient {
             }
         }
         let name = shared.lazy.compactMap { self.circlesByID[$0]?.members.first { $0.id == friendID }?.displayName }.first
-        return FriendBirds(friend: .init(id: friendID, displayName: name), species: best.values.sorted { $0.commonName < $1.commonName })
+        let birds = FriendBirds(friend: .init(id: friendID, displayName: name), species: best.values.sorted { $0.commonName < $1.commonName })
+        if compareAnswerLatency > .zero { try? await Task.sleep(for: compareAnswerLatency) }
+        return birds
     }
 
     private func counts(of itemID: String) -> [ReactionCount] {
