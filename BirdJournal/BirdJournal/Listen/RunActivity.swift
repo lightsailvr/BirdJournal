@@ -1,16 +1,15 @@
 @preconcurrency import ActivityKit
 import Album
 import Foundation
-import Identification
 import Observation
 import OSLog
 import UIKit
 
 extension RunSnapshot {
-    /// The pure reading of a run (issue #150): what the Live Activity shows, from the coordinator's state and the collection.
-    /// A bird heard is a new patch waiting until an add would only tick an existing patch's count, so an add takes it off,
-    /// and an undo puts it back.
-    init(state: ListeningCoordinator.State, startedAt: Date?, heard: [String], at coordinate: Coordinate?, collection: CardCollection) {
+    /// The pure reading of a run (issue #150): what the Live Activity shows, from the coordinator's state and the run's hunt. A
+    /// bird heard is a new patch waiting until an add would only tick an existing patch's count, so an add takes it off, and
+    /// an undo puts it back.
+    init(state: ListeningCoordinator.State, startedAt: Date?, hunt: RunHunt, at coordinate: Coordinate?, sets: [CardSet]) {
         switch state {
         case .idle: phase = .idle
         case .starting: phase = .starting
@@ -26,9 +25,9 @@ extension RunSnapshot {
         default: pausedTitle = nil
         }
         self.startedAt = startedAt
-        birdsHeard = heard.count
-        newPatchesWaiting = heard.count { collection.addSewsPatch(speciesID: $0, at: coordinate) }
-        setID = Self.setID(at: coordinate, in: collection.sets)
+        birdsHeard = hunt.newPatches + hunt.alreadyHave
+        newPatchesWaiting = hunt.newPatches
+        setID = Self.setID(at: coordinate, in: sets)
     }
 
     /// The set whose boundary holds the place, the smallest part winning as for a patch's placement; nil outside every set.
@@ -46,7 +45,7 @@ extension RunSnapshot {
 extension ListeningCoordinator {
     /// The run as the Live Activity shows it.
     func snapshot(in collection: CardCollection) -> RunSnapshot {
-        RunSnapshot(state: state, startedAt: startedAt, heard: candidates.map(\.species.birdnetLabel), at: coordinate, collection: collection)
+        RunSnapshot(state: state, startedAt: startedAt, hunt: hunt(in: collection), at: coordinate, sets: collection.sets)
     }
 }
 

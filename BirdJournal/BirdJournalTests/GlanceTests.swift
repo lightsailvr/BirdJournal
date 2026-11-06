@@ -36,8 +36,7 @@ struct RunSnapshotTests {
 
     @Test("each state of a run reads as a phase, and only a run under way has an activity")
     func phases() {
-        let empty = CardCollection([], sets: [])
-        let snapshot = { (state: ListeningCoordinator.State) in RunSnapshot(state: state, startedAt: nil, heard: [], at: nil, collection: empty) }
+        let snapshot = { (state: ListeningCoordinator.State) in RunSnapshot(state: state, startedAt: nil, hunt: RunHunt(newPatches: 0, alreadyHave: 0), at: nil, sets: []) }
         #expect(snapshot(.idle).phase == .idle)
         #expect(!snapshot(.idle).isRunning)
         #expect(snapshot(.starting).phase == .starting)
@@ -52,35 +51,33 @@ struct RunSnapshotTests {
         #expect(snapshot(.paused(.glassesOff)).isRunning)
     }
 
-    @Test("a bird heard is a new patch waiting until the collection has its patch here, and the place picks the edition")
+    @Test("it counts what the run's hunt counts, and the place picks the edition")
     func newPatchesAndEdition() {
         let start = Date(timeIntervalSince1970: 1_000)
-        var collection = CardCollection([], sets: [Self.la])
-        var snapshot = RunSnapshot(state: .listening, startedAt: start, heard: [Self.finch, Self.jay], at: Self.griffith, collection: collection)
+        var snapshot = RunSnapshot(state: .listening, startedAt: start, hunt: RunHunt(newPatches: 2, alreadyHave: 0), at: Self.griffith, sets: [Self.la])
         #expect(snapshot.startedAt == start)
         #expect(snapshot.birdsHeard == 2)
         #expect(snapshot.newPatchesWaiting == 2)
         #expect(snapshot.setID == "us-ca-la")
         #expect(snapshot.birdsHeardText == "2 birds heard")
-        #expect(snapshot.newPatchesText == "2 new patches waiting")
+        #expect(snapshot.newPatchesText == RunHunt(newPatches: 2, alreadyHave: 0).waiting)
 
-        collection = CardCollection([.init(identifier: UUID(), speciesID: Self.finch, confirmedAt: start, location: Self.griffith)], sets: [Self.la])
-        snapshot = RunSnapshot(state: .listening, startedAt: start, heard: [Self.finch, Self.jay], at: Self.griffith, collection: collection)
-        #expect(snapshot.newPatchesWaiting == 1)
+        snapshot = RunSnapshot(state: .listening, startedAt: start, hunt: RunHunt(newPatches: 1, alreadyHave: 1), at: Self.griffith, sets: [Self.la])
+        #expect(snapshot.birdsHeard == 2)
         #expect(snapshot.newPatchesText == "1 new patch waiting")
+        #expect(snapshot.newPatchesText == RunHunt(newPatches: 1, alreadyHave: 1).waiting)
         #expect(snapshot.spokenText == "Listening, 2 birds heard, 1 new patch waiting")
 
-        collection = CardCollection([.init(identifier: UUID(), speciesID: Self.finch, confirmedAt: start, location: Self.griffith), .init(identifier: UUID(), speciesID: Self.jay, confirmedAt: start, location: Self.griffith)], sets: [Self.la])
-        snapshot = RunSnapshot(state: .listening, startedAt: start, heard: [Self.finch, Self.jay], at: Self.griffith, collection: collection)
+        snapshot = RunSnapshot(state: .listening, startedAt: start, hunt: RunHunt(newPatches: 0, alreadyHave: 2), at: Self.griffith, sets: [Self.la])
         #expect(snapshot.newPatchesText == nil, "the line says nothing with none waiting")
         #expect(snapshot.spokenText == "Listening, 2 birds heard")
     }
 
     @Test("outside every set, or before a fix, the run has no edition")
     func noEdition() {
-        let collection = CardCollection([], sets: [Self.la])
-        #expect(RunSnapshot(state: .listening, startedAt: nil, heard: [], at: nil, collection: collection).setID == nil)
-        #expect(RunSnapshot(state: .listening, startedAt: nil, heard: [], at: Coordinate(latitude: 40.7, longitude: -74, accuracy: 10), collection: collection).setID == nil)
+        let hunt = RunHunt(newPatches: 0, alreadyHave: 0)
+        #expect(RunSnapshot(state: .listening, startedAt: nil, hunt: hunt, at: nil, sets: [Self.la]).setID == nil)
+        #expect(RunSnapshot(state: .listening, startedAt: nil, hunt: hunt, at: Coordinate(latitude: 40.7, longitude: -74, accuracy: 10), sets: [Self.la]).setID == nil)
     }
 
     private final class FakeHost: RunActivityHost {

@@ -91,9 +91,11 @@ struct RunReviewSheet: View {
                         .accessibilityIdentifier("recap-place-explanation")
 
                     SectionTitle("What you heard")
+                    HuntSummary(hunt: run.hunt(in: collection), isCentred: false)
+                        .padding(.top, 6)
                     VStack(spacing: 0) {
                         ForEach(run.orderedCandidates) { candidate in
-                            CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), startedAt: run.startedAt, seenHere: collection.count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)) {
+                            CandidateRow(candidate: candidate) {
                                 reviewing = candidate
                             }
                             RowRule()
@@ -106,6 +108,7 @@ struct RunReviewSheet: View {
                         .padding(.top, 12)
                 }
             }
+            .holdsPatchLight()
             .navigationTitle("Your run")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

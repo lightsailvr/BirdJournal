@@ -109,7 +109,7 @@ final class SpeedTour {
     }
 
     private func addSighting() {
-        guard let label = try? SpeciesPack.bundled().species.first?.birdnetLabel else { return }
+        guard let label = try? SpeciesPack.bundled().species.first.map(DebugSeeds.sightingLabel) else { return }
         context.insert(Sighting(speciesID: label, confirmedAt: .now, location: Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15), soundConfidence: 0.7, source: .phone))
         try? context.save()
     }

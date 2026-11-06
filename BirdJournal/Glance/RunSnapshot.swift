@@ -46,7 +46,8 @@ nonisolated struct RunSnapshot: Codable, Hashable, Sendable {
         "\(birdsHeard) \(birdsHeard == 1 ? "bird" : "birds") heard"
     }
 
-    /// "1 new patch waiting"; nil with none, when the line says nothing.
+    /// "1 new patch waiting", in `RunHunt.waiting`'s words, which the extension can't reach; nil with none, when the line says
+    /// nothing.
     var newPatchesText: String? {
         guard newPatchesWaiting > 0 else { return nil }
         return "\(newPatchesWaiting) new \(newPatchesWaiting == 1 ? "patch" : "patches") waiting"

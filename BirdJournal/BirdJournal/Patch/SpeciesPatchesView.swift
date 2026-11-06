@@ -163,7 +163,8 @@ struct PatchSightingsView: View {
     var body: some View {
         let shown = shownSightings
         PaperPage {
-            VStack(spacing: 0) {
+            // Lazy: a bird seen hundreds of times asks for only the rows on screen, each a live patch unless it has a photo.
+            LazyVStack(spacing: 0) {
                 ForEach(shown) { sighting in
                     NavigationLink(value: Route.sighting(sighting.persistentModelID)) {
                         SightingRow(sighting: sighting, showsDate: true)
@@ -174,6 +175,7 @@ struct PatchSightingsView: View {
                 }
             }
         }
+        .holdsPatchLight()
         .navigationTitle(PatchText.sightings(shown.count))
         .navigationBarTitleDisplayMode(.inline)
     }

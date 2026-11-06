@@ -102,7 +102,14 @@ final class PushesUITests: XCTestCase {
         for _ in 0..<24 where !mute.exists { list.swipeUp() }
         XCTAssertTrue(mute.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         mute.switches.firstMatch.tap()
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Muted: this Guild'")).firstMatch.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        // The switch's value says it took. Its footer can be off the bottom of the list, out of the accessibility tree, when the
+        // swiping stopped with the row low on the screen, so it's scrolled to before it's read.
+        let muted = NSPredicate(format: "value == '1'")
+        expectation(for: muted, evaluatedWith: mute)
+        waitForExpectations(timeout: 5)
+        let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Muted: this Guild'")).firstMatch
+        for _ in 0..<6 where !footer.waitForExistence(timeout: 1) { list.swipeUp() }
+        XCTAssertTrue(footer.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
 
         let maya = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Maya Ortiz'")).firstMatch
         let mayaRow = maya.exists ? maya : app.staticTexts["Maya Ortiz"].firstMatch
