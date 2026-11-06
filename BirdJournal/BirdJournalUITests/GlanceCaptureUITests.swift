@@ -69,11 +69,15 @@ final class GlanceCaptureUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-autoPhoneListening", clip, "-autoLocation", "griffith", "-autoScreen", "listening"]
         app.launch()
-        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 120), "no bird heard; screen: \(app.debugDescription.prefix(3000))")
-        row.tap()
         let close = app.buttons["Close"]
-        XCTAssertTrue(close.waitForExistence(timeout: 10), "no sheet; screen: \(app.debugDescription.prefix(3000))")
+        // The live list re-sorts as birds call, so a tap can land between rows.
+        for _ in 0..<5 where !close.exists {
+            row.tap()
+            _ = close.waitForExistence(timeout: 4)
+        }
+        XCTAssertTrue(close.exists, "no sheet; screen: \(app.debugDescription.prefix(3000))")
 
         let lock = NSSelectorFromString("pressLockButton")
         XCUIDevice.shared.perform(lock)
