@@ -199,6 +199,8 @@ private struct LatestPatch: View {
         NavigationLink(value: Route.patch(patch.id)) {
             PatchView(state: state, edition: PatchEdition.of(setID: patch.placement.setID), tag: name)
                 .frame(width: side)
+                // Its art takes no touches of its own (`PatchView`): the whole patch is what opens.
+                .contentShape(Rectangle())
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(PatchText.spoken(patch, name: name, beingSewn: state == .beingSewn))
         }
