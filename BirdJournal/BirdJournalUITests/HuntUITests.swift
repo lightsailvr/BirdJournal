@@ -127,6 +127,11 @@ final class HuntUITests: XCTestCase {
         XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
     }
 
+    /// The bird a row shows. Its label's other words can change while the list holds: a row's own contents aren't held.
+    private func bird(_ row: XCUIElement) -> String {
+        String(row.label.prefix { $0 != "," })
+    }
+
     /// A woodpecker always calling, and five with patches that keep passing their places along once a second, each with Add.
     /// (A launch argument can't hold an apostrophe: the defaults read it as a property list and drop every flag.)
     private static let movingBirds = "Melanerpes formicivorus_Acorn Woodpecker,Buteo jamaicensis_Red-tailed Hawk,Anas platyrhynchos_Mallard,Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe,Zenaida macroura_Mourning Dove"
@@ -146,8 +151,8 @@ final class HuntUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
 
         // It does keep moving when nobody's touching it.
-        let first = row.label
-        wait(for: [expectation(for: NSPredicate { _, _ in row.label != first }, evaluatedWith: NSObject())], timeout: 15)
+        let first = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != first }, evaluatedWith: NSObject())], timeout: 15)
 
         // The row's own button is the row's width less the pill, which sits to its right.
         let frame = row.frame
@@ -155,12 +160,11 @@ final class HuntUITests: XCTestCase {
         spot.press(forDuration: 2.5)
         let said = app.staticTexts.matching(NSPredicate(format: "label CONTAINS ' seen again, 2 times in Los Angeles'")).firstMatch
         XCTAssertTrue(said.waitForExistence(timeout: 1), "the press added nothing; screen: \(app.debugDescription.prefix(4000))")
-        let bird = said.label.components(separatedBy: " seen again").first ?? ""
-        XCTAssertTrue(row.label.hasPrefix("\(bird), added"), "\(bird) moved from under the finger: the row there is \(row.label)")
+        let added = said.label.components(separatedBy: " seen again").first ?? ""
+        XCTAssertTrue(row.label.hasPrefix("\(added), added"), "\(added) moved from under the finger: the row there is \(row.label)")
 
         // And it's let go: within a few seconds of the finger lifting, the list is moving again.
-        let held = row.label
-        wait(for: [expectation(for: NSPredicate { _, _ in row.label != held }, evaluatedWith: NSObject())], timeout: 15)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != added }, evaluatedWith: NSObject())], timeout: 15)
     }
 
     /// Scrolling counts as touching, with the finger nowhere near a row: here it's on the timer. These birds move three times a
@@ -176,18 +180,18 @@ final class HuntUITests: XCTestCase {
         app.launch()
         let row = app.buttons["candidate-row-2"]
         XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
-        let first = row.label
-        wait(for: [expectation(for: NSPredicate { _, _ in row.label != first }, evaluatedWith: NSObject())], timeout: 15)
+        let first = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != first }, evaluatedWith: NSObject())], timeout: 15)
 
         let timer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Listening for'")).firstMatch
         XCTAssertTrue(timer.exists, "screen: \(app.debugDescription.prefix(3000))")
         let from = timer.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         from.press(forDuration: 0.1, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -60)), withVelocity: .slow, thenHoldForDuration: 2)
-        let held = row.label
+        let held = bird(row)
         Thread.sleep(forTimeInterval: 0.6)
-        XCTAssertEqual(row.label, held, "the list moved during its 1.5 s after a scroll")
+        XCTAssertEqual(bird(row), held, "the list moved during its 1.5 s after a scroll")
 
-        wait(for: [expectation(for: NSPredicate { _, _ in row.label != held }, evaluatedWith: NSObject())], timeout: 15)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 15)
     }
 
     /// The finger's watcher leaves the touch to the scroll view.
