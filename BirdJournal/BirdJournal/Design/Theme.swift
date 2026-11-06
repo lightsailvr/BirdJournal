@@ -2,15 +2,15 @@ import SwiftUI
 import UIKit
 
 /// The app's design tokens: Featherguild design guide 1.0, page 9 (issue #116, replacing #28's field-journal palette).
-/// Deep teal and warm ivory: a teal page with ivory ink in the dark appearance, an ivory page with teal ink in the light
-/// one, each with an Increase Contrast variant, all from the asset catalog so the system picks the variant. The guide's
+/// Deep teal and warm ivory: a teal page with ivory ink in the dark appearance, a sage-grey page with teal ink in the light
+/// one (issue #150), each with an Increase Contrast variant, all from the asset catalog so the system picks the variant. The guide's
 /// values are starting tokens; the secondary ink, the rules and the text on an action are derived here, and
 /// `DesignTokenTests` measures every text pairing in all four variants. There is no gold since #132 (design guide 2.0
 /// retired Legendary); shared goals take the lavender accent; bird art keeps its own colours.
 extension Color {
-    /// The page: #10292D dark, #F4F2E9 light.
+    /// The page: #10292D dark, pale sage-grey #EEF1EC light (issue #150), so linen and card stock stand out against it.
     static let paper = Color("JournalPaper")
-    /// Grouped rows, panels and thumbnail placeholders: #193A3D dark, #DFEAE5 light.
+    /// Grouped rows, panels and thumbnail placeholders: #193A3D dark, #E0E8E2 light.
     static let raised = Color("JournalRaised")
     /// Primary text: #F5F1E7 dark, #15363A light.
     static let ink = Color("JournalInk")
@@ -51,7 +51,7 @@ enum JournalFont {
     static let scientific = Font.system(.subheadline, design: .serif).italic()
 }
 
-/// The card's type (design guide pages 5 and 8): the bird's name upright, the story title upright and smaller, the lore
+/// The paper card's type (design guide pages 5 and 8): the bird's name upright, the story title upright and smaller, the lore
 /// in a true italic serif with generous leading, the edition in small capitals, and a quiet sans footer.
 enum CardFont {
     /// The bird's name on a card's front, about 28 pt, upright.
@@ -64,10 +64,8 @@ enum CardFont {
     static let lore = Font.system(.callout, design: .serif).italic()
     /// The lore's extra leading, in points.
     static let loreLeading: CGFloat = 5
-    /// "CITRUS EDITION", "LEGENDARY · YOUR FIRST": the edition line, set in capitals with open tracking.
-    static let edition = Font.system(.caption, design: .serif, weight: .semibold)
-    static let editionTracking: CGFloat = 1.6
-    /// The edition line on a tile.
+    /// "CITRUS EDITION": the paper card's edition line, printed in capitals with open tracking. Capitals stay here and on
+    /// the wordmark and nowhere else (issue #150).
     static let editionCompact = Font.system(.caption2, design: .serif, weight: .semibold)
     static let editionCompactTracking: CGFloat = 1
     /// A tile's name, about 17 pt.
@@ -202,19 +200,51 @@ struct PaperForm<Content: View>: View {
     }
 }
 
-/// A section title in the serif with a fine rule under it.
+/// The one heading on a content page (issue #150): New York in the ink, no rule and no capitals, like "157 still out there".
+/// A plain-iOS list keeps the system's section headers. `.lead` is the larger first line of a page ("Maya has these. Go find
+/// them."). `top` is the space above it, and on felt or linen `onBoard` gives it a solid surface under Increase Contrast.
 struct SectionTitle: View {
+    enum Size {
+        case section, lead
+    }
+
     let text: String
+    var size = Size.section
+    var top = JournalLayout.sectionGap
+    var onBoard = false
+
+    init(_ text: String, size: Size = .section, top: CGFloat = JournalLayout.sectionGap, onBoard: Bool = false) {
+        self.text = text
+        self.size = size
+        self.top = top
+        self.onBoard = onBoard
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(text)
-                .font(JournalFont.section)
-                .foregroundStyle(Color.ink)
-            Rectangle().fill(Color.rule).frame(height: 1)
-        }
-        .padding(.top, JournalLayout.sectionGap)
-        .accessibilityAddTraits(.isHeader)
+        Text(text)
+            .font(size == .lead ? JournalFont.section : JournalFont.heading)
+            .foregroundStyle(Color.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .boardLabel(isOnBoard: onBoard)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, top)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Two short facts sharing a line at a small size: the one place a middle dot stays (issue #150). VoiceOver reads a comma.
+struct ShortFacts: View {
+    let first: String
+    let second: String
+
+    init(_ first: String, _ second: String) {
+        self.first = first
+        self.second = second
+    }
+
+    var body: some View {
+        Text("\(first) · \(second)")
+            .accessibilityLabel("\(first), \(second)")
     }
 }
 

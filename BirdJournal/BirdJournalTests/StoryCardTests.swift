@@ -136,7 +136,7 @@ struct DesignTokenTests {
         try expect("JournalRule", on: "JournalPaper", atLeast: 3, in: Self.variants.filter { $0.name.hasSuffix("Increase Contrast") })
     }
 
-    @Test("the guide's page values hold where it set them")
+    @Test("the guide's page values hold where it set them, and the light page is issue #150's sage-grey")
     func guideValues() throws {
         let light = Self.variants[0].traits
         let dark = Self.variants[2].traits
@@ -146,9 +146,9 @@ struct DesignTokenTests {
             return String(format: "#%02X%02X%02X", Int((red * 255).rounded()), Int((green * 255).rounded()), Int((blue * 255).rounded()))
         }
         #expect(try hex("JournalPaper", dark) == "#10292D")
-        #expect(try hex("JournalPaper", light) == "#F4F2E9")
+        #expect(try hex("JournalPaper", light) == "#EEF1EC")
         #expect(try hex("JournalRaised", dark) == "#193A3D")
-        #expect(try hex("JournalRaised", light) == "#DFEAE5")
+        #expect(try hex("JournalRaised", light) == "#E0E8E2")
         #expect(try hex("JournalInk", dark) == "#F5F1E7")
         #expect(try hex("JournalInk", light) == "#15363A")
         #expect(try hex("JournalMoss", dark) == "#BCE3D9")
@@ -277,7 +277,7 @@ struct PatchWordsTests {
         // Nothing about the count until there's a second sighting (issue #150).
         #expect(PatchText.tileLine(try Self.patch(count: 1, at: griffith)) == "No. 002")
         #expect(PatchText.tileLine(try Self.patch(count: 1, at: nil)) == "Uncharted")
-        #expect(PatchText.editionLine(try Self.patch(count: 1, at: griffith).placement) == "Citrus edition · No. 002")
+        #expect(PatchText.editionLine(try Self.patch(count: 1, at: griffith).placement) == "Citrus edition, No. 002")
         #expect(PatchText.editionLine(.uncharted) == "Uncharted")
     }
 

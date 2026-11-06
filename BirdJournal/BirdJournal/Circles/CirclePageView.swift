@@ -175,7 +175,7 @@ struct CirclePageView: View {
                             .foregroundStyle(Color.ink)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)
-                        Text("\(detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members") · Invite-only")
+                        Text("\(detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members"), invite-only")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             // Wraps at the largest sizes instead of "4 members…" (issue #119).
@@ -266,7 +266,7 @@ struct CirclePageView: View {
                     }
             }
         } header: {
-            Text("Members · \(detail.members.count) of 20")
+            Text("Members, \(detail.members.count) of 20")
         } footer: {
             if detail.members.count > 1 {
                 Text(detail.circle.isCreator
@@ -442,12 +442,7 @@ private struct MemberRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(member.initials)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.mossText)
-                .frame(width: 36, height: 36)
-                .background(Color.moss, in: .circle)
-                .accessibilityHidden(true)
+            MemberFace(member: member, size: 36)
             VStack(alignment: .leading, spacing: 2) {
                 Text(isMe ? "\(member.name) (you)" : member.name).font(JournalFont.rowTitle)
                 if member.isCreator {

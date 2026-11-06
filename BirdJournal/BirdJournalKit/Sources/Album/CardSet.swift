@@ -195,6 +195,6 @@ public struct SetProgress: Sendable, Hashable, Identifiable {
         self.total = total
     }
 
-    /// "Los Angeles · 87 of 160".
-    public var text: String { "\(name) · \(collected) of \(total)" }
+    /// "Los Angeles, 87 of 160".
+    public var text: String { "\(name), \(collected) of \(total)" }
 }

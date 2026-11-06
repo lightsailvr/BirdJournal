@@ -80,9 +80,9 @@ public struct CardCollection: Sendable, Equatable {
             count == 1 ? "once" : "\(count) times"
         }
 
-        /// A species' patches in a line: "2 patches · seen 10 times".
+        /// A species' patches in a line: "2 patches, seen 10 times".
         public static func speciesSummary(_ patches: [Patch]) -> String {
-            "\(patches.count) \(patches.count == 1 ? "patch" : "patches") · seen \(times(patches.reduce(0) { $0 + $1.count }))"
+            "\(patches.count) \(patches.count == 1 ? "patch" : "patches"), seen \(times(patches.reduce(0) { $0 + $1.count }))"
         }
     }
 
@@ -242,9 +242,9 @@ public struct CardCollection: Sendable, Equatable {
         "\(patchCount) \(patchCount == 1 ? "patch" : "patches")"
     }
 
-    /// The Collection's line under its title, e.g. "7 patches · 21 sightings".
+    /// The Collection's line under its title, e.g. "7 patches, 21 sightings".
     public var summary: String {
-        "\(patchesText) · \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
+        "\(patchesText), \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
     }
 }
 

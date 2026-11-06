@@ -83,7 +83,7 @@ public enum LensCardRenderer {
         default: "\(stack.count) species heard"
         }
         guard !stack.isEmpty else {
-            return LensCard(screenfuls: [[.heading(heading), .meta("Cards appear as birds call.")]])
+            return LensCard(screenfuls: [[.heading(heading), .meta("Birds appear as they call.")]])
         }
         let indices = order.indices.count == stack.count ? order.indices : Array(stack.candidates.indices)
         let pages = (indices.count + listRowsPerPage - 1) / listRowsPerPage
@@ -120,7 +120,7 @@ public enum LensCardRenderer {
     static func sounds(_ candidate: Candidate, clips: [LensSound], next: Int, playing: LensPlayback?) -> LensCard {
         var elements: [LensElement] = [.title(candidate.species.commonName, detail: confidence(candidate))]
         guard !clips.isEmpty else {
-            elements.append(.meta("No recordings in your pack · swipe down: photo"))
+            elements.append(.meta("No recordings on your phone · swipe down: photo"))
             return LensCard(screenfuls: [elements])
         }
         let nextClip = clips[next % clips.count]
@@ -174,7 +174,7 @@ public enum LensCardRenderer {
     static func problem(_ problem: LensProblem) -> LensCard {
         let (heading, body) = switch problem {
         case .noLocation:
-            ("No location", "Species are not filtered by your region. Allow location for Featherguild in Settings on the phone.")
+            ("No location", "Species are not filtered by your place. Allow location for Featherguild in Settings on the phone.")
         case .connectionLost:
             ("Connection lost", "The glasses were out of range. Featherguild kept listening and is back on the lens.")
         }
@@ -196,9 +196,9 @@ public enum LensCardRenderer {
         if let profile {
             let sizeAndHabitat = [profile.size, profile.habitat].filter { !$0.isEmpty }.joined(separator: " · ")
             if !sizeAndHabitat.isEmpty { fixed.append(.meta(sizeAndHabitat.limited(toWords: metaLineBudget))) }
-            fixed.append(.meta(profile.photo == nil ? "No photo in your pack" : profile.photoCredit.limited(toWords: metaLineBudget)))
+            fixed.append(.meta(profile.photo == nil ? "No photo on your phone" : profile.photoCredit.limited(toWords: metaLineBudget)))
         } else {
-            fixed.append(.meta("Not in your pack"))
+            fixed.append(.meta("Not in your field guide"))
         }
         if isSaved {
             fixed.append(savedLine(candidate, earned: earned))

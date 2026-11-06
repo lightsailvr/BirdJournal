@@ -144,7 +144,7 @@ struct PackLibraryTests {
 
         await library.download(descriptor)
 
-        #expect(library.status(of: descriptor) == .failed("The download holds the pack test-pack, not us-ca-la."))
+        #expect(library.status(of: descriptor) == .failed("The download holds test-pack, not us-ca-la."))
         #expect(library.bundledUpdate == nil)
     }
 

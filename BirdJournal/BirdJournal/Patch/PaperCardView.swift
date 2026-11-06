@@ -162,7 +162,7 @@ struct PaperCardView: View {
                     .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
                     .contentShape(Rectangle())
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(sighting.confirmedAt.formatted(date: .long, time: .omitted)), \(places.methodAndPlace(of: sighting))")
+                    .accessibilityLabel("\(sighting.confirmedAt.formatted(date: .long, time: .omitted)), \(places.methodAndPlace(of: sighting, separator: ", "))")
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Opens this sighting.")
@@ -176,11 +176,11 @@ struct PaperCardView: View {
         }
     }
 
-    /// "8 sightings here · sewn Sep 14 in Los Angeles".
+    /// "8 sightings here, sewn Sep 14 in Los Angeles".
     private var historyLine: String {
         let sewn = patch.sewn.confirmedAt.formatted(date: .abbreviated, time: .omitted)
         let here = patch.placement.setID == nil ? "" : " in \(patch.placement.setName)"
-        return "\(patch.count == 1 ? "sighting" : "sightings") here · sewn \(sewn)\(here)"
+        return "\(patch.count == 1 ? "sighting" : "sightings") here, sewn \(sewn)\(here)"
     }
 
     @ViewBuilder private func moreLore(_ lore: PackLore) -> some View {

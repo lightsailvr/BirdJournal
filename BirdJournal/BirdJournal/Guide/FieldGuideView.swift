@@ -56,7 +56,7 @@ struct FieldGuideView: View {
                 }
                 .padding(.top, 8)
                 if !elsewhere.isEmpty {
-                    AtlasHeading(text: "Somewhere new")
+                    SectionTitle("Somewhere new")
                         .id("atlas-new")
                     VStack(spacing: 16) {
                         ForEach(elsewhere) { set in
@@ -79,7 +79,7 @@ struct FieldGuideView: View {
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 12)
-                    AtlasHeading(text: "Field guide")
+                    SectionTitle("Field guide")
                     Text("\(entries.count) birds with photos and field notes on this iPhone. Any bird BirdNET knows can still be identified by name.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
@@ -89,18 +89,18 @@ struct FieldGuideView: View {
                     if entries.isEmpty {
                         StateNotice(
                             "No field guide yet",
-                            message: "No bird pack is on this iPhone, so there are no pages to browse. Download a regional set for its photos, sounds and stories. Listening and identification work without one.",
+                            message: "No field guide is on this iPhone, so there are no pages to browse. Download a set for its photos, sounds and stories. Listening and identification work without one.",
                             mark: .symbol("map")
                         ) {
-                            NavigationLink("See bird packs", value: Route.packs)
+                            NavigationLink("See field-guide downloads", value: Route.packs)
                                 .buttonStyle(.journalOutlined)
                         }
                     } else if sets.isEmpty {
-                        NoSearchMatch(query: query, searches: "Search by a bird's common or scientific name, or a region.") { query = "" }
+                        NoSearchMatch(query: query, searches: "Search by a bird's common or scientific name, or a set.") { query = "" }
                             .padding(.top, 12)
                     }
                 } else {
-                    if !query.isEmpty { AtlasHeading(text: "Birds") }
+                    if !query.isEmpty { SectionTitle("Birds") }
                     VStack(spacing: 0) {
                         ForEach(shown, id: \.species.scientificName) { entry in
                             NavigationLink(value: Route.species(scientificName: entry.species.scientificName, commonName: entry.species.commonName)) {
@@ -122,8 +122,8 @@ struct FieldGuideView: View {
         }
         .background(Color.paper)
         .navigationTitle("Atlas")
-        .navigationSubtitle("Field guide & regional sets")
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search birds or regions")
+        .navigationSubtitle("Field guide & sets")
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search birds or sets")
         #if DEBUG
         .task {
             // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
@@ -132,19 +132,6 @@ struct FieldGuideView: View {
         #endif
         .task { if library.index == nil { await library.refreshIndex() } }
         .refreshable { await library.refreshIndex() }
-    }
-}
-
-/// A heading on the Atlas: the serif section title, no rule (the tiles carry their own edges).
-private struct AtlasHeading: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .padding(.top, JournalLayout.sectionGap)
-            .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -157,8 +144,8 @@ struct OfflineNotice: View {
         ErrorNotice(
             "Couldn't check for sets",
             message: hasIndex
-                ? "You may be offline. These are the sets from the last check; packs on this iPhone, your collection and identification all keep working."
-                : "You may be offline. The sets you can download appear once the list comes through; packs on this iPhone, your collection and identification all keep working.",
+                ? "You may be offline. These are the sets from the last check; downloads on this iPhone, your collection and identification all keep working."
+                : "You may be offline. The sets you can download appear once the list comes through; downloads on this iPhone, your collection and identification all keep working.",
             symbol: "wifi.slash"
         ) {
             Button("Try again", action: retry)
@@ -168,7 +155,7 @@ struct OfflineNotice: View {
 }
 
 /// One regional set (design guide page 4): its cover, or the landscape its edition names; the name and edition;
-/// "Ready offline" or its download; and the birder's own progress, "18 of 160 species collected". The tile opens the
+/// "Ready offline" or its download; and the birder's own progress, "18 of 160 sewn". The tile opens the
 /// set's page; the download control sits apart from the link.
 struct SetTile: View {
     @Environment(PackLibrary.self) private var library
@@ -236,9 +223,9 @@ struct SetTile: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// "Citrus edition · 160 species".
+    /// "Citrus edition, 160 birds".
     private var editionLine: some View {
-        Text("\(set.edition.name) · \(set.species.count) species")
+        Text("\(set.edition.name), \(set.species.count) birds")
             .font(JournalFont.supporting)
             .foregroundStyle(Color.inkSecondary)
             .fixedSize(horizontal: false, vertical: true)
@@ -255,7 +242,7 @@ struct ReadyOffline: View {
     }
 }
 
-/// Personal progress in a set: a bar and "18 of 160 species collected", with the share.
+/// Personal progress in a set: a bar and "18 of 160 sewn", with the share.
 struct SpeciesCollected: View {
     let progress: SetProgress
 
@@ -272,7 +259,7 @@ struct SpeciesCollected: View {
             .frame(height: 6)
             .accessibilityHidden(true)
             HStack(alignment: .firstTextBaseline) {
-                Text("\(progress.collected) of \(progress.total) species collected")
+                Text("\(progress.collected) of \(progress.total) sewn")
                 Spacer(minLength: 8)
                 Text(fraction.formatted(.percent.precision(.fractionLength(0))))
                     .monospacedDigit()
@@ -284,7 +271,7 @@ struct SpeciesCollected: View {
     }
 }
 
-/// The way to the bird packs: what is on the phone, and the storage it takes.
+/// The way to the field-guide downloads: what is on the phone, and the storage it takes.
 private struct PacksCard: View {
     let library: PackLibrary
 
@@ -295,10 +282,10 @@ private struct PacksCard: View {
                 .foregroundStyle(Color.moss)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Bird packs")
+                Text("Field-guide downloads")
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
-                Text(library.packs.isEmpty ? "Photos, sounds and field notes, ready offline." : "Downloads, updates and storage · \(library.packs.map(\.info.name).joined(separator: ", "))")
+                Text(library.packs.isEmpty ? "Photos, sounds and field notes, ready offline." : "Downloads, updates and storage: \(library.packs.map(\.info.name).joined(separator: ", "))")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .lineLimit(2)

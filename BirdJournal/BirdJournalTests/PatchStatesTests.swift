@@ -72,7 +72,7 @@ struct PatchStatesTests {
         let bundled = try #require(try SpeciesPack.bundled().set)
         let first = try #require(bundled.species.first)
         #expect(PatchText.setNumbers(of: first.scientificName, in: [bundled]) == [
-            PatchText.SetNumber(text: "No. 001 of \(bundled.species.count) · \(bundled.name)", spoken: "Number 1 of \(bundled.species.count) in \(bundled.name)"),
+            PatchText.SetNumber(text: "No. 001 of \(bundled.species.count), \(bundled.name)", spoken: "Number 1 of \(bundled.species.count) in \(bundled.name)"),
         ])
         #expect(PatchText.setNumbers(of: "Turdus merula", in: [bundled]).isEmpty)
     }

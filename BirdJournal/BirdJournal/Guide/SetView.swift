@@ -14,6 +14,12 @@ struct SetView: View {
     let id: String
     @State private var query = ""
 
+    /// The one count on a set's page (issue #150): "157 still out there", or "All 160 sewn" once none are.
+    static func stillOutThere(_ progress: SetProgress) -> String {
+        let left = progress.total - progress.collected
+        return left > 0 ? "\(left) still out there" : "All \(progress.total) sewn"
+    }
+
     var body: some View {
         if let set = library.sets.first(where: { $0.id == id }) {
             let collection = library.collection(of: sightings)
@@ -26,7 +32,7 @@ struct SetView: View {
                             .padding(.top, 4)
                     }
                     if query.isEmpty, library.pack(id: set.id) == nil {
-                        Text("This pack isn't on your iPhone yet: downloading it adds photos, sounds and field notes, not birds. Patches you sew in its region count toward the set either way.")
+                        Text("This set's field guide isn't on your iPhone yet: downloading it adds photos, sounds and field notes, not birds. Patches you sew here count toward the set either way.")
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 8)
@@ -35,6 +41,9 @@ struct SetView: View {
                     if shown.isEmpty {
                         NoSearchMatch(query: query) { query = "" }
                             .padding(.top, 12)
+                    }
+                    if query.isEmpty {
+                        SectionTitle(Self.stillOutThere(progress), top: 20)
                     }
                     VStack(spacing: 0) {
                         ForEach(shown, id: \.element.scientificName) { offset, species in
@@ -48,7 +57,7 @@ struct SetView: View {
                             RowRule()
                         }
                     }
-                    .padding(.top, 12)
+                    .padding(.top, 4)
                 }
                 .padding(.horizontal, JournalLayout.margin)
                 .padding(.bottom, JournalLayout.sectionGap)
@@ -59,14 +68,14 @@ struct SetView: View {
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search \(set.name) birds")
         } else {
-            ContentUnavailableView("Set not found", systemImage: "square.stack.3d.down.right", description: Text("The pack index no longer lists this set."))
-                .background(Color.paper)
+            StateNotice("Set not found", message: "The list of sets no longer includes this one.", mark: .symbol("square.stack.3d.down.right"))
+                .statePage()
         }
     }
 }
 
-/// One species of a set: its collector number, its photo once collected (a collected bird whose pack isn't on the
-/// phone has no photo, so the row also says Collected) or a silhouette, and its names.
+/// One species of a set: its collector number, its photo once sewn (a bird whose pack isn't on the phone has no photo, so the
+/// row also says Sewn) or a silhouette, and its names. A silhouette needs no words: the heading above counts them.
 private struct SetSpeciesRow: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -98,13 +107,9 @@ private struct SetSpeciesRow: View {
                     .font(JournalFont.scientific)
                     .foregroundStyle(Color.inkSecondary)
                 if isCollected {
-                    Label("Collected", systemImage: "checkmark")
+                    Label("Sewn", systemImage: "checkmark")
                         .font(JournalFont.attribution.weight(.semibold))
-                        .foregroundStyle(Color.mossText)
-                } else {
-                    Text("Not yet found here")
-                        .font(JournalFont.attribution)
-                        .foregroundStyle(Color.inkSecondary)
+                        .foregroundStyle(Color.ink)
                 }
             }
             Spacer(minLength: 4)
@@ -115,7 +120,7 @@ private struct SetSpeciesRow: View {
         .padding(.vertical, 10)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel([number, species.commonName, isCollected ? "collected" : "not yet found here"].joined(separator: ", "))
+        .accessibilityLabel([number, species.commonName, isCollected ? "sewn" : "still out there"].joined(separator: ", "))
         .accessibilityIdentifier(isCollected ? "set-species-collected" : "set-species-silhouette")
     }
 }

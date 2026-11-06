@@ -105,15 +105,15 @@ final class ListeningCoordinator {
         var title: String {
             addition.placement.setID == nil ? "Your first \(commonName)" : "Your first \(commonName) in \(addition.placement.setName)"
         }
-        /// "New patch · Citrus edition".
-        var eyebrow: String { "New patch · \(addition.placement.editionLabel)" }
+        /// "New patch, Citrus edition".
+        var eyebrow: String { "New patch, \(addition.placement.editionLabel)" }
     }
 
-    /// What a repeat add says: "Seen again · 8 times in Los Angeles", or "Seen again · 8 times" outside every set. In digits
+    /// What a repeat add says: "Seen again, 8 times in Los Angeles", or "Seen again, 8 times" outside every set. In digits
     /// even for 1, unlike `Patch.times`'s "once": it's what the count ticks up from.
     private static func seenAgainText(_ placement: CardPlacement, count: Int) -> String {
         let times = "\(count) \(count == 1 ? "time" : "times")"
-        return placement.setID == nil ? "Seen again · \(times)" : "Seen again · \(times) in \(placement.setName)"
+        return placement.setID == nil ? "Seen again, \(times)" : "Seen again, \(times) in \(placement.setName)"
     }
 
     static let waveformLength = 40
@@ -254,9 +254,9 @@ final class ListeningCoordinator {
 
     func isAdded(_ candidate: Candidate) -> Bool { sightings.isAdded(candidate.species) }
 
-    /// The summary line: "3 species heard · 1 added".
+    /// The summary line: "3 species heard, 1 added".
     var summary: String {
-        "\(candidates.count) species heard · \(addedCount) added"
+        "\(candidates.count) species heard, \(addedCount) added"
     }
 
     // MARK: - Lifecycle

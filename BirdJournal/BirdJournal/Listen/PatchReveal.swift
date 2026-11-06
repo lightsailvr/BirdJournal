@@ -42,9 +42,7 @@ private struct RevealHeading: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(eyebrow)
-                .textCase(.uppercase)
-                .font(CardFont.editionCompact)
-                .tracking(CardFont.editionTracking)
+                .font(JournalFont.supporting)
                 .foregroundStyle(Color.ink)
                 .accessibilityFocused($focused)
             Text(name)
@@ -125,7 +123,7 @@ private struct RevealUndoButton: View {
 }
 
 /// The ceremony of an add that sewed a patch (issue #135, guide pages 5 and 14; replaced #132's Legendary reveal): the
-/// stitch-in, then the finished patch on felt with "New patch · Citrus edition" and "Your first Acorn Woodpecker in Los
+/// stitch-in, then the finished patch on felt with "New patch, Citrus edition" and "Your first Acorn Woodpecker in Los
 /// Angeles." Under Reduce Motion or VoiceOver, or without a painting on the phone, it's straight to the finished patch. The
 /// sighting was written before this opened, so closing it or a failed share loses nothing. It belongs to the add: it's never
 /// replayed, and reopening the patch never shows it. An add on the phone opens it there and then; one on the lens, when the
@@ -281,7 +279,7 @@ private struct SewingPage: View {
     }
 }
 
-/// The finished patch on felt: "New patch · Citrus edition", "Your first Acorn Woodpecker in Los Angeles.", Keep listening.
+/// The finished patch on felt: "New patch, Citrus edition", "Your first Acorn Woodpecker in Los Angeles.", Keep listening.
 private struct NewPatchPage: View {
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
@@ -334,7 +332,7 @@ private struct NewPatchPage: View {
                     // A long glasses run can sew a dozen. Going to the collection waits for the last of them.
                     Group {
                         if run.waitingCeremonies > 0 {
-                            Button("Skip the rest · \(run.waitingCeremonies) more") { run.skipCeremonies() }
+                            Button("Skip the rest, \(run.waitingCeremonies) more") { run.skipCeremonies() }
                         } else {
                             Button("See it in my collection") {
                                 run.dismissReveal()

@@ -237,7 +237,7 @@ private struct FakeStackSection: View {
         } header: {
             Text("Fake stack")
         } footer: {
-            Text("Adding a species while on a card appends it without moving the page. The new species and the one before it are calling now; their markers lapse on their own a few seconds later.")
+            Text("Adding a species while on a page appends it without moving the page. The new species and the one before it are calling now; their markers lapse on their own a few seconds later.")
         }
     }
 }

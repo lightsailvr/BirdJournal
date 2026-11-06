@@ -104,6 +104,6 @@ struct AudioSourceSheet: View {
         var parts = [device.linkText]
         if let battery = device.state.batteryLevel { parts.append("battery \(battery)%") }
         if device.state.compatibility != .compatible { parts.append(device.state.compatibility.displayString) }
-        return parts.joined(separator: " · ")
+        return parts.joined(separator: ", ")
     }
 }

@@ -51,7 +51,7 @@ struct CreditsView: View {
 
             if library.packs.isEmpty {
                 Section("Photos") {
-                    Text("No bird pack is on this iPhone, so there are no photos to credit.")
+                    Text("No field guide is on this iPhone, so there are no photos to credit.")
                         .foregroundStyle(Color.inkSecondary)
                 }
             }
@@ -73,7 +73,7 @@ private struct LoreCredits: View {
     var body: some View {
         let withLore = packs.reduce(0) { $0 + $1.species.count { $0.lore != nil } }
         VStack(alignment: .leading, spacing: 6) {
-            Text("Each bird's fact sheet is its stats and sentences from its English Wikipedia article, at the article revision its pack was built from (Wikipedia contributors, CC BY-SA 4.0). Each bird's Sources & credits links that revision.")
+            Text("Each bird's fact sheet is its stats and sentences from its English Wikipedia article, at the article revision its set was built from (Wikipedia contributors, CC BY-SA 4.0). Each bird's Sources & credits links that revision.")
             if withLore > 0 {
                 Text("The lore of \(withLore) birds was written by Claude (Anthropic) from the fact sheet alone, every sentence citing the facts it rests on, and reviewed by hand. As an adaptation of the Wikipedia text it is shared under CC BY-SA 4.0.")
             }

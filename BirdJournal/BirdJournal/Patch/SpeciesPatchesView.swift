@@ -78,7 +78,7 @@ struct SpeciesPatchesView: View {
                 .font(JournalFont.scientific)
                 .foregroundStyle(Color.ink)
             if let first = patches.map(\.sewn.confirmedAt).min() {
-                Text("\(CardCollection.Patch.speciesSummary(patches)) · since \(first.formatted(.dateTime.month(.abbreviated).day()))")
+                Text("\(CardCollection.Patch.speciesSummary(patches)), since \(first.formatted(.dateTime.month(.abbreviated).day()))")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.ink)
                     .padding(.top, 4)
@@ -106,11 +106,7 @@ private struct NoPatchesYet: View {
                 AttributedImage(pack: reference.pack, photo: photo)
                     .padding(.top, 12)
             }
-            Text("No sightings of \(commonName) yet")
-                .font(JournalFont.section)
-                .foregroundStyle(Color.ink)
-                .padding(.top, 14)
-                .accessibilityAddTraits(.isHeader)
+            SectionTitle("No sightings of \(commonName) yet", size: .lead, top: 14)
             ForEach(PatchText.setNumbers(of: scientificName, in: library.sets), id: \.self) { number in
                 Text(number.text)
                     .font(JournalFont.supporting.monospacedDigit())

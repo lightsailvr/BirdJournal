@@ -55,7 +55,7 @@ struct LensCardRendererTests {
     @Test("the list counts the species heard and has one row per species, newest last, with the selection marked")
     func list() {
         #expect(Self.render(.list, stack: CandidateStack(), at: Fakes.quiet).screenfuls == [[
-            .heading("No species yet"), .meta("Cards appear as birds call."),
+            .heading("No species yet"), .meta("Birds appear as they call."),
         ]])
         #expect(Self.render(.list, stack: Fakes.stack(1), at: Fakes.quiet).screenfuls[0][0] == .heading("1 species heard"))
         #expect(Self.render(.list, selection: 1).screenfuls == [[
@@ -210,7 +210,7 @@ struct LensCardRendererTests {
         let card = Self.render(.sounds(index: 1))
         #expect(card.elements == [
             .title("House Finch", detail: "80% match"),
-            .meta("No recordings in your pack · swipe down: photo"),
+            .meta("No recordings on your phone · swipe down: photo"),
         ])
     }
 
@@ -249,7 +249,7 @@ struct LensCardRendererTests {
         #expect(photoPage.photo == nil)
         #expect(photoPage.elements == [.title("House Finch", detail: "80% match"), .status("3 species · 2 of 3"), Self.hint])
         #expect(Self.render(.details(index: 1)).elements == [
-            .title("House Finch", detail: "80% match"), .passage("Haemorhous mexicanus"), .meta("Not in your pack"), Self.saveButton,
+            .title("House Finch", detail: "80% match"), .passage("Haemorhous mexicanus"), .meta("Not in your field guide"), Self.saveButton,
         ])
     }
 
@@ -258,7 +258,7 @@ struct LensCardRendererTests {
         let profile = SpeciesProfile(photo: nil, fieldMarks: "", size: "", habitat: "", photoCredit: "")
         let card = Self.render(.details(index: 0), stack: Self.stack, at: Fakes.quiet) { _ in profile }
         #expect(card.elements == [
-            .title("Black Phoebe", detail: "80% match"), .passage("Sayornis nigricans"), .meta("No photo in your pack"), Self.saveButton,
+            .title("Black Phoebe", detail: "80% match"), .passage("Sayornis nigricans"), .meta("No photo on your phone"), Self.saveButton,
         ])
     }
 
@@ -302,7 +302,7 @@ struct LensCardRendererTests {
     func problemPages() {
         #expect(Self.render(.problem(.noLocation)).elements == [
             .heading("No location"),
-            .body("Species are not filtered by your region. Allow location for Featherguild in Settings on the phone."),
+            .body("Species are not filtered by your place. Allow location for Featherguild in Settings on the phone."),
             .meta("Swipe right to continue"),
         ])
         #expect(Self.render(.problem(.connectionLost)).elements == [

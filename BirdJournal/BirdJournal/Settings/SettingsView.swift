@@ -79,9 +79,9 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Field guide") {
+            Section("Atlas") {
                 NavigationLink(value: Route.packs) {
-                    LabeledContent("Bird packs", value: library.packs.map(\.info.name).joined(separator: ", "))
+                    LabeledContent("Field-guide downloads", value: library.packs.map(\.info.name).joined(separator: ", "))
                 }
             }
 
@@ -134,7 +134,7 @@ struct GlassesDeviceRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(device.name).font(.headline)
-            Text("\(device.linkText) · \(device.state.compatibility.displayString)")
+            ShortFacts(device.linkText, device.state.compatibility.displayString)
                 .font(JournalFont.supporting)
                 .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? Color.moss : Color.inkSecondary)
             if let battery = device.state.batteryLevel {

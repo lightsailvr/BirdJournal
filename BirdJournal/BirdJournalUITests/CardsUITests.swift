@@ -33,7 +33,7 @@ final class CardsUITests: XCTestCase {
 
         let reveal = app.staticTexts["Your first \(name)"]
         XCTAssertTrue(reveal.waitForExistence(timeout: 10), "no new-patch reveal for \(name); screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["New patch · Uncharted"].exists, "no New patch line; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, Uncharted"].exists, "no New patch line; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Legendary'")).firstMatch.exists, "no Legendary")
         XCTAssertTrue(app.buttons["Keep listening"].exists, "no Keep listening during a run; screen: \(app.debugDescription.prefix(4000))")
         let back = app.buttons["See it in my collection"]
@@ -53,7 +53,7 @@ final class CardsUITests: XCTestCase {
         let addAnother = app.buttons["Add another sighting"]
         XCTAssertTrue(addAnother.waitForExistence(timeout: 10))
         addAnother.tap()
-        XCTAssertTrue(app.staticTexts["Seen again · 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Seen again, 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "a repeat add stitches nothing")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "and opens no page")
