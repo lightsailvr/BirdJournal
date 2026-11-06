@@ -35,7 +35,22 @@ final class CollectionUITests: XCTestCase {
     /// Search sits in the title's row as a magnifier, opens to a field, and leaves the picker where it was.
     @MainActor
     func testTheMagnifierSearchesAndThePickerStaysWhereItWas() throws {
-        let app = launch()
+        try checkTheMagnifier(launch())
+    }
+
+    /// The same at the largest text, where the field as a drawer took 124 pt.
+    @MainActor
+    func testTheMagnifierAtTheLargestTextStaysInItsRow() throws {
+        let app = launch(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        try checkTheMagnifier(app)
+        XCTAssertLessThan(app.searchFields.firstMatch.frame.height, 70, "\(app.searchFields.firstMatch.frame)")
+        if let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_FEEL_SHOTS"] {
+            try app.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: folder).appending(path: "search-ax5.png"))
+        }
+    }
+
+    @MainActor
+    private func checkTheMagnifier(_ app: XCUIApplication) throws {
         let modes = app.segmentedControls["collection-mode"]
         XCTAssertTrue(modes.waitForExistence(timeout: 15))
         let top = modes.frame.minY
