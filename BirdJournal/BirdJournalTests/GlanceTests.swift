@@ -267,6 +267,21 @@ struct WidgetSnapshotTests {
         }
     }
 
+    @Test("the extension's pictures stay under what WidgetKit will archive, or the widget silently stays on its placeholder")
+    func picturesFitAWidget() throws {
+        // From the system's log on an iPhone 17 Pro's small widget: "image being too large ... max[1069415.6]", in pixels of area.
+        let limit = 1_069_415
+        let catalog = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appending(path: "BirdJournalWidgets/Assets.xcassets")
+        let patch = 188 * 3  // `LatestPatchPublisher`: 160 points and the shadow's room, at three times.
+        for name in ["MaterialFelt.imageset/felt.jpg", "MaterialLinen.imageset/linen.jpg"] {
+            let source = try #require(CGImageSourceCreateWithURL(catalog.appending(path: name) as CFURL, nil))
+            let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
+            let width = try #require(properties[kCGImagePropertyPixelWidth] as? Int)
+            let height = try #require(properties[kCGImagePropertyPixelHeight] as? Int)
+            #expect(width * height + patch * patch < limit, "\(name) is \(width)×\(height)")
+        }
+    }
+
     @Test("the store hands the extension what the app wrote, and the old picture goes with the last patch")
     func store() throws {
         let store = WidgetStore(directory: URL.temporaryDirectory.appending(path: "widget-\(UUID().uuidString)", directoryHint: .isDirectory))

@@ -69,40 +69,42 @@ final class GlanceCaptureUITests: XCTestCase {
         sleep(2)
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         func step(_ name: String) { print("WIDGET STEP \(name): \(springboard.debugDescription.prefix(2500))") }
-        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72)).press(forDuration: 1.5)
-        sleep(2)
-        step("after press")
-        let edit = springboard.buttons["Edit"]
-        if edit.waitForExistence(timeout: 3) { edit.tap(); sleep(1) }
-        let addWidget = springboard.buttons["Add Widget"]
-        guard addWidget.waitForExistence(timeout: 5) else { step("no Add Widget"); throw XCTSkip("no Add Widget") }
-        addWidget.tap()
-        sleep(3)
-        step("gallery")
-        let search = springboard.searchFields.firstMatch
-        guard search.waitForExistence(timeout: 5) else { throw XCTSkip("no search") }
-        search.tap()
-        search.typeText("Featherguild")
-        sleep(2)
-        step("searched")
-        let result = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Featherguild'")).element(boundBy: 1)
-        guard result.waitForExistence(timeout: 5) else { throw XCTSkip("no result") }
-        result.tap()
-        sleep(3)
-        try save("widget-gallery", to: folder)
-        step("detail")
-        let add = springboard.buttons.matching(NSPredicate(format: "label CONTAINS 'Add Widget'")).firstMatch
-        guard add.waitForExistence(timeout: 5) else { throw XCTSkip("no add button") }
-        add.tap()
-        sleep(2)
-        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72)).tap()
-        sleep(1)
-        let done = springboard.buttons["Done"]
-        if done.waitForExistence(timeout: 2) { done.tap() }
-        sleep(4)
+        let widget = springboard.icons.matching(NSPredicate(format: "label == 'Featherguild' AND value == 'Widget'")).firstMatch
+        if !widget.waitForExistence(timeout: 2) {
+            springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72)).press(forDuration: 1.5)
+            sleep(2)
+            step("after press")
+            let edit = springboard.buttons["Edit"]
+            if edit.waitForExistence(timeout: 3) { edit.tap(); sleep(1) }
+            let addWidget = springboard.buttons["Add Widget"]
+            guard addWidget.waitForExistence(timeout: 5) else { step("no Add Widget"); throw XCTSkip("no Add Widget") }
+            addWidget.tap()
+            sleep(3)
+            step("gallery")
+            let search = springboard.searchFields.firstMatch
+            guard search.waitForExistence(timeout: 5) else { throw XCTSkip("no search") }
+            search.tap()
+            search.typeText("Featherguild")
+            sleep(2)
+            step("searched")
+            let result = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Featherguild'")).element(boundBy: 1)
+            guard result.waitForExistence(timeout: 5) else { throw XCTSkip("no result") }
+            result.tap()
+            sleep(3)
+            try save("widget-gallery", to: folder)
+            step("detail")
+            let add = springboard.buttons.matching(NSPredicate(format: "label CONTAINS 'Add Widget'")).firstMatch
+            guard add.waitForExistence(timeout: 5) else { throw XCTSkip("no add button") }
+            add.tap()
+            sleep(2)
+            springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72)).tap()
+            sleep(1)
+            let done = springboard.buttons["Done"]
+            if done.waitForExistence(timeout: 2) { done.tap() }
+        }
+        sleep(8)
         try save("widget-home", to: folder)
         step("home")
-        let widget = springboard.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Latest patch'")).firstMatch
         guard widget.waitForExistence(timeout: 5) else { throw XCTSkip("the widget isn't readable") }
         widget.tap()
         XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the widget didn't open its patch; screen: \(app.debugDescription.prefix(3000))")
