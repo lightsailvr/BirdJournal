@@ -204,12 +204,12 @@ struct ThreadProgressTests {
 
     @Test("rendered: the set's own thread, lavender for a goal, with a stitch for the first bird")
     func rendered() async throws {
-        ThreadProgress.lastSeen.removeAll()
         for (_, traits) in DesignTokenTests.variants {
-            let one = SetProgress(setID: "us-ca-desert", name: "California Deserts", collected: 1, total: 160)
-            #expect(try await drawn(ThreadProgress(one), sized: "EditionDesert", in: traits) == 1)
-            let half = SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: 80, total: 160)
-            #expect(try await drawn(ThreadProgress(half), sized: "EditionCitrus", in: traits) == 12)
+            // Swift Testing runs suites side by side, and other screens show these sets: this asks for the memory of nothing.
+            let one = ThreadProgress(value: 1, total: 160, sentence: "1 of 160", thread: .edition(setID: "us-ca-desert"))
+            #expect(try await drawn(one, sized: "EditionDesert", in: traits) == 1)
+            let half = ThreadProgress(value: 80, total: 160, sentence: "80 of 160", thread: .edition(setID: "us-ca-la"))
+            #expect(try await drawn(half, sized: "EditionCitrus", in: traits) == 12)
             let downloading = ThreadProgress(value: 1, total: 2, sentence: "Downloading", thread: .edition(setID: "us-fl-orlando"))
             #expect(try await drawn(downloading, sized: "EditionWetland", in: traits) == 12, "the set being downloaded")
             let lavender = ThreadProgress(value: 12, total: 14, sentence: "12 of 14", thread: .together)
@@ -220,13 +220,15 @@ struct ThreadProgressTests {
     @Test("rendered: coming back to a set with more birds, the thread starts where it was and sews to the value")
     func sewsOnReturn() async throws {
         let traits = UITraitCollection(userInterfaceStyle: .dark)
-        let progress = SetProgress(setID: "us-ca-sd", name: "San Diego", collected: 40, total: 160)
-        ThreadProgress.lastSeen = ["set-us-ca-sd": 1]
-        #expect(try await drawn(ThreadProgress(progress), sized: "EditionCoastal", in: traits, settle: .milliseconds(100)) == 1, "where it was")
-        ThreadProgress.lastSeen = ["set-us-ca-sd": 1]
-        #expect(try await drawn(ThreadProgress(progress), sized: "EditionCoastal", in: traits, settle: .seconds(3)) == 6, "sewn")
-        #expect(ThreadProgress.lastSeen["set-us-ca-sd"] == 40, "so it sews once")
-        #expect(try await drawn(ThreadProgress(progress), sized: "EditionCoastal", in: traits, settle: .milliseconds(100)) == 6, "and comes back whole")
+        // A set no other test shows, in the aqua of a set the app doesn't know.
+        let key = "set-us-test-return"
+        let progress = SetProgress(setID: "us-test-return", name: "Somewhere", collected: 40, total: 160)
+        ThreadProgress.lastSeen[key] = 1
+        #expect(try await drawn(ThreadProgress(progress), sized: "JournalMoss", in: traits, settle: .milliseconds(100)) == 1, "where it was")
+        ThreadProgress.lastSeen[key] = 1
+        #expect(try await drawn(ThreadProgress(progress), sized: "JournalMoss", in: traits, settle: .seconds(3)) == 6, "sewn")
+        #expect(ThreadProgress.lastSeen[key] == 40, "so it sews once")
+        #expect(try await drawn(ThreadProgress(progress), sized: "JournalMoss", in: traits, settle: .milliseconds(100)) == 6, "and comes back whole")
     }
 
     @Test("a rise it wasn't on screen for sews from the stitch it last showed; a fall, a first sight or Reduce Motion doesn't sew", arguments: [
