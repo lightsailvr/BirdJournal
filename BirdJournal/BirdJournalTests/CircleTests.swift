@@ -131,6 +131,8 @@ struct InviteLinkTests {
         "https://birdquest.matthewcelia.com/x/abc",
         "http://birdquest.matthewcelia.com/i/abc",
         "https://example.com/i/abc",
+        "https://featherguild.matthewcelia.com.evil.com/i/abc",
+        "https://birdquest.matthewcelia.com.evil.com/i/abc",
         "birdjournal://auth/callback?code=1",
     ])
     func notInvites(link: String) {

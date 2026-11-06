@@ -96,6 +96,7 @@ class InviteSite(Construct):
         certificate_arn: str,
         app_ids: list[str],
         former_domains: Sequence[str] = (),
+        new_host_first: bool = False,
     ) -> None:
         super().__init__(scope, id)
 
@@ -112,7 +113,7 @@ class InviteSite(Construct):
         rewrite = cloudfront.Function(
             self,
             "RewriteInvites",
-            code=cloudfront.FunctionCode.from_inline(viewer_request_code(domain, former_domains)),
+            code=cloudfront.FunctionCode.from_inline(viewer_request_code(domain, () if new_host_first else former_domains)),
             runtime=cloudfront.FunctionRuntime.JS_2_0,
             comment="BirdJournal: former hosts redirect; /i/<token> serves the invite page; /privacy and /terms theirs",
         )
@@ -178,3 +179,5 @@ class InviteSite(Construct):
 
         self.domain = domain
         self.url = f"https://{domain}"
+        # Where the API's invite links point: the new host, once the first deploy has shown it answers.
+        self.link_url = f"https://{former_domains[0]}" if new_host_first and former_domains else self.url

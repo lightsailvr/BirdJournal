@@ -69,6 +69,10 @@ if command == ["acm", "describe-certificate"]:
     answer({"Certificate": {"Status": c["status"], "SubjectAlternativeNames": c["sans"], "DomainValidationOptions": [
         {"DomainName": host, "ResourceRecord": {"Name": f"_v.{host}.", "Value": f"_{host}.acm-validations.aws."}} for host in c["sans"]]}})
 if command == ["cloudformation", "describe-stacks"]:
+    if state.get("no_stack"):
+        save()
+        sys.stderr.write("Stack with id BirdJournal does not exist\n")
+        sys.exit(254)
     if "StackStatus" in query:
         answer("UPDATE_COMPLETE")
     for key, value in state["outputs"].items():
@@ -147,23 +151,25 @@ class Wizard:
         repo = root / "repo"
         scripts = repo / "infra" / "scripts"
         scripts.mkdir(parents=True)
-        for name in ("domain-wizard.sh", "check-invite-certificate.sh"):
+        for name in ("domain-wizard.sh", "check-invite-certificate.sh", "check-invite-dns.sh", "check-live-backend.sh"):
             shutil.copy(INFRA / "scripts" / name, scripts / name)
         shutil.copy(INFRA / "cdk.json", repo / "infra" / "cdk.json")
         backend = repo / "backend" / "src" / "birdjournal_api"
         backend.mkdir(parents=True)
         (backend / "goals_api.py").write_text("class GoalSpecies:\n    pass\n")
+        (backend / "reactions_api.py").write_text("editions: list[str]\n")
         self.script = scripts / "domain-wizard.sh"
         self._executable(
             scripts / "deploy.sh",
-            f'#!/usr/bin/env bash\nset -eu\necho "$* arn=$INVITE_CERTIFICATE_ARN cname=$(dig +short CNAME {NEW})" >> "{self.deploys}"\n'
-            + 'if [[ "${1:-}" != "--diff" ]]; then "$(dirname "$0")/fake-deployed.py"; fi\n',
+            f'#!/usr/bin/env bash\nset -eu\necho "deploy $* arn=$INVITE_CERTIFICATE_ARN" >> "{self.deploys}"\n'
+            + 'if [[ "${1:-}" != "--diff" ]]; then "$(dirname "$0")/fake-deployed.py" "$@"; fi\n',
         )
         self._executable(
             scripts / "fake-deployed.py",
             "#!/usr/bin/env python3\nimport json, os\n"
-            'path = os.environ["FAKE_STATE"]\nstate = json.load(open(path))\n'
-            f'state["outputs"]["InviteBaseUrl"] = "https://{NEW}"\n'
+            'import sys\npath = os.environ["FAKE_STATE"]\nstate = json.load(open(path))\n'
+            f'state["distribution"] = {{"aliases": ["{NEW}", "{OLD}"], "certificate": os.environ["INVITE_CERTIFICATE_ARN"]}}\n'
+            f'if "--new-host-first" not in sys.argv:\n    state["outputs"]["InviteBaseUrl"] = "https://{NEW}"\n'
             'json.dump(state, open(path, "w"))\n',
         )
         bin_ = root / "bin"
@@ -227,6 +233,42 @@ class Wizard:
         self.state = json.loads(self.state_path.read_text())
         return result
 
+    def use_the_real_deploy(self) -> Path:
+        """deploy.sh as it is, with everything after its checks faked: a log of what reached `npx` says if it got past them."""
+        scripts = self.script.parent
+        shutil.copy(INFRA / "scripts" / "deploy.sh", scripts / "deploy.sh")
+        self._executable(scripts / "check-bootstrap.sh", "#!/bin/sh\nexit 0\n")
+        self._executable(scripts / "write-app-config.sh", "#!/bin/sh\nexit 0\n")
+        (self.root / "repo" / "infra" / "node_modules").mkdir()
+        bin_ = self.root / "bin"
+        self._executable(bin_ / "uv", "#!/bin/sh\nexit 0\n")
+        self._executable(bin_ / "npx", f'#!/bin/sh\necho "$*" >> "{self.deploys}"\n')
+        self.env_file.write_text(f"INVITE_CERTIFICATE_ARN='{NEW_ARN}'\nBUDGET_ALERT_EMAIL='a@example.com'\n")
+        self.state["certificates"].append(
+            {"arn": NEW_ARN, "domain": NEW, "sans": [NEW, OLD], "status": "ISSUED", "tags": [{"Key": "project", "Value": "birdjournal"}]}
+        )
+        self.save()
+        return scripts / "deploy.sh"
+
+    def deploy(self, *arguments: str) -> subprocess.CompletedProcess[str]:
+        script = self.use_the_real_deploy()
+        result = subprocess.run(
+            [str(script), *arguments],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env={
+                **{name: value for name, value in os.environ.items() if name not in ("INVITE_CERTIFICATE_ARN", "BUDGET_ALERT_EMAIL")},
+                "PATH": f"{self.root / 'bin'}:{os.environ['PATH']}",
+                "HOME": str(self.home),
+                "FAKE_STATE": str(self.state_path),
+            },
+        )
+        return result
+
+    def reached_cdk(self) -> str:
+        return self.deploys.read_text() if self.deploys.exists() else ""
+
     def saved_arn(self) -> str:
         return self.env_file.read_text().split("INVITE_CERTIFICATE_ARN='")[1].split("'")[0]
 
@@ -246,18 +288,21 @@ FIRST_RUN = [
     "",  # 4 issued
     "",  # 5 CNAME
     "n",  # 6 no diff
-    "y",  # 6 deploy
+    "y",  # 6 the first deploy
     "",  # 6
-    "",  # 7 site checks
-    f"https://{NEW}/i/from-the-app",  # 8 a real link
-    "",  # 8
-    "y",  # 9 App Store Connect
+    "n",  # 7 no diff
+    "y",  # 7 the second deploy
+    "",  # 7
+    "",  # 8 site checks
+    f"https://{NEW}/i/from-the-app",  # 9 a real link
     "",  # 9
-    "",  # 10 SES, which it reads itself
-    "y",  # 11 Wearables Developer Center
-    "",  # 11
-    "y",  # 12 Google
+    "y",  # 10 App Store Connect
+    "",  # 10
+    "",  # 11 SES, which it reads itself
+    "y",  # 12 Wearables Developer Center
     "",  # 12
+    "y",  # 13 Google
+    "",  # 13
 ]
 
 
@@ -274,7 +319,7 @@ def test_a_first_run_requests_one_certificate_for_both_hosts_and_saves_it_only_o
     assert requested[requested.index("--region") + 1] == "us-east-1"
     assert "Key=project,Value=birdjournal" in requested
     assert wizard.saved_arn() == NEW_ARN
-    assert f"arn={NEW_ARN} cname={TARGET}." in wizard.deploys.read_text()
+    assert wizard.deploys.read_text().splitlines() == [f"deploy --new-host-first arn={NEW_ARN}", f"deploy  arn={NEW_ARN}"]
     assert "still to do" not in result.stdout
 
 
@@ -320,12 +365,12 @@ def test_a_rerun_finds_its_certificate_instead_of_requesting_another(wizard: Wiz
     )
     wizard.state["distribution"] = {"aliases": [NEW, OLD], "certificate": NEW_ARN}
     wizard.state["outputs"]["InviteBaseUrl"] = f"https://{NEW}"
-    answers = ["", "", "", "", "", "", "n", "", "", "", "", "y", "", "", "y", "", "y", ""]
+    answers = ["", "", "", "", "", "", "", "", "", "", "", "y", "", "", "y", "", "y", ""]
     result = wizard.run(answers)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "requested" not in wizard.state
-    assert not wizard.deploys.exists()  # already live, and it asked before deploying again
-    assert "Already deployed" in result.stdout
+    assert not wizard.deploys.exists()
+    assert result.stdout.count("Already live") == 2
 
 
 def test_a_certificate_whose_tags_cant_be_read_doesnt_lead_to_a_second_certificate(wizard: Wizard) -> None:
@@ -355,9 +400,9 @@ def test_a_dig_timeout_isnt_read_as_a_record(wizard: Wizard) -> None:
 
 def test_an_unreadable_ses_account_is_listed_rather_than_passed(wizard: Wizard) -> None:
     wizard.state["failing"] = ["sesv2 get-account"]
-    result = wizard.run(["", "", "y", "", "y", ""], WIZARD_FROM="10")
+    result = wizard.run(["", "", "y", "", "y", ""], WIZARD_FROM="11")
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "SES's account website: WIZARD_FROM=10" in result.stdout
+    assert "SES's account website: WIZARD_FROM=11" in result.stdout
 
 
 def test_dns_somewhere_else_stops_before_anything_changes(wizard: Wizard) -> None:
@@ -379,17 +424,52 @@ def test_a_record_pointing_elsewhere_is_not_overwritten(wizard: Wizard) -> None:
     assert not wizard.deploys.exists()
 
 
-def test_a_checkout_without_the_live_backend_doesnt_deploy_without_asking(wizard: Wizard) -> None:
-    """Slice 8's backend is live: deploying a checkout without it would take its fields off the API."""
+def _ready_for_the_first_deploy(wizard: Wizard) -> None:
     wizard.state["certificates"].append(
         {"arn": NEW_ARN, "domain": NEW, "sans": [NEW, OLD], "status": "ISSUED", "tags": [{"Key": "project", "Value": "birdjournal"}]}
     )
     wizard.env_file.write_text(f"INVITE_CERTIFICATE_ARN='{NEW_ARN}'\n")
-    (wizard.root / "repo/backend/src/birdjournal_api/goals_api.py").write_text("# before slice 8\n")
-    result = wizard.run(["", "n"], WIZARD_FROM="6")
+
+
+@pytest.mark.parametrize("stage", ["6", "7"])
+@pytest.mark.parametrize("host", [NEW, OLD])
+def test_a_missing_record_stops_either_deploy(wizard: Wizard, stage: str, host: str) -> None:
+    """The old host would redirect to a name that doesn't resolve, and resolvers can cache that for hours."""
+    _ready_for_the_first_deploy(wizard)
+    del wizard.state["records"][host]
+    result = wizard.run(["", "n", "y", ""], WIZARD_FROM=stage)
     assert result.returncode == 1
-    assert "Guild-data backend" in result.stdout
+    assert f"{host} points at ''" in result.stdout
+    assert "WIZARD_FROM=5" in result.stdout
     assert not wizard.deploys.exists()
+
+
+def test_a_checkout_without_the_live_backend_stops_the_wizard(wizard: Wizard) -> None:
+    _ready_for_the_first_deploy(wizard)
+    (wizard.root / "repo/backend/src/birdjournal_api/goals_api.py").write_text("# before slice 8\n")
+    result = wizard.run(["", "n", "y", ""], WIZARD_FROM="6")
+    assert result.returncode == 1
+    assert "already live" in result.stdout
+    assert not wizard.deploys.exists()
+
+
+def test_the_second_deploy_waits_for_the_new_host(wizard: Wizard) -> None:
+    _ready_for_the_first_deploy(wizard)
+    wizard.state["distribution"] = {"aliases": [NEW, OLD], "certificate": NEW_ARN}
+    del wizard.state["web"][f"https://{NEW}/"]
+    result = wizard.run(["", "n", "y", ""], WIZARD_FROM="7")
+    assert result.returncode == 1
+    assert "Nothing has moved" in result.stdout
+    assert "cached" in result.stdout
+    assert not wizard.deploys.exists()
+
+
+def test_the_first_deploy_is_skipped_once_live_and_doesnt_ask_to_repeat(wizard: Wizard) -> None:
+    _ready_for_the_first_deploy(wizard)
+    wizard.state["distribution"] = {"aliases": [NEW, OLD], "certificate": NEW_ARN}
+    result = wizard.run(["", "", "n", "n"], WIZARD_FROM="6")
+    assert "Already live" in result.stdout
+    assert "--new-host-first" not in (wizard.deploys.read_text() if wizard.deploys.exists() else "")
 
 
 @pytest.mark.parametrize(
@@ -403,28 +483,29 @@ def test_a_checkout_without_the_live_backend_doesnt_deploy_without_asking(wizard
 )
 def test_a_failed_site_check_stops_it(wizard: Wizard, url: str, broken: dict[str, Any], message: str) -> None:
     wizard.state["web"][url] = broken
-    result = wizard.run([""], WIZARD_FROM="7")
+    result = wizard.run([""], WIZARD_FROM="8")
     assert result.returncode == 1
     assert message in result.stdout
-    assert "WIZARD_FROM=7" in result.stdout
+    assert "WIZARD_FROM=8" in result.stdout
+    assert "cached" in result.stdout
 
 
 def test_a_pasted_link_on_the_old_host_stops_it(wizard: Wizard) -> None:
     wizard.state["outputs"]["InviteBaseUrl"] = f"https://{NEW}"
-    result = wizard.run(["", f"https://{OLD}/i/abc"], WIZARD_FROM="8")
+    result = wizard.run(["", f"https://{OLD}/i/abc"], WIZARD_FROM="9")
     assert result.returncode == 1
     assert "isn't on" in result.stdout
 
 
 def test_a_console_step_not_done_is_listed_at_the_end(wizard: Wizard) -> None:
-    result = wizard.run(["", "n", "", "", "y", "", "y", ""], WIZARD_FROM="9")
+    result = wizard.run(["", "n", "", "", "y", "", "y", ""], WIZARD_FROM="10")
     assert result.returncode == 0, result.stdout + result.stderr
     assert "App Store Connect's privacy, support and marketing URLs" in result.stdout
 
 
 def test_the_closing_notes_give_the_order(wizard: Wizard) -> None:
-    result = wizard.run(["", "y", "", "", "y", "", "y", ""], WIZARD_FROM="9")
-    assert "this deploy first, then the app's release" in result.stdout
+    result = wizard.run(["", "y", "", "", "y", "", "y", ""], WIZARD_FROM="10")
+    assert "these deploys first, then the app's release" in result.stdout
     assert "deploy only from branches that hold this change" in result.stdout
 
 
@@ -450,6 +531,86 @@ def test_the_deploy_refuses_a_certificate_that_wont_do(wizard: Wizard, sans: lis
     assert message in result.stdout
 
 
-def test_deploy_sh_checks_the_certificate_before_a_real_deploy() -> None:
-    script = (INFRA / "scripts" / "deploy.sh").read_text()
-    assert script.index("check-invite-certificate.sh") < script.index("npx cdk deploy")
+@pytest.mark.parametrize("host", [NEW, OLD])
+@pytest.mark.parametrize("arguments", [(), ("--new-host-first",)])
+def test_a_bare_deploy_refuses_a_missing_record(wizard: Wizard, host: str, arguments: tuple[str, ...]) -> None:
+    del wizard.state["records"][host]
+    result = wizard.deploy(*arguments)
+    assert result.returncode == 1
+    assert f"{host} points at ''" in result.stdout
+    assert wizard.reached_cdk() == ""
+
+
+def test_a_bare_deploy_refuses_a_record_pointing_elsewhere(wizard: Wizard) -> None:
+    wizard.state["records"][NEW] = "someone-else.example.com."
+    result = wizard.deploy()
+    assert result.returncode == 1
+    assert "someone-else.example.com" in result.stdout
+    assert wizard.reached_cdk() == ""
+
+
+def test_a_bare_deploy_refuses_when_the_stack_cant_be_read(wizard: Wizard) -> None:
+    wizard.state["failing"] = ["cloudformation describe-stacks"]
+    result = wizard.deploy()
+    assert result.returncode == 1
+    assert "Can't read the stack" in result.stdout
+    assert wizard.reached_cdk() == ""
+
+
+def test_a_deploy_on_a_new_account_has_no_records_to_check(wizard: Wizard) -> None:
+    wizard.state["no_stack"] = True
+    wizard.state["records"] = {}
+    result = wizard.deploy("--new-host-first")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "cdk deploy" in wizard.reached_cdk()
+
+
+def test_a_bare_deploy_refuses_until_the_new_host_answers(wizard: Wizard) -> None:
+    del wizard.state["web"][f"https://{NEW}/"]
+    result = wizard.deploy()
+    assert result.returncode == 1
+    assert "first deploy of the new host" in result.stdout.lower()
+    assert wizard.reached_cdk() == ""
+
+
+def test_the_first_deploy_doesnt_need_the_new_host_yet_and_says_so_to_cdk(wizard: Wizard) -> None:
+    del wizard.state["web"][f"https://{NEW}/"]
+    result = wizard.deploy("--new-host-first")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "cdk deploy BirdJournal --require-approval broadening -c inviteNewHostFirst=true" in wizard.reached_cdk()
+
+
+def test_a_bare_deploy_with_everything_ready_reaches_cdk(wizard: Wizard) -> None:
+    result = wizard.deploy()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "cdk deploy BirdJournal --require-approval broadening" in wizard.reached_cdk()
+    assert "inviteNewHostFirst" not in wizard.reached_cdk()
+
+
+@pytest.mark.parametrize("backend", ["goals_api.py", "reactions_api.py"])
+def test_a_bare_deploy_refuses_a_checkout_without_the_live_backend(wizard: Wizard, backend: str) -> None:
+    (wizard.root / "repo/backend/src/birdjournal_api" / backend).write_text("# before slice 8\n")
+    result = wizard.deploy()
+    assert result.returncode == 1
+    assert "--without-live-backend" in result.stdout
+    assert wizard.reached_cdk() == ""
+
+
+def test_the_override_deploys_without_the_live_backend(wizard: Wizard) -> None:
+    (wizard.root / "repo/backend/src/birdjournal_api/goals_api.py").write_text("# before slice 8\n")
+    result = wizard.deploy("--without-live-backend")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "cdk deploy" in wizard.reached_cdk()
+
+
+def test_a_diff_compares_templates_and_never_deploys(wizard: Wizard) -> None:
+    """Otherwise cdk makes a temporary change set with the deploy role and uploads the assets."""
+    result = wizard.deploy("--diff")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert wizard.reached_cdk().splitlines() == ["cdk diff BirdJournal --method=template"]
+
+
+def test_an_unknown_argument_stops_a_deploy(wizard: Wizard) -> None:
+    result = wizard.deploy("--without-live-backends")
+    assert result.returncode == 2
+    assert wizard.reached_cdk() == ""

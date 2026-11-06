@@ -205,13 +205,15 @@ finish() {
 #   infra/scripts/domain-wizard.sh                  # from the start; finished stages check themselves and move on
 #   WIZARD_FROM=4 infra/scripts/domain-wizard.sh    # resume at stage 4 (e.g. waiting on the certificate)
 #
-# It changes AWS in two places only, each after asking: it requests one certificate tagged project=birdjournal, and it runs
-# infra/scripts/deploy.sh, which deploys the BirdJournal stack. Everything else it does in the shared account is read-only.
-# Run it from a checkout that holds both this change and everything the live API already runs (stage 6 explains).
+# It changes AWS in two ways only, each after asking: it requests one certificate tagged project=birdjournal, and it runs
+# infra/scripts/deploy.sh twice for the BirdJournal stack. Everything else it does in the shared account is read-only. The
+# first deploy adds the new host beside the old, which keeps serving its pages. Once the new host answers, the second turns
+# on the old host's redirects and moves the API's links, so nothing ever points at a host that isn't ready.
+# Run it from a checkout that holds both this change and everything the live API already runs; deploy.sh refuses otherwise.
 
 run_wizard() {
 
-TOTAL_STAGES=12
+TOTAL_STAGES=13
 WIZARD_FROM="${WIZARD_FROM:-1}"
 
 for tool in aws jq dig curl; do
@@ -451,7 +453,7 @@ fi
 if begin "SiteGround: point $DOMAIN at CloudFront"; then
   target=$(clean "$(stack_output InviteDistributionDomain)")
   if [[ -z "$target" || "$target" == "none" ]]; then
-    die "The stack has no InviteDistributionDomain output. On a new account, deploy with WIZARD_FROM=6, then come back." 5
+    die "The stack has no InviteDistributionDomain output. On a new account, deploy with WIZARD_FROM=6, then WIZARD_FROM=5." 5
   fi
   others=$(aws cloudfront list-distributions --output json \
     --query "DistributionList.Items[?Aliases.Items && contains(Aliases.Items, '$DOMAIN') && DomainName!='$target'].Id" | jq -r 'join(" ")') ||
@@ -463,8 +465,8 @@ if begin "SiteGround: point $DOMAIN at CloudFront"; then
   elif [[ -n "$current" ]]; then
     die "$DOMAIN already points at $current. This wizard doesn't overwrite a record it didn't make." 5
   else
-    say "The distribution keeps its address, so the record goes in before the deploy: invite links work the"
-    say "moment the API starts making them. Until the deploy this host answers with an error, and nothing links to it yet."
+    say "The distribution keeps its address, so the record goes in before the deploys. Until the first one"
+    say "this host answers with an error, and nothing links to it yet."
     open_url "$SITEGROUND"
     step "Site Tools → Domain → DNS Zone Editor → $ZONE → CNAME tab."
     step "Name: $HOST"
@@ -487,49 +489,80 @@ if begin "SiteGround: point $DOMAIN at CloudFront"; then
   pause
 fi
 
-if begin "Deploy"; then
+# deploy_checks STAGE: what deploy.sh checks, sooner, so a stage stops before its prompts.
+deploy_checks() {
   INVITE_CERTIFICATE_ARN="${INVITE_CERTIFICATE_ARN:-$(_existing INVITE_CERTIFICATE_ARN || true)}"
   export INVITE_CERTIFICATE_ARN
   "$INFRA_DIR/scripts/check-invite-certificate.sh" || die "The saved certificate won't do." 4
+  "$INFRA_DIR/scripts/check-invite-dns.sh" || die "The records at SiteGround aren't right yet." 5
+  "$INFRA_DIR/scripts/check-live-backend.sh" || die "Stopped before the deploy." "$1"
+}
 
+# before_a_deploy STAGE [DEPLOY-FLAGS]: what's about to go, and a look at it first. The flags are the deploy's, unquoted.
+before_a_deploy() {
+  local stage="$1" dirty; shift
+  note "This deploys what this checkout holds, $(checkout_name), and its backend replaces the live API."
+  dirty=$(git -C "$REPO_DIR" status --porcelain -- infra backend 2>/dev/null || true)
+  if [[ -n "$dirty" ]]; then
+    warn "infra/ or backend/ has uncommitted changes, and they would deploy too:"
+    note "$dirty"
+    confirm "Deploy them?" || die "Stopped before the deploy." "$stage"
+  fi
+  if confirm "See what would change first (cdk diff of the templates: changes and uploads nothing, about 2 minutes)?"; then
+    "$INFRA_DIR/scripts/deploy.sh" --diff "$@" || die "cdk diff failed." "$stage"
+  fi
+}
+
+if begin "First deploy: the new host beside the old"; then
+  deploy_checks 6
   target=$(clean "$(stack_output InviteDistributionDomain)")
   live=$(distribution "$target" 2>/dev/null || echo '{}')
   if jq -e --argjson hosts "$HOSTS_JSON" --arg arn "$INVITE_CERTIFICATE_ARN" \
-      '(($hosts - (.aliases // [])) | length == 0) and .certificate == $arn' >/dev/null 2>&1 <<<"$live" &&
-    [[ "$(stack_output InviteBaseUrl)" == "https://$DOMAIN" ]]; then
-    ok "Already deployed: the distribution answers on every host with this certificate, and the API uses $DOMAIN."
-    deploy_now=no
-    if confirm "Deploy again anyway?"; then deploy_now=yes; fi
+      '(($hosts - (.aliases // [])) | length == 0) and .certificate == $arn' >/dev/null 2>&1 <<<"$live"; then
+    ok "Already live: the distribution answers on every host with this certificate."
   else
-    say "This deploys whatever this checkout holds, and the live API is replaced by this checkout's backend."
-    note "Checkout: $(checkout_name)"
-    # Slice 8's backend (#150) went live from its own branch. A checkout without it would take its fields back off the API.
-    if ! grep -q "class GoalSpecies" "$REPO_DIR/backend/src/birdjournal_api/goals_api.py"; then
-      warn "This checkout lacks the Guild-data backend (#150, slice 8) that's already live: goals' species would"
-      warn "disappear from the API. Merge it here first, or deploy from the branch that has both."
-      confirm "Deploy anyway?" || die "Stopped before the deploy." 6
+    say "This adds $DOMAIN and the certificate to the distribution. The old host keeps serving its pages and"
+    say "the API keeps making links on it, so nobody notices. The next stage moves them, once $DOMAIN answers."
+    before_a_deploy 6 --new-host-first
+    note "Expect in a diff: the distribution's aliases and certificate, the viewer function, the API's code, and the site's files."
+    if ! confirm "Deploy BirdJournal to $AWS_ACCOUNT / $STACK_REGION now?"; then
+      SKIPPED+=("both deploys: WIZARD_FROM=6 $SCRIPT")
+      finish; exit 0
     fi
-    dirty=$(git -C "$REPO_DIR" status --porcelain -- infra backend 2>/dev/null || true)
-    if [[ -n "$dirty" ]]; then
-      warn "infra/ or backend/ has uncommitted changes, and they would deploy too:"
-      note "$dirty"
-      confirm "Deploy them?" || die "Stopped before the deploy." 6
-    fi
-    if confirm "See what would change first (cdk diff, reads AWS only, about 2 minutes)?"; then
-      "$INFRA_DIR/scripts/deploy.sh" --diff || die "cdk diff failed." 6
-      say "Expect: the distribution's aliases and certificate, the viewer function, the API's INVITE_BASE_URL and"
-      say "code, and the site's files. Anything else, stop and ask."
-    fi
-    deploy_now=no
-    if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $STACK_REGION now?"; then deploy_now=yes; fi
-  fi
-  if [[ "$deploy_now" == "yes" ]]; then
     note "CloudFront takes 5 to 15 minutes. cdk asks once more if IAM permissions widen."
-    "$INFRA_DIR/scripts/deploy.sh" || die "The deploy failed. If CloudFormation had started, it rolls back by itself and the old host keeps working." 6
+    "$INFRA_DIR/scripts/deploy.sh" --new-host-first ||
+      die "The deploy failed. If CloudFormation had started, it rolls back by itself and the old host keeps working." 6
     ok "Deployed."
-  elif [[ "$(stack_output InviteBaseUrl)" != "https://$DOMAIN" ]]; then
-    SKIPPED+=("the deploy: WIZARD_FROM=6 $SCRIPT")
-    finish; exit 0
+  fi
+  pause
+fi
+
+if begin "Second deploy: the old host's redirects and the API's links"; then
+  deploy_checks 7
+  if [[ "$(stack_output InviteBaseUrl)" == "https://$DOMAIN" ]]; then
+    ok "Already live: the API makes links on $DOMAIN."
+  else
+    say "Waiting for https://$DOMAIN to answer over TLS here, up to 30 minutes."
+    note "This Mac's resolver may have cached \"no such host\" from before the record existed, for an hour or more."
+    answer=""
+    for _ in $(seq 1 60); do
+      answer=$(probe "https://$DOMAIN/")
+      [[ "${answer%%|*}" == "200" ]] && break
+      sleep 30
+    done
+    [[ "${answer%%|*}" == "200" ]] ||
+      die "https://$DOMAIN/ answered $answer, wanted 200. Nothing has moved. If it's this Mac's resolver, try again in an hour." 7
+    ok "https://$DOMAIN/ answers."
+    say "This turns on the old host's redirects and moves the API's links to $DOMAIN."
+    before_a_deploy 7
+    note "Expect in a diff: the viewer function, and the API's INVITE_BASE_URL."
+    if ! confirm "Deploy BirdJournal to $AWS_ACCOUNT / $STACK_REGION now?"; then
+      SKIPPED+=("the second deploy: WIZARD_FROM=7 $SCRIPT")
+      finish; exit 0
+    fi
+    "$INFRA_DIR/scripts/deploy.sh" ||
+      die "The deploy failed. If CloudFormation had started, it rolls back by itself and the old host keeps working." 7
+    ok "Deployed."
   fi
   pause
 fi
@@ -553,7 +586,9 @@ if begin "Check the site on both hosts"; then
     expect_redirect "https://$former/" "https://$DOMAIN/"
   done
   if (( CHECK_FAILURES )); then
-    die "$CHECK_FAILURES check(s) failed. DNS or CloudFront may still be settling: give it a few minutes." 7
+    warn "This Mac's resolver may have cached \"no such host\" for $DOMAIN from before the record existed, for an hour"
+    warn "or more, and CloudFront may still be settling, so a failure here is worth rerunning before you dig in."
+    die "$CHECK_FAILURES check(s) failed." 8
   fi
   say ""
   say "Apple's CDN holds its own copy of the file, and phones read that one. It can lag by a day or more, so this"
@@ -566,26 +601,26 @@ fi
 
 if begin "Check the API's invite links"; then
   base=$(stack_output InviteBaseUrl)
-  [[ "$base" == "https://$DOMAIN" ]] || die "The stack's InviteBaseUrl is $base, wanted https://$DOMAIN. Has it deployed?" 6
+  [[ "$base" == "https://$DOMAIN" ]] || die "The stack's InviteBaseUrl is $base, wanted https://$DOMAIN. Has the second deploy run?" 7
   function_name=$(aws cloudformation list-stack-resources --region "$STACK_REGION" --stack-name BirdJournal --output json \
     --query "StackResourceSummaries[?ResourceType=='AWS::Lambda::Function' && starts_with(LogicalResourceId, 'ApiFunction')].PhysicalResourceId" \
-    | jq -r '.[0]') || die "Can't find the API's function in the stack." 8
+    | jq -r '.[0]') || die "Can't find the API's function in the stack." 9
   live_base=$(aws lambda get-function-configuration --region "$STACK_REGION" --function-name "$function_name" \
-    --query 'Environment.Variables.INVITE_BASE_URL' --output text) || die "Can't read the API's settings." 8
-  [[ "$live_base" == "https://$DOMAIN" ]] || die "The API's INVITE_BASE_URL is $live_base, wanted https://$DOMAIN." 6
+    --query 'Environment.Variables.INVITE_BASE_URL' --output text) || die "Can't read the API's settings." 9
+  [[ "$live_base" == "https://$DOMAIN" ]] || die "The API's INVITE_BASE_URL is $live_base, wanted https://$DOMAIN." 7
   ok "The API makes links on https://$DOMAIN"
   say "Only a signed-in app can ask for a real one. On your phone, in a build with Guilds (a Debug build today):"
   step "Guilds → a Guild → Invite → Copy link. Send it to this Mac and paste it below, or press Enter to skip."
   ask INVITE_LINK_CHECK "Invite link:"
   if [[ -z "$INVITE_LINK_CHECK" ]]; then
-    SKIPPED+=("a real invite link from the app: WIZARD_FROM=8 $SCRIPT")
+    SKIPPED+=("a real invite link from the app: WIZARD_FROM=9 $SCRIPT")
   else
-    [[ "$INVITE_LINK_CHECK" == "https://$DOMAIN/i/"* ]] || die "That link isn't on $DOMAIN: $INVITE_LINK_CHECK" 8
+    [[ "$INVITE_LINK_CHECK" == "https://$DOMAIN/i/"* ]] || die "That link isn't on $DOMAIN: $INVITE_LINK_CHECK" 9
     expect_page "$INVITE_LINK_CHECK" "invited to a Guild"
     for former in $FORMER_HOSTS; do
       expect_redirect "https://$former/i/${INVITE_LINK_CHECK##*/}" "$INVITE_LINK_CHECK"
     done
-    (( CHECK_FAILURES == 0 )) || die "The link doesn't work yet." 8
+    (( CHECK_FAILURES == 0 )) || die "The link doesn't work yet." 9
   fi
   pause
 fi
@@ -600,7 +635,7 @@ if begin "App Store Connect: the addresses it lists"; then
   note "A field that's empty or doesn't name the old host: leave it. One you can't edit until the next version: change"
   note "it then; the old address redirects in the meantime."
   if confirm "Does App Store Connect name $DOMAIN everywhere it named the old host?"; then ok "App Store Connect"
-  else SKIPPED+=("App Store Connect's privacy, support and marketing URLs: WIZARD_FROM=9 $SCRIPT"); fi
+  else SKIPPED+=("App Store Connect's privacy, support and marketing URLs: WIZARD_FROM=10 $SCRIPT"); fi
   pause
 fi
 
@@ -610,7 +645,7 @@ if begin "SES: the website its production access names"; then
   for former in $FORMER_HOSTS; do [[ "$website" == *"$former"* ]] && named_old=yes; done
   if [[ -z "$website" ]]; then
     warn "Can't read SES's account details."
-    SKIPPED+=("SES's account website: WIZARD_FROM=10 $SCRIPT")
+    SKIPPED+=("SES's account website: WIZARD_FROM=11 $SCRIPT")
   elif [[ "$named_old" == "yes" ]]; then
     warn "SES's account details name the old host ($website). They belong to the whole shared account: ask its owner."
     SKIPPED+=("SES's account website, $website: ask the shared account's owner")
@@ -625,7 +660,7 @@ if begin "Wearables Developer Center: the app's iOS integration"; then
   step "If its Universal link or any URL it lists names the old host, change it to $DOMAIN."
   note "The repo set up the custom scheme birdjournal:// there and no https link, so there's probably nothing."
   if confirm "Does it name $DOMAIN wherever it named the old host?"; then ok "Wearables Developer Center"
-  else SKIPPED+=("Wearables Developer Center's URLs: WIZARD_FROM=11 $SCRIPT"); fi
+  else SKIPPED+=("Wearables Developer Center's URLs: WIZARD_FROM=12 $SCRIPT"); fi
   pause
 fi
 
@@ -635,7 +670,7 @@ if begin "Google: the sign-in consent screen"; then
   step "App home page, Privacy policy and Terms of service links: change any that name the old host."
   note "The accounts wizard only added amazoncognito.com there. Apple's Services ID and Cognito's callbacks don't use this host."
   if confirm "Does it name $DOMAIN wherever it named the old host?"; then ok "Google"
-  else SKIPPED+=("Google's Branding page: WIZARD_FROM=12 $SCRIPT"); fi
+  else SKIPPED+=("Google's Branding page: WIZARD_FROM=13 $SCRIPT"); fi
   pause
 fi
 
@@ -646,7 +681,7 @@ say ""
 say "From here on, deploy only from branches that hold this change. An older branch would take $DOMAIN back off the"
 say "distribution and send the API's invite links back to the old host."
 say ""
-say "The order for the app: this deploy first, then the app's release. A build with the new host needs it live:"
+say "The order for the app: these deploys first, then the app's release. A build with the new host needs it live:"
 note "  its Settings links open $DOMAIN, and a phone reads the association file when it installs the app."
 say ""
 say "Old apps: Release builds (TestFlight) have never had Guilds or the associated domain, which are Debug only, so"

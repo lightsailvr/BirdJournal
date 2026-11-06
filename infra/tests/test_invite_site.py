@@ -235,6 +235,44 @@ def test_the_stack_outputs_the_cname_target(template: Template) -> None:
     assert outputs["InviteBaseUrl"]["Value"] == f"https://{NEW_HOST}"
 
 
+def _synthesized(**context: Any) -> Template:
+    full = {
+        **json.loads(CDK_JSON.read_text())["context"],
+        "budgetAlertEmail": "budget@example.com",
+        "inviteCertificateArn": INVITE_CERTIFICATE_ARN,
+        "aws:cdk:bundling-stacks": [],
+        **context,
+    }
+    app = cdk.App(context=full)
+    return Template.from_stack(
+        BirdJournalStack(
+            app, "BirdJournal", config=BirdJournalConfig.from_context(app.node), env=cdk.Environment(region="us-west-2")
+        )
+    )
+
+
+def test_the_first_deploy_adds_the_new_host_and_moves_nothing() -> None:
+    """Redirects and links wait for the second deploy, so nothing points at a host that isn't answering yet."""
+    first = _synthesized(inviteNewHostFirst="true")
+    assert _distribution(first)["Aliases"] == [NEW_HOST, OLD_HOST]
+    assert _distribution(first)["ViewerCertificate"]["AcmCertificateArn"] == INVITE_CERTIFICATE_ARN
+    (function,) = [
+        resource
+        for resource in first.find_resources("AWS::Lambda::Function").values()
+        if resource["Properties"].get("Handler") == "birdjournal_api.handler.handler"
+    ]
+    assert function["Properties"]["Environment"]["Variables"]["INVITE_BASE_URL"] == f"https://{OLD_HOST}"
+    assert first.to_json()["Outputs"]["InviteBaseUrl"]["Value"] == f"https://{OLD_HOST}"
+    code = _only(first, "AWS::CloudFront::Function")["Properties"]["FunctionCode"]
+    assert 'FORMER_HOSTS = []' in code
+
+
+def test_the_first_and_second_deploys_keep_the_same_distribution_and_function(template: Template) -> None:
+    first = _synthesized(inviteNewHostFirst="true")
+    for type_ in ("AWS::CloudFront::Distribution", "AWS::CloudFront::Function"):
+        assert set(first.find_resources(type_)) == set(template.find_resources(type_))
+
+
 def _synth(**context: Any) -> None:
     app = cdk.App(context={**json.loads(CDK_JSON.read_text())["context"], "aws:cdk:bundling-stacks": [], **context})
     BirdJournalStack(

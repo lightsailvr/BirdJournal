@@ -47,6 +47,9 @@ class BirdJournalConfig:
     # Hosts the site used to answer on (issue #150). They stay on the distribution for good, because old invite links,
     # QR codes and installed apps still name them: their association file is served and all else redirects.
     invite_former_domains: tuple[str, ...] = ()
+    # The domain wizard's first deploy (`deploy.sh --new-host-first`): the new host joins the distribution while the
+    # former hosts keep serving pages and the API keeps its links on them, until the new host answers (issue #150).
+    invite_new_host_first: bool = False
 
     @classmethod
     def from_context(cls, node: Node) -> "BirdJournalConfig":
@@ -76,6 +79,7 @@ class BirdJournalConfig:
             budget_alert_email=email,
             invite_domain=node.get_context("inviteDomain"),
             invite_former_domains=tuple(node.try_get_context("inviteFormerDomains") or ()),
+            invite_new_host_first=str(node.try_get_context("inviteNewHostFirst")).lower() == "true",
             ios_app_ids=tuple(node.get_context("iosAppIds")),
             invite_certificate_arn=certificate,
             apns_secret_name=node.get_context("apnsSecretName"),
