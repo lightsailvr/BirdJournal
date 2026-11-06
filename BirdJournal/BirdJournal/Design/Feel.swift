@@ -4,7 +4,8 @@ import SwiftUI
 /// so they stay consistent. They all go through `sensoryFeedback`, so the system's haptics setting turns them off.
 ///
 /// A phone-microphone run keeps the audio session recording, and `AVAudioSession` would silence these during it, so
-/// `PhoneMicAudioSource` allows them. Whether they then reach the microphone as false detections is for a phone: DECISIONS.md.
+/// `PhoneMicAudioSource` allows them. Whether a stitch's ticks then reach the microphone as false detections is for a phone:
+/// `ticksDuringPhoneRun` is the switch, and DECISIONS.md has the rest.
 enum Haptic: String, CaseIterable, Sendable {
     /// A patch's page opening. The touch itself is the press's: a touch can also be the start of a scroll.
     case lift
@@ -31,6 +32,15 @@ enum Haptic: String, CaseIterable, Sendable {
         case .reaction: .impact(weight: .light)
         case .error: .error
         }
+    }
+
+    /// Whether a stitch ticks while the phone's microphone is listening. On, as the issue has it, until a phone says otherwise. If
+    /// ticks raise false detections, this goes false and everything else still plays, Start and Stop included.
+    static let ticksDuringPhoneRun = true
+
+    /// Whether a stitch ticks now.
+    static func ticks(phoneRunHoldsSession: Bool, duringPhoneRun: Bool = ticksDuringPhoneRun) -> Bool {
+        duringPhoneRun || !phoneRunHoldsSession
     }
 }
 

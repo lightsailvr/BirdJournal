@@ -157,6 +157,60 @@ final class FeelUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Share this patch"].waitForExistence(timeout: 10), "no share sheet: \(app.debugDescription.prefix(3000))")
     }
 
+    /// A stack in a sheet: the page grows in the sheet, the peek's actions land in the sheet, and neither pushes onto the tab behind it.
+    @MainActor
+    func testLiftAndPeekInASheetStayInTheSheet() throws {
+        guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
+        // A run in Griffith Park, where the House Finch has a patch to be reached from its review.
+        let app = launch(["-seedJournal", "YES", "-reduceMotion", "NO", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
+        let row = app.buttons["Review House Finch"]
+        let close = app.buttons["Close"]
+        let yours = element(app, "profile-your-cards")
+        var reached = false
+        for _ in 0..<5 {
+            XCTAssertTrue(row.waitForExistence(timeout: 90), "no row: \(app.debugDescription.prefix(3000))")
+            row.tap()
+            XCTAssertTrue(close.waitForExistence(timeout: 10), "no sheet: \(app.debugDescription.prefix(3000))")
+            if app.staticTexts["House Finch"].exists {
+                reached = true
+                break
+            }
+            close.tap()
+        }
+        XCTAssertTrue(reached, "the live list kept moving")
+        XCTAssertTrue(app.scrolledTo(yours, limit: 12), "no way to its patches: \(app.debugDescription.prefix(3000))")
+        yours.tap()
+        let finch = tile(app, "Citrus")
+        XCTAssertTrue(finch.waitForExistence(timeout: 10), "no tile in the sheet: \(app.debugDescription.prefix(3000))")
+
+        // The Lift, there and back.
+        finch.tap()
+        let face = element(app, "patch-face")
+        XCTAssertTrue(face.waitForExistence(timeout: 10), "the patch did not open: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(face.isHittable, "it opened behind the sheet")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(finch.waitForExistence(timeout: 10))
+
+        // The peek's two ways on.
+        finch.press(forDuration: 1.2)
+        let turn = app.buttons["Turn over"]
+        XCTAssertTrue(turn.waitForExistence(timeout: 5), "no peek: \(app.debugDescription.prefix(3000))")
+        turn.tap()
+        let card = element(app, "card-flip")
+        XCTAssertTrue(element(app, "card-name").waitForExistence(timeout: 10), "Turn over did nothing here: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(card.isHittable, "Turn over went behind the sheet")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        XCTAssertTrue(finch.waitForExistence(timeout: 10))
+        finch.press(forDuration: 1.2)
+        let all = app.buttons["All 2 sightings"]
+        XCTAssertTrue(all.waitForExistence(timeout: 5), "\(app.debugDescription.prefix(3000))")
+        all.tap()
+        let sighting = app.buttons["patch-sighting"].firstMatch
+        XCTAssertTrue(sighting.waitForExistence(timeout: 10), "All sightings did nothing here: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(sighting.isHittable, "All sightings went behind the sheet")
+    }
+
     // MARK: - The set's menu
 
     @MainActor
@@ -324,6 +378,18 @@ final class FeelUITests: XCTestCase {
         flip.tap()
         waitForHaptic("turn", count: 2, app)
         XCTAssertEqual(hapticLog(app).filter { $0 == "lift" }.count, 1, "\(hapticLog(app))")
+    }
+
+    /// The mock's compact pill, and across the page once its words need the room.
+    @MainActor
+    func testStopIsACompactCentredPill() throws {
+        guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
+        let app = launch(["-autoPhoneListening", Self.clip, "-autoLocation", "denied", "-autoScreen", "listening"])
+        let stop = app.buttons["Stop listening"]
+        XCTAssertTrue(stop.waitForExistence(timeout: 30), "\(app.debugDescription.prefix(3000))")
+        let window = app.windows.firstMatch.frame
+        XCTAssertLessThan(stop.frame.width, window.width * 0.7, "\(stop.frame)")
+        XCTAssertEqual(stop.frame.midX, window.midX, accuracy: 2, "\(stop.frame)")
     }
 
     @MainActor

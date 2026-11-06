@@ -305,6 +305,7 @@ struct Toast: View {
     var ticksFrom: String?
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
+    @Environment(ListeningCoordinator.self) private var run: ListeningCoordinator?
     @State private var ticked = false
 
     /// Long enough for a review sheet to have finished closing, so the tick is seen.
@@ -339,7 +340,7 @@ struct Toast: View {
         .overlay(Capsule().strokeBorder(Color.rule, lineWidth: 1))
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
-        .haptic(.stitchTick, trigger: ticked)
+        .haptic(.stitchTick, trigger: ticked) { _, _ in Haptic.ticks(phoneRunHoldsSession: run?.phoneRunHoldsSession ?? false) }
         .task {
             guard ticksFrom != nil else { return }
             if !isStill {

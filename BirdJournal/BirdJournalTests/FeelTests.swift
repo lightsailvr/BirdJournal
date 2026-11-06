@@ -23,6 +23,15 @@ struct FeelTests {
         #expect(Haptic.error.feedback == .error)
     }
 
+    @Test("the switch for ticks on a phone-mic run reaches only that run")
+    func tickSwitch() {
+        #expect(Haptic.ticksDuringPhoneRun, "on, as the issue has it, until a phone says otherwise")
+        #expect(Haptic.ticks(phoneRunHoldsSession: true))
+        #expect(Haptic.ticks(phoneRunHoldsSession: false))
+        #expect(!Haptic.ticks(phoneRunHoldsSession: true, duringPhoneRun: false))
+        #expect(Haptic.ticks(phoneRunHoldsSession: false, duringPhoneRun: false), "a glasses run or no run still ticks")
+    }
+
     @Test("a press moves a button, or under Reduce Motion only dims it, and letting go puts it back")
     func press() {
         #expect(PressFeel.appearance(isPressed: true, scale: PressFeel.sinks, reduceMotion: false) == (PressFeel.sinks, 1))

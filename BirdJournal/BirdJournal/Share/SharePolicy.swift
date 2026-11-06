@@ -60,7 +60,7 @@ enum SharePolicy {
             attribution = nil
         } else if let reference, mayShare(reference) {
             picture = .reference(reference)
-            caption = "Reference photo. \(reference.shortCredit)"
+            caption = "Reference. \(reference.shortCredit)"
             attribution = "Photo: \(reference.creditLine), via iNaturalist \(reference.sourceURL.absoluteString)"
         } else {
             picture = .none

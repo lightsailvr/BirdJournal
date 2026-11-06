@@ -102,6 +102,88 @@ final class CollectionUITests: XCTestCase {
         }
     }
 
+    /// Each mode's list, scrolled, comes back where it was left, through other modes and a quick run of changes.
+    @MainActor
+    func testEachModeKeepsItsScrollPositionThroughChanges() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES"])
+        let modes = app.segmentedControls["collection-mode"]
+        XCTAssertTrue(modes.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 10), "no board; screen: \(app.debugDescription.prefix(3000))")
+
+        // Scrolls `mode` a little, and returns a tile or row in view with where it rests.
+        func scrolled(_ mode: String, _ rows: XCUIElementQuery) throws -> (element: XCUIElement, minY: CGFloat) {
+            modes.buttons[mode].tap()
+            Thread.sleep(forTimeInterval: 1)
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 1)
+            let shown = try XCTUnwrap(rows.allElementsBoundByIndex.first { Self.isClearOfBars($0, in: app) }, "nothing in view in \(mode); screen: \(app.debugDescription.prefix(3000))")
+            let element = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
+            return (element, Self.settledMinY(of: element))
+        }
+        let patch = try scrolled("Patches", app.buttons.matching(identifier: "board-patch"))
+        let sighting = try scrolled("Sightings", app.buttons.matching(NSPredicate(format: "label CONTAINS 'added from'")))
+        let species = try scrolled("Species", app.buttons.matching(NSPredicate(format: "label CONTAINS 'sighting, last'")))
+
+        modes.buttons["Patches"].tap()
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(Self.settledMinY(of: patch.element), patch.minY, accuracy: 3, "Patches moved")
+        modes.buttons["Sightings"].tap()
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(Self.settledMinY(of: sighting.element), sighting.minY, accuracy: 3, "Sightings moved")
+        modes.buttons["Species"].tap()
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(Self.settledMinY(of: species.element), species.minY, accuracy: 3, "Species moved")
+
+        // Quickly through them all, with no time to settle between.
+        for mode in ["Patches", "Sightings", "Species", "Patches"] {
+            modes.buttons[mode].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
+        Thread.sleep(forTimeInterval: 1.5)
+        XCTAssertTrue(modes.buttons["Patches"].isSelected)
+        XCTAssertEqual(Self.settledMinY(of: patch.element), patch.minY, accuracy: 3, "a quick run of changes moved Patches")
+    }
+
+    /// A mode change never shows the old mode moving: when the scroll has to go elsewhere, it has already gone.
+    @MainActor
+    func testTheOldModeHasGoneBeforeTheScrollMoves() throws {
+        // The surface's fade is slowed: the words and tiles don't wait for it.
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES", "-modeFadeSeconds", "6"])
+        let modes = app.segmentedControls["collection-mode"]
+        XCTAssertTrue(modes.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 10))
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 1)
+        modes.buttons["Sightings"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertFalse(app.buttons["board-patch"].firstMatch.exists, "the board is still there, a sixth of the way through the surface's fade")
+    }
+
+    /// The set's menu stays in reach down a board, and the bar it's in keeps touches off what scrolls under it.
+    @MainActor
+    func testTheSetMenuIsInReachFromAScrolledBoard() throws {
+        let app = launch(["-seedBoard", "YES"])
+        let name = app.buttons["collection-board"]
+        XCTAssertTrue(name.waitForExistence(timeout: 15), "no set menu; screen: \(app.debugDescription.prefix(3000))")
+        let top = name.frame.minY
+        for _ in 0..<4 { app.swipeUp() }
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertTrue(name.isHittable, "scrolled away; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertLessThanOrEqual(name.frame.minY, top, "it pins under the title")
+
+        // The bar's empty end, with tiles scrolled under it: a tap there opens nothing.
+        let frame = name.frame
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: app.frame.maxX - 30, dy: frame.midY))
+            .tap()
+        XCTAssertFalse(app.buttons["card-flip"].waitForExistence(timeout: 2), "a tap on the bar reached a tile under it")
+
+        name.tap()
+        let uncharted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch
+        XCTAssertTrue(uncharted.waitForExistence(timeout: 5), "no list of sets; screen: \(app.debugDescription.prefix(3000))")
+        uncharted.tap()
+        XCTAssertEqual(app.buttons["collection-board"].label, "Uncharted")
+    }
+
     @MainActor
     func testAnotherBoardIsChosenAndKeptAcrossTheTabs() throws {
         let app = launch()
