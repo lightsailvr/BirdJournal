@@ -97,6 +97,8 @@ struct RunLockScreenView: View {
             }
         }
         .padding(16)
+        // A fixed-size surface: the words are in the app at any size.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .accessibilityElement(children: .contain)
     }
 }
@@ -108,13 +110,28 @@ struct RunIslandExpandedLeading: View {
     let snapshot: RunSnapshot
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 6) {
             Image(systemName: "waveform")
                 .foregroundStyle(GlanceInk.tint(setID: snapshot.setID, scheme, contrast))
                 .accessibilityLabel(snapshot.statusText)
             RunActivityClock(snapshot: snapshot, font: .system(.title2, design: .serif))
         }
         .padding(.leading, 4)
+    }
+}
+
+/// Under the Island's top line: the counts, on a line they fit, and Stop.
+struct RunIslandExpandedBottom: View {
+    let snapshot: RunSnapshot
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            RunActivityCounts(snapshot: snapshot)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            RunActivityStop(snapshot: snapshot)
+        }
+        .padding(.horizontal, 4)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 }
 

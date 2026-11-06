@@ -15,6 +15,8 @@ struct RunReviewSheet: View {
     @Environment(PlaceNames.self) private var places
     @State private var reviewing: Candidate?
     @State private var pictures: [RunRecap.Picture] = []
+    /// The patches `pictures` was drawn for: until it catches up, there's no image to share, not one missing a patch.
+    @State private var drawnFor: [CardCollection.Patch.Key]?
     @State private var includeCity = true
     @State private var export: CardExport?
 
@@ -66,8 +68,7 @@ struct RunReviewSheet: View {
 
     private struct ExportKey: Equatable {
         var recap: RunRecap
-        var pictures: [CardCollection.Patch.Key]
-        var isActive: Bool
+        var isReady: Bool
     }
 
     var body: some View {
@@ -146,8 +147,9 @@ struct RunReviewSheet: View {
                 guard scenePhase == .active else { return }
                 await drawPictures()
             }
-            .task(id: ExportKey(recap: recap, pictures: pictures.map(\.id), isActive: scenePhase == .active)) {
-                guard scenePhase == .active else { return }
+            .task(id: ExportKey(recap: recap, isReady: scenePhase == .active && drawnFor == sewn.map(\.id))) {
+                export = nil
+                guard scenePhase == .active, drawnFor == sewn.map(\.id) else { return }
                 render()
             }
             .task(id: run.coordinate) {
@@ -167,8 +169,9 @@ struct RunReviewSheet: View {
 
     /// Flat pictures of the sewn patches: a page full of shaders isn't what a printed recap is, and they go into the image.
     private func drawPictures() async {
+        let patches = sewn
         var drawn: [RunRecap.Picture] = []
-        for patch in sewn {
+        for patch in patches {
             if let known = pictures.first(where: { $0.id == patch.id }) {
                 drawn.append(known)
                 continue
@@ -183,6 +186,7 @@ struct RunReviewSheet: View {
             }
         }
         pictures = drawn
+        drawnFor = patches.map(\.id)
     }
 
     /// The image as the system share takes it: a fresh PNG with nothing but its pixels.

@@ -62,13 +62,11 @@ final class AfterTheRunUITests: XCTestCase {
         add.tap()
         let done = app.buttons["Done"].firstMatch
         XCTAssertTrue(done.waitForExistence(timeout: 20), "no way off the reveal; screen: \(app.debugDescription.prefix(4000))")
-        let revealClosed = NSPredicate(format: "label CONTAINS '1 patch sewn'")
-        app.buttons.matching(identifier: "Keep listening").firstMatch.tapIfExists()
         if app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'New patch'")).firstMatch.waitForExistence(timeout: 10) { done.tap() }
         let back = app.navigationBars.buttons.firstMatch
         if !card.waitForExistence(timeout: 3), back.exists { back.tap() }
         XCTAssertTrue(card.waitForExistence(timeout: 10), "back to the recap; screen: \(app.debugDescription.prefix(4000))")
-        expectation(for: revealClosed, evaluatedWith: card)
+        expectation(for: NSPredicate(format: "label CONTAINS '1 patch sewn'"), evaluatedWith: card)
         waitForExpectations(timeout: 10)
     }
 
@@ -103,7 +101,7 @@ final class AfterTheRunUITests: XCTestCase {
     }
 
     /// The bundled pack's first bird, in Griffith Park, as `-seedBoard` adds it.
-    private static let seeded = "birdjournal://patch?species=Branta%20canadensis_Canada%20Goose&set=us-ca-la"
+    private static let seeded = "birdjournal://patch?species=Buteo%20jamaicensis_Red-tailed%20Hawk&set=us-ca-la"
 
     @MainActor
     func testTheWidgetsLinkOpensThatPatchsPage() {
@@ -112,7 +110,7 @@ final class AfterTheRunUITests: XCTestCase {
         app.open(URL(string: Self.seeded)!)
         XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the patch didn't open; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Los Angeles, '")).firstMatch.exists, "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Canada Goose'")).firstMatch.exists, "the right bird; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Red-tailed Hawk'")).firstMatch.exists, "the right bird; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor
@@ -132,14 +130,8 @@ final class AfterTheRunUITests: XCTestCase {
         XCTAssertTrue(recap(app).waitForExistence(timeout: 120), "no recap; screen: \(app.debugDescription.prefix(4000))")
         app.open(URL(string: Self.seeded)!)
         XCTAssertFalse(app.buttons["card-flip"].waitForExistence(timeout: 3), "the review stays until the birder closes it")
-        XCTAssertTrue(recap(app).exists)
+        XCTAssertTrue(recap(app).exists, "screen: \(app.debugDescription.prefix(3000))")
         app.buttons["Done"].firstMatch.tap()
         XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "then the patch opens; screen: \(app.debugDescription.prefix(4000))")
-    }
-}
-
-private extension XCUIElement {
-    func tapIfExists() {
-        if exists, isHittable { tap() }
     }
 }

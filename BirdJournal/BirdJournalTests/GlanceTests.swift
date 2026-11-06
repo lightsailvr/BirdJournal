@@ -368,6 +368,9 @@ struct RunRecapTests {
         #expect(recap(patches: []).spokenText.hasSuffix("0 patches sewn."))
         #expect(recap(patches: ["House Finch", "Black Phoebe"]).spokenText.hasSuffix("2 patches sewn: House Finch and Black Phoebe."))
         #expect(recap(place: nil).spokenText.hasPrefix("October 26, 2026. Listened"))
+        #expect(recap(place: nil).title == "October 26, 2026")
+        #expect(recap(place: FindPolicy.secretSpot).title == "A secret spot")
+        #expect(recap().title == "Los Angeles")
     }
 
     @Test("the place follows the share policy: the city only, off when chosen, and a secret spot with a sensitive bird on it")

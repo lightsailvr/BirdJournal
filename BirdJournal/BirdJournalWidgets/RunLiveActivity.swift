@@ -13,12 +13,16 @@ struct RunLiveActivity: Widget {
                     RunIslandExpandedLeading(snapshot: context.state)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    RunActivityCounts(snapshot: context.state, alignment: .trailing)
+                    Text(context.state.statusText)
+                        .font(.subheadline)
+                        .foregroundStyle(GlanceInk.secondary(.dark, .standard))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .frame(maxHeight: .infinity)
                         .padding(.trailing, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    RunActivityStop(snapshot: context.state)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    RunIslandExpandedBottom(snapshot: context.state)
                 }
             } compactLeading: {
                 RunIslandCompactLeading(snapshot: context.state)

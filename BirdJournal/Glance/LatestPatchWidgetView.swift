@@ -23,6 +23,8 @@ struct LatestPatchWidgetView: View {
                 medium
             }
         }
+        // A fixed-size surface: the words are in the app at any size.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .widgetURL(snapshot.latest?.link.url)
         .containerBackground(for: .widget) { GlanceBoard() }
         .accessibilityElement(children: .ignore)

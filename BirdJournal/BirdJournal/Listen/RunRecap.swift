@@ -47,6 +47,12 @@ struct RunRecap: Equatable {
         return left == 0 ? ("\(hours) hr", spokenHours) : ("\(hours) hr \(left) min", "\(spokenHours) \(spokenMinutes)")
     }
 
+    /// What heads the card: the place, "A secret spot" as a title has it, or the date with no place to give.
+    var title: String {
+        guard let place else { return dateText }
+        return place.prefix(1).uppercased() + place.dropFirst()
+    }
+
     var patchesSewn: Int { patchNames.count }
     /// "bird heard", "birds heard".
     var birdsLabel: String { birdsHeard == 1 ? "bird heard" : "birds heard" }
@@ -138,7 +144,7 @@ struct RunRecapCard: View {
     }
 
     @ViewBuilder private var heading: some View {
-        let title = Text(recap.place ?? recap.dateText)
+        let title = Text(recap.title)
             .font(JournalFont.title)
             .foregroundStyle(Color.cardInk)
             .fixedSize(horizontal: false, vertical: true)

@@ -74,13 +74,14 @@ struct GlancePreview: View {
             .frame(height: 36)
             .background(.black, in: Capsule())
             VStack(spacing: 8) {
-                HStack(alignment: .top) {
+                HStack {
                     RunIslandExpandedLeading(snapshot: Self.run)
                     Spacer()
-                    RunActivityCounts(snapshot: Self.run, alignment: .trailing)
+                    Text(Self.run.statusText)
+                        .font(.subheadline)
+                        .foregroundStyle(GlanceInk.secondary(.dark, .standard))
                 }
-                RunActivityStop(snapshot: Self.run)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                RunIslandExpandedBottom(snapshot: Self.run)
             }
             .padding(18)
             .background(.black, in: RoundedRectangle(cornerRadius: 36))
