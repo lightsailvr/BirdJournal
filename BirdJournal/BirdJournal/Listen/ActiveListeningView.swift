@@ -12,6 +12,9 @@ struct ActiveListeningView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// For the summary's count of what's new and what you have.
     @Environment(CollectionStore.self) private var collectionStore
+    #if DEBUG
+    @Environment(\.openCollection) private var openCollection
+    #endif
     /// The rows hold still around a touch; so does what's above them, while it would push them about.
     @State private var held = HeldListOrder<Species>()
     @State private var heldHunt: RunHunt?
@@ -109,7 +112,13 @@ struct ActiveListeningView: View {
 
             }
         }
-        .onScrollPhaseChange { _, phase in setHolding(.scroll, phase != .idle) }
+        .onScrollPhaseChange { _, phase in
+            setHolding(.scroll, phase != .idle)
+            #if DEBUG
+            // `-fakeLeaveDuringFlick YES`: another tab while the list decelerates, quicker than a UI test can tap one.
+            if phase == .decelerating, UserDefaults.standard.bool(forKey: "fakeLeaveDuringFlick") { openCollection() }
+            #endif
+        }
         .task(id: held.releaseAt) {
             guard let releaseAt = held.releaseAt else { return }
             try? await Task.sleep(for: .seconds(max(releaseAt.timeIntervalSinceNow, 0)))

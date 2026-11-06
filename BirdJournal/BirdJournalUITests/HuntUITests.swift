@@ -201,7 +201,7 @@ final class HuntUITests: XCTestCase {
     func testAFlickThenAnotherTabDoesNotLeaveTheListHeld() throws {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1",
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeLeaveDuringFlick", "YES",
             "-fakeRunBirds", Self.movingBirds + ",Melozone crissalis_California Towhee,Spinus psaltria_Lesser Goldfinch",
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
         ]
@@ -210,7 +210,8 @@ final class HuntUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
 
         row.swipeUp(velocity: .fast)
-        app.tabBars.buttons["Collection"].tap()
+        let collection = app.tabBars.buttons["Collection"]
+        XCTAssertTrue(collection.waitForExistence(timeout: 5) && collection.isSelected, "the flick didn't leave; screen: \(app.debugDescription.prefix(3000))")
         app.tabBars.buttons["Listen"].tap()
         XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         // Well inside the safety net's time: this is leaving letting go, not the net.

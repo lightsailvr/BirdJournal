@@ -55,7 +55,8 @@ import UIKit
 ///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
 ///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
 ///   reveal; `-fakeRunReorderEvery <seconds>` keeps those heard earlier swapping places, so the list keeps re-sorting;
-///   `-fakeSheetDuringTouch YES` lands a review a second into a touch on the list; `-autoRunStops YES` stops the run, for the review. `-patchDecodeLog YES` logs each patch decode under `patch-decode`.
+///   `-fakeSheetDuringTouch YES` lands a review a second into a touch on the list; `-fakeLeaveDuringFlick YES` opens the
+///   Collection while the list decelerates; `-autoRunStops YES` stops the run, for the review. `-patchDecodeLog YES` logs each patch decode under `patch-decode`.
 /// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
