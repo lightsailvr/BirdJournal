@@ -17,7 +17,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aechmophorus-occidentalis": {
       "common_name": "Western Grebe",
@@ -35,7 +35,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aeronautes-saxatalis": {
       "common_name": "White-throated Swift",
@@ -53,7 +53,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "agelaius-phoeniceus": {
       "common_name": "Red-winged Blackbird",
@@ -71,7 +71,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aimophila-ruficeps": {
       "common_name": "Rufous-crowned Sparrow",
@@ -89,7 +89,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "alopochen-aegyptiaca": {
       "common_name": "Egyptian Goose",
@@ -107,7 +107,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "amazona-oratrix": {
       "common_name": "Yellow-headed Amazon",
@@ -125,7 +125,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "amazona-viridigenalis": {
       "common_name": "Red-crowned Amazon",
@@ -143,7 +143,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anarhynchus-nivosus": {
       "common_name": "Snowy Plover",
@@ -161,7 +161,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anas-crecca": {
       "common_name": "Eurasian Teal",
@@ -179,7 +179,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anas-platyrhynchos": {
       "common_name": "Mallard",
@@ -197,7 +197,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "anthus-rubescens": {
       "common_name": "American Pipit",
@@ -215,7 +215,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aphelocoma-californica": {
       "common_name": "California Scrub Jay",
@@ -233,7 +233,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aratinga-nenday": {
       "common_name": "Nanday Parakeet",
@@ -251,7 +251,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "archilochus-alexandri": {
       "common_name": "Black-chinned Hummingbird",
@@ -269,7 +269,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "ardea-alba": {
       "common_name": "Great Egret",
@@ -287,7 +287,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "ardea-herodias": {
       "common_name": "Great Blue Heron",
@@ -305,7 +305,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "astur-cooperii": {
       "common_name": "Cooper's Hawk",
@@ -323,7 +323,7 @@
         "holes_filled": 3,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "aythya-collaris": {
       "common_name": "Ring-necked Duck",
@@ -341,7 +341,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "baeolophus-inornatus": {
       "common_name": "Oak Titmouse",
@@ -359,7 +359,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bombycilla-cedrorum": {
       "common_name": "Cedar Waxwing",
@@ -377,7 +377,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "branta-canadensis": {
       "common_name": "Canada Goose",
@@ -395,7 +395,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "brotogeris-chiriri": {
       "common_name": "Yellow-chevroned Parakeet",
@@ -413,7 +413,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bubo-virginianus": {
       "common_name": "Great Horned Owl",
@@ -431,7 +431,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "bucephala-albeola": {
       "common_name": "Bufflehead",
@@ -449,7 +449,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "buteo-jamaicensis": {
       "common_name": "Red-tailed Hawk",
@@ -467,7 +467,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "buteo-lineatus": {
       "common_name": "Red-shouldered Hawk",
@@ -485,7 +485,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "butorides-virescens": {
       "common_name": "Green Heron",
@@ -503,7 +503,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cairina-moschata": {
       "common_name": "Muscovy Duck",
@@ -521,7 +521,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calidris-alba": {
       "common_name": "Sanderling",
@@ -539,7 +539,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calidris-mauri": {
       "common_name": "Western Sandpiper",
@@ -557,7 +557,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calidris-minutilla": {
       "common_name": "Least Sandpiper",
@@ -575,7 +575,7 @@
         "holes_filled": 3,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "callipepla-californica": {
       "common_name": "California Quail",
@@ -595,7 +595,7 @@
           "right"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "calypte-anna": {
       "common_name": "Anna's Hummingbird",
@@ -613,7 +613,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "campylorhynchus-brunneicapillus": {
       "common_name": "Cactus Wren",
@@ -631,7 +631,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cardellina-pusilla": {
       "common_name": "Wilson's Warbler",
@@ -649,7 +649,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cathartes-aura": {
       "common_name": "Turkey Vulture",
@@ -667,7 +667,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catharus-guttatus": {
       "common_name": "Hermit Thrush",
@@ -685,7 +685,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catharus-ustulatus": {
       "common_name": "Swainson's Thrush",
@@ -703,7 +703,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "catherpes-mexicanus": {
       "common_name": "Canyon Wren",
@@ -721,7 +721,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "chamaea-fasciata": {
       "common_name": "Wrentit",
@@ -739,7 +739,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "charadrius-vociferus": {
       "common_name": "Killdeer",
@@ -757,7 +757,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "chondestes-grammacus": {
       "common_name": "Lark Sparrow",
@@ -775,7 +775,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "colaptes-auratus": {
       "common_name": "Northern Flicker",
@@ -793,7 +793,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "columba-livia": {
       "common_name": "Rock Dove",
@@ -811,7 +811,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "contopus-sordidulus": {
       "common_name": "Western Wood Pewee",
@@ -829,7 +829,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corthylio-calendula": {
       "common_name": "Ruby-crowned Kinglet",
@@ -847,7 +847,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corvus-brachyrhynchos": {
       "common_name": "American Crow",
@@ -865,7 +865,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "corvus-corax": {
       "common_name": "Northern Raven",
@@ -883,7 +883,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "cyanocitta-stelleri": {
       "common_name": "Steller's Jay",
@@ -901,7 +901,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "dryobates-nuttallii": {
       "common_name": "Nuttall's Woodpecker",
@@ -919,7 +919,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "dryobates-pubescens": {
       "common_name": "Downy Woodpecker",
@@ -937,7 +937,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "egretta-thula": {
       "common_name": "Snowy Egret",
@@ -955,7 +955,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "empidonax-difficilis": {
       "common_name": "Western Flycatcher",
@@ -973,7 +973,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "euphagus-cyanocephalus": {
       "common_name": "Brewer's Blackbird",
@@ -991,7 +991,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "falco-peregrinus": {
       "common_name": "Peregrine Falcon",
@@ -1009,7 +1009,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "falco-sparverius": {
       "common_name": "American Kestrel",
@@ -1027,7 +1027,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "fulica-americana": {
       "common_name": "American Coot",
@@ -1045,7 +1045,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "geococcyx-californianus": {
       "common_name": "Greater Roadrunner",
@@ -1063,7 +1063,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "geothlypis-trichas": {
       "common_name": "Common Yellowthroat",
@@ -1081,7 +1081,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haematopus-bachmani": {
       "common_name": "Black Oystercatcher",
@@ -1099,7 +1099,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haemorhous-mexicanus": {
       "common_name": "House Finch",
@@ -1117,7 +1117,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "haliaeetus-leucocephalus": {
       "common_name": "Bald Eagle",
@@ -1135,7 +1135,7 @@
         "holes_filled": 10,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "himantopus-mexicanus": {
       "common_name": "Black-necked Stilt",
@@ -1153,7 +1153,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "hirundo-rustica": {
       "common_name": "Barn Swallow",
@@ -1171,7 +1171,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "hydroprogne-caspia": {
       "common_name": "Caspian Tern",
@@ -1189,7 +1189,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "icterus-bullockii": {
       "common_name": "Bullock's Oriole",
@@ -1207,7 +1207,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "icterus-cucullatus": {
       "common_name": "Hooded Oriole",
@@ -1225,7 +1225,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "junco-hyemalis": {
       "common_name": "Dark-eyed Junco",
@@ -1243,7 +1243,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "lanius-ludovicianus": {
       "common_name": "Loggerhead Shrike",
@@ -1261,7 +1261,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-californicus": {
       "common_name": "California Gull",
@@ -1279,7 +1279,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-delawarensis": {
       "common_name": "Ring-billed Gull",
@@ -1297,7 +1297,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-heermanni": {
       "common_name": "Heermann's Gull",
@@ -1315,7 +1315,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-occidentalis": {
       "common_name": "Western Gull",
@@ -1333,7 +1333,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "larus-smithsonianus": {
       "common_name": "American Herring Gull",
@@ -1351,7 +1351,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "leiothlypis-celata": {
       "common_name": "Orange-crowned Warbler",
@@ -1369,7 +1369,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "limosa-fedoa": {
       "common_name": "Marbled Godwit",
@@ -1387,7 +1387,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "lonchura-punctulata": {
       "common_name": "Scaly-breasted Munia",
@@ -1405,7 +1405,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "lophodytes-cucullatus": {
       "common_name": "Hooded Merganser",
@@ -1423,7 +1423,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "mareca-americana": {
       "common_name": "American Wigeon",
@@ -1441,7 +1441,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "mareca-strepera": {
       "common_name": "Gadwall",
@@ -1459,7 +1459,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "megaceryle-alcyon": {
       "common_name": "Belted Kingfisher",
@@ -1477,7 +1477,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "megascops-kennicottii": {
       "common_name": "Western Screech Owl",
@@ -1495,7 +1495,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melanerpes-formicivorus": {
       "common_name": "Acorn Woodpecker",
@@ -1513,7 +1513,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melanitta-perspicillata": {
       "common_name": "Surf Scoter",
@@ -1531,7 +1531,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melospiza-lincolnii": {
       "common_name": "Lincoln's Sparrow",
@@ -1551,7 +1551,7 @@
           "right"
         ]
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melospiza-melodia": {
       "common_name": "Song Sparrow",
@@ -1569,7 +1569,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "melozone-crissalis": {
       "common_name": "California Towhee",
@@ -1587,7 +1587,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "mimus-polyglottos": {
       "common_name": "Northern Mockingbird",
@@ -1605,7 +1605,7 @@
         "holes_filled": 3,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "molothrus-ater": {
       "common_name": "Brown-headed Cowbird",
@@ -1623,7 +1623,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "myiarchus-cinerascens": {
       "common_name": "Ash-throated Flycatcher",
@@ -1641,7 +1641,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "nannopterum-auritum": {
       "common_name": "Double-crested Cormorant",
@@ -1659,7 +1659,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "numenius-hudsonicus": {
       "common_name": "Hudsonian Whimbrel",
@@ -1677,7 +1677,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "nyctanassa-violacea": {
       "common_name": "Yellow-crowned Night Heron",
@@ -1695,7 +1695,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "nycticorax-nycticorax": {
       "common_name": "Black-crowned Night Heron",
@@ -1713,7 +1713,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "oxyura-jamaicensis": {
       "common_name": "Ruddy Duck",
@@ -1731,7 +1731,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pandion-haliaetus": {
       "common_name": "Osprey",
@@ -1749,7 +1749,7 @@
         "holes_filled": 5,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "passer-domesticus": {
       "common_name": "House Sparrow",
@@ -1767,7 +1767,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "passerculus-sandwichensis": {
       "common_name": "Savannah Sparrow",
@@ -1785,7 +1785,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "passerina-amoena": {
       "common_name": "Lazuli Bunting",
@@ -1803,7 +1803,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "patagioenas-fasciata": {
       "common_name": "Band-tailed Pigeon",
@@ -1821,7 +1821,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pavo-cristatus": {
       "common_name": "Indian Peafowl",
@@ -1839,7 +1839,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pelecanus-erythrorhynchos": {
       "common_name": "American White Pelican",
@@ -1857,7 +1857,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pelecanus-occidentalis": {
       "common_name": "Brown Pelican",
@@ -1875,7 +1875,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "petrochelidon-pyrrhonota": {
       "common_name": "American Cliff Swallow",
@@ -1893,7 +1893,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "phainopepla-nitens": {
       "common_name": "Phainopepla",
@@ -1911,7 +1911,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "phalaenoptilus-nuttallii": {
       "common_name": "Common Poorwill",
@@ -1929,7 +1929,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pheucticus-melanocephalus": {
       "common_name": "Black-headed Grosbeak",
@@ -1947,7 +1947,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pipilo-maculatus": {
       "common_name": "Spotted Towhee",
@@ -1965,7 +1965,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "piranga-ludoviciana": {
       "common_name": "Western Tanager",
@@ -1983,7 +1983,7 @@
         "holes_filled": 3,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "plegadis-chihi": {
       "common_name": "White-faced Ibis",
@@ -2001,7 +2001,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pluvialis-squatarola": {
       "common_name": "Grey Plover",
@@ -2019,7 +2019,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "podiceps-nigricollis": {
       "common_name": "Black-necked Grebe",
@@ -2037,7 +2037,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "podilymbus-podiceps": {
       "common_name": "Pied-billed Grebe",
@@ -2055,7 +2055,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "poecile-gambeli": {
       "common_name": "Mountain Chickadee",
@@ -2073,7 +2073,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "polioptila-caerulea": {
       "common_name": "Blue-grey Gnatcatcher",
@@ -2091,7 +2091,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "polioptila-californica": {
       "common_name": "California Gnatcatcher",
@@ -2109,7 +2109,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "psaltriparus-minimus": {
       "common_name": "American Bushtit",
@@ -2127,7 +2127,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "psittacara-mitratus": {
       "common_name": "Mitred Parakeet",
@@ -2145,7 +2145,7 @@
         "holes_filled": 19,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pycnonotus-jocosus": {
       "common_name": "Red-whiskered Bulbul",
@@ -2163,7 +2163,7 @@
         "holes_filled": 3,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "pyrocephalus-rubinus": {
       "common_name": "Scarlet Flycatcher",
@@ -2181,7 +2181,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "quiscalus-mexicanus": {
       "common_name": "Great-tailed Grackle",
@@ -2199,7 +2199,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sayornis-nigricans": {
       "common_name": "Black Phoebe",
@@ -2217,7 +2217,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sayornis-saya": {
       "common_name": "Say's Phoebe",
@@ -2235,7 +2235,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "selasphorus-sasin": {
       "common_name": "Allen's Hummingbird",
@@ -2253,7 +2253,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-aestiva": {
       "common_name": "American Yellow Warbler",
@@ -2271,7 +2271,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-coronata": {
       "common_name": "Myrtle Warbler",
@@ -2289,7 +2289,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-nigrescens": {
       "common_name": "Black-throated Grey Warbler",
@@ -2307,7 +2307,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "setophaga-townsendi": {
       "common_name": "Townsend's Warbler",
@@ -2325,7 +2325,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sialia-mexicana": {
       "common_name": "Western Bluebird",
@@ -2343,7 +2343,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sitta-carolinensis": {
       "common_name": "White-breasted Nuthatch",
@@ -2361,7 +2361,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spatula-clypeata": {
       "common_name": "Northern Shoveler",
@@ -2379,7 +2379,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spatula-cyanoptera": {
       "common_name": "Cinnamon Teal",
@@ -2397,7 +2397,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spatula-discors": {
       "common_name": "Blue-winged Teal",
@@ -2415,7 +2415,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spinus-psaltria": {
       "common_name": "Lesser Goldfinch",
@@ -2433,7 +2433,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spinus-tristis": {
       "common_name": "American Goldfinch",
@@ -2451,7 +2451,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "spizella-passerina": {
       "common_name": "Chipping Sparrow",
@@ -2469,7 +2469,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "stelgidopteryx-serripennis": {
       "common_name": "Northern Rough-winged Swallow",
@@ -2487,7 +2487,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "streptopelia-decaocto": {
       "common_name": "Eurasian Collared Dove",
@@ -2505,7 +2505,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sturnella-neglecta": {
       "common_name": "Western Meadowlark",
@@ -2523,7 +2523,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "sturnus-vulgaris": {
       "common_name": "Common Starling",
@@ -2541,7 +2541,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "thalasseus-elegans": {
       "common_name": "Elegant Tern",
@@ -2559,7 +2559,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "thalasseus-maximus": {
       "common_name": "Royal Tern",
@@ -2577,7 +2577,7 @@
         "holes_filled": 2,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "thryomanes-bewickii": {
       "common_name": "Bewick's Wren",
@@ -2595,7 +2595,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "toxostoma-redivivum": {
       "common_name": "California Thrasher",
@@ -2613,7 +2613,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tringa-melanoleuca": {
       "common_name": "Greater Yellowlegs",
@@ -2631,7 +2631,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tringa-semipalmata": {
       "common_name": "Willet",
@@ -2649,7 +2649,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "troglodytes-aedon": {
       "common_name": "Northern House Wren",
@@ -2667,7 +2667,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "turdus-migratorius": {
       "common_name": "American Robin",
@@ -2685,7 +2685,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyrannus-verticalis": {
       "common_name": "Western Kingbird",
@@ -2703,7 +2703,7 @@
         "holes_filled": 9,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyrannus-vociferans": {
       "common_name": "Cassin's Kingbird",
@@ -2721,7 +2721,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "tyto-furcata": {
       "common_name": "American Barn Owl",
@@ -2739,7 +2739,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "urile-penicillatus": {
       "common_name": "Brandt's Cormorant",
@@ -2757,7 +2757,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vidua-macroura": {
       "common_name": "Pin-tailed Whydah",
@@ -2775,7 +2775,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-bellii": {
       "common_name": "Bell's Vireo",
@@ -2793,7 +2793,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-gilvus": {
       "common_name": "Warbling Vireo",
@@ -2811,7 +2811,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "vireo-huttoni": {
       "common_name": "Hutton's Vireo",
@@ -2829,7 +2829,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "zenaida-macroura": {
       "common_name": "Mourning Dove",
@@ -2847,7 +2847,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "zonotrichia-atricapilla": {
       "common_name": "Golden-crowned Sparrow",
@@ -2865,7 +2865,7 @@
         "holes_filled": 0,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     },
     "zonotrichia-leucophrys": {
       "common_name": "White-crowned Sparrow",
@@ -2883,7 +2883,7 @@
         "holes_filled": 1,
         "cut": []
       },
-      "review": "pending"
+      "review": "approved"
     }
   }
 }
