@@ -489,10 +489,16 @@ if begin "SiteGround: point $DOMAIN at CloudFront"; then
   pause
 fi
 
+# stopped_before_deploying WHAT STAGE: an honest end when the maintainer says no: nothing is set up yet.
+stopped_before_deploying() {
+  printf '\n'
+  warn "Stopped before $1. Nothing moved: the site is where it was."
+  note "To carry on: WIZARD_FROM=$2 $SCRIPT"
+  exit 0
+}
+
 # deploy_checks STAGE: what deploy.sh checks, sooner, so a stage stops before its prompts.
 deploy_checks() {
-  INVITE_CERTIFICATE_ARN="${INVITE_CERTIFICATE_ARN:-$(_existing INVITE_CERTIFICATE_ARN || true)}"
-  export INVITE_CERTIFICATE_ARN
   "$INFRA_DIR/scripts/check-invite-certificate.sh" || die "The saved certificate won't do." 4
   "$INFRA_DIR/scripts/check-invite-dns.sh" || die "The records at SiteGround aren't right yet." 5
   "$INFRA_DIR/scripts/check-live-backend.sh" || die "Stopped before the deploy." "$1"
@@ -514,20 +520,21 @@ before_a_deploy() {
 }
 
 if begin "First deploy: the new host beside the old"; then
-  deploy_checks 6
+  INVITE_CERTIFICATE_ARN="${INVITE_CERTIFICATE_ARN:-$(_existing INVITE_CERTIFICATE_ARN || true)}"
+  export INVITE_CERTIFICATE_ARN
   target=$(clean "$(stack_output InviteDistributionDomain)")
   live=$(distribution "$target" 2>/dev/null || echo '{}')
   if jq -e --argjson hosts "$HOSTS_JSON" --arg arn "$INVITE_CERTIFICATE_ARN" \
       '(($hosts - (.aliases // [])) | length == 0) and .certificate == $arn' >/dev/null 2>&1 <<<"$live"; then
     ok "Already live: the distribution answers on every host with this certificate."
   else
+    deploy_checks 6
     say "This adds $DOMAIN and the certificate to the distribution. The old host keeps serving its pages and"
     say "the API keeps making links on it, so nobody notices. The next stage moves them, once $DOMAIN answers."
     before_a_deploy 6 --new-host-first
     note "Expect in a diff: the distribution's aliases and certificate, the viewer function, the API's code, and the site's files."
     if ! confirm "Deploy BirdJournal to $AWS_ACCOUNT / $STACK_REGION now?"; then
-      SKIPPED+=("both deploys: WIZARD_FROM=6 $SCRIPT")
-      finish; exit 0
+      stopped_before_deploying "the first deploy" 6
     fi
     note "CloudFront takes 5 to 15 minutes. cdk asks once more if IAM permissions widen."
     "$INFRA_DIR/scripts/deploy.sh" --new-host-first ||
@@ -538,10 +545,12 @@ if begin "First deploy: the new host beside the old"; then
 fi
 
 if begin "Second deploy: the old host's redirects and the API's links"; then
-  deploy_checks 7
+  INVITE_CERTIFICATE_ARN="${INVITE_CERTIFICATE_ARN:-$(_existing INVITE_CERTIFICATE_ARN || true)}"
+  export INVITE_CERTIFICATE_ARN
   if [[ "$(stack_output InviteBaseUrl)" == "https://$DOMAIN" ]]; then
     ok "Already live: the API makes links on $DOMAIN."
   else
+    deploy_checks 7
     say "Waiting for https://$DOMAIN to answer over TLS here, up to 30 minutes."
     note "This Mac's resolver may have cached \"no such host\" from before the record existed, for an hour or more."
     answer=""
@@ -554,13 +563,12 @@ if begin "Second deploy: the old host's redirects and the API's links"; then
       die "https://$DOMAIN/ answered $answer, wanted 200. Nothing has moved. If it's this Mac's resolver, try again in an hour." 7
     ok "https://$DOMAIN/ answers."
     say "This turns on the old host's redirects and moves the API's links to $DOMAIN."
-    before_a_deploy 7
+    before_a_deploy 7 --move-to-new-host
     note "Expect in a diff: the viewer function, and the API's INVITE_BASE_URL."
     if ! confirm "Deploy BirdJournal to $AWS_ACCOUNT / $STACK_REGION now?"; then
-      SKIPPED+=("the second deploy: WIZARD_FROM=7 $SCRIPT")
-      finish; exit 0
+      stopped_before_deploying "the second deploy" 7
     fi
-    "$INFRA_DIR/scripts/deploy.sh" ||
+    "$INFRA_DIR/scripts/deploy.sh" --move-to-new-host ||
       die "The deploy failed. If CloudFormation had started, it rolls back by itself and the old host keeps working." 7
     ok "Deployed."
   fi
@@ -677,6 +685,8 @@ fi
 finish
 say "Keep, for good:"
 note "  the $FORMER_HOSTS CNAME and both validation records at SiteGround, and the old host in inviteFormerDomains."
+say ""
+say "A deploy.sh refusal names --emergency, which skips its checks, for when one of them stands in the way of a fix."
 say ""
 say "From here on, deploy only from branches that hold this change. An older branch would take $DOMAIN back off the"
 say "distribution and send the API's invite links back to the old host."

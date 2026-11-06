@@ -97,10 +97,18 @@ FAKE_DIG = r"""#!/usr/bin/env python3
 import json, os, sys
 state = json.load(open(os.environ["FAKE_STATE"]))
 args = [a for a in sys.argv[1:] if not a.startswith("+") and not a.startswith("@")]
-if state.get("dig_times_out"):
+server = next((a[1:].rstrip(".") for a in sys.argv[1:] if a.startswith("@")), None)
+if state.get("dig_times_out") or server in state.get("dead_name_servers", []):
     print(";; connection timed out; no servers could be reached")
     sys.exit(9)
-if args[0] == "NS":
+if "+short" not in sys.argv:  # the full form, with the status: check-invite-dns.sh's
+    name = args[1].rstrip(".")
+    record = state["records"].get(name)
+    status = "SERVFAIL" if server in state.get("failing_name_servers", []) else "NOERROR" if record else "NXDOMAIN"
+    print(f";; ->>HEADER<<- opcode: QUERY, status: {status}, id: 1")
+    if record and status == "NOERROR":
+        print(f"{name}. 3600 IN CNAME {record}")
+elif args[0] == "NS":
     print("\n".join(state["name_servers"]))
 elif args[0] == "CNAME":
     print(state["records"].get(args[1].rstrip("."), ""))
@@ -145,6 +153,7 @@ def _web() -> dict[str, Any]:
 class Wizard:
     def __init__(self, root: Path) -> None:
         self.root = root
+        self.real_deploy = False
         self.home = root / "home"
         self.state_path = root / "state.json"
         self.deploys = root / "deploys.log"
@@ -156,8 +165,8 @@ class Wizard:
         shutil.copy(INFRA / "cdk.json", repo / "infra" / "cdk.json")
         backend = repo / "backend" / "src" / "birdjournal_api"
         backend.mkdir(parents=True)
-        (backend / "goals_api.py").write_text("class GoalSpecies:\n    pass\n")
-        (backend / "reactions_api.py").write_text("editions: list[str]\n")
+        (backend / "goals_api.py").write_text("class GoalResponse(BaseModel):\n    species: list[GoalSpecies]\n")
+        (backend / "reactions_api.py").write_text("class ComparedSpeciesResponse(BaseModel):\n    editions: list[str]\n")
         self.script = scripts / "domain-wizard.sh"
         self._executable(
             scripts / "deploy.sh",
@@ -236,6 +245,10 @@ class Wizard:
     def use_the_real_deploy(self) -> Path:
         """deploy.sh as it is, with everything after its checks faked: a log of what reached `npx` says if it got past them."""
         scripts = self.script.parent
+        if self.real_deploy:
+            self.save()
+            return scripts / "deploy.sh"
+        self.real_deploy = True
         shutil.copy(INFRA / "scripts" / "deploy.sh", scripts / "deploy.sh")
         self._executable(scripts / "check-bootstrap.sh", "#!/bin/sh\nexit 0\n")
         self._executable(scripts / "write-app-config.sh", "#!/bin/sh\nexit 0\n")
@@ -319,7 +332,7 @@ def test_a_first_run_requests_one_certificate_for_both_hosts_and_saves_it_only_o
     assert requested[requested.index("--region") + 1] == "us-east-1"
     assert "Key=project,Value=birdjournal" in requested
     assert wizard.saved_arn() == NEW_ARN
-    assert wizard.deploys.read_text().splitlines() == [f"deploy --new-host-first arn={NEW_ARN}", f"deploy  arn={NEW_ARN}"]
+    assert wizard.deploys.read_text().splitlines() == [f"deploy --new-host-first arn={NEW_ARN}", f"deploy --move-to-new-host arn={NEW_ARN}"]
     assert "still to do" not in result.stdout
 
 
@@ -439,7 +452,7 @@ def test_a_missing_record_stops_either_deploy(wizard: Wizard, stage: str, host: 
     del wizard.state["records"][host]
     result = wizard.run(["", "n", "y", ""], WIZARD_FROM=stage)
     assert result.returncode == 1
-    assert f"{host} points at ''" in result.stdout
+    assert f"{host} has no CNAME" in result.stdout
     assert "WIZARD_FROM=5" in result.stdout
     assert not wizard.deploys.exists()
 
@@ -450,6 +463,21 @@ def test_a_checkout_without_the_live_backend_stops_the_wizard(wizard: Wizard) ->
     result = wizard.run(["", "n", "y", ""], WIZARD_FROM="6")
     assert result.returncode == 1
     assert "already live" in result.stdout
+    assert "WIZARD_FROM=6" in result.stdout
+    assert not wizard.deploys.exists()
+
+
+@pytest.mark.parametrize(("stage", "words"), [("6", "the first deploy"), ("7", "the second deploy")])
+def test_saying_no_to_a_deploy_doesnt_claim_setup_is_complete(wizard: Wizard, stage: str, words: str) -> None:
+    _ready_for_the_first_deploy(wizard)
+    wizard.state["distribution"] = (
+        {"aliases": [OLD], "certificate": OLD_ARN} if stage == "6" else {"aliases": [NEW, OLD], "certificate": NEW_ARN}
+    )
+    result = wizard.run(["", "n", "n"], WIZARD_FROM=stage)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Setup complete" not in result.stdout
+    assert f"Stopped before {words}" in result.stdout
+    assert f"WIZARD_FROM={stage}" in result.stdout
     assert not wizard.deploys.exists()
 
 
@@ -531,46 +559,90 @@ def test_the_deploy_refuses_a_certificate_that_wont_do(wizard: Wizard, sans: lis
     assert message in result.stdout
 
 
+def _moved(wizard: Wizard) -> None:
+    wizard.state["outputs"]["InviteBaseUrl"] = f"https://{NEW}"
+
+
 @pytest.mark.parametrize("host", [NEW, OLD])
-@pytest.mark.parametrize("arguments", [(), ("--new-host-first",)])
-def test_a_bare_deploy_refuses_a_missing_record(wizard: Wizard, host: str, arguments: tuple[str, ...]) -> None:
+@pytest.mark.parametrize("arguments", [("--move-to-new-host",), ("--new-host-first",)])
+def test_a_deploy_refuses_a_missing_record(wizard: Wizard, host: str, arguments: tuple[str, ...]) -> None:
     del wizard.state["records"][host]
     result = wizard.deploy(*arguments)
     assert result.returncode == 1
-    assert f"{host} points at ''" in result.stdout
+    assert f"{host} has no CNAME" in result.stdout
+    assert "Add or fix the record" in result.stdout
     assert wizard.reached_cdk() == ""
 
 
-def test_a_bare_deploy_refuses_a_record_pointing_elsewhere(wizard: Wizard) -> None:
+def test_a_deploy_refuses_a_record_pointing_elsewhere(wizard: Wizard) -> None:
     wizard.state["records"][NEW] = "someone-else.example.com."
-    result = wizard.deploy()
+    result = wizard.deploy("--move-to-new-host")
     assert result.returncode == 1
     assert "someone-else.example.com" in result.stdout
     assert wizard.reached_cdk() == ""
 
 
-def test_a_bare_deploy_refuses_when_the_stack_cant_be_read(wizard: Wizard) -> None:
-    wizard.state["failing"] = ["cloudformation describe-stacks"]
-    result = wizard.deploy()
-    assert result.returncode == 1
-    assert "Can't read the stack" in result.stdout
+def test_a_dns_timeout_reads_as_a_lookup_failure_not_a_missing_record(wizard: Wizard) -> None:
+    wizard.state["dead_name_servers"] = ["ns1.siteground.net", "ns2.siteground.net"]
+    result = wizard.deploy("--move-to-new-host")
+    assert result.returncode == 3
+    assert "lookup failure" in result.stdout
+    assert "Add or fix" not in result.stdout
     assert wizard.reached_cdk() == ""
 
 
-def test_a_deploy_on_a_new_account_has_no_records_to_check(wizard: Wizard) -> None:
-    wizard.state["no_stack"] = True
-    wizard.state["records"] = {}
-    result = wizard.deploy("--new-host-first")
+def test_a_servfail_from_every_name_server_is_a_lookup_failure_too(wizard: Wizard) -> None:
+    wizard.state["failing_name_servers"] = ["ns1.siteground.net", "ns2.siteground.net"]
+    result = wizard.deploy("--move-to-new-host")
+    assert result.returncode == 3
+    assert "lookup failure" in result.stdout
+
+
+def test_one_name_server_down_is_fine_when_the_other_answers(wizard: Wizard) -> None:
+    wizard.state["dead_name_servers"] = ["ns1.siteground.net"]
+    result = wizard.deploy("--move-to-new-host")
     assert result.returncode == 0, result.stdout + result.stderr
     assert "cdk deploy" in wizard.reached_cdk()
 
 
-def test_a_bare_deploy_refuses_until_the_new_host_answers(wizard: Wizard) -> None:
-    del wizard.state["web"][f"https://{NEW}/"]
+def test_a_deploy_refuses_when_the_stack_cant_be_read(wizard: Wizard) -> None:
+    wizard.state["failing"] = ["cloudformation describe-stacks"]
     result = wizard.deploy()
+    assert result.returncode == 3
+    assert "Can't read the stack" in result.stdout
+    assert wizard.reached_cdk() == ""
+
+
+def test_a_deploy_on_a_new_account_has_nothing_to_protect(wizard: Wizard) -> None:
+    wizard.state["no_stack"] = True
+    wizard.state["records"] = {}
+    result = wizard.deploy()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "cdk deploy" in wizard.reached_cdk()
+
+
+def test_between_the_deploys_a_plain_deploy_makes_you_choose(wizard: Wizard) -> None:
+    """It would otherwise finish the move, for someone adding pushes or the like, if the new host happened to answer."""
+    result = wizard.deploy()
+    assert result.returncode == 1
+    assert "--move-to-new-host" in result.stdout
+    assert "--new-host-first" in result.stdout
+    assert wizard.reached_cdk() == ""
+
+
+def test_the_second_deploy_refuses_until_the_new_host_answers(wizard: Wizard) -> None:
+    del wizard.state["web"][f"https://{NEW}/"]
+    result = wizard.deploy("--move-to-new-host")
     assert result.returncode == 1
     assert "first deploy of the new host" in result.stdout.lower()
     assert wizard.reached_cdk() == ""
+
+
+def test_the_second_deploy_reaches_cdk_once_the_new_host_answers(wizard: Wizard) -> None:
+    result = wizard.deploy("--move-to-new-host")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "inviteNewHostFirst" not in wizard.reached_cdk()
+    assert "cdk deploy BirdJournal" in wizard.reached_cdk()
 
 
 def test_the_first_deploy_doesnt_need_the_new_host_yet_and_says_so_to_cdk(wizard: Wizard) -> None:
@@ -580,24 +652,127 @@ def test_the_first_deploy_doesnt_need_the_new_host_yet_and_says_so_to_cdk(wizard
     assert "cdk deploy BirdJournal --require-approval broadening -c inviteNewHostFirst=true" in wizard.reached_cdk()
 
 
-def test_a_bare_deploy_with_everything_ready_reaches_cdk(wizard: Wizard) -> None:
+@pytest.mark.parametrize("status", [500, None])
+def test_after_the_move_a_broken_new_host_doesnt_block_the_deploy_that_fixes_it(wizard: Wizard, status: int | None) -> None:
+    _moved(wizard)
+    if status is None:
+        del wizard.state["web"][f"https://{NEW}/"]
+    else:
+        wizard.state["web"][f"https://{NEW}/"] = {"status": status}
     result = wizard.deploy()
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "cdk deploy BirdJournal --require-approval broadening" in wizard.reached_cdk()
-    assert "inviteNewHostFirst" not in wizard.reached_cdk()
+    assert "cdk deploy" in wizard.reached_cdk()
 
 
-@pytest.mark.parametrize("backend", ["goals_api.py", "reactions_api.py"])
-def test_a_bare_deploy_refuses_a_checkout_without_the_live_backend(wizard: Wizard, backend: str) -> None:
-    (wizard.root / "repo/backend/src/birdjournal_api" / backend).write_text("# before slice 8\n")
-    result = wizard.deploy()
+def test_after_the_move_new_host_first_is_refused_because_it_moves_everything_back(wizard: Wizard) -> None:
+    _moved(wizard)
+    result = wizard.deploy("--new-host-first")
     assert result.returncode == 1
-    assert "--without-live-backend" in result.stdout
+    assert "move" in result.stdout
+    assert "--new-host-first --emergency" in result.stdout
     assert wizard.reached_cdk() == ""
 
 
-def test_the_override_deploys_without_the_live_backend(wizard: Wizard) -> None:
+def _no_certificate(wizard: Wizard) -> None:
+    wizard.state["certificates"] = [c for c in wizard.state["certificates"] if c["arn"] != NEW_ARN]
+
+
+def _record_missing(wizard: Wizard) -> None:
+    del wizard.state["records"][NEW]
+
+
+def _dns_down(wizard: Wizard) -> None:
+    wizard.state["dead_name_servers"] = ["ns1.siteground.net", "ns2.siteground.net"]
+
+
+def _no_name_servers(wizard: Wizard) -> None:
+    wizard.state["dig_times_out"] = True
+
+
+def _stack_unreadable(wizard: Wizard) -> None:
+    wizard.state["failing"] = ["cloudformation describe-stacks"]
+
+
+def _backend_missing(wizard: Wizard) -> None:
     (wizard.root / "repo/backend/src/birdjournal_api/goals_api.py").write_text("# before slice 8\n")
+
+
+def _new_host_broken(wizard: Wizard) -> None:
+    wizard.state["web"][f"https://{NEW}/"] = {"status": 500}
+
+
+def _nothing(wizard: Wizard) -> None:
+    pass
+
+
+@pytest.mark.parametrize(
+    ("break_it", "arguments"),
+    [
+        (_no_certificate, ()),
+        (_record_missing, ()),
+        (_dns_down, ()),
+        (_no_name_servers, ()),
+        (_stack_unreadable, ()),
+        (_backend_missing, ()),
+        (_nothing, ()),  # between the deploys, a plain deploy is refused
+        (_new_host_broken, ("--move-to-new-host",)),
+        (_moved, ("--new-host-first",)),
+    ],
+    ids=["certificate", "record", "dns-down", "no-name-servers", "stack", "backend", "between-deploys", "new-host", "moved-back"],
+)
+def test_every_refusal_names_the_emergency_flag_and_the_flag_gets_past_it(
+    wizard: Wizard, break_it: Any, arguments: tuple[str, ...]
+) -> None:
+    wizard.use_the_real_deploy()
+    break_it(wizard)
+
+    refused = wizard.deploy(*arguments)
+    assert refused.returncode != 0
+    assert "--emergency" in refused.stdout
+    assert wizard.reached_cdk() == ""
+
+    through = wizard.deploy(*arguments, "--emergency")
+    assert through.returncode == 0, through.stdout + through.stderr
+    assert "cdk deploy" in wizard.reached_cdk()
+    assert "EMERGENCY DEPLOY" in through.stderr
+    assert "DNS points both hosts" in through.stderr
+
+
+def test_an_ordinary_deploy_gives_no_emergency_warning(wizard: Wizard) -> None:
+    _moved(wizard)
+    assert "EMERGENCY" not in wizard.deploy().stderr
+
+
+@pytest.mark.parametrize(
+    ("source", "code"),
+    [
+        ("class GoalResponse(BaseModel):\n    species: list[GoalSpecies]\n", 0),
+        ("class GoalResponse(BaseModel):\n    species  :  list[\n        GoalSpecies\n    ]  # reformatted\n", 0),
+        ("class GoalResponse(BaseModel):\n    # species: list[GoalSpecies]\n    id: str\n", 1),
+        ("class GoalSpecies(BaseModel):\n    species: str\n", 1),
+        ("class GoalResponse(BaseModel:\n", 1),
+    ],
+    ids=["as-written", "reformatted", "only-in-a-comment", "another-class", "doesnt-parse"],
+)
+def test_the_live_backend_check_reads_the_fields_themselves(wizard: Wizard, source: str, code: int) -> None:
+    (wizard.root / "repo/backend/src/birdjournal_api/goals_api.py").write_text(source)
+    result = subprocess.run([str(wizard.script.parent / "check-live-backend.sh")], capture_output=True, text=True)
+    assert result.returncode == code, result.stdout + result.stderr
+
+
+@pytest.mark.skipif(not (INFRA.parent / "backend/src/birdjournal_api/goals_api.py").exists(), reason="needs the backend")
+def test_this_checkout_holds_the_live_backend() -> None:
+    result = subprocess.run([str(INFRA / "scripts/check-live-backend.sh")], capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout
+
+
+def test_the_override_deploys_without_the_live_backend(wizard: Wizard) -> None:
+    _moved(wizard)
+    _backend_missing(wizard)
+    refused = wizard.deploy()
+    assert refused.returncode == 1
+    assert "--without-live-backend" in refused.stdout
+    assert "renamed" in refused.stdout
     result = wizard.deploy("--without-live-backend")
     assert result.returncode == 0, result.stdout + result.stderr
     assert "cdk deploy" in wizard.reached_cdk()
@@ -614,3 +789,11 @@ def test_an_unknown_argument_stops_a_deploy(wizard: Wizard) -> None:
     result = wizard.deploy("--without-live-backends")
     assert result.returncode == 2
     assert wizard.reached_cdk() == ""
+
+
+@pytest.mark.parametrize(
+    ("script", "stage"), [("push-wizard.sh", 4), ("safety-wizard.sh", 2), ("accounts-wizard.sh", 10)]
+)
+def test_the_other_wizards_say_where_to_resume_when_a_deploy_is_refused(script: str, stage: int) -> None:
+    text = (INFRA / "scripts" / script).read_text()
+    assert f'deploy.sh" || {{\n      printf \'%s\\n\' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM={stage}' in text

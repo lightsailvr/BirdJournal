@@ -404,7 +404,10 @@ if begin "Deploy the stack"; then
   say "infra/scripts/deploy.sh runs the template tests, deploys, and writes the stack's"
   say "sign-in settings into the app (BirdJournal/BirdJournal/Account/AccountServer.json)."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
-    "$INFRA_DIR/scripts/deploy.sh"
+    "$INFRA_DIR/scripts/deploy.sh" || {
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=10 infra/scripts/accounts-wizard.sh" >&2
+      exit 1
+    }
     note "Commit BirdJournal/BirdJournal/Account/AccountServer.json so the app can sign in."
   else
     SKIPPED+=("deploy: infra/scripts/deploy.sh")

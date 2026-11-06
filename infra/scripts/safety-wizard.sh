@@ -264,7 +264,10 @@ if begin "Deploy: the SES identity and the API's new permissions"; then
   say "bootstraps), and deploys the API's rights to send as $(report_email) or its domain, Rekognition (used"
   say "only once moderation is on), AdminDeleteUser on the user pool and the Apple key's secret."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
-    REPORT_EMAIL="$(report_email)" "$INFRA_DIR/scripts/deploy.sh"
+    REPORT_EMAIL="$(report_email)" "$INFRA_DIR/scripts/deploy.sh" || {
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=2 infra/scripts/safety-wizard.sh" >&2
+      exit 1
+    }
   else
     SKIPPED+=("deploy: REPORT_EMAIL=... infra/scripts/deploy.sh, then WIZARD_FROM=3 infra/scripts/safety-wizard.sh")
     finish; exit 0

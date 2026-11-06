@@ -337,7 +337,10 @@ if begin "Deploy the stack with pushes"; then
   say "infra/scripts/deploy.sh runs the template tests, checks the shared us-west-2 bootstrap (it never"
   say "bootstraps), and deploys the 15-minute digest schedule and the API's read access to $SECRET_NAME."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
-    "$INFRA_DIR/scripts/deploy.sh"
+    "$INFRA_DIR/scripts/deploy.sh" || {
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=4 infra/scripts/push-wizard.sh" >&2
+      exit 1
+    }
   else
     SKIPPED+=("deploy: infra/scripts/deploy.sh, then WIZARD_FROM=5 infra/scripts/push-wizard.sh")
     finish; exit 0

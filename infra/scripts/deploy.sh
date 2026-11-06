@@ -5,11 +5,16 @@
 #   infra/scripts/deploy.sh --synth    # template tests and cdk synth only: no AWS calls
 #   infra/scripts/deploy.sh --diff     # template tests and a template-only cdk diff: reads AWS, changes and uploads nothing
 #
-# A deploy first checks the invite certificate, DNS, that the new host answers, and that the checkout holds the live
-# backend. Two flags change that:
-#   --new-host-first         the domain wizard's first deploy: adds the new host and certificate, leaves the old host's
-#                            pages and the API's links alone, and doesn't need the new host to answer yet
-#   --without-live-backend   deploy a checkout lacking the live backend's code, taking that code off the API
+# A deploy first checks the invite certificate, DNS and that the checkout holds the live backend. While the site is moving
+# hosts (issue #150, the domain wizard), a plain deploy refuses, because it would have to say which side of the move it's on:
+#   --new-host-first       the wizard's first deploy: adds the new host and certificate, leaves the old host's pages and
+#                          the API's links alone. Refused once the stack has moved, because it would move them back.
+#   --move-to-new-host     the wizard's second deploy: turns on the old host's redirects and moves the API's links. Needs
+#                          the new host to answer. Once the stack has moved, a plain deploy does this and checks no more.
+# And two ways past a refusal:
+#   --without-live-backend the live-backend check is wrong, or you mean to remove those fields
+#   --emergency            skips every check above, for when one of them stands between you and fixing an outage. The
+#                          template tests and the bootstrap check still run. It says what it skipped.
 #
 # Needs the wizards' console steps done first: infra/scripts/accounts-wizard.sh (the two secrets in Secrets
 # Manager, the CDK bootstrap, BUDGET_ALERT_EMAIL in ~/keys/birdjournal.env) and, from issue #61,
@@ -21,15 +26,18 @@
 set -euo pipefail
 
 mode=deploy
-new_host_first=no
+move=stay
 check_backend=yes
+emergency=no
 context=""
 for argument in "$@"; do
     case "$argument" in
         --synth) mode=synth ;;
         --diff) mode=diff ;;
-        --new-host-first) new_host_first=yes; context="-c inviteNewHostFirst=true" ;;
+        --new-host-first) move=new-host-first; context="-c inviteNewHostFirst=true" ;;
+        --move-to-new-host) move=move ;;
         --without-live-backend) check_backend=no ;;
+        --emergency) emergency=yes ;;
         *) echo "Unknown argument $argument. See the top of this script." >&2; exit 2 ;;
     esac
 done
@@ -57,21 +65,84 @@ fi
 export BUDGET_ALERT_EMAIL="${BUDGET_ALERT_EMAIL:?set BUDGET_ALERT_EMAIL or run infra/scripts/accounts-wizard.sh}"
 export INVITE_CERTIFICATE_ARN="${INVITE_CERTIFICATE_ARN:?set INVITE_CERTIFICATE_ARN or run infra/scripts/domain-wizard.sh}"
 
-# Before anything slow: CloudFront would refuse a certificate that doesn't cover the hosts, partway through the deploy.
-[[ "$mode" == "synth" ]] || "$infra/scripts/check-invite-certificate.sh"
-if [[ "$mode" == "deploy" ]]; then
-    "$infra/scripts/check-invite-dns.sh"
-    [[ "$check_backend" == "no" ]] || "$infra/scripts/check-live-backend.sh"
-    if [[ "$new_host_first" == "no" ]]; then
-        # This deploy redirects the old host to the new one and puts the new one in invite links, so it has to work first.
-        domain=$(jq -r '.context.inviteDomain' "$infra/cdk.json")
-        answer=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "https://$domain/" 2>/dev/null) || true
-        if [[ "$answer" != "200" ]]; then
-            echo "https://$domain/ answered '$answer', not 200, so this deploy would send the old host's visitors to a broken page."
-            echo "First deploy of the new host: infra/scripts/domain-wizard.sh. This Mac's resolver may also have cached"
-            echo "\"no such host\" from before the record existed, for an hour or more: wait, and try again."
+EMERGENCY="If you have to deploy regardless: infra/scripts/deploy.sh --emergency"
+
+# site_address: the stack's InviteBaseUrl, or "none" with no stack yet. Fails if the stack can't be read.
+site_address() {
+    local answer
+    if ! answer=$(aws cloudformation describe-stacks --region us-west-2 --stack-name BirdJournal --output text \
+        --query "Stacks[0].Outputs[?OutputKey=='InviteBaseUrl'].OutputValue" 2>&1); then
+        [[ "$answer" == *"does not exist"* ]] || return 1
+        answer=none
+    fi
+    printf '%s' "$answer"
+}
+
+# check_the_move: which side of the host move this deploy is on, against where the stack is.
+check_the_move() {
+    local new_url current answer
+    new_url="https://$(jq -r '.context.inviteDomain' "$infra/cdk.json")"
+    if ! current=$(site_address); then
+        echo "Can't read the stack to see whether the site has moved hosts (is AWS_PROFILE $AWS_PROFILE signed in?)."
+        echo "$EMERGENCY"
+        exit 1
+    fi
+    if [[ "$current" == "none" ]]; then
+        return 0 # A new account: no live host to protect.
+    fi
+    if [[ "$current" == "$new_url" ]]; then
+        if [[ "$move" == "new-host-first" ]]; then
+            echo "The stack has already moved to $new_url. --new-host-first would turn off the old host's redirects and move"
+            echo "the API's links back to it. To change anything else, deploy without it."
+            echo "If moving back is what you want: infra/scripts/deploy.sh --new-host-first --emergency"
             exit 1
         fi
+        return 0
+    fi
+    case "$move" in
+        new-host-first) ;;
+        stay)
+            echo "The site is partway through moving to $new_url: the stack's links are still on $current."
+            echo "A plain deploy from this checkout would finish that move, so it has to be a choice:"
+            echo "  to finish it, infra/scripts/domain-wizard.sh, or infra/scripts/deploy.sh --move-to-new-host"
+            echo "  to deploy something else and leave the site where it is, infra/scripts/deploy.sh --new-host-first"
+            echo "$EMERGENCY"
+            exit 1
+            ;;
+        move)
+            answer=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$new_url/" 2>/dev/null) || true
+            if [[ "$answer" != "200" ]]; then
+                echo "$new_url/ answered '$answer', not 200, so this deploy would send the old host's visitors to a broken page."
+                echo "First deploy of the new host: infra/scripts/domain-wizard.sh. This Mac's resolver may also have cached"
+                echo "\"no such host\" from before the record existed, for an hour or more: wait, and try again."
+                echo "$EMERGENCY"
+                exit 1
+            fi
+            ;;
+    esac
+}
+
+if [[ "$emergency" == "yes" && "$mode" != "synth" ]]; then
+    cat >&2 <<'WARNING'
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! EMERGENCY DEPLOY. These checks are SKIPPED:
+  !!   the invite certificate is issued and covers both hosts
+  !!   DNS points both hosts at the distribution
+  !!   this checkout holds the backend that's live
+  !!   the new host answers, and which side of the host move this deploy is on
+  !! Any of them could now break invite links or take fields off the API.
+  !! The template tests and the shared account's bootstrap check still run.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+WARNING
+elif [[ "$mode" != "synth" ]]; then
+    # Before anything slow: CloudFront would refuse a certificate that doesn't cover the hosts, partway through the deploy.
+    "$infra/scripts/check-invite-certificate.sh"
+    if [[ "$mode" == "deploy" ]]; then
+        "$infra/scripts/check-invite-dns.sh"
+        [[ "$check_backend" == "no" ]] || "$infra/scripts/check-live-backend.sh"
+        check_the_move
     fi
 fi
 
