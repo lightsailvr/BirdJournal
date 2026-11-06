@@ -43,11 +43,11 @@ nonisolated enum GlanceInk {
         if contrast == .increased { return ink(scheme, contrast) }
         let dark = scheme == .dark
         switch setID {
-        case "us-ca-la": return color(dark ? 0xC8CF6B : 0x5C6420)
-        case "us-ca-sd": return color(dark ? 0x8FC7E3 : 0x1E5F86)
-        case "us-ca-bay": return color(dark ? 0xC9D4D6 : 0x4F5F66)
-        case "us-ca-desert": return color(dark ? 0xE7A78E : 0x9A4A2F)
-        case "us-fl-orlando": return color(dark ? 0x7FD3C4 : 0x0F6B60)
+        case "us-ca-la": return color(dark ? 0xC8CF6B : 0x454B18)
+        case "us-ca-sd": return color(dark ? 0x8FC7E3 : 0x184C6B)
+        case "us-ca-bay": return color(dark ? 0xC9D4D6 : 0x3D494F)
+        case "us-ca-desert": return color(dark ? 0xE9B099 : 0x703622)
+        case "us-fl-orlando": return color(dark ? 0x7FD3C4 : 0x0B5048)
         default: return color(dark ? 0xBCE3D9 : 0x15363A)
         }
     }
