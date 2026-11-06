@@ -84,8 +84,15 @@ shot patch-dark         9 "${seeded[@]}" -autoLocation joshua-tree -autoScreen c
 shot atlas-dark         9 "${seeded[@]}" -autoLocation griffith -autoScreen guide
 shot species-list-dark  9 "${seeded[@]}" -autoLocation griffith -autoScreen species-list
 shot goals-dark        10 "${guilds[@]}" -autoLocation griffith -autoScreen circle
-shot download-dark     14 "${empty[@]}" -autoLocation griffith -autoDownloadPack us-ca-sd
+# Part way through a download, in San Diego's thread, from a clean install so its pack isn't there yet, and it's left that way.
 xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
+xcrun simctl uninstall "$udid" "$bundle"
+xcrun simctl install "$udid" "$app"
+shot download-dark      6 "${empty[@]}" -autoLocation griffith -autoDownloadPack us-ca-sd
+xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
+xcrun simctl uninstall "$udid" "$bundle"
+xcrun simctl install "$udid" "$app"
+launch 10 "${empty[@]}"
 
 xcrun simctl ui "$udid" increase_contrast enabled
 shot listen-contrast-dark     8 "${seeded[@]}" -autoLocation joshua-tree -autoScreen listen

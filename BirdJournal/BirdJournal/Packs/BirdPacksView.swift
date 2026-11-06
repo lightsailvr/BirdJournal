@@ -206,7 +206,7 @@ struct PackTransferStatus: View {
             }
         case .downloading(let received):
             if let descriptor {
-                DownloadProgress(name: descriptor.name, received: received, total: Int64(descriptor.byteCount)) {
+                DownloadProgress(setID: descriptor.id, name: descriptor.name, received: received, total: Int64(descriptor.byteCount)) {
                     library.cancelDownload(id: descriptor.id)
                 }
                 .padding(.top, 4)
@@ -230,8 +230,9 @@ struct PackTransferStatus: View {
     }
 }
 
-/// A download under way: a bar, "41.2 MB of 173 MB, 24%", and Cancel.
+/// A download under way: the set's thread, "41.2 MB of 173 MB, 24%", and Cancel.
 struct DownloadProgress: View {
+    let setID: String
     let name: String
     let received: Int64
     let total: Int64
@@ -243,7 +244,7 @@ struct DownloadProgress: View {
         let words = "\(shown.formatted(.byteCount(style: .file))) of \(total.formatted(.byteCount(style: .file))), \(fraction.formatted(.percent.precision(.fractionLength(0))))"
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 10) {
-                ThreadProgress(value: Double(shown), total: Double(max(total, 1)), sentence: "Downloading \(name), \(words)")
+                ThreadProgress(value: Double(shown), total: Double(max(total, 1)), sentence: "Downloading \(name), \(words)", thread: .edition(setID: setID))
                     .accessibilityHidden(true)
                 Button(action: cancel) {
                     Image(systemName: "xmark.circle")
