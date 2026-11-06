@@ -188,8 +188,10 @@ final class HuntUITests: XCTestCase {
         let from = timer.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         from.press(forDuration: 0.1, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -60)), withVelocity: .slow, thenHoldForDuration: 2)
         let held = bird(row)
+        let words = row.label
         Thread.sleep(forTimeInterval: 0.6)
         XCTAssertEqual(bird(row), held, "the list moved during its 1.5 s after a scroll")
+        XCTAssertNotEqual(row.label, words, "a row's own contents aren't held, only the order")
 
         wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 15)
     }

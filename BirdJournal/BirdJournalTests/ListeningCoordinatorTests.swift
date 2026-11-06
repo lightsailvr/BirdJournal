@@ -268,15 +268,7 @@ struct ListeningCoordinatorTests {
         #expect(held.shown(["new", "other", "a", "b"]) == ["a", "b", "new", "other"], "the two new birds don't swap under the thumb either")
     }
 
-    @Test("a row's own contents aren't held: only the order is", arguments: [true, false])
-    func onlyTheOrderHolds(isHolding: Bool) {
-        var held = HeldListOrder<String>()
-        if isHolding { held.hold(.finger, showing: ["a", "b"], at: Self.holdStart) }
-        // The value holds identifiers: what a row shows is read from the coordinator on each draw, whichever way this goes.
-        #expect(Set(held.shown(["b", "a"])) == ["a", "b"])
-    }
-
-    @Test("a hold with nothing to hold doesn't outlive a run: a bird gone from the order goes from the list")
+    @Test("a bird gone from the order goes from the list, even during a hold")
     func aBirdGoneFromTheOrderGoes() {
         var held = HeldListOrder<String>()
         held.hold(.finger, showing: ["a", "b"], at: Self.holdStart)
