@@ -38,6 +38,8 @@ def fail():
     save()
     sys.exit(254)
 command = args[:2]
+if " ".join(command) in state["failing"]:
+    fail()
 query = args[args.index("--query") + 1] if "--query" in args else ""
 if command == ["sts", "get-caller-identity"]:
     answer("000000000000")
@@ -78,7 +80,7 @@ if command == ["cloudfront", "list-distributions"]:
         answer(state["other_distribution"])
     answer(state["distribution"])
 if command == ["cloudformation", "list-stack-resources"]:
-    answer("BirdJournal-ApiFunction")
+    answer(["BirdJournal-ApiFunction"])
 if command == ["lambda", "get-function-configuration"]:
     answer(state["outputs"]["InviteBaseUrl"])
 if command == ["sesv2", "get-account"]:
@@ -91,6 +93,9 @@ FAKE_DIG = r"""#!/usr/bin/env python3
 import json, os, sys
 state = json.load(open(os.environ["FAKE_STATE"]))
 args = [a for a in sys.argv[1:] if not a.startswith("+") and not a.startswith("@")]
+if state.get("dig_times_out"):
+    print(";; connection timed out; no servers could be reached")
+    sys.exit(9)
 if args[0] == "NS":
     print("\n".join(state["name_servers"]))
 elif args[0] == "CNAME":
@@ -173,6 +178,7 @@ class Wizard:
         self.env_file.write_text(f"INVITE_CERTIFICATE_ARN='{OLD_ARN}'\n")
         self.state: dict[str, Any] = {
             "aws_calls": [],
+            "failing": [],
             "name_servers": ["ns1.siteground.net.", "ns2.siteground.net."],
             "new_arn": NEW_ARN,
             "checks_until_issued": 2,
@@ -180,7 +186,7 @@ class Wizard:
                 {"arn": OLD_ARN, "domain": OLD, "sans": [OLD], "status": "ISSUED", "tags": [{"Key": "project", "Value": "birdjournal"}]}
             ],
             "outputs": {"InviteDistributionDomain": TARGET, "InviteBaseUrl": f"https://{OLD}"},
-            "other_distribution": "",
+            "other_distribution": [],
             "distribution": {"aliases": [OLD], "certificate": OLD_ARN},
             "records": {
                 OLD: f"{TARGET}.",
@@ -208,8 +214,8 @@ class Wizard:
             text=True,
             timeout=60,
             env={
-                # deploy.sh runs these tests with its own certificate exported, and the saved one is the point here.
-                **{name: value for name, value in os.environ.items() if name != "INVITE_CERTIFICATE_ARN"},
+                # The wizard's deploy.sh runs these tests, with its own certificate exported and maybe a resume stage.
+                **{name: value for name, value in os.environ.items() if name not in ("INVITE_CERTIFICATE_ARN", "WIZARD_FROM")},
                 "PATH": f"{self.root / 'bin'}:{os.environ['PATH']}",
                 "HOME": str(self.home),
                 "FAKE_STATE": str(self.state_path),
@@ -247,8 +253,11 @@ FIRST_RUN = [
     "",  # 8
     "y",  # 9 App Store Connect
     "",  # 9
-    "y",  # 10 the other consoles
-    "",  # 10
+    "",  # 10 SES, which it reads itself
+    "y",  # 11 Wearables Developer Center
+    "",  # 11
+    "y",  # 12 Google
+    "",  # 12
 ]
 
 
@@ -311,12 +320,44 @@ def test_a_rerun_finds_its_certificate_instead_of_requesting_another(wizard: Wiz
     )
     wizard.state["distribution"] = {"aliases": [NEW, OLD], "certificate": NEW_ARN}
     wizard.state["outputs"]["InviteBaseUrl"] = f"https://{NEW}"
-    answers = ["", "", "", "", "", "", "n", "", "", "", "", "y", "", "y", ""]
+    answers = ["", "", "", "", "", "", "n", "", "", "", "", "y", "", "", "y", "", "y", ""]
     result = wizard.run(answers)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "requested" not in wizard.state
     assert not wizard.deploys.exists()  # already live, and it asked before deploying again
     assert "Already deployed" in result.stdout
+
+
+def test_a_certificate_whose_tags_cant_be_read_doesnt_lead_to_a_second_certificate(wizard: Wizard) -> None:
+    wizard.state["certificates"].append(
+        {"arn": NEW_ARN, "domain": NEW, "sans": [NEW, OLD], "status": "ISSUED", "tags": [{"Key": "project", "Value": "birdjournal"}]}
+    )
+    wizard.state["failing"] = ["acm list-tags-for-certificate"]
+    result = wizard.run(["", "", "y"])
+    assert result.returncode == 1
+    assert "Can't read the tags" in result.stdout + result.stderr
+    assert "requested" not in wizard.state
+
+
+def test_cloudfront_not_answering_isnt_read_as_no_other_distribution(wizard: Wizard) -> None:
+    wizard.state["failing"] = ["cloudfront list-distributions"]
+    result = wizard.run([""], WIZARD_FROM="5")
+    assert result.returncode == 1
+    assert "Can't list CloudFront" in result.stdout
+
+
+def test_a_dig_timeout_isnt_read_as_a_record(wizard: Wizard) -> None:
+    wizard.state["dig_times_out"] = True
+    result = wizard.run(["", ""], WIZARD_FROM="5")
+    assert result.returncode == 1
+    assert "already points at" not in result.stdout
+
+
+def test_an_unreadable_ses_account_is_listed_rather_than_passed(wizard: Wizard) -> None:
+    wizard.state["failing"] = ["sesv2 get-account"]
+    result = wizard.run(["", "", "y", "", "y", ""], WIZARD_FROM="10")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "SES's account website: WIZARD_FROM=10" in result.stdout
 
 
 def test_dns_somewhere_else_stops_before_anything_changes(wizard: Wizard) -> None:
@@ -376,13 +417,13 @@ def test_a_pasted_link_on_the_old_host_stops_it(wizard: Wizard) -> None:
 
 
 def test_a_console_step_not_done_is_listed_at_the_end(wizard: Wizard) -> None:
-    result = wizard.run(["", "n", "", "y", ""], WIZARD_FROM="9")
+    result = wizard.run(["", "n", "", "", "y", "", "y", ""], WIZARD_FROM="9")
     assert result.returncode == 0, result.stdout + result.stderr
     assert "App Store Connect's privacy, support and marketing URLs" in result.stdout
 
 
 def test_the_closing_notes_give_the_order(wizard: Wizard) -> None:
-    result = wizard.run(["", "y", "", "y", ""], WIZARD_FROM="9")
+    result = wizard.run(["", "y", "", "", "y", "", "y", ""], WIZARD_FROM="9")
     assert "this deploy first, then the app's release" in result.stdout
     assert "deploy only from branches that hold this change" in result.stdout
 

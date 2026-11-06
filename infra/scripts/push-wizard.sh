@@ -205,7 +205,7 @@ finish() {
 #   infra/scripts/push-wizard.sh                  # from the start
 #   WIZARD_FROM=3 infra/scripts/push-wizard.sh    # resume at stage 3 (e.g. after the key is stored)
 #
-# Run infra/scripts/accounts-wizard.sh first (and circles-wizard.sh: every deploy needs its certificate). The key
+# Run infra/scripts/accounts-wizard.sh first (and domain-wizard.sh: every deploy needs its certificate). The key
 # never goes into the stack, the repo or ~/keys/birdjournal.env: only its Key ID and Team ID are saved there, and
 # the .p8 itself goes straight into Secrets Manager. Apple lets you download it once; keep the file safe or revoke
 # it and make another.

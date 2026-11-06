@@ -206,7 +206,7 @@ finish() {
 #   infra/scripts/safety-wizard.sh                  # from the start
 #   WIZARD_FROM=3 infra/scripts/safety-wizard.sh    # resume at stage 3 (e.g. after the deploy)
 #
-# Run infra/scripts/accounts-wizard.sh and circles-wizard.sh first (every deploy needs their values). The report
+# Run infra/scripts/accounts-wizard.sh and domain-wizard.sh first (every deploy needs their values). The report
 # address is the sender and the only recipient. A verified identity may mail itself even from the SES sandbox, so
 # production access is needed only to send reports elsewhere (stage 5 checks it; the shared account has it already).
 

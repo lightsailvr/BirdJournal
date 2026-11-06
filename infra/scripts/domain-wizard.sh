@@ -211,7 +211,7 @@ finish() {
 
 run_wizard() {
 
-TOTAL_STAGES=10
+TOTAL_STAGES=12
 WIZARD_FROM="${WIZARD_FROM:-1}"
 
 for tool in aws jq dig curl; do
@@ -260,12 +260,11 @@ stack_output() {
     --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text 2>/dev/null || true
 }
 
+# lookup DIG-ARGUMENTS: dig's first answer. It prints a timeout to stdout as a ";;" line, and that isn't an answer.
+lookup() { dig +short +time=3 +tries=2 "$@" 2>/dev/null | grep -v '^;' | sed -n 1p || true; }
+
 # cname_of NAME [SERVER]: the record's target, asking SERVER if given; empty if there's none.
-cname_of() {
-  local answer
-  answer=$(dig +short +time=3 +tries=2 CNAME "$1" ${2:+"@$2"} 2>/dev/null | sed -n 1p || true)
-  clean "$answer"
-}
+cname_of() { clean "$(lookup CNAME "$1" ${2:+"@$2"})"; }
 
 # find_certificate: the ARN of this project's certificate for every host, issued ones first; empty if there's none, and
 # failing if ACM can't say, so call it as arn=$(find_certificate) || exit 1. The shared account holds other projects'
@@ -277,7 +276,8 @@ find_certificate() {
   while read -r status arn; do
     [[ -n "$arn" ]] || continue
     tagged=$(aws acm list-tags-for-certificate --region "$CERT_REGION" --certificate-arn "$arn" \
-      --query "length(Tags[?Key=='project' && Value=='birdjournal'])" --output text 2>/dev/null </dev/null || echo 0)
+      --query "length(Tags[?Key=='project' && Value=='birdjournal'])" --output text 2>/dev/null </dev/null) ||
+      { warn "Can't read the tags on $arn." >&2; return 1; }
     if [[ "$tagged" == "1" ]]; then printf '%s' "$arn"; return 0; fi
     warn "$arn covers these hosts but isn't tagged project=birdjournal, so this wizard leaves it alone." >&2
   done < <(jq -r --arg domain "$DOMAIN" --argjson hosts "$HOSTS_JSON" '
@@ -300,13 +300,17 @@ distribution() {
     --query "DistributionList.Items[?DomainName=='$1'] | [0].{aliases: Aliases.Items, certificate: ViewerCertificate.ACMCertificateArn}"
 }
 
-checkout() {
+checkout_name() {
   printf '%s at %s' "$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)" \
     "$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 }
 
 # probe URL: "<status>|<content type>|<redirect>", following nothing.
-probe() { curl -sS -o /dev/null -w '%{http_code}|%{content_type}|%{redirect_url}' --max-time 20 "$1" 2>/dev/null || echo "000||"; }
+probe() {
+  local out
+  out=$(curl -sS -o /dev/null -w '%{http_code}|%{content_type}|%{redirect_url}' --max-time 20 "$1" 2>/dev/null) || true
+  printf '%s' "${out:-000||}"
+}
 
 CHECK_FAILURES=0
 failed() { warn "$1"; CHECK_FAILURES=$((CHECK_FAILURES + 1)); }
@@ -320,8 +324,8 @@ expect_page() {
 
 # expect_association HOST: the file itself with no redirect (Apple doesn't follow one), as JSON, naming the app.
 expect_association() {
-  local url="https://$1$AASA_PATH" answer status type rest location
-  answer=$(probe "$url"); status="${answer%%|*}"; rest="${answer#*|}"; type="${rest%%|*}"; location="${rest#*|}"
+  local url="https://$1$AASA_PATH" answer status type location
+  answer=$(probe "$url"); IFS='|' read -r status type location <<<"$answer"
   if [[ "$status" == "200" && -z "$location" && "$type" == application/json* ]] &&
     curl -sS --max-time 20 "$url" 2>/dev/null | jq -e --arg app "$APP_ID" \
       '.applinks.details[0] | (.appIDs | index($app)) != null and (.components[0]["/"] == "/i/*")' >/dev/null 2>&1; then
@@ -333,14 +337,14 @@ expect_association() {
 
 # expect_redirect FROM TO: a permanent redirect from one URL to exactly the other.
 expect_redirect() {
-  local answer status rest location
-  answer=$(probe "$1"); status="${answer%%|*}"; rest="${answer#*|}"; location="${rest#*|}"
+  local answer status type location
+  answer=$(probe "$1"); IFS='|' read -r status type location <<<"$answer"
   if [[ "$status" == "301" && "$location" == "$2" ]]; then ok "$1 → $2"
   else failed "$1 answered $answer, wanted 301 to $2."; fi
 }
 
 # DNS is read before anything else, because every SiteGround step below depends on it.
-NAME_SERVERS=$(dig +short NS "$ZONE" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+NAME_SERVERS=$(dig +short NS "$ZONE" 2>/dev/null | grep -v '^;' | tr '[:upper:]' '[:lower:]' || true)
 AUTH_NS=$(clean "$(printf '%s\n' "$NAME_SERVERS" | sed -n 1p)")
 
 banner "Featherguild: the site moves to $DOMAIN"
@@ -362,7 +366,7 @@ if begin "Where things stand (read-only)"; then
     if [[ -n "$target" && "$(cname_of "$former")" == "$target" ]]; then ok "$former → $target (it stays)"
     else warn "$former doesn't point at the stack's distribution ($target). Stage 5 checks this again."; fi
   done
-  note "Checkout: $(checkout)"
+  note "Checkout: $(checkout_name)"
   pause
 fi
 
@@ -436,6 +440,7 @@ if begin "Wait for the certificate, and save it"; then
   case "$status" in
     ISSUED) ok "Issued: $arn" ;;
     PENDING_VALIDATION) die "Still pending after 30 minutes. Compare the records at SiteGround with stage 3's." 3 ;;
+    UNKNOWN) die "Can't read the certificate's status from ACM." 4 ;;
     *) die "The certificate is $status. Look at it in the ACM console ($CERT_REGION), and delete it there if it failed." 2 ;;
   esac
   write_env INVITE_CERTIFICATE_ARN "$arn"
@@ -446,11 +451,12 @@ fi
 if begin "SiteGround: point $DOMAIN at CloudFront"; then
   target=$(clean "$(stack_output InviteDistributionDomain)")
   if [[ -z "$target" || "$target" == "none" ]]; then
-    die "The stack has no InviteDistributionDomain output. On a new account: infra/scripts/deploy.sh, then come back." 5
+    die "The stack has no InviteDistributionDomain output. On a new account, deploy with WIZARD_FROM=6, then come back." 5
   fi
-  others=$(aws cloudfront list-distributions --output text \
-    --query "DistributionList.Items[?Aliases.Items && contains(Aliases.Items, '$DOMAIN') && DomainName!='$target'].Id" || true)
-  [[ -z "$others" || "$others" == "None" ]] || die "Another distribution ($others) already answers on $DOMAIN. Leave it alone and find out why."
+  others=$(aws cloudfront list-distributions --output json \
+    --query "DistributionList.Items[?Aliases.Items && contains(Aliases.Items, '$DOMAIN') && DomainName!='$target'].Id" | jq -r 'join(" ")') ||
+    die "Can't list CloudFront's distributions." 5
+  [[ -z "$others" ]] || die "Another distribution ($others) already answers on $DOMAIN. Leave it alone and find out why."
   current=$(cname_of "$DOMAIN" "$AUTH_NS")
   if [[ "$current" == "$target" ]]; then
     ok "$DOMAIN → $target already"
@@ -496,7 +502,7 @@ if begin "Deploy"; then
     if confirm "Deploy again anyway?"; then deploy_now=yes; fi
   else
     say "This deploys whatever this checkout holds, and the live API is replaced by this checkout's backend."
-    note "Checkout: $(checkout)"
+    note "Checkout: $(checkout_name)"
     # Slice 8's backend (#150) went live from its own branch. A checkout without it would take its fields back off the API.
     if ! grep -q "class GoalSpecies" "$REPO_DIR/backend/src/birdjournal_api/goals_api.py"; then
       warn "This checkout lacks the Guild-data backend (#150, slice 8) that's already live: goals' species would"
@@ -531,7 +537,7 @@ fi
 if begin "Check the site on both hosts"; then
   say "Waiting for $DOMAIN to resolve here."
   for _ in $(seq 1 40); do
-    [[ -n "$(dig +short "$DOMAIN" 2>/dev/null || true)" ]] && break
+    [[ -n "$(lookup "$DOMAIN")" ]] && break
     sleep 15
   done
   expect_page "https://$DOMAIN/" "Featherguild"
@@ -553,7 +559,7 @@ if begin "Check the site on both hosts"; then
   say "Apple's CDN holds its own copy of the file, and phones read that one. It can lag by a day or more, so this"
   say "is for information only:"
   for host in $DOMAIN $FORMER_HOSTS; do
-    note "  $APPLE_CDN/$host: $(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$APPLE_CDN/$host" 2>/dev/null || echo unreachable)"
+    note "  $APPLE_CDN/$host: $(probe "$APPLE_CDN/$host" | cut -d'|' -f1)"
   done
   pause
 fi
@@ -561,10 +567,11 @@ fi
 if begin "Check the API's invite links"; then
   base=$(stack_output InviteBaseUrl)
   [[ "$base" == "https://$DOMAIN" ]] || die "The stack's InviteBaseUrl is $base, wanted https://$DOMAIN. Has it deployed?" 6
-  function_name=$(aws cloudformation list-stack-resources --region "$STACK_REGION" --stack-name BirdJournal --output text \
-    --query "StackResourceSummaries[?ResourceType=='AWS::Lambda::Function' && starts_with(LogicalResourceId, 'ApiFunction')].PhysicalResourceId | [0]")
+  function_name=$(aws cloudformation list-stack-resources --region "$STACK_REGION" --stack-name BirdJournal --output json \
+    --query "StackResourceSummaries[?ResourceType=='AWS::Lambda::Function' && starts_with(LogicalResourceId, 'ApiFunction')].PhysicalResourceId" \
+    | jq -r '.[0]') || die "Can't find the API's function in the stack." 8
   live_base=$(aws lambda get-function-configuration --region "$STACK_REGION" --function-name "$function_name" \
-    --query 'Environment.Variables.INVITE_BASE_URL' --output text)
+    --query 'Environment.Variables.INVITE_BASE_URL' --output text) || die "Can't read the API's settings." 8
   [[ "$live_base" == "https://$DOMAIN" ]] || die "The API's INVITE_BASE_URL is $live_base, wanted https://$DOMAIN." 6
   ok "The API makes links on https://$DOMAIN"
   say "Only a signed-in app can ask for a real one. On your phone, in a build with Guilds (a Debug build today):"
@@ -597,29 +604,38 @@ if begin "App Store Connect: the addresses it lists"; then
   pause
 fi
 
-if begin "The other places that could name the host"; then
-  website=$(aws sesv2 get-account --region "$STACK_REGION" --query 'Details.WebsiteURL' --output text 2>/dev/null || echo unknown)
+if begin "SES: the website its production access names"; then
+  website=$(aws sesv2 get-account --region "$STACK_REGION" --query 'Details.WebsiteURL' --output text 2>/dev/null) || website=""
   named_old=no
   for former in $FORMER_HOSTS; do [[ "$website" == *"$former"* ]] && named_old=yes; done
-  if [[ "$named_old" == "yes" ]]; then
+  if [[ -z "$website" ]]; then
+    warn "Can't read SES's account details."
+    SKIPPED+=("SES's account website: WIZARD_FROM=10 $SCRIPT")
+  elif [[ "$named_old" == "yes" ]]; then
     warn "SES's account details name the old host ($website). They belong to the whole shared account: ask its owner."
     SKIPPED+=("SES's account website, $website: ask the shared account's owner")
   else
-    ok "SES's production access names $website: nothing to do"
+    ok "SES names $website: nothing to do"
   fi
-  say ""
-  say "Wearables Developer Center (the app's iOS integration):"
+  pause
+fi
+
+if begin "Wearables Developer Center: the app's iOS integration"; then
   open_url "https://wearables.developer.meta.com/"
   step "If its Universal link or any URL it lists names the old host, change it to $DOMAIN."
   note "The repo set up the custom scheme birdjournal:// there and no https link, so there's probably nothing."
-  say ""
-  say "Google (only the sign-in consent screen shows these):"
+  if confirm "Does it name $DOMAIN wherever it named the old host?"; then ok "Wearables Developer Center"
+  else SKIPPED+=("Wearables Developer Center's URLs: WIZARD_FROM=11 $SCRIPT"); fi
+  pause
+fi
+
+if begin "Google: the sign-in consent screen"; then
   project=$(_existing GOOGLE_CLOUD_PROJECT || true)
-  [[ -z "$project" ]] || open_url "https://console.cloud.google.com/auth/branding?project=$project"
-  step "Branding → App home page, Privacy policy and Terms of service links: change any that name the old host."
+  open_url "https://console.cloud.google.com/auth/branding${project:+?project=$project}"
+  step "App home page, Privacy policy and Terms of service links: change any that name the old host."
   note "The accounts wizard only added amazoncognito.com there. Apple's Services ID and Cognito's callbacks don't use this host."
-  if confirm "Do both name $DOMAIN wherever they named the old host?"; then ok "Developer Center and Google"
-  else SKIPPED+=("Wearables Developer Center and Google's Branding page: WIZARD_FROM=10 $SCRIPT"); fi
+  if confirm "Does it name $DOMAIN wherever it named the old host?"; then ok "Google"
+  else SKIPPED+=("Google's Branding page: WIZARD_FROM=12 $SCRIPT"); fi
   pause
 fi
 
@@ -637,6 +653,8 @@ say "Old apps: Release builds (TestFlight) have never had Guilds or the associat
 note "  their only use of the host is Settings' privacy and terms links, and those redirect. A Debug build from before"
 note "  this change opens only the old host: it can't open the new links the API makes now, and they land on the invite"
 note "  page, which has no TestFlight or App Store link to follow. Build and install a new Debug build."
+say ""
+say "Nothing changes on the App ID or in Xcode Cloud: the bundle ID stays, and Associated Domains isn't per host."
 say ""
 say "On a phone, with a new Debug build: open a new invite link and an old one from Messages. Both should open the"
 say "join screen. Apple's CDN can take a day or more to pick up $DOMAIN, and a phone reads it at install."
