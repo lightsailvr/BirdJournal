@@ -22,8 +22,8 @@ if [[ "${1:-}" == "--sheets" ]]; then
     }
     in_out() { local s; for s in "$@"; do printf '%s\n' "$out/$s.jpg"; done; }
     collect() { local line; while IFS= read -r line; do shots+=("$line"); done; }
-    shots=("$references/2-listening-run.png"); collect < <(in_out listening-dark reveal-undo-dark); sheet reference-outlined 3 "${shots[@]}"
-    shots=(); collect < <(in_out board-dark menu-dark board-scrolled-dark mode-fade-dark sightings-dark board-light board-ax5); sheet set-menu-and-modes 7 "${shots[@]}"
+    shots=("$references/2-listening-run.png"); collect < <(in_out listening-dark stop-toast-ax5 reveal-undo-dark); sheet reference-outlined 4 "${shots[@]}"
+    shots=(); collect < <(in_out board-dark menu-dark board-scrolled-dark search-dark mode-fade-dark sightings-dark board-light board-ax5); sheet set-menu-and-modes 8 "${shots[@]}"
     shots=(); collect < <(in_out reveal-dark reveal-shared-dark reveal-undo-dark reveal-light reveal-ax5 sewing-dark); sheet reveal 6 "${shots[@]}"
     shots=(); collect < <(in_out lift-1 lift-2 lift-3 lift-4 lift-5 lift-6); sheet lift 6 "${shots[@]}"
     shots=(); collect < <(in_out lift-reduced-1 lift-reduced-2 lift-reduced-3 lift-reduced-4 lift-reduced-5 lift-reduced-6); sheet lift-reduce-motion 6 "${shots[@]}"
@@ -64,8 +64,10 @@ if [[ -z "${LIFT_ONLY:-}" ]]; then
         -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheSetsMenuAndThePeek \
         -only-testing:BirdJournalUITests/FeelCaptureUITests/testAModePartWayThroughItsFade \
         -only-testing:BirdJournalUITests/FeelCaptureUITests/testTheRevealWithUndoOpen \
-        -only-testing:BirdJournalUITests/FeelCaptureUITests/testAScrolledBoard
-    for shot in menu peek mode-fade reveal-undo board-scrolled; do
+        -only-testing:BirdJournalUITests/FeelCaptureUITests/testAScrolledBoard \
+        -only-testing:BirdJournalUITests/FeelUITests/testStopWrapsAndWorksUnderAToastAtTheLargestText
+    [[ -f "$raw/stop-toast-ax5.png" ]] && half "$raw/stop-toast-ax5.png" stop-toast-ax5
+    for shot in menu peek mode-fade reveal-undo board-scrolled search; do
         [[ -f "$raw/$shot.png" ]] && half "$raw/$shot.png" "$shot-dark"
     done
 fi

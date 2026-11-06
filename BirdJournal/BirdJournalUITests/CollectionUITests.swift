@@ -32,6 +32,26 @@ final class CollectionUITests: XCTestCase {
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch.exists, "the search kept only the match")
     }
 
+    /// Search sits in the title's row as a magnifier, opens to a field, and leaves the picker where it was.
+    @MainActor
+    func testTheMagnifierSearchesAndThePickerStaysWhereItWas() throws {
+        let app = launch()
+        let modes = app.segmentedControls["collection-mode"]
+        XCTAssertTrue(modes.waitForExistence(timeout: 15))
+        let top = modes.frame.minY
+        let search = app.navigationBars["Collection"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search'")).firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10), "no magnifier: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.searchFields.firstMatch.exists, "no field until asked for")
+        search.tap()
+        let field = app.searchFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10), "no field: \(app.debugDescription.prefix(3000))")
+        field.typeText("House")
+        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch'")).firstMatch
+        XCTAssertTrue(finch.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch.exists, "the search kept only the match")
+        XCTAssertEqual(modes.frame.minY, top, accuracy: 0.5, "the picker moved")
+    }
+
     @MainActor
     func testASearchForABirdYouHaventFoundSaysSo() throws {
         let app = launch(["-autoQuery", "Canada Goose"])

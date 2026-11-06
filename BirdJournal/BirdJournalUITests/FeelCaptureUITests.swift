@@ -54,6 +54,9 @@ final class FeelCaptureUITests: XCTestCase {
         app.swipeUp()
         Thread.sleep(forTimeInterval: 2)
         try shot("board-scrolled", app)
+        app.navigationBars["Collection"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search'")).firstMatch.tap()
+        Thread.sleep(forTimeInterval: 2)
+        try shot("search", app)
     }
 
     /// For a recording: from a scrolled board to Sightings and back.
