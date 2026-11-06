@@ -23,8 +23,14 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 |---|---|---|
 | Light page | `#F4F2E9` | `#EEF1EC` (`#F3F5F1` under Increase Contrast) |
 | Raised surface | `#DFEAE5` | `#E0E8E2` (`#D5E0D9`) |
-| Card stock on linen, light | `#E1D9C3` on `#E8DBCD` | CARD_LIGHT on LINEN_LIGHT |
-| Card stock on linen, light with Increase Contrast | | CARD_IC on LINEN_IC |
+| Card stock on linen, light | `#E1D9C3` on `#E8DBCD` | `#EEE7D7` on `#EADECF`, with its edge at `#91A198` |
+| Card stock on linen, light with Increase Contrast | darker than the linen (`#F4EEE7` at a 72% veil) | `#EEE7D7` on `#EEE4D8` at a 55% veil, with its edge at `#8B9A91` |
+
+The stock's values are the mean of its middle on the render, and the linen's the mean of a corner, both in `cardOnLinen`.
+
+## A trap in the capture
+
+An aborted capture once left the simulator at ax5, and `testSignedOutTheTabInvitesTheBirderToSignIn` then failed on a screen this slice didn't break: it passed alone once the text size was back at `large`. The script now restores the text size and appearance on any exit.
 
 ## Not proven here
 
