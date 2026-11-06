@@ -6,7 +6,7 @@ One CDK (Python) stack, `BirdJournal`, in `us-west-2`, in the shared Lightsail V
 - **API Gateway HTTP API** proxying every route to **FastAPI on Lambda** (`../backend`, Python 3.14 on ARM, 512 MB). The function verifies the Cognito access token itself. The stage throttles at 25 requests a second, bursts of 50.
 - **DynamoDB**, one on-demand table (`pk`, `sk`), with point-in-time recovery, deletion protection and a Retain policy.
 - A **budget**, `birdjournal-monthly` ($10, `monthlyBudgetUsd` in `cdk.json`), over the costs tagged `project=birdjournal`, emailing at 80 % actual and 100 % forecast.
-- The **invite site** (issue #61): CloudFront at `birdquest.matthewcelia.com` (`inviteDomain` in `cdk.json`) over a private S3 bucket with origin access control, serving `infra/site/` (the home page and the fallback page every `/i/<token>` link shows in a browser, rewritten at the edge by a CloudFront function) and `/.well-known/apple-app-site-association` (application/json, `/i/*` for the app IDs in `iosAppIds`). Its certificate is in us-east-1 but outside the stack (below); the bucket is retained.
+- The **invite site** (issue #61): CloudFront at `featherguild.matthewcelia.com` (`inviteDomain` in `cdk.json`), and at `birdquest.matthewcelia.com` for good (`inviteFormerDomains`: its association file is served there and every other request redirects to the same path on the new host, because old invite links, QR codes and installed apps name it), over a private S3 bucket with origin access control, serving `infra/site/` (the home page and the fallback page every `/i/<token>` link shows in a browser, rewritten at the edge by a CloudFront function) and `/.well-known/apple-app-site-association` (application/json, `/i/*` for the app IDs in `iosAppIds`). Its certificate is in us-east-1 but outside the stack (below); the bucket is retained.
 - Every resource is tagged `project=birdjournal` at the stack; `tests/test_stack.py` fails on any resource that isn't.
 
 ## First time: the wizard
@@ -17,13 +17,13 @@ infra/scripts/accounts-wizard.sh
 
 It walks through every console-only step and stores what the stack needs: the budget address in `~/keys/birdjournal.env`, Sign in with Apple (App ID capability, Services ID, key) as the `birdjournal/apple-sign-in` secret, the Google OAuth client as `birdjournal/google-oauth`, the CDK bootstrap (`scripts/check-bootstrap.sh`: an existing `CDKToolkit` is only checked, never bootstrapped over, since ivan-parallax shares it; on 2026-11-01 it was at version 32 and this stack needs 6), the deploy, and activating `project` as a cost allocation tag. `WIZARD_FROM=<stage>` resumes at a stage: the tag only shows up for activation up to a day after the first tagged resource exists, so stage 11 may need a second run.
 
-## Circle invite links: the second wizard
+## The invite domain: the second wizard
 
 ```sh
-infra/scripts/circles-wizard.sh
+infra/scripts/domain-wizard.sh
 ```
 
-Run after the accounts wizard. It requests the invite domain's certificate in us-east-1 (tagged `project=birdjournal`, ARN saved as `INVITE_CERTIFICATE_ARN` in `~/keys/birdjournal.env`), shows the validation CNAME to add in SiteGround's DNS Zone Editor (the zone `matthewcelia.com` is hosted there), waits for the certificate, deploys, shows the `birdquest` CNAME to CloudFront (the `InviteDistributionDomain` output), checks the association file and the fallback page, and has you tick Associated Domains on the App ID. The certificate lives outside the stack so CloudFormation never waits on a manual DNS change and us-east-1 needs no CDK bootstrap: CloudFront takes it by ARN from this us-west-2 stack. Keep the validation record: ACM renews the certificate with it.
+Run after the accounts wizard (issue #150; it replaces the wizard that set up the old host). It requests one certificate for both hosts in us-east-1 (tagged `project=birdjournal`, and saved as `INVITE_CERTIFICATE_ARN` in `~/keys/birdjournal.env` only once it's issued, because `deploy.sh` reads it), shows any validation CNAME missing from SiteGround's DNS Zone Editor (the zone `matthewcelia.com` is hosted there; the wizard checks the name servers first), waits for the certificate, has you add the new host's CNAME to CloudFront (the `InviteDistributionDomain` output), deploys twice after asking (first the new host beside the old, then, once it answers, the old host's redirects and the API's links), checks both hosts with `curl` (the pages, the association file with no redirect and as JSON, an old invite link redirecting) and the API's invite links, then walks the console fields that name the host. Finished stages check themselves and move on, so it's safe to rerun; `WIZARD_FROM=<stage>` resumes. Keep both validation records and both CNAMEs: ACM renews with the first and old links depend on the second. The certificate lives outside the stack so CloudFormation never waits on a manual DNS change and us-east-1 needs no CDK bootstrap: CloudFront takes it by ARN from this us-west-2 stack.
 
 ## Pushes: the third wizard
 
@@ -44,11 +44,13 @@ Run after the others (issue #71). It saves the report address as `REPORT_EMAIL` 
 ## Deploy (one command)
 
 ```sh
-infra/scripts/deploy.sh            # template tests, cdk deploy, then the app's AccountServer.json
+infra/scripts/deploy.sh            # checks, template tests, cdk deploy, then the app's AccountServer.json
 infra/scripts/deploy.sh --synth    # template tests and cdk synth only: no AWS calls
+infra/scripts/deploy.sh --diff     # template tests and a template-only cdk diff: reads AWS, changes and uploads nothing
+infra/scripts/deploy.sh --emergency  # skips the checks below, saying so; before the move, the site stays where it is
 ```
 
-`deploy.sh` checks the bootstrap the same way first (and stops if it is too old), reads `BUDGET_ALERT_EMAIL` and `INVITE_CERTIFICATE_ARN` from `~/keys/birdjournal.env` and uses `AWS_PROFILE=lsvr-admin` unless set. After a deploy, `scripts/write-app-config.sh` writes the API URL, Cognito domain and client ID (all public) into `BirdJournal/BirdJournal/Account/AccountServer.json`; commit it, and the app's Settings → Account comes alive. Until then the app says accounts aren't available in this build.
+`deploy.sh` checks the bootstrap the same way first (and stops if it is too old), reads `BUDGET_ALERT_EMAIL` and `INVITE_CERTIFICATE_ARN` from `~/keys/birdjournal.env`, stops if that certificate isn't issued or doesn't cover every host (`scripts/check-invite-certificate.sh`), if SiteGround's records don't point both hosts at the distribution (`scripts/check-invite-dns.sh`), if the checkout lacks backend fields that are already live (`scripts/check-live-backend.sh`; `--without-live-backend` gets past a false refusal), or, partway through the host move, unless you say which side of it you're on: `--new-host-first` leaves the site where it is, and `--move-to-new-host` finishes the move once the new host answers. Once the stack has moved, a plain deploy doesn't check the new host at all, so it can fix one that's broken. Every refusal it can help with names `--emergency`; a certificate that doesn't cover both hosts says how to ship an urgent fix instead and uses `AWS_PROFILE=lsvr-admin` unless set. After a deploy, `scripts/write-app-config.sh` writes the API URL, Cognito domain and client ID (all public) into `BirdJournal/BirdJournal/Account/AccountServer.json`; commit it, and the app's Settings → Account comes alive. Until then the app says accounts aren't available in this build.
 
 The Lambda package is built on this machine with `uv` (ARM64 manylinux wheels for the runtime's Python), with no Docker; without `uv` CDK falls back to the runtime's build image in Docker.
 
@@ -60,7 +62,7 @@ The Lambda package is built on this machine with `uv` (ARM64 manylinux wheels fo
 cd infra && uv run pytest
 ```
 
-`tests/test_stack.py` synthesizes the stack with `cdk.json`'s context and no AWS calls (bundling skipped) and checks it against issue #60: tags on every resource, the budget, both identity providers, the app client, the table, the API and the function's environment; `tests/test_invite_site.py` checks issue #61's invite site (CloudFront, the certificate, the private bucket, the association file's content type, the edge rewrite run in node, the table's time-to-live). `tests/test_bundling.py` builds the real Lambda package (needs PyPI).
+`tests/test_stack.py` synthesizes the stack with `cdk.json`'s context and no AWS calls (bundling skipped) and checks it against issue #60: tags on every resource, the budget, both identity providers, the app client, the table, the API and the function's environment; `tests/test_invite_site.py` checks issue #61's invite site (CloudFront, the certificate, the private bucket, the association file's content type, the edge rewrite and the old host's redirects run in node, the table's time-to-live); `tests/test_domain_wizard.py` runs the domain wizard over fake `aws`, `dig` and `curl`. `tests/test_bundling.py` builds the real Lambda package (needs PyPI).
 
 ## Smoke test (after a deploy)
 
