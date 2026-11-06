@@ -195,6 +195,14 @@ public struct SetProgress: Sendable, Hashable, Identifiable {
         self.total = total
     }
 
-    /// "Los Angeles · 87 of 160".
-    public var text: String { "\(name) · \(collected) of \(total)" }
+    /// "Los Angeles, 87 of 160".
+    public var text: String { "\(name), \(collected) of \(total)" }
+
+    /// "3 of 160 sewn".
+    public var sewnText: String { "\(collected) of \(total) sewn" }
+
+    /// The one count on a set's page: "157 still out there", or "All 160 sewn" once none are.
+    public var stillOutThereText: String {
+        collected < total ? "\(total - collected) still out there" : "All \(total) sewn"
+    }
 }

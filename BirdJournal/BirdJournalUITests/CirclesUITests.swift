@@ -144,7 +144,7 @@ final class CirclesUITests: XCTestCase {
 
         row.tap()
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.scrolledTo(app.staticTexts["Members · 1 of 20"]), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledTo(app.staticTexts["Members, 1 of 20"]), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(scrolledTo(app.buttons["Leave Guild"], in: app))
     }
 
@@ -165,7 +165,7 @@ final class CirclesUITests: XCTestCase {
     func testAGuildPageLeadsWithBelongingAndKeepsSharingVisible() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'Invite-only'")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'invite-only'")).firstMatch.exists)
         let sharing = app.switches["guildShareFindsToggle"]
         XCTAssertTrue(scrolledTo(sharing, in: app), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(sharing.value as? String, "1", "sharing is on by default")
@@ -201,8 +201,8 @@ final class CirclesUITests: XCTestCase {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "empty", "-autoScreen", "join", "-autoInvite", "fake-invite"])
         XCTAssertTrue(app.staticTexts["Canyon Walkers"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         app.buttons["Join Guild"].tap()
-        XCTAssertTrue(app.staticTexts["3 members · Invite-only"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.scrolledTo(app.staticTexts["Members · 3 of 20"]), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["3 members, invite-only"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledTo(app.staticTexts["Members, 3 of 20"]), "screen: \(app.debugDescription.prefix(3000))")
     }
 }
 #endif

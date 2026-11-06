@@ -116,8 +116,8 @@ struct ShareCardTests {
         let facts = Self.facts()
         #expect(facts.name == "Black Phoebe")
         let date = Self.sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted)
-        #expect(facts.line == "Citrus edition · Los Angeles · \(date)")
-        #expect(facts.imprint == "AI illustration · Featherguild")
+        #expect(facts.line == "Citrus edition, Los Angeles, \(date)")
+        #expect(facts.imprint == "AI illustration, Featherguild")
         #expect(facts.credits == "Patch from a reference photo: © A. Birder, some rights reserved (CC BY).")
     }
 
@@ -133,9 +133,9 @@ struct ShareCardTests {
 
     @Test("the place is only what the share may carry: a secret spot, or none at all with the city off")
     func placeOnTheCard() {
-        #expect(Self.facts(place: FindPolicy.secretSpot).line.hasPrefix("Citrus edition · a secret spot · "))
+        #expect(Self.facts(place: FindPolicy.secretSpot).line.hasPrefix("Citrus edition, a secret spot, "))
         let off = Self.facts(place: nil).line
-        #expect(!off.contains("Los Angeles") && off.hasPrefix("Citrus edition · "))
+        #expect(!off.contains("Los Angeles") && off.hasPrefix("Citrus edition, "))
     }
 
     @Test("a blank isn't an illustration and credits no photo")

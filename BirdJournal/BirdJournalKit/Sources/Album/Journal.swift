@@ -74,9 +74,9 @@ public enum Journal {
             .sorted { $0.latest.confirmedAt > $1.latest.confirmedAt }
     }
 
-    /// The summary line under the journal's title, e.g. "12 species · 28 sightings".
+    /// The summary line under the journal's title, e.g. "12 species, 28 sightings".
     public static func summary(sightingCount: Int, speciesCount: Int) -> String {
-        "\(speciesCount) species · \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
+        "\(speciesCount) species, \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
     }
 
     /// Whether a species matches a search: every word of the query starts a word of the common or scientific name,

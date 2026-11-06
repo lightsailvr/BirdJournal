@@ -63,7 +63,7 @@ struct PackFailureTests {
         #expect(PackLibrary.message(for: URLError(.networkConnectionLost)) == "The connection dropped before the download finished. Try again.")
         #expect(PackLibrary.message(for: URLError(.timedOut)) == "The download timed out. Try again.")
         #expect(PackLibrary.message(for: CocoaError(.fileWriteOutOfSpace)).hasPrefix("This iPhone ran out of space"))
-        #expect(PackLibrary.message(for: PackDownloadError.httpStatus(503)) == "The pack server answered 503. Try again later.")
+        #expect(PackLibrary.message(for: PackDownloadError.httpStatus(503)) == "The download server answered 503. Try again later.")
         #expect(PackLibrary.spaceNeeded(for: PackDescriptor(id: "x", name: "X", version: 1, url: URL(string: "https://example.com")!, sha256: "", byteCount: 1_000)) == 2_000 + PackLibrary.storageHeadroom)
     }
 }

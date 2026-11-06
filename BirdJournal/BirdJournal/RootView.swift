@@ -76,7 +76,7 @@ private struct RouteDestination: View {
         case .modelLicense(let fileName):
             LicenseTextView(title: fileName) { try ModelCredits.licenseText(fileName: fileName) }
         case .packLicense(let id):
-            LicenseTextView(title: "Pack license") {
+            LicenseTextView(title: "Field guide license") {
                 guard let pack = library.pack(id: id) else { throw PackError.notInstalled(id) }
                 return pack.info.licenseText
             }
@@ -146,7 +146,7 @@ struct RootView: View {
                         .appDestinations()
                 }
             }
-            SwiftUI.Tab("Collection", systemImage: "leaf", value: Tab.journal) {
+            SwiftUI.Tab("Collection", image: "stitched.ring", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
                     JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()

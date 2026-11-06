@@ -48,7 +48,9 @@ final class PatchStatesUITests: XCTestCase {
         let app = launch(seeded + ["-autoScreen", "set"])
         let row = app.buttons.matching(identifier: "set-species-silhouette").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(row.label, "001, Canada Goose, not yet found here")
+        XCTAssertEqual(row.label, "001, Canada Goose, still out there")
+        XCTAssertTrue(app.staticTexts["157 still out there"].exists, "one count, once, as a heading; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.staticTexts["Not yet found here"].exists)
         row.tap()
         XCTAssertTrue(app.staticTexts["Canada Goose"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["Branta canadensis"].exists, "the Atlas profile")
@@ -127,7 +129,7 @@ final class PatchStatesUITests: XCTestCase {
         let app = launch(seeded + ["-autoBoard", "uncharted", "-autoScreen", "cards"])
         let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH \"Anna's Hummingbird, Uncharted patch\"")).firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts["Uncharted · 2 outside every set"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["Uncharted, 2 outside every set"].exists, "screen: \(app.debugDescription.prefix(3000))")
         tile.tap()
         let flip = element(app, "card-flip")
         XCTAssertTrue(flip.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")

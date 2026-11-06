@@ -76,7 +76,7 @@ struct PackFailureTests {
         let offline = PackFailure(message: "No internet connection. Connect to Wi‑Fi or cellular data and try again.")
         #expect(offline.kind == .offline)
         #expect(offline.action == "Try again")
-        #expect(PackFailure(message: "The pack server could not be reached. Try again later.").kind == .offline)
+        #expect(PackFailure(message: "The download server could not be reached. Try again later.").kind == .offline)
 
         let dropped = PackFailure(message: "The connection dropped before the download finished. Try again.")
         #expect(dropped.kind == .interrupted)
@@ -93,7 +93,7 @@ struct PackFailureTests {
         let checksum = PackFailure(message: "The download's checksum did not match the index, so it was not installed. Try again.")
         #expect(checksum.kind == .install)
         #expect(checksum.action == "Download again")
-        #expect(PackFailure(message: "The download is not a readable pack (malformed).").kind == .install)
+        #expect(PackFailure(message: "The download is not a readable field guide (malformed).").kind == .install)
     }
 }
 

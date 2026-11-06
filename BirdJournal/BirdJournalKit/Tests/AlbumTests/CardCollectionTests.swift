@@ -125,9 +125,9 @@ struct CardCollectionTests {
         #expect(collection.sightingCount == 3)
         #expect(collection.patchCount == 2)
         #expect(collection.speciesCount == 2)
-        #expect(collection.summary == "2 patches · 3 sightings")
+        #expect(collection.summary == "2 patches, 3 sightings")
         #expect(collection.patchesText == "2 patches")
-        #expect(CardCollection([Self.card(Self.finch, minutes: 0, id: 1)]).summary == "1 patch · 1 sighting")
+        #expect(CardCollection([Self.card(Self.finch, minutes: 0, id: 1)]).summary == "1 patch, 1 sighting")
     }
 
     @Test("seen-again and new-patch lines")

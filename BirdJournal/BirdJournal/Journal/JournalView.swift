@@ -108,13 +108,13 @@ struct JournalView: View {
                         ToolbarItem(placement: .topBarTrailing) {
                             let shown = shownBoard(collection)
                             Menu {
-                                Picker("Board", selection: Binding(get: { shown }, set: { state.board = $0 })) {
+                                Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
                                     ForEach(boards(collection), id: \.self) { board in
                                         Text(boardMenuTitle(board, collection)).tag(board)
                                     }
                                 }
                             } label: {
-                                Label("Board", systemImage: "square.stack")
+                                Label("Set", systemImage: "square.stack")
                             }
                             .accessibilityValue(boardTitle(shown))
                             .accessibilityIdentifier("collection-board")
@@ -182,7 +182,7 @@ struct JournalView: View {
                     PatchBoard(patches: collection.patches(in: set.id))
                 }
             case .uncharted:
-                Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedPatches.count) outside every set")
+                Text("\(CardPlacement.unchartedTitle), \(collection.unchartedPatches.count) outside every set")
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
                     .boardLabel()
@@ -219,12 +219,8 @@ struct JournalView: View {
                 .padding(.top, 24)
         } else {
             ForEach(groups, id: \.board) { group in
-                Text(boardTitle(group.board))
-                    .font(JournalFont.rowTitle)
-                    .foregroundStyle(Color.ink)
-                    .boardLabel()
-                    .padding(.vertical, 10)
-                    .accessibilityAddTraits(.isHeader)
+                SectionTitle(boardTitle(group.board), top: 10, onBoard: true)
+                    .padding(.bottom, 10)
                 PatchBoard(patches: group.patches)
             }
         }
@@ -247,8 +243,8 @@ struct JournalView: View {
 
     private func boardMenuTitle(_ board: BoardChoice, _ collection: CardCollection) -> String {
         switch board {
-        case .set(let id): "\(boardTitle(board)) · \(collection.progress(of: id).collected)"
-        case .uncharted: "\(boardTitle(board)) · \(collection.unchartedPatches.count)"
+        case .set(let id): "\(boardTitle(board)), \(collection.progress(of: id).collected)"
+        case .uncharted: "\(boardTitle(board)), \(collection.unchartedPatches.count)"
         }
     }
 
@@ -353,16 +349,7 @@ private struct CollectionIntroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label {
-                Text("Your collection so far")
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-            } icon: {
-                Image(systemName: "sparkles")
-                    .foregroundStyle(Color.moss)
-                    .accessibilityHidden(true)
-            }
-            .accessibilityAddTraits(.isHeader)
+            SectionTitle("Your collection so far", top: 0)
             Text("\(collection.patchesText) of \(collection.speciesCount) species. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count.")
                 .font(JournalFont.body)
                 .foregroundStyle(Color.ink)
@@ -385,10 +372,7 @@ private struct SightingsByDay: View {
     var body: some View {
         ForEach(Journal.days(sightings)) { day in
             VStack(alignment: .leading, spacing: 2) {
-                Text(Journal.title(for: day.start))
-                    .font(JournalFont.section)
-                    .foregroundStyle(Color.ink)
-                    .accessibilityAddTraits(.isHeader)
+                SectionTitle(Journal.title(for: day.start), top: 0)
                 if let place = sharedPlace(day) {
                     Text(place)
                         .font(JournalFont.supporting)
@@ -441,7 +425,7 @@ struct SightingRow: View {
                 Text(library.commonName(for: sighting))
                     .font(JournalFont.heading)
                     .foregroundStyle(Color.ink)
-                Text("\(showsDate ? sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened) : sighting.confirmedAt.formatted(date: .omitted, time: .shortened)) · \(sighting.source == .glasses ? "Added from glasses" : "Added from iPhone")")
+                Text("\(showsDate ? sighting.confirmedAt.formatted(date: .abbreviated, time: .shortened) : sighting.confirmedAt.formatted(date: .omitted, time: .shortened)), \(sighting.source == .glasses ? "added from glasses" : "added from iPhone")")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                 Text(sighting.frameImagePath != nil ? "Your glasses snapshot" : (reference?.species.photos.isEmpty == false ? "Reference photo" : "No photo"))
@@ -468,18 +452,14 @@ struct SightingRow: View {
     }
 }
 
-/// Set progress above the Species list (issue #54): each set the birder has a card in, "Los Angeles · 87 of 160" with
+/// Set progress above the Species list (issue #54): each set the birder has a patch in, "Los Angeles, 87 of 160" with
 /// a bar, opening the set's page; then how many species are Uncharted.
 private struct SetProgressList: View {
     let collection: CardCollection
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Sets")
-                .font(JournalFont.section)
-                .foregroundStyle(Color.ink)
-                .accessibilityAddTraits(.isHeader)
-                .padding(.top, JournalLayout.sectionGap)
+            SectionTitle("Sets")
             ForEach(collection.progress) { progress in
                 NavigationLink(value: Route.set(id: progress.setID)) {
                     SetProgressRow(progress: progress)
@@ -489,7 +469,7 @@ private struct SetProgressList: View {
                 RowRule()
             }
             if collection.unchartedSpeciesCount > 0 {
-                Text("\(CardPlacement.unchartedTitle) · \(collection.unchartedSpeciesCount) species outside every set")
+                Text("\(CardPlacement.unchartedTitle), \(collection.unchartedSpeciesCount) species outside every set")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.vertical, 12)
@@ -499,7 +479,7 @@ private struct SetProgressList: View {
     }
 }
 
-/// One set's progress: "Los Angeles · 87 of 160" over a bar.
+/// One set's progress: "Los Angeles, 87 of 160" over a bar.
 struct SetProgressRow: View {
     let progress: SetProgress
     var detail: String?
@@ -528,7 +508,7 @@ struct SetProgressRow: View {
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel([progress.name, "\(progress.collected) of \(progress.total) species collected", detail].compactMap { $0 }.joined(separator: ", "))
+        .accessibilityLabel([progress.name, progress.sewnText, detail].compactMap { $0 }.joined(separator: ", "))
     }
 }
 
@@ -555,7 +535,7 @@ private struct SpeciesRows: View {
                             Text(entry.scientificName)
                                 .font(JournalFont.scientific)
                                 .foregroundStyle(Color.inkSecondary)
-                            Text("\(entry.count) \(entry.count == 1 ? "sighting" : "sightings") · last \(SpeciesRowsText.lastSeen(entry.latest.confirmedAt))")
+                            Text("\(entry.count) \(entry.count == 1 ? "sighting" : "sightings"), last \(SpeciesRowsText.lastSeen(entry.latest.confirmedAt))")
                                 .font(JournalFont.supporting)
                                 .foregroundStyle(Color.inkSecondary)
                         }

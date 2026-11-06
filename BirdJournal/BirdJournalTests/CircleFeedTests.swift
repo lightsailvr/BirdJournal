@@ -194,8 +194,8 @@ struct FindRowTests {
 
     @Test("it says where, or a secret spot, and when")
     func whereAndWhen() {
-        #expect(FindRow.whereAndWhen(Self.item()).hasPrefix("Pasadena · "))
-        #expect(FindRow.whereAndWhen(Self.item(place: FindPolicy.secretSpot)).hasPrefix("At a secret spot · "))
+        #expect(FindRow.whereAndWhen(Self.item()).hasPrefix("Pasadena, "))
+        #expect(FindRow.whereAndWhen(Self.item(place: FindPolicy.secretSpot)).hasPrefix("At a secret spot, "))
         #expect(!FindRow.whereAndWhen(Self.item(place: nil)).contains("·"))
     }
 
@@ -215,8 +215,8 @@ extension FindRowTests {
         #expect(FindRow.isLed(item))
         #expect(FindRow.headline(item) == "Maya Ortiz sewed a new patch")
         #expect(FindRow.headline(Self.item(newPatch: true, mine: true)) == "You sewed a new patch")
-        #expect(FindRow.howAndWhere(item).hasPrefix("Heard · Pasadena · "))
-        #expect(FindRow.spoken(item).hasPrefix("Black Phoebe. Heard by Maya Ortiz. Pasadena · "))
+        #expect(FindRow.howAndWhere(item).hasPrefix("Heard in Pasadena, "))
+        #expect(FindRow.spoken(item).hasPrefix("Black Phoebe. Heard by Maya Ortiz. Pasadena, "))
         #expect(FindRow.spoken(item).hasSuffix(". New patch. First for the Guild"))
     }
 
@@ -224,12 +224,12 @@ extension FindRowTests {
     func seenAgain() {
         let item = Self.item(first: true)
         #expect(!FindRow.isLed(item))
-        #expect(FindRow.seenAgainLine(item).hasPrefix("Maya Ortiz heard a Black Phoebe again · Pasadena · "))
+        #expect(FindRow.seenAgainLine(item).hasPrefix("Maya Ortiz heard a Black Phoebe again in Pasadena, "))
         var seen = Self.item(mine: true, place: nil)
         seen.method = .seen
         seen.commonName = "Acorn Woodpecker"
-        #expect(FindRow.seenAgainLine(seen).hasPrefix("You saw an Acorn Woodpecker again · "))
-        #expect(!FindRow.seenAgainLine(seen).contains("· ·"))
+        #expect(FindRow.seenAgainLine(seen).hasPrefix("You saw an Acorn Woodpecker again, "))
+        #expect(!FindRow.seenAgainLine(seen).contains(", ,"))
         #expect(FindRow.spoken(item).contains("Heard again by Maya Ortiz"))
         #expect(!FindRow.spoken(item).contains("New patch"))
         #expect(FindRow.marks(item) == ["First for the Guild"])

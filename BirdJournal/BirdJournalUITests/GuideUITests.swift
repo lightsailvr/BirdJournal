@@ -3,7 +3,7 @@ import XCTest
 /// The profile's reference sounds (issue #41): a real tap plays the song, the row turns into its stop control, the
 /// clip plays to its end, and a tap on the playing call stops it.
 final class GuideUITests: XCTestCase {
-    /// The Atlas (issue #118): a set's tile keeps the birder's "species collected" apart from "Ready offline", and the
+    /// The Atlas (issue #118): a set's tile keeps the birder's "sewn" apart from "Ready offline", and the
     /// profile keeps its full credits a tap away.
     @MainActor
     func testTheAtlasKeepsSpeciesCollectedApartFromReadyOffline() throws {
@@ -17,19 +17,20 @@ final class GuideUITests: XCTestCase {
         XCTAssertTrue(tile.label.contains("Los Angeles"), tile.label)
         XCTAssertTrue(tile.label.contains("Citrus edition"), tile.label)
         XCTAssertTrue(tile.label.contains("Ready offline"), tile.label)
-        XCTAssertTrue(tile.label.contains("0 of 160 species collected"), "nothing collected yet, though the pack is on the phone: \(tile.label)")
+        XCTAssertTrue(tile.label.contains("0 of 160 sewn"), "nothing collected yet, though the pack is on the phone: \(tile.label)")
         tile.tap()
         XCTAssertTrue(app.navigationBars["Los Angeles"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
-    func testTheProfileHasTheTaleAndItsCreditsATapAway() throws {
+    func testTheProfileHasItsStoryAndItsCreditsATapAway() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-inMemoryAlbum", "YES", "-autoScreen", "profile"]
         app.launch()
 
         let credits = app.buttons["profile-credits"]
-        XCTAssertTrue(app.staticTexts["The tale"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["About this bird"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.staticTexts["The tale"].exists, "the story's own title is its heading")
         for _ in 0..<12 where !(credits.exists && credits.isHittable) { app.swipeUp() }
         XCTAssertTrue(credits.isHittable, "screen: \(app.debugDescription.prefix(3000))")
         credits.tap()

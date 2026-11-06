@@ -195,9 +195,7 @@ private struct PatchPage: View {
     private var words: some View {
         VStack(spacing: 4) {
             Text(PatchText.editionLine(patch.placement))
-                .textCase(.uppercase)
-                .font(CardFont.editionCompact)
-                .tracking(CardFont.editionTracking)
+                .font(JournalFont.supporting)
                 .foregroundStyle(Color.ink)
             Text(name)
                 .font(PatchFont.pageName)

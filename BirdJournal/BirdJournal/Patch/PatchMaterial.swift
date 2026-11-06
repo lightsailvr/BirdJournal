@@ -34,7 +34,7 @@ struct BoardMaterial: View {
             } else {
                 Image("MaterialLinen")
                     .resizable(resizingMode: .tile)
-                    .overlay(Color.white.opacity(contrast == .increased ? 0.72 : 0.45))
+                    .overlay(Color.white.opacity(contrast == .increased ? 0.55 : 0.45))
             }
         }
         .accessibilityHidden(true)
@@ -92,11 +92,16 @@ struct FeltBoard<Content: View>: View {
 
 /// Paper card stock: the ivory under its fibre texture, a fine inner keyline, and a slot punched at the top, like the
 /// backer a patch is sold on. Printed matter: no embossing, foil or glows. Everything on it reads in the light scheme.
+/// On the linen (the light appearance) the fibre is eased so the card measures lighter than the cloth under it, and a fine
+/// edge sets it off; on the felt it glows as it is (issue #150).
 struct CardStockSurface: ViewModifier {
     static let radius: CGFloat = 8
+    /// The page's appearance: this modifier reads it from outside the light scheme it sets below.
+    @Environment(\.colorScheme) private var pageScheme
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: Self.radius, style: .continuous)
+        let onLinen = pageScheme == .light
         content
             .background {
                 Color.cardStock
@@ -104,11 +109,14 @@ struct CardStockSurface: ViewModifier {
                         Image("MaterialPaper")
                             .resizable(resizingMode: .tile)
                             .blendMode(.multiply)
-                            .opacity(0.5)
+                            .opacity(onLinen ? 0.15 : 0.5)
                     }
                     .clipShape(shape)
                     // On the stock, not the card: on the whole card the type would take it too.
                     .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 6)
+                    .overlay {
+                        if onLinen { shape.strokeBorder(Color.cardEdge.opacity(0.55), lineWidth: 1) }
+                    }
                     .accessibilityHidden(true)
             }
             .overlay {
