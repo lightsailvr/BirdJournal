@@ -294,6 +294,7 @@ def test_the_app_bundles_every_approved_cover_and_only_those(tmp_path):
         chosen = entry["candidates"][entry["chosen"] - 1]
         assert cover["painting"] == chosen["sha256"], f"{pack_id}: run `packbuilder bundle-covers`"
         assert (cover["seed"], cover["model"]) == (chosen["seed"], entry["model"])
+        assert (bundled / cover["set"]).read_bytes() == (PACKS / pack_id / "set.json").read_bytes(), f"{pack_id}: run `packbuilder bundle-covers`"
         with Image.open(bundled / cover["file"]) as image:
             assert (image.format, image.size) == ("JPEG", COVER_SIZE)
         total += (bundled / cover["file"]).stat().st_size
@@ -304,6 +305,7 @@ def test_bundling_a_cover_needs_its_approved_painting(tmp_path):
     definitions = tmp_path / "packs"
     (definitions / "us-ca-la").mkdir(parents=True)
     shutil.copy(PACKS / "us-ca-la" / LOCK_FILE, definitions / "us-ca-la" / LOCK_FILE)
+    shutil.copy(PACKS / "us-ca-la" / "set.json", definitions / "us-ca-la" / "set.json")
     (definitions / "us-ca-new").mkdir()
     (definitions / "us-ca-new" / LOCK_FILE).write_text(json.dumps({"review": PENDING, "candidates": []}))
     cache = tmp_path / "covers"
@@ -318,3 +320,4 @@ def test_bundling_a_cover_needs_its_approved_painting(tmp_path):
     assert list(covers) == ["us-ca-la"], "a pending cover isn't bundled"
     assert not (tmp_path / "out" / "us-ca-old.jpg").exists(), "a cover turned down since leaves the app"
     assert covers["us-ca-la"]["file"] == "us-ca-la.jpg" and (tmp_path / "out" / "us-ca-la.jpg").exists()
+    assert (tmp_path / "out" / covers["us-ca-la"]["set"]).read_bytes() == (PACKS / "us-ca-la" / "set.json").read_bytes(), "the set ships with its cover"

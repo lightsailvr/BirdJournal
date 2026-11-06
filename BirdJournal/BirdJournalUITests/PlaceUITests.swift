@@ -1,29 +1,13 @@
 import XCTest
 
-/// The painting that follows you (issue #150), with real launches: `-autoLocation` is the phone's last known position, and a
-/// pack index built from the repo's set definitions is what the phone has read, with none of the other sets' packs on it. The
+/// The painting that follows you (issue #150), with real launches: `-autoLocation` is the phone's last known position, and the
+/// phone is a fresh install with the index out of reach, so all it has of the other sets is what shipped with the app. The
 /// painting's accessibility label and "Your local set" have to agree.
 final class PlaceUITests: XCTestCase {
-    private static let repo = URL(fileURLWithPath: #filePath)
-        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-
-    /// An index of the five sets, as `packbuilder index` publishes them, without covers: the painting comes from the app.
-    private static func indexFile() throws -> URL {
-        var packs: [[String: Any]] = []
-        for id in ["us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"] {
-            let data = try Data(contentsOf: repo.appending(path: "packbuilder/packs/\(id)/set.json"))
-            let set = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-            packs.append(["id": id, "name": set["name"] ?? id, "version": 1, "url": "https://example.com/\(id).zip", "sha256": "ab", "byteCount": 1, "set": set])
-        }
-        let url = URL.temporaryDirectory.appending(path: "place-index-\(UUID().uuidString).json")
-        try JSONSerialization.data(withJSONObject: ["packs": packs]).write(to: url)
-        return url
-    }
-
     @MainActor
-    private func launch(_ arguments: [String]) throws -> XCUIApplication {
+    private func launch(_ arguments: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-packIndexURL", try Self.indexFile().absoluteString] + arguments
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-freshPackStorage", "YES", "-packIndexURL", "http://127.0.0.1:9/index.json"] + arguments
         app.launch()
         return app
     }
@@ -38,9 +22,9 @@ final class PlaceUITests: XCTestCase {
     }
 
     @MainActor
-    func testThePaintingFollowsThePlaceIntoASetWhosePackIsntOnThePhone() throws {
+    func testAFreshInstallOfflineShowsThePaintingOfThePlaceItsIn() {
         for (place, set) in [("joshua-tree", "California Deserts"), ("orlando", "Orlando & Space Coast"), ("san-diego", "San Diego"), ("oakland", "SF Bay Area"), ("griffith", "Los Angeles")] {
-            let app = try launch(["-autoLocation", place])
+            let app = launch(["-autoLocation", place])
             expectPainting(of: set, in: app)
             app.terminate()
         }
@@ -48,27 +32,27 @@ final class PlaceUITests: XCTestCase {
 
     /// The set you're in beats your newest sighting's. Outside every set, or with location denied, it's your last set.
     @MainActor
-    func testTheFallbackOrderWithSightings() throws {
+    func testTheFallbackOrderWithSightings() {
         let inSanDiego = ["-seedNewestAt", "san-diego"]
-        var app = try launch(inSanDiego + ["-autoLocation", "joshua-tree"])
+        var app = launch(inSanDiego + ["-autoLocation", "joshua-tree"])
         expectPainting(of: "California Deserts", in: app)
         app.terminate()
-        app = try launch(inSanDiego + ["-autoLocation", "kansas"])
+        app = launch(inSanDiego + ["-autoLocation", "kansas"])
         expectPainting(of: "San Diego", in: app)
         app.terminate()
-        app = try launch(inSanDiego + ["-autoLocation", "denied"])
+        app = launch(inSanDiego + ["-autoLocation", "denied"])
         expectPainting(of: "San Diego", in: app)
         app.terminate()
-        app = try launch(["-autoLocation", "denied", "-currentPlaceSetID", ""])
+        app = launch(["-autoLocation", "denied", "-currentPlaceSetID", ""])
         expectPainting(of: "Los Angeles", in: app)
     }
 
     /// A launch with permission undecided asks nothing and falls back to the bundled set. Only Start may ask.
     @MainActor
-    func testNoPermissionPromptAtLaunch() throws {
+    func testNoPermissionPromptAtLaunch() {
         let app = XCUIApplication()
         app.resetAuthorizationStatus(for: .location)
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-packIndexURL", try Self.indexFile().absoluteString, "-currentPlaceSetID", ""]
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-freshPackStorage", "YES", "-packIndexURL", "http://127.0.0.1:9/index.json", "-currentPlaceSetID", ""]
         app.launch()
         expectPainting(of: "Los Angeles", in: app)
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -79,8 +63,8 @@ final class PlaceUITests: XCTestCase {
 
     /// The name, not just its words, opens the page, and the thread beside it takes no touch from the patches below.
     @MainActor
-    func testTheLocalSetAndItsLatestPatchOpen() throws {
-        let app = try launch(["-seedJournal", "YES", "-autoLocation", "griffith", "-collectionIntroShown", "YES"])
+    func testTheLocalSetAndItsLatestPatchOpen() {
+        let app = launch(["-seedJournal", "YES", "-autoLocation", "griffith"])
         expectPainting(of: "Los Angeles", in: app)
         let patch = app.buttons.matching(identifier: "board-patch").firstMatch
         if !patch.waitForExistence(timeout: 5) || !patch.isHittable { app.swipeUp() }
@@ -92,5 +76,19 @@ final class PlaceUITests: XCTestCase {
         XCTAssertTrue(local.waitForExistence(timeout: 10))
         local.tap()
         XCTAssertTrue(app.navigationBars["Los Angeles"].waitForExistence(timeout: 10), "the set's page; screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    /// Offline, a set the phone knows only from what shipped has its tile and page, with no Download to offer, and sewing a patch in
+    /// it would count.
+    @MainActor
+    func testASetKnownOnlyFromWhatShippedOpensInTheAtlas() {
+        let app = launch(["-autoLocation", "joshua-tree", "-autoScreen", "guide"])
+        let desert = app.buttons["guide-set-us-ca-desert"]
+        for _ in 0..<6 where !desert.waitForExistence(timeout: 3) || !desert.isHittable { app.swipeUp() }
+        XCTAssertTrue(desert.isHittable, "no tile; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Download'")).firstMatch.exists, "nothing to download it from")
+        desert.tap()
+        XCTAssertTrue(app.navigationBars["California Deserts"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["155 still out there"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
     }
 }

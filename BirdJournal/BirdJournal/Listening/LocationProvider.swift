@@ -23,8 +23,9 @@ protocol LocationProvider {
     /// is dropped.
     func fixes() -> AsyncStream<LocationFix>
 
-    /// The last position the phone knows (issue #150), for picking the Listen painting's set: one read, which never prompts,
-    /// starts no updates and shows no indicator, and nothing unless when-in-use permission is already granted. The caller
+    /// The last position the phone knows (issue #150), for picking the Listen painting's set: one read, which never prompts and
+    /// starts no updates, so no blue pill, and nothing unless when-in-use permission is already granted. iOS may still show its
+    /// arrow in the status bar for a moment, as it does for any use of location. The caller
     /// uses it to pick a set, and neither stores nor sends it.
     func lastKnownCoordinate() -> Coordinate?
 }

@@ -8,7 +8,7 @@ final class LaunchUITests: XCTestCase {
     func testTheSplashEndingDuringAnAnimationDoesntEndTheApp() {
         for launch in 1...4 {
             let app = XCUIApplication()
-            app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circles", "-splashTitleSeconds", "5"]
+            app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circles", "-splashTitleSeconds", "5", "-launchSplashShown", "NO"]
             app.launch()
             XCTAssertTrue(app.navigationBars["Guilds"].waitForExistence(timeout: 20), "launch \(launch): \(app.debugDescription.prefix(2000))")
             // The splash is 1.1 s from the first frame, and it fades over 0.5 s.

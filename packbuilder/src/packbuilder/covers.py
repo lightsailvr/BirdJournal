@@ -30,6 +30,7 @@ import hashlib
 import io
 import json
 import logging
+import shutil
 import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -323,7 +324,8 @@ def write_thumbnail(painting: Path, target: Path) -> str:
 
 def bundle_covers(definitions_dir: Path, cache_dir: Path, out_dir: Path, quality: int = BUNDLED_QUALITY) -> dict:
     """The approved covers the app ships (issue #150, slice 6), so the Listen painting works before a set's pack is on the
-    phone and offline: `<pack id>.jpg` at the pack cover's size, and `covers.json` with each one's credit and the painting it
+    phone and offline: `<pack id>.jpg` at the pack cover's size, `<pack id>.set.json` (the set's boundary and birds, so a phone
+    that has never read the index still knows which set it's in), and `covers.json` with each one's credit and the painting it
     came from. JPEG rather than the pack's AVIF, since AV1 decodes hold their thread and this one is decoded at launch. A set
     with no approved cover is left out; a chosen painting gone from the cache stops the run, rather than ship less."""
     out_dir = Path(out_dir)
@@ -343,12 +345,14 @@ def bundle_covers(definitions_dir: Path, cache_dir: Path, out_dir: Path, quality
             image = image.resize(COVER_SIZE, Image.Resampling.LANCZOS)
         file = f"{lock_path.parent.name}.jpg"
         image.save(out_dir / file, "JPEG", quality=quality, optimize=True, progressive=True)
+        definition = f"{lock_path.parent.name}.set.json"
+        shutil.copyfile(lock_path.parent / "set.json", out_dir / definition)
         covers[lock_path.parent.name] = {
-            "file": file, "model": entry["model"], "workflowVersion": workflow_version(entry), "seed": chosen["seed"], "painting": chosen["sha256"],
+            "file": file, "set": definition, "model": entry["model"], "workflowVersion": workflow_version(entry), "seed": chosen["seed"], "painting": chosen["sha256"],
         }
     # A cover that's since been turned down leaves the app.
-    shipped = {cover["file"] for cover in covers.values()}
-    for stale in out_dir.glob("*.jpg"):
+    shipped = {name for cover in covers.values() for name in (cover["file"], cover["set"])}
+    for stale in [*out_dir.glob("*.jpg"), *out_dir.glob("*.set.json")]:
         if stale.name not in shipped:
             stale.unlink()
     (out_dir / BUNDLE_FILE).write_text(json.dumps(covers, indent=2) + "\n")

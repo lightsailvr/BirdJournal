@@ -1,6 +1,7 @@
 {
   "us-ca-bay": {
     "file": "us-ca-bay.jpg",
+    "set": "us-ca-bay.set.json",
     "model": "FLUX.3 Image Klein",
     "workflowVersion": "set-cover@1 cover-prompts@1",
     "seed": 1849353107,
@@ -8,6 +9,7 @@
   },
   "us-ca-desert": {
     "file": "us-ca-desert.jpg",
+    "set": "us-ca-desert.set.json",
     "model": "FLUX.3 Image Klein",
     "workflowVersion": "set-cover@1 cover-prompts@1",
     "seed": 2349655602,
@@ -15,6 +17,7 @@
   },
   "us-ca-la": {
     "file": "us-ca-la.jpg",
+    "set": "us-ca-la.set.json",
     "model": "FLUX.3 Image Klein",
     "workflowVersion": "set-cover@1 cover-prompts@1",
     "seed": 2471396767,
@@ -22,6 +25,7 @@
   },
   "us-ca-sd": {
     "file": "us-ca-sd.jpg",
+    "set": "us-ca-sd.set.json",
     "model": "FLUX.3 Image Klein",
     "workflowVersion": "set-cover@1 cover-prompts@1",
     "seed": 259791541,
@@ -29,6 +33,7 @@
   },
   "us-fl-orlando": {
     "file": "us-fl-orlando.jpg",
+    "set": "us-fl-orlando.set.json",
     "model": "FLUX.3 Image Klein",
     "workflowVersion": "set-cover@1 cover-prompts@1",
     "seed": 2635883174,

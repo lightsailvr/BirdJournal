@@ -128,6 +128,20 @@ struct PlaceTests {
         #expect(defaults.string(forKey: CurrentPlace.rememberedKey) == "us-ca-la")
     }
 
+    @Test("a phone that has never read the index still moves to the desert, with its painting")
+    func neverOnline() async throws {
+        let library = PackLibrary(
+            bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PlaceTests-\(UUID().uuidString)")),
+            indexURL: URL(string: "http://127.0.0.1:9/index.json")!, availableCapacity: { .max }
+        )
+        await library.refreshIndex()
+        #expect(library.index == nil)
+        let place = Self.place(library, at: Self.joshuaTree, defaults: Self.defaults())
+        await place.refresh()
+        #expect(place.setID == "us-ca-desert")
+        #expect(place.painting?.size == CGSize(width: 1536, height: 864))
+    }
+
     @Test("a remembered set the phone no longer knows is forgotten rather than shown")
     func forgotten() throws {
         let library = try Self.library()

@@ -45,7 +45,7 @@ public final class PackLibrary {
 
     /// - Parameter availableCapacity: free bytes on the phone before a download, nil when unknown; the storage's
     ///   own reading by default.
-    /// - Parameter bundledCovers: the set covers that ship with the app.
+    /// - Parameter bundledCovers: the set covers and definitions that ship with the app.
     public init(
         bundled: SpeciesPack?, storage: PackStorage, indexURL: URL = PackIndex.defaultURL, session: URLSession = .shared,
         availableCapacity: (() -> Int64?)? = nil, bundledCovers: BundledCovers = .shipped
@@ -128,14 +128,17 @@ public final class PackLibrary {
         return nil
     }
 
-    /// Every set the phone knows (issue #54): each readable pack's own, then the index's for packs not on the phone, one
-    /// per pack id. A set therefore works before its pack is downloaded, and an installed pack's set is the one its
-    /// cards and Field Guide read.
+    /// Every set the phone knows (issue #54): each readable pack's own, then the index's for packs not on the phone, then the
+    /// ones that shipped with the app (issue #150), one per pack id. A set therefore works before its pack is downloaded and
+    /// before the index has ever been read, and an installed pack's set is the one its cards and Field Guide read.
     public var sets: [PackSet] {
         var sets = packs.compactMap(\.set)
         var known = Set(sets.map(\.id))
         for descriptor in index?.packs ?? [] {
             guard let set = descriptor.set, known.insert(set.id).inserted else { continue }
+            sets.append(set)
+        }
+        for set in bundledCovers.sets where known.insert(set.id).inserted {
             sets.append(set)
         }
         return sets

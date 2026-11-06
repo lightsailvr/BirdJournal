@@ -54,6 +54,8 @@ import UIKit
 ///   with a fix in Griffith Park. `san-diego`, `oakland`, `joshua-tree` and `orlando` are places in the other sets, and `kansas`
 ///   is outside every set (`DebugPlace`). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
 ///   picks the Listen painting (issue #150).
+/// - `-freshPackStorage YES` starts with no downloads and no index read yet, as a fresh install does; with `-packIndexURL
+///   http://127.0.0.1:9/index.json` the index stays out of reach (issue #150).
 /// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen

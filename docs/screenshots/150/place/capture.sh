@@ -34,6 +34,7 @@ for picture in [mock, *crops]:
 sheet.save(f"{out}/sheets/reference-listen.jpg", quality=84)
 PY
     sheet reference-thread 4 "$reference/4-set-page.png" "$out/set-la-dark.jpg" "$reference/1-guild-page.png" "$out/goals-dark.jpg"
+    sheet offline 4 "$out"/offline-{desert-dark,desert-light,atlas-dark,set-dark}.jpg
     sheet places-dark 3 "$out"/listen-{griffith,joshua-tree,san-diego,oakland,orlando,kansas}-dark.jpg
     sheet places-light 3 "$out"/listen-{griffith,joshua-tree,san-diego,oakland,orlando,kansas}-light.jpg
     sheet tint-dark 4 "$out"/{set-la,set-desert,set-coastal,patch,atlas,species-list,goals,download}-dark.jpg
@@ -88,7 +89,13 @@ for appearance in dark light; do
     shot "section-$appearance" 9 "${seeded[@]}" -autoLocation griffith -autoScreen listen -autoScrollTo local-set
 done
 
+offline=(-inMemoryAlbum YES -collectionIntroShown YES -freshPackStorage YES -packIndexURL http://127.0.0.1:9/index.json -autoLocation joshua-tree)
+xcrun simctl ui "$udid" appearance light
+shot offline-desert-light 8 "${offline[@]}" -autoScreen listen
 xcrun simctl ui "$udid" appearance dark
+shot offline-desert-dark  8 "${offline[@]}" -autoScreen listen
+shot offline-atlas-dark   9 "${offline[@]}" -autoScreen guide
+shot offline-set-dark     9 "${offline[@]}" -autoScreen set -autoSet us-ca-desert
 shot set-la-dark        9 "${seeded[@]}" -autoLocation griffith -autoScreen set
 shot set-desert-dark    9 "${seeded[@]}" -autoLocation griffith -autoScreen set -autoSet us-ca-desert
 shot set-coastal-dark   9 "${seeded[@]}" -autoLocation griffith -autoScreen set -autoSet us-ca-sd

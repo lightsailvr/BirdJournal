@@ -227,7 +227,8 @@ watercolours often end in.
   index, so the pack and the index show the same cover.
 - **In the app.** Every approved cover also ships in the app itself, so the Listen painting works before a set's pack is
   on the phone and offline (issue #150): `uv run packbuilder bundle-covers` writes them at full size as JPEG, about 3 MB
-  together, with `covers.json`, into the `Pack` target's `Covers` folder, which is committed. Run it after approving a
+  together, with each `set.json` (so a phone that has never read the index knows which set it's in) and `covers.json`, into
+  the `Pack` target's `Covers` folder, which is committed. Run it after approving a
   cover: `test_covers` fails while a bundled cover isn't the one its lock approved. It reads the cover cache, so the
   chosen paintings have to be there (`packbuilder cover` paints a missing one from its seed).
 

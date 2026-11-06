@@ -485,7 +485,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Featherguild connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Featherguild finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to list the birds that live where you are listening and to record where each bird was heard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Featherguild listens for birdsong with the phone microphone when your glasses are not connected.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -534,7 +534,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Featherguild connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Featherguild finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to list the birds that live where you are listening and to record where each bird was heard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Featherguild listens for birdsong with the phone microphone when your glasses are not connected.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

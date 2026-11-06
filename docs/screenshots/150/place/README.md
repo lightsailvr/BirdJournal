@@ -5,6 +5,7 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 | Pick | What | Shots |
 |---|---|---|
 | V5 | The painting follows the place: Griffith Park, Joshua Tree, San Diego, Oakland and Orlando, with none of those packs on the phone, and Kansas, outside every set, on your last set | `listen-<place>-dark`, `listen-<place>-light`, `sheets/places-*` |
+| V5 | A fresh install with the index out of reach, in the desert: the desert's painting, tint and name, and the set's tile and page in the Atlas | `offline-desert-*`, `offline-atlas-dark`, `offline-set-dark`, `sheets/offline.jpg` |
 | V5 | Location denied, no prompt, the fallback | `listen-denied-*`, `PlaceUITests.testNoPermissionPromptAtLaunch` |
 | V5 | "Your local set" names the set the painting shows | the same shots |
 | V4 | The accent follows the place, and a set's or patch's page has its own edition | `listen-*`, `set-*-dark`, `patch-dark` (a Citrus patch while in the desert) |
@@ -28,10 +29,11 @@ The Listen hero is meant to change only where the painting does, so it was measu
 
 ## Size
 
-The covers add 2.4 MB to the app (`BirdJournalKit_Pack.bundle/Covers`: five JPEGs at 1536 × 864, quality 90).
+The covers and sets add 2.5 MB to the app (`BirdJournalKit_Pack.bundle/Covers`: five JPEGs at 1536 × 864, quality 90, and five `set.json` files, 89 KB).
 
 ## By hand on a phone
 
 - The cross-fade when a place changes, and the switch without one under Reduce Motion.
 - The thread sewing forward, when the Listen tab comes back after a run. `ThreadProgressTests.sewsOnReturn` holds its start and end on pixels; the middle needs eyes.
 - A real last known position moving the painting: the simulator's fixes are `-autoLocation`'s.
+- What the read shows: no blue pill, and on the simulator iOS's location arrow in the status bar, gone by 30 s. See what a phone does, and whether the arrow bothers anyone at every launch.
