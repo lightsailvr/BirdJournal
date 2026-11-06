@@ -153,6 +153,15 @@ struct ActiveListeningView: View {
 extension ActiveListeningView {
     /// A finger, a scroll or VoiceOver's focus has come to the list, or left it.
     fileprivate func setHolding(_ holder: HeldListOrder<Species>.Holder, _ isHolding: Bool) {
+        #if DEBUG
+        // `-fakeSheetDuringTouch YES`: a review lands a second into a finger's touch, as a run ending or a reveal can.
+        if holder == .finger, isHolding, UserDefaults.standard.bool(forKey: "fakeSheetDuringTouch") {
+            Task {
+                try? await Task.sleep(for: .seconds(1))
+                run.reviewing = run.candidates.first
+            }
+        }
+        #endif
         if isHolding {
             if !held.isHeld { heldHunt = run.hunt(in: collectionStore.collection) }
             held.hold(holder, showing: run.orderedCandidates.map(\.species), at: .now)

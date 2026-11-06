@@ -196,6 +196,50 @@ final class HuntUITests: XCTestCase {
         wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 15)
     }
 
+    /// A flick still decelerating when the list leaves the screen never tells it the scroll is over, so leaving lets go.
+    @MainActor
+    func testAFlickThenAnotherTabDoesNotLeaveTheListHeld() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1",
+            "-fakeRunBirds", Self.movingBirds + ",Melozone crissalis_California Towhee,Spinus psaltria_Lesser Goldfinch",
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+
+        row.swipeUp(velocity: .fast)
+        app.tabBars.buttons["Collection"].tap()
+        app.tabBars.buttons["Listen"].tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // Well inside the safety net's time: this is leaving letting go, not the net.
+        let held = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 8)
+    }
+
+    /// A sheet landing under a finger takes the touch away, so the list can't wait to hear it end.
+    @MainActor
+    func testASheetLandingMidTouchLetsTheListGo() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeSheetDuringTouch", "YES",
+            "-fakeRunBirds", Self.movingBirds,
+            "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
+        ]
+        app.launch()
+        let row = app.buttons["candidate-row-2"]
+        XCTAssertTrue(row.waitForExistence(timeout: 60), "no row; screen: \(app.debugDescription.prefix(3000))")
+
+        row.press(forDuration: 2.5)
+        let close = app.buttons["Close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 10), "no sheet; screen: \(app.debugDescription.prefix(3000))")
+        close.tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        let held = bird(row)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != held }, evaluatedWith: NSObject())], timeout: 8)
+    }
+
     /// The finger's watcher leaves the touch to the scroll view.
     @MainActor
     func testTheListStillScrolls() throws {
