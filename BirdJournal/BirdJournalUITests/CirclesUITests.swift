@@ -181,7 +181,7 @@ final class CirclesUITests: XCTestCase {
         let code = app.images["inviteQRCode"]
         XCTAssertTrue(code.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         let link = code.value as? String ?? ""
-        XCTAssertTrue(link.hasPrefix("https://birdquest.matthewcelia.com/i/fake-"), link)
+        XCTAssertTrue(link.hasPrefix("https://featherguild.matthewcelia.com/i/fake-"), link)
         // It goes by the code, Share link or Copy link, and isn't printed on the sheet (issue #150).
         XCTAssertFalse(app.staticTexts[link].exists, "the link is printed on the sheet")
         let copy = app.buttons["inviteCopyLink"]

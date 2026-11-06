@@ -156,6 +156,6 @@ struct GlassesDeviceRow: View {
 
 /// The privacy policy and terms (issue #71), on the invite domain's site (`infra/site/`).
 enum SiteLinks {
-    static let privacy = URL(string: "https://birdquest.matthewcelia.com/privacy")!
-    static let terms = URL(string: "https://birdquest.matthewcelia.com/terms")!
+    static let privacy = URL(string: "https://featherguild.matthewcelia.com/privacy")!
+    static let terms = URL(string: "https://featherguild.matthewcelia.com/terms")!
 }

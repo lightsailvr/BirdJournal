@@ -206,7 +206,7 @@ finish() {
 #   infra/scripts/safety-wizard.sh                  # from the start
 #   WIZARD_FROM=3 infra/scripts/safety-wizard.sh    # resume at stage 3 (e.g. after the deploy)
 #
-# Run infra/scripts/accounts-wizard.sh and circles-wizard.sh first (every deploy needs their values). The report
+# Run infra/scripts/accounts-wizard.sh and domain-wizard.sh first (every deploy needs their values). The report
 # address is the sender and the only recipient. A verified identity may mail itself even from the SES sandbox, so
 # production access is needed only to send reports elsewhere (stage 5 checks it; the shared account has it already).
 
@@ -264,7 +264,10 @@ if begin "Deploy: the SES identity and the API's new permissions"; then
   say "bootstraps), and deploys the API's rights to send as $(report_email) or its domain, Rekognition (used"
   say "only once moderation is on), AdminDeleteUser on the user pool and the Apple key's secret."
   if confirm "Deploy BirdJournal to $AWS_ACCOUNT / $AWS_REGION now?"; then
-    REPORT_EMAIL="$(report_email)" "$INFRA_DIR/scripts/deploy.sh"
+    REPORT_EMAIL="$(report_email)" "$INFRA_DIR/scripts/deploy.sh" || {
+      printf '%s\n' "  deploy.sh refused or failed: read its message above. To carry on afterwards: WIZARD_FROM=2 infra/scripts/safety-wizard.sh, or WIZARD_FROM=3 if you then deployed by hand with deploy.sh --new-host-first" >&2
+      exit 1
+    }
   else
     SKIPPED+=("deploy: REPORT_EMAIL=... infra/scripts/deploy.sh, then WIZARD_FROM=3 infra/scripts/safety-wizard.sh")
     finish; exit 0
@@ -326,7 +329,7 @@ if begin "Optional: reports to another address (SES production access)"; then
   fi
   if [[ "$production" != "True" ]] && confirm "Request production access now?"; then
     open_url "https://us-west-2.console.aws.amazon.com/ses/home?region=us-west-2#/account"
-    step "Request production access. Mail type: Transactional. Website: https://birdquest.matthewcelia.com"
+    step "Request production access. Mail type: Transactional. Website: https://featherguild.matthewcelia.com"
     step "Use case: 'Moderation reports from the Bird Journal app, sent only to the maintainer, a few a week.'"
     note "AWS answers within a day; nothing in the stack changes either way."
   fi
