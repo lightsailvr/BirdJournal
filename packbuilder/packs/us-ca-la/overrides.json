@@ -1,5 +1,5 @@
 {
- "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}, \"art\": {\"reference\": inat photo id: the pack photo pack art is painted from, instead of the best-lit one (#57); \"setting\": what pack art paints the bird on, one of perch, trunk, flight, ground, rock, shore, wade or water, from what its reference shows (any perch off the ground is a branch; prompts v10); \"length_cm\": the bird's length, which sizes the setting, where the description gives none}}. Photo ids are in the pack's report.json and LICENSE. \"art.patch\" is for the species' embroidered patch (#133): {\"reference\": another of the pack's inat photo ids to paint it from, \"markings\": plumage facts stated in its prompt, which describe the bird and never name it}.",
+ "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}, \"art\": {\"reference\": inat photo id: the pack photo pack art is painted from, instead of the best-lit one (#57); \"setting\": what pack art paints the bird on, one of perch, trunk, flight, ground, rock, shore, wade or water, from what its reference shows (any perch off the ground is a branch; prompts v10); \"length_cm\": the bird's length, which sizes the setting, where the description gives none}}. Photo ids are in the pack's report.json and LICENSE. \"art.patch\" is for the species' embroidered patch (#133): {\"reference\": another of the pack's inat photo ids to paint it from, \"markings\": plumage facts stated in its prompt, which describe the bird and never name it}. \"art.silhouette\" is for its silhouette (#150): {\"reference\": another of the pack's inat photo ids whose isolated bird is in the art cache, to take the shape from}. \"hero\" is for its first photo (#150): {\"proposed\": an inat photo id, \"_why\": why}, which the build ignores, until `packbuilder hero-review --accept` puts it first in \"include\" and leaves {\"pinned\": the id, \"_why\": why}.",
  "Melozone crissalis": {
   "exclude": [
    740654177,
@@ -196,7 +196,11 @@
   "art": {
    "reference": 201114714,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
-   "setting": "perch"
+   "setting": "perch",
+   "silhouette": {
+    "reference": 242825399,
+    "_why": "the patch's bird is a round back with a bill; this one has a woodpecker's long body (a cached isolation of another pack photo; #150)"
+   }
   }
  },
  "Cairina moschata": {
@@ -377,6 +381,10 @@
    "setting": "trunk",
    "patch": {
     "reference": 169830093
+   },
+   "silhouette": {
+    "reference": 105628199,
+    "_why": "the patch's bird clings with its head out of the outline; this one shows head and tail (a cached isolation of another pack photo; #150)"
    }
   }
  },
@@ -558,7 +566,11 @@
   "art": {
    "reference": 568859959,
    "_why": "the v10 review (2026-11-01): the old reference's isolated bird lost its feet or was cut off, so the painting floated; a whole, well-lit bird with its feet showing",
-   "setting": "ground"
+   "setting": "ground",
+   "silhouette": {
+    "reference": 621490600,
+    "_why": "the patch's bird runs off the frame at its tail; this one is whole and upright (a cached isolation of another pack photo; #150)"
+   }
   }
  },
  "Bubo virginianus": {
@@ -862,7 +874,11 @@
   "art": {
    "reference": 603992548,
    "_why": "a female half on rocks was painted on a branch; a male on the water",
-   "setting": "water"
+   "setting": "water",
+   "silhouette": {
+    "reference": 266116558,
+    "_why": "the patch's bird is a flat line on water; this one shows the round head and body (a cached isolation of another pack photo; #150)"
+   }
   }
  },
  "Psittacara mitratus": {
@@ -900,6 +916,10 @@
    "patch": {
     "reference": 260950245,
     "markings": "The whole body, wings and head are very dark blackish thread, with no tan or light brown; the long bill is orange-red, the iris bright yellow with a red eye-ring."
+   },
+   "silhouette": {
+    "reference": 127561861,
+    "_why": "the patch's bird is round with its bill as a spike; this one has its body and long bill in line (a cached isolation of another pack photo; #150)"
    }
   }
  },
@@ -1016,6 +1036,10 @@
    "patch": {
     "reference": 344944792,
     "markings": "The band sweeping back from the eye and the patch on the wing are iridescent green thread, not white."
+   },
+   "silhouette": {
+    "reference": 342127424,
+    "_why": "the patch's bird sleeps with its head tucked, a blob; this one swims with its neck up (a cached isolation of another pack photo; #150)"
    }
   }
  },
@@ -1220,6 +1244,10 @@
    "setting": "water",
    "patch": {
     "reference": 340591597
+   },
+   "silhouette": {
+    "reference": 175110432,
+    "_why": "the patch's bird's raised crest and bill tangle into one lump; this one reads as a duck (a cached isolation of another pack photo; #150)"
    }
   }
  },
