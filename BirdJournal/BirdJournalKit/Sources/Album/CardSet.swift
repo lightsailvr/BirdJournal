@@ -120,6 +120,15 @@ public struct CardSet: Sendable, Hashable, Identifiable {
         regions.filter { $0.contains(latitude: latitude, longitude: longitude) }.map(\.area).min()
     }
 
+    /// The set a place is in, whatever birds it lists (issue #150): the one whose containing part is smallest, ties going to the
+    /// lower id, as for a card; nil outside every set.
+    public static func containing(_ location: Coordinate, in sets: [CardSet]) -> CardSet? {
+        sets
+            .compactMap { set in set.containingArea(latitude: location.latitude, longitude: location.longitude).map { (set: set, area: $0) } }
+            .min { $0.area != $1.area ? $0.area < $1.area : $0.set.id < $1.set.id }?
+            .set
+    }
+
     /// Where a card of `speciesID` (a BirdNET label) added at `location` belongs among `sets`: the set whose
     /// containing part is smallest among those listing the species, ties going to the lower id; else Uncharted, as for
     /// a sighting with no location.

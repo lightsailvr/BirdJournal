@@ -23,6 +23,7 @@ import UIKit
 /// - `-seedLarge <n>` fills the album to n sightings over three years, for profiling (issue #150). With `-albumFile <name>` it
 ///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and
 ///   prints what each cost (`SpeedTour`).
+/// - `-seedNewestAt <place>` adds a sighting just now at one of `-autoLocation`'s places, so its set is the newest sighting's.
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
 ///   the species' patches (issue #134).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
@@ -49,8 +50,12 @@ import UIKit
 ///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).
 /// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
-/// - `-autoLocation denied` with `-autoPhoneListening <wav>` answers the location request as denied instead of
-///   prompting, for the UI tests; `griffith` answers with a fix in Griffith Park.
+/// - `-autoLocation denied` answers the location request as denied instead of prompting, for the UI tests; `griffith` answers
+///   with a fix in Griffith Park. `san-diego`, `oakland`, `joshua-tree` and `orlando` are places in the other sets, and `kansas`
+///   is outside every set (`DebugPlace`). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
+///   picks the Listen painting (issue #150).
+/// - `-freshPackStorage YES` starts with no downloads and no index read yet, as a fresh install does; with `-packIndexURL
+///   http://127.0.0.1:9/index.json` the index stays out of reach (issue #150).
 /// - `-fakeRunBirds "Haemorhous mexicanus_House Finch,…"` makes a run's list these BirdNET labels and hold still, the first
 ///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
 ///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
@@ -93,6 +98,7 @@ struct DebugLaunch: ViewModifier {
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
+            if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
             let large = defaults.integer(forKey: "seedLarge")
             if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
             if defaults.bool(forKey: "speedTour") {
@@ -299,15 +305,35 @@ struct DeniedLocationProvider: LocationProvider {
     }
 }
 
-/// Stands in for Core Location with a fix in Griffith Park (`-autoLocation griffith`, issue #135): a run in the Los Angeles
-/// set, so an add there sews a patch with a painting, with no permission prompt for a UI test to answer.
-struct GriffithParkLocationProvider: LocationProvider {
+/// The places `-autoLocation` names: one in each set, and one outside them all.
+enum DebugPlace: String {
+    case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas
+
+    var coordinate: Coordinate {
+        switch self {
+        case .griffith: Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 10)
+        case .sanDiego: Coordinate(latitude: 32.7157, longitude: -117.1611, accuracy: 10)
+        case .oakland: Coordinate(latitude: 37.8044, longitude: -122.2712, accuracy: 10)
+        case .joshuaTree: Coordinate(latitude: 33.8734, longitude: -115.9010, accuracy: 10)
+        case .orlando: Coordinate(latitude: 28.5384, longitude: -81.3789, accuracy: 10)
+        case .kansas: Coordinate(latitude: 38.5, longitude: -98.5, accuracy: 10)
+        }
+    }
+}
+
+/// Stands in for Core Location with a fix in one place (`-autoLocation griffith`, issue #135: a run in the Los Angeles set, so
+/// an add there sews a patch with a painting), with no permission prompt for a UI test to answer.
+struct FixedLocationProvider: LocationProvider {
+    let place: DebugPlace
+
     func fixes() -> AsyncStream<LocationFix> {
         AsyncStream { continuation in
-            continuation.yield(.fix(latitude: 34.1365, longitude: -118.2942, accuracy: 10, at: .now))
+            continuation.yield(.fix(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude, accuracy: place.coordinate.accuracy, at: .now))
             continuation.finish()
         }
     }
+
+    func lastKnownCoordinate() -> Coordinate? { place.coordinate }
 }
 
 /// Hands a file's chunks out at the pace they were recorded, so a WAV drives the Listen tab like a microphone would
@@ -487,6 +513,12 @@ enum DebugSeeds {
             sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: location, at: sighting.confirmedAt)
             context.insert(sighting)
         }
+        try? context.save()
+    }
+
+    /// A House Finch just now at `place`, on top of any other seed: the newest sighting's set, for the painting's fallback (issue #150).
+    static func seedNewest(at place: DebugPlace, context: ModelContext) {
+        context.insert(Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, location: place.coordinate, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
         try? context.save()
     }
 

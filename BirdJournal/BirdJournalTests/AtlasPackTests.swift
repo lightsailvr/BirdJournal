@@ -97,19 +97,9 @@ struct PackFailureTests {
     }
 }
 
-/// The Atlas's designed fallback names its landscape from the edition, and a Guild's look comes from its ID alone.
+/// A Guild's look comes from its ID alone.
 @Suite("Set and Guild identity")
 struct AtlasIdentityTests {
-    @Test("an edition's name picks its landscape")
-    func editions() {
-        #expect(Landscape(edition: "Citrus edition") == .citrus)
-        #expect(Landscape(edition: "Coastal edition") == .coastal)
-        #expect(Landscape(edition: "Fog edition") == .fog)
-        #expect(Landscape(edition: "Desert edition") == .desert)
-        #expect(Landscape(edition: "Wetland edition") == .wetland)
-        #expect(Landscape(edition: "Mountain edition") == .hills)
-    }
-
     @Test("a Guild's emblem and cover are stable for its ID, and never gold")
     func guilds() {
         #expect(GuildIdentity(circleID: "c-1") == GuildIdentity(circleID: "c-1"))
