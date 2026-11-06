@@ -296,6 +296,8 @@ struct SewingCeremonyAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn ") }, "the patch in words: \(labels)")
         #expect(labels.contains("Done"), "no run: back to where the add was: \(labels)")
         #expect(labels.contains("Share this patch"), "\(labels)")
+        #expect(!labels.contains("See it in my collection"), "the patch does that: \(labels)")
+        #expect(!labels.contains("Your sighting is already saved."), "\(labels)")
         #expect(harness.run.reveal?.hasPlayed == true, "decided once: it won't start stitching if VoiceOver goes off under the page")
     }
 
@@ -319,6 +321,31 @@ struct SewingCeremonyAccessibilityTests {
         #expect(labels.contains("Skip the rest, 1 more"), "\(labels)")
         #expect(!labels.contains("See it in my collection"), "\(labels)")
         #expect(!labels.contains("Undo adding Black Phoebe"), "\(labels)")
+    }
+
+    @Test("the patch reads as the button it is, with where it goes")
+    func patchIsTheWayToTheCollection() async throws {
+        let harness = try Self.harness()
+        try await Self.withFlag("voiceOverPath", true) {
+            CardFlipAccessibilityTests.enableAccessibility()
+            let host = UIHostingController(rootView: harness.hosted(Color.clear.patchReveal(), typeSize: .large))
+            let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+            let window = try UIWindow(windowScene: #require(scene))
+            window.frame = CGRect(x: 0, y: 0, width: 402, height: 1400)
+            window.rootViewController = host
+            window.makeKeyAndVisible()
+            defer { window.isHidden = true }
+
+            var label: String?
+            for _ in 0..<60 {
+                try await Task.sleep(for: .milliseconds(250))
+                label = ScreenAccessibilityTests.spoken(host.view).first { $0.hasPrefix("Black Phoebe, Citrus edition patch") }
+                if label != nil { break }
+            }
+            let patch = try Self.element(in: host.view, labelled: #require(label))
+            #expect(patch?.accessibilityTraits.contains(.button) == true)
+            #expect(patch?.accessibilityHint == "Shows it in your collection.")
+        }
     }
 
     @Test("the stitch-in, if VoiceOver does land on it, is one element that says what's happening, and activating it finishes it")

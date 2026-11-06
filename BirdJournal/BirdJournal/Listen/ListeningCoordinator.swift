@@ -140,6 +140,8 @@ final class ListeningCoordinator {
     private(set) var pendingCeremonies: [UUID] {
         didSet { defaults.set(pendingCeremonies.map(\.uuidString), forKey: Self.pendingCeremoniesKey) }
     }
+    /// How many adds and undos have failed: an error's haptic follows it.
+    private(set) var failedActions = 0
     /// Set when a run that heard something ends, until the review is dismissed.
     var isReviewing = false
     /// The candidate the birder is reviewing, nil when none.
@@ -254,6 +256,20 @@ final class ListeningCoordinator {
 
     func isAdded(_ candidate: Candidate) -> Bool { sightings.isAdded(candidate.species) }
 
+    /// What Start's and Stop's haptic follows. It goes on as the run starts. It goes off at Stop on the glasses, but for a phone
+    /// run only once the microphone is let go, since a phone that's recording plays no haptics (`Haptic`).
+    var isRunFelt: Bool {
+        switch state {
+        case .stopping: runSource == .phone
+        default: state.isActive
+        }
+    }
+
+    /// The last run ended by failing.
+    var hasFailed: Bool {
+        if case .ended(.failed) = state { true } else { false }
+    }
+
     /// The summary line: "3 species heard, 1 added".
     var summary: String {
         "\(candidates.count) species heard, \(addedCount) added"
@@ -338,6 +354,7 @@ final class ListeningCoordinator {
             return addition
         } catch {
             Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
             acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
             return nil
         }
@@ -407,6 +424,7 @@ final class ListeningCoordinator {
             if reveal?.addition == addition { reveal = nil }
         } catch {
             Self.logger.error("undo failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
             acknowledge("Could not undo: \(error.localizedDescription)", undo: nil)
         }
     }

@@ -46,23 +46,22 @@ struct JournalView: View {
                 let collection = collectionStore.collection
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Text(state.mode == .cards ? collection.summary : Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(state.mode == .cards ? Color.ink : Color.inkSecondary)
-                            .boardLabel(isOnBoard: state.mode == .cards)
-                            .padding(.top, 2)
-                            .padding(.bottom, 10)
                         Section {
-                            content(collection)
+                            // One mode fading out over the next: in a stack they'd sit one above the other meanwhile.
+                            ZStack(alignment: .topLeading) {
+                                LazyVStack(alignment: .leading, spacing: 0) {
+                                    content(collection)
+                                }
+                                .id(state.mode)
+                                .transition(.opacity)
+                            }
                         } header: {
                             Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
                                 ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
                             }
                             .pickerStyle(.segmented)
                             .padding(.vertical, 8)
-                            .background {
-                                if state.mode == .cards { BoardMaterial() } else { Color.paper }
-                            }
+                            .background { ModeSurface(mode: state.mode) }
                             .accessibilityIdentifier("collection-mode")
                         }
                     }
@@ -91,9 +90,7 @@ struct JournalView: View {
                     state.offsets[.cards] = 0
                     restore(0)
                 }
-                .background {
-                    if state.mode == .cards { BoardMaterial().ignoresSafeArea() } else { Color.paper.ignoresSafeArea() }
-                }
+                .background { ModeSurface(mode: state.mode).ignoresSafeArea() }
                 .searchable(text: $state.query, prompt: "Search birds")
                 #if DEBUG
                 .task {
@@ -103,24 +100,6 @@ struct JournalView: View {
                     if UserDefaults.standard.string(forKey: "autoBoard") == "uncharted" { state.board = .uncharted }
                 }
                 #endif
-                .toolbar {
-                    if state.mode == .cards, state.query.isEmpty, boards(collection).count > 1 {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            let shown = shownBoard(collection)
-                            Menu {
-                                Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
-                                    ForEach(boards(collection), id: \.self) { board in
-                                        Text(boardMenuTitle(board, collection)).tag(board)
-                                    }
-                                }
-                            } label: {
-                                Label("Set", systemImage: "square.stack")
-                            }
-                            .accessibilityValue(boardTitle(shown))
-                            .accessibilityIdentifier("collection-board")
-                        }
-                    }
-                }
             }
         }
         .navigationTitle("Collection")
@@ -155,6 +134,10 @@ struct JournalView: View {
             NoSearchMatch(query: state.query) { state.query = "" }
                 .padding(.top, 24)
         } else {
+            Text(Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
+                .font(JournalFont.supporting)
+                .foregroundStyle(Color.inkSecondary)
+                .padding(.top, 6)
             if state.mode == .sightings {
                 SightingsByDay(sightings: shown)
             } else {
@@ -170,23 +153,24 @@ struct JournalView: View {
     @ViewBuilder
     private func patches(_ collection: CardCollection) -> some View {
         if state.query.isEmpty {
-            switch shownBoard(collection) {
+            let shown = shownBoard(collection)
+            setName(shown, collection)
+            switch shown {
             case .set(let id):
                 if let set = library.sets.first(where: { $0.id == id }) {
                     NavigationLink(value: Route.set(id: set.id)) {
-                        SetProgressRow(progress: collection.progress(of: set.id), detail: set.edition.name, detailInk: .ink)
-                            .boardLabel(horizontal: 10, vertical: 2)
+                        SetThreadRow(progress: collection.progress(of: set.id), edition: set.edition.name)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.journalPress)
                     .accessibilityIdentifier("cards-set-progress")
                     PatchBoard(patches: collection.patches(in: set.id))
                 }
             case .uncharted:
-                Text("\(CardPlacement.unchartedTitle), \(collection.unchartedPatches.count) outside every set")
-                    .font(JournalFont.rowTitle)
+                Text("\(collection.unchartedPatches.count) outside every set")
+                    .font(JournalFont.supporting)
                     .foregroundStyle(Color.ink)
                     .boardLabel()
-                    .padding(.vertical, 12)
+                    .padding(.bottom, 4)
                 PatchBoard(patches: collection.unchartedPatches)
             }
         } else {
@@ -199,6 +183,42 @@ struct JournalView: View {
             .boardLabel()
             .frame(maxWidth: .infinity)
             .padding(.top, 28)
+    }
+
+    /// The set's name heads the board and, with more than one to choose from, is the menu for the others (issue #150, audit F9).
+    /// The menu carries the total across all of them: on the page, "5 patches" over "3 of 160 sewn" would seem to disagree.
+    @ViewBuilder
+    private func setName(_ shown: BoardChoice, _ collection: CardCollection) -> some View {
+        let boards = boards(collection)
+        if boards.count > 1 {
+            Menu {
+                Section(collection.summary) {
+                    Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
+                        ForEach(boards, id: \.self) { board in
+                            Text(boardMenuTitle(board, collection)).tag(board)
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(boardTitle(shown))
+                        .font(JournalFont.section)
+                    Image(systemName: "chevron.down")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .foregroundStyle(Color.ink)
+                .boardLabel()
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel(boardTitle(shown))
+            .accessibilityHint("Shows your other sets.")
+            .accessibilityIdentifier("collection-board")
+            .padding(.top, 6)
+        } else {
+            SectionTitle(boardTitle(shown), size: .lead, top: 12, onBoard: true)
+                .padding(.bottom, 6)
+        }
     }
 
     /// A search reads every board, so a patch sewn in another place is still found.
@@ -259,8 +279,17 @@ struct JournalView: View {
     private func switchMode(to mode: Mode) {
         guard mode != state.mode else { return }
         let saved = state.offsets[mode] ?? 0
-        state.mode = mode
+        withAnimation(modeFade) { state.mode = mode }
         restore(saved)
+    }
+
+    /// The surface and what's on it cross-fade from one mode to the next (issue #150, audit F10); under Reduce Motion, quickly.
+    private var modeFade: Animation {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "modeFadeSeconds")
+        if seconds > 0 { return .linear(duration: seconds) }
+        #endif
+        return .easeInOut(duration: PatchMotion.reduces(system: reduceMotion) ? 0.12 : 0.25)
     }
 
     /// Scrolls to `saved` once the shown mode has laid out, without saving the offsets passed on the way. The scroll
@@ -279,6 +308,21 @@ struct JournalView: View {
             }
             restoring = false
             state.offsets[state.mode] = max(offset, 0)
+        }
+    }
+}
+
+/// What a mode sits on: felt under the patches, the page under the lists.
+private struct ModeSurface: View {
+    let mode: JournalView.Mode
+
+    var body: some View {
+        ZStack {
+            if mode == .cards {
+                BoardMaterial().transition(.opacity)
+            } else {
+                Color.paper.transition(.opacity)
+            }
         }
     }
 }
@@ -479,6 +523,43 @@ private struct SetProgressList: View {
     }
 }
 
+/// A set's progress as a bar, the one place that draws it for a set's rows and the board's header. `ThreadProgress` replaces it.
+struct SetProgressBar: View {
+    let progress: SetProgress
+
+    var body: some View {
+        ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
+            .tint(Color.moss)
+            .accessibilityHidden(true)
+    }
+}
+
+/// Under a board's name: its thread and count, "3 of 160 sewn, Citrus edition", opening the set's page.
+private struct SetThreadRow: View {
+    let progress: SetProgress
+    let edition: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                SetProgressBar(progress: progress)
+                Text("\(progress.sewnText), \(edition)")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.ink)
+            }
+            Image(systemName: "chevron.right")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.ink)
+        }
+        .boardLabel(horizontal: 10, vertical: 6)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(progress.name), \(progress.sewnText), \(edition)")
+        .accessibilityHint("Opens the set.")
+    }
+}
+
 /// One set's progress: "Los Angeles, 87 of 160" over a bar.
 struct SetProgressRow: View {
     let progress: SetProgress
@@ -497,9 +578,7 @@ struct SetProgressRow: View {
                         .font(JournalFont.supporting)
                         .foregroundStyle(detailInk)
                 }
-                ProgressView(value: Double(progress.collected), total: Double(max(progress.total, 1)))
-                    .tint(Color.moss)
-                    .accessibilityHidden(true)
+                SetProgressBar(progress: progress)
             }
             Image(systemName: "chevron.right")
                 .font(.subheadline.weight(.semibold))

@@ -107,9 +107,13 @@ struct HowThisWorks: View {
 /// leaning on colour alone, at the text contrast the system red missed.
 struct InlineError: View {
     let text: String
+    /// Plays the error haptic as it appears: for something the birder just tried, not a page that couldn't load.
+    let felt: Bool
+    @State private var appeared = false
 
-    init(_ text: String) {
+    init(_ text: String, felt: Bool = false) {
         self.text = text
+        self.felt = felt
     }
 
     var body: some View {
@@ -122,5 +126,7 @@ struct InlineError: View {
         .font(JournalFont.supporting)
         .foregroundStyle(Color.alert)
         .accessibilityElement(children: .combine)
+        .haptic(.error, trigger: appeared ? text : nil)
+        .onAppear { appeared = felt }
     }
 }

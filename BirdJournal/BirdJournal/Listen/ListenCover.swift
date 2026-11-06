@@ -182,7 +182,7 @@ struct LocalSetSection: View {
                     LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
                         ForEach(latest) { sighting in
                             if let patch = collection.patch(of: sighting.identifier) {
-                                SewnPatchTile(patch: patch, name: PatchText.name(of: patch, library: library))
+                                SewnPatchTile(patch: patch, name: PatchText.name(of: patch, library: library), surface: .latest)
                             }
                         }
                     }

@@ -14,6 +14,7 @@ struct PatchDetailView: View {
     /// The one patch turned over to its card, if any: state here, so a swipe can put it back.
     @State private var turned: CardCollection.Patch.Key?
     @State private var isSharing = false
+    @State private var opened = false
 
     /// - Parameter startsTurned: opens on its paper card rather than the patch.
     init(key: CardCollection.Patch.Key, startsTurned: Bool = false) {
@@ -54,7 +55,10 @@ struct PatchDetailView: View {
                     }
                 }
             }
-            .sensoryFeedback(.impact(weight: .light), trigger: turned)
+            .haptic(.turn, trigger: turned)
+            // Once, when the page first opens: coming back to it from its sightings isn't lifting it again.
+            .haptic(.lift, trigger: opened)
+            .onAppear { opened = true }
             .sheet(isPresented: $isSharing) {
                 if let latest = order[index].ownSightings(among: allSightings).first {
                     ShareCardView(sighting: latest)

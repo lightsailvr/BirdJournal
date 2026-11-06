@@ -101,25 +101,39 @@ enum PatchTextures {
         }
     }
 
-    private static let cache = NSCache<NSString, Loaded>()
+    /// NSCache is safe from any thread: an operation looks in it just before decoding.
+    private nonisolated(unsafe) static let cache = NSCache<NSString, Loaded>()
+
+    /// From blank to lit, when the patch had to be waited for.
+    static let popIn = Animation.easeOut(duration: 0.18)
 
     static func cached(_ art: PatchArt, size: Size) -> Loaded? {
         cache.object(forKey: key(art, size))
     }
 
-    static func load(_ art: PatchArt, size: Size) async -> Loaded? {
+    /// - Parameter priority: `.low` waits behind every patch on screen for its turn.
+    static func load(_ art: PatchArt, size: Size, priority: Operation.QueuePriority = .normal) async -> Loaded? {
         if let hit = cached(art, size: size) { return hit }
         let colourPixels = size.colourPixels, layerPixels = size.layerPixels
+        let cacheKey = key(art, size)
         let flag = CancelFlag()
         let loaded: Loaded? = await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
-                decoding.addOperation {
+                let operation = BlockOperation {
+                    // Queued behind a request for the same patch, which has finished by now.
+                    if let hit = cache.object(forKey: cacheKey) {
+                        continuation.resume(returning: hit)
+                        return
+                    }
                     guard !flag.isCancelled, let colour = decode(art.colour, maxPixels: colourPixels), let layers = decode(art.layers, maxPixels: layerPixels) else {
                         continuation.resume(returning: nil)
                         return
                     }
                     continuation.resume(returning: Loaded(colour: colour, layers: layers))
                 }
+                operation.queuePriority = priority
+                if priority == .low { operation.qualityOfService = .utility }
+                decoding.addOperation(operation)
             }
         } onCancel: {
             flag.cancel()
@@ -127,6 +141,22 @@ enum PatchTextures {
         if let loaded { cache.setObject(loaded, forKey: key(art, size)) }
         return loaded
     }
+
+    /// Decodes `arts` ahead of being scrolled to (issue #150, audit R6): one at a time at low priority, so the two-at-a-time queue
+    /// always has a thread for a patch on screen, and stopping as soon as the task is cancelled.
+    static func decodeAhead(_ arts: some Sequence<PatchArt>, size: Size) async {
+        for art in arts {
+            guard !Task.isCancelled else { return }
+            _ = await load(art, size: size, priority: .low)
+        }
+    }
+
+    #if DEBUG
+    /// Nothing decoded, for a test of what happens then.
+    static func forgetAll() {
+        cache.removeAllObjects()
+    }
+    #endif
 
     /// The patch's threads, for its stitch-in: every pixel of its layers is read, so it's off the main thread too.
     nonisolated static func threads(of loaded: Loaded, art: PatchArt) async -> [StitchThread] {

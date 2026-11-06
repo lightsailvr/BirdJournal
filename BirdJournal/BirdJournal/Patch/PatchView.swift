@@ -65,8 +65,10 @@ struct PatchView: View {
             .overlay {
                 if let loaded {
                     LitPatch(loaded: loaded, ground: twill, sewnTo: sewnTo, room: size == .thumbnail ? 14 : 34)
+                        .transition(.opacity)
                 } else {
                     PatchBlank(edition: edition, tag: art == nil || failed ? tag : nil, beingSewn: beingSewn)
+                        .transition(.opacity)
                 }
             }
             .allowsHitTesting(false)
@@ -79,7 +81,9 @@ struct PatchView: View {
                 }
                 let decoded = await PatchTextures.load(art, size: size)
                 guard !Task.isCancelled else { return }
-                loaded = decoded
+                // Already decoded, it was there from the first frame. A wait shows the blank, which fades into the patch (issue
+                // #150, audit R6). Only `loaded` animates: the frames of a moving light never come through here.
+                withAnimation(loaded == nil && decoded != nil ? PatchTextures.popIn : nil) { loaded = decoded }
                 failed = decoded == nil
             }
     }

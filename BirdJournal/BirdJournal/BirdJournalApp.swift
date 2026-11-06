@@ -26,7 +26,7 @@ struct BirdJournalApp: App {
     @State private var findOutbox: FindOutbox
     @State private var pushes: PushCenter
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
-    @State private var showingSplash = true
+    @State private var showingSplash: Bool
     private let album: ModelContainer
     private let frames: FrameStore
 
@@ -38,6 +38,10 @@ struct BirdJournalApp: App {
                 .error("Wearables.configure failed: \(error.localizedDescription)")
         }
         JournalFont.applyNavigationBarAppearance()
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "resetLaunchSplash") { UserDefaults.standard.removeObject(forKey: LaunchSplash.shownKey) }
+        #endif
+        _showingSplash = State(initialValue: LaunchSplash.isDue())
         let connection = GlassesConnection()
         let album = Self.makeAlbum()
         let frames = Self.makeFrameStore()

@@ -86,7 +86,7 @@ final class CollectionUITests: XCTestCase {
     func testAnotherBoardIsChosenAndKeptAcrossTheTabs() throws {
         let app = launch()
         let collectionTab = app.tabBars.buttons["Collection"]
-        let boards = app.navigationBars["Collection"].buttons["Set"]
+        let boards = app.buttons["collection-board"]
         XCTAssertTrue(boards.waitForExistence(timeout: 15), "no board menu; screen: \(app.debugDescription.prefix(3000))")
         boards.tap()
         let uncharted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch

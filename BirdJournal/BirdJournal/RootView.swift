@@ -10,8 +10,9 @@ enum Route: Hashable {
     case species(scientificName: String, commonName: String)
     case speciesCredits(scientificName: String)
     case sighting(PersistentIdentifier)
-    /// One patch, on its page with its paper card behind it (issue #134).
-    case patch(CardCollection.Patch.Key)
+    /// One patch, on its page with its paper card behind it (issue #134). `from` is the kind of tile it grows out of (issue #150);
+    /// `turned` opens it on the paper card.
+    case patch(CardCollection.Patch.Key, from: PatchLiftSurface? = nil, turned: Bool = false)
     /// A patch's sightings, or every sighting of the species.
     case sightings(SightingsScope)
     /// One species' patches across places (issue #134).
@@ -59,8 +60,9 @@ private struct RouteDestination: View {
             SpeciesCreditsView(scientificName: scientificName)
         case .sighting(let id):
             SightingDetailView(id: id)
-        case .patch(let key):
-            PatchDetailView(key: key)
+        case .patch(let key, let surface, let turned):
+            PatchDetailView(key: key, startsTurned: turned)
+                .patchLiftTransition(from: surface.map { PatchLiftID(key: key, surface: $0) })
         case .sightings(let scope):
             PatchSightingsView(scope: scope)
         case .speciesPatches(let scientificName, let commonName):
@@ -101,7 +103,7 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Collection tab at the top of the Patches view: the new-patch reveal's "See it in my collection" (issues #51, #132).
+    /// Opens the Collection tab at the top of the Patches view, on the newest patch's set: the new patch on the reveal (issues #51, #132, #150).
     @Entry var openCollection: @MainActor () -> Void = {}
     /// Opens the Listen tab: a species with no sightings yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
@@ -145,18 +147,24 @@ struct RootView: View {
                     ListenView()
                         .appDestinations()
                 }
+                .patchLiftScope()
+                .environment(\.pushRoute) { listenPath.append($0) }
             }
             SwiftUI.Tab("Collection", image: "stitched.ring", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
                     JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()
                 }
+                .patchLiftScope()
+                .environment(\.pushRoute) { journalPath.append($0) }
             }
             SwiftUI.Tab("Atlas", systemImage: "map", value: Tab.guide) {
                 NavigationStack(path: $guidePath) {
                     FieldGuideView()
                         .appDestinations()
                 }
+                .patchLiftScope()
+                .environment(\.pushRoute) { guidePath.append($0) }
             }
             // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
             // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
@@ -167,6 +175,8 @@ struct RootView: View {
                         CirclesView()
                             .appDestinations()
                     }
+                    .patchLiftScope()
+                    .environment(\.pushRoute) { circlesPath.append($0) }
                 }
             }
         }
@@ -174,6 +184,10 @@ struct RootView: View {
             ListeningAccessory { tab = .listen }
         }
         .tint(Color.moss)
+        // Here, so Start and both Stops say the same, and a run the glasses end does too.
+        .haptic(.startStop, trigger: run.isRunFelt)
+        .haptic(.error, trigger: run.hasFailed) { _, failed in failed }
+        .haptic(.error, trigger: run.failedActions)
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
         // it's up this one waits: two pages would sew the patch twice, each with its own haptics. The sheet is the Listen tab's:
         // on another tab, after Stop on the listening strip, it isn't up until the birder comes back.
@@ -186,6 +200,7 @@ struct RootView: View {
             collection.mode = .cards
             collection.query = ""
             collection.offsets[.cards] = 0
+            collection.board = nil
             journalPath = NavigationPath()
             tab = .journal
         }
@@ -244,6 +259,7 @@ struct RootView: View {
         .task { await pushes.refreshPermission() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
+        .overlay(alignment: .topLeading) { HapticLogProbe() }
         .modifier(DebugLaunch(tab: $tab, journalMode: $collection.mode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }

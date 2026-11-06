@@ -175,14 +175,16 @@ struct ScreenAccessibilityTests {
         #expect(start < local, "Start listening comes before the local set")
     }
 
-    @Test("Collection: the summary, the modes and the patches, each with how often it was seen", arguments: sizes)
+    @Test("Collection: the set's name and count, the modes and the patches, each with how often it was seen", arguments: sizes)
     func collection(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(JournalView(state: CollectionState()), harness: harness, typeSize: typeSize) { labels in
             labels.contains { $0.contains("House Finch") } && labels.contains("Patches")
         }
         Self.expectClean(labels, screen: "Collection")
-        #expect(labels.contains { $0.hasSuffix(", 6 sightings") && $0.contains("patches") }, "the summary: \(labels)")
+        #expect(labels.contains("Los Angeles"), "the set's name, which is the menu of the others: \(labels)")
+        #expect(labels.contains("Los Angeles, 3 of 160 sewn, Citrus edition"), "its count: \(labels)")
+        #expect(!labels.contains { $0.hasSuffix(", 6 sightings") }, "the total across sets is in the menu: \(labels)")
         for mode in ["Patches", "Sightings", "Species"] {
             #expect(labels.contains(mode), "\(mode): \(labels)")
         }

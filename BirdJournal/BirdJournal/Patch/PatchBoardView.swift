@@ -28,6 +28,9 @@ struct PatchBoard: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let patches: [CardCollection.Patch]
 
+    /// As many as a few screens' worth: a big board's rest decode as they scroll in. Each costs about 650 KB until the cache lets go.
+    private static let decodedAhead = 48
+
     var body: some View {
         LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize), spacing: 18) {
             ForEach(patches) { patch in
@@ -36,28 +39,70 @@ struct PatchBoard: View {
         }
         .padding(.vertical, 14)
         .holdsPatchLight()
+        .task(id: patches.map(\.id)) {
+            let arts = patches.prefix(Self.decodedAhead).compactMap { library.patchArt(scientificName: $0.scientificName, setID: $0.placement.setID) }
+            await PatchTextures.decodeAhead(arts, size: .thumbnail)
+        }
     }
 }
 
-/// A sewn patch on a board: it opens the patch's page.
+/// A sewn patch on a board: it rises to the touch and grows into the patch's page (issue #150, audit R1), and a long press peeks
+/// at it with its quick actions.
 struct SewnPatchTile: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(\.modelContext) private var context
+    @Environment(\.pushRoute) private var pushRoute
     let patch: CardCollection.Patch
     let name: String
     /// Under the name, in place of the number and count.
     var line: String? = nil
     /// The patch's sentence names the bird, even where the tile's words name the edition.
     var spokenName: String? = nil
+    /// Where this tile is: its page's way back.
+    var surface = PatchLiftSurface.board
+    @State private var sharing: Sighting?
+
+    /// The newest sighting: what the patch page's Share shares. Fetched when asked for: a board of tiles shouldn't each hold the album.
+    private var newestSighting: Sighting? {
+        guard let identifier = patch.sightings.first?.identifier else { return nil }
+        var descriptor = FetchDescriptor<Sighting>(predicate: #Predicate { $0.identifier == identifier })
+        descriptor.fetchLimit = 1
+        return try? context.fetch(descriptor).first
+    }
 
     var body: some View {
         let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
-        NavigationLink(value: Route.patch(patch.id)) {
+        let edition = PatchEdition.of(setID: patch.placement.setID)
+        NavigationLink(value: Route.patch(patch.id, from: surface)) {
             PatchTile(
-                state: state, edition: PatchEdition.of(setID: patch.placement.setID), tag: spokenName ?? name,
-                name: name, line: line ?? PatchText.tileLine(patch), spoken: PatchText.spoken(patch, name: spokenName ?? name, beingSewn: state == .beingSewn)
+                state: state, edition: edition, tag: spokenName ?? name,
+                name: name, line: line ?? PatchText.tileLine(patch), spoken: PatchText.spoken(patch, name: spokenName ?? name, beingSewn: state == .beingSewn),
+                lift: PatchLiftID(key: patch.id, surface: surface)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.patchLift)
+        .contextMenu {
+            Button {
+                pushRoute(.patch(patch.id, from: surface, turned: true))
+            } label: {
+                Label("Turn over", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
+            }
+            Button {
+                sharing = newestSighting
+            } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+            Button {
+                pushRoute(.sightings(.patch(patch.id)))
+            } label: {
+                Label(PatchText.allSightings(patch.count), systemImage: "list.bullet")
+            }
+        } preview: {
+            PatchPeek(state: state, edition: edition, tag: spokenName ?? name)
+        }
+        .sheet(item: $sharing) { sighting in
+            ShareCardView(sighting: sighting)
+        }
         .accessibilityHint("Opens the patch. Turn it over for its story.")
         .accessibilityIdentifier("board-patch")
     }
@@ -75,12 +120,15 @@ struct PatchTile: View {
     let line: String
     /// What VoiceOver reads: the tile is one element.
     let spoken: String
+    /// The tile a page grows out of: only the patch, not its words.
+    var lift: PatchLiftID? = nil
 
     var body: some View {
         VStack(spacing: 6) {
             PatchView(state: state, edition: edition, tag: tag)
                 // One column at accessibility sizes: the patch grows with its words.
                 .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 124)
+                .patchLiftSource(lift)
             VStack(spacing: 2) {
                 Text(name)
                     .font(PatchFont.tileName)

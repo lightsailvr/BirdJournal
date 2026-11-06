@@ -118,6 +118,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: JournalLayout.primaryActionHeight)
             .background(Color.moss.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 
@@ -140,6 +141,7 @@ struct OutlinedButtonStyle: ButtonStyle {
             .overlay(shape.strokeBorder(Color.moss, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
             .contentShape(shape)
+            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 
@@ -337,8 +339,7 @@ struct Toast: View {
         .overlay(Capsule().strokeBorder(Color.rule, lineWidth: 1))
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
-        // A light, optional haptic as the count changes: the system's haptics setting turns it off.
-        .sensoryFeedback(.impact(weight: .light), trigger: ticked)
+        .haptic(.stitchTick, trigger: ticked)
         .task {
             guard ticksFrom != nil else { return }
             if !isStill {

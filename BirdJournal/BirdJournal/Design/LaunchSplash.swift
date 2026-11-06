@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// The moment after the launch screen: it starts as the launch screen (`UILaunchScreen` in the Info.plist, the paper
+/// The moment after the launch screen on the first launch only (issue #150, audit F15): later launches go straight to Listen,
+/// for someone reaching for the phone because a bird is calling. It starts as the launch screen (`UILaunchScreen` in the Info.plist, the paper
 /// colour with the `LaunchBird` image, the perched bird at 240 × 144 pt in the middle of the screen), sets the app's
 /// name in the serif under the bird, then fades away over the Listen tab, which is already built underneath. It takes
 /// no touches and hides from VoiceOver, so nothing waits on it.
@@ -18,11 +19,17 @@ struct LaunchSplash: View {
     private let systemScheme = Self.systemColorScheme
 
     static let birdSize = CGSize(width: 240, height: 144)
+    /// Remembers that it played.
+    static let shownKey = "launchSplashShown"
+
+    static func isDue(in defaults: UserDefaults = .standard) -> Bool {
+        !defaults.bool(forKey: shownKey)
+    }
 
     var body: some View {
         ZStack {
             Color.paper
-            PerchedBirdDrawing()
+            art
                 .frame(width: Self.birdSize.width, height: Self.birdSize.height)
                 .overlay(alignment: .bottom) {
                     Text("Featherguild")
@@ -37,11 +44,27 @@ struct LaunchSplash: View {
         .environment(\.colorScheme, systemScheme ?? appScheme)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .accessibilityIdentifier("launch-splash")
         .task {
+            // From the start: a launch killed part way through has still shown it.
+            UserDefaults.standard.set(true, forKey: Self.shownKey)
             withAnimation(.easeOut(duration: 0.6)) { showsTitle = true }
-            try? await Task.sleep(for: .milliseconds(1100))
+            try? await Task.sleep(for: holds)
             onFinished()
         }
+    }
+
+    /// The bird. The mascot's embroidered patch goes here, and in `LaunchBird`, so the launch screen still leads into it.
+    private var art: some View {
+        PerchedBirdDrawing()
+    }
+
+    private var holds: Duration {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "launchSplashSeconds")
+        if seconds > 0 { return .seconds(seconds) }
+        #endif
+        return .milliseconds(1100)
     }
 
     /// The appearance the launch screen was drawn in: the screen's, which the window's override does not change.
