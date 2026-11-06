@@ -106,7 +106,7 @@ class ReactionFlushReport:
 
 def reaction_words(reactor_names: list[str], common_name: str, kinds: list[ReactionKind]) -> tuple[str, str]:
     """"Bo reacted to your Black Phoebe" / "Lovely find"; "Bo and Cy …", "Bo and 2 others …"; the kinds in their
-    fixed order, joined by " · "."""
+    fixed order: "Lovely find, Jealous! Let's go together"."""
     names = list(dict.fromkeys(reactor_names)) or [FRIEND_FALLBACK]
     if len(names) == 1:
         who = names[0]
@@ -115,7 +115,11 @@ def reaction_words(reactor_names: list[str], common_name: str, kinds: list[React
     else:
         who = f"{names[0]} and {len(names) - 1} others"
     ordered = [kind for kind in KINDS if kind in set(kinds)]
-    return f"{who} reacted to your {common_name}", " · ".join(kind.words for kind in ordered)
+    body = ""
+    for kind in ordered:
+        # A comma after "Jealous!" would read wrongly, so its exclamation mark is the only break there.
+        body += kind.words if not body else (" " if body.endswith("!") else ", ") + kind.words
+    return f"{who} reacted to your {common_name}", body
 
 
 def counts_of(reactions: list[tuple[str, ReactionKind]], reader: str) -> list[ReactionCount]:
