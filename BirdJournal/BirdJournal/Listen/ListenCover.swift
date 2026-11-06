@@ -88,6 +88,7 @@ struct ListenCoverHeader: View {
             .accessibilityElement()
             .accessibilityLabel("\(local?.set.name ?? "Featherguild") cover, AI illustration")
             .accessibilityIdentifier("listen-painting")
+            .accessibilityHidden(place.painting == nil)
         }
         .overlay(alignment: .bottomTrailing) {
             if place.painting != nil {
@@ -108,7 +109,6 @@ struct ListenCoverHeader: View {
 /// thread; and the latest patches.
 struct LocalSetSection: View {
     @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(PackLibrary.self) private var library
     @ScaledMetric(relativeTo: .body) private var patchSide: CGFloat = 80
     let local: LocalSet
     let collection: CardCollection
@@ -126,7 +126,9 @@ struct LocalSetSection: View {
                     count
                 }
             }
+            // Another place's thread is another thread: it doesn't sew from this one's count.
             ThreadProgress(local.progress)
+                .id(local.set.id)
             let latest = latestPatches
             if latest.isEmpty {
                 Text("Birds you add while listening are sewn as patches here, one for every bird in every place.")

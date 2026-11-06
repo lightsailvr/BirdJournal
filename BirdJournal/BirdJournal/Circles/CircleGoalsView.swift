@@ -147,7 +147,7 @@ struct CustomGoalRow: View {
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(Color.ink)
             }
-            ThreadProgress(goal: goal, thread: .together)
+            ThreadProgress(goal: goal)
                 .accessibilityHidden(true)
             Text(GoalWords.customNote(goal, timeZone: timeZone))
                 .font(JournalFont.supporting)

@@ -184,13 +184,13 @@ struct ThreadProgressTests {
     }
 
     /// The stitches actually drawn in `color`, along the row: a pixel fact.
-    func drawn(_ thread: ThreadProgress, tint: Color = .moss, sized color: String, in variant: UITraitCollection, on page: Color = .paper) async throws -> Int {
+    func drawn(_ thread: ThreadProgress, sized color: String, in variant: UITraitCollection, settle: Duration = .milliseconds(300)) async throws -> Int {
         let image = try await TokenPairingTests.renderImage(
             ZStack {
-                page
-                thread.frame(width: 358).tint(tint)
+                Color.paper
+                thread.frame(width: 358)
             },
-            traits: variant, size: 360
+            traits: variant, size: 360, settle: settle
         )
         let target = try DesignTokenTests.color(color, variant)
         var sewn = 0
@@ -204,73 +204,36 @@ struct ThreadProgressTests {
 
     @Test("rendered: the set's own thread, lavender for a goal, with a stitch for the first bird")
     func rendered() async throws {
+        ThreadProgress.lastSeen.removeAll()
         for (_, traits) in DesignTokenTests.variants {
             let one = SetProgress(setID: "us-ca-desert", name: "California Deserts", collected: 1, total: 160)
             #expect(try await drawn(ThreadProgress(one), sized: "EditionDesert", in: traits) == 1)
             let half = SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: 80, total: 160)
             #expect(try await drawn(ThreadProgress(half), sized: "EditionCitrus", in: traits) == 12)
-            let downloading = ThreadProgress(value: 1, total: 2, sentence: "Downloading")
-            #expect(try await drawn(downloading, tint: Color("EditionWetland"), sized: "EditionWetland", in: traits) == 12, "the accent where it's drawn")
+            let downloading = ThreadProgress(value: 1, total: 2, sentence: "Downloading", thread: .edition(setID: "us-fl-orlando"))
+            #expect(try await drawn(downloading, sized: "EditionWetland", in: traits) == 12, "the set being downloaded")
             let lavender = ThreadProgress(value: 12, total: 14, sentence: "12 of 14", thread: .together)
             #expect(try await drawn(lavender, sized: "ThreadTogether", in: traits) == 21)
         }
     }
 
-    @Test("VoiceOver hears a sentence")
-    func sentence() {
-        #expect(ThreadProgress(SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: 3, total: 160)).sentence == "3 of 160 sewn in Los Angeles")
-    }
-}
-
-/// The edition tints (issue #150): every one in all four appearance variants, on the page, a raised surface, felt and linen.
-@Suite("Edition tints")
-@MainActor
-struct EditionTintTests {
-    nonisolated static let tints = ["EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionUncharted"]
-
-    @Test("4.5:1 on the page and a raised surface, and the accent's words 4.5:1 on its fill", arguments: tints + ["ThreadTogether"])
-    func onThePage(_ tint: String) throws {
-        for (name, traits) in DesignTokenTests.variants {
-            let color = try DesignTokenTests.color(tint, traits)
-            for surface in ["JournalPaper", "JournalRaised"] {
-                let ratio = DesignTokenTests.contrast(color, try DesignTokenTests.color(surface, traits))
-                #expect(ratio >= 4.5, "\(tint) on \(surface), \(name): \(String(format: "%.2f", ratio)):1")
-            }
-            let words = DesignTokenTests.contrast(try DesignTokenTests.color("JournalMossText", traits), color)
-            #expect(words >= 4.5, "the words on \(tint), \(name): \(String(format: "%.2f", words)):1")
-        }
+    @Test("rendered: coming back to a set with more birds, the thread starts where it was and sews to the value")
+    func sewsOnReturn() async throws {
+        let traits = UITraitCollection(userInterfaceStyle: .dark)
+        let progress = SetProgress(setID: "us-ca-sd", name: "San Diego", collected: 40, total: 160)
+        ThreadProgress.lastSeen = ["set-us-ca-sd": 1]
+        #expect(try await drawn(ThreadProgress(progress), sized: "EditionCoastal", in: traits, settle: .milliseconds(100)) == 1, "where it was")
+        ThreadProgress.lastSeen = ["set-us-ca-sd": 1]
+        #expect(try await drawn(ThreadProgress(progress), sized: "EditionCoastal", in: traits, settle: .seconds(3)) == 6, "sewn")
+        #expect(ThreadProgress.lastSeen["set-us-ca-sd"] == 40, "so it sews once")
+        #expect(try await drawn(ThreadProgress(progress), sized: "EditionCoastal", in: traits, settle: .milliseconds(100)) == 6, "and comes back whole")
     }
 
-    @Test("on felt and linen, against the texture's worst pixel", arguments: tints + ["ThreadTogether"])
-    func onTheBoard(_ tint: String) async throws {
-        for (name, traits) in DesignTokenTests.variants {
-            let image = try await TokenPairingTests.renderImage(BoardMaterial(), traits: traits, size: 300)
-            let extremes = try #require(TokenPairingTests.luminanceExtremes(image))
-            let ratio = TokenPairingTests.worst(try DesignTokenTests.color(tint, traits), on: extremes)
-            #expect(ratio >= 4.5, "\(tint) on the board, \(name) (\(TokenPairingTests.hex(extremes.darkest))...\(TokenPairingTests.hex(extremes.lightest))): \(String(format: "%.2f", ratio)):1")
-        }
-    }
-
-    @Test("a stitch on card stock, which reads in the light scheme, clears 3:1 against the fibre's worst pixel", arguments: tints)
-    func onPaper(_ tint: String) async throws {
-        let stock = Color.clear.modifier(CardStockSurface())
-        for (name, traits) in DesignTokenTests.variants {
-            let image = try await TokenPairingTests.renderImage(stock, traits: traits, size: 300)
-            let extremes = try #require(TokenPairingTests.luminanceExtremes(image))
-            let light = UITraitCollection { $0.userInterfaceStyle = .light; $0.accessibilityContrast = traits.accessibilityContrast }
-            let ratio = TokenPairingTests.worst(try DesignTokenTests.color(tint, light), on: extremes)
-            #expect(ratio >= 3, "\(tint) on card stock, \(name): \(String(format: "%.2f", ratio)):1")
-        }
-    }
-
-    @Test("the toast's words stay readable in every tint over the material", arguments: tints)
-    func onTheMaterial(_ tint: String) async throws {
-        for (name, traits) in DesignTokenTests.variants {
-            for behind in ["JournalPaper", "JournalRaised"] {
-                let rendered = try #require(try await TokenPairingTests.render(.regularMaterial, over: Color(behind), traits: traits))
-                let ratio = DesignTokenTests.contrast(try DesignTokenTests.color(tint, traits), rendered)
-                #expect(ratio >= 4.5, "\(tint) on the material over \(behind), \(name): \(String(format: "%.2f", ratio)):1")
-            }
-        }
+    @Test("a rise it wasn't on screen for sews from the stitch it last showed; a fall, a first sight or Reduce Motion doesn't sew", arguments: [
+        // last seen, now, starts at, still
+        (Double?.some(1), 2.0, 1, false), (2, 40, 2, false), (nil, 40, 6, false), (40, 40, 6, false), (41, 40, 6, false), (1, 40, 6, true),
+    ] as [(seen: Double?, value: Double, starts: Int, still: Bool)])
+    func start(_ row: (seen: Double?, value: Double, starts: Int, still: Bool)) {
+        #expect(ThreadProgress.startingStitches(lastSeen: row.seen, value: row.value, total: 160, stitches: 24, countsBirds: true, isStill: row.still) == row.starts, "\(row)")
     }
 }

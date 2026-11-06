@@ -313,6 +313,8 @@ def test_bundling_a_cover_needs_its_approved_painting(tmp_path):
     entry = CoverLock.load(definitions / "us-ca-la" / LOCK_FILE).cover
     cache.mkdir()
     Image.new("RGB", COVER_SIZE, (120, 140, 90)).save(cache / f"{entry['candidates'][entry['chosen'] - 1]['sha256']}.png")
+    (tmp_path / "out" / "us-ca-old.jpg").write_bytes(b"turned down since")
     covers = bundle_covers(definitions, cache, tmp_path / "out")
     assert list(covers) == ["us-ca-la"], "a pending cover isn't bundled"
+    assert not (tmp_path / "out" / "us-ca-old.jpg").exists(), "a cover turned down since leaves the app"
     assert covers["us-ca-la"]["file"] == "us-ca-la.jpg" and (tmp_path / "out" / "us-ca-la.jpg").exists()

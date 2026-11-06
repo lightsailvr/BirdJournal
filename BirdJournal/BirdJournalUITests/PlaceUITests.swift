@@ -49,13 +49,17 @@ final class PlaceUITests: XCTestCase {
     /// The set you're in beats your newest sighting's. Outside every set, or with location denied, it's your last set.
     @MainActor
     func testTheFallbackOrderWithSightings() throws {
-        var app = try launch(["-seedJournal", "YES", "-autoLocation", "joshua-tree"])
+        let inSanDiego = ["-seedNewestAt", "san-diego"]
+        var app = try launch(inSanDiego + ["-autoLocation", "joshua-tree"])
         expectPainting(of: "California Deserts", in: app)
         app.terminate()
-        app = try launch(["-seedJournal", "YES", "-autoLocation", "kansas"])
-        expectPainting(of: "Los Angeles", in: app)
+        app = try launch(inSanDiego + ["-autoLocation", "kansas"])
+        expectPainting(of: "San Diego", in: app)
         app.terminate()
-        app = try launch(["-seedJournal", "YES", "-autoLocation", "denied"])
+        app = try launch(inSanDiego + ["-autoLocation", "denied"])
+        expectPainting(of: "San Diego", in: app)
+        app.terminate()
+        app = try launch(["-autoLocation", "denied", "-currentPlaceSetID", ""])
         expectPainting(of: "Los Angeles", in: app)
     }
 

@@ -118,7 +118,7 @@ private struct SmallPin: View {
 
     var body: some View {
         Circle()
-            .fill(.tint)
+            .fill(Color.moss)
             .overlay(Circle().strokeBorder(.white, lineWidth: 2))
             .frame(width: isSelected ? 22 : 14, height: isSelected ? 22 : 14)
             .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1)

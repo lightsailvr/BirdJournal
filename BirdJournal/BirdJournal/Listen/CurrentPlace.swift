@@ -32,14 +32,19 @@ final class CurrentPlace {
         let remembered = defaults.string(forKey: Self.rememberedKey).flatMap { id in library.sets.contains { $0.id == id } ? id : nil }
         let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection())
         setID = id
-        shownCover = id.flatMap(library.cover(setID:))
-        painting = SetCoverImage.decoded(shownCover)
+        let cover = id.flatMap(library.cover(setID:))
+        // A pack's AVIF holds its thread while it decodes, so that one waits for the first read, off the main actor. All five
+        // sets have a bundled JPEG; this is for a set that doesn't.
+        if case .pack = cover { return }
+        shownCover = cover
+        painting = SetCoverImage.decoded(cover)
     }
 
     /// One read of the last known position, and the set it picks. If that's a different set (or a better cover of the same one),
     /// its cover decodes off the main actor and then everything changes at once.
     func refresh() async {
         guard let id = LocalSet.choose(coordinate: location.lastKnownCoordinate(), in: collection()) else { return }
+        defaults.set(id, forKey: Self.rememberedKey)
         let cover = library.cover(setID: id)
         guard id != setID || cover != shownCover else { return }
         let image = await SetCoverImage.load(cover)
@@ -47,6 +52,5 @@ final class CurrentPlace {
         setID = id
         shownCover = cover
         painting = image
-        defaults.set(id, forKey: Self.rememberedKey)
     }
 }

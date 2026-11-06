@@ -58,12 +58,12 @@ CANVAS_SIZE = (1664, 944)
 40 px off the top and bottom, past the paper edge FLUX.3's watercolours often end in."""
 THUMBNAIL_SIZE = (480, 270)
 THUMBNAIL_QUALITY = 72
-BUNDLED_QUALITY = 90
-"""About 480 KB a cover, the five about 2.4 MB together in the app (issue #150)."""
-BUNDLE_FILE = "covers.json"
 """The index's thumbnail: about 30 KB of JPEG (40 KB in base64) per set, since the phone fetches the index (84 KB before
 covers) on every refresh; enough for an Atlas tile until the pack, and its full cover, is downloaded. 512 x 288 at
 quality 78 was 39 KB."""
+BUNDLED_QUALITY = 90
+"""About 480 KB a cover, the five about 2.4 MB together in the app (issue #150)."""
+BUNDLE_FILE = "covers.json"
 MODEL = "FLUX.3 Image Klein"
 CROP_GUIDES = (("Atlas", 2.4), ("Listen", 1.5))
 """The app's crops of a cover, as width over height, drawn faintly on the contact sheet."""
@@ -346,6 +346,11 @@ def bundle_covers(definitions_dir: Path, cache_dir: Path, out_dir: Path, quality
         covers[lock_path.parent.name] = {
             "file": file, "model": entry["model"], "workflowVersion": workflow_version(entry), "seed": chosen["seed"], "painting": chosen["sha256"],
         }
+    # A cover that's since been turned down leaves the app.
+    shipped = {cover["file"] for cover in covers.values()}
+    for stale in out_dir.glob("*.jpg"):
+        if stale.name not in shipped:
+            stale.unlink()
     (out_dir / BUNDLE_FILE).write_text(json.dumps(covers, indent=2) + "\n")
     return covers
 

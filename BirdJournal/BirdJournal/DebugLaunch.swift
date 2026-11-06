@@ -23,6 +23,7 @@ import UIKit
 /// - `-seedLarge <n>` fills the album to n sightings over three years, for profiling (issue #150). With `-albumFile <name>` it
 ///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and
 ///   prints what each cost (`SpeedTour`).
+/// - `-seedNewestAt <place>` adds a sighting just now at one of `-autoLocation`'s places, so its set is the newest sighting's.
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
 ///   the species' patches (issue #134).
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
@@ -91,6 +92,7 @@ struct DebugLaunch: ViewModifier {
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
+            if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
             let large = defaults.integer(forKey: "seedLarge")
             if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
             if defaults.bool(forKey: "speedTour") {
@@ -489,6 +491,12 @@ enum DebugSeeds {
             sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: location, at: sighting.confirmedAt)
             context.insert(sighting)
         }
+        try? context.save()
+    }
+
+    /// A House Finch just now at `place`, on top of any other seed: the newest sighting's set, for the painting's fallback (issue #150).
+    static func seedNewest(at place: DebugPlace, context: ModelContext) {
+        context.insert(Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, location: place.coordinate, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
         try? context.save()
     }
 

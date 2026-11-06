@@ -282,7 +282,7 @@ struct TokenPairingTests {
     }
 
     /// `view` filling a square window with `traits`' appearance and contrast, at one pixel a point.
-    static func renderImage(_ view: some View, traits: UITraitCollection, size: CGFloat) async throws -> UIImage {
+    static func renderImage(_ view: some View, traits: UITraitCollection, size: CGFloat, settle: Duration = .milliseconds(300)) async throws -> UIImage {
         let host = UIHostingController(rootView: view
             .ignoresSafeArea()
             .environment(\.colorScheme, traits.userInterfaceStyle == .dark ? .dark : .light))
@@ -299,7 +299,7 @@ struct TokenPairingTests {
         window.makeKeyAndVisible()
         defer { window.isHidden = true }
         host.view.layoutIfNeeded()
-        try await Task.sleep(for: .milliseconds(300))
+        try await Task.sleep(for: settle)
         return UIGraphicsImageRenderer(bounds: window.bounds, format: {
             let format = UIGraphicsImageRendererFormat()
             format.scale = 1
@@ -335,6 +335,59 @@ struct TokenPairingTests {
         for variant in DesignTokenTests.variants {
             let ratio = DesignTokenTests.contrast(try DesignTokenTests.color(foreground, variant.traits), try DesignTokenTests.color(background, variant.traits))
             #expect(ratio >= minimum, "\(foreground) on \(background), \(variant.name): \(String(format: "%.2f", ratio)):1")
+        }
+    }
+}
+
+/// The edition tints (issue #150): every one in all four appearance variants, on the page, a raised surface, felt and linen.
+@Suite("Edition tints")
+@MainActor
+struct EditionTintTests {
+    nonisolated static let tints = ["EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionUncharted"]
+
+    @Test("4.5:1 on the page and a raised surface, and the accent's words 4.5:1 on its fill", arguments: tints + ["ThreadTogether"])
+    func onThePage(_ tint: String) throws {
+        for (name, traits) in DesignTokenTests.variants {
+            let color = try DesignTokenTests.color(tint, traits)
+            for surface in ["JournalPaper", "JournalRaised"] {
+                let ratio = DesignTokenTests.contrast(color, try DesignTokenTests.color(surface, traits))
+                #expect(ratio >= 4.5, "\(tint) on \(surface), \(name): \(String(format: "%.2f", ratio)):1")
+            }
+            let words = DesignTokenTests.contrast(try DesignTokenTests.color("JournalMossText", traits), color)
+            #expect(words >= 4.5, "the words on \(tint), \(name): \(String(format: "%.2f", words)):1")
+        }
+    }
+
+    @Test("on felt and linen, against the texture's worst pixel", arguments: tints + ["ThreadTogether"])
+    func onTheBoard(_ tint: String) async throws {
+        for (name, traits) in DesignTokenTests.variants {
+            let image = try await TokenPairingTests.renderImage(BoardMaterial(), traits: traits, size: 300)
+            let extremes = try #require(TokenPairingTests.luminanceExtremes(image))
+            let ratio = TokenPairingTests.worst(try DesignTokenTests.color(tint, traits), on: extremes)
+            #expect(ratio >= 4.5, "\(tint) on the board, \(name) (\(TokenPairingTests.hex(extremes.darkest))...\(TokenPairingTests.hex(extremes.lightest))): \(String(format: "%.2f", ratio)):1")
+        }
+    }
+
+    @Test("a stitch on card stock, which reads in the light scheme, clears 3:1 against the fibre's worst pixel", arguments: tints)
+    func onPaper(_ tint: String) async throws {
+        let stock = Color.clear.modifier(CardStockSurface())
+        for (name, traits) in DesignTokenTests.variants {
+            let image = try await TokenPairingTests.renderImage(stock, traits: traits, size: 300)
+            let extremes = try #require(TokenPairingTests.luminanceExtremes(image))
+            let light = UITraitCollection { $0.userInterfaceStyle = .light; $0.accessibilityContrast = traits.accessibilityContrast }
+            let ratio = TokenPairingTests.worst(try DesignTokenTests.color(tint, light), on: extremes)
+            #expect(ratio >= 3, "\(tint) on card stock, \(name): \(String(format: "%.2f", ratio)):1")
+        }
+    }
+
+    @Test("the toast's words stay readable in every tint over the material", arguments: tints)
+    func onTheMaterial(_ tint: String) async throws {
+        for (name, traits) in DesignTokenTests.variants {
+            for behind in ["JournalPaper", "JournalRaised"] {
+                let rendered = try #require(try await TokenPairingTests.render(.regularMaterial, over: Color(behind), traits: traits))
+                let ratio = DesignTokenTests.contrast(try DesignTokenTests.color(tint, traits), rendered)
+                #expect(ratio >= 4.5, "\(tint) on the material over \(behind), \(name): \(String(format: "%.2f", ratio)):1")
+            }
         }
     }
 }
