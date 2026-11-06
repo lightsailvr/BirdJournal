@@ -268,7 +268,15 @@
   "_why": "open-license review (#50): out 282219540: lying on the ground with wings splayed",
   "art": {
    "setting": "perch"
-  }
+  },
+  "hero": {
+   "pinned": 520029657,
+   "_why": "the maintainer's pick from the second round"
+  },
+  "include": [
+   520029657,
+   187415416
+  ]
  },
  "Bombycilla cedrorum": {
   "exclude": [
@@ -764,7 +772,14 @@
    "setting": "perch",
    "length_cm": 12.5,
    "_length_why": "the Wikipedia text gives no length; a typical length from the field guides"
-  }
+  },
+  "hero": {
+   "pinned": 477452926,
+   "_why": "the maintainer's pick from the second round"
+  },
+  "include": [
+   477452926
+  ]
  },
  "Dryobates nuttallii": {
   "exclude": [
@@ -954,7 +969,15 @@
    "reference": 616227519,
    "_why": "a distant bird against the sky gave a wrong head (dE 24); a close full-body bird",
    "setting": "ground"
-  }
+  },
+  "hero": {
+   "pinned": 630642736,
+   "_why": "the maintainer's pick from the second round"
+  },
+  "include": [
+   630642736,
+   616227519
+  ]
  },
  "Corvus corax": {
   "art": {
@@ -1148,7 +1171,15 @@
    "patch": {
     "markings": "The hood, back, shoulders and wings are all one slate blue-grey, with no brown or tan on the back or shoulders; only the belly is pale."
    }
-  }
+  },
+  "hero": {
+   "pinned": 645754181,
+   "_why": "the maintainer's pick from the second round"
+  },
+  "include": [
+   645754181,
+   740001274
+  ]
  },
  "Mimus polyglottos": {
   "art": {
@@ -1290,7 +1321,15 @@
  "Agelaius phoeniceus": {
   "art": {
    "setting": "perch"
-  }
+  },
+  "hero": {
+   "pinned": 689379758,
+   "_why": "the maintainer's pick from the second round"
+  },
+  "include": [
+   689379758,
+   454315615
+  ]
  },
  "Turdus migratorius": {
   "art": {
@@ -1308,7 +1347,15 @@
     "reference": 342127424,
     "_why": "the patch's bird sleeps with its head tucked, a blob; this one swims with its neck up (a cached isolation of another pack photo; #150)"
    }
-  }
+  },
+  "hero": {
+   "pinned": 342127424,
+   "_why": "the maintainer's pick from the second round"
+  },
+  "include": [
+   342127424,
+   344944792
+  ]
  },
  "Callipepla californica": {
   "art": {
