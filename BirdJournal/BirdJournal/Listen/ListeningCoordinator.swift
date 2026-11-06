@@ -109,11 +109,12 @@ final class ListeningCoordinator {
         var eyebrow: String { "New patch, \(addition.placement.editionLabel)" }
     }
 
-    /// What a repeat add says: "Seen again, 8 times in Los Angeles", or "Seen again, 8 times" outside every set. In digits
-    /// even for 1, unlike `Patch.times`'s "once": it's what the count ticks up from.
-    private static func seenAgainText(_ placement: CardPlacement, count: Int) -> String {
+    /// What a repeat add says: "House Finch seen again, 8 times in Los Angeles", or "House Finch seen again, 8 times" outside
+    /// every set. It names the bird because nothing else does: a repeat has no reveal, and a live list can move another bird's
+    /// Add under a thumb (issue #150). In digits even for 1, unlike `Patch.times`'s "once": it's what the count ticks up from.
+    private static func seenAgainText(_ name: String, _ placement: CardPlacement, count: Int) -> String {
         let times = "\(count) \(count == 1 ? "time" : "times")"
-        return placement.setID == nil ? "Seen again, \(times)" : "Seen again, \(times) in \(placement.setName)"
+        return placement.setID == nil ? "\(name) seen again, \(times)" : "\(name) seen again, \(times) in \(placement.setName)"
     }
 
     static let waveformLength = 40
@@ -213,8 +214,20 @@ final class ListeningCoordinator {
         }
     }
 
+    private var stack: CandidateStack {
+        #if DEBUG
+        if let fakeStack { return fakeStack }
+        #endif
+        return listening.stack
+    }
+
+    #if DEBUG
+    /// `-fakeRunBirds` (issue #150): the birds a run has heard, standing still, for the UI tests and the screenshots.
+    var fakeStack: CandidateStack?
+    #endif
+
     /// Every species heard this run, in the order they were admitted: the order the stack and the lens pages keep.
-    var candidates: [Candidate] { listening.stack.candidates }
+    var candidates: [Candidate] { stack.candidates }
     /// The same species as the Listen tab lists them: calling now first (newest caller, then the one calling the
     /// longest), then the rest most recently heard first. Computed from the current stack over the remembered
     /// order, so a species that just arrived is placed at once.
@@ -238,7 +251,7 @@ final class ListeningCoordinator {
     /// The remembered order brought up to the current stack and clock; nothing is calling once the run has ended.
     private func currentOrder() -> SpeciesListOrder {
         var order = listOrder
-        order.update(with: listening.stack, at: state.isActive ? sessionTime : .infinity)
+        order.update(with: stack, at: state.isActive ? sessionTime : .infinity)
         return order
     }
     var startedAt: Date? { listening.startedAt }
@@ -250,13 +263,12 @@ final class ListeningCoordinator {
     /// Whether a phone-microphone run holds the audio session, which a reference clip then plays in (issue #41).
     var phoneRunHoldsSession: Bool { runSource == .phone && state.isActive }
     var errorMessage: String? { runSource == .glasses ? glasses.errorMessage : phone.errorMessage }
-    var addedCount: Int { sightings.entries.count }
 
     func isAdded(_ candidate: Candidate) -> Bool { sightings.isAdded(candidate.species) }
 
-    /// The summary line: "3 species heard, 1 added".
-    var summary: String {
-        "\(candidates.count) species heard, \(addedCount) added"
+    /// The summary line's counts, against the patches an add here would join: "1 new patch waiting and 2 you already have".
+    func hunt(in collection: CardCollection) -> RunHunt {
+        RunHunt(candidates: candidates, collection: collection, at: coordinate)
     }
 
     // MARK: - Lifecycle
@@ -330,8 +342,8 @@ final class ListeningCoordinator {
                 acknowledge(reveal.title, undo: addition)
             } else {
                 acknowledge(
-                    Self.seenAgainText(addition.placement, count: addition.patchCount),
-                    ticksFrom: Self.seenAgainText(addition.placement, count: addition.patchCount - 1),
+                    Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount),
+                    ticksFrom: Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount - 1),
                     undo: addition
                 )
             }
@@ -341,6 +353,18 @@ final class ListeningCoordinator {
             acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
             return nil
         }
+    }
+
+    /// The Sew it or Add on a bird's row (issue #150, L2): the review sheet's own add, with its reveal, count and Undo, as Heard,
+    /// which the sighting's page can change. A bird no installed pack describes goes to its review and nothing is written: it
+    /// isn't added with nothing to compare it against.
+    @discardableResult
+    func addFromRow(_ candidate: Candidate, isDescribed: Bool) async -> RunSightings.Addition? {
+        guard isDescribed else {
+            reviewing = candidate
+            return nil
+        }
+        return await add(candidate, method: .heard)
     }
 
     #if DEBUG

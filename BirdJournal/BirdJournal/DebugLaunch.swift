@@ -33,7 +33,7 @@ import UIKit
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the patches of the newest sighting's species, or `-autoCardSpecies`'s, found or not), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
-///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe),
+///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe, or `-autoCardSpecies`'s),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `account` (Settings → Account; `-fakeAccount
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
@@ -56,6 +56,10 @@ import UIKit
 ///   picks the Listen painting (issue #150).
 /// - `-freshPackStorage YES` starts with no downloads and no index read yet, as a fresh install does; with `-packIndexURL
 ///   http://127.0.0.1:9/index.json` the index stays out of reach (issue #150).
+/// - `-fakeRunBirds "Haemorhous mexicanus_House Finch,…"` makes a run's list these BirdNET labels and hold still, the first
+///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
+///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
+///   reveal; `-autoRunStops YES` stops the run, for the review. `-patchDecodeLog YES` logs each patch decode under `patch-decode`.
 /// - `-fakePatchArt missing|sewing` draws every patch without its painting: the blank with its paper tag, or "Being sewn"
 ///   in a set (issue #138). `-autoBoard uncharted` opens the Collection on the Uncharted board.
 /// - `-autoQuery <text>` searches the Collection or the Atlas once; `-autoThenTab <tab>` switches tab after the screen
@@ -125,7 +129,18 @@ struct DebugLaunch: ViewModifier {
             case "listening", "review":
                 tab = .listen
                 run.source = .phone
+                run.fakeStack = FakeRunBirds.stack
                 await run.start()
+                if let name = defaults.string(forKey: "autoRowAdd"), let bird = run.candidates.first(where: { $0.species.commonName == name }) {
+                    // `-autoRowAddAfter <seconds>`: late enough for a screenshot to catch its acknowledgment.
+                    try? await Task.sleep(for: .seconds(defaults.double(forKey: "autoRowAddAfter")))
+                    await run.addFromRow(bird, isDescribed: true)
+                    run.finishCeremony()
+                    run.dismissReveal()
+                }
+                if defaults.bool(forKey: "autoRunStops") {
+                    await run.stop()
+                }
                 if screen == "review" {
                     // The WAV's first admissions take a few windows; wait for a bird the packs describe, so the
                     // review shows a photo, else take the first.
@@ -203,7 +218,8 @@ struct DebugLaunch: ViewModifier {
                 tab = .guide
             case "profile":
                 tab = .guide
-                guidePath.append(Route.species(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"))
+                let scientificName = defaults.string(forKey: "autoCardSpecies") ?? "Sayornis nigricans"
+                guidePath.append(Route.species(scientificName: scientificName, commonName: library.species(scientificName: scientificName)?.species.commonName ?? scientificName))
             case "packs":
                 tab = .guide
                 guidePath.append(Route.packs)
@@ -502,11 +518,17 @@ enum DebugSeeds {
         try? context.save()
     }
 
+    /// The label an add writes for this bird, the identification model's: a pack's own `birdnetLabel` is only its scientific name,
+    /// so a run's rows and the sightings it adds would be different birds.
+    static func sightingLabel(_ species: PackSpecies) -> String {
+        "\(species.scientificName)_\(species.commonName)"
+    }
+
     /// One sighting of each of the bundled pack's first 30 birds, a minute apart.
     static func seedBoard(context: ModelContext) {
         let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
         for (index, species) in ((try? SpeciesPack.bundled().species) ?? []).prefix(30).enumerated() {
-            context.insert(Sighting(speciesID: species.birdnetLabel, confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
+            context.insert(Sighting(speciesID: sightingLabel(species), confirmedAt: Date.now.addingTimeInterval(-Double(index) * 60), location: griffithPark, soundConfidence: 0.7, source: .phone))
         }
         try? context.save()
     }
@@ -517,7 +539,7 @@ enum DebugSeeds {
     static func seedLarge(context: ModelContext, count: Int) {
         let existing = (try? context.fetchCount(FetchDescriptor<Sighting>())) ?? 0
         guard existing < count else { return }
-        let labels = ((try? SpeciesPack.bundled().species) ?? []).map(\.birdnetLabel)
+        let labels = ((try? SpeciesPack.bundled().species) ?? []).map(sightingLabel)
         guard !labels.isEmpty else { return }
         var random = SplitMix(state: 150)
         for index in existing..<count {
@@ -563,6 +585,19 @@ enum DebugSeeds {
             border.stroke()
         }
         return image.jpegData(compressionQuality: 0.85) ?? Data()
+    }
+}
+/// `-fakeRunBirds`: a run's list from the launch arguments.
+enum FakeRunBirds {
+    static var stack: CandidateStack? {
+        guard let labels = UserDefaults.standard.string(forKey: "fakeRunBirds") else { return nil }
+        return CandidateStack(candidates: labels.split(separator: ",").enumerated().map { position, label in
+            let parts = label.split(separator: "_", maxSplits: 1).map(String.init)
+            let species = Species(index: position, scientificName: parts[0], commonName: parts.last ?? parts[0], taxonomicClass: "Aves")
+            // A clock far ahead keeps the first calling for good; the others fell quiet before the run began.
+            let heard = position == 0 ? 1_000_000 : Double(-60 * (2 * position + 1))
+            return Candidate(species: species, score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: heard, admittedAt: Double(position))
+        })
     }
 }
 #endif

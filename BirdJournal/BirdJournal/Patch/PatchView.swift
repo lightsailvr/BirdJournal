@@ -246,7 +246,34 @@ enum PatchMotion {
 extension View {
     /// Holds the phone's light on while this surface is on screen: the lit surface's half of `PatchLight`.
     func holdsPatchLight() -> some View {
-        onAppear { PatchLight.shared.hold() }
-            .onDisappear { PatchLight.shared.release() }
+        modifier(HoldsPatchLight())
+    }
+}
+
+/// A surface stays "on screen" with the phone locked, and a run's rows stay up for a whole walk with it in a pocket (issue #150):
+/// the motion updates stop with the scene and start again, from "as held", when it's back.
+private struct HoldsPatchLight: ViewModifier {
+    @Environment(\.scenePhase) private var phase
+    @State private var isOnScreen = false
+    @State private var isHolding = false
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                isOnScreen = true
+                update()
+            }
+            .onDisappear {
+                isOnScreen = false
+                update()
+            }
+            .onChange(of: phase) { update() }
+    }
+
+    private func update() {
+        let wanted = PatchLight.isWanted(isOnScreen: isOnScreen, phase: phase)
+        guard wanted != isHolding else { return }
+        isHolding = wanted
+        if wanted { PatchLight.shared.hold() } else { PatchLight.shared.release() }
     }
 }

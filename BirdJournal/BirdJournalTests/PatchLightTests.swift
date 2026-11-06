@@ -26,6 +26,14 @@ struct PatchLightTests {
         return model
     }
 
+    @Test("a surface holds the light while on screen, and lets it go with the phone locked: a run's rows stay up for a whole walk (issue #150)")
+    func theLightStopsWithTheScene() {
+        #expect(PatchLight.isWanted(isOnScreen: true, phase: .active))
+        #expect(PatchLight.isWanted(isOnScreen: true, phase: .inactive), "a passing sheet or Control Center doesn't restart it")
+        #expect(!PatchLight.isWanted(isOnScreen: true, phase: .background))
+        #expect(!PatchLight.isWanted(isOnScreen: false, phase: .active))
+    }
+
     @Test("the light starts upper-left, however the phone is held")
     func startsUpperLeft() {
         for held in [Self.gravity(), Self.gravity(topEdgeUp: 70), Self.gravity(rightEdgeDown: 20, topEdgeUp: 45)] {

@@ -1,4 +1,5 @@
 import ImageIO
+import OSLog
 import Pack
 import SwiftUI
 
@@ -101,7 +102,9 @@ enum PatchTextures {
         }
     }
 
-    private static let cache = NSCache<NSString, Loaded>()
+    /// Safe from the decoding queue, which reads and fills it there: a screen of rows showing one patch asks for it once per row,
+    /// and only the two decoding at once can miss each other.
+    private nonisolated(unsafe) static let cache = NSCache<NSString, Loaded>()
 
     static func cached(_ art: PatchArt, size: Size) -> Loaded? {
         cache.object(forKey: key(art, size))
@@ -110,21 +113,27 @@ enum PatchTextures {
     static func load(_ art: PatchArt, size: Size) async -> Loaded? {
         if let hit = cached(art, size: size) { return hit }
         let colourPixels = size.colourPixels, layerPixels = size.layerPixels
+        let cacheKey = key(art, size)
         let flag = CancelFlag()
         let loaded: Loaded? = await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
                 decoding.addOperation {
+                    if let hit = cache.object(forKey: cacheKey) {
+                        continuation.resume(returning: hit)
+                        return
+                    }
                     guard !flag.isCancelled, let colour = decode(art.colour, maxPixels: colourPixels), let layers = decode(art.layers, maxPixels: layerPixels) else {
                         continuation.resume(returning: nil)
                         return
                     }
-                    continuation.resume(returning: Loaded(colour: colour, layers: layers))
+                    let loaded = Loaded(colour: colour, layers: layers)
+                    cache.setObject(loaded, forKey: cacheKey)
+                    continuation.resume(returning: loaded)
                 }
             }
         } onCancel: {
             flag.cancel()
         }
-        if let loaded { cache.setObject(loaded, forKey: key(art, size)) }
         return loaded
     }
 
@@ -164,6 +173,13 @@ enum PatchTextures {
     }
 
     private nonisolated static func decode(_ url: URL, maxPixels: Int) -> CGImage? {
+        #if DEBUG
+        // Issue #150: what a sweep counts, with patches on rows that refresh every second. A thumbnail that's stayed lazy shows up
+        // in the same log as the decoder's own lines.
+        if UserDefaults.standard.bool(forKey: "patchDecodeLog") {
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "patch-decode").info("decode \(url.lastPathComponent, privacy: .public)")
+        }
+        #endif
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,

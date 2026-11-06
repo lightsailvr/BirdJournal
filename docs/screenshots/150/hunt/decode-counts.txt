@@ -1,0 +1,4 @@
+A real run over the clip, its birds sewn (`count-run-clip`): first window: 89 lines, 2 patch decodes, 18 AV1 or ImageIO lines. 20 s later: 33 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 4.
+A run holding still, three rows (`count-run-still`): first window: 8 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 28 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 4.
+Species rows (`count-species`): first window: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 23 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 12.
+Set rows (`count-set`): first window: 3 lines, 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 23 lines, 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 2.

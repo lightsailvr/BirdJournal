@@ -21,6 +21,8 @@ struct TokenPairingTests {
         ("JournalMoss", "JournalPaper"), ("JournalMoss", "JournalRaised"),
         ("AccentColor", "JournalPaper"), ("AccentColor", "JournalRaised"),
         ("JournalAlert", "JournalPaper"), ("JournalAlert", "JournalRaised"),
+        // The transfer pen is held to the issue's tint table, though today it only marks the ring round a bird not yet sewn.
+        ("TransferPen", "JournalPaper"), ("TransferPen", "JournalRaised"),
         // A primary action's label.
         ("JournalMossText", "JournalMoss"),
         // Shared goals: everything on the lavender is `onSharedGoal`.
