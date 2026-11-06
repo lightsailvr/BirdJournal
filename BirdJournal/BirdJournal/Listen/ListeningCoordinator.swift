@@ -230,6 +230,7 @@ final class ListeningCoordinator {
         #if DEBUG
         if let fakeStack { return fakeStack }
         #endif
+        if let restored { return CandidateStack(candidates: restored.candidates) }
         return listening.stack
     }
 

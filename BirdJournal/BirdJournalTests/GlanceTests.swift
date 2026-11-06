@@ -357,7 +357,7 @@ struct WidgetSnapshotTests {
         let library = PackLibrary.forApp()
         let collection = CollectionStore(container: album, sets: { library.cardSets })
         let store = WidgetStore(directory: URL.temporaryDirectory.appending(path: "widget-\(UUID().uuidString)", directoryHint: .isDirectory))
-        var drawing: LatestPatchPublisher.DrawnPatch? = .init(png: Data([1]), isPainted: true)
+        var drawing: LatestPatchPublisher.DrawnPatch? = .init(png: Data([1]), isLit: true)
         var drew = 0
         let publisher = LatestPatchPublisher(store: store, collection: collection, packs: library, draw: { _ in
             drew += 1
@@ -378,12 +378,12 @@ struct WidgetSnapshotTests {
         #expect(store.snapshot()?.latest?.name == "House Finch", "the finch's picture is still there, so its name stays")
         #expect(store.patchImage() == Data([1]))
 
-        drawing = .init(png: Data([2]), isPainted: false)
+        drawing = .init(png: Data([2]), isLit: false)
         await publisher.write()
         #expect(store.snapshot()?.latest?.link.speciesID == Self.jay)
         #expect(store.snapshot()?.latest?.hasPainting == false)
         let before = drew
-        drawing = .init(png: Data([3]), isPainted: true)
+        drawing = .init(png: Data([3]), isLit: true)
         await publisher.write()
         #expect(drew == before + 1, "the painting it couldn't decode gets another try")
         #expect(store.patchImage() == Data([3]))

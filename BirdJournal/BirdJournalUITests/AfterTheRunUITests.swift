@@ -113,7 +113,7 @@ final class AfterTheRunUITests: XCTestCase {
         let card = recap(app)
         XCTAssertTrue(card.waitForExistence(timeout: 30), "the review didn't come back; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(card.label.contains("birds heard") || card.label.contains("bird heard"), card.label)
-        XCTAssertEqual(card.label.components(separatedBy: "Listened for").last, label.components(separatedBy: "Listened for").last, "the same run")
+        XCTAssertEqual(card.label, label, "the same run")
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch.exists, "with its birds; screen: \(app.debugDescription.prefix(4000))")
 
         app.buttons["Done"].firstMatch.tap()
