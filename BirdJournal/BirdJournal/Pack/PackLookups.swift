@@ -33,9 +33,11 @@ extension PackLibrary {
         }
         var indexURL = PackIndex.defaultURL
         #if DEBUG
-        // A fresh install's packs: no downloads and no index read yet, whatever this simulator has seen.
-        let storage = UserDefaults.standard.bool(forKey: "freshPackStorage") ? PackStorage(directory: URL.temporaryDirectory.appending(path: "FreshPacks-\(UUID().uuidString)", directoryHint: .isDirectory)) : storage
         if let override = UserDefaults.standard.string(forKey: "packIndexURL").flatMap(URL.init(string:)) { indexURL = override }
+        // A fresh install's packs: no downloads and no index read yet, whatever this simulator has seen.
+        if UserDefaults.standard.bool(forKey: "freshPackStorage") {
+            return PackLibrary(bundled: bundled, storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "FreshPacks-\(UUID().uuidString)", directoryHint: .isDirectory)), indexURL: indexURL)
+        }
         #endif
         return PackLibrary(bundled: bundled, storage: storage, indexURL: indexURL)
     }

@@ -84,10 +84,15 @@ final class PlaceUITests: XCTestCase {
     func testASetKnownOnlyFromWhatShippedOpensInTheAtlas() {
         let app = launch(["-autoLocation", "joshua-tree", "-autoScreen", "guide"])
         let desert = app.buttons["guide-set-us-ca-desert"]
-        for _ in 0..<6 where !desert.waitForExistence(timeout: 3) || !desert.isHittable { app.swipeUp() }
-        XCTAssertTrue(desert.isHittable, "no tile; screen: \(app.debugDescription.prefix(3000))")
+        // The tiles are lazy, and the tab bar floats over the page's foot.
+        let inReach = app.windows.firstMatch.frame.insetBy(dx: 0, dy: 160)
+        for _ in 0..<8 {
+            if desert.waitForExistence(timeout: 2), inReach.contains(CGPoint(x: desert.frame.midX, y: desert.frame.midY)) { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(desert.exists, "no tile; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Download'")).firstMatch.exists, "nothing to download it from")
-        desert.tap()
+        desert.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
         XCTAssertTrue(app.navigationBars["California Deserts"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["155 still out there"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
     }
