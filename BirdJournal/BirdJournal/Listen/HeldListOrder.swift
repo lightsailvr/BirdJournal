@@ -13,6 +13,10 @@ struct HeldListOrder<ID: Hashable>: Equatable {
         case finger
         case scroll
         case voiceOverFocus(ID)
+
+        var isVoiceOverFocus: Bool {
+            if case .voiceOverFocus = self { true } else { false }
+        }
     }
 
     static var settle: TimeInterval { 1.5 }
@@ -71,9 +75,14 @@ struct HeldListOrder<ID: Hashable>: Equatable {
     }
 
     /// The clock's turn: the list is let go once it's due.
-    mutating func tick(at now: Date) {
+    /// - Parameter isVoiceOverRunning: turned off with its focus on a row, VoiceOver won't say the focus has gone.
+    mutating func tick(at now: Date, isVoiceOverRunning: Bool = true) {
+        if !isVoiceOverRunning, holders.contains(where: \.isVoiceOverFocus) {
+            holders = holders.filter { !$0.isVoiceOverFocus }
+            if holders.isEmpty { releaseAt = now }
+        }
         if !holders.isEmpty, let lastTouch, now.timeIntervalSince(lastTouch) >= Self.staleAfter {
-            holders = holders.filter { if case .voiceOverFocus = $0 { true } else { false } }
+            holders = holders.filter(\.isVoiceOverFocus)
             if holders.isEmpty { releaseAt = now }
         }
         guard holders.isEmpty, let releaseAt, now >= releaseAt else { return }

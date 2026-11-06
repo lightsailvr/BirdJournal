@@ -297,6 +297,26 @@ struct ListeningCoordinatorTests {
         #expect(!focused.isHeld, "the stale scroll went with the net")
     }
 
+    @Test("VoiceOver turned off with its focus on a row lets that go, and leaves a finger's hold alone")
+    func voiceOverTurnedOff() {
+        let start = Self.holdStart
+        var held = HeldListOrder<String>()
+        held.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        held.tick(at: start.addingTimeInterval(5))
+        #expect(held.isHeld, "it's still running")
+        held.tick(at: start.addingTimeInterval(10), isVoiceOverRunning: false)
+        #expect(!held.isHeld)
+
+        var both = HeldListOrder<String>()
+        both.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        both.hold(.finger, showing: ["a", "b"], at: start)
+        both.tick(at: start.addingTimeInterval(5), isVoiceOverRunning: false)
+        #expect(both.isHeld, "the finger's still down")
+        both.letGo(.finger, at: start.addingTimeInterval(6))
+        both.tick(at: start.addingTimeInterval(7.5), isVoiceOverRunning: false)
+        #expect(!both.isHeld)
+    }
+
     @Test("a bird first heard during a hold goes at the bottom, where it moves no row, and stays in the place it was shown")
     func aNewBirdGoesAtTheBottom() {
         var held = HeldListOrder<String>()

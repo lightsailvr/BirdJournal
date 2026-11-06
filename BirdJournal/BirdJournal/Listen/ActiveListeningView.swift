@@ -114,7 +114,9 @@ struct ActiveListeningView: View {
             }
         }
         .onScrollPhaseChange { _, phase in
-            setHolding(.scroll, phase != .idle)
+            // A finger dragging or the flick it left. Not `.animating`: the tab's scroll-to-top with the list already at the top
+            // never reports that it's over.
+            setHolding(.scroll, phase == .interacting || phase == .decelerating)
             #if DEBUG
             // `-fakeLeaveDuringFlick YES`: another tab while the list decelerates, quicker than a UI test can tap one.
             if phase == .decelerating, UserDefaults.standard.bool(forKey: "fakeLeaveDuringFlick") { openCollection() }
@@ -124,13 +126,13 @@ struct ActiveListeningView: View {
             guard let releaseAt = held.releaseAt else { return }
             try? await Task.sleep(for: .seconds(max(releaseAt.timeIntervalSinceNow, 0)))
             guard !Task.isCancelled else { return }
-            held.tick(at: .now)
+            held.tick(at: .now, isVoiceOverRunning: UIAccessibility.isVoiceOverRunning)
         }
         // The safety net's clock, only while something holds.
         .task(id: held.isHeld) {
             while held.isHeld, !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(5))
-                if !Task.isCancelled { held.tick(at: .now) }
+                if !Task.isCancelled { held.tick(at: .now, isVoiceOverRunning: UIAccessibility.isVoiceOverRunning) }
             }
         }
         .onChange(of: held.isHeld) { _, isHeld in
