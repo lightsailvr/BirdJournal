@@ -133,8 +133,12 @@
           "attempts": 1
         }
       ],
-      "review": "pending",
-      "chosen": null
+      "review": "approved",
+      "chosen": 8,
+      "approved": {
+        "file": "approved/perched-finch.png",
+        "sha256": "66a4b2754abe4859e076afb8853a3ef96a776268f96bcfb2e078e49b3616e5db"
+      }
     },
     "blue-bird": {
       "title": "Blue Bird",
