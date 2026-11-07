@@ -30,6 +30,23 @@ struct JournalView: View {
     @State private var offset: CGFloat = 0
     /// While a mode's saved offset is being restored, the scroll view's reports are not saved over it.
     @State private var restoring = false
+    /// The restore under way.
+    @State private var settling: Task<Void, Never>?
+    /// A patch's page hides the tab bar, and the scroll view underneath gets taller. At the foot of a board that would pull the offset
+    /// back by the bar's height, so the page would land short of its tile. Room below the content for as long as that lasts keeps
+    /// the offset where it was, and nothing has to be put back. It's never seen: the page covers it.
+    @State private var hasCoverRoom = false
+    @State private var coverRoomGoing: Task<Void, Never>?
+    /// More than any tab bar.
+    private static let coverRoom: CGFloat = 140
+    /// How long the room stays after the way back. `-coverRoomSeconds <n>` holds it, for a test to flick into it.
+    private static var coverRoomSeconds: Double {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "coverRoomSeconds")
+        if seconds > 0 { return seconds }
+        #endif
+        return 1.5
+    }
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
     /// meanwhile are not the birder's.
     var isCovered = false
@@ -45,30 +62,40 @@ struct JournalView: View {
             } else {
                 let collection = collectionStore.collection
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Text(state.mode == .cards ? collection.summary : Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(state.mode == .cards ? Color.ink : Color.inkSecondary)
-                            .boardLabel(isOnBoard: state.mode == .cards)
-                            .padding(.top, 2)
-                            .padding(.bottom, 10)
-                        Section {
+                    // One mode fading out over the next: in a stack they'd sit one above the other meanwhile.
+                    ZStack(alignment: .topLeading) {
+                        LazyVStack(alignment: .leading, spacing: 0) {
                             content(collection)
-                        } header: {
-                            Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
-                                ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
-                            }
-                            .pickerStyle(.segmented)
-                            .padding(.vertical, 8)
-                            .background {
-                                if state.mode == .cards { BoardMaterial() } else { Color.paper }
-                            }
-                            .accessibilityIdentifier("collection-mode")
+                        }
+                        .id(state.mode)
+                        .transition(modeContentTransition)
+                    }
+                    .padding(.horizontal, JournalLayout.margin)
+                    .padding(.bottom, JournalLayout.sectionGap + (hasCoverRoom ? Self.coverRoom : 0))
+                }
+                // Outside the scrolling content, under a title that doesn't collapse: the picker has nothing to ride on, so whatever a
+                // mode change does to the content or the offset, it stays exactly where it is.
+                .safeAreaBar(edge: .top) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
+                            ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.vertical, 8)
+                        .accessibilityIdentifier("collection-mode")
+                        if state.mode == .cards, state.query.isEmpty, boards(collection).count > 1 {
+                            // In reach from anywhere on a board.
+                            setMenu(shownBoard(collection), collection)
+                                .transition(.opacity)
                         }
                     }
                     .padding(.horizontal, JournalLayout.margin)
-                    .padding(.bottom, JournalLayout.sectionGap)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background { ModeSurface(mode: state.mode).ignoresSafeArea(edges: .top) }
+                    // The bar's empty parts don't reach the tiles scrolling under them.
+                    .contentShape(Rectangle())
                 }
+                .scrollEdgeEffectHidden(true, for: .top)
                 .scrollPosition($position)
                 .onScrollGeometryChange(for: CGFloat.self) { geometry in
                     geometry.contentOffset.y + geometry.contentInsets.top
@@ -76,14 +103,28 @@ struct JournalView: View {
                     offset = newOffset
                     if !isCovered, !restoring { state.offsets[state.mode] = max(newOffset, 0) }
                 }
+                .onScrollPhaseChange { _, phase in
+                    // The birder's own scroll wins over putting one back. The room goes too: the bar's back by the time a finger can be
+                    // on the board, and a flick mustn't reach empty felt, then be pulled back when the room goes.
+                    if phase == .interacting {
+                        stopRestoring()
+                        if !isCovered {
+                            coverRoomGoing?.cancel()
+                            hasCoverRoom = false
+                        }
+                    }
+                }
                 .onChange(of: isCovered) { _, covered in
-                    guard !covered else { return }
-                    // Under a card's page the tab bar hides, and at the foot of the grid the offset is clamped to the
-                    // taller page; once the way back has settled, put back anything that moved meanwhile.
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(450))
-                        let saved = state.offsets[state.mode] ?? 0
-                        if !isCovered, abs(saved - offset) > 1 { restore(saved) }
+                    coverRoomGoing?.cancel()
+                    if covered {
+                        stopRestoring()
+                        hasCoverRoom = true
+                    } else {
+                        // Once the tab bar is surely back, when the room can go without anything moving.
+                        coverRoomGoing = Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(Self.coverRoomSeconds))
+                            if !Task.isCancelled { hasCoverRoom = false }
+                        }
                     }
                 }
                 .onChange(of: state.board) {
@@ -91,10 +132,10 @@ struct JournalView: View {
                     state.offsets[.cards] = 0
                     restore(0)
                 }
-                .background {
-                    if state.mode == .cards { BoardMaterial().ignoresSafeArea() } else { Color.paper.ignoresSafeArea() }
-                }
-                .searchable(text: $state.query, prompt: "Search birds")
+                .background { ModeSurface(mode: state.mode).ignoresSafeArea() }
+                // A magnifier in the title's row, so nothing moves the picker: as a drawer it hid on scroll and took the picker with it.
+                .searchable(text: $state.query, placement: .toolbar, prompt: "Search birds")
+                .searchToolbarBehavior(.minimize)
                 #if DEBUG
                 .task {
                     // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
@@ -103,27 +144,10 @@ struct JournalView: View {
                     if UserDefaults.standard.string(forKey: "autoBoard") == "uncharted" { state.board = .uncharted }
                 }
                 #endif
-                .toolbar {
-                    if state.mode == .cards, state.query.isEmpty, boards(collection).count > 1 {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            let shown = shownBoard(collection)
-                            Menu {
-                                Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
-                                    ForEach(boards(collection), id: \.self) { board in
-                                        Text(boardMenuTitle(board, collection)).tag(board)
-                                    }
-                                }
-                            } label: {
-                                Label("Set", systemImage: "square.stack")
-                            }
-                            .accessibilityValue(boardTitle(shown))
-                            .accessibilityIdentifier("collection-board")
-                        }
-                    }
-                }
             }
         }
         .navigationTitle("Collection")
+        .toolbarTitleDisplayMode(.inlineLarge)
         .task(id: sightings.isEmpty) {
             // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()
@@ -155,6 +179,10 @@ struct JournalView: View {
             NoSearchMatch(query: state.query) { state.query = "" }
                 .padding(.top, 24)
         } else {
+            Text(Journal.summary(sightingCount: sightings.count, speciesCount: collection.speciesCount))
+                .font(JournalFont.supporting)
+                .foregroundStyle(Color.inkSecondary)
+                .padding(.top, 6)
             if state.mode == .sightings {
                 SightingsByDay(sightings: shown)
                     .holdsPatchLight()
@@ -171,23 +199,28 @@ struct JournalView: View {
     @ViewBuilder
     private func patches(_ collection: CardCollection) -> some View {
         if state.query.isEmpty {
-            switch shownBoard(collection) {
+            let shown = shownBoard(collection)
+            // With more than one, the name is the menu pinned with the modes.
+            if boards(collection).count == 1 {
+                SectionTitle(boardTitle(shown), size: .lead, top: 12, onBoard: true)
+                    .padding(.bottom, 6)
+            }
+            switch shown {
             case .set(let id):
                 if let set = library.sets.first(where: { $0.id == id }) {
                     NavigationLink(value: Route.set(id: set.id)) {
-                        SetProgressRow(progress: collection.progress(of: set.id), detail: set.edition.name, detailInk: .ink)
-                            .boardLabel(horizontal: 10, vertical: 2)
+                        SetThreadRow(progress: collection.progress(of: set.id), edition: set.edition.name)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.journalPress)
                     .accessibilityIdentifier("cards-set-progress")
                     PatchBoard(patches: collection.patches(in: set.id))
                 }
             case .uncharted:
-                Text("\(CardPlacement.unchartedTitle), \(collection.unchartedPatches.count) outside every set")
-                    .font(JournalFont.rowTitle)
+                Text("\(collection.unchartedPatches.count) outside every set")
+                    .font(JournalFont.supporting)
                     .foregroundStyle(Color.ink)
                     .boardLabel()
-                    .padding(.vertical, 12)
+                    .padding(.bottom, 4)
                 PatchBoard(patches: collection.unchartedPatches)
             }
         } else {
@@ -200,6 +233,38 @@ struct JournalView: View {
             .boardLabel()
             .frame(maxWidth: .infinity)
             .padding(.top, 28)
+    }
+
+    /// The set's name is the menu for the others (issue #150, audit F9), in the bar with the modes. The menu carries the total across all
+    /// of them: on the page, "5 patches" over "3 of 160 sewn" would seem to disagree. Being pinned it stops growing at the first
+    /// accessibility size, or at the largest it would take a third of the page from the patches.
+    private func setMenu(_ shown: BoardChoice, _ collection: CardCollection) -> some View {
+        Menu {
+            // A line of its own: a section's title doesn't show over a picker.
+            Text(collection.summary)
+            Divider()
+            Picker("Set", selection: Binding(get: { shown }, set: { state.board = $0 })) {
+                ForEach(boards(collection), id: \.self) { board in
+                    Text(boardMenuTitle(board, collection)).tag(board)
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(boardTitle(shown))
+                    .font(JournalFont.section)
+                    .lineLimit(2)
+                Image(systemName: "chevron.down")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundStyle(Color.ink)
+            .boardLabel()
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        .accessibilityLabel(boardTitle(shown))
+        .accessibilityHint("Shows your other sets.")
+        .accessibilityIdentifier("collection-board")
     }
 
     /// A search reads every board, so a patch sewn in another place is still found.
@@ -260,26 +325,69 @@ struct JournalView: View {
     private func switchMode(to mode: Mode) {
         guard mode != state.mode else { return }
         let saved = state.offsets[mode] ?? 0
-        state.mode = mode
+        withAnimation(modeFade) { state.mode = mode }
         restore(saved)
+    }
+
+    /// The surface cross-fades from one mode to the next (issue #150, audit F10); under Reduce Motion, quickly.
+    private var modeFade: Animation {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "modeFadeSeconds")
+        if seconds > 0 { return .linear(duration: seconds) }
+        #endif
+        return .easeInOut(duration: PatchMotion.reduces(system: reduceMotion) ? 0.12 : 0.25)
+    }
+
+    /// Both modes share one scroll view, which moves to the new mode's place soon after the change. So what's on the surface doesn't
+    /// fade across that move, where it would be seen to jump: the old mode has gone first, and the new one comes up after it.
+    private var modeContentTransition: AnyTransition {
+        let reduces = PatchMotion.reduces(system: reduceMotion)
+        return .asymmetric(
+            insertion: .opacity.animation(.easeOut(duration: reduces ? 0.08 : 0.17).delay(0.08)),
+            removal: .opacity.animation(.easeOut(duration: 0.05))
+        )
     }
 
     /// Scrolls to `saved` once the shown mode has laid out, without saving the offsets passed on the way. The scroll
     /// view's reported offset and `scrollTo(y:)` can differ by the collapsing title's height, so a second step corrects
-    /// by whatever the first one missed.
+    /// by whatever the first one missed. A newer change takes over from one still under way.
     private func restore(_ saved: CGFloat) {
         restoring = true
-        Task { @MainActor in
+        settling?.cancel()
+        settling = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(60))
+            guard !Task.isCancelled else { return }
             position.scrollTo(y: saved)
             try? await Task.sleep(for: .milliseconds(80))
+            guard !Task.isCancelled else { return }
             let missed = saved - offset
             if abs(missed) > 1 {
                 position.scrollTo(y: saved + missed)
                 try? await Task.sleep(for: .milliseconds(80))
+                guard !Task.isCancelled else { return }
             }
             restoring = false
             state.offsets[state.mode] = max(offset, 0)
+        }
+    }
+
+    private func stopRestoring() {
+        settling?.cancel()
+        restoring = false
+    }
+}
+
+/// What a mode sits on: felt under the patches, the page under the lists.
+private struct ModeSurface: View {
+    let mode: JournalView.Mode
+
+    var body: some View {
+        ZStack {
+            if mode == .cards {
+                BoardMaterial().transition(.opacity)
+            } else {
+                Color.paper.transition(.opacity)
+            }
         }
     }
 }
@@ -484,6 +592,35 @@ private struct SetProgressList: View {
                 RowRule()
             }
         }
+    }
+}
+
+/// Under a board's name: its thread and count, "3 of 160 sewn, Citrus edition", opening the set's page.
+private struct SetThreadRow: View {
+    let progress: SetProgress
+    let edition: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                // Another set's thread is another thread: it doesn't sew from this one's count. The row says the count.
+                ThreadProgress(progress)
+                    .id(progress.setID)
+                    .accessibilityHidden(true)
+                Text("\(progress.sewnText), \(edition)")
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.ink)
+            }
+            Image(systemName: "chevron.right")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.ink)
+        }
+        .boardLabel(horizontal: 10, vertical: 6)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(progress.name), \(progress.sewnText), \(edition)")
+        .accessibilityHint("Opens the set.")
     }
 }
 

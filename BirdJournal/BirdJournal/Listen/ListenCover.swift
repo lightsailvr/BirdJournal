@@ -198,15 +198,18 @@ private struct LatestPatch: View {
     var body: some View {
         let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
         let name = PatchText.name(of: patch, library: library)
-        NavigationLink(value: Route.patch(patch.id)) {
-            PatchView(state: state, edition: PatchEdition.of(setID: patch.placement.setID), tag: name)
+        let edition = PatchEdition.of(setID: patch.placement.setID)
+        NavigationLink(value: Route.patch(patch.id, from: .latest)) {
+            PatchView(state: state, edition: edition, tag: name)
                 .frame(width: side)
+                .patchLiftSource(PatchLiftID(key: patch.id, surface: .latest))
                 // Its art takes no touches of its own (`PatchView`): the whole patch is what opens.
                 .contentShape(Rectangle())
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(PatchText.spoken(patch, name: name, beingSewn: state == .beingSewn))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.patchLift)
+        .modifier(PatchPeekActions(patch: patch, surface: .latest, state: state, edition: edition, tag: name))
         .accessibilityHint("Opens the patch. Turn it over for its story.")
         .accessibilityIdentifier("board-patch")
     }

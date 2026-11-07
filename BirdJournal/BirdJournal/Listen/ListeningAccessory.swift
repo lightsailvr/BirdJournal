@@ -46,7 +46,7 @@ struct ListeningAccessory: View {
                     .frame(width: 40, height: 40)
                     .background(.tint, in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.journalPress)
             .disabled(run.state == .stopping || run.state == .starting)
             .accessibilityLabel("Stop listening")
         }

@@ -78,14 +78,9 @@ private extension ListeningCoordinator.Reveal {
     }
 }
 
-/// "Your sighting is already saved.": true from before the first thing on these pages.
-private struct SavedNote: View {
-    var body: some View {
-        Text("Your sighting is already saved.")
-            .font(JournalFont.attribution)
-            .foregroundStyle(Color.ink)
-            .boardLabel()
-    }
+/// How wide the patch sits on these pages, the same on both so it doesn't move as the stitching ends.
+private func revealPatchWidth(_ typeSize: DynamicTypeSize) -> CGFloat {
+    typeSize.isAccessibilitySize ? 200 : 300
 }
 
 /// The way back to the run; once it has ended (a reveal over the run's review), back to the review; with more patches from
@@ -113,6 +108,7 @@ private struct RevealUndoButton: View {
     var body: some View {
         if run.acknowledgment?.undo == reveal.addition {
             Button("Undo") { run.undo(reveal.addition) }
+                .buttonStyle(.journalPress)
                 .font(JournalFont.supporting.weight(.semibold))
                 .foregroundStyle(Color.ink)
                 .boardLabel()
@@ -147,15 +143,15 @@ private struct NewPatchReveal: View {
 
     var body: some View {
         Group {
-            if reveal.hasPlayed {
+            // One branch for the finished page, however it's reached: going straight there, then marked as played, it stays the
+            // same page, and its success plays once.
+            if reveal.hasPlayed || (prepared == nil && !stitches) {
                 NewPatchPage(reveal: reveal, decoded: prepared?.loaded)
             } else if let prepared {
                 SewingPage(reveal: reveal, art: prepared.art, decoded: prepared.loaded, timeline: prepared.timeline)
-            } else if stitches {
+            } else {
                 // A moment, while the patch decodes: its cloth.
                 SewingPage(reveal: reveal, art: nil, decoded: nil, timeline: StitchTimeline(threads: []))
-            } else {
-                NewPatchPage(reveal: reveal, decoded: nil)
             }
         }
         .patchSheetBackground()
@@ -223,7 +219,7 @@ private struct SewingPage: View {
             VStack(spacing: 18) {
                 RevealHeading(eyebrow: "Sewing your patch", name: reveal.commonName, line: PatchText.revealNumberLine(reveal.addition.placement), takesFocus: false)
                 patch
-                    .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 280)
+                    .frame(maxWidth: revealPatchWidth(typeSize))
                     .padding(.vertical, 8)
                 HStack(spacing: 8) {
                     Circle()
@@ -235,7 +231,6 @@ private struct SewingPage: View {
                         .foregroundStyle(Color.ink)
                 }
                 .boardLabel()
-                SavedNote()
             }
             .multilineTextAlignment(.center)
             .revealMargins()
@@ -247,8 +242,8 @@ private struct SewingPage: View {
         .accessibilityValue(caption.replacing(" · ", with: ", "))
         .accessibilityHint("Finishes it.")
         .accessibilityIdentifier("stitch-in")
-        // A light, optional tick at each thread: the system's haptics setting turns it off.
-        .sensoryFeedback(.impact(weight: .light), trigger: thread) { _, now in now != nil }
+        // A tick at each thread; the finished page says the last stitch.
+        .haptic(.stitchTick, trigger: thread) { _, now in now != nil && Haptic.ticks(phoneRunHoldsSession: run.phoneRunHoldsSession) }
         #if DEBUG
         .onAppear {
             if UserDefaults.standard.bool(forKey: "stitchInSweep") { frameLog = PatchFrameLog(category: "stitch-in") }
@@ -279,10 +274,15 @@ private struct SewingPage: View {
     }
 }
 
-/// The finished patch on felt: "New patch, Citrus edition", "Your first Acorn Woodpecker in Los Angeles.", Keep listening.
+/// The finished patch on felt: "New patch, Citrus edition", "Your first Acorn Woodpecker in Los Angeles.", and little else, so
+/// the patch gets the room (issue #150, audit F20): one primary action, Share, Undo while its window is open, and the patch itself
+/// as the way to the collection. That the sighting is saved goes without saying: the toast and Undo say it.
 private struct NewPatchPage: View {
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(AccountSession.self) private var account
+    @Environment(CircleStore.self) private var circles
+    @Environment(FindOutbox.self) private var findOutbox
     @Environment(\.modelContext) private var context
     @Environment(\.openCollection) private var openCollection
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -305,12 +305,7 @@ private struct NewPatchPage: View {
         ScrollView {
             VStack(spacing: 18) {
                 RevealHeading(eyebrow: reveal.eyebrow, name: reveal.commonName, line: PatchText.revealNumberLine(reveal.addition.placement))
-                PatchView(state: reveal.artState(in: library), edition: reveal.edition, size: .full, tag: reveal.commonName, decoded: decoded)
-                    .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 280)
-                    .padding(.vertical, 8)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(PatchText.spoken(name: reveal.commonName, edition: reveal.addition.placement.editionLabel, count: reveal.addition.patchCount, sewn: sighting?.confirmedAt ?? .now, beingSewn: reveal.artState(in: library) == .beingSewn))
-                    .accessibilityIdentifier("revealed-patch")
+                patch(spoken: PatchText.spoken(name: reveal.commonName, edition: reveal.addition.placement.editionLabel, count: reveal.addition.patchCount, sewn: sighting?.confirmedAt ?? .now, beingSewn: reveal.artState(in: library) == .beingSewn))
                 Text("\(reveal.title).")
                     .font(.system(.body, design: .serif).italic())
                     .foregroundStyle(Color.ink)
@@ -318,6 +313,15 @@ private struct NewPatchPage: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .boardLabel(horizontal: 12, vertical: 8)
                     .accessibilityLabel(reveal.title)
+                if let sharedLine {
+                    Text(sharedLine)
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.ink)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .boardLabel()
+                        .accessibilityIdentifier("revealed-shared")
+                }
                 VStack(spacing: 10) {
                     KeepListeningButton()
                     if let sighting {
@@ -329,33 +333,61 @@ private struct NewPatchPage: View {
                         }
                         .buttonStyle(.journalOutlined)
                     }
-                    // A long glasses run can sew a dozen. Going to the collection waits for the last of them.
-                    Group {
-                        if run.waitingCeremonies > 0 {
-                            Button("Skip the rest, \(run.waitingCeremonies) more") { run.skipCeremonies() }
-                        } else {
-                            Button("See it in my collection") {
-                                run.dismissReveal()
-                                openCollection()
-                            }
-                        }
+                    if run.waitingCeremonies > 0 {
+                        Button("Skip the rest, \(run.waitingCeremonies) more") { run.skipCeremonies() }
+                            .buttonStyle(.journalPress)
+                            .font(JournalFont.supporting.weight(.semibold))
+                            .foregroundStyle(Color.ink)
+                            .boardLabel()
+                            .frame(minHeight: 44)
                     }
-                    .font(JournalFont.supporting.weight(.semibold))
-                    .foregroundStyle(Color.ink)
-                    .boardLabel()
-                    .frame(minHeight: 44)
                     RevealUndoButton(reveal: reveal)
-                    SavedNote()
                 }
             }
             .revealMargins()
         }
         .scrollBounceBehavior(.basedOnSize)
-        // A light, optional haptic: the system's haptics setting turns it off.
-        .sensoryFeedback(.impact(weight: .light), trigger: appeared)
+        // The last stitch, however the page was reached: after the stitching, or straight here with none.
+        .haptic(.stitchDone, trigger: appeared)
         .onAppear { appeared = true }
+        // The Guilds may not have been read yet this launch: the Guilds tab hasn't been opened.
+        .task {
+            if account.isSignedIn, circles.circles.isEmpty, circles.listState != .loaded { await circles.refresh() }
+        }
         .sheet(item: $sharing) { sighting in
             ShareCardView(sighting: sighting)
+        }
+    }
+
+    /// "Shared with Sunday Group": true of this sighting, not only of the settings, since a patch from the glasses can be shown
+    /// long after its add.
+    private var sharedLine: String? {
+        guard findOutbox.isPublished(reveal.addition.identifier) else { return nil }
+        return FindPolicy.sharedLine(sharing: FindOutbox.sharingSetting, signedIn: account.isSignedIn, guilds: circles.circles.map(\.name))
+    }
+
+    /// The patch, and the way to it in the collection. A long glasses run can sew a dozen, and going to the collection waits for
+    /// the last of them, so until then it's only the patch.
+    @ViewBuilder private func patch(spoken: String) -> some View {
+        let picture = PatchView(state: reveal.artState(in: library), edition: reveal.edition, size: .full, tag: reveal.commonName, decoded: decoded)
+            .frame(maxWidth: revealPatchWidth(typeSize))
+            .padding(.vertical, 8)
+        if run.waitingCeremonies > 0 {
+            picture
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(spoken)
+                .accessibilityIdentifier("revealed-patch")
+        } else {
+            Button {
+                run.dismissReveal()
+                openCollection(reveal.addition.placement.setID.map(BoardChoice.set(id:)) ?? .uncharted)
+            } label: {
+                picture.contentShape(Rectangle())
+            }
+            .buttonStyle(.patchLift)
+            .accessibilityLabel(spoken)
+            .accessibilityHint("Shows it in your collection.")
+            .accessibilityIdentifier("revealed-patch")
         }
     }
 }

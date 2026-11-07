@@ -10,8 +10,9 @@ enum Route: Hashable {
     case species(scientificName: String, commonName: String)
     case speciesCredits(scientificName: String)
     case sighting(PersistentIdentifier)
-    /// One patch, on its page with its paper card behind it (issue #134).
-    case patch(CardCollection.Patch.Key)
+    /// One patch, on its page with its paper card behind it (issue #134). `from` is the kind of tile it grows out of (issue #150);
+    /// `turned` opens it on the paper card.
+    case patch(CardCollection.Patch.Key, from: PatchLiftSurface? = nil, turned: Bool = false)
     /// A patch's sightings, or every sighting of the species.
     case sightings(SightingsScope)
     /// One species' patches across places (issue #134).
@@ -59,8 +60,9 @@ private struct RouteDestination: View {
             SpeciesCreditsView(scientificName: scientificName)
         case .sighting(let id):
             SightingDetailView(id: id)
-        case .patch(let key):
-            PatchDetailView(key: key)
+        case .patch(let key, let surface, let turned):
+            PatchDetailView(key: key, startsTurned: turned)
+                .patchLiftTransition(from: surface.map { PatchLiftID(key: key, surface: $0) })
         case .sightings(let scope):
             PatchSightingsView(scope: scope)
         case .speciesPatches(let scientificName, let commonName):
@@ -101,8 +103,8 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Collection tab at the top of the Patches view: the new-patch reveal's "See it in my collection" (issues #51, #132).
-    @Entry var openCollection: @MainActor () -> Void = {}
+    /// Opens the Collection tab at the top of the Patches view, on one board: the new patch on the reveal (issues #51, #132, #150).
+    @Entry var openCollection: @MainActor (BoardChoice?) -> Void = { _ in }
     /// Opens the Listen tab: a species with no sightings yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
     /// Opens the Atlas tab: an empty collection's birds to find (issue #138).
@@ -170,18 +172,21 @@ struct RootView: View {
                     ListenView()
                         .appDestinations()
                 }
+                .patchStack { listenPath.append($0) }
             }
             SwiftUI.Tab("Collection", image: "stitched.ring", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
                     JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()
                 }
+                .patchStack { journalPath.append($0) }
             }
             SwiftUI.Tab("Atlas", systemImage: "map", value: Tab.guide) {
                 NavigationStack(path: $guidePath) {
                     FieldGuideView()
                         .appDestinations()
                 }
+                .patchStack { guidePath.append($0) }
             }
             // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
             // turns it on in Release, add what's in `BirdJournal.entitlements` to `BirdJournal-Release.entitlements`: the invite
@@ -192,12 +197,18 @@ struct RootView: View {
                         CirclesView()
                             .appDestinations()
                     }
+                    .patchStack { circlesPath.append($0) }
                 }
             }
         }
         .tabViewBottomAccessory(isEnabled: run.state.isActive && tab != .listen) {
             ListeningAccessory { tab = .listen }
         }
+        // Here, so Start and both Stops say the same, and a run the glasses end does too.
+        // A run that failed says that, and only that.
+        .haptic(.startStop, trigger: run.isRunGoing) { _, _ in !run.hasFailed }
+        .haptic(.error, trigger: run.hasFailed) { _, failed in failed }
+        .haptic(.error, trigger: run.failedActions)
         // The end of a run, from whichever tab it finds the birder on (issue #150). On the Listen tab's own view it could only be
         // presented with that tab showing: on another, SwiftUI gave up on it and the birds heard went with it. It waits for any
         // sheet already up to close, since only one can be: over a bird's review or New Guild it would throw away what's in it.
@@ -219,10 +230,11 @@ struct RootView: View {
         .onChange(of: scenePhase == .active && !isUnderSplash && run.hasCeremonyWaiting, initial: true) { _, ready in
             if ready { run.showNextCeremony() }
         }
-        .environment(\.openCollection) {
+        .environment(\.openCollection) { board in
             collection.mode = .cards
             collection.query = ""
             collection.offsets[.cards] = 0
+            collection.board = board
             journalPath = NavigationPath()
             tab = .journal
         }
@@ -283,6 +295,7 @@ struct RootView: View {
         .task { await pushes.refreshPermission() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
+        .overlay(alignment: .topLeading) { HapticLogProbe() }
         .modifier(DebugLaunch(tab: $tab, journalMode: $collection.mode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }

@@ -119,7 +119,7 @@ final class PatchStatesUITests: XCTestCase {
     func testANewPatchWithoutItsPaintingGoesStraightToTheFinishedPage() throws {
         let app = launch(seeded + ["-fakePatchArt", "missing", "-autoScreen", "reveal", "-autoCardSpecies", "Sayornis nigricans"])
         XCTAssertTrue(element(app, "revealed-patch").waitForExistence(timeout: 15), "no stitching without a painting: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts["Your sighting is already saved."].exists, "the sighting is saved however the art stands")
+        XCTAssertTrue(app.buttons["Done"].exists, "the page is the same however the art stands")
     }
 
     // MARK: - Uncharted
@@ -129,7 +129,7 @@ final class PatchStatesUITests: XCTestCase {
         let app = launch(seeded + ["-autoBoard", "uncharted", "-autoScreen", "cards"])
         let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH \"Anna's Hummingbird, Uncharted patch\"")).firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts["Uncharted, 2 outside every set"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["2 outside every set"].exists, "screen: \(app.debugDescription.prefix(3000))")
         tile.tap()
         let flip = element(app, "card-flip")
         XCTAssertTrue(flip.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")

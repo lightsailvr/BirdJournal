@@ -9,9 +9,10 @@ import SwiftUI
 struct CandidateReviewSheet: View {
     @Environment(\.dismiss) private var dismiss
     let candidate: Candidate
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             CandidateReviewView(candidate: candidate)
                 .appDestinations()
                 .toolbar {
@@ -20,6 +21,7 @@ struct CandidateReviewSheet: View {
                     }
                 }
         }
+        .patchStack(lifts: false) { path.append($0) }
     }
 }
 

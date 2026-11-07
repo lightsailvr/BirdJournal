@@ -197,7 +197,7 @@ struct PaperCardView: View {
 
     /// Stays in view under the scrolling text.
     private func footer(hasCredits: Bool) -> some View {
-        let all = patch.count == 1 ? PatchText.sightings(1) : "All \(PatchText.sightings(patch.count))"
+        let all = PatchText.allSightings(patch.count)
         let hasPainting = library.patchArt(scientificName: patch.scientificName, setID: patch.placement.setID) != nil
         return ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) {

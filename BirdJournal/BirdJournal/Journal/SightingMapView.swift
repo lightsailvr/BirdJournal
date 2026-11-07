@@ -53,13 +53,14 @@ struct SightingMapView: View {
 
     private var located: [Sighting] { sightings.filter { $0.location != nil } }
 
+    @State private var path = NavigationPath()
     private var selected: Sighting? {
         guard let selection else { return nil }
         return located.first { $0.persistentModelID == selection }
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Map(position: $position, selection: $selection) {
                 ForEach(located) { sighting in
                     if let centre = sighting.location?.clCoordinate {
@@ -109,6 +110,14 @@ struct SightingMapView: View {
             }
             .appDestinations()
         }
+        .patchStack(lifts: false) { path.append($0) }
+        #if DEBUG
+        .task {
+            if UserDefaults.standard.bool(forKey: "autoMapSpeciesPatches"), let focus = located.first(where: { $0.persistentModelID == focusID }) {
+                path.append(Route.speciesPatches(scientificName: focus.scientificName, commonName: library.commonName(for: focus)))
+            }
+        }
+        #endif
     }
 }
 

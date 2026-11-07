@@ -141,6 +141,8 @@ final class ListeningCoordinator {
     private(set) var pendingCeremonies: [UUID] {
         didSet { defaults.set(pendingCeremonies.map(\.uuidString), forKey: Self.pendingCeremoniesKey) }
     }
+    /// How many adds and undos have failed: an error's haptic follows it.
+    private(set) var failedActions = 0
     /// When the run ended, by Stop or on its own: what the recap counts the time to, however long the review waits to be seen.
     private(set) var endedAt: Date?
     /// The time the run has spent paused, so "listened" doesn't count it.
@@ -285,6 +287,16 @@ final class ListeningCoordinator {
 
     func isAdded(_ candidate: Candidate) -> Bool { sightings.isAdded(candidate.species) }
 
+    /// What Start's and Stop's haptic follows: on as the run starts, off the moment it's told to stop.
+    var isRunGoing: Bool {
+        state.isActive && state != .stopping
+    }
+
+    /// The last run ended by failing.
+    var hasFailed: Bool {
+        if case .ended(.failed) = state { true } else { false }
+    }
+
     /// The summary line's counts, against the patches an add here would join: "1 new patch waiting and 2 you already have".
     func hunt(in collection: CardCollection) -> RunHunt {
         RunHunt(candidates: candidates, collection: collection, at: coordinate)
@@ -400,6 +412,7 @@ final class ListeningCoordinator {
             return addition
         } catch {
             Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
             acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
             return nil
         }
@@ -514,6 +527,7 @@ final class ListeningCoordinator {
             if reveal?.addition == addition { reveal = nil }
         } catch {
             Self.logger.error("undo failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
             acknowledge("Could not undo: \(error.localizedDescription)", undo: nil)
         }
     }
@@ -523,10 +537,19 @@ final class ListeningCoordinator {
         self.acknowledgment = acknowledgment
         acknowledgmentTask?.cancel()
         acknowledgmentTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(6))
+            try? await Task.sleep(for: .seconds(Self.acknowledgmentSeconds))
             guard !Task.isCancelled, let self, self.acknowledgment == acknowledgment else { return }
             self.acknowledgment = nil
         }
+    }
+
+    /// How long an add's toast and its Undo stay. `-acknowledgmentSeconds <n>` holds them, for a test to get to them.
+    private static var acknowledgmentSeconds: Double {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "acknowledgmentSeconds")
+        if seconds > 0 { return seconds }
+        #endif
+        return 6
     }
 
     // MARK: - Waveform
