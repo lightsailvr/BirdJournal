@@ -15,4 +15,10 @@ final class CollectionState {
     var board: BoardChoice?
     /// How far down each mode was scrolled, in points from the top of its content.
     var offsets: [JournalView.Mode: CGFloat] = [:]
+    /// The search field is open.
+    var isSearching = false
+    /// Where each mode was when a search started, to go back to when it's cleared.
+    var offsetsBeforeSearch: [JournalView.Mode: CGFloat]?
+    /// Goes up to send the page to its top from outside it.
+    var topRequests = 0
 }

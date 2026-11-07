@@ -50,6 +50,8 @@ import UIKit
 ///   splash has played, and `-launchSplashSeconds <n>` holds it that long, so a UI test can catch it; `-modeFadeSeconds <n>` slows
 ///   the Collection's cross-fade between modes the same way (issue #150).
 /// - `-acknowledgmentSeconds <n>` keeps an add's toast and Undo up that long.
+/// - `-autoRevealDelay <n>` with `-autoScreen reveal` starts on the Collection tab and shows the page n seconds on, over whatever's been done
+///   there by then (issue #150).
 /// - `-coverRoomSeconds <n>` holds the room under a board after coming back from a patch's page, for a flick to try (issue #150).
 /// - `-autoMapSpeciesPatches YES` with `-autoScreen map` goes on to the bird's patches in the map sheet's own stack (issue #150).
 /// - `-reduceMotion YES` makes the card flip switch faces and the stitch-in not happen, as with the system's Reduce
@@ -214,6 +216,11 @@ struct DebugLaunch: ViewModifier {
                 journalMode = .sightings
             case "reveal":
                 tab = .listen
+                let revealDelay = defaults.double(forKey: "autoRevealDelay")
+                if revealDelay > 0 {
+                    tab = .journal
+                    try? await Task.sleep(for: .seconds(revealDelay))
+                }
                 // With `-autoPhoneListening`, over a run, as after a real add (issue #117's screenshots).
                 if defaults.string(forKey: "autoPhoneListening") != nil {
                     run.source = .phone

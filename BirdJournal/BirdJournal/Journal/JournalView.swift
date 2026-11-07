@@ -2,6 +2,7 @@ import Album
 import Pack
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// The Collection tab (issue #28, renamed from Journal in #117): a felt board of a set's patches (issue #134), every
 /// sighting by day (the journal), or the distinct species, with search; a patch opens its page, a sighting the sighting
@@ -32,8 +33,6 @@ struct JournalView: View {
     @State private var restoring = false
     /// The restore under way.
     @State private var settling: Task<Void, Never>?
-    /// Where each mode was when a search started, to go back to when it's cleared.
-    @State private var offsetsBeforeSearch: [Mode: CGFloat]?
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
     /// meanwhile are not the birder's.
     var isCovered = false
@@ -64,6 +63,22 @@ struct JournalView: View {
                 // mode change does to the content or the offset, it stays exactly where it is.
                 .safeAreaBar(edge: .top) {
                     VStack(alignment: .leading, spacing: 0) {
+                        if state.isSearching {
+                            HStack(spacing: 8) {
+                                CollectionSearchField(query: $state.query)
+                                    .frame(height: 40)
+                                Button(action: endSearch) {
+                                    Label("Close search", systemImage: "xmark")
+                                        .labelStyle(.iconOnly)
+                                        .frame(width: 24, height: 28)
+                                }
+                                .buttonStyle(.glass)
+                                .buttonBorderShape(.circle)
+                                .accessibilityIdentifier("collection-search-close")
+                            }
+                            // The height of the row it stands in for, so the picker stays where it was.
+                            .frame(height: 54)
+                        }
                         Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
                             ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
                         }
@@ -100,29 +115,45 @@ struct JournalView: View {
                 .keepsItsFootUnderAPage(isCovered: isCovered)
                 .onChange(of: state.query.isEmpty) { _, isEmpty in
                     // Results start at their top, whatever the board's offset was: there, a short list's patches sit above the bar until
-                    // it's scrolled. Clearing the search goes back to where each mode was.
-                    if isEmpty {
-                        state.offsets = offsetsBeforeSearch ?? state.offsets
-                        offsetsBeforeSearch = nil
-                        restore(state.offsets[state.mode] ?? 0)
-                    } else {
-                        offsetsBeforeSearch = state.offsets
+                    // it's scrolled. Clearing the words goes back to where the mode was.
+                    if !isEmpty {
                         restore(0)
+                    } else if let before = state.offsetsBeforeSearch {
+                        state.offsets = before
+                        restore(before[state.mode] ?? 0)
                     }
                 }
+                .onChange(of: state.topRequests) { restore(0) }
                 .onChange(of: state.board) {
                     // Another board starts from its first patch.
                     state.offsets[.cards] = 0
                     restore(0)
                 }
                 .background { ModeSurface(mode: state.mode).ignoresSafeArea() }
-                // A magnifier in the title's row, so nothing moves the picker: as a drawer it hid on scroll and took the picker with it.
-                .searchable(text: $state.query, placement: .toolbar, prompt: "Search birds")
-                .searchToolbarBehavior(.minimize)
+                // Search in the title's row, so nothing moves the picker, and our own: the system's in this place has a close button that
+                // does nothing with the keyboard up, and keeps the words with it down (DECISIONS.md). While it's open the navigation bar
+                // gives way to it, in the bar with the picker, since a toolbar item won't hold a field that wide.
+                .toolbarVisibility(state.isSearching ? .hidden : .automatic, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            state.offsetsBeforeSearch = state.offsets
+                            state.isSearching = true
+                        } label: {
+                            Label("Search", systemImage: "magnifyingglass")
+                        }
+                        .accessibilityIdentifier("collection-search-open")
+                    }
+                }
+                .scrollDismissesKeyboard(.immediately)
                 #if DEBUG
                 .task {
                     // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
-                    if let text = UserDefaults.standard.string(forKey: "autoQuery") { state.query = text }
+                    if let text = UserDefaults.standard.string(forKey: "autoQuery") {
+                        state.offsetsBeforeSearch = state.offsets
+                        state.isSearching = true
+                        state.query = text
+                    }
                     // Issue #138's: `-autoBoard uncharted` opens the Uncharted board.
                     if UserDefaults.standard.string(forKey: "autoBoard") == "uncharted" { state.board = .uncharted }
                 }
@@ -304,6 +335,18 @@ struct JournalView: View {
         }
     }
 
+    /// Closes the search from whatever state it's in: the field, the keyboard and the words all go, and the board goes back to where it was.
+    private func endSearch() {
+        let before = state.offsetsBeforeSearch
+        state.offsetsBeforeSearch = nil
+        state.isSearching = false
+        state.query = ""
+        if let before {
+            state.offsets = before
+            restore(before[state.mode] ?? 0)
+        }
+    }
+
     /// Shows `mode` where it was left: the picker stays pinned, so each mode keeps its own place.
     private func switchMode(to mode: Mode) {
         guard mode != state.mode else { return }
@@ -357,6 +400,62 @@ struct JournalView: View {
     private func stopRestoring() {
         settling?.cancel()
         restoring = false
+    }
+}
+
+/// The search field, in the title's row: the system's own search text field, so it looks and reads as one, taking the keyboard as it's put
+/// on screen, which a SwiftUI field in a toolbar item doesn't. The keyboard's Search key lowers it and keeps the results.
+private struct CollectionSearchField: UIViewRepresentable {
+    @Binding var query: String
+
+    /// Takes the keyboard once it's in the window.
+    final class Field: UISearchTextField {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            guard window != nil else { return }
+            Task { @MainActor in becomeFirstResponder() }
+        }
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        let query: Binding<String>
+
+        init(query: Binding<String>) {
+            self.query = query
+        }
+
+        @objc func changed(_ field: UITextField) {
+            query.wrappedValue = field.text ?? ""
+        }
+
+        func textFieldShouldReturn(_ field: UITextField) -> Bool {
+            field.resignFirstResponder()
+            return false
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(query: $query)
+    }
+
+    func makeUIView(context: Context) -> Field {
+        let field = Field()
+        field.placeholder = "Search birds"
+        field.text = query
+        field.returnKeyType = .search
+        field.autocorrectionType = .no
+        field.delegate = context.coordinator
+        field.adjustsFontForContentSizeCategory = true
+        // It's one line in the title's row, whatever the text size.
+        field.maximumContentSizeCategory = .accessibilityMedium
+        field.accessibilityIdentifier = "collection-search"
+        field.addTarget(context.coordinator, action: #selector(Coordinator.changed), for: .editingChanged)
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        return field
+    }
+
+    func updateUIView(_ field: Field, context: Context) {
+        if field.text != query { field.text = query }
     }
 }
 

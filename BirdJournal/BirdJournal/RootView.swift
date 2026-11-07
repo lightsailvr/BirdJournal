@@ -232,8 +232,12 @@ struct RootView: View {
         }
         .environment(\.openCollection) { board in
             collection.mode = .cards
+            // To the top, not back to where a search open meanwhile started from.
+            collection.offsetsBeforeSearch = nil
+            collection.isSearching = false
             collection.query = ""
             collection.offsets[.cards] = 0
+            collection.topRequests += 1
             collection.board = board
             journalPath = NavigationPath()
             tab = .journal
