@@ -10,7 +10,8 @@ import SwiftUI
 /// `ListeningCoordinator`, so leaving the tab never ends one.
 struct ListenView: View {
     @Environment(ListeningCoordinator.self) private var run
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     @Environment(\.warmEngine) private var warmEngine
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab.
     var isCovered = false

@@ -343,7 +343,7 @@ private struct FacesAndInvite: View {
             Button(action: invite) {
                 Text("Invite")
             }
-            .buttonStyle(InvitePillStyle())
+            .buttonStyle(OutlinedButtonStyle(colour: .ink, size: .small))
             .disabled(detail.circle.memberCount >= 20)
             .accessibilityLabel("Invite friends")
             .accessibilityValue(detail.circle.memberCount >= 20 ? "This Guild is full" : "")
@@ -353,28 +353,6 @@ private struct FacesAndInvite: View {
     /// "4 members, invite-only: Pat Birder, Maya Ortiz, Jo Park and Sam Okafor".
     private var spoken: String {
         "\(total == 1 ? "1 member" : "\(total) members"), invite-only: \(members.map(\.name).formatted(.list(type: .and)))"
-    }
-}
-
-/// Invite, as the mock draws it: a small outlined pill, no taller than the faces beside it, answering to 44 pt.
-private struct InvitePillStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.dynamicTypeSize) private var typeSize
-
-    func makeBody(configuration: Configuration) -> some View {
-        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
-        configuration.label
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(Color.ink)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 5)
-            .background(Color.ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
-            .overlay(shape.strokeBorder(Color.ink, lineWidth: 1))
-            .frame(minHeight: 44)
-            .opacity(isEnabled ? 1 : 0.4)
-            .contentShape(.rect)
-            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 

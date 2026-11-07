@@ -144,6 +144,11 @@ public final class PackLibrary {
         return sets
     }
 
+    /// The set with this id, among every set the phone knows (`sets`).
+    public func set(id: String) -> PackSet? {
+        sets.first { $0.id == id }
+    }
+
     /// A set's cover (issue #114) for the Atlas and the Listen tab: the one that ships with the app (issue #150), else the full
     /// cover of the pack on the phone whose set it is, else the index's thumbnail; nil when none has one.
     public func cover(setID: String) -> SetCover? {

@@ -281,6 +281,14 @@ struct PatchWordsTests {
         #expect(PatchText.editionLine(.uncharted) == "Uncharted")
     }
 
+    @Test("a species' patch tile names its set, and the count with a comma from the second sighting")
+    func setLine() throws {
+        let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
+        let once = try Self.patch(count: 1, at: griffith)
+        #expect(PatchText.setLine(once) == once.placement.setName)
+        #expect(PatchText.setLine(try Self.patch(count: 8, at: griffith)) == "\(once.placement.setName), seen 8×")
+    }
+
     @Test("the board takes three columns, two as the text grows, one at accessibility sizes")
     func columns() {
         #expect(PatchBoardLayout.columns(for: .large) == 3)

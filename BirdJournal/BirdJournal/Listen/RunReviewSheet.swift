@@ -88,7 +88,6 @@ struct RunReviewSheet: View {
                         .padding(.top, 8)
                     if run.coordinate != nil {
                         Toggle(isOn: $includeCity) { Label("City", systemImage: "building.2") }
-                            .tint(Color.moss)
                             .font(JournalFont.body)
                             .foregroundStyle(Color.ink)
                             .padding(.top, 14)

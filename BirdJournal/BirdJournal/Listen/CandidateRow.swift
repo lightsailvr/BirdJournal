@@ -14,7 +14,8 @@ struct CandidateRow: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     let candidate: Candidate
     var isCalling = false
     /// The moment the heard text is written against, from the screen's clock.

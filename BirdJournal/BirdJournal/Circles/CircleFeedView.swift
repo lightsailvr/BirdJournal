@@ -727,10 +727,8 @@ struct FindPatchPicture: View {
 
 extension FeedItem.Owner {
     /// "Maya", from "Maya Ortiz".
-    var firstName: String { name.split(separator: " ").first.map(String.init) ?? name }
+    var firstName: String { CircleMember.firstName(of: name) }
 
     /// Avatars are initials only (spec v2, "Accounts and the app client").
-    var initials: String {
-        name.split(whereSeparator: \.isWhitespace).prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
-    }
+    var initials: String { CircleMember.initials(of: name) }
 }

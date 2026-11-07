@@ -57,8 +57,8 @@ import UIKit
 ///   there by then (issue #150).
 /// - `-coverRoomSeconds <n>` holds the room under a board after coming back from a patch's page, for a flick to try (issue #150).
 /// - `-autoMapSpeciesPatches YES` with `-autoScreen map` goes on to the bird's patches in the map sheet's own stack (issue #150).
-/// - `-reduceMotion YES` makes the card flip switch faces and the stitch-in not happen, as with the system's Reduce
-///   Motion. The Lift doesn't read it: its cross-fade is the system's own, so it takes the real setting
+/// - `-reduceMotion YES` is the system's Reduce Motion for everything the app draws (`PatchMotion`): the card flip switches
+///   faces, the stitch-in doesn't happen, the run's waveform holds still. The Lift doesn't read it: its cross-fade is the system's own, so it takes the real setting
 ///   (`simctl spawn <udid> defaults write com.apple.Accessibility ReduceMotionEnabled -bool true`, then relaunch). `-voiceOverPath YES` skips the stitch-in as VoiceOver does (issue #135).
 /// - `-stitchInSeconds <n>` makes the stitch-in that long, so a UI test or a screenshot can catch it part way;
 ///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).

@@ -29,7 +29,7 @@ struct SpeciesPatchesView: View {
                 } else {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 18) {
                         ForEach(patches) { patch in
-                            SewnPatchTile(patch: patch, name: patch.placement.editionLabel, line: patch.count == 1 ? patch.placement.setName : "\(patch.placement.setName) · seen \(patch.count)×", spokenName: name, surface: .species)
+                            SewnPatchTile(patch: patch, name: patch.placement.editionLabel, line: PatchText.setLine(patch), spokenName: name, surface: .species)
                         }
                     }
                     .padding(.horizontal, 12)

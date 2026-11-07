@@ -243,7 +243,7 @@ private struct SewingPage: View {
         .accessibilityHint("Finishes it.")
         .accessibilityIdentifier("stitch-in")
         // A tick at each thread; the finished page says the last stitch.
-        .haptic(.stitchTick, trigger: thread) { _, now in now != nil && Haptic.ticks(phoneRunHoldsSession: run.phoneRunHoldsSession) }
+        .stitchTickHaptic(trigger: thread) { _, now in now != nil }
         #if DEBUG
         .onAppear {
             if UserDefaults.standard.bool(forKey: "stitchInSweep") { frameLog = PatchFrameLog(category: "stitch-in") }

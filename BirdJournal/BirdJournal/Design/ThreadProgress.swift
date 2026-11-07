@@ -39,7 +39,6 @@ struct ThreadProgress: View {
     /// The stitches drawn: behind the value for as long as it's sewing towards it.
     @State private var shown: Double?
     @State private var isOnScreen = false
-    @Environment(ListeningCoordinator.self) private var run: ListeningCoordinator?
     /// What the haptics follow as it sews: one tick a stitch, and the last stitch's success.
     @State private var ticks = 0
     @State private var finishes = 0
@@ -142,7 +141,7 @@ struct ThreadProgress: View {
             }
         }
         .frame(height: stitchHeight)
-        .haptic(.stitchTick, trigger: ticks) { _, _ in Haptic.ticks(phoneRunHoldsSession: run?.phoneRunHoldsSession ?? false) }
+        .stitchTickHaptic(trigger: ticks)
         .haptic(.stitchDone, trigger: finishes)
         .onDisappear { felt?.cancel() }
         .allowsHitTesting(false)

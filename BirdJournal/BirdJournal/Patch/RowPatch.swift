@@ -52,10 +52,10 @@ struct RowPicture: View {
     }
 }
 
-/// A patch on a run's row, standing for the bird: `PatchView`, on its two-at-a-time decode queue, as a plain bitmap under the shader,
-/// so a row that redraws every second never decodes it again. The bird's name is in type beside it, so a patch without its
-/// painting is the edition's blank, with no paper tag to read at this size. Whoever shows it holds the light
-/// (`holdsPatchLight`).
+/// A small patch standing for the bird, on a run's row and in a Guild goal's row of the month's patches: `PatchView`, on its
+/// two-at-a-time decode queue, as a plain bitmap under the shader, so a row that redraws every second never decodes it again.
+/// The bird's name is in type beside it or in what VoiceOver hears, so a patch without its painting is the edition's blank,
+/// with no paper tag to read at this size. Whoever shows it holds the light (`holdsPatchLight`).
 struct RowPatch: View {
     @Environment(PackLibrary.self) private var library
     let scientificName: String

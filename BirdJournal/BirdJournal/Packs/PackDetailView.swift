@@ -27,7 +27,7 @@ struct PackDetailView: View {
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
                 let line = [edition, installed?.info.region ?? descriptor?.region].compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: ", ").nilIfEmpty
-                let progress = library.sets.contains { $0.id == id } ? collectionStore.collection.progress(of: id) : nil
+                let progress = library.set(id: id) != nil ? collectionStore.collection.progress(of: id) : nil
                 PackPlate(setID: id, line: line, progress: progress)
                     .padding(.top, 4)
                 if let installed {

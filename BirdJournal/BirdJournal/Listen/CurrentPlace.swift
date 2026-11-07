@@ -29,7 +29,7 @@ final class CurrentPlace {
         self.collection = collection
         self.location = location
         self.defaults = defaults
-        let remembered = defaults.string(forKey: Self.rememberedKey).flatMap { id in library.sets.contains { $0.id == id } ? id : nil }
+        let remembered = defaults.string(forKey: Self.rememberedKey).flatMap { id in library.set(id: id) != nil ? id : nil }
         let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection())
         setID = id
         let cover = id.flatMap(library.cover(setID:))

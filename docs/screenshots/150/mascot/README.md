@@ -14,6 +14,6 @@ Audit pick V7. The six birds in glasses as the app icon choices, and the perched
 | Each icon's lower-left arc at 1024 px, the approved patch above and what ships below | `icon-edges-before-after.jpg` |
 | The finch's glasses at true pixels, at the size a state uses and at ax5 | `finch-true-pixels-large.jpg`, `finch-true-pixels-ax5.jpg` |
 
-Unchanged, on purpose: the Listen hero (its fallback still draws `PerchedBirdDrawing`), set headers, the Guilds sign-in and join pages, which keep the emblem, and the states with another mark. See `DECISIONS.md`, "The mascot in the app".
+Unchanged, on purpose: the Listen hero (its fallback still drew the old line drawing then; slice 6's covers took that use, and the drawing is deleted), set headers, the Guilds sign-in and join pages, which keep the emblem, and the states with another mark. See `DECISIONS.md`, "The mascot in the app".
 
 To take them, see the top of `capture.sh`.
