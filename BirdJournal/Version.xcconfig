@@ -1,0 +1,4 @@
+// Bump the marketing version when striking a release from dev to main.
+MARKETING_VERSION = 0.1.0
+// Local bundle-format fallback. Xcode Cloud's CI_BUILD_NUMBER replaces this in the generated Info.plists.
+CURRENT_PROJECT_VERSION = 1

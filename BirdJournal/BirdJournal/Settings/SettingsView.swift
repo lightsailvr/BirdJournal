@@ -117,10 +117,14 @@ struct SettingsView: View {
         #endif
     }
 
-    static var versionText: String {
-        let info = Bundle.main.infoDictionary
-        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
-        let build = info?["CFBundleVersion"] as? String ?? "?"
+    static var versionText: String { versionText(info: Bundle.main.infoDictionary ?? [:]) }
+
+    static func versionText(info: [String: Any]) -> String {
+        let version = info["CFBundleShortVersionString"] as? String ?? "?"
+        if let commit = info["BirdJournalBuildCommit"] as? String, !commit.isEmpty {
+            return "\(version) (local · \(commit))"
+        }
+        let build = info["CFBundleVersion"] as? String ?? "?"
         return "\(version) (\(build))"
     }
 }
