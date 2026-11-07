@@ -9,4 +9,6 @@ Validation on 2026-11-07:
 - App: 15 tests passed in HTTPCircleClientTests, CircleStoreTests and AtlasPackCollectionTests, including create/PATCH JSON, old cached Guild decoding, hashed fallback, and stored identity in the list/detail/invite.
 - UI: creation and noncreator-hidden-edit tests passed. The edit UI test saved and reopened the correct name/icon, then found the Mark picker did not expose its selected value on the button. Explicit accessibility values were added for Mark and Colour; the final integrated edit UI test passed with the corrected Mark and Colour assertions.
 
-The backend must be deployed before chosen icons and creator edits work against the real service. No infrastructure was deployed for this change.
+The backend was deployed to the existing `BirdJournal` API in `us-west-2` on 2026-11-07, after the maintainer requested deployment. CloudFormation completed successfully; the deployed Lambda package hash matches the tested artifact. The live OpenAPI document exposes `PATCH /v1/circles/{circle_id}` and emblem fields on create/read/update, health checks pass, and an unauthenticated PATCH returns 401.
+
+The deployment changed only the API function's code/asset metadata in the stack template. An unrelated pending privacy-page asset was deliberately preserved, using a reviewed API-only CloudFormation change set. No table migration was needed. Authenticated creator editing and the noncreator control check are ready for the phone smoke test.

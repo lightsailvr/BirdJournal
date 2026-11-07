@@ -1377,7 +1377,7 @@ The species page centres its names and patches. One patch is 286 pt, the patch p
 - A creator can pick a nature mark and muted tone while creating a Guild, then change both its name and icon through Info → Edit Guild. The existing ten marks and six tones remain the only choices. With no choice on creation, no emblem is sent and the server-assigned ID gives the Guild its stable automatic look.
 - `emblem: {mark, tone}` is optional on the Guild META item, API responses and app cache. Old Guilds retain their hashed look until edited. All Guild surfaces, including invitation previews and Listen's goal, use the stored icon when present. An unknown future mark or tone safely uses the hash.
 - `PATCH /v1/circles/{id}` accepts a name and/or emblem and returns the updated detail. Only the current creator can edit (403 for other members; 404 for non-members). The DynamoDB write itself conditions on the creator, so a concurrent handoff cannot let the former creator edit. Name-only edits preserve the emblem.
-- Deploy the backend before using the phone's new create/edit controls. This change needs no stack migration and does not deploy infrastructure.
+- The backend must precede the phone's new create/edit controls. It was deployed on 2026-11-07 to the existing API through a reviewed Lambda-only CloudFormation update; no stack migration was needed. Live health, schema and authentication checks passed.
 
 ## A launch shows its real loading work (issue #175, 2026-11-07)
 
