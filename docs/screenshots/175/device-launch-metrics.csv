@@ -1,0 +1,13 @@
+variant,configuration,run,first_launch_after_install,first_frame_ms,listen_appearance_ms,readiness_proxy_ms,main_app_init_ms,source_revision
+before,Debug,1,True,414.194583,337.773375,414.194583,119.390167,78a7ad1 + instrumentation
+before,Debug,2,False,259.784458,187.913791,259.784458,117.135959,78a7ad1 + instrumentation
+before,Debug,3,False,256.6915,185.079083,256.6915,124.266584,78a7ad1 + instrumentation
+before,Release,1,True,418.022333,351.297917,418.022333,117.522042,78a7ad1 + instrumentation
+before,Release,2,False,237.942125,173.001958,237.942125,113.905875,78a7ad1 + instrumentation
+before,Release,3,False,239.248417,174.268792,239.248417,114.617917,78a7ad1 + instrumentation
+after,Debug,1,True,240.339084,416.564834,416.564834,50.645833,fbbc2dc
+after,Debug,2,False,110.645,173.891458,173.891458,54.563375,fbbc2dc
+after,Debug,3,False,112.106042,227.673584,227.673584,57.866458,fbbc2dc
+after,Release,1,True,248.42875,413.786209,413.786209,49.807375,d72247e
+after,Release,2,False,306.952166,456.842666,456.842666,103.956584,d72247e
+after,Release,3,False,107.1415,225.703333,225.703333,56.893792,d72247e
