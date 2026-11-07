@@ -113,6 +113,11 @@ struct CirclePageView: View {
                         .boardLabel()
                         .padding(.top, 12)
                 }
+                // The tab opened straight onto this Guild, so the tab's own way to join another is here.
+                if newGuild != nil {
+                    JoinWithAnInvite()
+                        .padding(.top, 24)
+                }
             }
         } else if let error {
             GuildsUnreachable(message: error) { Task { await load() } }
@@ -126,7 +131,10 @@ struct CirclePageView: View {
     /// Belonging first (the mock's header): the emblem at the left, the name large, the faces and Invite under it.
     private func header(_ detail: CircleDetail) -> some View {
         AdaptiveRow(stacked: typeSize.isAccessibilitySize, spacing: 16) {
-            GuildEmblem(identity: GuildIdentity(circleID: detail.circle.id), size: 102)
+            // The emblem's ring is the page's colour, so on felt it doesn't read: the disc you see is what's the patches' size. On
+            // linen the ring shows, just outside their edge.
+            GuildEmblem(identity: GuildIdentity(circleID: detail.circle.id), size: 112)
+                .padding(-5)
             VStack(alignment: .leading, spacing: 6) {
                 Text(detail.circle.name)
                     .font(JournalFont.title)
@@ -316,7 +324,7 @@ private struct FacesAndInvite: View {
             Button(action: invite) {
                 Text("Invite")
             }
-            .buttonStyle(.journalRowPill(isFilled: false))
+            .buttonStyle(InvitePillStyle())
             .disabled(detail.circle.memberCount >= 20)
             .accessibilityLabel("Invite friends")
             .accessibilityValue(detail.circle.memberCount >= 20 ? "This Guild is full" : "")
@@ -326,6 +334,28 @@ private struct FacesAndInvite: View {
     /// "4 members, invite-only: Pat Birder, Maya Ortiz, Jo Park and Sam Okafor".
     private var spoken: String {
         "\(total == 1 ? "1 member" : "\(total) members"), invite-only: \(members.map(\.name).formatted(.list(type: .and)))"
+    }
+}
+
+/// Invite, as the mock draws it: a small outlined pill, no taller than the faces beside it, answering to 44 pt.
+private struct InvitePillStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        configuration.label
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color.ink)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .background(Color.ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(Color.ink, lineWidth: 1))
+            .frame(minHeight: 44)
+            .opacity(isEnabled ? 1 : 0.4)
+            .contentShape(.rect)
+            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 

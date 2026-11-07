@@ -147,6 +147,8 @@ final class CirclesUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["Backyard Crew"].exists, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.tabBars.buttons["Guilds"].isHittable, "the tab's own page, not one pushed over it")
+        XCTAssertTrue(app.scrolledTo(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Join with an invite'")).firstMatch, limit: 4), "the way to join another stays; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<4 { app.swipeDown() }
         app.openGuildInfo()
         XCTAssertTrue(app.staticTexts["Members, 1 of 20"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         let leave = app.buttons["Leave Guild"]

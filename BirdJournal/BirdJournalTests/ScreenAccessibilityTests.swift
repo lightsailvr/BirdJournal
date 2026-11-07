@@ -795,6 +795,34 @@ struct ScreenAccessibilityTests {
         #expect(!labels.contains { $0.contains("Paper card") && $0.contains("Turn back") }, "\(labels)")
     }
 
+    @Test("An open find stays when a read of the feed leaves it out, and goes when its owner is blocked")
+    func openFindKept() async throws {
+        let harness = try Harness()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let circles = harness.circles
+        await circles.refresh()
+        let sunday = try #require(circles.circles.first { $0.name == "Sunday Group" })
+        await circles.loadFeed(circleID: sunday.id)
+        let id = "maya/00000000-0000-4000-8000-000000000000"
+        let route = FindRoute(itemID: id, surface: .guild(sunday.id))
+        let page = FindPageView(route: route)
+        var labels = try await Self.walk(page, harness: harness) { $0.contains("Black Phoebe") }
+        #expect(labels.contains("Black Phoebe"), "\(labels)")
+
+        // A read with Maya's phoebe off its pages, as from a pull on the page beneath.
+        try await client.deleteFriendFind(id, circleID: sunday.id)
+        await circles.loadFeed(circleID: sunday.id)
+        #expect(circles.feeds[sunday.id]?.items.contains { $0.id == id } == false)
+        labels = try await Self.walk(page, harness: harness) { $0.contains("Black Phoebe") }
+        #expect(labels.contains("Black Phoebe"), "the page keeps it: \(labels)")
+        #expect(!labels.contains("This find isn't here any more"), "\(labels)")
+
+        try await client.setBlocked(true, accountID: "maya", accessToken: "t")
+        await circles.loadBlocks()
+        labels = try await Self.walk(page, harness: harness) { $0.contains("This find isn't here any more") }
+        #expect(labels.contains("This find isn't here any more"), "blocked: \(labels)")
+    }
+
     @Test("A Guild's Info sheet: the goals, the sharing, the members and Leave", arguments: sizes)
     func infoSheet(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()

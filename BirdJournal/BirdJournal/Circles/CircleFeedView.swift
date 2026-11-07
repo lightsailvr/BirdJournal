@@ -17,9 +17,16 @@ struct FindsColumn: View {
     /// Report a friend's find, and block its owner (issue #71): whoever holds this presents the sheet and the dialog.
     var onReport: (FindEntry) -> Void = { _ in }
     var onBlock: (FeedItem.Owner) -> Void = { _ in }
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     /// The finds whose repeat line is open. By find, so a new repeat at the head of a line leaves it open.
     @State private var expanded: Set<String> = []
-    @State private var reactionError: String?
+    /// The latest reaction that didn't land: said at its find, where the birder's thumb is.
+    @State private var reactionFailure: ReactionFailure?
+
+    private struct ReactionFailure {
+        let itemID: String
+        let message: String
+    }
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
@@ -31,11 +38,6 @@ struct FindsColumn: View {
                     repeats(line)
                 }
                 FeedRule()
-            }
-            if let reactionError {
-                InlineError(reactionError, afterAction: true)
-                    .boardLabel()
-                    .padding(.top, 12)
             }
         }
         #if DEBUG
@@ -49,6 +51,7 @@ struct FindsColumn: View {
     private func find(_ entry: FindEntry) -> some View {
         FindCard(
             entry: entry, surface: surface, guilds: guildNames(entry),
+            reactionError: reactionFailure?.itemID == entry.id ? reactionFailure?.message : nil,
             react: { kind, given in react(kind, given: given, to: entry.item) },
             onReport: { onReport(entry) },
             onBlock: { onBlock(entry.item.owner) }
@@ -59,7 +62,7 @@ struct FindsColumn: View {
         let isOpen = line.contains { expanded.contains($0.id) }
         VStack(alignment: .leading, spacing: 0) {
             RepeatLine(entries: line, guilds: namesGuilds ? guildNames(in: line) : nil, isOpen: isOpen) {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(PatchMotion.reduces(system: systemReduceMotion) ? nil : .easeInOut(duration: 0.2)) {
                     if isOpen {
                         expanded.subtract(line.map(\.id))
                     } else {
@@ -93,9 +96,9 @@ struct FindsColumn: View {
         Task {
             do {
                 try await circles.react(kind, given: given, to: item)
-                reactionError = nil
+                reactionFailure = nil
             } catch {
-                reactionError = CircleStore.message(for: error, doing: "send your reaction")
+                reactionFailure = ReactionFailure(itemID: item.id, message: CircleStore.message(for: error, doing: "send your reaction"))
             }
         }
     }
@@ -160,6 +163,7 @@ private struct FindCard: View {
     let entry: FindEntry
     let surface: FindLiftSurface
     let guilds: [String]?
+    var reactionError: String?
     let react: (ReactionKind, Bool) -> Void
     let onReport: () -> Void
     let onBlock: () -> Void
@@ -181,6 +185,11 @@ private struct FindCard: View {
                 if !item.isMine { FindMenuItems(item: item, onReport: onReport, onBlock: onBlock) }
             }
             ReactionBar(item: item, react: react)
+            if let reactionError {
+                InlineError(reactionError, afterAction: true)
+                    .boardLabel()
+                    .accessibilityIdentifier("reaction-error-\(item.sightingID)")
+            }
         }
         // The whole row's width, so the menu sits in one place on every row.
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -283,12 +292,12 @@ private struct ReactionPill: View {
             tap()
         } label: {
             label
-                .font(.footnote.weight(.semibold))
+                .font(.subheadline.weight(.semibold))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(count.mine ? AnyShapeStyle(Color.mossText) : AnyShapeStyle(Color.ink))
                 .padding(.horizontal, 6)
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
                 .frame(maxWidth: .infinity, minHeight: 44, maxHeight: .infinity)
                 .background { pill }
                 .contentShape(.rect)
@@ -483,10 +492,11 @@ struct FindRow: View {
         item.method == .seen ? "saw" : "heard"
     }
 
-    /// "Lee Birder found 3 birds again, 2 hours ago": a member's gathered repeats, by the newest.
+    /// "3 more sightings from Lee Birder, 2 hours ago": a member's gathered repeats, by the newest. Sightings, since a line can hold
+    /// one bird twice.
     static func gatheredLine(_ items: [FeedItem]) -> String {
         guard let newest = items.first else { return "" }
-        return "\(subject(newest)) found \(items.count) birds again, \(when(newest))"
+        return "\(items.count) more sightings from \(finder(newest)), \(when(newest))"
     }
 
     /// "House Finch and Mourning Dove": each bird in a line of repeats, once.
@@ -496,7 +506,7 @@ struct FindRow: View {
         return names.formatted(.list(type: .and))
     }
 
-    /// "Lee Birder found 3 birds again, 2 hours ago. House Finch and Mourning Dove."
+    /// "3 more sightings from Lee Birder, 2 hours ago. House Finch and Mourning Dove."
     static func spokenLine(_ items: [FeedItem], guilds: [String]? = nil) -> String {
         var parts = [gatheredLine(items), birds(items)]
         if let guilds, !guilds.isEmpty { parts.append(inGuilds(guilds)) }

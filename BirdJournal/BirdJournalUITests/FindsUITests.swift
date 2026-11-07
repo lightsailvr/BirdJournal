@@ -134,7 +134,7 @@ final class FindsUITests: XCTestCase {
         let first = "00000000-0000-4000-8000-000000000010"
         let line = app.buttons["repeats-\(first)"]
         XCTAssertTrue(line.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(line.label.contains("Lee Birder found 3 birds again"), line.label)
+        XCTAssertTrue(line.label.contains("3 more sightings from Lee Birder"), line.label)
         XCTAssertTrue(line.label.contains("House Finch and Mourning Dove"), line.label)
         XCTAssertEqual(line.value as? String, "Closed")
         XCTAssertFalse(app.buttons["find-\(first)"].exists, "gathered")

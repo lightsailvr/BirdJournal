@@ -16,7 +16,8 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 
 `sheets/against-reference` puts `1-guild-page.png` next to the page.
 
-- **The emblem** is today's `GuildEmblem`. The mock's leaf crest is rejected.
+- **The emblem** is today's `GuildEmblem`, its disc at the patches' 102 pt. The mock's leaf crest is rejected.
+- **Invite** is the mock's small outlined pill, about 28 pt tall against its 25.5, and answers to 44 pt.
 - **The goal has thread alone.** The row of patches is slice 8's, and takes the room the mock gives it, under the thread.
 - **"All goals" and the sharing line** aren't in the mock. The issue asks for both, so they share a line under the goal.
 - **Reaction names are the issue's full ones:** "Lovely find", "Jealous!", "Let's go together", which wraps at default text, in three equal pills as drawn. They're 44 pt tall against the mock's 39.
@@ -29,9 +30,9 @@ Every picture is the running app on an iPhone 17 Pro simulator (iOS 27.2) at hal
 
 ```
 A Guild's page: first window: 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 6.
-The Guilds tab: first window: 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 8.
-A find's page: first window: 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 6.
-Sign-in, with its samples: first window: 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 10.
+The Guilds tab: first window: 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 2.
+A find's page: first window: 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 4.
+Sign-in, with its samples: first window: 0 patch decodes, 0 AV1 or ImageIO lines. 20 s later: 0 patch decodes, 0 AV1 or ImageIO lines. Patch decodes in the last minute: 6.
 ```
 
 Each patch decodes twice (colour and layers) as it comes on screen, and nothing after that. The last-minute counts run into the launch before them.

@@ -292,7 +292,7 @@ private struct GuildEmblemTile: View {
 }
 
 /// There is no scanner in the app: an invitation is a link, and the Camera opens its QR code as one.
-private struct JoinWithAnInvite: View {
+struct JoinWithAnInvite: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("Join with an invite").font(JournalFont.rowTitle)
