@@ -137,7 +137,7 @@ struct CompareBirdsView: View {
     /// What was last read of the friend, drawn at once and refreshed in place.
     private var friend: FriendBirds? { circles.friendBirds[friendID] }
 
-    private var firstName: String { friendName.split(separator: " ").first.map(String.init) ?? friendName }
+    private var firstName: String { CircleMember.firstName(of: friendName) }
 
     var body: some View {
         ScrollViewReader { proxy in

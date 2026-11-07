@@ -56,10 +56,20 @@ enum PatchText {
     /// count until there's a second sighting: "No. 003", or "Uncharted" outside every set (issue #150).
     static func tileLine(_ patch: CardCollection.Patch) -> String {
         guard case .numbered(_, _, _, let number, let total) = patch.placement else {
-            return patch.count == 1 ? CardPlacement.unchartedTitle : "seen \(patch.count)×"
+            return patch.count == 1 ? CardPlacement.unchartedTitle : seenCount(patch.count)
         }
         let numbered = "No. \(CardPlacement.paddedNumber(number, of: total))"
-        return patch.count == 1 ? numbered : "\(numbered) · seen \(patch.count)×"
+        return patch.count == 1 ? numbered : "\(numbered) · \(seenCount(patch.count))"
+    }
+
+    /// A species' patch tile's line, under its edition: "Los Angeles", then "Los Angeles, seen 8×" from a second sighting.
+    static func setLine(_ patch: CardCollection.Patch) -> String {
+        patch.count == 1 ? patch.placement.setName : "\(patch.placement.setName), \(seenCount(patch.count))"
+    }
+
+    /// A tile's count, in the tile's few characters: "seen 8×".
+    private static func seenCount(_ count: Int) -> String {
+        "seen \(count)×"
     }
 
     /// Under the patch on its page: "Seen 8 times in Los Angeles, sewn Sep 14".

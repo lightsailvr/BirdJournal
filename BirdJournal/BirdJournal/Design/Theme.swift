@@ -127,26 +127,33 @@ struct PrimaryButtonStyle: ButtonStyle {
 
 /// A secondary action: a capsule outlined in the accent, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
 /// rectangle, since its words wrap (issue #150). `colour` makes it quieter: Stop, in the ink, doesn't speak over the birds.
+/// `size: .small` draws it no taller than a row of faces beside it, still answering to 44 pt: a Guild's Invite, as the mock has it.
 struct OutlinedButtonStyle: ButtonStyle {
+    enum Size { case regular, small }
+
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.dynamicTypeSize) private var typeSize
     /// The accent when nil.
     var colour: Color?
+    var size = Size.regular
 
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
         let ink = colour.map(AnyShapeStyle.init) ?? AnyShapeStyle(TintShapeStyle.tint)
+        let isSmall = size == .small
         configuration.label
-            .font(.subheadline.weight(.semibold))
+            .font((isSmall ? Font.footnote : Font.subheadline).weight(.semibold))
             .foregroundStyle(ink)
             .multilineTextAlignment(.center)
-            .padding(.horizontal, 16)
-            .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
-            .frame(minHeight: 44)
+            .padding(.horizontal, isSmall ? 12 : 16)
+            .padding(.vertical, isSmall ? 5 : typeSize.isAccessibilitySize ? 8 : 0)
+            .frame(minHeight: isSmall ? nil : 44)
             .background(ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
             .overlay(shape.strokeBorder(ink, lineWidth: 1))
+            // The small pill's 44 pt is around what it draws.
+            .frame(minHeight: isSmall ? 44 : nil)
             .opacity(isEnabled ? 1 : 0.4)
-            .contentShape(shape)
+            .contentShape(isSmall ? AnyShape(Rectangle()) : AnyShape(shape))
             .pressResponse(isPressed: configuration.isPressed)
     }
 }
@@ -347,7 +354,6 @@ struct Toast: View {
     var ticksFrom: String?
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
-    @Environment(ListeningCoordinator.self) private var run: ListeningCoordinator?
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var ticked = false
 
@@ -393,7 +399,7 @@ struct Toast: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
-        .haptic(.stitchTick, trigger: ticked) { _, _ in Haptic.ticks(phoneRunHoldsSession: run?.phoneRunHoldsSession ?? false) }
+        .stitchTickHaptic(trigger: ticked)
         .task {
             guard ticksFrom != nil else { return }
             if !isStill {

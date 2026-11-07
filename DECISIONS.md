@@ -1089,7 +1089,7 @@ The maintainer's picks ship as they are: finch on peach, the others on tan, the 
 - **In a state**, `StateNotice`'s `.drawing`, the patch is 110 pt at the default text size, growing to about 167 pt at the largest, with a cap so the words stay near. The glasses read at 110 pt.
 - **Where it went.** The empty collection, where the drawing was, and Settings → Account signed out, the one sign-in page without an emblem. The Guilds sign-in and join pages keep the emblem: they never had the drawing, and the issue's "Sign-in and join" says both show the emblem, with slices 7 and 8 adding the samples. Other states keep the mark they had: an emblem or a symbol says more than a bird would on "No Guilds yet" or "No field guide yet".
 - **The mascot isn't a found bird.** The guide's "a patch means someone found this bird" is about a place's birds. The finch is the app's own character and names no sighting, so it may sit on an empty collection, as the issue's story asks. It's a picture at the head of the Account page too, though Settings is otherwise plain iOS, because the issue asks for it on sign-in and that page has no other mark.
-- **`PerchedBirdDrawing` stays, for one use.** The Listen hero's fallback, a set without a cover, draws it at half strength, and the issue says the hero doesn't change, with the mascot kept out. So it isn't unused and isn't removed. Dropping that one line and the file is the maintainer's call.
+- **The old drawing is gone.** This slice kept the line drawing for the Listen hero's fallback, a set without a cover. Slice 6's bundled covers gave every set a painting and took that use away, which left the drawing with nothing outside its own file, so the epic's clean-up deleted it.
 
 ## UX cohesion slice 4: speed (issue #150) — built 2026-11-05, the numbers on a phone pending
 
@@ -1331,7 +1331,7 @@ This overrides issue #150's V2, A2 and stories 44 to 46, 54 and 57, and the patc
 - **Species rows** always have the reference photo.
 - **The Atlas has no patches in it.** A set's row for a bird you've found has the reference photo, and keeps "Yours, seen once". An unfound bird keeps its silhouette or the glyph. Search rows have the reference photo.
 - **`BirdProfileView`**: the names run straight into the reference photo, in the same place for every bird, found or not. Under its credit come your sightings and, if you have it, your patch as a link in words, "Your patch, Los Angeles", opening its page; with several it's your newest sighting's, and the others are a tap on from the sightings. Then the story on card stock. With a `match` it's as before. Above the photo, the links pushed it about 60% down the screen at the largest text.
-- **`RowPictureSource` has no patch case**, so nothing using `RowPicture` can show one. `RowPatch` stays for a run's rows alone.
+- **`RowPictureSource` has no patch case**, so nothing using `RowPicture` can show one. `RowPatch` stays for the places that keep their patches: a run's rows and a Guild goal's month of patches.
 - **What keeps its patches, confirmed by the maintainer:** a run's rows, Listen's latest patches, a sighting's own page, map pins, Guilds, Compare and goals, "because it's the mark of the bird you found. the issue was wanting users to understand what the bird actually looks like."
 - **The reasoning:** a patch marks a bird you found, and a photo teaches what the bird looks like, so the places you read to learn a bird show the photo.
 
@@ -1354,3 +1354,13 @@ The issue's "Compare", "Goal", "Friends around the app" and "The goal on Listen"
 - **A paper card reads the friends when it's turned over**, or shows beside its patch on a phone on its side, not when its page opens, though both faces are built from the start: browsing patches reads nobody's birds. The names sit above the history, so they're in view: a full card cuts the history off, which says there's more.
 - **The sweep is the store's, not a screen's.** A screen pushing the next one would cancel a read that one is waiting on, so it runs on its own task, and a screen asking during it waits. Listen's read of the goals is on its own task for the same reason: a cancelled list reads as a failed one.
 - **By hand on a phone:** the board's press and the grow from a tile, and the goal row's small targets, at 45 pt, one-handed.
+
+## The epic's clean-up (issue #150, from the whole-epic review) — built 2026-11-07
+
+No behaviour or look changes, except the two the review asked for: the review sheet's City switch takes the page's tint, and a species' patch tile reads "Los Angeles, seen 8×" with a comma (the short-facts rule above).
+
+- **One Reduce Motion reader.** Every view that reads `accessibilityReduceMotion` reads it through `PatchMotion.reduces(system:)`, so `-reduceMotion` reaches Listen, the run's rows, waveform and accessory, the splash and the Journal too. The name stays: renaming every reader for a word wasn't worth the churn.
+- **One stitch tick**, `.stitchTickHaptic(trigger:when:)` in `Feel.swift`, reads the run itself and asks `Haptic.ticks`; the toast, `ThreadProgress` and the stitch-in use it.
+- **Shared helpers:** `CircleMember.initials(of:)` and `firstName(of:)` for a feed find's owner and Compare's friend; `String.capitalizedFirst` in `Design/` for the run's recap title too; `PackLibrary.set(id:)` for a set by id; `OutlinedButtonStyle(colour:size: .small)` for a Guild's Invite, which had its own style.
+- **`RowPatch` keeps its name** for a run's rows and a Guild goal's patches: both are a row of small patches.
+- **Notes for later, left alone:** splitting `CircleStore`, one cap for the small patches' sizes and one way to load them, and the copy namespaces' names.

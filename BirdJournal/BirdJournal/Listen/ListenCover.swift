@@ -11,7 +11,7 @@ struct LocalSet {
     /// The set shown, with its progress; nil when the phone doesn't know it.
     @MainActor
     init?(setID: String?, library: PackLibrary, collection: CardCollection) {
-        guard let set = library.sets.first(where: { $0.id == setID }) else { return nil }
+        guard let setID, let set = library.set(id: setID) else { return nil }
         self.set = set
         progress = collection.progress(of: set.id)
     }

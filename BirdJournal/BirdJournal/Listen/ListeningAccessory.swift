@@ -8,7 +8,8 @@ struct ListeningAccessory: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     let showListen: () -> Void
 
     var body: some View {

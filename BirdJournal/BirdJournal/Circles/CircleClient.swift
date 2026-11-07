@@ -40,9 +40,17 @@ struct CircleMember: Equatable, Identifiable, Codable, Sendable {
     var name: String { displayName ?? "A birder" }
 
     /// Avatars are initials only (spec v2, "Accounts and the app client").
-    var initials: String {
+    var initials: String { Self.initials(of: name) }
+
+    /// "MO", from "Maya Ortiz": the first two words' first letters.
+    static func initials(of name: String) -> String {
         let words = name.split(whereSeparator: \.isWhitespace).prefix(2)
         return words.compactMap(\.first).map(String.init).joined().uppercased()
+    }
+
+    /// "Maya", from "Maya Ortiz".
+    static func firstName(of name: String) -> String {
+        name.split(separator: " ").first.map(String.init) ?? name
     }
 }
 

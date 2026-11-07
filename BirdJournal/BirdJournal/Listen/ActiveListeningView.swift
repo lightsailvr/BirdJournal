@@ -9,7 +9,8 @@ import SwiftUI
 /// other decoration here (issue #117, design guide page 11): the list gets the room.
 struct ActiveListeningView: View {
     @Environment(ListeningCoordinator.self) private var run
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     @Environment(\.dynamicTypeSize) private var typeSize
     /// For the summary's count of what's new and what you have.
     @Environment(CollectionStore.self) private var collectionStore
@@ -222,7 +223,8 @@ extension ActiveListeningView {
 /// The live level, on its own: it changes a dozen times a second, and reading it in the page would redraw the rows with it.
 private struct RunWaveform: View {
     @Environment(ListeningCoordinator.self) private var run
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
 
     var body: some View {
         Waveform(levels: run.waveform, isLive: run.state == .listening && !reduceMotion)

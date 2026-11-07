@@ -23,7 +23,8 @@ struct JournalView: View {
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     @Bindable var state: CollectionState
     @State private var showsIntro = false
     @State private var position = ScrollPosition(edge: .top)
@@ -231,7 +232,7 @@ struct JournalView: View {
             }
             switch shown {
             case .set(let id):
-                if let set = library.sets.first(where: { $0.id == id }) {
+                if let set = library.set(id: id) {
                     NavigationLink(value: Route.set(id: set.id)) {
                         SetThreadRow(progress: collection.progress(of: set.id), edition: set.edition.name)
                     }
@@ -342,7 +343,7 @@ struct JournalView: View {
 
     private func boardTitle(_ board: BoardChoice) -> String {
         switch board {
-        case .set(let id): library.sets.first { $0.id == id }?.name ?? id
+        case .set(let id): library.set(id: id)?.name ?? id
         case .uncharted: CardPlacement.unchartedTitle
         }
     }
@@ -381,15 +382,14 @@ struct JournalView: View {
         let seconds = UserDefaults.standard.double(forKey: "modeFadeSeconds")
         if seconds > 0 { return .linear(duration: seconds) }
         #endif
-        return .easeInOut(duration: PatchMotion.reduces(system: reduceMotion) ? 0.12 : 0.25)
+        return .easeInOut(duration: reduceMotion ? 0.12 : 0.25)
     }
 
     /// Both modes share one scroll view, which moves to the new mode's place soon after the change. So what's on the surface doesn't
     /// fade across that move, where it would be seen to jump: the old mode has gone first, and the new one comes up after it.
     private var modeContentTransition: AnyTransition {
-        let reduces = PatchMotion.reduces(system: reduceMotion)
-        return .asymmetric(
-            insertion: .opacity.animation(.easeOut(duration: reduces ? 0.08 : 0.17).delay(0.08)),
+        .asymmetric(
+            insertion: .opacity.animation(.easeOut(duration: reduceMotion ? 0.08 : 0.17).delay(0.08)),
             removal: .opacity.animation(.easeOut(duration: 0.05))
         )
     }

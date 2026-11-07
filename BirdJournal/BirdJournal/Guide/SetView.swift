@@ -27,7 +27,7 @@ struct SetView: View {
     }
 
     var body: some View {
-        if let set = library.sets.first(where: { $0.id == id }) {
+        if let set = library.set(id: id) {
             let collection = collectionStore.collection
             let progress = collection.progress(of: set.id)
             let pack = library.pack(id: set.id)

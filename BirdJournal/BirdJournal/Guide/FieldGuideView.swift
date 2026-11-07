@@ -275,10 +275,3 @@ private struct GuideRow: View {
         .accessibilityElement(children: .combine)
     }
 }
-
-extension String {
-    var capitalizedFirst: String {
-        guard let first else { return self }
-        return first.uppercased() + dropFirst()
-    }
-}

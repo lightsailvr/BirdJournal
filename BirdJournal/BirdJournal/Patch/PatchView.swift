@@ -230,7 +230,8 @@ private struct TiedTag: View {
     }
 }
 
-/// Reduce Motion, with the debug flag the UI tests turn it on with (the simulator's own setting can't be set per run).
+/// Reduce Motion, with the debug flag the UI tests turn it on with (the simulator's own setting can't be set per run). Every
+/// view that reads `accessibilityReduceMotion` reads it through here, patch or not, so `-reduceMotion` reaches them all.
 enum PatchMotion {
     static func reduces(system: Bool) -> Bool {
         #if DEBUG

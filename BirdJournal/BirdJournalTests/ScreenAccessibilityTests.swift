@@ -668,7 +668,7 @@ struct ScreenAccessibilityTests {
     @Test("A set's page: the plate is one labelled image and the set's name a heading, and a found bird's row says it's yours", arguments: sizes)
     func setPage(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness(seeded: false)
-        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let set = try #require(harness.library.set(id: PackIndex.bundledPackID))
         let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
         let first = set.species[0], second = set.species[1]
         for (species, minutesAgo) in [(first, 1.0), (first, 2.0), (second, 3.0)] {
@@ -713,7 +713,7 @@ struct ScreenAccessibilityTests {
     @Test("The Atlas: a tile leads with the set's name, and says the plate last", arguments: sizes)
     func atlasTile(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let set = try #require(harness.library.set(id: PackIndex.bundledPackID))
         let labels = try await Self.walk(FieldGuideView(), harness: harness, typeSize: typeSize) { labels in
             labels.contains { $0.hasPrefix("\(set.name), ") }
         }
@@ -775,7 +775,7 @@ struct ScreenAccessibilityTests {
     @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)
     func notYetFound(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let set = try #require(harness.library.set(id: PackIndex.bundledPackID))
         let first = try #require(set.species.first)
         let rows = try await Self.walk(SetView(id: set.id), harness: harness, typeSize: typeSize) { labels in
             labels.contains("001, \(first.commonName), still out there")

@@ -49,7 +49,7 @@ struct RunRecap: Equatable {
     /// What heads the card: the place, "A secret spot" as a title has it, or the date with no place to give.
     var title: String {
         guard let place else { return dateText }
-        return place.prefix(1).uppercased() + place.dropFirst()
+        return place.capitalizedFirst
     }
 
     var patchesSewn: Int { patchNames.count }

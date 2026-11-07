@@ -55,6 +55,24 @@ extension View {
             return haptic.feedback
         }
     }
+
+    /// A stitch's tick when `trigger` changes, if `condition` agrees with the change and `Haptic.ticks` allows it with the run as
+    /// it is now.
+    func stitchTickHaptic<T: Equatable>(trigger: T, when condition: @escaping (_ old: T, _ new: T) -> Bool = { _, _ in true }) -> some View {
+        modifier(StitchTickHaptic(trigger: trigger, condition: condition))
+    }
+}
+
+private struct StitchTickHaptic<T: Equatable>: ViewModifier {
+    @Environment(ListeningCoordinator.self) private var run: ListeningCoordinator?
+    let trigger: T
+    let condition: (_ old: T, _ new: T) -> Bool
+
+    func body(content: Content) -> some View {
+        content.haptic(.stitchTick, trigger: trigger) { old, new in
+            condition(old, new) && Haptic.ticks(phoneRunHoldsSession: run?.phoneRunHoldsSession ?? false)
+        }
+    }
 }
 
 /// How a control answers a press (issue #150, audit R2): a quick spring, or under Reduce Motion a dim and no movement.
