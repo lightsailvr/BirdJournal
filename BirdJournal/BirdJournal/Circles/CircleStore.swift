@@ -258,11 +258,25 @@ final class CircleStore {
     }
 
     /// Whether a screen coming on screen should read this Guild's newest finds: it hasn't been read this launch, though the cache
-    /// may have drawn it, or it's a while since it was. Reading a first page replaces what was read, so a birder who has gone
-    /// further down isn't moved: back from a find's page, what they were reading is still there, until they pull to refresh.
+    /// may have drawn it, or it's a while since it was. Reading a first page replaces what was read, and can move the merged feed's
+    /// horizon, so once the birder has gone further down any Guild's finds nothing moves: back from a find's page, what they were
+    /// reading is still there, until they pull to refresh.
     func isFeedStale(_ circleID: String, now: Date = .now) -> Bool {
-        guard let read = firstPageReads[circleID], let feed = feeds[circleID] else { return true }
-        return feed.items.count <= feed.firstPageCount && now.timeIntervalSince(read) > Self.feedKeepsFor
+        guard let read = firstPageReads[circleID], feeds[circleID] != nil else { return true }
+        let hasGoneFurther = feeds.values.contains { $0.items.count > $0.firstPageCount }
+        return !hasGoneFurther && now.timeIntervalSince(read) > Self.feedKeepsFor
+    }
+
+    /// The signed-in birder among a Guild's members: the account's ID, or until the account is read (it may not be, on a cached page
+    /// with no connection), the sign-in's, or the creator's if the birder created the circle.
+    func myID(in detail: CircleDetail) -> String? {
+        account.account?.id ?? account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
+    }
+
+    /// A Guild's members as its page shows them: the blocked are gone from its faces and Compare, as their finds are. The Info sheet
+    /// still lists them, since that's where they're unblocked.
+    func visibleMembers(of detail: CircleDetail) -> [CircleMember] {
+        detail.members.filter { member in !blocked.contains { $0.id == member.id } }
     }
 
     private static let feedKeepsFor: TimeInterval = 60

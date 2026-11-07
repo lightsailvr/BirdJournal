@@ -7,6 +7,7 @@ struct CirclePageView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(PushCenter.self) private var pushes
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     let id: String
     /// On a Guild the tab opened straight onto (issue #150, G3), the way to start another, which the tab's own page would have had.
     var newGuild: (() -> Void)? = nil
@@ -124,7 +125,7 @@ struct CirclePageView: View {
 
     /// Belonging first (the mock's header): the emblem at the left, the name large, the faces and Invite under it.
     private func header(_ detail: CircleDetail) -> some View {
-        HeaderLayout {
+        AdaptiveRow(stacked: typeSize.isAccessibilitySize, spacing: 16) {
             GuildEmblem(identity: GuildIdentity(circleID: detail.circle.id), size: 102)
             VStack(alignment: .leading, spacing: 6) {
                 Text(detail.circle.name)
@@ -133,7 +134,7 @@ struct CirclePageView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .boardLabel()
                     .accessibilityAddTraits(.isHeader)
-                FacesAndInvite(detail: detail) { inviting = true }
+                FacesAndInvite(detail: detail, members: circles.visibleMembers(of: detail)) { inviting = true }
             }
         }
     }
@@ -234,7 +235,7 @@ struct CirclePageView: View {
     /// Compare birds: the friends in the Guild, each opening the two of you side by side. Rows to operate, so they sit on their own
     /// raised surface, not the felt.
     @ViewBuilder private func compare(_ detail: CircleDetail) -> some View {
-        let friends = detail.members.filter { $0.id != myID(in: detail) }
+        let friends = circles.visibleMembers(of: detail).filter { $0.id != circles.myID(in: detail) }
         VStack(alignment: .leading, spacing: 0) {
             if friends.isEmpty {
                 Text("Invite a friend, then compare your birds with theirs.")
@@ -275,21 +276,11 @@ struct CirclePageView: View {
         }
     }
 
-    static func blockMessage(_ name: String) -> String {
-        "You won't see \(name)'s finds or reactions, or get notifications about them, in any Guild. \(name) isn't told. Unblock in Settings → Account."
-    }
-
     private func subject(of draft: ReportDraft) -> String {
         let name = detail?.members.first { $0.id == draft.accountID }?.name
             ?? circles.feeds[id]?.items.first { $0.owner.id == draft.accountID }?.owner.name
             ?? "this member"
         return draft.kind == .find ? "\(name)'s find" : name
-    }
-
-    /// The signed-in birder among the members: the account's ID, or until the account is read (it may not be, on a cached page
-    /// with no connection), the sign-in's, or the creator's if the birder created the circle.
-    private func myID(in detail: CircleDetail) -> String? {
-        circles.account.account?.id ?? circles.account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
     }
 
     private func load(pulled: Bool = false) async {
@@ -305,29 +296,23 @@ struct CirclePageView: View {
     }
 }
 
-/// The emblem beside the name and faces, stacked at the largest text sizes.
-private struct HeaderLayout<Content: View>: View {
-    @Environment(\.dynamicTypeSize) private var typeSize
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(alignment: .center, spacing: 16))
-        layout { content }
-    }
-}
-
 /// Who's in the Guild, in faces VoiceOver reads as a sentence, and Invite.
 private struct FacesAndInvite: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let detail: CircleDetail
+    /// Those not blocked.
+    let members: [CircleMember]
     let invite: () -> Void
+
+    /// Everyone in the Guild but the blocked, some of whom the page may not have read yet.
+    private var total: Int { detail.circle.memberCount - (detail.members.count - members.count) }
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
-            MemberFaces(members: detail.members, total: detail.circle.memberCount, shown: 5)
+            MemberFaces(members: members, total: total, shown: 5)
                 .accessibilityHidden(false)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Self.spoken(detail))
+                .accessibilityLabel(spoken)
             Button(action: invite) {
                 Text("Invite")
             }
@@ -339,9 +324,8 @@ private struct FacesAndInvite: View {
     }
 
     /// "4 members, invite-only: Pat Birder, Maya Ortiz, Jo Park and Sam Okafor".
-    static func spoken(_ detail: CircleDetail) -> String {
-        let members = detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members"
-        return "\(members), invite-only: \(detail.members.map(\.name).formatted(.list(type: .and)))"
+    private var spoken: String {
+        "\(total == 1 ? "1 member" : "\(total) members"), invite-only: \(members.map(\.name).formatted(.list(type: .and)))"
     }
 }
 

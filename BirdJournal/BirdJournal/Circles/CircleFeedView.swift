@@ -168,7 +168,7 @@ private struct FindCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            NavigationLink(value: Route.find(FindRoute(itemID: item.id, surface: surface))) {
+            NavigationLink(value: Route.find(FindRoute(itemID: item.id, surface: surface, liftsFromPatch: FindRow.isLed(item)))) {
                 FindRow(item: item, guilds: guilds, lift: FindLiftID(itemID: item.id, surface: surface))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
@@ -280,7 +280,7 @@ private struct ReactionPill: View {
     var body: some View {
         Button {
             pops += 1
-            withAnimation(isStill ? nil : .spring(response: 0.25, dampingFraction: 0.7)) { tap() }
+            tap()
         } label: {
             label
                 .font(.footnote.weight(.semibold))
@@ -292,6 +292,8 @@ private struct ReactionPill: View {
                 .frame(maxWidth: .infinity, minHeight: 44, maxHeight: .infinity)
                 .background { pill }
                 .contentShape(.rect)
+                // The store's update comes a moment after the tap, in its own task, so the tick is tied to the count.
+                .animation(isStill ? nil : .spring(response: 0.25, dampingFraction: 0.7), value: count)
                 .keyframeAnimator(initialValue: 1.0, trigger: pops) { content, scale in
                     content.scaleEffect(isStill ? 1 : scale)
                 } keyframes: { _ in
@@ -360,8 +362,7 @@ struct FindRow: View {
 
     private var led: some View {
         VStack(alignment: .leading, spacing: 10) {
-            let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 16))
-            layout {
+            AdaptiveRow(stacked: typeSize.isAccessibilitySize, spacing: 16) {
                 FindPatch(item: item, side: 104)
                     .findLiftSource(lift)
                 VStack(alignment: .leading, spacing: 2) {
@@ -464,7 +465,7 @@ struct FindRow: View {
 
     /// "Maya Ortiz sewed a new patch", on the find's own page; "Jo Park heard this bird again" for a repeat.
     static func fullHeadline(_ item: FeedItem) -> String {
-        let again = "\(item.method == .seen ? "saw" : "heard") this bird again"
+        let again = "\(verb(item)) this bird again"
         return "\(subject(item)) \(item.newPatch ? "sewed a new patch" : isLed(item) ? "shared a sighting" : again)"
     }
 
@@ -475,8 +476,11 @@ struct FindRow: View {
 
     /// "Maya Ortiz heard a Black Phoebe again in Pasadena, 2 hours ago", "You saw an Acorn Woodpecker again, 2 hours ago".
     static func seenAgainLine(_ item: FeedItem) -> String {
-        let verb = item.method == .seen ? "saw" : "heard"
-        return "\(subject(item)) \(verb) \(CardText.article(for: item.commonName)) \(item.commonName) again\(inPlace(item)), \(when(item))"
+        "\(subject(item)) \(verb(item)) \(CardText.article(for: item.commonName)) \(item.commonName) again\(inPlace(item)), \(when(item))"
+    }
+
+    private static func verb(_ item: FeedItem) -> String {
+        item.method == .seen ? "saw" : "heard"
     }
 
     /// "Lee Birder found 3 birds again, 2 hours ago": a member's gathered repeats, by the newest.

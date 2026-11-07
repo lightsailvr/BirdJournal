@@ -125,7 +125,7 @@ struct CompactGoal: View {
     private var count: some View {
         HStack(spacing: 4) {
             if goal.isReached { Image(systemName: "checkmark.circle") }
-            Text(GoalWords.count(goal, inWords: false))
+            Text(GoalWords.tally(goal))
                 .monospacedDigit()
         }
         .font(JournalFont.supporting)
@@ -230,8 +230,8 @@ enum GoalWords {
     }
 
     /// "12 of 14", beside a headline that says what's being counted.
-    static func count(_ goal: CircleGoal, inWords: Bool) -> String {
-        inWords ? count(goal) : "\(goal.progress) of \(goal.target)"
+    static func tally(_ goal: CircleGoal) -> String {
+        "\(goal.progress) of \(goal.target)"
     }
 
     /// "November goal. Fourteen birds, together. 9 of 14 species. 5 still to discover."

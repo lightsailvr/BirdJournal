@@ -13,7 +13,7 @@ struct SamplePatches: View {
         ("Calypte anna", "Anna's Hummingbird"),
         ("Melanerpes formicivorus", "Acorn Woodpecker"),
     ]
-    private static let setID = "us-ca-la"
+    private static let setID = PackIndex.bundledPackID
 
     var body: some View {
         FeltBoard {

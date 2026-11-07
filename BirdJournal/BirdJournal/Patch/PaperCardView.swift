@@ -66,7 +66,7 @@ struct PaperCardView: View {
             PaperRule()
             history
             if let lore = species?.lore {
-                moreLore(lore)
+                PaperCardMoreLore(lore: lore)
             }
         }
         .padding(.horizontal, 14)
@@ -163,10 +163,6 @@ struct PaperCardView: View {
         return "\(patch.count == 1 ? "sighting" : "sightings") here, sewn \(sewn)\(here)"
     }
 
-    private func moreLore(_ lore: PackLore) -> some View {
-        PaperCardMoreLore(lore: lore)
-    }
-
     /// Stays in view under the scrolling text.
     private func footer(hasCredits: Bool) -> some View {
         let all = PatchText.allSightings(patch.count)
@@ -210,16 +206,25 @@ struct PaperCardView: View {
                 .accessibilityIdentifier("card-art-credit")
         }
         if hasCredits {
-            NavigationLink(value: Route.speciesCredits(scientificName: patch.scientificName)) {
-                Label("Sources", systemImage: "chevron.right")
-                    .labelStyle(TrailingChevronLabel())
-                    .frame(minHeight: 30)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .fixedSize()
-            .accessibilityIdentifier("card-sources")
+            PaperCardSourcesLink(scientificName: patch.scientificName)
         }
+    }
+}
+
+/// The way to a bird's sources, in a card's footer.
+private struct PaperCardSourcesLink: View {
+    let scientificName: String
+
+    var body: some View {
+        NavigationLink(value: Route.speciesCredits(scientificName: scientificName)) {
+            Label("Sources", systemImage: "chevron.right")
+                .labelStyle(TrailingChevronLabel())
+                .frame(minHeight: 30)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .fixedSize()
+        .accessibilityIdentifier("card-sources")
     }
 }
 
@@ -277,6 +282,8 @@ struct FriendPaperCard: View {
     let species: PackSpecies
     /// "Citrus edition, No. 021", if this phone knows the find's set.
     let edition: String?
+    /// The find's set, for whether its patch is a painting.
+    let setID: String?
     let isReadingView: Bool
 
     var body: some View {
@@ -290,16 +297,13 @@ struct FriendPaperCard: View {
                     .accessibilityIdentifier("card-back-scroll")
             }
             HStack(spacing: 8) {
-                Spacer(minLength: 0)
-                NavigationLink(value: Route.speciesCredits(scientificName: species.scientificName)) {
-                    Label("Sources", systemImage: "chevron.right")
-                        .labelStyle(TrailingChevronLabel())
-                        .frame(minHeight: 30)
-                        .contentShape(Rectangle())
+                if library.patchArt(scientificName: species.scientificName, setID: setID) != nil {
+                    Text("AI illustration")
+                        .fixedSize()
+                        .accessibilityIdentifier("card-art-credit")
                 }
-                .buttonStyle(.plain)
-                .fixedSize()
-                .accessibilityIdentifier("card-sources")
+                Spacer(minLength: 0)
+                PaperCardSourcesLink(scientificName: species.scientificName)
             }
             .font(.caption)
             .foregroundStyle(Color.cardEdge)

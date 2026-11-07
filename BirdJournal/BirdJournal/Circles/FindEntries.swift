@@ -51,13 +51,13 @@ private extension FeedItem {
 
 /// A feed's rows (issue #150, G4): each find on its own, except that a member's consecutive repeats within a day are gathered
 /// into one line, so they don't push new patches off the screen. A new patch, a card shared by hand and anything with a mark
-/// (First for the Guild, Rare, Exceptional) always stands on its own, and ends the run. Two repeats make a line; one is just
+/// (First for the Guild, Rare, Exceptional) always stands on its own, and ends the line. Two repeats make a line; one is just
 /// a quiet row.
 enum FindFeedRow: Equatable, Identifiable {
     case find(FindEntry)
     case repeats([FindEntry])
 
-    /// A run is gathered within a day of its newest find.
+    /// A line gathers what's within a day of its newest find.
     static let window: TimeInterval = 86_400
 
     var id: String {
@@ -75,28 +75,28 @@ enum FindFeedRow: Equatable, Identifiable {
     /// Finds, newest first, as rows.
     static func rows(of entries: [FindEntry]) -> [FindFeedRow] {
         var rows: [FindFeedRow] = []
-        var run: [FindEntry] = []
-        func endRun() {
-            if run.count > 1 {
-                rows.append(.repeats(run))
-            } else if let only = run.first {
+        var line: [FindEntry] = []
+        func endLine() {
+            if line.count > 1 {
+                rows.append(.repeats(line))
+            } else if let only = line.first {
                 rows.append(.find(only))
             }
-            run = []
+            line = []
         }
         for entry in entries {
             guard isGathered(entry.item) else {
-                endRun()
+                endLine()
                 rows.append(.find(entry))
                 continue
             }
-            if let newest = run.first,
+            if let newest = line.first,
                newest.item.owner.id != entry.item.owner.id || newest.item.foundAt.timeIntervalSince(entry.item.foundAt) > window {
-                endRun()
+                endLine()
             }
-            run.append(entry)
+            line.append(entry)
         }
-        endRun()
+        endLine()
         return rows
     }
 }

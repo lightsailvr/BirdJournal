@@ -7,8 +7,19 @@ struct FindRoute: Hashable, Sendable {
     /// `FeedItem.id`: its owner and sighting.
     let itemID: String
     var surface: FindLiftSurface? = nil
+    /// A led find's row has a patch to grow out of; a quiet line is a plain push.
+    var liftsFromPatch = true
 
-    var lift: FindLiftID? { surface.map { FindLiftID(itemID: itemID, surface: $0) } }
+    var lift: FindLiftID? {
+        guard liftsFromPatch else { return nil }
+        return surface.map { FindLiftID(itemID: itemID, surface: $0) }
+    }
+
+    /// The Guild it was opened in, for a report: where the birder saw it.
+    func reportingCircle(of entry: FindEntry) -> String? {
+        if case .guild(let id) = surface, entry.circleIDs.contains(id) { return id }
+        return entry.circleIDs.first
+    }
 }
 
 /// A friend's find, opened (issue #150, F1). Everything on it comes from the `FeedItem`, as the store has it now, so its reactions
@@ -19,10 +30,12 @@ struct FindRoute: Hashable, Sendable {
 struct FindPageView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(\.dismiss) private var dismiss
-    let id: String
+    let route: FindRoute
     @State private var reporting: ReportDraft?
     @State private var blocking: BlockedAccount?
     @State private var error: String?
+
+    private var id: String { route.itemID }
 
     var body: some View {
         Group {
@@ -34,7 +47,7 @@ struct FindPageView: View {
                                 Menu {
                                     FindMenuItems(
                                         item: entry.item,
-                                        onReport: { if let circle = entry.circleIDs.first { reporting = .find(entry.item, circleID: circle) } },
+                                        onReport: { if let circle = route.reportingCircle(of: entry) { reporting = .find(entry.item, circleID: circle) } },
                                         onBlock: { blocking = BlockedAccount(id: entry.item.owner.id, displayName: entry.item.owner.displayName) }
                                     )
                                 } label: {
@@ -92,8 +105,12 @@ private struct FindSafety: ViewModifier {
             ) { account in
                 Button("Block \(account.name)", role: .destructive) { block(account) }
             } message: { account in
-                Text(CirclePageView.blockMessage(account.name))
+                Text(Self.blockMessage(account.name))
             }
+    }
+
+    static func blockMessage(_ name: String) -> String {
+        "You won't see \(name)'s finds or reactions, or get notifications about them, in any Guild. \(name) isn't told. Unblock in Settings → Account."
     }
 
     private func block(_ account: BlockedAccount) {
@@ -187,7 +204,7 @@ private struct FindPageContent: View {
                 .accessibilityHint("Turn over for its story.")
                 .accessibilityIdentifier("patch-face")
             } back: {
-                FriendPaperCard(species: species, edition: editionLine, isReadingView: typeSize.isAccessibilitySize)
+                FriendPaperCard(species: species, edition: editionLine, setID: item.edition, isReadingView: typeSize.isAccessibilitySize)
             }
             .frame(maxWidth: Self.footprint.width)
         } else {

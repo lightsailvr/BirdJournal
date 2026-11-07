@@ -95,7 +95,7 @@ private struct RouteDestination: View {
         case .circle(let id):
             CirclePageView(id: id)
         case .find(let route):
-            FindPageView(id: route.itemID)
+            FindPageView(route: route)
                 .findLiftTransition(from: route.lift)
         case .joinCircle(let token):
             JoinCircleView(token: token)

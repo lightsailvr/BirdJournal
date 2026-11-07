@@ -64,7 +64,7 @@ struct CircleInfoSheet: View {
         .task {
             // Issue #71's screenshot: the report sheet for the first friend.
             if UserDefaults.standard.bool(forKey: "autoCircleReport"), let detail = circles.details[circleID],
-               let friend = detail.members.first(where: { $0.id != myID(in: detail) }) {
+               let friend = detail.members.first(where: { $0.id != circles.myID(in: detail) }) {
                 UserDefaults.standard.removeObject(forKey: "autoCircleReport")
                 reporting = .account(friend, circleID: circleID)
             }
@@ -90,7 +90,7 @@ struct CircleInfoSheet: View {
     private func members(_ detail: CircleDetail) -> some View {
         Section {
             ForEach(detail.members) { member in
-                let isMe = member.id == myID(in: detail)
+                let isMe = member.id == circles.myID(in: detail)
                 let isMuted = circles.mutes.friends.contains(member.id)
                 let isBlocked = circles.blocked.contains { $0.id == member.id }
                 MemberRow(member: member, isMe: isMe, isMuted: isMuted, isBlocked: isBlocked)
@@ -220,12 +220,6 @@ struct CircleInfoSheet: View {
             return "You started this Guild. It passes to the member who has been in it longest."
         }
         return "You can join again only with a new invitation."
-    }
-
-    /// The signed-in birder among the members: the account's ID, or until the account is read (it may not be, on a cached page
-    /// with no connection), the sign-in's, or the creator's if the birder created the circle.
-    private func myID(in detail: CircleDetail) -> String? {
-        circles.account.account?.id ?? circles.account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
     }
 
     private func leave() {

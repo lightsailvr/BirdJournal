@@ -581,7 +581,7 @@ struct ScreenAccessibilityTests {
         let harness = try Harness()
         await harness.circles.refresh()
         await harness.circles.loadMergedFeed()
-        let labels = try await Self.walk(FindPageView(id: "sam/00000000-0000-4000-8000-000000000003"), harness: harness, typeSize: typeSize) { labels in
+        let labels = try await Self.walk(FindPageView(route: FindRoute(itemID: "sam/00000000-0000-4000-8000-000000000003")), harness: harness, typeSize: typeSize) { labels in
             labels.contains { $0.contains("About this bird") }
         }
         Self.expectClean(labels, screen: "A find")
@@ -636,6 +636,7 @@ struct ScreenAccessibilityTests {
             labels.contains { $0.hasPrefix("Sample patches") }
         }
         Self.expectClean(labels, screen: "Guilds, signed out")
+        Self.expectOneWordPerThing(labels, screen: "Guilds, signed out")
         #expect(labels.contains { $0.contains("Find wonder together.") }, "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Sample patches") && $0.contains("Black Phoebe") }, "\(labels)")
     }

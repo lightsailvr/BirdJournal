@@ -770,6 +770,49 @@ struct MergedFeedTests {
         }
     }
 
+    @Test("a blocked friend leaves a Guild's faces and Compare, and stays in the list to unblock them from")
+    func blockedMembers() async throws {
+        let (store, client) = store()
+        await store.refresh()
+        let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
+        try await store.loadDetail(id: sunday.id)
+        try await client.setBlocked(true, accountID: "maya", accessToken: "t")
+        await store.loadBlocks()
+        let detail = try #require(store.details[sunday.id])
+        #expect(detail.members.contains { $0.id == "maya" })
+        #expect(!store.visibleMembers(of: detail).contains { $0.id == "maya" })
+    }
+
+    @Test("a feed is read again once it's a while old, unless the birder has gone further down")
+    func staleness() async throws {
+        let (store, client) = store(seeded: false)
+        let busy = try await store.create(named: "Busy").circle.id
+        let quiet = try await store.create(named: "Quiet").circle.id
+        #expect(store.isFeedStale(busy), "not read yet")
+        await store.loadMergedFeed()
+        let soon = Date.now.addingTimeInterval(30)
+        let later = Date.now.addingTimeInterval(120)
+        #expect(!store.isFeedStale(busy, now: soon))
+        #expect(store.isFeedStale(busy, now: later))
+        put(client, busy, 25, owner: "busy", startingAt: .now, every: 60)
+        await store.loadFeed(circleID: busy)
+        await store.loadMoreFeed(circleID: busy)
+        #expect(!store.isFeedStale(busy, now: later), "it would throw away the second page")
+        #expect(!store.isFeedStale(quiet, now: later), "it could move the horizon of what's being read")
+    }
+
+    @Test("a report names the Guild the find was opened in")
+    func reportingCircle() {
+        let item = FeedItem(
+            sightingID: "a", speciesID: "x_y", scientificName: "x", commonName: "y", method: .seen, place: nil, foundAt: .now, newPatch: true,
+            rarity: nil, art: nil, owner: .init(id: "maya", displayName: nil), circleFirst: false, isMine: false
+        )
+        let entry = FindEntry(item: item, circleIDs: ["c1", "c2"])
+        #expect(FindRoute(itemID: entry.id, surface: .guild("c2")).reportingCircle(of: entry) == "c2")
+        #expect(FindRoute(itemID: entry.id, surface: .allGuilds).reportingCircle(of: entry) == "c1")
+        #expect(FindRoute(itemID: entry.id, surface: .guild("elsewhere")).reportingCircle(of: entry) == "c1")
+    }
+
     @Test("Lee's repeats gather, in the seeds the UI tests use")
     func seededRepeats() async throws {
         let (store, client) = store()
