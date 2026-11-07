@@ -623,6 +623,14 @@ struct FindFeedRowTests {
         #expect(entries.map(\.circleIDs) == [["c1"], ["c2"], ["c1", "c2"]])
     }
 
+    @Test("a line's row keeps its identity when a repeat lands at its head")
+    func lineIdentity() {
+        let older = [Self.item("b", hoursAgo: 1), Self.item("c", hoursAgo: 2)]
+        let newer = [Self.item("a", hoursAgo: 0)] + older
+        let id = { (items: [FeedItem]) in FindFeedRow.rows(of: items.map { FindEntry(item: $0, circleIDs: ["c"]) }).first?.id }
+        #expect(id(older) == id(newer))
+    }
+
     @Test("the same sighting number from two owners is two finds")
     func twoOwners() {
         let entries = FindEntry.merging([("c1", [Self.item("a")]), ("c2", [Self.item("a", owner: "jo")])])
@@ -863,6 +871,93 @@ struct MergedFeedTests {
         #expect(feed.items.map(\.foundAt) == feed.items.map(\.foundAt).sorted(by: >))
     }
 
+    @Test("more finds than a push reads leave no gap: they replace the rows, and More finds reaches everything, a Rare find too")
+    func pushOverAGap() async throws {
+        let (store, client) = store(seeded: false)
+        let circle = try await store.create(named: "Long").circle.id
+        let start = Date.now
+        put(client, circle, 40, owner: "a", startingAt: start, every: 60)
+        await store.refresh()
+        await store.loadFeed(circleID: circle)
+        await store.loadMoreFeed(circleID: circle)
+        #expect(store.feeds[circle]?.items.count == 40)
+
+        // 130 land above them, one of them Rare, past what five pages read.
+        for index in 0..<130 {
+            client.add(FeedItem(
+                sightingID: "new-\(index)", speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", commonName: "Black Phoebe",
+                method: .seen, place: nil, foundAt: start.addingTimeInterval(Double(130 - index) * 60), newPatch: false, rarity: index == 120 ? .rare : .common, art: nil,
+                owner: .init(id: "b", displayName: "b"), circleFirst: false, isMine: false
+            ), to: circle)
+        }
+        await store.refreshAfterPush(circleIDs: [circle])
+        var feed = try #require(store.feeds[circle])
+        #expect(feed.items.count == 100, "five pages")
+        #expect(!feed.items.contains { $0.owner.id == "a" }, "nothing below a gap")
+        #expect(store.mergedFeed.hasMore)
+
+        // A second push changes nothing.
+        await store.refreshAfterPush(circleIDs: [circle])
+        #expect(store.feeds[circle]?.items.count == 100)
+
+        while store.mergedFeed.hasMore { await store.loadMoreMergedFeed() }
+        feed = try #require(store.feeds[circle])
+        #expect(feed.items.count == 170, "everything, once")
+        #expect(Set(feed.items.map(\.id)).count == 170)
+        #expect(feed.items.contains { $0.rarity == .rare }, "the marked find is there")
+        #expect(feed.items.map(\.foundAt) == feed.items.map(\.foundAt).sorted(by: >))
+    }
+
+    @Test("pages of only a blocked account's finds leave the rows, and read on to what can be shown")
+    func emptyPages() async throws {
+        let (store, client) = store(seeded: false)
+        let circle = try await store.create(named: "Mixed").circle.id
+        let start = Date.now
+        put(client, circle, 10, owner: "friend", startingAt: start, every: 60)
+        client.addMember("blocked", to: circle)
+        await store.refresh()
+        await store.loadFeed(circleID: circle)
+        #expect(store.feeds[circle]?.items.count == 10)
+
+        // Six pages of someone blocked land above: the server cuts the pages, then leaves them out.
+        put(client, circle, 120, owner: "blocked", startingAt: start.addingTimeInterval(86_400), every: 60)
+        try await client.setBlocked(true, accountID: "blocked", accessToken: "t")
+        await store.loadBlocks()
+        await store.refreshAfterPush(circleIDs: [circle])
+        let feed = try #require(store.feeds[circle])
+        #expect(feed.items.map(\.owner.id) == Array(repeating: "friend", count: 10))
+        #expect(!feed.hasNoFinds)
+        #expect(!store.mergedFeed.hasNoFinds)
+    }
+
+    @Test("past what it's worth reading in one go, the rows stay, and an empty feed with more to read isn't called empty")
+    func emptyForever() async throws {
+        let (store, client) = store(seeded: false)
+        let kept = try await store.create(named: "Kept").circle.id
+        let bare = try await store.create(named: "Bare").circle.id
+        let start = Date.now
+        put(client, kept, 5, owner: "friend", startingAt: start, every: 60)
+        client.addMember("blocked", to: kept)
+        client.addMember("blocked", to: bare)
+        await store.refresh()
+        await store.loadMergedFeed()
+        // More of someone blocked than twenty pages.
+        put(client, kept, 420, owner: "blocked", startingAt: start.addingTimeInterval(86_400), every: 60)
+        put(client, bare, 420, owner: "blocked", startingAt: start.addingTimeInterval(86_400), every: 60)
+        try await client.setBlocked(true, accountID: "blocked", accessToken: "t")
+        await store.loadBlocks()
+        await store.refreshAfterPush(circleIDs: [kept, bare])
+
+        #expect(store.feeds[kept]?.items.count == 5, "not \"No finds yet\"")
+        let empty = try #require(store.feeds[bare])
+        #expect(empty.items.isEmpty)
+        #expect(empty.nextCursor != nil)
+        #expect(!empty.hasNoFinds, "more to read, so \"No finds yet\" wouldn't be true")
+
+        await store.loadMoreFeed(circleID: bare)
+        #expect(store.feeds[bare]?.hasNoFinds == true, "read to its end, it is")
+    }
+
     @Test("a push's refresh takes out a find removed from within the page it read")
     func pushRemoves() async throws {
         let (store, client) = store(seeded: false)
@@ -889,7 +984,8 @@ struct MergedFeedTests {
         await store.refreshAfterPush(circleIDs: [circle])
         let kept = try #require(store.snapshot.feeds[circle])
         #expect(kept.items.count == 20)
-        #expect(kept.nextCursor == "20")
+        #expect(kept.nextCursor == store.feeds[circle]?.firstPageCursor)
+        #expect(kept.nextCursor != nil)
     }
 
     @Test("an open find's page keeps its find through a read that leaves it out, until a block, or its Guild goes")
