@@ -755,7 +755,7 @@ struct SetProgressRow: View {
     }
 }
 
-/// The Species list: one row per bird added, with your newest patch of it, how many sightings and when last, each opening its
+/// The Species list: one row per bird added, with how many sightings and when last, each opening its
 /// patches (issue #134). Its picture is always the Atlas's reference photo (the maintainer, issue #150). Lazy, so a long list asks
 /// for only the photos on screen.
 private struct SpeciesRows: View {

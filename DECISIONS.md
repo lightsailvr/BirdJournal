@@ -1330,5 +1330,6 @@ This overrides issue #150's V2, A2 and stories 44 to 46, 54 and 57, and the patc
 - **The Atlas has no patches in it.** A set's row for a bird you've found has the reference photo, and keeps "Yours, seen once". An unfound bird keeps its silhouette or the glyph. Search rows have the reference photo.
 - **`BirdProfileView`** has its names, then the reference photo with its credit, then the story on card stock, found or not. With a `match` it's as before. Your patch is a link in words beside your sightings, "Your patch, Los Angeles", opening its page; with several it's your newest sighting's, and the others are a tap on from the sightings. The names stay above the photo, as they have on every profile without a patch.
 - **`RowPictureSource` has no patch case**, so nothing using `RowPicture` can show one. `RowPatch` stays for a run's rows alone.
-- **Left as they are until the maintainer confirms:** a run's rows, Listen's latest patches, a sighting's own page, map pins, Guilds, Compare and goals.
+- **What keeps its patches, confirmed by the maintainer:** a run's rows, Listen's latest patches, a sighting's own page, map pins, Guilds, Compare and goals, "because it's the mark of the bird you found. the issue was wanting users to understand what the bird actually looks like."
+- **The reasoning:** a patch marks a bird you found, and a photo teaches what the bird looks like, so the places you read to learn a bird show the photo.
 
