@@ -1,3 +1,4 @@
+import OSLog
 import SwiftUI
 
 /// One patch as an object (issue #134, guide pages 9 and 13): its painting, lit by the phone's tilt with a shadow opposite
@@ -281,5 +282,27 @@ private struct HoldsPatchLight: ViewModifier {
         guard wanted != isHolding else { return }
         isHolding = wanted
         if wanted { PatchLight.shared.hold() } else { PatchLight.shared.release() }
+    }
+}
+
+/// SwiftUI exposes asynchronous shader compilation, so the first real patch need not compile its stitchable function
+/// while drawing a frame. Arguments have the same types as `LitPatch`; their values are supplied on each draw.
+enum PatchShader {
+    static func warm() async {
+        let shader = ShaderLibrary.patchLit(
+            .float2(CGPoint.zero), .float4(14, 14, 160, 160), .float2(CGSize(width: 1, height: 1)),
+            .float(1), .float(0.3), .float(StitchTimeline.allSewn), .color(Color.gray),
+            .color(PatchMaterial.transferPen), .image(Image("PerchedFinch"))
+        )
+        await Task.detached(priority: .utility) {
+            let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+            let interval = signposter.beginInterval("Warm patch shader")
+            defer { signposter.endInterval("Warm patch shader", interval) }
+            do { try await shader.compile(as: .layerEffect) }
+            catch {
+                Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+                    .error("patch shader warm-up failed: \(error.localizedDescription)")
+            }
+        }.value
     }
 }

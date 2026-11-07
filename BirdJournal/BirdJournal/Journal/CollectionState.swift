@@ -3,7 +3,8 @@ import Foundation
 import Observation
 
 /// What the Collection tab remembers while the app runs (issue #117, design guide page 10: "preserve filters, sorting
-/// and scroll position when returning"): its mode, the search, the board and each mode's scroll offset. The root
+/// and scroll position when returning"): its mode, the search, the board and search-return offsets. Changing modes
+/// starts at the top (issue #180); returning from another page or tab keeps the current position. The root
 /// owns it, so a card opened and closed, another tab and back, or the Collection page itself being rebuilt all come
 /// back to the same place. Nothing here is stored: a new launch starts on Patches, at the top of the set you're in.
 @MainActor @Observable
@@ -13,7 +14,7 @@ final class CollectionState {
     var query = ""
     /// The board the birder chose; nil shows the set they're in.
     var board: BoardChoice?
-    /// How far down each mode was scrolled, in points from the top of its content.
+    /// Current offsets, used only to return from a search; switching modes resets the destination to zero.
     var offsets: [JournalView.Mode: CGFloat] = [:]
     /// The search field is open.
     var isSearching = false

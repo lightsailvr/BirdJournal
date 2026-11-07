@@ -452,3 +452,84 @@ def test_leaving_twice_at_once_counts_the_member_out_once(client: TestClient, is
         )
     assert statuses == [204, 404]
     assert client.get(f"/v1/circles/{circle['id']}", headers=issuer.headers(sub="ada")).json()["member_count"] == 1
+
+# Guild identity (issue #181).
+
+
+def test_a_chosen_emblem_is_stored_listed_and_previewed(client: TestClient, issuer: TestIssuer, table: Any) -> None:
+    emblem = {"mark": "bird.fill", "tone": "sage"}
+    response = client.post("/v1/circles", headers=issuer.headers(sub="ada"), json={"name": "Birders", "emblem": emblem})
+    assert response.status_code == 201, response.text
+    circle = response.json()
+    assert circle["emblem"] == emblem
+    assert table.get_item(Key={"pk": f"CIRCLE#{circle['id']}", "sk": "META"})["Item"]["emblem"] == emblem
+    assert client.get("/v1/circles", headers=issuer.headers(sub="ada")).json()["circles"][0]["emblem"] == emblem
+    token = _invite(client, issuer, circle["id"])["token"]
+    assert client.get(f"/v1/invites/{token}", headers=issuer.headers(sub="bob")).json()["circle"]["emblem"] == emblem
+
+
+def test_only_the_creator_can_update_the_name_and_emblem(client: TestClient, issuer: TestIssuer) -> None:
+    circle = _create(client, issuer)
+    _join(client, issuer, circle["id"], "bob")
+    path = f"/v1/circles/{circle['id']}"
+    body = {"name": "  Lake birders  ", "emblem": {"mark": "water.waves", "tone": "mist"}}
+    assert client.patch(path, headers=issuer.headers(sub="bob"), json=body).status_code == 403
+    assert client.patch(path, headers=issuer.headers(sub="stranger"), json=body).status_code == 404
+    assert client.patch(path, json=body).status_code == 401
+    response = client.patch(path, headers=issuer.headers(sub="ada"), json=body)
+    assert response.status_code == 200, response.text
+    assert response.json()["name"] == "Lake birders"
+    assert response.json()["emblem"] == body["emblem"]
+    member_copy = client.get(path, headers=issuer.headers(sub="bob")).json()
+    assert member_copy["name"] == "Lake birders"
+    assert member_copy["emblem"] == body["emblem"]
+    assert not member_copy["is_creator"]
+
+
+def test_partial_updates_preserve_the_other_field_and_old_guilds_have_no_emblem(client: TestClient, issuer: TestIssuer) -> None:
+    circle = _create(client, issuer)
+    assert circle["emblem"] is None
+    path = f"/v1/circles/{circle['id']}"
+    headers = issuer.headers(sub="ada")
+    renamed = client.patch(path, headers=headers, json={"name": "Renamed"}).json()
+    assert renamed["emblem"] is None
+    emblem = {"mark": "tree.fill", "tone": "clay"}
+    changed = client.patch(path, headers=headers, json={"emblem": emblem}).json()
+    assert changed["name"] == "Renamed"
+    assert changed["emblem"] == emblem
+    assert client.patch(path, headers=headers, json={"name": "Again"}).json()["emblem"] == emblem
+
+
+@pytest.mark.parametrize("body", [
+    {}, {"name": None}, {"emblem": None}, {"name": ""}, {"name": "x" * 41}, {"name": "bad\tname"},
+    {"emblem": {"mark": "star.fill", "tone": "sage"}}, {"emblem": {"mark": "bird.fill", "tone": "gold"}},
+    {"emblem": {"mark": "bird.fill"}}, {"emblem": {"mark": "bird.fill", "tone": "sage", "extra": True}},
+    {"created_by": "bob"}, {"name": "Okay", "emblem": None},
+])
+def test_invalid_guild_updates_are_rejected(client: TestClient, issuer: TestIssuer, body: dict[str, Any]) -> None:
+    circle = _create(client, issuer)
+    path = f"/v1/circles/{circle['id']}"
+    assert client.patch(path, headers=issuer.headers(sub="ada"), json=body).status_code == 422
+    unchanged = client.get(path, headers=issuer.headers(sub="ada")).json()
+    assert unchanged["name"] == circle["name"]
+    assert unchanged["emblem"] is None
+
+
+@pytest.mark.parametrize("emblem", [
+    {"mark": "unknown", "tone": "sage"}, {"mark": "bird.fill", "tone": "unknown"},
+    {"tone": "sage"}, {"mark": "bird.fill", "tone": "sage", "extra": True},
+])
+def test_invalid_emblems_are_rejected_on_create(client: TestClient, issuer: TestIssuer, emblem: dict[str, Any]) -> None:
+    assert client.post("/v1/circles", headers=issuer.headers(), json={"name": "Birders", "emblem": emblem}).status_code == 422
+
+
+def test_edit_rights_follow_the_creator_handoff(client: TestClient, issuer: TestIssuer) -> None:
+    circle = _create(client, issuer)
+    _join(client, issuer, circle["id"], "bob")
+    path = f"/v1/circles/{circle['id']}"
+    assert client.delete(path + "/members/me", headers=issuer.headers(sub="ada")).status_code == 204
+    assert client.patch(path, headers=issuer.headers(sub="ada"), json={"name": "No"}).status_code == 404
+    response = client.patch(path, headers=issuer.headers(sub="bob"), json={"name": "Bob's birds"})
+    assert response.status_code == 200
+    assert response.json()["created_by"] == "bob"
+    assert response.json()["name"] == "Bob's birds"

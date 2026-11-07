@@ -51,14 +51,6 @@ struct FeelTests {
         #expect(FindPolicy.sharedLine(sharing: .private, signedIn: true, guilds: ["Sunday Group"]) == nil)
     }
 
-    @Test("the splash is due until it has played")
-    func splash() throws {
-        let defaults = try #require(UserDefaults(suiteName: "feel-splash-\(UUID().uuidString)"))
-        #expect(LaunchSplash.isDue(in: defaults))
-        defaults.set(true, forKey: LaunchSplash.shownKey)
-        #expect(!LaunchSplash.isDue(in: defaults))
-    }
-
     /// The bundled pack's first patches, nothing decoded.
     private func arts(_ count: Int) throws -> [PatchArt] {
         let harness = try ScreenAccessibilityTests.Harness(seeded: false)

@@ -1,0 +1,1311 @@
+{
+  "date": "2026-11-07",
+  "device": "iPhone 17 Pro, iOS 27.2",
+  "journal_sightings": 37,
+  "loaded_pack_versions": {
+    "us-ca-la": 12,
+    "us-ca-bay": 2,
+    "us-ca-desert": 2,
+    "us-ca-sd": 4,
+    "us-fl-orlando": 2
+  },
+  "time_origin": "First recorded lifecycle initialization event; not a home-screen tap.",
+  "first_frame_definition": "End of App Launch Initial Frame Rendering interval.",
+  "readiness_proxy_definition": "max(first_frame_ms, Journal interactive appearance event). Does not measure a touch response or guarantee presentation of a later Listen frame.",
+  "normal_runs": [
+    {
+      "variant": "before",
+      "configuration": "Debug",
+      "run": 1,
+      "source_revision": "78a7ad1 + instrumentation",
+      "first_launch_after_install": true,
+      "first_frame_ms": 414.194583,
+      "listen_appearance_ms": 337.773375,
+      "readiness_proxy_ms": 414.194583,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 177.1545,
+          "duration_ms": 119.390167,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 177.292458,
+          "duration_ms": 24.582667,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 206.349375,
+          "duration_ms": 8.797417,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 216.013708,
+          "duration_ms": 45.314667,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 266.936292,
+          "duration_ms": 1.520166,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 268.600208,
+          "duration_ms": 0.7835,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 270.3885,
+          "duration_ms": 5.355917,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 276.046125,
+          "duration_ms": 16.696417,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 341.432708,
+          "duration_ms": 350.955917,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 423.283458,
+          "duration_ms": 0.500334,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "before",
+      "configuration": "Debug",
+      "run": 2,
+      "source_revision": "78a7ad1 + instrumentation",
+      "first_launch_after_install": false,
+      "first_frame_ms": 259.784458,
+      "listen_appearance_ms": 187.913791,
+      "readiness_proxy_ms": 259.784458,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 34.408916,
+          "duration_ms": 117.135959,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 34.438916,
+          "duration_ms": 33.719917,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 73.381458,
+          "duration_ms": 6.265208,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 79.801166,
+          "duration_ms": 45.623459,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 127.753416,
+          "duration_ms": 0.646417,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 128.415625,
+          "duration_ms": 0.684583,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 129.751291,
+          "duration_ms": 4.091375,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 133.859125,
+          "duration_ms": 15.739666,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 192.384166,
+          "duration_ms": 231.216375,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 267.769916,
+          "duration_ms": 0.287375,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "before",
+      "configuration": "Debug",
+      "run": 3,
+      "source_revision": "78a7ad1 + instrumentation",
+      "first_launch_after_install": false,
+      "first_frame_ms": 256.6915,
+      "listen_appearance_ms": 185.079083,
+      "readiness_proxy_ms": 256.6915,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 24.012333,
+          "duration_ms": 124.266584,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 24.036458,
+          "duration_ms": 39.111875,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 68.53225,
+          "duration_ms": 6.2275,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 74.917625,
+          "duration_ms": 46.38475,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 123.565125,
+          "duration_ms": 0.6405,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 124.220792,
+          "duration_ms": 0.67825,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 125.538542,
+          "duration_ms": 4.086125,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 129.641208,
+          "duration_ms": 16.68425,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 188.432792,
+          "duration_ms": 234.316416,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 265.228333,
+          "duration_ms": 0.755084,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "before",
+      "configuration": "Release",
+      "run": 1,
+      "source_revision": "78a7ad1 + instrumentation",
+      "first_launch_after_install": true,
+      "first_frame_ms": 418.022333,
+      "listen_appearance_ms": 351.297917,
+      "readiness_proxy_ms": 418.022333,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 196.232,
+          "duration_ms": 117.522042,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 197.187167,
+          "duration_ms": 30.65325,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 235.751917,
+          "duration_ms": 10.774333,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 246.622208,
+          "duration_ms": 41.77025,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 290.701458,
+          "duration_ms": 0.505167,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 291.207292,
+          "duration_ms": 0.869791,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 292.626667,
+          "duration_ms": 2.174458,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 294.80175,
+          "duration_ms": 16.7185,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 354.511375,
+          "duration_ms": 224.964917,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 426.743625,
+          "duration_ms": 0.688292,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "before",
+      "configuration": "Release",
+      "run": 2,
+      "source_revision": "78a7ad1 + instrumentation",
+      "first_launch_after_install": false,
+      "first_frame_ms": 237.942125,
+      "listen_appearance_ms": 173.001958,
+      "readiness_proxy_ms": 237.942125,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 25.959542,
+          "duration_ms": 113.905875,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 26.006333,
+          "duration_ms": 38.379334,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 69.700792,
+          "duration_ms": 6.347708,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 76.166625,
+          "duration_ms": 41.942833,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 119.130958,
+          "duration_ms": 0.317542,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 119.449042,
+          "duration_ms": 0.718583,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 120.699125,
+          "duration_ms": 1.729375,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 122.42925,
+          "duration_ms": 15.64225,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 176.339083,
+          "duration_ms": 214.739375,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 247.072792,
+          "duration_ms": 0.758625,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "before",
+      "configuration": "Release",
+      "run": 3,
+      "source_revision": "78a7ad1 + instrumentation",
+      "first_launch_after_install": false,
+      "first_frame_ms": 239.248417,
+      "listen_appearance_ms": 174.268792,
+      "readiness_proxy_ms": 239.248417,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 24.471667,
+          "duration_ms": 114.617917,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 24.526334,
+          "duration_ms": 39.10675,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 69.046209,
+          "duration_ms": 5.918333,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 75.084542,
+          "duration_ms": 42.277167,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 118.389042,
+          "duration_ms": 0.318542,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 118.708292,
+          "duration_ms": 0.717125,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 119.972334,
+          "duration_ms": 1.763916,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 121.736917,
+          "duration_ms": 15.563208,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 178.542917,
+          "duration_ms": 250.425958,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 247.293167,
+          "duration_ms": 0.293542,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "configuration": "Debug",
+      "run": 1,
+      "source_revision": "fbbc2dc",
+      "first_launch_after_install": true,
+      "first_frame_ms": 240.339084,
+      "listen_appearance_ms": 416.564834,
+      "readiness_proxy_ms": 416.564834,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 162.342584,
+          "duration_ms": 50.645833,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 162.348834,
+          "duration_ms": 22.380291,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 190.196875,
+          "duration_ms": 8.550667,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 205.445167,
+          "duration_ms": 1.048958,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 206.495042,
+          "duration_ms": 1.287833,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Stores ready",
+          "start_ms": 237.072042,
+          "duration_ms": 155.895083,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 237.234042,
+          "duration_ms": 129.898708,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open bundled pack",
+          "start_ms": 237.23625,
+          "duration_ms": 45.407,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Warm patch shader",
+          "start_ms": 247.607625,
+          "duration_ms": 106.495625,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open downloaded packs",
+          "start_ms": 282.643959,
+          "duration_ms": 78.967833,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Read cached index and sets",
+          "start_ms": 361.612625,
+          "duration_ms": 5.5185,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 369.786125,
+          "duration_ms": 2.067084,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 374.917625,
+          "duration_ms": 17.968167,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 416.137167,
+          "duration_ms": 213.076542,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 2480.314167,
+          "duration_ms": 3.043333,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "configuration": "Debug",
+      "run": 2,
+      "source_revision": "fbbc2dc",
+      "first_launch_after_install": false,
+      "first_frame_ms": 110.645,
+      "listen_appearance_ms": 173.891458,
+      "readiness_proxy_ms": 173.891458,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 29.795875,
+          "duration_ms": 54.563375,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 29.813958,
+          "duration_ms": 36.158083,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 71.17925,
+          "duration_ms": 6.217166,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 80.13675,
+          "duration_ms": 0.570333,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 80.708041,
+          "duration_ms": 0.666417,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Stores ready",
+          "start_ms": 107.939333,
+          "duration_ms": 47.089542,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 108.034625,
+          "duration_ms": 25.995458,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open bundled pack",
+          "start_ms": 108.036458,
+          "duration_ms": 10.328208,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Warm patch shader",
+          "start_ms": 114.884625,
+          "duration_ms": 9.032541,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open downloaded packs",
+          "start_ms": 118.365291,
+          "duration_ms": 12.744584,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Read cached index and sets",
+          "start_ms": 131.110416,
+          "duration_ms": 2.918375,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 135.268625,
+          "duration_ms": 1.841375,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 139.016083,
+          "duration_ms": 15.914083,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 173.7585,
+          "duration_ms": 195.273291,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 2291.919625,
+          "duration_ms": 1.303125,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "configuration": "Debug",
+      "run": 3,
+      "source_revision": "fbbc2dc",
+      "first_launch_after_install": false,
+      "first_frame_ms": 112.106042,
+      "listen_appearance_ms": 227.673584,
+      "readiness_proxy_ms": 227.673584,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 28.708667,
+          "duration_ms": 57.866458,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 28.723042,
+          "duration_ms": 38.838333,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 73.004,
+          "duration_ms": 5.814917,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 81.953542,
+          "duration_ms": 0.7075,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 82.662125,
+          "duration_ms": 0.814084,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Stores ready",
+          "start_ms": 109.546042,
+          "duration_ms": 99.057208,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 109.642417,
+          "duration_ms": 75.525417,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open bundled pack",
+          "start_ms": 109.644,
+          "duration_ms": 19.479917,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Warm patch shader",
+          "start_ms": 116.138959,
+          "duration_ms": 10.321416,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open downloaded packs",
+          "start_ms": 129.124459,
+          "duration_ms": 50.336708,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Read cached index and sets",
+          "start_ms": 179.461584,
+          "duration_ms": 5.705,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 186.458084,
+          "duration_ms": 1.949833,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 190.3485,
+          "duration_ms": 18.177125,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 227.547792,
+          "duration_ms": 212.198,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 2325.708417,
+          "duration_ms": 3.009792,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "configuration": "Release",
+      "run": 1,
+      "source_revision": "d72247e",
+      "first_launch_after_install": true,
+      "first_frame_ms": 248.42875,
+      "listen_appearance_ms": 413.786209,
+      "readiness_proxy_ms": 413.786209,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 162.900209,
+          "duration_ms": 49.807375,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 162.906709,
+          "duration_ms": 25.969916,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 194.321167,
+          "duration_ms": 9.08275,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 207.45175,
+          "duration_ms": 0.523042,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 207.975042,
+          "duration_ms": 1.210167,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Stores ready",
+          "start_ms": 240.316167,
+          "duration_ms": 155.975417,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 240.421334,
+          "duration_ms": 136.606583,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open bundled pack",
+          "start_ms": 240.422334,
+          "duration_ms": 50.766916,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Warm patch shader",
+          "start_ms": 255.517834,
+          "duration_ms": 79.127458,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open downloaded packs",
+          "start_ms": 291.18975,
+          "duration_ms": 80.807209,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Read cached index and sets",
+          "start_ms": 371.99725,
+          "duration_ms": 5.030125,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 377.406667,
+          "duration_ms": 2.560125,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 380.21075,
+          "duration_ms": 15.975709,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 413.731542,
+          "duration_ms": 408.49475,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 2397.940042,
+          "duration_ms": 0.621417,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "configuration": "Release",
+      "run": 2,
+      "source_revision": "d72247e",
+      "first_launch_after_install": false,
+      "first_frame_ms": 306.952166,
+      "listen_appearance_ms": 456.842666,
+      "readiness_proxy_ms": 456.842666,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 84.275541,
+          "duration_ms": 103.956584,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 84.616791,
+          "duration_ms": 41.603875,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 141.18725,
+          "duration_ms": 27.115,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 171.718625,
+          "duration_ms": 1.510041,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 173.228958,
+          "duration_ms": 1.714042,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Stores ready",
+          "start_ms": 306.3215,
+          "duration_ms": 111.233625,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 306.343208,
+          "duration_ms": 92.404083,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open bundled pack",
+          "start_ms": 306.343541,
+          "duration_ms": 41.051542,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Warm patch shader",
+          "start_ms": 311.271666,
+          "duration_ms": 21.313792,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open downloaded packs",
+          "start_ms": 347.395333,
+          "duration_ms": 47.132042,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Read cached index and sets",
+          "start_ms": 394.527791,
+          "duration_ms": 4.218792,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 398.95675,
+          "duration_ms": 2.302541,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 401.487416,
+          "duration_ms": 15.963209,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 456.785041,
+          "duration_ms": 242.098,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 2583.589083,
+          "duration_ms": 2.380333,
+          "began_on_main_thread": true
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "configuration": "Release",
+      "run": 3,
+      "source_revision": "d72247e",
+      "first_launch_after_install": false,
+      "first_frame_ms": 107.1415,
+      "listen_appearance_ms": 225.703333,
+      "readiness_proxy_ms": 225.703333,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 23.998708,
+          "duration_ms": 56.893792,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 24.011083,
+          "duration_ms": 38.26775,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 68.226916,
+          "duration_ms": 6.65925,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 76.511583,
+          "duration_ms": 0.593042,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 77.104916,
+          "duration_ms": 0.874542,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Stores ready",
+          "start_ms": 104.452958,
+          "duration_ms": 100.218917,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 104.513,
+          "duration_ms": 79.810083,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open bundled pack",
+          "start_ms": 104.514083,
+          "duration_ms": 17.584292,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Warm patch shader",
+          "start_ms": 111.235041,
+          "duration_ms": 10.112459,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open downloaded packs",
+          "start_ms": 122.098583,
+          "duration_ms": 56.994958,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Read cached index and sets",
+          "start_ms": 179.09375,
+          "duration_ms": 5.228666,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 184.527958,
+          "duration_ms": 1.47575,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 186.248,
+          "duration_ms": 18.325958,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 225.65025,
+          "duration_ms": 237.695166,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 2333.345083,
+          "duration_ms": 1.818083,
+          "began_on_main_thread": true
+        }
+      ]
+    }
+  ],
+  "widget_probes": [
+    {
+      "time_origin": "first recorded lifecycle initialization event; not a home-screen tap",
+      "first_frame_ms": 494.0571249999998,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 164.85691700000007,
+          "duration_ms": 212.873042,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 165.00541700000008,
+          "duration_ms": 28.365208,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 200.01283399999988,
+          "duration_ms": 13.091666,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 215.16933399999994,
+          "duration_ms": 117.647791,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 347.769417,
+          "duration_ms": 1.377167,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 349.2797089999999,
+          "duration_ms": 1.122291,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 351.3143749999999,
+          "duration_ms": 5.495667,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 357.0587089999999,
+          "duration_ms": 16.922333,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 425.5196249999999,
+          "duration_ms": 343.604209,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 502.592709,
+          "duration_ms": 86.942541,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Widget render and PNG",
+          "start_ms": 532.720542,
+          "duration_ms": 55.14725,
+          "began_on_main_thread": true
+        }
+      ],
+      "markers": [
+        {
+          "name": "Launch surface appeared",
+          "at_ms": 421.90162499999997
+        },
+        {
+          "name": "Journal interactive",
+          "at_ms": 421.9024589999999
+        },
+        {
+          "name": "Launch context",
+          "at_ms": 425.860584
+        },
+        {
+          "name": "Widget probe input",
+          "at_ms": 532.719
+        }
+      ],
+      "context": {
+        "sightings": 37,
+        "packs": {
+          "us-ca-la": 12,
+          "us-ca-bay": 2,
+          "us-ca-desert": 2,
+          "us-ca-sd": 4,
+          "us-fl-orlando": 2
+        },
+        "widget_has_approved_painting": true
+      },
+      "listen_appearance_ms": 421.9024589999999,
+      "readiness_proxy_ms": 494.0571249999998,
+      "variant": "before",
+      "configuration": "Debug",
+      "source_revision": "78a7ad1 + instrumentation + temporary widget store"
+    },
+    {
+      "time_origin": "first recorded lifecycle initialization event; not a home-screen tap",
+      "first_frame_ms": 283.0414579999999,
+      "phases": [
+        {
+          "name": "App init",
+          "start_ms": 169.74754200000007,
+          "duration_ms": 81.636541,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Configure wearables",
+          "start_ms": 169.7545419999999,
+          "duration_ms": 30.324083,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open album store",
+          "start_ms": 207.29475000000002,
+          "duration_ms": 12.132208,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read Guild cache",
+          "start_ms": 236.26383299999998,
+          "duration_ms": 3.139084,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Read find outbox",
+          "start_ms": 239.40391699999986,
+          "duration_ms": 2.984166,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Stores ready",
+          "start_ms": 278.16824999999994,
+          "duration_ms": 80.581,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Open packs",
+          "start_ms": 278.27491699999996,
+          "duration_ms": 58.657541,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open bundled pack",
+          "start_ms": 278.276167,
+          "duration_ms": 24.390541,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Warm patch shader",
+          "start_ms": 288.2312079999999,
+          "duration_ms": 12.033167,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Open downloaded packs",
+          "start_ms": 302.66724999999997,
+          "duration_ms": 30.2315,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Read cached index and sets",
+          "start_ms": 332.8991249999999,
+          "duration_ms": 4.031917,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Build collection",
+          "start_ms": 338.90583300000003,
+          "duration_ms": 1.983209,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Decode cover",
+          "start_ms": 343.159167,
+          "duration_ms": 15.513166,
+          "began_on_main_thread": false
+        },
+        {
+          "name": "Refresh pack index",
+          "start_ms": 380.8606669999999,
+          "duration_ms": 334.948416,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Publish widget",
+          "start_ms": 2559.654042,
+          "duration_ms": 69.776583,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Widget render",
+          "start_ms": 2597.139583,
+          "duration_ms": 1.229792,
+          "began_on_main_thread": true
+        },
+        {
+          "name": "Widget encode PNG",
+          "start_ms": 2598.4697499999997,
+          "duration_ms": 28.450042,
+          "began_on_main_thread": false
+        }
+      ],
+      "markers": [
+        {
+          "name": "Launch surface appeared",
+          "at_ms": 278.161167
+        },
+        {
+          "name": "Launch context",
+          "at_ms": 381.31354199999987
+        },
+        {
+          "name": "Journal interactive",
+          "at_ms": 381.31504199999995
+        },
+        {
+          "name": "Widget probe input",
+          "at_ms": 2597.136208
+        }
+      ],
+      "context": {
+        "sightings": 37,
+        "packs": {
+          "us-ca-la": 12,
+          "us-ca-bay": 2,
+          "us-ca-desert": 2,
+          "us-ca-sd": 4,
+          "us-fl-orlando": 2
+        },
+        "widget_has_approved_painting": true
+      },
+      "listen_appearance_ms": 381.31504199999995,
+      "readiness_proxy_ms": 381.31504199999995,
+      "variant": "after",
+      "configuration": "Debug",
+      "source_revision": "d72247e + temporary widget store"
+    }
+  ]
+}

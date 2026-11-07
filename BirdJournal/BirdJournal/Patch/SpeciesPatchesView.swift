@@ -7,7 +7,6 @@ import SwiftUI
 /// haven't found it has no patch. Reached from the Species list and the Atlas profile.
 struct SpeciesPatchesView: View {
     @Environment(PackLibrary.self) private var library
-    @Environment(PlaceNames.self) private var places
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
@@ -20,41 +19,31 @@ struct SpeciesPatchesView: View {
         let patches = collection.patches.filter { $0.scientificName == scientificName }.sorted { $0.sewn.confirmedAt < $1.sewn.confirmedAt }
         let name = library.species(scientificName: scientificName)?.species.commonName ?? ofSpecies.first?.commonName ?? commonName
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(spacing: 0) {
                 header(name: name, patches: patches)
                     .padding(.horizontal, JournalLayout.margin)
                 if patches.isEmpty {
                     NoPatchesYet(scientificName: scientificName, commonName: name)
                         .padding(.horizontal, JournalLayout.margin)
                 } else {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 18) {
-                        ForEach(patches) { patch in
-                            SewnPatchTile(patch: patch, name: patch.placement.editionLabel, line: PatchText.setLine(patch), spokenName: name, surface: .species)
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 18)
+                    patchHeroes(patches, name: name)
+                        .padding(.top, 18)
                 }
-                VStack(alignment: .leading, spacing: 10) {
-                    if let latest = ofSpecies.first {
-                        Text("Most recent: \(SpeciesRowsText.lastSeen(latest.confirmedAt))\(latest.location.flatMap(places.name(for:)).map { ", \($0)" } ?? "")")
-                            .font(JournalFont.attribution)
-                            .foregroundStyle(Color.ink)
-                            .boardLabel()
-                            .accessibilityIdentifier("species-latest")
-                        NavigationLink(value: Route.sightings(.species(speciesID: latest.speciesID))) {
-                            Label(ofSpecies.count == 1 ? PatchText.sightings(1) : "All \(PatchText.sightings(ofSpecies.count))", systemImage: "list.bullet")
-                        }
-                        .buttonStyle(.journalOutlined)
-                        .accessibilityIdentifier("species-all-sightings")
-                    }
-                    NavigationLink(value: Route.species(scientificName: scientificName, commonName: name)) {
-                        Label("Open in Atlas", systemImage: "book")
-                    }
-                    .buttonStyle(.journalOutlined)
+                NavigationLink(value: Route.species(scientificName: scientificName, commonName: name)) {
+                    Label("Open in Atlas", systemImage: "book")
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
                 }
+                .buttonStyle(.journalPrimary)
+                .accessibilityIdentifier("species-open-atlas")
                 .padding(.horizontal, JournalLayout.margin)
-                .padding(.top, JournalLayout.sectionGap - 8)
+                .padding(.top, 24)
+
+                if !ofSpecies.isEmpty {
+                    sightingList(ofSpecies)
+                        .padding(.top, 28)
+                }
             }
             .padding(.bottom, JournalLayout.sectionGap)
         }
@@ -64,13 +53,65 @@ struct SpeciesPatchesView: View {
         .holdsPatchLight()
         .navigationTitle(name)
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: ofSpecies.first?.location) {
-            if let location = ofSpecies.first?.location { await places.resolve(location) }
+    }
+
+    /// A single patch has the patch page's footprint. Several keep that scale in a centred, snapping carousel;
+    /// accessibility text uses a reading column so no horizontal gesture is needed to reach an edition's words.
+    @ViewBuilder
+    private func patchHeroes(_ patches: [CardCollection.Patch], name: String) -> some View {
+        if patches.count == 1 || typeSize.isAccessibilitySize {
+            VStack(spacing: 28) {
+                ForEach(patches) { patch in
+                    hero(patch, name: name)
+                }
+            }
+            .padding(.horizontal, JournalLayout.margin)
+        } else {
+            ScrollView(.horizontal) {
+                HStack(alignment: .top, spacing: 16) {
+                    ForEach(patches) { patch in
+                        hero(patch, name: name)
+                            .containerRelativeFrame(.horizontal)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .contentMargins(.horizontal, JournalLayout.margin, for: .scrollContent)
+            .scrollTargetBehavior(.viewAligned)
+            .accessibilityIdentifier("species-patch-carousel")
         }
     }
 
+    private func hero(_ patch: CardCollection.Patch, name: String) -> some View {
+        SewnPatchTile(
+            patch: patch, name: patch.placement.setName, line: PatchText.pageLine(patch),
+            spokenName: name, surface: .species, side: 286, pictureSize: .full,
+            nameFont: JournalFont.heading, lineFont: JournalFont.supporting
+        )
+        .frame(maxWidth: .infinity)
+    }
+
+    private func sightingList(_ sightings: [Sighting]) -> some View {
+        // Keep the sightings on matte paper, like the Journal's list; only the patches live on felt.
+        LazyVStack(alignment: .leading, spacing: 0) {
+            SectionTitle(PatchText.sightings(sightings.count), top: 18)
+                .padding(.bottom, 8)
+            ForEach(sightings) { sighting in
+                NavigationLink(value: Route.sighting(sighting.persistentModelID)) {
+                    SightingRow(sighting: sighting, showsDate: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("species-sighting")
+                RowRule()
+            }
+        }
+        .padding(.horizontal, JournalLayout.margin)
+        .padding(.bottom, 12)
+        .background(Color.paper)
+    }
+
     private func header(name: String, patches: [CardCollection.Patch]) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(spacing: 2) {
             Text(name)
                 .font(JournalFont.title)
                 .foregroundStyle(Color.ink)
@@ -86,6 +127,9 @@ struct SpeciesPatchesView: View {
                     .accessibilityIdentifier("species-summary")
             }
         }
+        .multilineTextAlignment(.center)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity)
         .boardLabel(horizontal: 12, vertical: 8, isOnBoard: !patches.isEmpty)
         .padding(.top, 4)
     }
@@ -102,12 +146,15 @@ private struct NoPatchesYet: View {
 
     var body: some View {
         let reference = library.species(scientificName: scientificName)
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             if let reference, let photo = reference.species.photos.first {
                 AttributedImage(pack: reference.pack, photo: photo)
                     .padding(.top, 12)
             }
-            SectionTitle("No sightings of \(commonName) yet", size: .lead, top: 14)
+            Text("No sightings of \(commonName) yet")
+                .font(JournalFont.heading)
+                .accessibilityAddTraits(.isHeader)
+                .padding(.top, 14)
             ForEach(PatchText.setNumbers(of: scientificName, in: library.sets), id: \.self) { number in
                 Text(number.text)
                     .font(JournalFont.supporting.monospacedDigit())
@@ -125,16 +172,16 @@ private struct NoPatchesYet: View {
             } label: {
                 Label("Start listening", systemImage: "waveform")
             }
-            .buttonStyle(.journalPrimary)
+            .buttonStyle(.journalOutlined)
             .padding(.top, 16)
         }
+        .multilineTextAlignment(.center)
     }
 }
 
 /// Whose sightings a list shows.
 enum SightingsScope: Hashable {
     case patch(CardCollection.Patch.Key)
-    case species(speciesID: String)
 }
 
 extension CardCollection.Patch {
@@ -154,7 +201,7 @@ extension CardCollection.Patch {
     }
 }
 
-/// The sightings behind a patch, or behind every patch of a species: newest first, each opening its sighting.
+/// The sightings behind one patch: newest first, each opening its sighting. Species pages list theirs inline.
 struct PatchSightingsView: View {
     @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
@@ -181,7 +228,6 @@ struct PatchSightingsView: View {
 
     private var shownSightings: [Sighting] {
         switch scope {
-        case .species(let speciesID): sightings.filter { $0.speciesID == speciesID }
         case .patch(let key): collectionStore.collection.patch(key: key)?.ownSightings(among: sightings) ?? []
         }
     }

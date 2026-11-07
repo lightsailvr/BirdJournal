@@ -123,15 +123,18 @@ final class CardFlipUITests: XCTestCase {
     }
 
     @MainActor
-    func testReduceMotionCrossFadesWithoutTurning() {
+    func testReduceMotionFadesWithoutTurning() {
         let app = launch("card", ["-reduceMotion", "YES"])
         XCTAssertTrue(turn(app).waitForExistence(timeout: 15))
-        XCTAssertTrue(app.otherElements["card-switches"].exists, "with Reduce Motion the faces cross-fade; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.otherElements["card-switches"].exists, "with Reduce Motion the faces fade in sequence; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.otherElements["card-rotates"].exists)
-        turn(app).tap()
+        // The patch and the button share the same turn, including the exposed label and value.
+        face(app).tap()
         assertShowing(card: true, app)
         turn(app).tap()
         assertShowing(card: false, app)
+        turn(app).tap()
+        assertShowing(card: true, app)
     }
 
     @MainActor

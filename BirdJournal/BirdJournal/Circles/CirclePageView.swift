@@ -141,7 +141,7 @@ struct CirclePageView: View {
         AdaptiveRow(stacked: typeSize.isAccessibilitySize, spacing: 16) {
             // The emblem's ring is the page's colour, so on felt it doesn't read: the disc you see is what's the patches' size. On
             // linen the ring shows, just outside their edge.
-            GuildEmblem(identity: GuildIdentity(circleID: detail.circle.id), size: 112)
+            GuildEmblem(identity: GuildIdentity(circle: detail.circle), size: 112)
                 .padding(-5)
             VStack(alignment: .leading, spacing: 6) {
                 Text(detail.circle.name)

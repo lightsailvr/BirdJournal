@@ -11,6 +11,7 @@ struct CircleInfoSheet: View {
     let circleID: String
     /// The birder left: the sheet closes and the page goes with it.
     let left: () -> Void
+    @State private var editing = false
     @State private var confirmingLeave = false
     @State private var removing: CircleMember?
     @State private var reporting: ReportDraft?
@@ -25,6 +26,12 @@ struct CircleInfoSheet: View {
                     if let detail = circles.details[circleID] {
                         if let error {
                             Section { InlineError(error, afterAction: true) }
+                        }
+                        if detail.circle.isCreator {
+                            Section {
+                                Button("Edit Guild", systemImage: "pencil") { editing = true }
+                                    .accessibilityIdentifier("editGuild")
+                            }
                         }
                         CircleGoalsSection(circleID: circleID, timeZone: detail.circle.timeZone)
                         sharing
@@ -41,6 +48,9 @@ struct CircleInfoSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
+        }
+        .sheet(isPresented: $editing) {
+            if let circle = circles.details[circleID]?.circle { GuildEditorSheet(circle: circle) }
         }
         .confirmationDialog("Leave this Guild?", isPresented: $confirmingLeave, titleVisibility: .visible) {
             Button("Leave Guild", role: .destructive) { leave() }

@@ -200,10 +200,11 @@ private struct GoalPatchRow: View {
     @ViewBuilder
     private func patch(_ species: CircleGoal.Species, name: String?) -> some View {
         // Too small to read a tag, as on a row: VoiceOver says its name, and so does the page it opens.
-        let picture = RowPatch(scientificName: species.scientificName, setID: species.edition)
+        let artwork = library.guildPatchArtwork(scientificName: species.scientificName, setID: species.edition)
+        let picture = RowPatch(scientificName: species.scientificName, setID: artwork.setID)
             .frame(width: side, height: side)
             .contentShape(.rect)
-        let spoken = GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: species.edition))
+        let spoken = [GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: artwork.setID)), artwork.note].compactMap { $0 }.joined(separator: ". ")
         if let name {
             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: name)) { picture }
                 .buttonStyle(.patchLift)
@@ -282,10 +283,11 @@ struct GoalPatchesView: View {
         let names = library.birdNames
         return GoalPatchSlots(goal: goal, places: .max).shown.map { species in
             let name = names[species.scientificName]
+            let artwork = library.guildPatchArtwork(scientificName: species.scientificName, setID: species.edition)
             return BoardTile(
-                id: species.scientificName, scientificName: species.scientificName, setID: species.edition, name: name ?? BirdNames.unnamed,
-                caption: nil,
-                spoken: GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: species.edition)),
+                id: species.scientificName, scientificName: species.scientificName, setID: artwork.setID, name: name ?? BirdNames.unnamed,
+                caption: artwork.note,
+                spoken: [GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: artwork.setID)), artwork.note].compactMap { $0 }.joined(separator: ". "),
                 hint: name == nil ? nil : "Opens this bird in the Atlas.",
                 route: name.map { .species(scientificName: species.scientificName, commonName: $0) },
                 identifier: "goal-patch-\(species.scientificName)"

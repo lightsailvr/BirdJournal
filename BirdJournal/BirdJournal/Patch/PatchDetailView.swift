@@ -153,20 +153,25 @@ private struct PatchPage: View {
                     PaperCardView(patch: patch, sightings: sightings, name: name, isReadingView: typeSize.isAccessibilitySize)
                 }
                 .frame(maxWidth: Self.footprint.width)
-                if showsCard {
+                CardFlipText(showsBack: showsCard) {
+                    words
+                } back: {
                     Text("Your notes, photos and every sighting open from this side.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.ink)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                         .boardLabel(horizontal: 12, vertical: 8)
-                } else {
-                    words
                 }
                 Button(action: turn) {
-                    Label(showsCard ? "Turn back" : "Turn over", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
+                    CardFlipText(showsBack: showsCard) {
+                        Label("Turn over", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
+                    } back: {
+                        Label("Turn back", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
+                    }
                 }
                 .buttonStyle(.journalOutlined)
+                .accessibilityLabel(showsCard ? "Turn back" : "Turn over")
                 .accessibilityValue(showsCard ? "Paper card" : "Patch")
                 .accessibilityHint(showsCard ? "Shows the patch." : "Shows its paper card, with its story and your sightings.")
                 .accessibilityIdentifier("card-flip")

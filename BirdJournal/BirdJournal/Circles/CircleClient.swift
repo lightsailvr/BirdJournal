@@ -1,6 +1,12 @@
 import Album
 import Foundation
 
+/// A chosen nature mark and muted tone, shared with the Guild (issue #181).
+struct CircleEmblem: Equatable, Codable, Sendable {
+    var mark: String
+    var tone: String
+}
+
 /// One of the birder's circles as the list shows it (backend `GET /v1/circles`, issue #61). Named `CircleSummary`, not
 /// `Circle`, beside SwiftUI's shape.
 struct CircleSummary: Equatable, Identifiable, Codable, Sendable {
@@ -10,11 +16,12 @@ struct CircleSummary: Equatable, Identifiable, Codable, Sendable {
     var createdAt: Date
     var timeZone: String
     var memberCount: Int
-    /// Whether the signed-in birder created it, so may remove members.
+    /// Whether the signed-in birder created it, so may edit the Guild or remove members.
     var isCreator: Bool
+    var emblem: CircleEmblem? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, name
+        case id, name, emblem
         case createdBy = "created_by"
         case createdAt = "created_at"
         case timeZone = "time_zone"
@@ -468,7 +475,8 @@ enum CircleError: Error, Equatable {
 /// in memory for the tests and the simulator.
 protocol CircleClient: AnyObject {
     func circles(accessToken: String) async throws -> [CircleSummary]
-    func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail
+    func createCircle(named name: String, timeZone: String, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail
+    func updateCircle(id: String, name: String?, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail
     func circle(id: String, accessToken: String) async throws -> CircleDetail
     func createInvite(circleID: String, accessToken: String) async throws -> CircleInvite
     func invitePreview(token: String, accessToken: String) async throws -> InvitePreview
@@ -522,8 +530,23 @@ final class HTTPCircleClient: CircleClient {
         return try await send("GET", "v1/circles", accessToken: accessToken, as: List.self).circles
     }
 
-    func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail {
-        try await send("POST", "v1/circles", body: ["name": name, "time_zone": timeZone], accessToken: accessToken, as: CircleDetail.self)
+    func createCircle(named name: String, timeZone: String, emblem: CircleEmblem? = nil, accessToken: String) async throws -> CircleDetail {
+        struct Body: Encodable {
+            let name: String
+            let time_zone: String
+            let emblem: CircleEmblem?
+        }
+        let body = try JSONEncoder().encode(Body(name: name, time_zone: timeZone, emblem: emblem))
+        return try Self.decode(CircleDetail.self, from: try await data("POST", "v1/circles", body: body, accessToken: accessToken))
+    }
+
+    func updateCircle(id: String, name: String?, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail {
+        struct Body: Encodable {
+            let name: String?
+            let emblem: CircleEmblem?
+        }
+        let body = try JSONEncoder().encode(Body(name: name, emblem: emblem))
+        return try Self.decode(CircleDetail.self, from: try await data("PATCH", "v1/circles/\(id)", body: body, accessToken: accessToken))
     }
 
     func circle(id: String, accessToken: String) async throws -> CircleDetail {

@@ -1,3 +1,4 @@
+import OSLog
 import Pack
 import SwiftUI
 import UIKit
@@ -31,7 +32,12 @@ struct SetCoverImage: View {
 
     /// Decodes the cover off the main actor.
     static func load(_ cover: SetCover?) async -> UIImage? {
-        await Task.detached(priority: .userInitiated) { decoded(cover) }.value
+        await Task.detached(priority: .userInitiated) {
+            let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+            let state = signposter.beginInterval("Decode cover")
+            defer { signposter.endInterval("Decode cover", state) }
+            return decoded(cover)
+        }.value
     }
 
     /// The cover's pixels, decoded now rather than at its first draw: a JPEG in the app, an AVIF in a pack, or the index's JPEG.

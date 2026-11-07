@@ -1,0 +1,78 @@
+diff --git a/BirdJournal/BirdJournal/BirdJournalApp.swift b/BirdJournal/BirdJournal/BirdJournalApp.swift
+index 7f63c96..c9b42a2 100644
+--- a/BirdJournal/BirdJournal/BirdJournalApp.swift
++++ b/BirdJournal/BirdJournal/BirdJournalApp.swift
+@@ -36,0 +37,3 @@ struct BirdJournalApp: App {
++        let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++        let interval = signposter.beginInterval("App init")
++        defer { signposter.endInterval("App init", interval) }
+@@ -38 +41 @@ struct BirdJournalApp: App {
+-            try Wearables.configure()
++            try LaunchProbe.measure("Configure wearables") { try Wearables.configure() }
+@@ -48 +51 @@ struct BirdJournalApp: App {
+-        let album = Self.makeAlbum()
++        let album = LaunchProbe.measure("Open album store") { Self.makeAlbum() }
+@@ -50 +53 @@ struct BirdJournalApp: App {
+-        let packs = PackLibrary.forApp()
++        let packs = LaunchProbe.measure("Open packs") { PackLibrary.forApp() }
+@@ -72 +75 @@ struct BirdJournalApp: App {
+-        let circles = CircleStore.forApp(account: account)
++        let circles = LaunchProbe.measure("Read Guild cache") { CircleStore.forApp(account: account) }
+@@ -75 +78 @@ struct BirdJournalApp: App {
+-        let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
++        let findOutbox = LaunchProbe.measure("Read find outbox") { FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places) }
+@@ -87 +90 @@ struct BirdJournalApp: App {
+-        let collectionStore = CollectionStore(container: album, sets: { packs.cardSets })
++        let collectionStore = LaunchProbe.measure("Build collection") { CollectionStore(container: album, sets: { packs.cardSets }) }
+@@ -89 +92 @@ struct BirdJournalApp: App {
+-        _place = State(initialValue: CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation()))
++        _place = State(initialValue: LaunchProbe.measure("Decode cover") { CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation()) })
+@@ -301,0 +305,5 @@ struct BirdJournalApp: App {
++            .onAppear {
++                let versions = packs.packs.map { "\($0.info.id):\($0.info.version)" }.joined(separator: ", ")
++                OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++                    .emitEvent("Launch context", "sightings: \(collectionStore.collection.sightingCount, privacy: .public); packs: \(versions, privacy: .public)")
++            }
+@@ -336,0 +345,10 @@ private struct AppSurface<Root: View>: View {
++        .onAppear {
++            let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++            signposter.emitEvent("Launch surface appeared")
++            if !showingSplash { signposter.emitEvent("Journal interactive") }
++        }
++        .onChange(of: showingSplash) { _, showing in
++            if !showing {
++                OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch").emitEvent("Journal interactive")
++            }
++        }
+diff --git a/BirdJournal/BirdJournal/Design/LaunchProbe.swift b/BirdJournal/BirdJournal/Design/LaunchProbe.swift
+new file mode 100644
+index 0000000..fbdaedc
+--- /dev/null
++++ b/BirdJournal/BirdJournal/Design/LaunchProbe.swift
+@@ -0,0 +1,10 @@
++import OSLog
++
++enum LaunchProbe {
++    nonisolated static func measure<T>(_ name: StaticString, _ work: () throws -> T) rethrows -> T {
++        let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++        let interval = signposter.beginInterval(name)
++        defer { signposter.endInterval(name, interval) }
++        return try work()
++    }
++}
+diff --git a/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift b/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
+index 23df08c..2be8203 100644
+--- a/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
++++ b/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
+@@ -94,0 +95,3 @@ final class LatestPatchPublisher {
++        let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++        let interval = signposter.beginInterval("Publish widget")
++        defer { signposter.endInterval("Publish widget", interval) }
+diff --git a/BirdJournal/BirdJournalKit/Sources/Pack/PackLibrary.swift b/BirdJournal/BirdJournalKit/Sources/Pack/PackLibrary.swift
+index 52af2b7..8cbd0cd 100644
+--- a/BirdJournal/BirdJournalKit/Sources/Pack/PackLibrary.swift
++++ b/BirdJournal/BirdJournalKit/Sources/Pack/PackLibrary.swift
+@@ -191,0 +192,3 @@ public final class PackLibrary {
++        let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++        let interval = signposter.beginInterval("Refresh pack index")
++        defer { signposter.endInterval("Refresh pack index", interval) }

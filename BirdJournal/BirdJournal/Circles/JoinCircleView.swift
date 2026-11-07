@@ -62,7 +62,7 @@ struct JoinCircleView: View {
     private func invitation(_ preview: InvitePreview) -> some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
-                GuildEmblem(identity: GuildIdentity(circleID: preview.circle.id), size: 64)
+                GuildEmblem(identity: GuildIdentity(circle: preview.circle), size: 64)
                 Text(preview.circle.name).font(JournalFont.title)
                 Text(details(preview)).foregroundStyle(Color.inkSecondary)
             }

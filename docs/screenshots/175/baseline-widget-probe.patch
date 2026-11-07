@@ -1,0 +1,23 @@
+diff --git a/BirdJournal/BirdJournal/BirdJournalApp.swift b/BirdJournal/BirdJournal/BirdJournalApp.swift
+index c9b42a2..df21823 100644
+--- a/BirdJournal/BirdJournal/BirdJournalApp.swift
++++ b/BirdJournal/BirdJournal/BirdJournalApp.swift
+@@ -98 +98,8 @@ struct BirdJournalApp: App {
+-        latestPatch = WidgetStore.shared.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }
++        #if DEBUG
++        let widgetStore: WidgetStore? = UserDefaults.standard.bool(forKey: "launchWidgetProbe")
++            ? WidgetStore(directory: URL.temporaryDirectory.appending(path: "WidgetLaunchProbe-\(UUID().uuidString)", directoryHint: .isDirectory))
++            : WidgetStore.shared
++        #else
++        let widgetStore = WidgetStore.shared
++        #endif
++        latestPatch = widgetStore.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }
+diff --git a/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift b/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
+index 2be8203..898c244 100644
+--- a/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
++++ b/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
+@@ -126,0 +127,4 @@ final class LatestPatchPublisher {
++            let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++            signposter.emitEvent("Widget probe input", "approved painting: \(loaded != nil, privacy: .public)")
++            let interval = signposter.beginInterval("Widget render and PNG")
++            defer { signposter.endInterval("Widget render and PNG", interval) }

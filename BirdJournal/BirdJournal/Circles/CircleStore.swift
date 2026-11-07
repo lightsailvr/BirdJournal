@@ -168,11 +168,18 @@ final class CircleStore {
 
     /// Creates and names a circle, with the birder as its creator and only member; it joins the list at once.
     @discardableResult
-    func create(named name: String) async throws -> CircleDetail {
-        let detail = try await call { try await $0.createCircle(named: name.trimmingCharacters(in: .whitespacesAndNewlines), timeZone: self.timeZone(), accessToken: $1) }
+    func create(named name: String, emblem: CircleEmblem? = nil) async throws -> CircleDetail {
+        let detail = try await call { try await $0.createCircle(named: name.trimmingCharacters(in: .whitespacesAndNewlines), timeZone: self.timeZone(), emblem: emblem, accessToken: $1) }
         remember(detail)
         await joinedCircle?()
         return detail
+    }
+
+    func updateCircle(id: String, name: String?, emblem: CircleEmblem?) async throws {
+        let session = session
+        let detail = try await call { try await $0.updateCircle(id: id, name: name, emblem: emblem, accessToken: $1) }
+        guard session == self.session else { return }
+        remember(detail)
     }
 
     func loadDetail(id: String) async throws {
@@ -861,7 +868,7 @@ final class CircleStore {
         case CircleError.inviteExpired: "This invitation has expired. Ask your friend for a new one."
         case CircleError.inviteRevoked: "This invitation no longer works for you. Ask the Guild for a new one."
         case CircleError.notFound: "This Guild or invitation isn't there any more."
-        case CircleError.creatorOnly: "Only the Guild's creator can remove members."
+        case CircleError.creatorOnly: "Only the Guild's creator can make this change."
         case CircleError.rejected: "Use a name of up to 40 characters, on one line."
         case CircleError.goalNotYours: "Only a goal's creator or the Guild's creator can delete it, and the monthly goal stays."
         case CircleError.tooManyReports: "You've sent a lot of reports today. Try again tomorrow, or email matt@lightsailvr.com."

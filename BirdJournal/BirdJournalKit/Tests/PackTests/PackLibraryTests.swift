@@ -126,11 +126,44 @@ struct PackLibraryTests {
         #expect(library.packs.count == 1 && library.downloads.isEmpty)
         #expect(library.pack(id: PackIndex.bundledPackID)?.species.count == 2)
 
+        let relaunched = PackLibrary(bundled: library.bundled, storage: library.storage)
+        #expect(relaunched.bundledUpdate?.descriptor.version == next, "a newer download survives an app launch")
+        #expect(relaunched.packs.first?.species.count == 2)
+
         try library.remove(id: PackIndex.bundledPackID)
 
         #expect(library.status(of: descriptor) == .updateAvailable(installed: bundledVersion, available: next))
         #expect(library.packs.first?.species.count == bundledCount, "back to the bundled copy")
         #expect(library.bundledUpdate == nil)
+    }
+
+    @Test("older and equal downloads cannot replace the bundle on synchronous or deferred launch", arguments: [-1, 0], [false, true])
+    func supersededBundledDownload(versionDifference: Int, deferred: Bool) async throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let bundled = try SpeciesPack.bundled()
+        let zip = try #require(Bundle.module.url(forResource: "us-ca-la-v2", withExtension: "zip", subdirectory: "Fixtures"))
+        let storage = PackStorage(directory: root.appending(path: "Packs"))
+        let old = PackDescriptor(id: bundled.info.id, name: bundled.info.name, version: bundled.info.version + versionDifference,
+                                 url: zip, sha256: try PackStorage.sha256(of: zip), byteCount: 1)
+        _ = try storage.install(zip: zip, as: old)
+        let other = try Fixtures.testPackZip()
+        _ = try storage.install(zip: other, as: Fixtures.descriptor(for: other, version: 1))
+        #expect(storage.installed().count == 2)
+
+        let library = PackLibrary(bundled: deferred ? nil : bundled, storage: storage, deferred: deferred)
+        if deferred { await library.loadForLaunch() }
+
+        #expect(library.bundledUpdate == nil)
+        #expect(library.packs.first?.directory == bundled.directory)
+        #expect(library.pack(id: bundled.info.id)?.info.version == bundled.info.version)
+        #expect(library.status(of: old) == .bundled)
+        let next = PackDescriptor(id: old.id, name: old.name, version: bundled.info.version + 1,
+                                  url: zip, sha256: old.sha256, byteCount: 1)
+        #expect(library.status(of: next) == .updateAvailable(installed: bundled.info.version, available: bundled.info.version + 1))
+        #expect(!FileManager.default.fileExists(atPath: storage.url(for: bundled.info.id).path(percentEncoded: false)))
+        #expect(storage.installed().map(\.id) == ["test-pack"], "other downloads are kept")
+        #expect(library.downloads.map(\.id) == ["test-pack"])
     }
 
     @Test("a zip that holds another pack than the index entry names installs nothing")

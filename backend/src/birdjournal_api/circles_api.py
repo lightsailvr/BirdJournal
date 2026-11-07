@@ -1,13 +1,15 @@
-"""The circle routes (issue #61): create, list, read, invite, preview and accept an invite, leave, remove a member."""
+"""The circle routes (issue #61): create, edit, list, read, invite, preview and accept an invite, leave, remove a member."""
 
 from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator, model_validator
 
 from birdjournal_api.auth import Subject
 from birdjournal_api.circles import (
+    EMBLEM_MARKS,
+    EMBLEM_TONES,
     Circle,
     CircleDetail,
     CircleFull,
@@ -26,6 +28,27 @@ def _utc(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
+class Emblem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mark: str
+    tone: str
+
+    @field_validator("mark")
+    @classmethod
+    def _mark(cls, value: str) -> str:
+        if value not in EMBLEM_MARKS:
+            raise ValueError("Unknown Guild emblem mark")
+        return value
+
+    @field_validator("tone")
+    @classmethod
+    def _tone(cls, value: str) -> str:
+        if value not in EMBLEM_TONES:
+            raise ValueError("Unknown Guild emblem tone")
+        return value
+
+
 class CircleResponse(BaseModel):
     id: str
     name: str
@@ -33,7 +56,8 @@ class CircleResponse(BaseModel):
     created_at: datetime
     time_zone: str
     member_count: int
-    # Whether the account asking created the circle (so may remove members).
+    emblem: Emblem | None = None
+    # Whether the account asking created the circle (so may edit it or remove members).
     is_creator: bool
 
     @field_serializer("created_at")
@@ -49,6 +73,7 @@ class CircleResponse(BaseModel):
             created_at=circle.created_at,
             time_zone=circle.time_zone,
             member_count=circle.member_count,
+            emblem=Emblem(**circle.emblem) if circle.emblem else None,
             is_creator=circle.created_by == subject,
         )
 
@@ -93,6 +118,7 @@ class CircleCreate(BaseModel):
     name: str
     # The creator's device's zone; the goals (a later ticket) run their months in it.
     time_zone: str = "UTC"
+    emblem: Emblem | None = None
 
     @field_validator("name")
     @classmethod
@@ -103,6 +129,24 @@ class CircleCreate(BaseModel):
     @classmethod
     def _zone(cls, value: str) -> str:
         return clean_time_zone(value)
+
+
+class CircleUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = None
+    emblem: Emblem | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, value: str | None) -> str | None:
+        return clean_circle_name(value) if value is not None else None
+
+    @model_validator(mode="after")
+    def _changes(self) -> "CircleUpdate":
+        if not self.model_fields_set or any(getattr(self, key) is None for key in self.model_fields_set):
+            raise ValueError("Supply a name and/or emblem; null is not an update")
+        return self
 
 
 class InviteResponse(BaseModel):
@@ -173,7 +217,7 @@ def list_circles(subject: Subject, circles: Circles) -> CircleList:
 
 @router.post("/circles", status_code=status.HTTP_201_CREATED)
 def create_circle(subject: Subject, body: CircleCreate, circles: Circles, goals: Goals) -> CircleDetailResponse:
-    detail = circles.create(subject, body.name, body.time_zone)
+    detail = circles.create(subject, body.name, body.time_zone, body.emblem.model_dump() if body.emblem else None)
     # Its first monthly goal and its place in the goals' rollover (issue #65).
     goals.circle_created(detail.circle)
     return CircleDetailResponse.of_detail(detail, subject)
@@ -184,6 +228,15 @@ def read_circle(subject: Subject, circle_id: str, circles: Circles) -> CircleDet
     try:
         return CircleDetailResponse.of_detail(circles.detail(subject, circle_id), subject)
     except NotFound as error:
+        raise _refused(error) from None
+
+
+@router.patch("/circles/{circle_id}")
+def update_circle(subject: Subject, circle_id: str, body: CircleUpdate, circles: Circles) -> CircleDetailResponse:
+    try:
+        detail = circles.update(subject, circle_id, body.name, body.emblem.model_dump() if body.emblem else None)
+        return CircleDetailResponse.of_detail(detail, subject)
+    except (NotFound, Forbidden, ValueError) as error:
         raise _refused(error) from None
 
 

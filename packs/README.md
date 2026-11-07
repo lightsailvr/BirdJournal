@@ -36,6 +36,14 @@ present); the script keeps the zips under `build/pack-downloads/`: everything un
 this directory and is declared as a package resource, so the pack ships in the package's resource bundle and
 `SpeciesPack.bundled()` reads it offline. The `PackTests` bundle reads it too, so run the download before the tests.
 
+Local Xcode builds and `scripts/build-and-test.sh` run `scripts/check-bundled-packs.py` before building. It fails
+when a bundled pack's `.unpacked-sha256` differs from the manifest, its SQLite is missing, or the database's id/version
+does not match the pin, and names `scripts/download-pack.sh` as the repair. It reads only local files and never
+downloads during a build. Run `python3 -m unittest discover -s scripts/tests -v` to exercise the guard with temporary packs.
+
+On the phone, a downloaded copy replaces the bundled pack only when its installed version is newer. Copies at or
+below the bundled version are removed during the launch scan; other regional downloads stay installed.
+
 ## Publishing a new build
 
 1. `scripts/build-pack.sh <id>` writes the pack (`packs/<id>/` for the bundled pack, `build/packs/<id>/` for a

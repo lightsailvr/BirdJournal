@@ -406,19 +406,18 @@ final class FeelUITests: XCTestCase {
     // MARK: - Splash
 
     @MainActor
-    func testTheSplashPlaysOnTheFirstLaunchOnly() {
-        let first = XCUIApplication()
-        first.launchArguments = ["-inMemoryAlbum", "YES", "-resetLaunchSplash", "YES", "-launchSplashSeconds", "8"]
-        first.launch()
-        XCTAssertTrue(element(first, "launch-splash").waitForExistence(timeout: 5), "no splash on a first launch: \(first.debugDescription.prefix(3000))")
-        first.terminate()
-
-        let next = XCUIApplication()
-        next.launchArguments = ["-inMemoryAlbum", "YES", "-launchSplashSeconds", "8"]
-        next.launch()
-        XCTAssertTrue(next.buttons["Start listening"].waitForExistence(timeout: 15), "screen: \(next.debugDescription.prefix(3000))")
-        XCTAssertFalse(element(next, "launch-splash").exists, "a later launch goes straight to Listen")
-        XCTAssertTrue(next.buttons["Start listening"].isHittable)
+    func testTheSplashWaitsForReadinessOnEveryLaunch() {
+        for launch in 1...2 {
+            let app = XCUIApplication()
+            app.launchArguments = ["-inMemoryAlbum", "YES", "-launchSplashShown", launch == 1 ? "NO" : "YES", "-launchWaitForTap", "YES", "-autoLocation", "denied"]
+            app.launch()
+            XCTAssertTrue(app.staticTexts["Opening your journal…"].waitForExistence(timeout: 5))
+            app.buttons["Continue"].tap()
+            XCTAssertTrue(app.buttons["Start listening"].waitForExistence(timeout: 15))
+            XCTAssertFalse(element(app, "launch-splash").exists)
+            XCTAssertTrue(app.buttons["Start listening"].isHittable)
+            app.terminate()
+        }
     }
 
     // MARK: - The reveal

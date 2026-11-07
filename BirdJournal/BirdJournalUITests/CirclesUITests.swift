@@ -162,6 +162,50 @@ final class CirclesUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["No Guilds yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
     }
 
+    /// Issue #181: the creator edits the same stored identity the Guild page and invitation use.
+    @MainActor
+    func testTheCreatorCanChooseAnIconAndRenameTheGuild() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle-info"])
+        let edit = app.buttons["editGuild"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 10), app.debugDescription)
+        edit.tap()
+        let mark = app.buttons["guildEmblemMark"]
+        XCTAssertTrue(mark.waitForExistence(timeout: 5), app.debugDescription)
+        mark.tap()
+        app.buttons["Bird"].tap()
+        let tone = app.buttons["guildEmblemTone"]
+        tone.tap()
+        app.buttons["Sage"].tap()
+        let name = app.textFields["guildName"]
+        XCTAssertTrue(name.exists)
+        name.tap()
+        let old = name.value as? String ?? ""
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count) + "Lake Birders")
+        app.buttons["saveGuild"].tap()
+        XCTAssertTrue(app.navigationBars["Lake Birders"].waitForExistence(timeout: 10), app.debugDescription)
+        edit.tap()
+        XCTAssertTrue(app.textFields["guildName"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["guildName"].value as? String, "Lake Birders")
+        XCTAssertEqual(app.buttons["guildEmblemMark"].value as? String, "Bird", app.debugDescription)
+        XCTAssertEqual(app.buttons["guildEmblemTone"].value as? String, "Sage", app.debugDescription)
+        let picture = XCTAttachment(screenshot: app.screenshot())
+        picture.name = "Guild icon editor"
+        picture.lifetime = .keepAlways
+        add(picture)
+    }
+
+    @MainActor
+    func testOtherMembersHaveNoGuildEditControl() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some"])
+        app.tabBars.buttons["Guilds"].tap()
+        let family = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Family,'")).firstMatch
+        XCTAssertTrue(family.waitForExistence(timeout: 10), app.debugDescription)
+        family.tap()
+        app.openGuildInfo()
+        XCTAssertTrue(app.staticTexts["Members, 3 of 20"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(app.buttons["editGuild"].exists)
+    }
+
     /// Two Guilds: the tab opens on what's new across them, under a row of emblems that each open a Guild (issue #150, G3).
     @MainActor
     func testTwoGuildsOpenOnWhatsNewAcrossThem() {

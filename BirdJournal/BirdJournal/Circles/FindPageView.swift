@@ -29,8 +29,8 @@ struct FindRoute: Hashable, Sendable {
 }
 
 /// A friend's find, opened (issue #150, F1). Everything on it comes from the `FeedItem`, as the store has it now, so its reactions
-/// stay in step with the feed: the patch in the find's edition (a blank with its tag if the phone has no painting, never another
-/// edition's), who found it, how, the place the feed names, when, its marks, its reactions and a shared card's note and photo. It
+/// stay in step with the feed: the same patch illustration, who found it, how, the place the feed names, when, its marks,
+/// its reactions and a shared card's note and photo. An illustration borrowed from another edition is labelled as artwork. It
 /// says no more of where the bird was than the feed does: a secret spot stays one. It turns over to the paper card when the viewer's
 /// pack describes the bird; without that pack it's the name and no card. Report and Block are in its menu.
 struct FindPageView: View {
@@ -153,6 +153,7 @@ struct FindPageContent: View {
     private static let footprint = CGSize(width: 330, height: 400)
 
     private var item: FeedItem { entry.item }
+    private var artwork: GuildPatchArtwork { library.guildPatchArtwork(scientificName: item.scientificName, setID: item.edition) }
     private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     /// What this phone's packs know of the bird.
     private var species: PackSpecies? { library.species(scientificName: item.scientificName)?.species }
@@ -227,7 +228,7 @@ struct FindPageContent: View {
         }
     }
 
-    /// The patch centred in the footprint: a blank with its tag if the phone has no painting of it in this edition.
+    /// The same illustration as the feed, centred in the footprint.
     private var face: some View {
         FindPatchPicture(item: item, size: .full)
             .padding(.horizontal, 22)
@@ -236,7 +237,7 @@ struct FindPageContent: View {
     }
 
     private var spokenPatch: String {
-        [item.commonName, editionLabel.map { "\($0) patch" } ?? "patch", item.isMine ? "yours" : "\(item.owner.name)'s"].joined(separator: ", ")
+        [item.commonName, editionLabel.map { "\($0) patch" } ?? "patch", item.isMine ? "yours" : "\(item.owner.name)'s", artwork.note].compactMap { $0 }.joined(separator: ", ")
     }
 
     /// Who found it and how, in type below it. The same words as the feed, no more.
@@ -255,6 +256,11 @@ struct FindPageContent: View {
             Text(FindRow.howAndWhere(item))
                 .font(JournalFont.supporting)
                 .accessibilityIdentifier("find-page-where")
+            if let note = artwork.note {
+                Text(note)
+                    .font(JournalFont.attribution)
+                    .accessibilityIdentifier("find-page-artwork")
+            }
             let marks = FindRow.marks(item)
             if !marks.isEmpty {
                 FlowMarks(marks: marks)

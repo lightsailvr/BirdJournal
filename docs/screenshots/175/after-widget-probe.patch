@@ -1,0 +1,31 @@
+diff --git a/BirdJournal/BirdJournal/BirdJournalApp.swift b/BirdJournal/BirdJournal/BirdJournalApp.swift
+index 758fa53..407256f 100644
+--- a/BirdJournal/BirdJournal/BirdJournalApp.swift
++++ b/BirdJournal/BirdJournal/BirdJournalApp.swift
+@@ -104 +104,8 @@ struct BirdJournalApp: App {
+-        latestPatch = WidgetStore.shared.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }
++        #if DEBUG
++        let widgetStore: WidgetStore? = UserDefaults.standard.bool(forKey: "launchWidgetProbe")
++            ? WidgetStore(directory: URL.temporaryDirectory.appending(path: "WidgetLaunchProbe-\(UUID().uuidString)", directoryHint: .isDirectory))
++            : WidgetStore.shared
++        #else
++        let widgetStore = WidgetStore.shared
++        #endif
++        latestPatch = widgetStore.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }
+diff --git a/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift b/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
+index 5387054..151d94c 100644
+--- a/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
++++ b/BirdJournal/BirdJournal/Journal/LatestPatchPublisher.swift
+@@ -132,0 +133,3 @@ final class LatestPatchPublisher {
++            let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++            signposter.emitEvent("Widget probe input", "approved painting: \(loaded != nil, privacy: .public)")
++            let interval = signposter.beginInterval("Widget render")
+@@ -134 +137,7 @@ final class LatestPatchPublisher {
+-            let png = await Task.detached(priority: .utility) { image?.pngData() }.value
++            signposter.endInterval("Widget render", interval)
++            let png = await Task.detached(priority: .utility) {
++                let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
++                let interval = signposter.beginInterval("Widget encode PNG")
++                defer { signposter.endInterval("Widget encode PNG", interval) }
++                return image?.pngData()
++            }.value

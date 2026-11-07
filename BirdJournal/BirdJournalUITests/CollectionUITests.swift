@@ -1,7 +1,7 @@
 import XCTest
 
 /// Issues #117 and #134: the board opens on the set you're in and shows only your patches; a patch's page hides
-/// the tab bar; and coming back to Collection finds its mode, its board and each mode's scroll position as they were left.
+/// the tab bar; returning from a page keeps the current position, while switching modes starts at the top (#180).
 /// Real taps on the seeded journal: three birds in Los Angeles, and two outside every set (`-seedBoard`: 30, enough to scroll).
 final class CollectionUITests: XCTestCase {
     @MainActor
@@ -103,20 +103,19 @@ final class CollectionUITests: XCTestCase {
         // Another mode, another tab and back: the mode stays.
         let modes = app.segmentedControls["collection-mode"]
         XCTAssertTrue(modes.waitForExistence(timeout: 5), "the mode picker is not pinned in reach; screen: \(app.debugDescription.prefix(3000))")
-        modes.buttons["Sightings"].tap()
-        XCTAssertTrue(modes.buttons["Sightings"].isSelected)
+        selectMode("Sightings", in: modes)
         app.tabBars.buttons["Listen"].tap()
         XCTAssertTrue(app.buttons["Start listening"].waitForExistence(timeout: 10))
         collectionTab.tap()
         XCTAssertTrue(modes.waitForExistence(timeout: 10))
         XCTAssertTrue(modes.buttons["Sightings"].isSelected, "Collection did not come back on Sightings")
 
-        // Patches again: where the board was left, not the top.
-        modes.buttons["Patches"].tap()
-        XCTAssertTrue(tile.waitForExistence(timeout: 5))
-        let settled = NSPredicate { _, _ in Self.isClearOfBars(tile, in: app) }
-        wait(for: [expectation(for: settled, evaluatedWith: tile)], timeout: 5)
-        XCTAssertEqual(Self.settledMinY(of: tile), scrolledTo, accuracy: 12, "Patches did not keep its own scroll position")
+        // Switching back to Patches starts at its top, unlike returning from a patch's own page.
+        selectMode("Patches", in: modes)
+        let firstPatch = app.buttons.matching(identifier: "board-patch").firstMatch
+        XCTAssertTrue(firstPatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(firstPatch.isHittable, "the first patch should be visible without scrolling")
+        XCTAssertTrue(app.buttons["cards-set-progress"].isHittable, "the board starts with its set's progress")
     }
 
     /// The tab bar hides on a patch's page, which clamps the offset at the board's foot: it has to come back all the same.
@@ -339,45 +338,68 @@ final class CollectionUITests: XCTestCase {
         XCTAssertEqual(Self.settledMinY(of: left) - modes.frame.minY, leftAt, accuracy: 50, "clearing it went somewhere else")
     }
 
-    /// Each mode's list, scrolled, comes back where it was left, through other modes and a quick run of changes.
+    /// Issue #180: a long Species list must not lend its offset or lazy range to Sightings (or any other pair).
     @MainActor
-    func testEachModeKeepsItsScrollPositionThroughChanges() throws {
-        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES"])
-        let modes = app.segmentedControls["collection-mode"]
-        XCTAssertTrue(modes.waitForExistence(timeout: 15))
-        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 10), "no board; screen: \(app.debugDescription.prefix(3000))")
+    func testEveryModeSwitchStartsAtTheTopInALongJournal() throws {
+        try checkModeSwitchesStartAtTop(longJournal: true)
+    }
 
-        // Scrolls `mode` a little, and returns a tile or row in view with where it rests.
-        func scrolled(_ mode: String, _ rows: XCUIElementQuery) throws -> (element: XCUIElement, minY: CGFloat) {
-            modes.buttons[mode].tap()
-            Thread.sleep(forTimeInterval: 1)
-            app.swipeUp()
-            Thread.sleep(forTimeInterval: 1)
-            let shown = try XCTUnwrap(rows.allElementsBoundByIndex.first { Self.isClearOfBars($0, in: app) }, "nothing in view in \(mode); screen: \(app.debugDescription.prefix(3000))")
-            let element = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
-            return (element, Self.settledMinY(of: element))
+    @MainActor
+    func testEveryModeSwitchStartsAtTheTopInAShortJournal() throws {
+        try checkModeSwitchesStartAtTop(longJournal: false)
+    }
+
+    @MainActor
+    private func checkModeSwitchesStartAtTop(longJournal: Bool) throws {
+        let app = launch(longJournal ? ["-seedJournal", "NO", "-seedBoard", "YES"] : [])
+        let picker = app.segmentedControls["collection-mode"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 15))
+        let modes = ["Species", "Sightings", "Patches"]
+        func firstRow(_ mode: String) -> XCUIElement {
+            switch mode {
+            case "Patches": return app.buttons.matching(identifier: "board-patch").firstMatch
+            case "Sightings": return app.buttons.matching(NSPredicate(format: "label CONTAINS 'added from'")).firstMatch
+            default: return app.buttons.matching(NSPredicate(format: "label CONTAINS 'sighting' AND label CONTAINS 'last'")).firstMatch
+            }
         }
-        let patch = try scrolled("Patches", app.buttons.matching(identifier: "board-patch"))
-        let sighting = try scrolled("Sightings", app.buttons.matching(NSPredicate(format: "label CONTAINS 'added from'")))
-        let species = try scrolled("Species", app.buttons.matching(NSPredicate(format: "label CONTAINS 'sighting, last'")))
-
-        modes.buttons["Patches"].tap()
-        Thread.sleep(forTimeInterval: 1)
-        XCTAssertEqual(Self.settledMinY(of: patch.element), patch.minY, accuracy: 3, "Patches moved")
-        modes.buttons["Sightings"].tap()
-        Thread.sleep(forTimeInterval: 1)
-        XCTAssertEqual(Self.settledMinY(of: sighting.element), sighting.minY, accuracy: 3, "Sightings moved")
-        modes.buttons["Species"].tap()
-        Thread.sleep(forTimeInterval: 1)
-        XCTAssertEqual(Self.settledMinY(of: species.element), species.minY, accuracy: 3, "Species moved")
-
-        // Quickly through them all, with no time to settle between.
+        // Remember the actual first row and its top position, rather than whichever row a reused lazy stack mounts.
+        var first: [String: (label: String, y: CGFloat)] = [:]
+        for mode in modes {
+            selectMode(mode, in: picker)
+            let row = firstRow(mode)
+            XCTAssertTrue(row.waitForExistence(timeout: 5), "no first row in \(mode): \(app.debugDescription.prefix(2000))")
+            first[mode] = (row.label, Self.settledMinY(of: row))
+        }
+        for source in modes {
+            for target in modes where source != target {
+                selectMode(source, in: picker)
+                for _ in 0..<(longJournal ? 4 : 1) { app.swipeUp() }
+                selectMode(target, in: picker)
+                let expected = try XCTUnwrap(first[target])
+                let row = app.buttons.matching(NSPredicate(format: "label == %@", expected.label)).firstMatch
+                XCTAssertTrue(row.waitForExistence(timeout: 5), "\(source) → \(target) lost its first row")
+                XCTAssertTrue(row.isHittable, "\(source) → \(target) must show the first row without a scroll")
+                XCTAssertEqual(Self.settledMinY(of: row), expected.y, accuracy: 4, "\(source) → \(target) did not start at the top")
+            }
+        }
+        // A quick run of changes cancels any pending search return and leaves the final mode at its top too.
         for mode in ["Patches", "Sightings", "Species", "Patches"] {
-            modes.buttons[mode].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            picker.buttons[mode].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         }
-        Thread.sleep(forTimeInterval: 1.5)
-        XCTAssertTrue(modes.buttons["Patches"].isSelected)
-        XCTAssertEqual(Self.settledMinY(of: patch.element), patch.minY, accuracy: 3, "a quick run of changes moved Patches")
+        XCTAssertTrue(picker.buttons["Patches"].wait(for: \.isSelected, toEqual: true, timeout: 5))
+        let expected = try XCTUnwrap(first["Patches"])
+        let row = app.buttons.matching(NSPredicate(format: "label == %@", expected.label)).firstMatch
+        XCTAssertTrue(row.isHittable)
+        XCTAssertEqual(Self.settledMinY(of: row), expected.y, accuracy: 4)
+    }
+
+    /// A pinned segment's automatic scroll-to-visible hit point may be stale after returning from a page.
+    /// Tap its visible centre once, then wait for the selected-state snapshot; never retry the interaction.
+    @MainActor
+    private func selectMode(_ title: String, in picker: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let segment = picker.buttons[title]
+        segment.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(segment.wait(for: \.isSelected, toEqual: true, timeout: 5), "\(title) did not become selected", file: file, line: line)
     }
 
     /// A mode change never shows the old mode moving: when the scroll has to go elsewhere, it has already gone.

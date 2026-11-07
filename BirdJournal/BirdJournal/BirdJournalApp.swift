@@ -32,28 +32,33 @@ struct BirdJournalApp: App {
     private let frames: FrameStore
     private let runActivity: RunActivityController
     private let latestPatch: LatestPatchPublisher?
+    private let recorder: SightingRecorder
 
     init() {
+        let launchSignposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+        let initialization = launchSignposter.beginInterval("App init")
+        defer { launchSignposter.endInterval("App init", initialization) }
+        let configure = launchSignposter.beginInterval("Configure wearables")
         do {
             try Wearables.configure()
         } catch {
             Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "glasses")
                 .error("Wearables.configure failed: \(error.localizedDescription)")
         }
+        launchSignposter.endInterval("Configure wearables", configure)
         JournalFont.applyNavigationBarAppearance()
-        #if DEBUG
-        if UserDefaults.standard.bool(forKey: "resetLaunchSplash") { UserDefaults.standard.removeObject(forKey: LaunchSplash.shownKey) }
-        #endif
         let connection = GlassesConnection()
+        let openAlbum = launchSignposter.beginInterval("Open album store")
         let album = Self.makeAlbum()
+        launchSignposter.endInterval("Open album store", openAlbum)
         let frames = Self.makeFrameStore()
-        let packs = PackLibrary.forApp()
+        let packs = PackLibrary.forApp(deferred: true)
         let levels = LevelSink()
         // The reference clips the profile plays (issue #41) are silenced in whichever run is listening.
         let suppression = AudioSuppression()
         let recorder = SightingRecorder(container: album, frames: frames, rarity: BundledIdentification.rarityReader())
         recorder.sets = { packs.cardSets }
-        Self.backfillRarity(recorder)
+        self.recorder = recorder
         let sightings = RunSightings(recorder: recorder)
         let places = PlaceNames()
         sightings.captioner = Self.makeCaptioner(packs: packs, places: places)
@@ -69,10 +74,14 @@ struct BirdJournalApp: App {
         self.frames = frames
         let account = AccountSession.forApp()
         _account = State(initialValue: account)
+        let loadCircles = launchSignposter.beginInterval("Read Guild cache")
         let circles = CircleStore.forApp(account: account)
+        launchSignposter.endInterval("Read Guild cache", loadCircles)
         _circles = State(initialValue: circles)
         // Finds (issue #62): adds made while signed in and sharing reach the birder's circles.
+        let loadOutbox = launchSignposter.beginInterval("Read find outbox")
         let findOutbox = FindOutbox.forApp(account: account, client: circles.client, album: album, packs: packs, places: places)
+        launchSignposter.endInterval("Read find outbox", loadOutbox)
         sightings.findOutbox = findOutbox
         _findOutbox = State(initialValue: findOutbox)
         // Pushes (issue #63): permission at the first circle, the token to the account, and a refresh on every push.
@@ -84,7 +93,7 @@ struct BirdJournalApp: App {
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
-        let collectionStore = CollectionStore(container: album, sets: { packs.cardSets })
+        let collectionStore = CollectionStore(container: album, deferred: true, sets: { packs.cardSets })
         _collectionStore = State(initialValue: collectionStore)
         _place = State(initialValue: CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation()))
         // The run on the Lock Screen, and the patch on the Home Screen (issue #150). Neither waits for a view: a run goes on
@@ -93,7 +102,7 @@ struct BirdJournalApp: App {
         runActivity.follow { [weak listening, collectionStore] in listening?.snapshot(in: collectionStore.collection) ?? .idle }
         RunStopper.stop = { [weak listening] in await listening?.stop() }
         latestPatch = WidgetStore.shared.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }
-        latestPatch?.follow()
+
         let lens = Self.makeLensSession(connection: connection, packs: packs)
         _lens = State(initialValue: lens)
         _phoneListening = State(initialValue: phone)
@@ -177,7 +186,10 @@ struct BirdJournalApp: App {
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "inMemoryAlbum") || UserDefaults.standard.string(forKey: "albumFile") != nil { return }
         #endif
-        Task { await recorder.backfillRarity() }
+        Task(priority: .utility) {
+            do { try await Task.sleep(for: .seconds(2)) } catch { return }
+            await recorder.backfillRarity()
+        }
     }
 
     /// Where sightings' frames go, beside the album; the album screens read them from the same store. With the
@@ -273,9 +285,36 @@ struct BirdJournalApp: App {
         // Swift 6 traps it there, since it belongs to the main actor (issue #150). So what changes lives in `AppSurface`, a view,
         // whose body SwiftUI keeps on the main thread. `LaunchUITests` holds it.
         WindowGroup {
-            AppSurface { isUnderSplash in root(isUnderSplash: isUnderSplash) }
+            AppSurface(prepare: prepareForLaunch, openURL: handleURL) { isUnderSplash in root(isUnderSplash: isUnderSplash) }
         }
         .modelContainer(album)
+    }
+
+    private func prepareForLaunch() async throws {
+        #if DEBUG
+        // Exercises the real launch gate on a repeat launch without slowing production or touching the album.
+        let delay = UserDefaults.standard.double(forKey: "launchLoadDelay")
+        if delay > 0 { try await Task.sleep(for: .seconds(delay)) }
+        #endif
+        async let shader: Void = PatchShader.warm()
+        await packs.loadForLaunch()
+        try Task.checkCancellation()
+        try await collectionStore.loadForLaunch()
+        await place.prepareForLaunch()
+        await shader
+        try Task.checkCancellation()
+        latestPatch?.follow()
+        Self.backfillRarity(recorder)
+    }
+
+    private func handleURL(_ url: URL) {
+        if let token = InviteLink.token(from: url) {
+            circles.pendingInvite = token
+        } else if let link = PatchLink(url: url) {
+            pendingPatch = CardCollection.Patch.Key(speciesID: link.speciesID, setID: link.setID)
+        } else {
+            Task { await connection.handle(url: url) }
+        }
     }
 
     /// The app with its shared objects, under the launch splash.
@@ -299,21 +338,10 @@ struct BirdJournalApp: App {
             .environment(place)
             .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
-            .onOpenURL { url in
-                // An invite link (issue #61) arrives here as a universal link, the widget's patch as `birdjournal://patch`
-                // (issue #150); everything else is the toolkit's.
-                if let token = InviteLink.token(from: url) {
-                    circles.pendingInvite = token
-                } else if let link = PatchLink(url: url) {
-                    pendingPatch = CardCollection.Patch.Key(speciesID: link.speciesID, setID: link.setID)
-                } else {
-                    Task { await connection.handle(url: url) }
-                }
-            }
-            .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
-                if let url = activity.webpageURL, let token = InviteLink.token(from: url) {
-                    circles.pendingInvite = token
-                }
+            .onAppear {
+                let versions = packs.packs.map { "\($0.info.id):\($0.info.version)" }.joined(separator: ", ")
+                OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+                    .emitEvent("Launch context", "sightings: \(collectionStore.collection.sightingCount, privacy: .public); packs: \(versions, privacy: .public)")
             }
     }
 }
@@ -321,18 +349,62 @@ struct BirdJournalApp: App {
 /// The window's content, with the two things at this level that change: the launch splash going, and the appearance from Settings.
 private struct AppSurface<Root: View>: View {
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
-    @State private var showingSplash = LaunchSplash.isDue()
+    @State private var ready = false
+    @State private var error: String?
+    @State private var attempt = 0
+    @State private var launchPermitted = false
+    let prepare: () async throws -> Void
+    let openURL: (URL) -> Void
     @ViewBuilder let root: (_ isUnderSplash: Bool) -> Root
+
+    private var waitsForTestSignal: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "launchWaitForTap") && !launchPermitted
+        #else
+        false
+        #endif
+    }
 
     var body: some View {
         ZStack {
-            root(showingSplash)
-            if showingSplash {
-                LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
-                    .transition(.opacity)
-                    .zIndex(1)
+            if ready {
+                root(false)
+                    .onAppear {
+                        OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+                            .emitEvent("Journal interactive")
+                    }
+            } else {
+                LaunchLoadingView(error: error, continueLoading: waitsForTestSignal ? {
+                    launchPermitted = true
+                    attempt += 1
+                } : nil) { attempt += 1 }
             }
         }
         .preferredColorScheme(appearance.colorScheme)
+        .onAppear {
+            OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+                .emitEvent("Launch surface appeared")
+        }
+        .onOpenURL(perform: openURL)
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+            if let url = activity.webpageURL { openURL(url) }
+        }
+        .task(id: attempt) {
+            guard !ready, !waitsForTestSignal else { return }
+            let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+            let interval = signposter.beginInterval("Stores ready")
+            defer { signposter.endInterval("Stores ready", interval) }
+            do {
+                error = nil
+                try await prepare()
+                try Task.checkCancellation()
+                ready = true
+            } catch is CancellationError {
+                return
+            } catch {
+                self.error = "Your journal couldn’t be opened. Try again."
+                Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "launch").error("launch failed: \(error.localizedDescription)")
+            }
+        }
     }
 }

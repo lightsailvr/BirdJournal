@@ -97,6 +97,8 @@ struct ScreenAccessibilityTests {
     /// the tree some time after the first render, later under a full parallel run). The window is a phone's width and tall
     /// enough that the lazy lists lay out what VoiceOver would scroll to.
     static func walk(_ screen: some View, harness: Harness, typeSize: DynamicTypeSize = .large, ready: ([String]) -> Bool) async throws -> [String] {
+        // The real app awaits its cover before presenting any ready screen (#175).
+        await harness.place.prepareForLaunch()
         CardFlipAccessibilityTests.enableAccessibility()
         let host = UIHostingController(rootView: harness.hosted(screen, typeSize: typeSize))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
@@ -663,6 +665,28 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 9 times, sewn ") }, "\(labels)")
         #expect(labels.contains { $0.hasPrefix("House Finch, Coastal edition patch, seen 6 times, sewn ") }, "the blank: \(labels)")
         #expect(labels.contains("Open in Atlas"), "\(labels)")
+    }
+
+    @Test("The species page includes sightings with different stored labels for the same scientific name, newest first")
+    func speciesSightingsUseScientificName() async throws {
+        let harness = try Harness(seeded: false)
+        let older = Sighting(speciesID: "Haemorhous mexicanus_Original common name", confirmedAt: .now.addingTimeInterval(-3600), soundConfidence: 0.7, source: .phone)
+        older.note = "The earlier encounter"
+        let newer = Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, soundConfidence: 0.7, source: .phone)
+        newer.note = "The newest encounter"
+        let other = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, soundConfidence: 0.7, source: .phone)
+        other.note = "A different species"
+        for sighting in [older, newer, other] { harness.album.mainContext.insert(sighting) }
+        try harness.album.mainContext.save()
+        let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness) { labels in
+            labels.contains { $0.contains("The earlier encounter") } && labels.contains { $0.contains("The newest encounter") }
+        }
+        Self.expectClean(labels, screen: "Species inline sightings")
+        let newestIndex = try #require(labels.firstIndex { $0.contains("The newest encounter") })
+        let oldestIndex = try #require(labels.firstIndex { $0.contains("The earlier encounter") })
+        #expect(newestIndex < oldestIndex)
+        #expect(!labels.contains { $0.contains("A different species") })
+        #expect(labels.contains("2 sightings"))
     }
 
     @Test("A set's page: the plate is one labelled image and the set's name a heading, and a found bird's row says it's yours", arguments: sizes)

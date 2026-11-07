@@ -50,6 +50,56 @@ struct HTTPCircleClientTests {
         #expect(detail.members[0].initials == "A")
     }
 
+    @Test("chosen emblems are encoded on create and PATCH, and decoded in the response")
+    func emblems() async throws {
+        let emblem = CircleEmblem(mark: "bird.fill", tone: "sage")
+        let json = circleJSON.replacingOccurrences(of: #""member_count":2"#, with: #""emblem":{"mark":"bird.fill","tone":"sage"},"member_count":2"#)
+        let recorder = Recorder()
+        recorder.responses = [http(201, json), http(200, json)]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        let created = try await client.createCircle(named: "Birders", timeZone: "UTC", emblem: emblem, accessToken: "t")
+        #expect(created.circle.emblem == emblem)
+        let updated = try await client.updateCircle(id: "c1", name: "Lake birders", emblem: emblem, accessToken: "t")
+        #expect(updated.circle.emblem == emblem)
+        let createBody = try #require(JSONSerialization.jsonObject(with: recorder.requests[0].httpBody!) as? [String: Any])
+        #expect(createBody["emblem"] as? [String: String] == ["mark": "bird.fill", "tone": "sage"])
+        let patch = recorder.requests[1]
+        #expect(patch.httpMethod == "PATCH")
+        #expect(patch.url?.path == "/v1/circles/c1")
+        #expect(patch.value(forHTTPHeaderField: "Authorization") == "Bearer t")
+        let updateBody = try #require(JSONSerialization.jsonObject(with: patch.httpBody!) as? [String: Any])
+        #expect(updateBody["name"] as? String == "Lake birders")
+        #expect(updateBody["emblem"] as? [String: String] == ["mark": "bird.fill", "tone": "sage"])
+    }
+
+    @Test("name-only updates omit the emblem so the server preserves it")
+    func nameOnlyUpdate() async throws {
+        let recorder = Recorder()
+        recorder.responses = [http(200, circleJSON)]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        _ = try await client.updateCircle(id: "c1", name: "Birders", emblem: nil, accessToken: "t")
+        let body = try JSONSerialization.jsonObject(with: recorder.requests[0].httpBody!) as? [String: String]
+        #expect(body == ["name": "Birders"])
+    }
+
+    @Test("old cached Guilds without an emblem retain their stable hashed appearance")
+    @MainActor
+    func oldGuildIdentity() throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let old = try decoder.decode(CircleDetail.self, from: Data(circleJSON.utf8)).circle
+        #expect(old.emblem == nil)
+        #expect(GuildIdentity(circle: old) == GuildIdentity(circleID: old.id))
+        var chosen = old
+        chosen.emblem = CircleEmblem(mark: "bird.fill", tone: "sage")
+        #expect(GuildIdentity(circle: chosen).mark == "bird.fill")
+        #expect(GuildIdentity(circle: chosen).tone.name == "sage")
+        let cached = try JSONEncoder().encode(chosen)
+        #expect(try JSONDecoder().decode(CircleSummary.self, from: cached).emblem == chosen.emblem)
+        chosen.emblem = CircleEmblem(mark: "future-mark", tone: "future-tone")
+        #expect(GuildIdentity(circle: chosen) == GuildIdentity(circleID: old.id))
+    }
+
     @Test("the list, an invite, its preview and accepting it decode from the API's JSON")
     func reads() async throws {
         let recorder = Recorder()
@@ -168,7 +218,8 @@ private final class RefusingClient: CircleClient {
     }
 
     func circles(accessToken: String) async throws -> [CircleSummary] { try check(accessToken); return try await inner.circles(accessToken: accessToken) }
-    func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail { try check(accessToken); return try await inner.createCircle(named: name, timeZone: timeZone, accessToken: accessToken) }
+    func createCircle(named name: String, timeZone: String, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail { try check(accessToken); return try await inner.createCircle(named: name, timeZone: timeZone, emblem: emblem, accessToken: accessToken) }
+    func updateCircle(id: String, name: String?, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail { try check(accessToken); return try await inner.updateCircle(id: id, name: name, emblem: emblem, accessToken: accessToken) }
     func circle(id: String, accessToken: String) async throws -> CircleDetail { try check(accessToken); return try await inner.circle(id: id, accessToken: accessToken) }
     func createInvite(circleID: String, accessToken: String) async throws -> CircleInvite { try check(accessToken); return try await inner.createInvite(circleID: circleID, accessToken: accessToken) }
     func invitePreview(token: String, accessToken: String) async throws -> InvitePreview { try check(accessToken); return try await inner.invitePreview(token: token, accessToken: accessToken) }
@@ -209,6 +260,29 @@ struct CircleStoreTests {
         #expect(store.circles.map(\.name) == ["Backyard"])
         #expect(store.details[detail.circle.id]?.members.map(\.id) == [FakeCircleClient.me])
         #expect(detail.circle.timeZone == "Europe/London")
+    }
+
+    @Test("chosen icons and edits update the list, detail and invite, and non-creators are refused")
+    func editIdentity() async throws {
+        let store = signedInStore(seeded: true)
+        await store.refresh()
+        let emblem = CircleEmblem(mark: "water.waves", tone: "mist")
+        let created = try await store.create(named: "Birders", emblem: emblem)
+        #expect(store.circles.first { $0.id == created.circle.id }?.emblem == emblem)
+        let changed = CircleEmblem(mark: "tree.fill", tone: "clay")
+        try await store.updateCircle(id: created.circle.id, name: "Lake birders", emblem: changed)
+        #expect(store.details[created.circle.id]?.circle.name == "Lake birders")
+        #expect(store.circles.first { $0.id == created.circle.id }?.emblem == changed)
+        let invite = try await store.invite(circleID: created.circle.id)
+        let preview = try await store.preview(token: invite.token)
+        #expect(preview.circle.emblem == changed)
+        #expect(preview.circle.name == "Lake birders")
+        await store.refresh()
+        #expect(store.circles.first { $0.id == created.circle.id }?.emblem == changed)
+        let family = try #require(store.circles.first { $0.name == "Family" })
+        await #expect(throws: CircleError.creatorOnly) {
+            try await store.updateCircle(id: family.id, name: "No", emblem: changed)
+        }
     }
 
     @Test("joining from an invite adds the circle; leaving takes it away")

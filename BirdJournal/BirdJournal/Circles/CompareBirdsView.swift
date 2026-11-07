@@ -120,8 +120,8 @@ private extension SightingMethod {
 }
 
 /// You and a friend as boards of patches, as the reference draws it: theirs you don't have yet, then what you both have, then only
-/// yours, then the tally. On felt: these are objects. Patches in threes, a friend's in the edition they first found it, and the blank with its tag
-/// when the server names no edition, or one this phone can't paint.
+/// yours, then the tally. On felt: these are objects. A friend's illustration may use another available edition;
+/// the viewer's own patches remain strictly in their original editions.
 struct CompareBirdsView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(PackLibrary.self) private var library
@@ -211,10 +211,12 @@ struct CompareBirdsView: View {
     }
 
     private func tile(_ row: BirdComparison.Row) -> BoardTile {
-        BoardTile(
-            id: row.scientificName, scientificName: row.scientificName, setID: row.edition, name: row.commonName,
-            caption: BirdComparison.caption(row, friend: firstName),
-            spoken: "\(row.commonName). You: \(BirdComparison.word(row.mine)). \(firstName): \(BirdComparison.word(row.theirs)).",
+        // "Only you" opens your actual patch: borrowing another edition here would change the picture on a tap.
+        let artwork = row.theirs == nil ? nil : library.guildPatchArtwork(scientificName: row.scientificName, setID: row.edition)
+        return BoardTile(
+            id: row.scientificName, scientificName: row.scientificName, setID: artwork?.setID ?? row.edition, name: row.commonName,
+            caption: [BirdComparison.caption(row, friend: firstName), artwork?.note].compactMap { $0 }.joined(separator: "\n"),
+            spoken: ["\(row.commonName). You: \(BirdComparison.word(row.mine)). \(firstName): \(BirdComparison.word(row.theirs)).", artwork?.note].compactMap { $0 }.joined(separator: " "),
             hint: row.route == nil ? nil : row.theirs == nil && row.myPatch != nil ? "Opens your patch." : "Opens this bird in the Atlas.",
             route: row.route, identifier: "compare-\(row.scientificName)",
             lift: row.theirs == nil ? row.myPatch.map { PatchLiftID(key: $0, surface: .compare) } : nil
@@ -235,7 +237,7 @@ struct CompareBirdsView: View {
 struct BoardTile: Identifiable {
     let id: String
     let scientificName: String
-    /// The patch's edition. Nil, or one the phone has no painting in, is the blank; it's never drawn with another edition's.
+    /// The illustration's edition, resolved before making the tile. Personal patches keep their own edition.
     let setID: String?
     /// Under the patch, and on the blank's tag.
     let name: String
