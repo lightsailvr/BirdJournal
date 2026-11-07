@@ -689,33 +689,32 @@ struct FindPatch: View {
     }
 }
 
-/// A find's patch, lit like every other. A phone without that edition's pack shows the patch's thumbnail from the art CDN if the
-/// server names that edition's, then the edition's blank with the bird's name on its tag: a pack without patches (#58), a stored
-/// find naming a watercolour's thumbnail (retired by #137). A plain bitmap under the shader, on the two-at-a-time queue. Never
-/// another edition's patch. An edition this phone has never heard of (the server doesn't check it) is the plain blank, like
-/// Uncharted's. A decoration: the row or the page says what it is.
+/// A find's patch, lit like every other: its own edition's local painting, else another available local edition's
+/// illustration (issue #177). With no local painting the CDN thumbnail is still accepted only for the find's own edition;
+/// otherwise the named edition's blank stays. The find itself keeps its original edition and sharing history.
 struct FindPatchPicture: View {
     @Environment(PackLibrary.self) private var library
     let item: FeedItem
     var size = PatchTextures.Size.thumbnail
 
     var body: some View {
-        let state = library.patchArtState(scientificName: item.scientificName, setID: item.edition)
+        let artwork = library.guildPatchArtwork(scientificName: item.scientificName, setID: item.edition)
+        let state = artwork.state
         Group {
             if state.art == nil, state != .beingSewn, let url = Self.thumbnail(of: item) {
                 AsyncImage(url: url) { phase in
-                    if let image = phase.image { image.resizable().scaledToFit() } else { patch(state) }
+                    if let image = phase.image { image.resizable().scaledToFit() } else { patch(artwork) }
                 }
             } else {
-                patch(state)
+                patch(artwork)
             }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 
-    private func patch(_ state: PatchArtState) -> some View {
-        PatchView(state: state, edition: PatchEdition.of(setID: item.edition), size: size, tag: item.commonName)
+    private func patch(_ artwork: GuildPatchArtwork) -> some View {
+        PatchView(state: artwork.state, edition: PatchEdition.of(setID: artwork.setID), size: size, tag: item.commonName)
     }
 
     /// The thumbnail on the art CDN, if it's this find's edition's patch: the key is the finder's phone's word, like the edition.
