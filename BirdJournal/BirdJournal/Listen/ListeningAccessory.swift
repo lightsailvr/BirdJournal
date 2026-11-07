@@ -30,7 +30,7 @@ struct ListeningAccessory: View {
                         }
                     }
                     Spacer(minLength: 4)
-                    ElapsedTimeCompact(startedAt: run.startedAt)
+                    ElapsedTimeCompact(startedAt: run.clockStart, stoppedAt: run.clockStoppedAt)
                 }
                 .contentShape(Rectangle())
             }
@@ -68,10 +68,11 @@ struct ListeningAccessory: View {
 
 private struct ElapsedTimeCompact: View {
     let startedAt: Date?
+    let stoppedAt: Date?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            Text(ElapsedTime.text(from: startedAt, to: context.date))
+            Text(ElapsedTime.text(from: startedAt, to: stoppedAt ?? context.date))
                 .font(JournalFont.supporting.monospacedDigit())
                 .foregroundStyle(Color.inkSecondary)
         }

@@ -144,6 +144,8 @@ final class HuntUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeRunBirds", Self.movingBirds,
+            // A row takes this test a few seconds to read, and the hold has to outlast that once the finger's up.
+            "-listHoldSettle", "15",
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
         ]
         app.launch()
@@ -164,7 +166,7 @@ final class HuntUITests: XCTestCase {
         XCTAssertTrue(row.label.hasPrefix("\(added), added"), "\(added) moved from under the finger: the row there is \(row.label)")
 
         // And it's let go: within a few seconds of the finger lifting, the list is moving again.
-        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != added }, evaluatedWith: NSObject())], timeout: 15)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != added }, evaluatedWith: NSObject())], timeout: 30)
     }
 
     /// Scrolling counts as touching, with the finger nowhere near a row: here it's on the timer. These birds move three times a

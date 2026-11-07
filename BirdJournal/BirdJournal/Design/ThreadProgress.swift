@@ -40,7 +40,6 @@ struct ThreadProgress: View {
 
     /// The mock's 3 px thread at 1.34: 8 on and 3 off.
     static let height: CGFloat = 4
-    private static let lengthOverHeight: CGFloat = 8.0 / 3
     private static let secondsPerStitch = 0.07
     /// Past a tab change or a push, so the sewing is seen.
     private static let settle = Duration.milliseconds(350)
@@ -77,17 +76,13 @@ struct ThreadProgress: View {
 
     /// How many stitches a row of `width` holds.
     static func stitches(width: CGFloat, height: CGFloat = ThreadProgress.height) -> Int {
-        max(1, Int((width + height) / (height * lengthOverHeight + height)))
+        Stitches.count(width: width, height: height)
     }
 
     /// How many of `stitches` are sewn: the share, rounded, with at least one above zero and the last only at the whole.
     /// `countsBirds` gives the first two birds a stitch each.
     static func sewn(value: Double, total: Double, stitches: Int, countsBirds: Bool = false) -> Int {
-        guard total > 0, value > 0 else { return 0 }
-        guard value < total else { return stitches }
-        let share = Int((value / total * Double(stitches)).rounded())
-        let leastForThis = countsBirds ? min(Int(value), 2) : 1
-        return min(max(share, max(leastForThis, 1)), max(stitches - 1, 1))
+        Stitches.sewn(value: value, total: total, stitches: stitches, countsBirds: countsBirds)
     }
 
     /// Where a thread starts as it comes on screen: at the stitch it last showed, if the value has risen since, so it sews the
@@ -166,29 +161,5 @@ struct ThreadProgress: View {
     /// The stitches still to sew, as the mock draws them: faint, and stronger under Increase Contrast.
     private var trackColor: Color {
         (thread == .onLavender ? Color.onSharedGoal : Color.ink).opacity(contrast == .increased ? 0.4 : 0.22)
-    }
-}
-
-/// A row of `count` stitches, the first `sewn` of them drawn: a whole number at rest, and between two while it's sewing, so a
-/// stitch runs out along its length.
-private nonisolated struct Stitches: Shape {
-    let count: Int
-    var sewn: Double
-
-    var animatableData: Double {
-        get { sewn }
-        set { sewn = newValue }
-    }
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let gap = rect.height
-        let length = (rect.width - gap * CGFloat(count - 1)) / CGFloat(count)
-        for index in 0..<count where Double(index) < sewn {
-            let part = CGFloat(min(1, sewn - Double(index)))
-            let stitch = CGRect(x: rect.minX + CGFloat(index) * (length + gap), y: rect.minY, width: length * part, height: rect.height)
-            path.addRoundedRect(in: stitch, cornerSize: CGSize(width: rect.height / 4, height: rect.height / 4))
-        }
-        return path
     }
 }

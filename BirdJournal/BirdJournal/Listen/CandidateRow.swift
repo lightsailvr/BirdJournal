@@ -175,10 +175,15 @@ struct CandidateRow: View {
         }
     }
 
-    /// "just now" within the last minute, else minutes ago, from the run's own clock.
-    static func heardText(_ candidate: Candidate, startedAt: Date?, now: Date) -> String {
+    /// "just now" within the last minute, else minutes ago, from the run's own clock; past a day, as a recap can wait, the date.
+    static func heardText(_ candidate: Candidate, startedAt: Date?, now: Date, calendar: Calendar = .current, locale: Locale = .current) -> String {
         guard let startedAt else { return "just now" }
-        return AgeText.text(seconds: now.timeIntervalSince(startedAt) - candidate.lastHeardAt)
+        let heard = startedAt.addingTimeInterval(candidate.lastHeardAt)
+        let age = now.timeIntervalSince(heard)
+        guard age >= 86_400 else { return AgeText.text(seconds: age) }
+        var style = Date.FormatStyle(locale: locale, calendar: calendar).month(.abbreviated).day()
+        style.timeZone = calendar.timeZone
+        return heard.formatted(style)
     }
 }
 

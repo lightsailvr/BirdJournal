@@ -111,6 +111,48 @@ extension MockDeviceKitTests {
             }
         }
 
+        @Test("time with the glasses off isn't time listened: the clock holds still through the pause, and the recap leaves it out")
+        func pausedTimeIsNotListened() async throws {
+            try await withMockDisplay { glasses in
+                let connection = GlassesConnection()
+                try await waitUntil { connection.connectedDevice != nil }
+                let source = ManualAudioSource()
+                let album = try AlbumSchema.makeContainer(inMemory: true)
+                let recorder = SightingRecorder(container: album, frames: FrameStore(directory: Self.temporaryFrames()))
+                let sightings = RunSightings(recorder: recorder)
+                let glassesRun = GlassesListeningSession(
+                    recorder: recorder,
+                    sightings: sightings,
+                    loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
+                    makeSource: { _ in source },
+                    location: ScriptedLocationProvider([ListeningSessionTests.newYork]),
+                    profile: FakeLensStack.profile(for:),
+                    image: FakeLensStack.image(for:)
+                )
+                let run = ListeningCoordinator(phone: ListeningSession(), glasses: glassesRun, sightings: sightings, levels: LevelSink(), defaultSource: .glasses, defaults: UserDefaults(suiteName: "lens-ceremony-\(UUID().uuidString)")!)
+
+                await run.start()
+                try #require(run.state == .listening, "\(run.errorMessage ?? "no error")")
+                try await waitUntil { glassesRun.lens.inputsState == .active }
+                source.feed(seconds: 4.5)
+                try await waitUntil { glassesRun.lens.stack.count == 2 }
+
+                glasses.powerOff()
+                try await waitUntil { run.state == .paused(.disconnected) }
+                try await waitUntil(timeout: .seconds(2)) { run.clock.pausedSince != nil }
+                #expect(run.snapshot(in: CardCollection([])).pausedAt == run.clock.pausedSince, "the Live Activity's clock holds still too")
+                try await Task.sleep(for: .seconds(3))
+                glasses.powerOn()
+                try await waitUntil(timeout: .seconds(30)) { run.state == .listening }
+                try await waitUntil(timeout: .seconds(2)) { run.clock.pausedSince == nil }
+                await run.stop()
+
+                let wall = try #require(run.endedAt).timeIntervalSince(try #require(run.startedAt))
+                #expect(run.listened <= wall - 3, "listened \(run.listened) of \(wall), paused for at least 3 s")
+                #expect(run.listened > 0)
+            }
+        }
+
         @Test("a patch sewn on the lens waits for the run to end, and Back on the lens ending it is enough; a repeat from the lens waits for nothing (the maintainer, 2026-11-04)")
         func lensAddWaitsForTheEnd() async throws {
             try await withMockDisplay { glasses in
@@ -159,6 +201,9 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(1)) { glassesRun.lens.page == .list }
                 input.back()
                 try await waitUntil(timeout: .seconds(5)) { run.state == .ended(.endedByGlasses) }
+                // Back on the lens is an end like Stop: the recap and its time.
+                try await waitUntil(timeout: .seconds(5)) { run.isReviewing }
+                #expect(run.endedAt != nil)
                 #expect(run.hasCeremonyWaiting)
                 run.showNextCeremony()
                 #expect(run.reveal?.commonName == "House Finch")

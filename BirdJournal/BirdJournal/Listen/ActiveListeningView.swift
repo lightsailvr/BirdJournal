@@ -31,7 +31,7 @@ struct ActiveListeningView: View {
                         .padding(.top, 2)
                 }
 
-                ElapsedTime(startedAt: run.startedAt, isRunning: run.state.isActive)
+                ElapsedTime(startedAt: run.clockStart, stoppedAt: run.clockStoppedAt)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 22)
 
@@ -277,16 +277,18 @@ private struct StatusLine: View {
 /// Minutes and seconds since the run started, ticking once a second while it runs.
 struct ElapsedTime: View {
     let startedAt: Date?
-    let isRunning: Bool
+    /// Where it stands still: paused, or over.
+    let stoppedAt: Date?
     @ScaledMetric(relativeTo: .largeTitle) private var size: CGFloat = 40
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: isRunning ? 1 : 3_600)) { context in
-            Text(Self.text(from: startedAt, to: context.date))
+        TimelineView(.periodic(from: .now, by: stoppedAt == nil ? 1 : 3_600)) { context in
+            let now = stoppedAt ?? context.date
+            Text(Self.text(from: startedAt, to: now))
                 .font(.system(size: size, weight: .regular, design: .serif))
                 .monospacedDigit()
                 .foregroundStyle(Color.ink)
-                .accessibilityLabel(Self.spokenText(from: startedAt, to: context.date))
+                .accessibilityLabel(Self.spokenText(from: startedAt, to: now))
         }
     }
 

@@ -19,7 +19,14 @@ struct HeldListOrder<ID: Hashable>: Equatable {
         }
     }
 
-    static var settle: TimeInterval { 1.5 }
+    static var settle: TimeInterval {
+        #if DEBUG
+        // `-listHoldSettle <seconds>`: a slow UI test can read what the hold kept before it lets go.
+        let seconds = UserDefaults.standard.double(forKey: "listHoldSettle")
+        if seconds > 0 { return seconds }
+        #endif
+        return 1.5
+    }
     /// The last resort for a finger or scroll that never said it ended, however that came about. Long, because a finger can
     /// really stay still. VoiceOver's focus can stay as long as it likes, so this leaves it alone.
     static var staleAfter: TimeInterval { 20 }

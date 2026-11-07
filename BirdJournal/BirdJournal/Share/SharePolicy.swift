@@ -80,6 +80,20 @@ enum SharePolicy {
         )
     }
 
+    /// The app's credit, in what goes with any image.
+    static let appCredit = "Heard with Featherguild. Powered by BirdNET."
+
+    /// The place on a run recap's image (issue #150): the same rule as a find's, for a run. The city, never a coordinate; none
+    /// when the city is off or the run had no fix; and "a secret spot" as soon as a threatened or unrated bird is pictured on
+    /// it, since a patch beside a city would say where that bird is. Birds heard but not added are only a count, so they don't
+    /// move it.
+    /// - Parameter pictured: each pictured bird's `isThreatened`, nil when no pack rates it.
+    static func recapPlace(placeName: String?, hasLocation: Bool, pictured: [Bool?], includeCity: Bool) -> String? {
+        guard includeCity, hasLocation else { return nil }
+        if pictured.contains(where: { $0 != false }) { return FindPolicy.secretSpot }
+        return FindPolicy.cityLabel(placeName)
+    }
+
     /// The text that goes with the image: the bird, then when and where on their own line, the note, and the credit.
     static func text(for content: Content) -> String {
         var lines: [String] = []
@@ -87,7 +101,7 @@ enum SharePolicy {
         let whenAndWhere = [content.dateText, content.areaText].compactMap { $0 }
         if !whenAndWhere.isEmpty { lines.append(whenAndWhere.joined(separator: ", ")) }
         if let note = content.note { lines.append("“\(note)”") }
-        lines.append("Heard with Featherguild. Powered by BirdNET.")
+        lines.append(appCredit)
         if let attribution = content.attribution { lines.append(attribution) }
         return lines.joined(separator: "\n")
     }

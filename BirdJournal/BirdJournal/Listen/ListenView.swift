@@ -32,9 +32,6 @@ struct ListenView: View {
         .sheet(item: $run.reviewing) { candidate in
             CandidateReviewSheet(candidate: candidate)
         }
-        .sheet(isPresented: $run.isReviewing) {
-            RunReviewSheet()
-        }
         .safeAreaInset(edge: .bottom) {
             // Over the review, the sheet has its own: two would each tick, with two haptics.
             if let acknowledgment = run.acknowledgment, !run.isReviewing {
