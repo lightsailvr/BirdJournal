@@ -215,6 +215,22 @@ struct DebugLaunch: ViewModifier {
             case "journal", "cards":
                 tab = .journal
                 journalMode = .cards
+                // `-autoLiftAfter <s>` opens the `-autoCardSpecies` patch from its tile that long after launch, and `-autoLiftBackAfter
+                // <s>` goes back that long after, with no tap a UI test would wait out (issue #150).
+                let liftAfter = defaults.double(forKey: "autoLiftAfter")
+                if liftAfter > 0, let species = defaults.string(forKey: "autoCardSpecies") {
+                    try? await Task.sleep(for: .seconds(liftAfter))
+                    let all = (try? context.fetch(Sighting.newestFirst())) ?? []
+                    if let sighting = all.first(where: { $0.scientificName == species }) {
+                        let placement = CardCollection(sightings: all, sets: library.cardSets).placement(of: sighting.identifier)
+                        journalPath.append(Route.patch(CardCollection.Patch.Key(speciesID: sighting.speciesID, setID: placement?.setID), from: .board))
+                        let backAfter = defaults.double(forKey: "autoLiftBackAfter")
+                        if backAfter > 0 {
+                            try? await Task.sleep(for: .seconds(backAfter))
+                            journalPath.removeLast()
+                        }
+                    }
+                }
             case "sightings":
                 tab = .journal
                 journalMode = .sightings
