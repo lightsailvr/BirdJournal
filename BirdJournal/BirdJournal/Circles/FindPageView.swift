@@ -180,6 +180,7 @@ private struct FindPageContent: View {
         }
         .patchSheetBackground()
         .holdsPatchLight()
+        .readsFriendsBirds(when: turned)
         .haptic(.turn, trigger: turned)
         .haptic(.lift, trigger: opened)
         .onAppear { opened = true }

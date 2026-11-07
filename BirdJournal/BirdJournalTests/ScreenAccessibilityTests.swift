@@ -190,8 +190,6 @@ struct ScreenAccessibilityTests {
         #expect(start < local, "Start listening comes before the local set")
     }
 
-    /// A row as a run lists it. With no run on, an add here would be Uncharted, where the seeds have Anna's Hummingbird and the
-    /// Common Blackbird, which no pack describes; the House Finch's patches are all in Los Angeles.
     @Test("Compare reads each patch as a sentence, with Heard or Seen on both sides and the tally (issue #150)", arguments: sizes)
     func compareBoards(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
@@ -237,23 +235,56 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("Sunday Group is ") && $0.contains(" goal") }, "\(labels)")
     }
 
-    @Test("A set's row names the friends who have a bird you don't (issue #150)")
-    func setFaces() async throws {
+    @Test("A set's row names the friends who have a bird you don't (issue #150)", arguments: sizes)
+    func setFaces(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let client = try #require(harness.circles.client as? FakeCircleClient)
         let goose = FriendBirds.Species(speciesID: "Branta canadensis_Canada Goose", scientificName: "Branta canadensis", commonName: "Canada Goose", method: .seen)
         let egyptian = FriendBirds.Species(speciesID: "Alopochen aegyptiaca_Egyptian Goose", scientificName: "Alopochen aegyptiaca", commonName: "Egyptian Goose", method: .seen)
         client.setMoreCompared([goose, egyptian], friendID: "maya")
         client.setMoreCompared([egyptian], friendID: "jo")
-        let labels = try await Self.walk(SetView(id: PackIndex.bundledPackID), harness: harness) { labels in
+        let labels = try await Self.walk(SetView(id: PackIndex.bundledPackID), harness: harness, typeSize: typeSize) { labels in
             labels.contains { $0.contains("have this bird") }
         }
         Self.expectClean(labels, screen: "Set's friends")
+        Self.expectOneWordPerThing(labels, screen: "Set's friends")
         #expect(labels.contains("001, Canada Goose, still out there, Maya Ortiz has this bird"), "\(labels)")
         #expect(labels.contains("002, Egyptian Goose, still out there, Jo Park and Maya Ortiz have this bird"), "\(labels)")
-        #expect(labels.contains("021, Anna's Hummingbird, still out there"), "Jo has it, and so do you, Uncharted: by species, no face: \(labels)")
+        if typeSize == .large {
+            #expect(labels.contains("021, Anna's Hummingbird, still out there"), "Jo has it, and so do you, Uncharted: by species, no face: \(labels)")
+        }
     }
 
+    @Test("Every patch of a goal reads as a sentence, and nobody's words but the packs' (issue #150)", arguments: sizes)
+    func goalBoard(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        await harness.circles.loadGoals(circleID: sunday.id)
+        let monthly = try #require(harness.circles.goals[sunday.id]?.first { $0.kind == .monthly })
+        let labels = try await Self.walk(GoalPatchesView(circleID: sunday.id, goalID: monthly.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasSuffix("edition patch") }
+        }
+        Self.expectClean(labels, screen: "A goal's patches")
+        Self.expectOneWordPerThing(labels, screen: "A goal's patches")
+        #expect(labels.contains { $0.hasSuffix("birds, together.") }, "\(labels)")
+        #expect(labels.contains { $0.hasSuffix("edition patch") }, "\(labels)")
+    }
+
+    @Test("A paper card says who has the bird, in one sentence (issue #150)", arguments: sizes)
+    func cardFriends(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.loadFriendsBirds()
+        let patch = try #require(harness.collectionStore.collection.patches.first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(PatchDetailView(key: patch.id, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("this bird.") }
+        }
+        Self.expectClean(labels, screen: "A card's friends")
+        #expect(labels.contains("Jo Park and Maya Ortiz have this bird."), "\(labels)")
+    }
+
+    /// A row as a run lists it. With no run on, an add here would be Uncharted, where the seeds have Anna's Hummingbird and the
+    /// Common Blackbird, which no pack describes; the House Finch's patches are all in Los Angeles.
     @Test("A run's rows: a new patch waiting in words, your patch and its count, and each row's one button", arguments: sizes)
     func runRows(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()

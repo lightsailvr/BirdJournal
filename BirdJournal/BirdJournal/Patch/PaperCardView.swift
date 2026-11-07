@@ -11,7 +11,6 @@ import SwiftUI
 struct PaperCardView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
-    @Environment(CircleStore.self) private var circles: CircleStore?
     let patch: CardCollection.Patch
     /// The patch's sightings, newest first.
     let sightings: [Sighting]
@@ -40,7 +39,6 @@ struct PaperCardView: View {
         .padding(.horizontal, 7)
         .padding(.bottom, 7)
         .modifier(CardStockSurface())
-        .task { await circles?.loadFriendsBirds() }
     }
 
     private func content(_ species: PackSpecies?) -> some View {
@@ -279,7 +277,8 @@ private struct PaperCardMoreLore: View {
 }
 
 /// Which friends have this bird, on a paper card (issue #150, A4): their faces, and their names in print. Nothing without friends who
-/// do. The blocked are never among them.
+/// do. The blocked are never among them. Whoever turns the card over asks for them (`readsFriendsBirds`): both faces of a card are
+/// built from the start, and browsing patches shouldn't read anyone's birds.
 private struct FriendsOnCard: View {
     @Environment(CircleStore.self) private var circles: CircleStore?
     let scientificName: String
@@ -306,7 +305,6 @@ private struct FriendsOnCard: View {
 /// on this iPhone. Scrolls inside the patch's footprint, or grows at accessibility text sizes, like the birder's own.
 struct FriendPaperCard: View {
     @Environment(PackLibrary.self) private var library
-    @Environment(CircleStore.self) private var circles: CircleStore?
     let species: PackSpecies
     /// "Citrus edition, No. 021", if this phone knows the find's set.
     let edition: String?
@@ -343,7 +341,6 @@ struct FriendPaperCard: View {
         .padding(.horizontal, 7)
         .padding(.bottom, 7)
         .modifier(CardStockSurface())
-        .task { await circles?.loadFriendsBirds() }
     }
 
     private var content: some View {
@@ -432,5 +429,23 @@ private struct BiologyGrid: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card-stats")
+    }
+}
+
+extension View {
+    /// Reads friends' birds once a paper card is showing, for the names on it.
+    func readsFriendsBirds(when isShowingCard: Bool) -> some View {
+        modifier(ReadsFriendsBirds(isShowingCard: isShowingCard))
+    }
+}
+
+private struct ReadsFriendsBirds: ViewModifier {
+    @Environment(CircleStore.self) private var circles: CircleStore?
+    let isShowingCard: Bool
+
+    func body(content: Content) -> some View {
+        content.task(id: isShowingCard) {
+            if isShowingCard { await circles?.loadFriendsBirds() }
+        }
     }
 }

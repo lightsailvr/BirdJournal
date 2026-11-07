@@ -26,6 +26,9 @@ final class GoalsUITests: XCTestCase {
         XCTAssertTrue(monthly.label.contains("of 14 species"), monthly.label)
         XCTAssertTrue(monthly.label.contains("still to discover") || monthly.label.contains("Reached"), monthly.label)
         XCTAssertTrue(monthly.label.contains("birds, together."), monthly.label)
+        // Its patches under the thread, as many as fit, and "+N" for the rest (issue #150).
+        XCTAssertTrue(element(app, "goal-patches").waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["goal-patches-more"].exists, "screen: \(app.debugDescription.prefix(3000))")
 
         app.buttons["guildAllGoals"].tap()
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'goal-fake-goal'"))

@@ -58,7 +58,6 @@ final class CircleStore {
     @ObservationIgnored private var reactionTurns: [String: Int] = [:]
     /// The Guilds whose detail and goals have been read this launch, rather than coming from the cache.
     @ObservationIgnored private var freshDetails: Set<String> = []
-    @ObservationIgnored private var freshGoals: Set<String> = []
     /// When each Guild's goals were last read, this launch.
     @ObservationIgnored private var goalReads: [String: Date] = [:]
     /// The list of Guilds has been read this launch, rather than coming from the cache.
@@ -66,7 +65,9 @@ final class CircleStore {
     /// The friends whose birds have been read or are being read this session, so each is read at most once for the screens around
     /// the app. Compare's own screen reads for itself.
     @ObservationIgnored private var friendsRead: Set<String> = []
-    @ObservationIgnored private var isReadingFriends = false
+    /// The read of friends' birds under way. It's the store's, not a screen's: pushing the next screen mustn't cancel it, since that
+    /// screen is waiting on the same answers.
+    @ObservationIgnored private var friendsSweep: Task<Void, Never>?
     /// When each Guild's first page was last read, this launch.
     @ObservationIgnored private var firstPageReads: [String: Date] = [:]
     /// Bumped by `clear`, so an answer on its way when the birder signed out is dropped, not stored.
@@ -325,7 +326,6 @@ final class CircleStore {
             let read = try await call { try await $0.goals(circleID: circleID, accessToken: $1) }
             guard session == self.session else { return }
             goals[circleID] = read
-            freshGoals.insert(circleID)
             goalReads[circleID] = .now
             cacheLater()
         } catch {
@@ -357,13 +357,16 @@ final class CircleStore {
     /// for someone signed out.
     func loadRunningGoals(now: Date = .now) async {
         guard client != nil, account.isSignedIn else { return }
-        if !hasReadList { await refresh() }
-        let stale = circles.map(\.id).filter { id in goalReads[id].map { now.timeIntervalSince($0) > Self.goalsKeepFor } ?? true }
-        await withDiscardingTaskGroup { group in
-            for id in stale {
-                group.addTask { await self.loadGoals(circleID: id) }
+        // On its own task: Listen going away (a run starting, say) would cancel the read, and a cancelled list reads as a failed one.
+        await Task {
+            if !hasReadList { await refresh() }
+            let stale = circles.map(\.id).filter { id in goalReads[id].map { now.timeIntervalSince($0) > Self.goalsKeepFor } ?? true }
+            await withDiscardingTaskGroup { group in
+                for id in stale {
+                    group.addTask { await self.loadGoals(circleID: id) }
+                }
             }
-        }
+        }.value
     }
 
     private static let goalsKeepFor: TimeInterval = 300
@@ -533,17 +536,39 @@ final class CircleStore {
     }
 
     /// Reads each friend's birds, for a set's rows and a paper card: called by a screen showing them, once per screen rather than per
-    /// row, and each friend at most once a session, one at a time. Nothing for someone signed out or in no Guild. A failed read
-    /// stops there and leaves that friend for the next screen; a friend the server won't show stays read.
+    /// row, and each friend at most once a session, one at a time. Nothing for someone signed out or in no Guild. A screen that asks
+    /// during a read waits on that read. Any failed read stops there and leaves the rest for the next screen, so no connection costs
+    /// one call; a friend the server won't show stays read.
     func loadFriendsBirds() async {
-        guard client != nil, account.isSignedIn, !isReadingFriends else { return }
-        isReadingFriends = true
+        guard client != nil, account.isSignedIn else { return }
+        if let friendsSweep {
+            await friendsSweep.value
+            return
+        }
         let session = session
-        defer { if session == self.session { isReadingFriends = false } }
-        if !hasReadList { await refresh() }
+        let sweep = Task {
+            await readFriendsBirds(session: session)
+            if session == self.session { friendsSweep = nil }
+        }
+        friendsSweep = sweep
+        await sweep.value
+    }
+
+    private func readFriendsBirds(session: Int) async {
+        if !hasReadList {
+            await refresh()
+            guard hasReadList else { return }
+        }
         for circle in circles where needsDetail(circle.id) {
             guard session == self.session else { return }
-            try? await loadDetail(id: circle.id)
+            do {
+                try await loadDetail(id: circle.id)
+            } catch CircleError.notFound {
+                continue
+            } catch {
+                log.error("couldn't read a Guild's members: \(String(describing: error))")
+                return
+            }
         }
         guard session == self.session else { return }
         indexFriends()
@@ -573,7 +598,7 @@ final class CircleStore {
     func needsDetail(_ circleID: String) -> Bool { !freshDetails.contains(circleID) }
 
     /// Whether a screen should read the Guild's goals: as for its detail.
-    func needsGoals(_ circleID: String) -> Bool { !freshGoals.contains(circleID) }
+    func needsGoals(_ circleID: String) -> Bool { goalReads[circleID] == nil }
 
     /// Signed out or the account deleted: nothing of the circles stays on the phone, in memory or on disk (the root calls it
     /// whenever the account signs out).
@@ -586,14 +611,13 @@ final class CircleStore {
         friendBirds = [:]
         friendsBySpecies = [:]
         friendsRead = []
-        isReadingFriends = false
+        friendsSweep = nil
         hasReadList = false
         goalReads = [:]
         mutes = Mutes()
         blocked = []
         listState = .idle
         freshDetails = []
-        freshGoals = []
         firstPageReads = [:]
         cache?.remove()
     }
@@ -669,7 +693,6 @@ final class CircleStore {
         feeds[id] = nil
         goals[id] = nil
         freshDetails.remove(id)
-        freshGoals.remove(id)
         goalReads[id] = nil
         firstPageReads[id] = nil
         indexFriends()

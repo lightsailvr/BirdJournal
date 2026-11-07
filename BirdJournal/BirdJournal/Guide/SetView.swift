@@ -161,14 +161,6 @@ private struct SetSpeciesRow: View {
     }
 }
 
-/// Who else has a bird, in words.
-enum FriendWords {
-    /// "Maya Ortiz has this bird"; "Maya Ortiz, Jo Park and Sam Okafor have this bird".
-    static func have(_ friends: [CircleMember]) -> String {
-        "\(friends.map(\.name).formatted(.list(type: .and))) \(friends.count == 1 ? "has" : "have") this bird"
-    }
-}
-
 /// A bird not yet found: its true shape on the raised tile, or the glyph where there's none to show (a pack that isn't on the
 /// phone, one without silhouettes, or a bird left out on purpose). It says "no patch yet", so it holds 3:1 on the raised surface.
 /// The pack's picture is white and alpha, so it takes its colour here. It's a plain bitmap, and it takes no touches.

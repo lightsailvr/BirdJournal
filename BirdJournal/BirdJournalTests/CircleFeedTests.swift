@@ -685,6 +685,29 @@ struct FriendsAroundTheAppTests {
         #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
     }
 
+    @Test("no connection from the start costs one call, not one per Guild or friend")
+    func offlineFromTheStart() async {
+        let (store, client) = seeded()
+        client.isOffline = true
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.isEmpty, "it never got as far as a friend")
+        client.isOffline = false
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+    }
+
+    @Test("the screen that asked going away doesn't stop the read: the next screen is waiting on it")
+    func cancelled() async {
+        let (store, client) = seeded()
+        client.latency = .milliseconds(20)
+        let first = Task { await store.loadFriendsBirds() }
+        try? await Task.sleep(for: .milliseconds(30))
+        first.cancel()
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(client.compareLog.count == 5, "each once")
+    }
+
     @Test("no connection stops at the first failure, and the next screen tries again")
     func offline() async {
         let (store, client) = seeded()

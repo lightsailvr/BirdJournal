@@ -199,11 +199,11 @@ private struct GoalPatchRow: View {
 
     @ViewBuilder
     private func patch(_ species: CircleGoal.Species, name: String?) -> some View {
-        // Too small to read a tag: its name is what VoiceOver says, and on the patch's page. A plain blank without its painting.
-        let picture = PatchView(art: library.patchArtState(scientificName: species.scientificName, setID: species.edition).art, edition: PatchEdition.of(setID: species.edition))
+        // Too small to read a tag, as on a row: VoiceOver says its name, and so does the page it opens.
+        let picture = RowPatch(scientificName: species.scientificName, setID: species.edition)
             .frame(width: side, height: side)
             .contentShape(.rect)
-        let spoken = GoalWords.spokenPatch(name: name, edition: library.cardSets.first { $0.id == species.edition }?.edition)
+        let spoken = GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: species.edition))
         if let name {
             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: name)) { picture }
                 .buttonStyle(.patchLift)
@@ -278,7 +278,7 @@ struct GoalPatchesView: View {
             return BoardTile(
                 id: species.scientificName, scientificName: species.scientificName, setID: species.edition, name: name ?? GoalWords.unnamedBird,
                 caption: nil,
-                spoken: GoalWords.spokenPatch(name: name, edition: library.cardSets.first { $0.id == species.edition }?.edition),
+                spoken: GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: species.edition)),
                 hint: name == nil ? nil : "Opens this bird in the Atlas.",
                 route: name.map { .species(scientificName: species.scientificName, commonName: $0) },
                 identifier: "goal-patch-\(species.scientificName)"

@@ -167,8 +167,7 @@ struct CompareBirdsView: View {
                         .boardLabel()
                 }
                 board(comparison.onlyTheirs, title: BirdComparison.leadTitle(friend: firstName), isLead: true)
-                board(comparison.both, title: "You both have")
-                    .id("compare-both")
+                board(comparison.both, title: "You both have", scrollID: "compare-both")
                 board(comparison.onlyMine, title: "Only you")
                 Text("\(firstName)'s side is what they shared to Guilds you're both in. Yours is everything on this iPhone.")
                     .font(JournalFont.attribution)
@@ -185,9 +184,11 @@ struct CompareBirdsView: View {
     }
 
     @ViewBuilder
-    private func board(_ rows: [BirdComparison.Row], title: String, isLead: Bool = false) -> some View {
+    private func board(_ rows: [BirdComparison.Row], title: String, isLead: Bool = false, scrollID: String? = nil) -> some View {
         if !rows.isEmpty {
+            // Every item in a lazy stack needs its own identity: two sharing nil lost a heading.
             SectionTitle(title, size: isLead ? .lead : .section, top: isLead ? 18 : 26, onBoard: true)
+                .id(scrollID ?? title)
             BoardTiles(tiles: rows.map(tile), side: isLead ? 97 : 79)
                 .padding(.top, 10)
         }
@@ -215,7 +216,7 @@ struct CompareBirdsView: View {
 }
 
 /// One patch on a Guild's board: a bird in an edition that may be anyone's.
-struct BoardTile: Identifiable, Equatable {
+struct BoardTile: Identifiable {
     let id: String
     let scientificName: String
     /// The patch's edition. Nil, or one the phone has no painting in, is the blank; it's never drawn with another edition's.
@@ -241,13 +242,8 @@ struct BoardTiles: View {
     /// How wide a patch may be.
     let side: CGFloat
 
-    private var columns: Int {
-        if typeSize >= .accessibility3 { return 1 }
-        return typeSize.isAccessibilitySize ? 2 : 3
-    }
-
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8, alignment: .top), count: columns), alignment: .leading, spacing: 18) {
+        LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize, spacing: 8), alignment: .leading, spacing: 18) {
             ForEach(tiles) { tile in
                 let picture = PatchTile(
                     state: library.patchArtState(scientificName: tile.scientificName, setID: tile.setID), edition: PatchEdition.of(setID: tile.setID),
@@ -268,6 +264,11 @@ struct BoardTiles: View {
 }
 
 extension PackLibrary {
+    /// "Citrus edition", when this phone knows the set.
+    func editionLabel(setID: String?) -> String? {
+        cardSets.first { $0.id == setID }?.edition
+    }
+
     /// What the packs and sets on this phone call each bird, by scientific name. The server's names are the finder's phone's word.
     var birdNames: [String: String] {
         var names: [String: String] = [:]

@@ -30,13 +30,21 @@ final class GuildDataUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["You both have"].exists)
         XCTAssertEqual(element(app, "compareTally").label, "You have 5, Maya has 5, and you both have 2.")
 
-        // Three in a row, each opening its own bird: the tile's edges aren't anyone else's.
+        // Three in a row, each opening its own bird.
         for (scientific, title) in [("Melanerpes formicivorus", "Acorn Woodpecker"), ("Ardea alba", "Great Egret"), ("Sialia mexicana", "Western Bluebird")] {
             let tile = app.buttons["compare-\(scientific)"]
             XCTAssertTrue(tile.waitForExistence(timeout: 5) && tile.isHittable, "\(scientific); screen: \(app.debugDescription.prefix(3000))")
             XCTAssertTrue(tile.label.contains("You: Not yet."), tile.label)
             tile.tap()
             XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 8) || app.staticTexts[title].waitForExistence(timeout: 3), "\(title); screen: \(app.debugDescription.prefix(3000))")
+            tapBack(app)
+            XCTAssertTrue(app.navigationBars["You and Maya"].waitForExistence(timeout: 5))
+        }
+
+        // Near the edge of a column, a touch is still that tile's, on either side: a clipped picture next door doesn't take it.
+        for (offset, title) in [(CGVector(dx: 0.04, dy: 0.3), "Western Bluebird"), (CGVector(dx: 0.96, dy: 0.3), "Western Bluebird")] {
+            app.buttons["compare-Sialia mexicana"].coordinate(withNormalizedOffset: offset).tap()
+            XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 8) && !app.staticTexts["Maya has these. Go find them."].exists, "screen: \(app.debugDescription.prefix(3000))")
             tapBack(app)
             XCTAssertTrue(app.navigationBars["You and Maya"].waitForExistence(timeout: 5))
         }
@@ -79,6 +87,12 @@ final class GuildDataUITests: XCTestCase {
         XCTAssertEqual(phoebe.label, "Black Phoebe, Citrus edition patch")
         phoebe.tap()
         XCTAssertTrue(app.staticTexts["Black Phoebe"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        tapBack(app)
+        // The next along opens its own bird, not its neighbour's.
+        let hummingbird = app.buttons["goal-patch-Calypte anna"]
+        XCTAssertTrue(hummingbird.waitForExistence(timeout: 5) && hummingbird.isHittable, "screen: \(app.debugDescription.prefix(3000))")
+        hummingbird.tap()
+        XCTAssertTrue(app.staticTexts["Anna's Hummingbird"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
         tapBack(app)
 
         let more = app.buttons["goal-patches-more"]
