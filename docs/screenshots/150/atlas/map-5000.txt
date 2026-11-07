@@ -11,3 +11,5 @@ The guard, AtlasUITests.testTheMapAnswersAtFiveThousandSightings, real taps with
 On 6d943af's files the app stayed at 100% under the test's first query and it couldn't begin: MapKit's own accessibilityElements compares each annotation view with all the others, which is why ManyPinsMapView exists.
 
 Memory: about 950 MB resident on the simulator with this map open. Not looked into further.
+
+At 20,000 across 30 km, opened from a sighting: the map is on screen at once and fills in twenty goes, 26 s of CPU, about 1.2 GB resident. In one go it froze for about 18 s. See DECISIONS.md, "A map opens at once".

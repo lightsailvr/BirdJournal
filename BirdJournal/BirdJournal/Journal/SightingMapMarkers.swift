@@ -137,10 +137,7 @@ struct SightingMap: UIViewRepresentable {
             map.preferredConfiguration = style.configuration
         }
         if !coordinator.pins.elementsEqual(pins, by: ===) {
-            map.removeAnnotations(coordinator.pins)
-            coordinator.pins = pins
-            map.addAnnotations(pins)
-            coordinator.chosen = nil
+            coordinator.show(pins, on: map)
         }
         if coordinator.chosen != selection {
             coordinator.choose(selection, on: map)
@@ -153,6 +150,28 @@ struct SightingMap: UIViewRepresentable {
         var chosen: PersistentIdentifier?
         var onSelect: (PersistentIdentifier?) -> Void = { _ in }
         var onHere: ([PersistentIdentifier]) -> Void = { _ in }
+        private var feeding: Task<Void, Never>?
+
+        /// A few at a time, the opening sighting first. MapKit spends about a millisecond a view adding every annotation in the visible area,
+        /// clustered or not, all in one go on the main thread: 18 s at 20,000 sightings with the screen frozen. The cost is MapKit's and stays,
+        /// but this way the map answers while it fills.
+        func show(_ new: [SightingPin], on map: MKMapView) {
+            feeding?.cancel()
+            map.removeAnnotations(map.annotations.filter { $0 is SightingPin })
+            pins = new
+            chosen = nil
+            let ordered = new.filter(\.isFocus) + new.filter { !$0.isFocus }
+            // Twenty goes: each one also makes MapKit cluster again, so smaller batches cost more in all (at 20,000, 46 s of CPU in hundreds).
+            let batch = max(100, ordered.count / 20)
+            feeding = Task { [weak map] in
+                for start in stride(from: 0, to: ordered.count, by: batch) {
+                    guard !Task.isCancelled, let map else { return }
+                    map.addAnnotations(Array(ordered[start..<min(start + batch, ordered.count)]))
+                    guard start + batch < ordered.count else { return }
+                    try? await Task.sleep(for: .milliseconds(16))
+                }
+            }
+        }
 
         func choose(_ id: PersistentIdentifier?, on map: MKMapView) {
             chosen = id
