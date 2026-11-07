@@ -35,6 +35,23 @@ struct CardFlipTests {
             #expect(CardFlip.face(isBack: true, angle: angle, rotates: false).degrees == 0)
         }
     }
+
+    @Test("fading faces and external words never overlap, in either direction or on a reversed turn")
+    func fadesNeverOverlap() {
+        // The same curve drives Reduce Motion's card faces, the caption and the button's two labels.
+        let forward = Array(stride(from: 0.0, through: 180, by: 0.5))
+        for angle in forward + forward.reversed() + [40, 70, 85, 65, 90, 120, 105, 90, 60] {
+            let front = CardFlip.face(isBack: false, angle: angle, rotates: false).opacity
+            let back = CardFlip.face(isBack: true, angle: angle, rotates: false).opacity
+            #expect((0...1).contains(front))
+            #expect((0...1).contains(back))
+            #expect(front == 0 || back == 0, "overlapping words at \(angle)°")
+        }
+        #expect(CardFlip.face(isBack: false, angle: 0, rotates: false).opacity == 1)
+        #expect(CardFlip.face(isBack: true, angle: 180, rotates: false).opacity == 1)
+        #expect(CardFlip.face(isBack: false, angle: 90, rotates: false).opacity == 0)
+        #expect(CardFlip.face(isBack: true, angle: 90, rotates: false).opacity == 0)
+    }
 }
 
 // What VoiceOver reaches: the card hosted in a window and its UIAccessibility tree walked the way VoiceOver walks it.
@@ -51,8 +68,8 @@ struct CardFlipAccessibilityTests {
         unsafeBitCast(symbol, to: (@convention(c) (Bool) -> Void).self)(true)
     }
 
-    static func labels(showsBack: Bool) async throws -> [String] {
-        try await labels(of: CollectibleCard(showsBack: showsBack, rotates: true) {
+    static func labels(showsBack: Bool, rotates: Bool = true) async throws -> [String] {
+        try await labels(of: CollectibleCard(showsBack: showsBack, rotates: rotates) {
             VStack { Text("Front face"); Button("Front action") {} }
         } back: {
             VStack { Text("Back face"); Button("Back action") {} }
@@ -82,19 +99,29 @@ struct CardFlipAccessibilityTests {
         return []
     }
 
-    @Test("VoiceOver reaches only the face that is up, its controls included")
-    func oneFaceExposed() async throws {
-        let front = try await Self.labels(showsBack: false)
+    @Test("VoiceOver reaches only the face that is up, its controls included", arguments: [true, false])
+    func oneFaceExposed(rotates: Bool) async throws {
+        let front = try await Self.labels(showsBack: false, rotates: rotates)
         #expect(front.contains("Front face"), "\(front)")
         #expect(front.contains("Front action"))
         #expect(!front.contains("Back face"), "\(front)")
         #expect(!front.contains("Back action"))
 
-        let back = try await Self.labels(showsBack: true)
+        let back = try await Self.labels(showsBack: true, rotates: rotates)
         #expect(back.contains("Back face"), "\(back)")
         #expect(back.contains("Back action"))
         #expect(!back.contains("Front face"), "\(back)")
         #expect(!back.contains("Front action"))
+    }
+
+    @Test("the caption slot exposes only its selected words to VoiceOver", arguments: [true, false])
+    func selectedWords(showsBack: Bool) async throws {
+        let labels = try await Self.labels(of: CardFlipText(showsBack: showsBack) {
+            Text("Patch caption")
+        } back: {
+            Text("Paper card caption")
+        })
+        #expect(labels == [showsBack ? "Paper card caption" : "Patch caption"], "\(labels)")
     }
 
     @Test("mid-turn, the face still in view but no longer up is already gone from VoiceOver, and the new one is there")

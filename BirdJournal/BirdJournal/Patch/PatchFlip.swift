@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The flip (issue #134, guide page 10; #52's real turn): the object turns about its vertical centre in about 600 ms with
 /// both faces mounted, each showing only on its half of the turn and never mirrored. Under Reduce Motion nothing turns:
-/// the faces cross-fade.
+/// the outgoing face fades completely away before the incoming one appears.
 enum CardFlip {
     static let duration = 0.6
     static let crossFade = 0.25
@@ -11,7 +11,7 @@ enum CardFlip {
     static func face(isBack: Bool, angle: Double, rotates: Bool) -> (degrees: Double, opacity: Double) {
         guard rotates else {
             let progress = min(max(angle / 180, 0), 1)
-            return (0, isBack ? progress : 1 - progress)
+            return (0, isBack ? max(0, 2 * progress - 1) : max(0, 1 - 2 * progress))
         }
         let isVisible = isBack ? angle >= 90 : angle < 90
         return (isBack ? angle - 180 : angle, isVisible ? 1 : 0)
@@ -19,6 +19,23 @@ enum CardFlip {
 
     static func animation(reduceMotion: Bool) -> Animation? {
         reduceMotion ? .easeInOut(duration: crossFade) : .easeInOut(duration: duration)
+    }
+}
+
+/// Words outside the turning card share its progress, but never rotate. Both alternatives keep one stable slot;
+/// the split opacity guarantees they cannot overlap, including when a quick second tap reverses the turn.
+/// Only the selected words enter the accessibility tree, just like the card's selected face.
+struct CardFlipText<Front: View, Back: View>: View {
+    let showsBack: Bool
+    @ViewBuilder var front: Front
+    @ViewBuilder var back: Back
+
+    var body: some View {
+        let angle = showsBack ? 180.0 : 0
+        ZStack {
+            front.modifier(FlipFace(angle: angle, isBack: false, isUp: !showsBack, rotates: false))
+            back.modifier(FlipFace(angle: angle, isBack: true, isUp: showsBack, rotates: false))
+        }
     }
 }
 
