@@ -103,8 +103,7 @@ final class CollectionUITests: XCTestCase {
         // Another mode, another tab and back: the mode stays.
         let modes = app.segmentedControls["collection-mode"]
         XCTAssertTrue(modes.waitForExistence(timeout: 5), "the mode picker is not pinned in reach; screen: \(app.debugDescription.prefix(3000))")
-        modes.buttons["Sightings"].tap()
-        XCTAssertTrue(modes.buttons["Sightings"].isSelected)
+        selectMode("Sightings", in: modes)
         app.tabBars.buttons["Listen"].tap()
         XCTAssertTrue(app.buttons["Start listening"].waitForExistence(timeout: 10))
         collectionTab.tap()
@@ -112,7 +111,7 @@ final class CollectionUITests: XCTestCase {
         XCTAssertTrue(modes.buttons["Sightings"].isSelected, "Collection did not come back on Sightings")
 
         // Switching back to Patches starts at its top, unlike returning from a patch's own page.
-        modes.buttons["Patches"].tap()
+        selectMode("Patches", in: modes)
         let firstPatch = app.buttons.matching(identifier: "board-patch").firstMatch
         XCTAssertTrue(firstPatch.waitForExistence(timeout: 5))
         XCTAssertTrue(firstPatch.isHittable, "the first patch should be visible without scrolling")
@@ -366,16 +365,16 @@ final class CollectionUITests: XCTestCase {
         // Remember the actual first row and its top position, rather than whichever row a reused lazy stack mounts.
         var first: [String: (label: String, y: CGFloat)] = [:]
         for mode in modes {
-            picker.buttons[mode].tap()
+            selectMode(mode, in: picker)
             let row = firstRow(mode)
             XCTAssertTrue(row.waitForExistence(timeout: 5), "no first row in \(mode): \(app.debugDescription.prefix(2000))")
             first[mode] = (row.label, Self.settledMinY(of: row))
         }
         for source in modes {
             for target in modes where source != target {
-                picker.buttons[source].tap()
+                selectMode(source, in: picker)
                 for _ in 0..<(longJournal ? 4 : 1) { app.swipeUp() }
-                picker.buttons[target].tap()
+                selectMode(target, in: picker)
                 let expected = try XCTUnwrap(first[target])
                 let row = app.buttons.matching(NSPredicate(format: "label == %@", expected.label)).firstMatch
                 XCTAssertTrue(row.waitForExistence(timeout: 5), "\(source) → \(target) lost its first row")
@@ -387,10 +386,20 @@ final class CollectionUITests: XCTestCase {
         for mode in ["Patches", "Sightings", "Species", "Patches"] {
             picker.buttons[mode].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         }
+        XCTAssertTrue(picker.buttons["Patches"].wait(for: \.isSelected, toEqual: true, timeout: 5))
         let expected = try XCTUnwrap(first["Patches"])
         let row = app.buttons.matching(NSPredicate(format: "label == %@", expected.label)).firstMatch
         XCTAssertTrue(row.isHittable)
         XCTAssertEqual(Self.settledMinY(of: row), expected.y, accuracy: 4)
+    }
+
+    /// A pinned segment's automatic scroll-to-visible hit point may be stale after returning from a page.
+    /// Tap its visible centre once, then wait for the selected-state snapshot; never retry the interaction.
+    @MainActor
+    private func selectMode(_ title: String, in picker: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let segment = picker.buttons[title]
+        segment.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(segment.wait(for: \.isSelected, toEqual: true, timeout: 5), "\(title) did not become selected", file: file, line: line)
     }
 
     /// A mode change never shows the old mode moving: when the scroll has to go elsewhere, it has already gone.
