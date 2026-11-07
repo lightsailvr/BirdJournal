@@ -122,7 +122,8 @@ final class AtlasUITests: XCTestCase {
     }
 
     /// Issue #150's review: tap a cluster and pan straight away, at 5,000 sightings. A picture set through `MKAnnotationView.image` made MapKit
-    /// cluster again and again, the main thread stayed busy for over three and a half minutes and Done didn't answer. Printed, for the PR.
+    /// cluster again and again, the main thread stayed busy for over three and a half minutes and Done didn't answer. One pan didn't always
+    /// show it, three did, every time. Printed, for the PR.
     @MainActor
     func testTheMapAnswersAtFiveThousandSightings() {
         let app = XCUIApplication()
@@ -136,11 +137,13 @@ final class AtlasUITests: XCTestCase {
         func point(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate { app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y)) }
         let start = Date()
         point(0.42, 0.495).tap()
-        point(0.8, 0.5).press(forDuration: 0.01, thenDragTo: point(0.2, 0.3))
+        point(0.5, 0.57).press(forDuration: 0.01, thenDragTo: point(0.5, 0.23))
+        point(0.8, 0.5).press(forDuration: 0.01, thenDragTo: point(0.1, 0.5))
+        point(0.1, 0.34).press(forDuration: 0.01, thenDragTo: point(0.9, 0.69))
         point(0.13, 0.115).tap()  // Done
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 120), "Done didn't answer")
         let seconds = Date().timeIntervalSince(start)
-        print("MAP-5000: a cluster's tap, a pan and Done took \(String(format: "%.1f", seconds)) s")
+        print("MAP-5000: a cluster's tap, three pans and Done took \(String(format: "%.1f", seconds)) s")
         XCTAssertLessThan(seconds, 60)
     }
 

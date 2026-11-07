@@ -1,0 +1,13 @@
+The map at 5,000 sightings: -albumFile x5 -seedLarge 5000 -autoScreen map -autoMapAcross 30000, tap a cluster, then three pans straight away,
+driven from outside the app so its accessibility is off. %CPU of the app, once a second, starting right after the last pan.
+
+Before (6d943af's three map files), 45 s and still going when sampled, the stacks in _updateClusterableAnnotationViews:
+ 99.0  97.9  98.8 355.8 406.7 117.2  99.1  99.0  99.0  99.7 100.0  99.0  99.2  98.9  99.1  98.9  99.5  99.6  98.9  99.3  99.4 100.0 100.0  99.4  99.4  99.0 100.0 100.0  98.8  99.1 100.0 100.0  99.1  99.0  99.0  99.0 100.0  98.9 100.0  98.8  99.0  99.0  99.3  99.0  99.0
+
+After, the same gesture:
+323.6  79.3 304.1   9.5   0.0   0.0   0.0   0.0   0.2   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0
+
+The guard, AtlasUITests.testTheMapAnswersAtFiveThousandSightings, real taps with accessibility on: a cluster's tap, three pans and Done took 7.7 s, against a limit of 60.
+On 6d943af's files the app stayed at 100% under the test's first query and it couldn't begin: MapKit's own accessibilityElements compares each annotation view with all the others, which is why ManyPinsMapView exists.
+
+Memory: about 950 MB resident on the simulator with this map open. Not looked into further.
