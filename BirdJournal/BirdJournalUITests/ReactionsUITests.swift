@@ -34,11 +34,20 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(lovely.frame.height, 44)
         XCTAssertFalse(lovely.isSelected)
         screenshot(app, "64-feed-reactions")
+        // Three equal pills across the row (issue #150, G9), whatever their names' lengths.
+        let together = app.buttons["react-together-\(Self.mayasPhoebe)"]
+        let jealous = app.buttons["react-jealous-\(Self.mayasPhoebe)"]
+        XCTAssertEqual(lovely.label, "Lovely find")
+        XCTAssertEqual(jealous.label, "Jealous!")
+        XCTAssertEqual(together.label, "Let's go together")
+        XCTAssertEqual(lovely.frame.width, together.frame.width, accuracy: 1)
+        XCTAssertEqual(lovely.frame.width, jealous.frame.width, accuracy: 1)
 
         lovely.tap()
         XCTAssertTrue(lovely.wait(for: \.isSelected, toEqual: true, timeout: 5))
+        // A reaction stays on the feed: it isn't a way into the find.
+        XCTAssertFalse(app.navigationBars["Maya's find"].exists)
         XCTAssertEqual(lovely.value as? String, "3 reactions")
-        let together = app.buttons["react-together-\(Self.mayasPhoebe)"]
         XCTAssertEqual(together.value as? String, "1 reaction")
         screenshot(app, "64-feed-reacted")
 
@@ -59,9 +68,8 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertTrue(app.scrolledTo(picker), "screen: \(app.debugDescription.prefix(3000))")
         picker.buttons["Compare birds"].tap()
         let maya = app.buttons["compareWith-maya"]
-        // Below the goal card (issue #65): the list builds the friends only once scrolled to.
-        for _ in 0..<6 where !maya.exists || !maya.isHittable { app.swipeUp() }
         XCTAssertTrue(maya.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<6 where !maya.isHittable { app.swipeUp() }
         XCTAssertFalse(app.buttons["compareWith-fake-sub"].exists, "never yourself")
         screenshot(app, "64-compare-friends")
         maya.tap()

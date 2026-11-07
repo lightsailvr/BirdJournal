@@ -56,6 +56,8 @@ final class CircleStore {
     /// The Guilds whose detail and goals have been read this launch, rather than coming from the cache.
     @ObservationIgnored private var freshDetails: Set<String> = []
     @ObservationIgnored private var freshGoals: Set<String> = []
+    /// When each Guild's first page was last read, this launch.
+    @ObservationIgnored private var firstPageReads: [String: Date] = [:]
     /// Bumped by `clear`, so an answer on its way when the birder signed out is dropped, not stored.
     @ObservationIgnored private var session = 0
     @ObservationIgnored private var isCacheWriteWaiting = false
@@ -196,6 +198,7 @@ final class CircleStore {
             if cursor == nil {
                 feed.firstPageCount = page.items.count
                 feed.firstPageCursor = page.nextCursor
+                firstPageReads[circleID] = .now
                 cacheLater()
             }
             feed.removeFinds(of: blocked.map(\.id))
@@ -245,14 +248,24 @@ final class CircleStore {
         return FindEntry.merging(read, blocked: Set(blocked.map(\.id))).first
     }
 
-    /// Reads every Guild's newest finds again, side by side.
-    func loadMergedFeed() async {
+    /// Reads these Guilds' newest finds again, side by side; every Guild's unless it says.
+    func loadMergedFeed(circleIDs: [String]? = nil) async {
         await withDiscardingTaskGroup { group in
-            for circle in circles {
-                group.addTask { await self.loadFeed(circleID: circle.id) }
+            for id in circleIDs ?? circles.map(\.id) {
+                group.addTask { await self.loadFeed(circleID: id) }
             }
         }
     }
+
+    /// Whether a screen coming on screen should read this Guild's newest finds: it hasn't been read this launch, though the cache
+    /// may have drawn it, or it's a while since it was. Reading a first page replaces what was read, so a birder who has gone
+    /// further down isn't moved: back from a find's page, what they were reading is still there, until they pull to refresh.
+    func isFeedStale(_ circleID: String, now: Date = .now) -> Bool {
+        guard let read = firstPageReads[circleID], let feed = feeds[circleID] else { return true }
+        return feed.items.count <= feed.firstPageCount && now.timeIntervalSince(read) > Self.feedKeepsFor
+    }
+
+    private static let feedKeepsFor: TimeInterval = 60
 
     /// The next page, from whichever Guild's next item is newest: the one whose last read find is newest, since its next find
     /// can't be newer than that and any other's is older still. A Guild that has shown nothing, because all it has read so far is
@@ -437,6 +450,7 @@ final class CircleStore {
         listState = .idle
         freshDetails = []
         freshGoals = []
+        firstPageReads = [:]
         cache?.remove()
     }
 
@@ -511,6 +525,7 @@ final class CircleStore {
         goals[id] = nil
         freshDetails.remove(id)
         freshGoals.remove(id)
+        firstPageReads[id] = nil
         cacheLater()
     }
 

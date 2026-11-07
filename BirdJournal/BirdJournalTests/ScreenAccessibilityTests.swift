@@ -39,7 +39,7 @@ struct ScreenAccessibilityTests {
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
         ///   - session: what its downloads go through.
-        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared) throws {
+        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true) throws {
             album = try AlbumSchema.makeContainer(inMemory: true)
             frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibility-\(UUID().uuidString)", directoryHint: .isDirectory))
             let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)"))
@@ -48,7 +48,7 @@ struct ScreenAccessibilityTests {
             collectionStore = CollectionStore(container: album, sets: { [library] in library.cardSets })
             place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: ScriptedLocationProvider([.denied]), defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
             edits = JournalEdits(container: album, frames: frames)
-            account = FakeAccount.session(signedIn: true)
+            account = FakeAccount.session(signedIn: signedIn)
             let client = FakeCircleClient(seeded: true)
             circles = CircleStore(account: account, client: client, timeZone: { "America/Los_Angeles" })
             connection = GlassesConnection()
@@ -572,5 +572,67 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains { $0.contains("members") }, "\(labels)")
         #expect(labels.contains { $0.contains("still to discover") }, "the goal in words: \(labels)")
         #expect(!labels.contains { $0.localizedCaseInsensitiveContains("days left") }, "no countdown: \(labels)")
+        #expect(labels.contains { $0.contains("Sharing your finds automatically") }, "the sharing setting in view: \(labels)")
+        #expect(labels.contains { $0.contains("Pat Birder") && $0.contains("Maya Ortiz") }, "who's in it: \(labels)")
+    }
+
+    @Test("A friend's find: the bird, who found it, where the feed says, its marks and reactions, and the way to the Atlas", arguments: sizes)
+    func findPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        await harness.circles.loadMergedFeed()
+        let labels = try await Self.walk(FindPageView(id: "sam/00000000-0000-4000-8000-000000000003"), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("About this bird") }
+        }
+        Self.expectClean(labels, screen: "A find")
+        Self.expectOneWordPerThing(labels, screen: "A find")
+        #expect(labels.contains("California Gnatcatcher"), "\(labels)")
+        #expect(labels.contains { $0.contains("Sam Okafor") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("Heard at a secret spot") }, "the feed's words, no more: \(labels)")
+        #expect(labels.contains { $0.contains("First for the Guild") && $0.contains("Rare") }, "\(labels)")
+        #expect(labels.contains("Lovely find") && labels.contains("Jealous!") && labels.contains("Let's go together"), "\(labels)")
+        #expect(!labels.contains { $0.contains("Paper card") && $0.contains("Turn back") }, "\(labels)")
+    }
+
+    @Test("A Guild's Info sheet: the goals, the sharing, the members and Leave", arguments: sizes)
+    func infoSheet(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        try await harness.circles.loadDetail(id: sunday.id)
+        await harness.circles.loadGoals(circleID: sunday.id)
+        let labels = try await Self.walk(CircleInfoSheet(circleID: sunday.id) {}, harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("Leave Guild") }
+        }
+        Self.expectClean(labels, screen: "Guild info")
+        Self.expectOneWordPerThing(labels, screen: "Guild info")
+        #expect(labels.contains { $0.contains("Fall migration") }, "\(labels)")
+        #expect(labels.contains { $0.contains("Share my finds automatically") }, "\(labels)")
+        #expect(labels.contains { $0.contains("Maya Ortiz") }, "\(labels)")
+    }
+
+    @Test("The Guilds tab with two Guilds: each emblem, then what's new, naming its Guilds", arguments: sizes)
+    func allGuilds(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let labels = try await Self.walk(CirclesView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("In Sunday Group") }
+        }
+        Self.expectClean(labels, screen: "Guilds tab")
+        Self.expectOneWordPerThing(labels, screen: "Guilds tab")
+        let sunday = try #require(labels.firstIndex { $0.hasPrefix("Sunday Group") }, "\(labels)")
+        let find = try #require(labels.firstIndex { $0.contains("In Sunday Group") }, "\(labels)")
+        #expect(sunday < find, "the emblems above the feed: \(labels)")
+    }
+
+    @Test("Signed out, the sample patches are said to be samples", arguments: sizes)
+    func signedOutSamples(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness(signedIn: false)
+        let labels = try await Self.walk(CirclesView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("Sample patches") }
+        }
+        Self.expectClean(labels, screen: "Guilds, signed out")
+        #expect(labels.contains { $0.contains("Find wonder together.") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("Sample patches") && $0.contains("Black Phoebe") }, "\(labels)")
     }
 }

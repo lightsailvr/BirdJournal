@@ -161,8 +161,6 @@ private struct AllGuildsPage: View {
     @State private var reporting: ReportDraft?
     @State private var blocking: BlockedAccount?
     @State private var error: String?
-    /// Back from a Guild or a find isn't a new visit: reading the first pages again would throw away the pages under them.
-    @State private var hasLoaded = false
 
     var body: some View {
         let feed = circles.mergedFeed
@@ -204,11 +202,9 @@ private struct AllGuildsPage: View {
                 if circles.needsGoals(circle.id) { await circles.loadGoals(circleID: circle.id) }
             }
         }
+        // Runs again on the way back from a Guild or a find, which leaves what the birder was reading where it was.
         .task(id: circles.circles.map(\.id)) {
-            // A Guild joined or left reads everyone's first page again, which is as good as it gets without a server change.
-            guard !hasLoaded else { return }
-            hasLoaded = true
-            await circles.loadMergedFeed()
+            await circles.loadMergedFeed(circleIDs: circles.circles.map(\.id).filter { circles.isFeedStale($0) })
         }
         .findSafety(reporting: $reporting, blocking: $blocking, subject: subject(of:), blocked: { error = $0 })
     }

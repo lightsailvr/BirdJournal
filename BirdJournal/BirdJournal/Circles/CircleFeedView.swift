@@ -168,7 +168,9 @@ private struct FindCard: View {
                     .contentShape(.rect)
             }
             .buttonStyle(.patchLift)
+            .accessibilityLabel(FindRow.spoken(item, guilds: guilds))
             .accessibilityHint("Opens the find.")
+            .accessibilityIdentifier("find-\(item.sightingID)")
             .contextMenu {
                 if !item.isMine { FindMenuItems(item: item, onReport: onReport, onBlock: onBlock) }
             }
@@ -337,7 +339,6 @@ struct FindRow: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Self.spoken(item, guilds: guilds))
-        .accessibilityIdentifier("find-\(item.sightingID)")
     }
 
     /// The first line stays clear of the menu at the row's corner.

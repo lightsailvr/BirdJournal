@@ -17,8 +17,6 @@ struct CirclePageView: View {
     @State private var blocking: BlockedAccount?
     @State private var error: String?
     @State private var showing: Showing = .finds
-    /// Back from a find's page isn't a new visit: reading the first page again would throw away the pages under it.
-    @State private var hasLoaded = false
     @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
 
     enum Showing: Hashable {
@@ -59,14 +57,11 @@ struct CirclePageView: View {
                     .accessibilityIdentifier("guildInfo")
             }
         }
-        .task {
-            guard !hasLoaded else { return }
-            hasLoaded = true
-            await load()
-        }
+        // Runs again on the way back from a find, which leaves what the birder was reading where it was.
+        .task { await load() }
         // A notifications explanation that never got on screen gets one more chance (issue #107).
         .task { await pushes.circlesAppeared() }
-        .refreshable { await load() }
+        .refreshable { await load(pulled: true) }
         .sheet(isPresented: $inviting) { InviteSheet(circleID: id, circleName: detail?.circle.name ?? "") }
         .sheet(isPresented: $showingInfo) {
             CircleInfoSheet(circleID: id) { dismiss() }
@@ -297,12 +292,12 @@ struct CirclePageView: View {
         circles.account.account?.id ?? circles.account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
     }
 
-    private func load() async {
+    private func load(pulled: Bool = false) async {
         do {
             try await circles.loadDetail(id: id)
             error = nil
             async let goals: Void = circles.loadGoals(circleID: id)
-            await circles.loadFeed(circleID: id)
+            if pulled || circles.isFeedStale(id) { await circles.loadFeed(circleID: id) }
             await goals
         } catch {
             self.error = CircleStore.message(for: error, doing: "load the Guild")
