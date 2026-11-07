@@ -547,8 +547,12 @@ final class FeelUITests: XCTestCase {
     /// A Guild's goal sewing: a tick a stitch, then the last stitch's success.
     @MainActor
     func testASewingThreadTicksThenSucceeds() throws {
-        let app = launch(["-hapticLog", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circles", "-launchSplashShown", "NO"])
-        XCTAssertTrue(app.navigationBars["Guilds"].waitForExistence(timeout: 20))
+        let app = launch(["-hapticLog", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-fakeGoalRises", "2", "-autoScreen", "circle", "-launchSplashShown", "NO"])
+        let goal = app.descendants(matching: .any)["goal-monthly"]
+        XCTAssertTrue(goal.waitForExistence(timeout: 20), "\(app.debugDescription.prefix(3000))")
+        // The page has read the goal once. Pulling reads it again, two birds further on.
+        Thread.sleep(forTimeInterval: 1)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
         waitForHaptic("stitchDone", app)
         let log = hapticLog(app)
         XCTAssertLessThan(log.lastIndex(of: "stitchTick") ?? -1, log.firstIndex(of: "stitchDone") ?? 0, "\(log)")

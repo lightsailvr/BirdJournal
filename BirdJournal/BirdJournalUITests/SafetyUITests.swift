@@ -86,11 +86,13 @@ final class SafetyUITests: XCTestCase {
         app.launchArguments = ["-inMemoryAlbum", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle",
                                "-fakePushPermission", "authorized"]
         app.launch()
-        XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         return app
     }
 
+    /// In the Guild's Info sheet (issue #150).
     private func pressMaya(_ app: XCUIApplication) {
+        if !app.navigationBars.buttons["Done"].exists { app.openGuildInfo() }
         let list = app.collectionViews.firstMatch
         let members = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Members'")).firstMatch
         for _ in 0..<24 where !(members.exists && members.isHittable) { list.swipeUp() }
@@ -112,7 +114,8 @@ final class SafetyUITests: XCTestCase {
         app.buttons["Harassment or bullying"].tap()
         app.buttons["reportSend"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["reportSent"].waitForExistence(timeout: 5), "not sent; screen: \(app.debugDescription.prefix(3000))")
-        app.buttons["Done"].tap()
+        // Over the Info sheet, which has a Done of its own.
+        app.navigationBars["Report member"].buttons["Done"].tap()
     }
 
     /// Report and Block are in plain sight on a find (issue #150), without knowing about touch and hold.
@@ -128,17 +131,21 @@ final class SafetyUITests: XCTestCase {
         XCTAssertTrue(app.buttons["reportSend"].waitForExistence(timeout: 5), "no sheet; screen: \(app.debugDescription.prefix(3000))")
     }
 
-    /// Every find row's label, scrolling the page from top to bottom: the list builds only the rows on screen.
+    /// Every find row's label, scrolling the page from top to bottom: the page builds only the rows near the screen.
     private func findLabels(_ app: XCUIApplication) -> [String] {
-        let list = app.collectionViews.firstMatch
-        for _ in 0..<20 { list.swipeDown() }
+        for _ in 0..<8 { app.swipeDown() }
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-'"))
         var labels: [String: String] = [:]
-        for _ in 0..<18 {
+        for _ in 0..<10 {
             for row in rows.allElementsBoundByIndex where row.exists { labels[row.identifier] = row.label }
-            list.swipeUp()
+            app.swipeUp()
         }
         return Array(labels.values)
+    }
+
+    private func closeInfo(_ app: XCUIApplication) {
+        app.navigationBars.buttons["Done"].tap()
+        XCTAssertTrue(app.buttons["guildInfo"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
@@ -155,8 +162,8 @@ final class SafetyUITests: XCTestCase {
         let confirm = (app.sheets.firstMatch.exists ? app.sheets.firstMatch : app.alerts.firstMatch).buttons["Block Maya Ortiz"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 5), "no confirmation; screen: \(app.debugDescription.prefix(3000))")
         confirm.tap()
-        // The feed's reload moves the page, so the member's row can land below the tab bar: scroll to the mark.
-        XCTAssertTrue(app.scrolledTo(app.images["Blocked"], limit: 8), "not marked blocked; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledInGuildInfo(to: app.images["Blocked"], limit: 8), "not marked blocked; screen: \(app.debugDescription.prefix(3000))")
+        closeInfo(app)
         let remaining = findLabels(app)
         XCTAssertFalse(remaining.isEmpty, "the other friends' finds should stay")
         XCTAssertEqual(byMaya(remaining), [], "Maya's finds still show")
@@ -166,6 +173,7 @@ final class SafetyUITests: XCTestCase {
         let unblock = app.buttons["Unblock Maya Ortiz"]
         XCTAssertTrue(unblock.waitForExistence(timeout: 5), "no Unblock; screen: \(app.debugDescription.prefix(3000))")
         unblock.tap()
+        closeInfo(app)
         XCTAssertFalse(byMaya(findLabels(app)).isEmpty, "Maya's finds didn't come back")
     }
 }

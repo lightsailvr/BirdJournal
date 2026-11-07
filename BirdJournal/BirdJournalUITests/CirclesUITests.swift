@@ -18,12 +18,15 @@ final class CirclesUITests: XCTestCase {
     func testSignedOutTheTabInvitesTheBirderToSignIn() {
         let app = launch(["-fakeAccount", "signedOut", "-fakeCircles", "empty"])
         app.tabBars.buttons["Guilds"].tap()
-        XCTAssertTrue(app.staticTexts["Bird with your friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["Find wonder together."].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // A felt panel of patches, labelled as samples, so nobody takes them for anyone's finds.
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Sample patches'")).firstMatch.exists, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.buttons["Sign in with Apple"].exists)
         XCTAssertTrue(app.buttons["Sign in with Google"].exists)
 
         app.buttons["Sign in with Apple"].tap()
         XCTAssertTrue(app.staticTexts["No Guilds yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["Find wonder together."].exists, "the voice stays until there's a Guild")
     }
 
     /// Issue #150: with nothing known yet, the screens show the shape of what's coming, not a spinner, and the content takes
@@ -37,9 +40,11 @@ final class CirclesUITests: XCTestCase {
         XCTAssertEqual(placeholder.label, "Loading")
         XCTAssertEqual(app.activityIndicators.count, 0, "no spinner; screen: \(app.debugDescription.prefix(3000))")
 
-        let sunday = app.staticTexts["Sunday Group"]
+        let sunday = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sunday Group'")).firstMatch
         XCTAssertTrue(sunday.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertFalse(placeholder.exists)
+        // The Guilds come first, then their finds.
+        XCTAssertTrue(placeholder.waitForNonExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(app.activityIndicators.count, 0)
     }
 
     /// Issue #150: the Guilds and the finds a birder last saw are on screen at the next launch, with no connection at all, and
@@ -138,14 +143,46 @@ final class CirclesUITests: XCTestCase {
         name.typeText("Backyard Crew")
         app.buttons["Create"].tap()
 
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Backyard Crew'")).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 5), "not listed; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(row.label.contains("1 member"), row.label)
-
-        row.tap()
+        // One Guild: the tab is that Guild, with no step in between.
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.scrolledTo(app.staticTexts["Members, 1 of 20"]), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(scrolledTo(app.buttons["Leave Guild"], in: app))
+        XCTAssertTrue(app.staticTexts["Backyard Crew"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.tabBars.buttons["Guilds"].isHittable, "the tab's own page, not one pushed over it")
+        XCTAssertTrue(app.scrolledTo(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Join with an invite'")).firstMatch, limit: 4), "the way to join another stays; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<4 { app.swipeDown() }
+        app.openGuildInfo()
+        XCTAssertTrue(app.staticTexts["Members, 1 of 20"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        let leave = app.buttons["Leave Guild"]
+        XCTAssertTrue(app.scrolledInGuildInfo(to: leave))
+
+        // Leaving goes back to no Guild at all.
+        leave.tap()
+        let confirm = (app.sheets.firstMatch.exists ? app.sheets.firstMatch : app.alerts.firstMatch).buttons["Leave Guild"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        confirm.tap()
+        XCTAssertTrue(app.staticTexts["No Guilds yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    /// Two Guilds: the tab opens on what's new across them, under a row of emblems that each open a Guild (issue #150, G3).
+    @MainActor
+    func testTwoGuildsOpenOnWhatsNewAcrossThem() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "shared"])
+        app.tabBars.buttons["Guilds"].tap()
+        // Jo's hummingbird is in both Guilds: one row, naming both.
+        let shared = app.buttons["find-00000000-0000-4000-8000-000000000001"]
+        XCTAssertTrue(app.scrolledTo(shared, limit: 12), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(shared.label.contains("In Sunday Group and Family"), shared.label)
+        XCTAssertEqual(app.buttons.matching(identifier: "find-00000000-0000-4000-8000-000000000001").count, 1)
+        // Each find names its Guilds.
+        let sams = app.buttons["find-00000000-0000-4000-8000-000000000003"]
+        XCTAssertTrue(sams.label.contains("In Sunday Group"), sams.label)
+        XCTAssertFalse(sams.label.contains("Family"), sams.label)
+
+        for _ in 0..<12 where !app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Family,'")).firstMatch.isHittable { app.swipeDown() }
+        let family = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Family,'")).firstMatch
+        XCTAssertTrue(family.isHittable, "screen: \(app.debugDescription.prefix(3000))")
+        family.tap()
+        XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["Family"].exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 
     /// The Guilds list (issue #118): each Guild a card with its members and this month's shared goal in species.
@@ -165,10 +202,44 @@ final class CirclesUITests: XCTestCase {
     func testAGuildPageLeadsWithBelongingAndKeepsSharingVisible() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'invite-only'")).firstMatch.exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'invite-only'")).firstMatch.exists)
+        // One line states the setting, and opens the sheet it lives in.
+        let line = app.buttons["guildSharingLine"]
+        XCTAssertTrue(line.exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(line.label.contains("Sharing your finds automatically"), line.label)
+        line.tap()
         let sharing = app.switches["guildShareFindsToggle"]
-        XCTAssertTrue(scrolledTo(sharing, in: app), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(sharing.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(sharing.value as? String, "1", "sharing is on by default")
+    }
+
+    /// The Info sheet holds what moved off the page (issue #150, G2).
+    @MainActor
+    func testTheInfoSheetHoldsWhatMovedThere() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle", "-fakePushPermission", "authorized"])
+        XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // None of it is on the page.
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Members'")).firstMatch.exists)
+        XCTAssertFalse(app.buttons["Leave Guild"].exists)
+        XCTAssertFalse(app.buttons["newGoal"].exists)
+
+        app.openGuildInfo()
+        XCTAssertTrue(app.descendants(matching: .any)["goal-monthly"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledInGuildInfo(to: app.buttons["newGoal"]))
+        XCTAssertTrue(app.scrolledInGuildInfo(to: app.switches["guildShareFindsToggle"]))
+        XCTAssertTrue(app.scrolledInGuildInfo(to: app.staticTexts["Maya Ortiz"].firstMatch), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledInGuildInfo(to: app.switches["Mute this Guild"]))
+        XCTAssertTrue(app.scrolledInGuildInfo(to: app.buttons["Leave Guild"]))
+    }
+
+    /// "All goals" goes to the goals.
+    @MainActor
+    func testAllGoalsOpensTheGoals() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
+        let all = app.buttons["guildAllGoals"]
+        XCTAssertTrue(all.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        all.tap()
+        XCTAssertTrue(app.staticTexts["Fall migration"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
@@ -190,8 +261,7 @@ final class CirclesUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Copied"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
-    /// The goal card (issue #65) heads a circle's page and the list draws only what's on screen: scroll down to the
-    /// element.
+    /// The page draws only what's near the screen: scroll down to the element.
     private func scrolledTo(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
         app.scrolledTo(element)
     }
@@ -200,9 +270,17 @@ final class CirclesUITests: XCTestCase {
     func testAnInviteLinkOpensTheJoinScreenAndJoiningOpensTheCircle() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "empty", "-autoScreen", "join", "-autoInvite", "fake-invite"])
         XCTAssertTrue(app.staticTexts["Canyon Walkers"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        // Who invited you, patches labelled as samples, and nothing of the Guild's own finds (issue #150, G8).
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Invited by Maya Ortiz'")).firstMatch.exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Sample patches'")).firstMatch.exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'find-'")).count, 0)
         app.buttons["Join Guild"].tap()
-        XCTAssertTrue(app.staticTexts["3 members, invite-only"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.scrolledTo(app.staticTexts["Members, 3 of 20"]), "screen: \(app.debugDescription.prefix(3000))")
+        // The only Guild, so the tab is its page, with nothing to go back to.
+        let invite = app.buttons["Invite friends"]
+        XCTAssertTrue(invite.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS '3 members, invite-only'")).firstMatch.exists, "screen: \(app.debugDescription.prefix(3000))")
+        app.openGuildInfo()
+        XCTAssertTrue(app.staticTexts["Members, 3 of 20"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 }
 #endif

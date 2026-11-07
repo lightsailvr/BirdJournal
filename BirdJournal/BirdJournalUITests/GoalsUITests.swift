@@ -25,15 +25,18 @@ final class GoalsUITests: XCTestCase {
         XCTAssertTrue(monthly.label.localizedCaseInsensitiveContains("goal"), monthly.label)
         XCTAssertTrue(monthly.label.contains("of 14 species"), monthly.label)
         XCTAssertTrue(monthly.label.contains("still to discover") || monthly.label.contains("Reached"), monthly.label)
+        XCTAssertTrue(monthly.label.contains("birds, together."), monthly.label)
 
+        app.buttons["guildAllGoals"].tap()
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'goal-fake-goal'"))
         XCTAssertEqual(rows.count, 3)
+        XCTAssertTrue(rows.element(boundBy: 0).waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         let running = rows.element(boundBy: 0).label
         XCTAssertTrue(running.contains("Fall migration") && running.contains("by Maya Ortiz") && running.contains("still to discover"), running)
         XCTAssertTrue(rows.element(boundBy: 1).label.contains("Big Day in Ojai"), rows.element(boundBy: 1).label)
         let ended = rows.element(boundBy: 2).label
         XCTAssertTrue(ended.contains("Owls before Halloween") && ended.contains("Reached"), ended)
-        XCTAssertTrue(app.scrolledTo(app.buttons["newGoal"]))
+        XCTAssertTrue(app.scrolledInGuildInfo(to: app.buttons["newGoal"]))
     }
 
     @MainActor
@@ -41,7 +44,8 @@ final class GoalsUITests: XCTestCase {
         let app = launch(["-autoScreen", "circle"])
         let newGoal = app.buttons["newGoal"]
         XCTAssertTrue(app.descendants(matching: .any)["goal-monthly"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.scrolledTo(newGoal), "screen: \(app.debugDescription.prefix(3000))")
+        app.openGuildInfo()
+        XCTAssertTrue(newGoal.waitForExistence(timeout: 5) && app.scrolledInGuildInfo(to: newGoal), "screen: \(app.debugDescription.prefix(3000))")
         newGoal.tap()
 
         let title = app.textFields["goalTitle"]
@@ -57,7 +61,7 @@ final class GoalsUITests: XCTestCase {
         XCTAssertTrue(made.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(made.label.contains("by Pat Birder"), made.label)
 
-        // Below the Guild's header and the goal card (issue #118): bring the row clear of the bars before swiping it.
+        // In the Info sheet (issue #150): bring the row clear of the bars before swiping it.
         // A full swipe would carry it off screen, where the list drops the row: drag a little at a time.
         for _ in 0..<6 {
             guard made.exists else { break }

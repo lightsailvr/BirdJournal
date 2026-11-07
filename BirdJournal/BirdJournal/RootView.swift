@@ -31,6 +31,8 @@ enum Route: Hashable {
     case support
     /// A circle's page (issue #61).
     case circle(id: String)
+    /// A friend's find, on its own page (issue #150, F1).
+    case find(FindRoute)
     /// The join screen an invite link opens (issue #61).
     case joinCircle(token: String)
     /// Compare birds with a friend (issue #64).
@@ -92,6 +94,9 @@ private struct RouteDestination: View {
             SupportView()
         case .circle(let id):
             CirclePageView(id: id)
+        case .find(let route):
+            FindPageView(route: route)
+                .findLiftTransition(from: route.lift)
         case .joinCircle(let token):
             JoinCircleView(token: token)
         case .compareBirds(let friendID, let friendName):
@@ -163,6 +168,12 @@ struct RootView: View {
         journalPath = NavigationPath()
         tab = .journal
         if collectionStore.collection.patch(key: key) != nil { journalPath.append(Route.patch(key)) }
+    }
+
+    /// A Guild's page on the Guilds tab. With only that Guild, the tab already is its page.
+    private func openOnGuilds(circleID: String) {
+        guard circles.circles.map(\.id) != [circleID] else { return }
+        circlesPath.append(Route.circle(id: circleID))
     }
 
     var body: some View {
@@ -247,7 +258,7 @@ struct RootView: View {
         .environment(\.openCircle) { circleID in
             tab = .circles
             circlesPath = NavigationPath()
-            circlesPath.append(Route.circle(id: circleID))
+            openOnGuilds(circleID: circleID)
         }
         // Signed out (from Settings or a revoked token): nothing of the circles stays on the phone.
         .onChange(of: account.isSignedIn) { _, signedIn in
@@ -274,7 +285,7 @@ struct RootView: View {
             pushes.pendingCircle = nil
             tab = .circles
             circlesPath = NavigationPath()
-            if !circleID.isEmpty { circlesPath.append(Route.circle(id: circleID)) }
+            if !circleID.isEmpty { openOnGuilds(circleID: circleID) }
         }
         // The first circle created or joined (issue #63): why pushes, before the system asks.
         .alert("Hear about your friends' finds", isPresented: Bindable(pushes).isExplaining) {

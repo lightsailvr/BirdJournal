@@ -1,19 +1,18 @@
 import SwiftUI
 
-/// A Guild's page (issue #61 as a circle's page, reskinned as a Guild in #118): its habitat cover, emblem and members
-/// with the Invite action first, then the shared goals (issue #65), Finds (issue #62) or Compare birds (issue #64), the
-/// birder's own sharing setting kept in view, and, after them, the members and the settings (leave; the creator removes
-/// members). Models, routes and endpoints keep their Circle names.
+/// A Guild's page (issue #61 as a circle's page, reskinned as a Guild in #118, a scrolling page on felt since #150): its emblem,
+/// name, members and Invite, this month's goal, then Finds or Compare birds. The Info button, and the one line stating the birder's
+/// sharing, open the sheet with the rest (`CircleInfoSheet`). Models, routes and endpoints keep their Circle names.
 struct CirclePageView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(PushCenter.self) private var pushes
-    @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     let id: String
+    /// On a Guild the tab opened straight onto (issue #150, G3), the way to start another, which the tab's own page would have had.
+    var newGuild: (() -> Void)? = nil
     @State private var inviting = false
-    @State private var confirmingLeave = false
-    @State private var removing: CircleMember?
+    @State private var showingInfo = false
     /// Report and block (issue #71).
     @State private var reporting: ReportDraft?
     @State private var blocking: BlockedAccount?
@@ -30,97 +29,53 @@ struct CirclePageView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            page
-                #if DEBUG
-                .debugScroll(proxy, to: "guild-feed", when: circles.feeds[id]?.isLoaded == true)
-                .debugScroll(proxy, to: "guild-settings", when: circles.feeds[id]?.isLoaded == true)
-                #endif
-        }
-    }
-
-    private var page: some View {
-        PaperList {
-            if let detail {
-                header(detail)
-                CircleGoalsSection(circleID: detail.circle.id, timeZone: detail.circle.timeZone)
-                Section {
-                    Picker("Show", selection: $showing) {
-                        Text("Finds").tag(Showing.finds)
-                        Text("Compare birds").tag(Showing.compare)
-                    }
-                    .pickerStyle(.segmented)
-                    .accessibilityIdentifier("circlePageShowing")
-                    .id("guild-feed")
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                switch showing {
-                case .finds:
-                    CircleFeedSection(
-                        circleID: detail.circle.id,
-                        onReport: { item in reporting = .find(item, circleID: detail.circle.id) },
-                        onBlock: { owner in blocking = BlockedAccount(id: owner.id, displayName: owner.displayName) }
-                    )
-                case .compare: compare(detail)
-                }
-                sharing
-                members(detail)
-                settings(detail)
-            } else if let error {
-                Section {
-                    GuildsUnreachable(message: error) { Task { await load() } }
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                }
-            } else {
-                Section { GuildPlaceholder() }
+            ScrollView {
+                page
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, JournalLayout.margin)
+                    .padding(.bottom, JournalLayout.sectionGap)
             }
-            if let error, detail != nil {
-                Section { InlineError(error) }
-            }
+            #if DEBUG
+            .debugScroll(proxy, to: "guild-feed", when: circles.feeds[id]?.isLoaded == true)
+            #endif
         }
+        .patchSheetBackground()
+        .holdsPatchLight()
         .navigationTitle(detail?.circle.name ?? circles.circles.first { $0.id == id }?.name ?? "Guild")
         .navigationBarTitleDisplayMode(.inline)
+        // The name is the page's own, large. The title stays as what the next page's back reads.
+        .toolbar(removing: .title)
+        .toolbar {
+            if let newGuild {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("New Guild", systemImage: "plus", action: newGuild)
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Info", systemImage: "info") { showingInfo = true }
+                    .tint(Color.ink)
+                    .disabled(detail == nil)
+                    .accessibilityIdentifier("guildInfo")
+            }
+        }
+        // Runs again on the way back from a find, which leaves what the birder was reading where it was.
         .task { await load() }
         // A notifications explanation that never got on screen gets one more chance (issue #107).
         .task { await pushes.circlesAppeared() }
-        .refreshable { await load() }
+        .refreshable { await load(pulled: true) }
         .sheet(isPresented: $inviting) { InviteSheet(circleID: id, circleName: detail?.circle.name ?? "") }
-        .confirmationDialog("Leave this Guild?", isPresented: $confirmingLeave, titleVisibility: .visible) {
-            Button("Leave Guild", role: .destructive) { leave() }
-        } message: {
-            Text(leaveMessage)
+        .sheet(isPresented: $showingInfo) {
+            CircleInfoSheet(circleID: id) { dismiss() }
         }
-        .confirmationDialog(
-            "Remove \(removing?.name ?? "this member")?",
-            isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
-            titleVisibility: .visible,
-            presenting: removing
-        ) { member in
-            Button("Remove from Guild", role: .destructive) { remove(member) }
-        } message: { _ in
-            Text("They can come back only with a new invitation.")
-        }
-        .sheet(item: $reporting) { draft in
-            ReportSheet(draft: draft, subject: subject(of: draft))
-        }
-        .confirmationDialog(
-            "Block \(blocking?.name ?? "this member")?",
-            isPresented: Binding(get: { blocking != nil }, set: { if !$0 { blocking = nil } }),
-            titleVisibility: .visible,
-            presenting: blocking
-        ) { account in
-            Button("Block \(account.name)", role: .destructive) { block(account) }
-        } message: { account in
-            Text(Self.blockMessage(account.name))
-        }
+        .findSafety(reporting: $reporting, blocking: $blocking, subject: subject(of:), blocked: { error = $0 })
         #if DEBUG
         .task(id: detail?.members.count) {
-            // Issue #71's screenshot: the report sheet for the first friend.
-            if UserDefaults.standard.bool(forKey: "autoCircleReport"), let detail,
-               let friend = detail.members.first(where: { $0.id != myID(in: detail) }) {
-                UserDefaults.standard.removeObject(forKey: "autoCircleReport")
-                reporting = .account(friend, circleID: detail.circle.id)
+            guard detail != nil else { return }
+            let defaults = UserDefaults.standard
+            // What's reached through the sheet, for the screenshots and the tests.
+            if defaults.bool(forKey: "autoCircleInfo") || defaults.bool(forKey: "autoCircleReport") || defaults.bool(forKey: "autoNewGoal") {
+                defaults.removeObject(forKey: "autoCircleInfo")
+                showingInfo = true
             }
         }
         .task {
@@ -132,213 +87,201 @@ struct CirclePageView: View {
         #endif
     }
 
-    /// Compare birds: the friends in the Guild, each opening the two of you side by side.
-    private func compare(_ detail: CircleDetail) -> some View {
-        let friends = detail.members.filter { $0.id != myID(in: detail) }
-        return Section {
+    @ViewBuilder private var page: some View {
+        if let detail {
+            VStack(alignment: .leading, spacing: 0) {
+                header(detail)
+                    .padding(.top, 4)
+                goal
+                    .padding(.top, 20)
+                links
+                    .padding(.top, 6)
+                Picker("Show", selection: $showing) {
+                    Text("Finds").tag(Showing.finds)
+                    Text("Compare birds").tag(Showing.compare)
+                }
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("circlePageShowing")
+                .padding(.top, 10)
+                .id("guild-feed")
+                switch showing {
+                case .finds: finds
+                case .compare: compare(detail)
+                }
+                if let error {
+                    InlineError(error, afterAction: true)
+                        .boardLabel()
+                        .padding(.top, 12)
+                }
+                // The tab opened straight onto this Guild, so the tab's own way to join another is here.
+                if newGuild != nil {
+                    JoinWithAnInvite()
+                        .padding(.top, 24)
+                }
+            }
+        } else if let error {
+            GuildsUnreachable(message: error) { Task { await load() } }
+                .padding(.top, 8)
+        } else {
+            VStack(alignment: .leading, spacing: 12) { GuildPlaceholder() }
+                .padding(.top, 8)
+        }
+    }
+
+    /// Belonging first (the mock's header): the emblem at the left, the name large, the faces and Invite under it.
+    private func header(_ detail: CircleDetail) -> some View {
+        AdaptiveRow(stacked: typeSize.isAccessibilitySize, spacing: 16) {
+            // The emblem's ring is the page's colour, so on felt it doesn't read: the disc you see is what's the patches' size. On
+            // linen the ring shows, just outside their edge.
+            GuildEmblem(identity: GuildIdentity(circleID: detail.circle.id), size: 112)
+                .padding(-5)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(detail.circle.name)
+                    .font(JournalFont.title)
+                    .foregroundStyle(Color.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .boardLabel()
+                    .accessibilityAddTraits(.isHeader)
+                FacesAndInvite(detail: detail, members: circles.visibleMembers(of: detail)) { inviting = true }
+            }
+        }
+    }
+
+    /// The month's goal, with a place for its patches (slice 8) under the thread. Without them the goal is thread alone.
+    @ViewBuilder private var goal: some View {
+        if let goals = circles.goals[id] {
+            if let monthly = goals.first(where: { $0.kind == .monthly }) {
+                CompactGoal(goal: monthly, circleID: id)
+            }
+        } else {
+            GuildPlaceholder(rows: 1)
+        }
+    }
+
+    /// The one line on the birder's sharing, and "All goals". Both open the sheet they live in. The line stays in view, so nobody
+    /// has to go looking to see whether their finds are going out.
+    private var links: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                sharingLine
+                Spacer(minLength: 8)
+                allGoals
+            }
+            VStack(alignment: .leading, spacing: 0) {
+                sharingLine
+                allGoals
+            }
+        }
+    }
+
+    private var sharingLine: some View {
+        Button {
+            showingInfo = true
+        } label: {
+            Label(SharingWords.short(sharesFinds), systemImage: sharesFinds ? "person.2.wave.2" : "lock")
+                .font(JournalFont.attribution)
+                .foregroundStyle(Color.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .boardLabel()
+                .frame(minHeight: 44)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.journalPress)
+        .accessibilityHint("Opens this Guild's info, with the setting.")
+        .accessibilityIdentifier("guildSharingLine")
+    }
+
+    private var allGoals: some View {
+        Button {
+            showingInfo = true
+        } label: {
+            HStack(spacing: 2) {
+                Text("All goals")
+                Image(systemName: "chevron.right").imageScale(.small).accessibilityHidden(true)
+            }
+            .font(JournalFont.attribution.weight(.semibold))
+            .foregroundStyle(Color.ink)
+            .fixedSize()
+            .boardLabel()
+            .frame(minHeight: 44)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.journalPress)
+        .accessibilityIdentifier("guildAllGoals")
+    }
+
+    /// The Guild's finds, a page at a time.
+    @ViewBuilder private var finds: some View {
+        let feed = circles.feeds[id] ?? .init()
+        let entries = feed.items.map { FindEntry(item: $0, circleIDs: [id]) }
+        if entries.isEmpty {
+            if feed.isLoaded {
+                StateNotice("No finds yet", message: "Birds your Guild adds while sharing show here.", messageInk: .ink)
+                    .boardLabel()
+                    .accessibilityIdentifier("feedEmpty")
+            } else if let error = feed.error {
+                InlineError(error).boardLabel().padding(.top, 16)
+            } else {
+                VStack(alignment: .leading, spacing: 12) { GuildPlaceholder() }
+                    .padding(.top, 16)
+            }
+        }
+        FindsColumn(
+            entries: entries, surface: .guild(id),
+            onReport: { reporting = .find($0.item, circleID: id) },
+            onBlock: { blocking = BlockedAccount(id: $0.id, displayName: $0.displayName) }
+        )
+        .padding(.top, 2)
+        if feed.nextCursor != nil {
+            MoreFinds(isLoading: feed.isLoading) { await circles.loadMoreFeed(circleID: id) }
+        }
+        if let error = feed.error, !entries.isEmpty {
+            InlineError(error).boardLabel().padding(.top, 12)
+        }
+    }
+
+    /// Compare birds: the friends in the Guild, each opening the two of you side by side. Rows to operate, so they sit on their own
+    /// raised surface, not the felt.
+    @ViewBuilder private func compare(_ detail: CircleDetail) -> some View {
+        let friends = circles.visibleMembers(of: detail).filter { $0.id != circles.myID(in: detail) }
+        VStack(alignment: .leading, spacing: 0) {
             if friends.isEmpty {
                 Text("Invite a friend, then compare your birds with theirs.")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
+                    .padding(14)
             }
             ForEach(friends) { friend in
                 NavigationLink(value: Route.compareBirds(friendID: friend.id, friendName: friend.name)) {
-                    MemberRow(member: friend, isMe: false)
+                    HStack(spacing: 12) {
+                        MemberFace(member: friend, size: 36)
+                        Text(friend.name).font(JournalFont.rowTitle).foregroundStyle(Color.ink)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Color.inkSecondary)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
                 }
+                .buttonStyle(.journalPress)
                 .accessibilityIdentifier("compareWith-\(friend.id)")
             }
-        } header: {
-            Text("Compare birds")
-        } footer: {
-            if !friends.isEmpty {
-                Text("Each species Heard, Seen or not yet, for you and a friend: plan the next walk.")
-            }
         }
-    }
-
-    /// Belonging first: the habitat cover, the emblem and name, who is in it, and Invite.
-    private func header(_ detail: CircleDetail) -> some View {
-        let identity = GuildIdentity(circleID: detail.circle.id)
-        let full = detail.circle.memberCount >= 20
-        return Section {
-            VStack(alignment: .leading, spacing: 0) {
-                GuildCover(identity: identity)
-                    .frame(height: 120)
-                    .frame(maxWidth: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                HStack(alignment: .top, spacing: 14) {
-                    GuildEmblem(identity: identity, size: 72)
-                        .padding(.top, -36)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(detail.circle.name)
-                            .font(JournalFont.title)
-                            .foregroundStyle(Color.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityAddTraits(.isHeader)
-                        Text("\(detail.circle.memberCount == 1 ? "1 member" : "\(detail.circle.memberCount) members"), invite-only")
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
-                            // Wraps at the largest sizes instead of "4 members…" (issue #119).
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .padding(.top, 8)
-                }
-                .padding(.horizontal, 6)
-                AdaptiveRow(stacked: typeSize.stacksRows) {
-                    MemberFaces(members: detail.members, total: detail.circle.memberCount, shown: 5)
-                    if !typeSize.stacksRows { Spacer(minLength: 10) }
-                    Button {
-                        inviting = true
-                    } label: {
-                        Label("Invite friends", systemImage: "qrcode")
-                    }
-                    .buttonStyle(.journalOutlined)
-                    .disabled(full)
-                }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .padding(.top, 16)
+        if !friends.isEmpty {
+            Text("Each species Heard, Seen or not yet, for you and a friend: plan the next walk.")
+                .font(JournalFont.attribution)
+                .foregroundStyle(Color.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .boardLabel()
                 .padding(.top, 10)
-                .padding(.horizontal, 6)
-                Text(full
-                     ? "This Guild is full: a Guild holds 20 birders."
-                     : "Anyone in the Guild can invite. Invitations last seven days.")
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.inkSecondary)
-                    .padding(.top, 8)
-                    .padding(.horizontal, 6)
-            }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
         }
-    }
-
-    /// The birder's own sharing, in view on every Guild (design guide page 13): the same setting as Settings → Account.
-    private var sharing: some View {
-        Section {
-            Toggle(isOn: $sharesFinds) {
-                Label("Share my finds automatically", systemImage: sharesFinds ? "person.2.wave.2" : "lock")
-            }
-            .accessibilityIdentifier("guildShareFindsToggle")
-            HowThisWorks(SharingWords.detail(sharesFinds))
-        } header: {
-            Text("Your sharing")
-        } footer: {
-            Text(SharingWords.line(sharesFinds))
-        }
-    }
-
-    private func members(_ detail: CircleDetail) -> some View {
-        Section {
-            ForEach(detail.members) { member in
-                let isMe = member.id == myID(in: detail)
-                let isMuted = circles.mutes.friends.contains(member.id)
-                let isBlocked = circles.blocked.contains { $0.id == member.id }
-                MemberRow(member: member, isMe: isMe, isMuted: isMuted, isBlocked: isBlocked)
-                    .swipeActions {
-                        if detail.circle.isCreator, !isMe {
-                            Button("Remove", role: .destructive) { removing = member }
-                        }
-                        if !isMe {
-                            Button(isMuted ? "Unmute" : "Mute") { setFriendMuted(!isMuted, member) }
-                                .tint(Color.inkSecondary)
-                        }
-                    }
-                    .contextMenu {
-                        if !isMe {
-                            Button(isMuted ? "Unmute \(member.name)" : "Mute \(member.name)", systemImage: isMuted ? "bell" : "bell.slash") {
-                                setFriendMuted(!isMuted, member)
-                            }
-                            Button("Report \(member.name)…", systemImage: "exclamationmark.bubble") {
-                                reporting = .account(member, circleID: detail.circle.id)
-                            }
-                            if isBlocked {
-                                Button("Unblock \(member.name)", systemImage: "hand.raised.slash") {
-                                    unblock(BlockedAccount(id: member.id, displayName: member.displayName))
-                                }
-                            } else {
-                                Button("Block \(member.name)…", systemImage: "hand.raised", role: .destructive) {
-                                    blocking = BlockedAccount(id: member.id, displayName: member.displayName)
-                                }
-                            }
-                        }
-                        if detail.circle.isCreator, !isMe {
-                            Button("Remove from Guild", systemImage: "person.badge.minus", role: .destructive) { removing = member }
-                        }
-                    }
-            }
-        } header: {
-            Text("Members, \(detail.members.count) of 20")
-        } footer: {
-            if detail.members.count > 1 {
-                Text(detail.circle.isCreator
-                     ? "You started this Guild: swipe a member to mute or remove them. Touch and hold to report or block."
-                     : "Swipe a friend to mute their finds' notifications. Touch and hold to report or block.")
-            }
-        }
-    }
-
-    private func settings(_ detail: CircleDetail) -> some View {
-        Section {
-            if pushes.isAvailable {
-                notifications(detail)
-            }
-            Button("Leave Guild", role: .destructive) { confirmingLeave = true }
-                .foregroundStyle(Color.alert)
-                .id("guild-settings")
-        } header: {
-            Text("Settings")
-        } footer: {
-            if pushes.isAvailable, pushes.permission == .denied {
-                Text("Notifications are off for Featherguild, so friends' finds arrive only in the feed. Turn them on in Settings → Notifications.")
-            } else if circles.mutes.circles.contains(detail.circle.id) {
-                Text("Muted: this Guild's finds still show here, without notifications.")
-            }
-        }
-    }
-
-    /// Mute, and the way back to notifications when they are off (issue #63).
-    @ViewBuilder
-    private func notifications(_ detail: CircleDetail) -> some View {
-        switch pushes.permission {
-        case .denied:
-            Button("Open notification settings", systemImage: "bell.badge") {
-                if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
-            }
-        case .notDetermined:
-            Button("Turn on notifications", systemImage: "bell.badge") { Task { await pushes.turnOn() } }
-        default:
-            EmptyView()
-        }
-        Toggle(isOn: Binding(
-            get: { circles.mutes.circles.contains(detail.circle.id) },
-            set: { muted in setCircleMuted(muted, detail.circle.id) }
-        )) {
-            Label("Mute this Guild", systemImage: "bell.slash")
-        }
-    }
-
-    private func setCircleMuted(_ muted: Bool, _ circleID: String) {
-        Task {
-            do {
-                try await circles.setCircleMuted(muted, circleID: circleID)
-                error = nil
-            } catch {
-                self.error = CircleStore.message(for: error, doing: muted ? "mute the Guild" : "unmute the Guild")
-            }
-        }
-    }
-
-    private func setFriendMuted(_ muted: Bool, _ member: CircleMember) {
-        Task {
-            do {
-                try await circles.setFriendMuted(muted, friendID: member.id)
-                error = nil
-            } catch {
-                self.error = CircleStore.message(for: error, doing: muted ? "mute \(member.name)" : "unmute \(member.name)")
-            }
-        }
-    }
-
-    static func blockMessage(_ name: String) -> String {
-        "You won't see \(name)'s finds or reactions, or get notifications about them, in any Guild. \(name) isn't told. Unblock in Settings → Account."
     }
 
     private func subject(of draft: ReportDraft) -> String {
@@ -348,74 +291,90 @@ struct CirclePageView: View {
         return draft.kind == .find ? "\(name)'s find" : name
     }
 
-    private func block(_ account: BlockedAccount) {
-        Task {
-            do {
-                try await circles.setBlocked(true, accountID: account.id, name: account.displayName)
-                error = nil
-            } catch {
-                self.error = CircleStore.message(for: error, doing: "block \(account.name)")
-            }
-        }
-    }
-
-    private func unblock(_ account: BlockedAccount) {
-        Task {
-            do {
-                try await circles.setBlocked(false, accountID: account.id, name: account.displayName)
-                error = nil
-            } catch {
-                self.error = CircleStore.message(for: error, doing: "unblock \(account.name)")
-            }
-        }
-    }
-
-    private var leaveMessage: String {
-        guard let detail else { return "" }
-        if detail.circle.isCreator, detail.members.count > 1 {
-            return "You started this Guild. It passes to the member who has been in it longest."
-        }
-        return "You can join again only with a new invitation."
-    }
-
-    /// The signed-in birder among the members: the account's ID, or until the account is read (it may not be, on a cached page
-    /// with no connection), the sign-in's, or the creator's if the birder created the circle.
-    private func myID(in detail: CircleDetail) -> String? {
-        circles.account.account?.id ?? circles.account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
-    }
-
-    private func load() async {
+    private func load(pulled: Bool = false) async {
         do {
             try await circles.loadDetail(id: id)
             error = nil
             async let goals: Void = circles.loadGoals(circleID: id)
-            await circles.loadFeed(circleID: id)
+            if pulled || circles.isFeedStale(id) { await circles.loadFeed(circleID: id) }
             await goals
         } catch {
             self.error = CircleStore.message(for: error, doing: "load the Guild")
         }
     }
+}
 
-    private func leave() {
-        Task {
-            do {
-                try await circles.leave(circleID: id)
-                dismiss()
-            } catch {
-                self.error = CircleStore.message(for: error, doing: "leave the Guild")
+/// Who's in the Guild, in faces VoiceOver reads as a sentence, and Invite.
+private struct FacesAndInvite: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let detail: CircleDetail
+    /// Those not blocked.
+    let members: [CircleMember]
+    let invite: () -> Void
+
+    /// Everyone in the Guild but the blocked, some of whom the page may not have read yet.
+    private var total: Int { detail.circle.memberCount - (detail.members.count - members.count) }
+
+    var body: some View {
+        AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
+            MemberFaces(members: members, total: total, shown: 5)
+                .accessibilityHidden(false)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(spoken)
+            Button(action: invite) {
+                Text("Invite")
             }
+            .buttonStyle(InvitePillStyle())
+            .disabled(detail.circle.memberCount >= 20)
+            .accessibilityLabel("Invite friends")
+            .accessibilityValue(detail.circle.memberCount >= 20 ? "This Guild is full" : "")
         }
     }
 
-    private func remove(_ member: CircleMember) {
-        Task {
-            do {
-                try await circles.remove(memberID: member.id, circleID: id)
-                error = nil
-            } catch {
-                self.error = CircleStore.message(for: error, doing: "remove \(member.name)")
-            }
+    /// "4 members, invite-only: Pat Birder, Maya Ortiz, Jo Park and Sam Okafor".
+    private var spoken: String {
+        "\(total == 1 ? "1 member" : "\(total) members"), invite-only: \(members.map(\.name).formatted(.list(type: .and)))"
+    }
+}
+
+/// Invite, as the mock draws it: a small outlined pill, no taller than the faces beside it, answering to 44 pt.
+private struct InvitePillStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        configuration.label
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color.ink)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .background(Color.ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(Color.ink, lineWidth: 1))
+            .frame(minHeight: 44)
+            .opacity(isEnabled ? 1 : 0.4)
+            .contentShape(.rect)
+            .pressResponse(isPressed: configuration.isPressed)
+    }
+}
+
+/// Another page of finds. Quiet, and not on a list row: it asks for more of what it sits under.
+struct MoreFinds: View {
+    let isLoading: Bool
+    let load: () async -> Void
+
+    var body: some View {
+        Button {
+            Task { await load() }
+        } label: {
+            if isLoading { ProgressView() } else { Text("More finds") }
         }
+        .buttonStyle(.journalQuiet)
+        .disabled(isLoading)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 16)
+        .accessibilityIdentifier("feedMore")
     }
 }
 
@@ -425,42 +384,15 @@ enum SharingWords {
         sharing ? "Birds you add reach your Guilds, never with the exact spot." : "You're private: birds you add stay on this iPhone."
     }
 
+    /// The one line on a Guild's page, which opens the setting.
+    static func short(_ sharing: Bool) -> String {
+        sharing ? "Sharing your finds automatically" : "You're private: finds stay here"
+    }
+
     static func detail(_ sharing: Bool) -> String {
         sharing
             ? "Birds you add while signed in reach your Guilds as finds: the bird, Heard or Seen, the city and the time. Notes and original photos stay on this iPhone unless you share a patch with them. Threatened birds show as at a secret spot."
             : "Share a patch by hand to show it in a Guild. Finds you already shared stay in your Guilds until you remove the sighting."
-    }
-}
-
-private struct MemberRow: View {
-    let member: CircleMember
-    let isMe: Bool
-    var isMuted = false
-    var isBlocked = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            MemberFace(member: member, size: 36)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(isMe ? "\(member.name) (you)" : member.name).font(JournalFont.rowTitle)
-                if member.isCreator {
-                    Text("Started the Guild").font(JournalFont.supporting).foregroundStyle(Color.inkSecondary)
-                }
-            }
-            if isMuted || isBlocked {
-                Spacer()
-            }
-            if isBlocked {
-                Image(systemName: "hand.raised")
-                    .foregroundStyle(Color.inkSecondary)
-                    .accessibilityLabel("Blocked")
-            } else if isMuted {
-                Image(systemName: "bell.slash")
-                    .foregroundStyle(Color.inkSecondary)
-                    .accessibilityLabel("Muted")
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 

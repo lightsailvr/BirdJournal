@@ -18,11 +18,11 @@ struct CircleGoalsSection: View {
             if let goals {
                 ForEach(goals) { goal in
                     if goal.kind == .monthly {
-                        MonthlyGoalCard(goal: goal)
+                        MonthlyGoalCard(goal: goal, circleID: circleID)
                             .listRowBackground(Color.clear)
                             .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
                     } else {
-                        CustomGoalRow(goal: goal, timeZone: timeZone)
+                        CustomGoalRow(goal: goal, circleID: circleID, timeZone: timeZone)
                             .swipeActions {
                                 if goal.canDelete { Button("Delete", role: .destructive) { deleting = goal } }
                             }
@@ -86,11 +86,61 @@ struct CircleGoalsSection: View {
     }
 }
 
+/// This month's goal at the head of a Guild's page, on the felt (issue #150, G2): the calm headline from the target, how far it's got,
+/// and lavender thread, with this month's patches under it once there's a server to name them (slice 8). VoiceOver hears the
+/// whole sentence once. No countdown and no leaderboard.
+struct CompactGoal: View {
+    let goal: CircleGoal
+    let circleID: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    headline
+                    Spacer(minLength: 8)
+                    count
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    headline
+                    count
+                }
+            }
+            ThreadProgress(goal: goal, circleID: circleID)
+                .accessibilityHidden(true)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(GoalWords.spokenCompact(goal))
+        .accessibilityIdentifier("goal-monthly")
+    }
+
+    private var headline: some View {
+        Text(GoalWords.headline(goal))
+            .font(JournalFont.heading)
+            .foregroundStyle(Color.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .boardLabel()
+    }
+
+    private var count: some View {
+        HStack(spacing: 4) {
+            if goal.isReached { Image(systemName: "checkmark.circle") }
+            Text(GoalWords.tally(goal))
+                .monospacedDigit()
+        }
+        .font(JournalFont.supporting)
+        .foregroundStyle(Color.ink)
+        .fixedSize()
+        .boardLabel()
+    }
+}
+
 /// This month's goal, in the lavender of shared goals (design guide pages 3 and 13): the month, a calm headline from
 /// the target ("Fourteen birds, together."), a bar, "9 of 14 species" and "5 still to discover", or that it's reached.
 /// No countdown and no leaderboard, and no gold.
 struct MonthlyGoalCard: View {
     let goal: CircleGoal
+    let circleID: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -105,7 +155,7 @@ struct MonthlyGoalCard: View {
             }
             Text(GoalWords.headline(goal))
                 .font(JournalFont.section)
-            ThreadProgress(goal: goal, thread: .onLavender)
+            ThreadProgress(goal: goal, circleID: circleID, thread: .onLavender)
                 .accessibilityHidden(true)
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline) {
@@ -117,6 +167,7 @@ struct MonthlyGoalCard: View {
                     Text(GoalWords.count(goal)).font(.subheadline.weight(.semibold))
                     Text(GoalWords.monthlyNote(goal)).font(JournalFont.supporting)
                 }
+                .fixedSize(horizontal: false, vertical: true)
             }
         }
         .foregroundStyle(Color.onSharedGoal)
@@ -131,6 +182,7 @@ struct MonthlyGoalCard: View {
 /// A custom goal: its title, its days, who made it, the count and a bar.
 struct CustomGoalRow: View {
     let goal: CircleGoal
+    let circleID: String
     let timeZone: String
 
     var body: some View {
@@ -147,7 +199,7 @@ struct CustomGoalRow: View {
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(Color.ink)
             }
-            ThreadProgress(goal: goal)
+            ThreadProgress(goal: goal, circleID: circleID)
                 .accessibilityHidden(true)
             Text(GoalWords.customNote(goal, timeZone: timeZone))
                 .font(JournalFont.supporting)
@@ -176,6 +228,16 @@ enum GoalWords {
     /// "9 of 14 species", or "9/14" in a row.
     static func count(_ goal: CircleGoal, short: Bool = false) -> String {
         short ? "\(goal.progress)/\(goal.target)" : "\(goal.progress) of \(goal.target) species"
+    }
+
+    /// "12 of 14", beside a headline that says what's being counted.
+    static func tally(_ goal: CircleGoal) -> String {
+        "\(goal.progress) of \(goal.target)"
+    }
+
+    /// "November goal. Fourteen birds, together. 9 of 14 species. 5 still to discover."
+    static func spokenCompact(_ goal: CircleGoal) -> String {
+        [goal.title, headline(goal), "\(count(goal)).", "\(monthlyNote(goal))"].map { $0.hasSuffix(".") ? $0 : "\($0)." }.joined(separator: " ")
     }
 
     /// "Fourteen birds, together.": the target spelled out (in figures past a hundred), the guide's calm headline.

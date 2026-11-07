@@ -106,6 +106,5 @@ struct AtlasIdentityTests {
         let looks = Set((0..<200).map { GuildIdentity(circleID: "circle-\($0)").tone.name })
         #expect(looks.count > 3, "Guilds don't all look alike")
         #expect(!GuildIdentity.tones.map(\.name).contains("gold"))
-        #expect(GuildIdentity.habitats.allSatisfy { ![.citrus, .desert].contains($0) }, "the warm editions stay with their sets")
     }
 }

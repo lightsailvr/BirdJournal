@@ -24,17 +24,16 @@ final class PushesUITests: XCTestCase {
         app.buttons["Create"].tap()
     }
 
+    /// With one Guild the tab already is its page (issue #150).
     private func open(_ name: String, in app: XCUIApplication) {
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 5), "not listed; screen: \(app.debugDescription.prefix(3000))")
-        row.tap()
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[name].exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 
-    /// The settings are the page's last section, below the feed and the members.
+    /// The settings are the last section of the Info sheet, below the goals and the members.
     private func scrollToSettings(_ app: XCUIApplication) {
-        let leave = app.buttons["Leave Guild"]
-        for _ in 0..<24 where !(leave.exists && leave.isHittable) { app.collectionViews.firstMatch.swipeUp() }
+        app.openGuildInfo()
+        app.scrolledInGuildInfo(to: app.buttons["Leave Guild"])
     }
 
     @MainActor
@@ -57,7 +56,7 @@ final class PushesUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Turn on notifications"].exists)
         XCTAssertFalse(app.buttons["Open notification settings"].exists)
 
-        app.navigationBars.buttons.firstMatch.tap()
+        app.navigationBars.buttons["Done"].tap()
         create("Weekday Walkers", in: app)
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Weekday Walkers'")).firstMatch.waitForExistence(timeout: 5))
         XCTAssertFalse(app.alerts[explanation].waitForExistence(timeout: 3), "asked again at the second Guild")
@@ -76,7 +75,9 @@ final class PushesUITests: XCTestCase {
         open("Backyard Crew", in: app)
         scrollToSettings(app)
         XCTAssertTrue(app.buttons["Open notification settings"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Notifications are off for Featherguild'")).firstMatch.exists)
+        let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Notifications are off for Featherguild'")).firstMatch
+        for _ in 0..<4 where !footer.exists { app.collectionViews.firstMatch.swipeUp() }
+        XCTAssertTrue(footer.exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
@@ -97,6 +98,7 @@ final class PushesUITests: XCTestCase {
     func testACircleAndAFriendCanBeMuted() {
         let app = launch(["-fakeCircles", "some", "-autoScreen", "circle", "-fakePushPermission", "authorized"])
         let mute = app.switches["Mute this Guild"]
+        app.openGuildInfo()
         let list = app.collectionViews.firstMatch
         XCTAssertTrue(list.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<24 where !mute.exists { list.swipeUp() }

@@ -52,6 +52,56 @@ extension View {
     }
 }
 
+/// Where a find's row is: the same find can be on the Guilds tab and on a Guild's page, both on one stack.
+enum FindLiftSurface: Hashable, Sendable {
+    case allGuilds
+    case guild(String)
+}
+
+/// The patch on a find's row, which its page grows out of (issue #150, F1).
+struct FindLiftID: Hashable, Sendable {
+    let itemID: String
+    let surface: FindLiftSurface
+}
+
+extension View {
+    /// A find's patch, which its page grows out of.
+    func findLiftSource(_ id: FindLiftID?) -> some View {
+        modifier(FindLiftSource(id: id))
+    }
+
+    /// A find's page opened from the patch `id`. A quiet line has no patch to grow out of, so it's a plain push.
+    func findLiftTransition(from id: FindLiftID?) -> some View {
+        modifier(FindLiftTransition(id: id))
+    }
+}
+
+private struct FindLiftSource: ViewModifier {
+    @Environment(\.patchLiftNamespace) private var namespace
+    let id: FindLiftID?
+
+    func body(content: Content) -> some View {
+        if let id, let namespace {
+            content.matchedTransitionSource(id: id, in: namespace)
+        } else {
+            content
+        }
+    }
+}
+
+private struct FindLiftTransition: ViewModifier {
+    @Environment(\.patchLiftNamespace) private var namespace
+    let id: FindLiftID?
+
+    func body(content: Content) -> some View {
+        if let id, let namespace {
+            content.navigationTransition(.zoom(sourceID: id, in: namespace))
+        } else {
+            content
+        }
+    }
+}
+
 private struct PatchLiftScope: ViewModifier {
     @Namespace private var namespace
     let lifts: Bool

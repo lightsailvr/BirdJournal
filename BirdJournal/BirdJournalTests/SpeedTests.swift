@@ -295,7 +295,8 @@ struct LastKnownGuildScreenTests {
         let family = try #require(store.circles.first { $0.name == "Family" })
         #expect(!family.isCreator)
         #expect(harness.account.account == nil)
-        let labels = try await ScreenAccessibilityTests.walk(CirclePageView(id: family.id), harness: harness) { $0.contains { $0.contains("Pat Birder (you)") } }
+        try await store.loadDetail(id: family.id)
+        let labels = try await ScreenAccessibilityTests.walk(CircleInfoSheet(circleID: family.id) {}, harness: harness) { $0.contains { $0.contains("Pat Birder (you)") } }
         #expect(labels.contains { $0.contains("Pat Birder (you)") }, "\(labels)")
     }
 }

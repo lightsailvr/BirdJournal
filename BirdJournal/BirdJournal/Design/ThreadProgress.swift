@@ -9,8 +9,8 @@ import SwiftUI
 /// stitching).
 ///
 ///     ThreadProgress(setProgress)                                                    // the set's own edition
-///     ThreadProgress(goal: goal)                                                     // lavender, on the page or felt
-///     ThreadProgress(goal: goal, thread: .onLavender)                                // on a lavender card
+///     ThreadProgress(goal: goal, circleID: id)                                       // lavender, on the page or felt
+///     ThreadProgress(goal: goal, circleID: id, thread: .onLavender)                  // on a lavender card
 ///     ThreadProgress(value: got, total: size, sentence: "…", thread: .edition(setID: id))
 struct ThreadProgress: View {
     enum Thread: Equatable {
@@ -71,14 +71,15 @@ struct ThreadProgress: View {
         memoryKey = "set-\(progress.setID)"
     }
 
-    /// A goal's birds, in lavender.
-    init(goal: CircleGoal, thread: Thread = .together) {
+    /// A goal's birds, in lavender. `circleID` names whose: a monthly goal's id is only its month, the same in every Guild, so without
+    /// it one Guild's thread would sew from where another's was last seen.
+    init(goal: CircleGoal, circleID: String, thread: Thread = .together) {
         value = Double(goal.progress)
         total = Double(goal.target)
         sentence = GoalWords.sentence(goal)
         self.thread = thread
         countsBirds = true
-        memoryKey = "goal-\(goal.id)"
+        memoryKey = "goal-\(circleID)-\(goal.id)"
     }
 
     /// How many stitches a row of `width` holds.
