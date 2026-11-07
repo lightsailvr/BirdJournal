@@ -193,19 +193,34 @@ struct BirdComparisonTests {
         #expect(onlyMine.route == .patch(try #require(onlyMine.myPatch), from: .compare))
     }
 
-    @Test("names come from the packs, then your own sightings, and only then the words of the friend's phone")
+    @Test("the friend's phone's words are never a bird's name: BirdNET names what the packs don't, and otherwise it goes nowhere")
+    func hostileNames() throws {
+        let comparison = BirdComparison(
+            mine: [],
+            theirs: [
+                .init(speciesID: "x", scientificName: "Turdus merula", commonName: "Call me 555-1234", method: .seen),
+                .init(speciesID: "y", scientificName: "Not a real bird", commonName: "Call me 555-1234", method: .seen),
+            ]
+        )
+        #expect(comparison.onlyTheirs.map(\.commonName) == ["Common Blackbird", BirdNames.unnamed], "and what nothing names goes last")
+        #expect(comparison.onlyTheirs[0].route == .species(scientificName: "Turdus merula", commonName: "Common Blackbird"))
+        #expect(comparison.onlyTheirs[1].route == nil, "no profile headed with the sender's words")
+        #expect(!comparison.onlyTheirs.contains { $0.commonName.contains("555") })
+    }
+
+    @Test("names come from the packs, then your own sightings, never the friend's phone")
     func names() {
         let theirs: [FriendBirds.Species] = [
             .init(speciesID: "x", scientificName: "Sayornis nigricans", commonName: "Buy my thing", method: .seen),
-            .init(speciesID: "y", scientificName: "Calypte anna", commonName: "Rude words", method: .seen),
-            .init(speciesID: "z", scientificName: "Turdus merula", commonName: "Common Blackbird", method: .seen),
+            .init(speciesID: "y", scientificName: "Not in BirdNET", commonName: "Rude words", method: .seen),
+            .init(speciesID: "z", scientificName: "Melanerpes formicivorus", commonName: "Rude words", method: .seen),
         ]
         let comparison = BirdComparison(
-            mine: [("Calypte anna_Anna's Hummingbird", .heard)], theirs: theirs,
-            names: ["Sayornis nigricans": "Black Phoebe"]
+            mine: [("Not in BirdNET_My Own Word", .heard)], theirs: theirs,
+            names: BirdNames(packs: ["Sayornis nigricans": "Pack's Phoebe"])
         )
-        #expect(comparison.onlyTheirs.map(\.commonName) == ["Black Phoebe", "Common Blackbird"], "sorted by what's shown")
-        #expect(comparison.both.map(\.commonName) == ["Anna's Hummingbird"])
+        #expect(comparison.onlyTheirs.map(\.commonName) == ["Acorn Woodpecker", "Pack's Phoebe"], "sorted by what's shown")
+        #expect(comparison.both.map(\.commonName) == ["My Own Word"])
     }
 
     @Test("Heard or Seen stays under every patch, and the tally stays")
@@ -215,7 +230,7 @@ struct BirdComparisonTests {
             theirs: [species("Sayornis nigricans_Black Phoebe", .seen), species("Calypte anna_Anna's Hummingbird", .seen), species("Ardea alba_Great Egret", .heard)]
         )
         let captions = (comparison.onlyTheirs + comparison.both + comparison.onlyMine).map { BirdComparison.caption($0, friend: "Maya") }
-        #expect(captions == ["Heard by Maya", "Heard by you, seen by Maya", "Seen by you both", "Heard by you"])
+        #expect(captions == ["Heard by Maya", "You heard, Maya saw", "Seen by both", "Heard by you"])
         #expect(comparison.tally(friend: "Maya") == "You have 3, Maya has 3, and you both have 2.")
         #expect(BirdComparison.leadTitle(friend: "Maya") == "Maya has these. Go find them.")
     }

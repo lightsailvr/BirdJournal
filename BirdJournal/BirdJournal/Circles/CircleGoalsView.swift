@@ -259,6 +259,13 @@ struct GoalPatchesView: View {
                         .padding(.top, 2)
                     BoardTiles(tiles: tiles(of: goal), side: 79)
                         .padding(.top, 14)
+                } else {
+                    // Deleted from under the page, or its month ended and a read took it.
+                    StateNotice("This goal isn't here any more", message: "It may have been deleted, or its days may be over.", mark: .symbol("flag.checkered"), messageInk: .ink)
+                        .boardLabel()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
+                        .accessibilityIdentifier("goal-patches-gone")
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -276,7 +283,7 @@ struct GoalPatchesView: View {
         return GoalPatchSlots(goal: goal, places: .max).shown.map { species in
             let name = names[species.scientificName]
             return BoardTile(
-                id: species.scientificName, scientificName: species.scientificName, setID: species.edition, name: name ?? GoalWords.unnamedBird,
+                id: species.scientificName, scientificName: species.scientificName, setID: species.edition, name: name ?? BirdNames.unnamed,
                 caption: nil,
                 spoken: GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: species.edition)),
                 hint: name == nil ? nil : "Opens this bird in the Atlas.",
@@ -392,12 +399,9 @@ enum GoalWords {
         [goal.title, headline(goal), "\(count(goal)).", "\(monthlyNote(goal))"].map { $0.hasSuffix(".") ? $0 : "\($0)." }.joined(separator: " ")
     }
 
-    /// A goal's patch has no finder, so there's nobody behind the server's words for a bird no pack here knows, and they aren't shown.
-    static let unnamedBird = "A bird your sets don't list"
-
     /// "Black Phoebe, Citrus edition patch"; "Black Phoebe, patch".
     static func spokenPatch(name: String?, edition: String?) -> String {
-        "\(name ?? unnamedBird), \(edition.map { "\($0) patch" } ?? "patch")"
+        "\(name ?? BirdNames.unnamed), \(edition.map { "\($0) patch" } ?? "patch")"
     }
 
     /// The goal on Listen, after the Guild's name: "is 2 birds from its November goal".

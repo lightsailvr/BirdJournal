@@ -271,6 +271,29 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains { $0.hasSuffix("edition patch") }, "\(labels)")
     }
 
+    @Test("A hand-built name never reaches Compare's screen (issue #150)")
+    func compareHostileName() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        client.setMoreCompared([FriendBirds.Species(speciesID: "x", scientificName: "Not a real bird", commonName: "Call me 555-1234", method: .seen)], friendID: "maya")
+        let labels = try await Self.walk(CompareBirdsView(friendID: "maya", friendName: "Maya Ortiz"), harness: harness) { labels in
+            labels.contains { $0.hasPrefix(BirdNames.unnamed) }
+        }
+        #expect(labels.contains("\(BirdNames.unnamed). You: Not yet. Maya: Seen."), "\(labels)")
+        #expect(!labels.contains { $0.contains("555") }, "\(labels)")
+    }
+
+    @Test("A goal that's gone says so, rather than a blank page (issue #150)")
+    func goalBoardGone() async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(GoalPatchesView(circleID: "gone", goalID: "gone"), harness: harness) { labels in
+            labels.contains { $0.contains("isn't here any more") }
+        }
+        Self.expectClean(labels, screen: "A goal that's gone")
+        #expect(labels.contains("This goal isn't here any more"), "\(labels)")
+    }
+
     @Test("A paper card says who has the bird, in one sentence (issue #150)", arguments: sizes)
     func cardFriends(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()

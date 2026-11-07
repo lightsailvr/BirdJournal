@@ -103,7 +103,7 @@ struct GoalPatchSlotsTests {
     func spoken() {
         #expect(GoalWords.spokenPatch(name: "Black Phoebe", edition: "Citrus edition") == "Black Phoebe, Citrus edition patch")
         #expect(GoalWords.spokenPatch(name: "Black Phoebe", edition: nil) == "Black Phoebe, patch")
-        #expect(GoalWords.spokenPatch(name: nil, edition: nil) == "A bird your sets don't list, patch")
+        #expect(GoalWords.spokenPatch(name: nil, edition: nil) == "A bird this iPhone can't name, patch")
     }
 
     @Test("the line on Listen")

@@ -81,6 +81,9 @@ final class CircleStore {
     /// The friends whose birds have been read or are being read this session, so each is read at most once for the screens around
     /// the app. Compare's own screen reads for itself.
     @ObservationIgnored private var friendsRead: Set<String> = []
+    /// How many times each friend's birds have been dropped for a Guild they no longer share, so an answer already on its way, which
+    /// may count that Guild's finds, isn't kept.
+    @ObservationIgnored private var friendsDropped: [String: Int] = [:]
     /// The read of friends' birds under way. It's the store's, not a screen's: pushing the next screen mustn't cancel it, since that
     /// screen is waiting on the same answers.
     @ObservationIgnored private var friendsSweep: Task<Void, Never>?
@@ -121,6 +124,8 @@ final class CircleStore {
         do {
             let circles = try await account.withAccessToken(doing: "load your Guilds") { try await client.circles(accessToken: $0) }
             guard session == self.session else { return }
+            let left = self.circles.map(\.id).filter { id in !circles.contains { $0.id == id } }
+            dropFriendsBirds(of: left.flatMap { details[$0]?.members.map(\.id) ?? [] })
             self.circles = circles
             listState = .loaded
             hasReadList = true
@@ -571,9 +576,12 @@ final class CircleStore {
     func compare(friendID: String) async throws -> FriendBirds {
         let session = session
         let wasBlocked = blocked.contains { $0.id == friendID }
+        let drops = friendsDropped[friendID, default: 0]
         do {
             let birds = try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
             if !wasBlocked, blocked.contains(where: { $0.id == friendID }) { throw CircleError.notFound }
+            // A Guild they shared went while this was on its way: it may count that Guild's finds, so ask again.
+            if session == self.session, friendsDropped[friendID, default: 0] != drops { return try await compare(friendID: friendID) }
             if session == self.session {
                 friendBirds[friendID] = birds
                 friendsRead.insert(friendID)
@@ -603,6 +611,17 @@ final class CircleStore {
             }
         }
         return friends.sorted { ($0.name, $0.id) < ($1.name, $1.id) }
+    }
+
+    /// A friend's birds come from the Guilds the two share, so once one of those goes, what was read counts birds from it, even if
+    /// another Guild keeps them friends. Those friends' birds go at once, and the next screen reads them again.
+    private func dropFriendsBirds(of accounts: [String]) {
+        for id in accounts {
+            friendBirds[id] = nil
+            friendsRead.remove(id)
+            friendsDropped[id, default: 0] += 1
+        }
+        if !accounts.isEmpty { indexFriends() }
     }
 
     /// The friends who have this bird, by name.
@@ -701,6 +720,7 @@ final class CircleStore {
         friendBirds = [:]
         friendsBySpecies = [:]
         friendsRead = []
+        friendsDropped = [:]
         friendsSweep = nil
         hasReadList = false
         goalReads = [:]
@@ -766,6 +786,7 @@ final class CircleStore {
     private func remember(_ detail: CircleDetail) {
         // An answer that lands after the sign-out isn't kept.
         guard account.isSignedIn else { return }
+        let gone = details[detail.circle.id]?.members.map(\.id).filter { id in !detail.members.contains { $0.id == id } } ?? []
         details[detail.circle.id] = detail
         freshDetails.insert(detail.circle.id)
         cacheLater()
@@ -775,10 +796,13 @@ final class CircleStore {
             circles.append(detail.circle)
         }
         if listState != .loaded { listState = .loaded }
+        dropFriendsBirds(of: gone)
         indexFriends()
     }
 
     private func forget(_ id: String) {
+        // With no members read, anyone read may have been in it.
+        dropFriendsBirds(of: details[id]?.members.map(\.id) ?? Array(friendBirds.keys))
         circles.removeAll { $0.id == id }
         details[id] = nil
         feeds[id] = nil

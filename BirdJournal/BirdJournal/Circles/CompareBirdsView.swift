@@ -1,4 +1,5 @@
 import Album
+import Identification
 import Pack
 import SwiftData
 import SwiftUI
@@ -21,10 +22,14 @@ struct BirdComparison: Equatable {
 
         var id: String { scientificName }
 
+        /// Something other than the friend's phone names it. Anything else may be anyone's words, so it goes nowhere that would
+        /// print them as a bird's name.
+        var isNamed = true
+
         /// A patch the friend's side shows goes to the bird in the Atlas, the way to go and find it. Only yours opens your own.
-        var route: Route {
+        var route: Route? {
             if theirs == nil, let myPatch { return .patch(myPatch, from: .compare) }
-            return .species(scientificName: scientificName, commonName: commonName)
+            return isNamed ? .species(scientificName: scientificName, commonName: commonName) : nil
         }
     }
 
@@ -38,10 +43,10 @@ struct BirdComparison: Equatable {
 
     /// - Parameters:
     ///   - mine: every sighting's BirdNET label and method; species meet by scientific name.
-    ///   - names: what the packs call each bird, by scientific name. These win over the words on the birder's own sightings, and
-    ///     those over the friend's phone's, which nothing checks.
+    ///   - names: what the packs and BirdNET call each bird. These win over the words on the birder's own sightings. The friend's
+    ///     phone's words are never used: nothing checks them, and every bird a real phone can find is in BirdNET's list.
     ///   - myPatches: the birder's patches, for what shows under "Only you".
-    init(mine: [(speciesID: String, method: SightingMethod)], theirs: [FriendBirds.Species], names: [String: String] = [:], myPatches: [CardCollection.Patch] = []) {
+    init(mine: [(speciesID: String, method: SightingMethod)], theirs: [FriendBirds.Species], names: BirdNames = BirdNames(), myPatches: [CardCollection.Patch] = []) {
         var myBest: [String: (common: String, method: SightingMethod)] = [:]
         for (label, method) in mine {
             let scientific = Sighting.scientificName(ofLabel: label)
@@ -62,16 +67,19 @@ struct BirdComparison: Equatable {
         for name in Set(myBest.keys).union(theirBest.keys) {
             let their = theirBest[name]
             let mine = firstPatch[name]
+            let common = names[name] ?? myBest[name]?.common
             rows.append(Row(
                 scientificName: name,
-                commonName: names[name] ?? myBest[name]?.common ?? their?.commonName ?? name,
+                commonName: common ?? BirdNames.unnamed,
                 mine: myBest[name]?.method,
                 theirs: their?.method,
                 edition: their.map { $0.editions.first } ?? mine?.placement.setID,
-                myPatch: mine?.id
+                myPatch: mine?.id,
+                isNamed: common != nil
             ))
         }
-        rows.sort { ($0.commonName, $0.scientificName) < ($1.commonName, $1.scientificName) }
+        // What nothing names goes last, so it can't lead a board.
+        rows.sort { ($0.isNamed ? 0 : 1, $0.commonName, $0.scientificName) < ($1.isNamed ? 0 : 1, $1.commonName, $1.scientificName) }
         onlyTheirs = rows.filter { $0.mine == nil }
         onlyMine = rows.filter { $0.theirs == nil }
         both = rows.filter { $0.mine != nil && $0.theirs != nil }
@@ -88,11 +96,12 @@ struct BirdComparison: Equatable {
     /// "Maya has these. Go find them."
     static func leadTitle(friend: String) -> String { "\(friend) has these. Go find them." }
 
-    /// What a row's method says under its patch: "Heard by Maya", "Seen by you", "Seen by you both", "Heard by you, seen by Maya".
+    /// What a row's method says under its patch: "Heard by Maya", "Seen by you", "Seen by both", "You heard, Maya saw". VoiceOver
+    /// has the longer sentence.
     static func caption(_ row: Row, friend: String) -> String {
         switch (row.mine, row.theirs) {
-        case (let mine?, let theirs?) where mine == theirs: "\(mine.title) by you both"
-        case (let mine?, let theirs?): "\(mine.title) by you, \(theirs.title.lowercased()) by \(friend)"
+        case (let mine?, let theirs?) where mine == theirs: "\(mine.title) by both"
+        case (let mine?, let theirs?): "You \(mine.verb), \(friend) \(theirs.verb)"
         case (let mine?, nil): "\(mine.title) by you"
         case (nil, let theirs?): "\(theirs.title) by \(friend)"
         case (nil, nil): ""
@@ -105,8 +114,13 @@ struct BirdComparison: Equatable {
     }
 }
 
+private extension SightingMethod {
+    /// "heard" or "saw".
+    var verb: String { self == .seen ? "saw" : "heard" }
+}
+
 /// You and a friend as boards of patches, as the reference draws it: theirs you don't have yet, then what you both have, then only
-/// yours. On felt: these are objects. Patches in threes, a friend's in the edition they first found it, and the blank with its tag
+/// yours, then the tally. On felt: these are objects. Patches in threes, a friend's in the edition they first found it, and the blank with its tag
 /// when the server names no edition, or one this phone can't paint.
 struct CompareBirdsView: View {
     @Environment(CircleStore.self) private var circles
@@ -156,12 +170,6 @@ struct CompareBirdsView: View {
                 names: library.birdNames, myPatches: collectionStore.collection.patches
             )
             LazyVStack(alignment: .leading, spacing: 0) {
-                Text(comparison.tally(friend: firstName))
-                    .font(JournalFont.supporting)
-                    .foregroundStyle(Color.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .boardLabel()
-                    .accessibilityIdentifier("compareTally")
                 if comparison.onlyTheirs.isEmpty, comparison.onlyMine.isEmpty, comparison.both.isEmpty {
                     StateNotice("Neither of you has found a bird yet.", messageInk: .ink)
                         .boardLabel()
@@ -169,12 +177,19 @@ struct CompareBirdsView: View {
                 board(comparison.onlyTheirs, title: BirdComparison.leadTitle(friend: firstName), isLead: true)
                 board(comparison.both, title: "You both have", scrollID: "compare-both")
                 board(comparison.onlyMine, title: "Only you")
+                Text(comparison.tally(friend: firstName))
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .boardLabel()
+                    .padding(.top, JournalLayout.sectionGap)
+                    .accessibilityIdentifier("compareTally")
                 Text("\(firstName)'s side is what they shared to Guilds you're both in. Yours is everything on this iPhone.")
                     .font(JournalFont.attribution)
                     .foregroundStyle(Color.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .boardLabel()
-                    .padding(.top, JournalLayout.sectionGap)
+                    .padding(.top, 6)
             }
         } else if let error {
             GuildsUnreachable(message: error) { Task { await load() } }
@@ -187,9 +202,9 @@ struct CompareBirdsView: View {
     private func board(_ rows: [BirdComparison.Row], title: String, isLead: Bool = false, scrollID: String? = nil) -> some View {
         if !rows.isEmpty {
             // Every item in a lazy stack needs its own identity: two sharing nil lost a heading.
-            SectionTitle(title, size: isLead ? .lead : .section, top: isLead ? 18 : 26, onBoard: true)
+            SectionTitle(title, size: isLead ? .lead : .section, top: isLead ? 8 : 26, onBoard: true)
                 .id(scrollID ?? title)
-            BoardTiles(tiles: rows.map(tile), side: isLead ? 97 : 79)
+            BoardTiles(tiles: rows.map(tile), side: isLead ? 97 : 79, lineFont: isLead ? PatchFont.boardLine : PatchFont.tileLine)
                 .padding(.top, 10)
         }
     }
@@ -199,7 +214,7 @@ struct CompareBirdsView: View {
             id: row.scientificName, scientificName: row.scientificName, setID: row.edition, name: row.commonName,
             caption: BirdComparison.caption(row, friend: firstName),
             spoken: "\(row.commonName). You: \(BirdComparison.word(row.mine)). \(firstName): \(BirdComparison.word(row.theirs)).",
-            hint: row.theirs == nil && row.myPatch != nil ? "Opens your patch." : "Opens this bird in the Atlas.",
+            hint: row.route == nil ? nil : row.theirs == nil && row.myPatch != nil ? "Opens your patch." : "Opens this bird in the Atlas.",
             route: row.route, identifier: "compare-\(row.scientificName)",
             lift: row.theirs == nil ? row.myPatch.map { PatchLiftID(key: $0, surface: .compare) } : nil
         )
@@ -241,13 +256,14 @@ struct BoardTiles: View {
     let tiles: [BoardTile]
     /// How wide a patch may be.
     let side: CGFloat
+    var lineFont = PatchFont.tileLine
 
     var body: some View {
         LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize, spacing: 8), alignment: .leading, spacing: 18) {
             ForEach(tiles) { tile in
                 let picture = PatchTile(
                     state: library.patchArtState(scientificName: tile.scientificName, setID: tile.setID), edition: PatchEdition.of(setID: tile.setID),
-                    tag: tile.name, name: tile.name, line: tile.caption, spoken: tile.spoken, lift: tile.lift, side: side, isLarge: true
+                    tag: tile.name, name: tile.name, line: tile.caption, spoken: tile.spoken, lift: tile.lift, side: side, nameFont: PatchFont.boardName, lineFont: lineFont
                 )
                 if let route = tile.route {
                     NavigationLink(value: route) { picture }
@@ -269,8 +285,8 @@ extension PackLibrary {
         cardSets.first { $0.id == setID }?.edition
     }
 
-    /// What the packs and sets on this phone call each bird, by scientific name. The server's names are the finder's phone's word.
-    var birdNames: [String: String] {
+    /// What the packs and sets on this phone call each bird, then BirdNET. The server's names are the finder's phone's word.
+    var birdNames: BirdNames {
         var names: [String: String] = [:]
         for set in sets {
             for species in set.species where names[species.scientificName] == nil {
@@ -282,6 +298,25 @@ extension PackLibrary {
                 names[species.scientificName] = species.commonName
             }
         }
-        return names
+        return BirdNames(packs: names)
+    }
+}
+
+/// What a bird is called, from what ships with the app and never from the server: the packs, or BirdNET's own list, which holds every
+/// bird a phone can find. Nil is a name nobody but the sender vouches for: a hand-built client, or a newer model's bird.
+struct BirdNames: Equatable {
+    /// A bird with no name to trust.
+    static let unnamed = "A bird this iPhone can't name"
+
+    /// BirdNET's list. It's about 11,000 lines, so it's read once, the first time a bird isn't in a pack.
+    private nonisolated static let birdNET: [String: String] = {
+        let species = (try? ONNXBirdModel.bundledLabels()) ?? []
+        return Dictionary(species.map { ($0.scientificName, $0.commonName) }, uniquingKeysWith: { first, _ in first })
+    }()
+
+    var packs: [String: String] = [:]
+
+    subscript(scientificName: String) -> String? {
+        packs[scientificName] ?? Self.birdNET[scientificName]
     }
 }

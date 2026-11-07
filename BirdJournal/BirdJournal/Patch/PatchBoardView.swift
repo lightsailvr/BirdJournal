@@ -93,7 +93,8 @@ struct PatchTile: View {
     /// How wide the patch may be, in a column that's wide enough.
     var side: CGFloat = 124
     /// A Guild's boards are few patches and set their words larger than the Collection's.
-    var isLarge = false
+    var nameFont = PatchFont.tileName
+    var lineFont = PatchFont.tileLine
 
     var body: some View {
         VStack(spacing: 6) {
@@ -103,11 +104,11 @@ struct PatchTile: View {
                 .patchLiftSource(lift)
             VStack(spacing: 2) {
                 Text(name)
-                    .font(isLarge ? PatchFont.boardName : PatchFont.tileName)
+                    .font(nameFont)
                     .foregroundStyle(Color.ink)
                 if let line {
                     Text(line)
-                        .font(isLarge ? PatchFont.boardLine : PatchFont.tileLine)
+                        .font(lineFont)
                         .foregroundStyle(Color.ink)
                 }
             }

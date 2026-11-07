@@ -18,7 +18,7 @@ Every picture is the running app on an iPhone 17 Pro simulator at half size, tak
 
 ## Where it knowingly differs from the references
 
-- `5-compare.png`: no "Let's go together" (out of scope in the issue). The tally is a line above the boards and Heard or Seen sits under every patch, because the issue keeps both. The fixture's birds are heard from the phone, so "Only you" says so. Boards sort by name, so the Egret comes before the Bluebird.
+- `5-compare.png`: no "Let's go together" (out of scope in the issue). The tally is a line at the foot and Heard or Seen sits under every patch, because the issue keeps both. The fixture's birds are heard from the phone, so "Only you" says so. Boards sort by name, so the Egret comes before the Bluebird.
 - `1-guild-page.png`: six patches and "+6" where the mock draws seven, since the issue asks for "+N" past what fits and the goal stands at 12. Today's `GuildEmblem`, not the crest.
 - `3-listen-rejected-hoop.png`: only its lower half is the target. Listen keeps the painting, the wordmark and "Wonder is nearby.", and today's `GuildEmblem`.
 - `4-set-page.png`: the faces are Jo's and Sam's on the first rows, not Maya's on a heron, because the fixture keeps Maya's birds to the three the Compare mock gives her.

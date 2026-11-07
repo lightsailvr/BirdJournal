@@ -28,7 +28,9 @@ final class GuildDataUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["You and Maya"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["Maya has these. Go find them."].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["You both have"].exists)
-        XCTAssertEqual(element(app, "compareTally").label, "You have 5, Maya has 5, and you both have 2.")
+        // The page opens on Maya's board, and the tally is at its foot.
+        let lead = app.staticTexts["Maya has these. Go find them."]
+        XCTAssertLessThan(lead.frame.minY, 200, "screen: \(app.debugDescription.prefix(3000))")
 
         // Three in a row, each opening its own bird.
         for (scientific, title) in [("Melanerpes formicivorus", "Acorn Woodpecker"), ("Ardea alba", "Great Egret"), ("Sialia mexicana", "Western Bluebird")] {
@@ -56,6 +58,10 @@ final class GuildDataUITests: XCTestCase {
         // Only yours opens your own patch.
         let only = app.buttons["compare-Zenaida macroura"]
         XCTAssertTrue(app.scrolledTo(only), "screen: \(app.debugDescription.prefix(3000))")
+        let tally = element(app, "compareTally")
+        XCTAssertTrue(app.scrolledTo(tally), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(tally.label, "You have 5, Maya has 5, and you both have 2.")
+        XCTAssertGreaterThan(tally.frame.minY, only.frame.maxY, "under the boards")
         XCTAssertTrue(app.staticTexts["Only you"].exists)
         only.tap()
         XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")

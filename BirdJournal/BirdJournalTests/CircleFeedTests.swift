@@ -685,6 +685,74 @@ struct FriendsAroundTheAppTests {
         #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
     }
 
+    /// Pat in Canyon Walkers too, with Maya, who's found a bird only there.
+    private func inTwoGuildsWithMaya() async throws -> (CircleStore, FakeCircleClient, CircleSummary) {
+        let (store, client) = seeded()
+        let canyon = try await store.accept(token: "fake-invite")
+        client.add(FeedItem(
+            sightingID: "00000000-0000-4000-8000-000000000040", speciesID: "Ardea alba_Great Egret", scientificName: "Ardea alba", commonName: "Great Egret",
+            method: .seen, place: "Ojai", foundAt: .now, newPatch: true, rarity: .common, art: nil,
+            owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"), circleFirst: false, isMine: false, edition: "us-ca-la"
+        ), to: canyon.circle.id)
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Ardea alba").map(\.id) == ["maya"])
+        return (store, client, canyon.circle)
+    }
+
+    @Test("leaving one of two Guilds shared with a friend takes that Guild's birds off them, and the next screen reads them again")
+    func leftOneOfTwo() async throws {
+        let (store, client, canyon) = try await inTwoGuildsWithMaya()
+        let reads = client.compareLog.filter { $0 == "maya" }.count
+        try await store.leave(circleID: canyon.id)
+        #expect(store.friends(having: "Ardea alba").isEmpty, "at once")
+        #expect(store.friendBirds["maya"] == nil)
+
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.filter { $0 == "maya" }.count == reads + 1)
+        #expect(store.friends(having: "Ardea alba").isEmpty, "the server no longer counts it")
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"], "Sunday Group's still count")
+    }
+
+    @Test("an answer on its way when the Guild was left isn't kept")
+    func leftDuringARead() async throws {
+        let (store, client, canyon) = try await inTwoGuildsWithMaya()
+        client.compareAnswerLatency = .milliseconds(200)
+        let read = Task { try await store.compare(friendID: "maya") }
+        try await Task.sleep(for: .milliseconds(50))
+        try await store.leave(circleID: canyon.id)
+        client.compareAnswerLatency = .zero
+        _ = try await read.value
+        #expect(store.friends(having: "Ardea alba").isEmpty)
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+    }
+
+    @Test("a Guild gone from the list, left on another device, does the same")
+    func leftElsewhere() async throws {
+        let (store, client, canyon) = try await inTwoGuildsWithMaya()
+        try await client.leave(circleID: canyon.id, accessToken: "t")
+        await store.refresh()
+        #expect(store.friends(having: "Ardea alba").isEmpty)
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+    }
+
+    @Test("a detail read that's lost a member drops what was read of them, though another Guild keeps them friends")
+    func memberLost() async throws {
+        let client = FakeCircleClient(seeded: true)
+        client.seedSharedFinds()
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client)
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Sayornis nigricans").map(\.id).contains("jo"), "only in Sunday Group")
+        let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
+        try await store.remove(memberID: "jo", circleID: sunday.id)
+        #expect(store.friendBirds["jo"] == nil)
+        #expect(!store.friends(having: "Sayornis nigricans").map(\.id).contains("jo"))
+
+        await store.loadFriendsBirds()
+        #expect(!store.friends(having: "Sayornis nigricans").map(\.id).contains("jo"))
+        #expect(store.friends(having: "Calypte anna").map(\.id).contains("jo"), "the hummingbird's in Family too")
+    }
+
     @Test("no connection from the start costs one call, not one per Guild or friend")
     func offlineFromTheStart() async {
         let (store, client) = seeded()
