@@ -53,8 +53,8 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(face(app).label.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn "), face(app).label)
         XCTAssertEqual(face(app).value as? String ?? "", "")
         XCTAssertTrue(app.staticTexts["Black Phoebe"].exists)
-        XCTAssertTrue(element(app, "patch-count").label.hasPrefix("Seen once in Los Angeles · sewn "), element(app, "patch-count").label)
-        let line = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Citrus edition · No. '")).firstMatch
+        XCTAssertTrue(element(app, "patch-count").label.hasPrefix("Seen once in Los Angeles, sewn "), element(app, "patch-count").label)
+        let line = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Citrus edition, No. '")).firstMatch
         XCTAssertTrue(line.exists, "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Legendary'")).firstMatch.exists)
     }
@@ -138,7 +138,7 @@ final class CardFlipUITests: XCTestCase {
     func testAnUnchartedPatchWithNoPackSaysSoPlainly() {
         let app = launch("cards")
         // The oldest seed: a Common Blackbird no pack describes, added with no location and no photo.
-        let boards = app.navigationBars["Collection"].buttons["Board"]
+        let boards = app.buttons["collection-board"]
         XCTAssertTrue(boards.waitForExistence(timeout: 15), "no board menu; screen: \(app.debugDescription.prefix(3000))")
         boards.tap()
         let uncharted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch
@@ -161,9 +161,11 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("Place not recorded"), row.label)
         row.tap()
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 10))
+        let opens = app.buttons["Rarity"]
+        for _ in 0..<6 where !opens.isHittable { app.swipeUp() }
+        opens.tap()
         let rarity = app.staticTexts["Rarity unavailable for this place and season. No location was saved with this sighting, and rarity is never guessed."]
-        for _ in 0..<6 where !rarity.exists { app.swipeUp() }
-        XCTAssertTrue(rarity.exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(rarity.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["View original photo"].exists, "no original, no entry")
     }
 
@@ -172,24 +174,24 @@ final class CardFlipUITests: XCTestCase {
         let app = launch("card")
         XCTAssertTrue(face(app).waitForExistence(timeout: 15), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
-        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "dove, phoebe, finch, then the two Uncharted; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "dove, phoebe, finch, then the two Uncharted; screen: \(app.debugDescription.prefix(3000))")
 
         // From the patch: the next patch, the first Uncharted.
         app.swipeLeft()
-        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5), "the swipe did not move on; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("4 of 5").waitForExistence(timeout: 5), "the swipe did not move on; screen: \(app.debugDescription.prefix(3000))")
         assertShowing(card: false, app)
 
         // From its card: back to the finch, on the finch's face.
         turn(app).tap()
         assertShowing(card: true, app)
         app.swipeRight()
-        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "the swipe from the card did not move; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "the swipe from the card did not move; screen: \(app.debugDescription.prefix(3000))")
         assertShowing(card: false, app)
         XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
 
         // And coming back to the one turned over, it's the patch again.
         app.swipeLeft()
-        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.patchPage("4 of 5").waitForExistence(timeout: 5))
         assertShowing(card: false, app)
     }
 
@@ -214,11 +216,11 @@ final class CardFlipUITests: XCTestCase {
 
         // A swipe moves on from the patch, and from over the card, whose own scrolling is vertical.
         patch.swipeLeft()
-        XCTAssertTrue(app.navigationBars["4 of 5"].waitForExistence(timeout: 5), "the swipe from the patch; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("4 of 5").waitForExistence(timeout: 5), "the swipe from the patch; screen: \(app.debugDescription.prefix(3000))")
         let cards = app.descendants(matching: .any).matching(identifier: "card-back-scroll").allElementsBoundByIndex
         let card = try XCTUnwrap(cards.first { $0.isHittable }, "no card in reach; screen: \(app.debugDescription.prefix(3000))")
         card.swipeRight()
-        XCTAssertTrue(app.navigationBars["3 of 5"].waitForExistence(timeout: 5), "the swipe from over the card; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "the swipe from over the card; screen: \(app.debugDescription.prefix(3000))")
 
         // And the page comes back upright with its Turn over.
         XCUIDevice.shared.orientation = .portrait
@@ -257,7 +259,6 @@ final class CardFlipUITests: XCTestCase {
         let view = app.buttons["View original photo"]
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<8 where !view.isHittable { app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["Photo attached"].exists)
         view.tap()
         XCTAssertTrue(app.navigationBars["Original photo"].waitForExistence(timeout: 5), "the photo did not open; screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Done"].tap()
@@ -272,14 +273,13 @@ final class CardFlipUITests: XCTestCase {
         let attach = app.buttons["sighting-attach-photo"]
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
-        XCTAssertTrue(app.staticTexts["No photo attached"].exists, "a sighting heard on the phone has no photo of its own")
-        XCTAssertFalse(app.buttons["View original photo"].exists)
+        XCTAssertFalse(app.buttons["View original photo"].exists, "a sighting heard on the phone has no photo of its own")
         attach.tap()
 
         let photo = element(app, "sighting-attached-photo")
         XCTAssertTrue(photo.waitForExistence(timeout: 5), "the photo isn't on the sighting; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertGreaterThan(photo.frame.height, 50, "it shows at a size to see")
-        XCTAssertTrue(app.staticTexts["Photo attached"].exists)
+        XCTAssertTrue(app.buttons["View original photo"].exists)
         XCTAssertFalse(attach.exists, "one photo at a time, so it is clear which one a share sends")
         XCTAssertTrue(app.buttons["Heard"].isSelected, "attaching a photo doesn't say the bird was seen")
 
@@ -300,7 +300,7 @@ final class CardFlipUITests: XCTestCase {
         confirm.tap()
         XCTAssertTrue(attach.waitForExistence(timeout: 5), "it can be attached again; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(photo.exists)
-        XCTAssertTrue(app.staticTexts["No photo attached"].exists)
+        XCTAssertFalse(app.buttons["View original photo"].exists)
     }
 
     /// The real picker's button, not the stand-in: the sheet is the system's and out of reach, but the control is there
@@ -313,5 +313,12 @@ final class CardFlipUITests: XCTestCase {
         for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
         XCTAssertTrue(attach.isHittable, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(attach.label, "Attach a photo")
+    }
+}
+
+private extension XCUIApplication {
+    /// A patch's page by its position: its title also names the place, "Los Angeles, 3 of 5" (issue #150).
+    func patchPage(_ position: String) -> XCUIElement {
+        navigationBars.matching(NSPredicate(format: "identifier ENDSWITH %@", ", \(position)")).firstMatch
     }
 }

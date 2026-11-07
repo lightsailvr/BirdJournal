@@ -35,7 +35,7 @@ enum CardText {
         }
         let when = season(week: snapshot.week, locale: locale)
         let rating = snapshot.occurrence.map { " at \($0.formatted(.number.precision(.fractionLength(2)).locale(locale))) on a scale of 0 to 1" } ?? ""
-        return "\(snapshot.label.title). The BirdNET geomodel rated the chance of \(article(for: commonName)) \(commonName) here in \(when)\(rating), read when you added it. Common, Uncommon, Rare and Exceptional are bands of that chance across the birds of the Featherguild packs. Rarity is about the place and the season, not about your patches."
+        return "\(snapshot.label.title). The BirdNET geomodel rated the chance of \(article(for: commonName)) \(commonName) here in \(when)\(rating), read when you added it. Common, Uncommon, Rare and Exceptional are bands of that chance across the birds of every Featherguild set. Rarity is about the place and the season, not about your patches."
     }
 
     /// The place on the card: its name when known, else the coordinate; "Place not recorded" without a location, never
@@ -54,6 +54,12 @@ enum CardText {
     /// The back's evidence line: "Photo attached" only when an original exists.
     static func evidence(_ sighting: Sighting) -> String {
         originalPhotoPath(sighting) == nil ? "No photo attached" : "Photo attached"
+    }
+
+    /// How the birder met it, on a sighting's record: "Heard with iPhone microphone"; "Seen, and heard with Ray-Ban Display".
+    static func how(_ sighting: Sighting) -> String {
+        let device = sighting.source == .glasses ? "Ray-Ban Display" : "iPhone microphone"
+        return sighting.method == .seen ? "Seen, and heard with \(device)" : "Heard with \(device)"
     }
 
     static func article(for name: String) -> String {

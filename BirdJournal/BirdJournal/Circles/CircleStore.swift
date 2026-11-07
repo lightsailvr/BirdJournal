@@ -12,9 +12,56 @@ final class CircleStore {
         /// Where the next page starts; nil once the last is read.
         var nextCursor: String?
         var isLoading = false
-        /// The first page has come back.
+        /// The first page has come back, this launch or from the cache.
         var isLoaded = false
         var error: String?
+        /// How much of `items` is the first page, the part the cache keeps, and where its next page starts.
+        var firstPageCount = 0
+        var firstPageCursor: String?
+
+        /// Whether the finds just read, newest first, come down as far as what's been read: if not, there may be finds between.
+        func meets(_ newest: [FeedItem]) -> Bool {
+            guard let reach = newest.last.map({ ($0.foundAt, $0.id) }) else { return false }
+            return items.contains { ($0.foundAt, $0.id) >= reach }
+        }
+
+        /// The newest finds, as just read, laid over what's been read: what's older than they reach stays, and with it the place
+        /// to read on from, so a birder further down keeps their rows. What's gone from within their reach is gone.
+        ///
+        /// Reaching the feed's end, there's nothing older to keep. Not coming down as far as what's been read, there may be finds
+        /// between that a marked one could be among, so they replace it and read on from there, and "More finds" reaches everything.
+        /// Having read nothing it can show (the server leaves a blocked account's finds out after it pages), it can't say what's
+        /// changed, so the rows stay.
+        mutating func layOver(_ newest: [FeedItem], nextCursor cursor: String?) {
+            guard cursor != nil else {
+                items = newest
+                nextCursor = nil
+                return
+            }
+            guard let reach = newest.last.map({ ($0.foundAt, $0.id) }) else {
+                if items.isEmpty { nextCursor = cursor }
+                return
+            }
+            guard meets(newest) else {
+                items = newest
+                nextCursor = cursor
+                return
+            }
+            let older = items.filter { old in (old.foundAt, old.id) < reach && !newest.contains { $0.id == old.id } }
+            items = newest + older
+            if older.isEmpty { nextCursor = cursor }
+        }
+
+        /// There's nothing here and nothing further to read. Rows can be empty with a cursor still leading on, when all that's been
+        /// read so far is someone blocked, and "No finds yet" wouldn't be true.
+        var hasNoFinds: Bool { isLoaded && items.isEmpty && nextCursor == nil }
+
+        /// Takes these accounts' finds out, keeping the first page's count true.
+        mutating func removeFinds(of accounts: [String]) {
+            guard !accounts.isEmpty else { return }
+            firstPageCount = items.prefix(firstPageCount).count { !accounts.contains($0.owner.id) }
+            items.removeAll { accounts.contains($0.owner.id) }
+        }
     }
 
     enum ListState: Equatable {
@@ -30,6 +77,14 @@ final class CircleStore {
     private(set) var feeds: [String: Feed] = [:]
     /// Each circle's goals (issue #65), by circle id: this month's goal first, then the custom goals.
     private(set) var goals: [String: [CircleGoal]] = [:]
+    /// Each friend's side of Compare birds as last read (issue #150), by friend id: this launch only.
+    private(set) var friendBirds: [String: FriendBirds] = [:]
+    /// Who, of the friends read, has each bird (issue #150, A4), by scientific name: for a set's rows and a paper card, which look a
+    /// bird up per row and mustn't walk everyone's species to do it. Never the blocked or anyone no longer in a Guild with the birder.
+    private(set) var friendsBySpecies: [String: [CircleMember]] = [:]
+    /// The finds whose pages have been open, as last read (issue #150): a page keeps its find when a read of the feeds no longer
+    /// holds it, until its owner is blocked or its Guilds are gone. This launch only, by `heldFindKey`.
+    private var heldFinds: [String: FindEntry] = [:]
     private(set) var listState: ListState = .idle
     /// The token of an invite link opened from outside the app, for the join screen.
     var pendingInvite: String?
@@ -41,17 +96,46 @@ final class CircleStore {
     @ObservationIgnored var joinedCircle: (() async -> Void)?
     /// The latest reaction tap on each feed item, by item id.
     @ObservationIgnored private var reactionTurns: [String: Int] = [:]
+    /// The Guilds whose detail and goals have been read this launch, rather than coming from the cache.
+    @ObservationIgnored private var freshDetails: Set<String> = []
+    /// When each Guild's goals were last read, this launch.
+    @ObservationIgnored private var goalReads: [String: Date] = [:]
+    /// The list of Guilds has been read this launch, rather than coming from the cache.
+    @ObservationIgnored private var hasReadList = false
+    /// The friends whose birds have been read or are being read this session, so each is read at most once for the screens around
+    /// the app. Compare's own screen reads for itself.
+    @ObservationIgnored private var friendsRead: Set<String> = []
+    /// How many times each friend's birds have been dropped for a Guild they no longer share, so an answer already on its way, which
+    /// may count that Guild's finds, isn't kept.
+    @ObservationIgnored private var friendsDropped: [String: Int] = [:]
+    /// The read of friends' birds under way. It's the store's, not a screen's: pushing the next screen mustn't cancel it, since that
+    /// screen is waiting on the same answers.
+    @ObservationIgnored private var friendsSweep: Task<Void, Never>?
+    /// When each Guild's first page was last read, this launch.
+    @ObservationIgnored private var firstPageReads: [String: Date] = [:]
+    /// Bumped by `clear`, so an answer on its way when the birder signed out is dropped, not stored.
+    @ObservationIgnored private var session = 0
+    @ObservationIgnored private var isCacheWriteWaiting = false
 
     let account: AccountSession
     /// The circle server's client; the find outbox (issue #62) sends through the same one.
     let client: CircleClient?
     private let timeZone: () -> String
+    private let cache: CircleCache?
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "circles")
 
-    init(account: AccountSession, client: CircleClient?, timeZone: @escaping () -> String = { TimeZone.current.identifier }) {
+    /// - Parameter cache: where the last-known content lives between launches (issue #150). What it holds is drawn at once if
+    ///   the birder is signed in. A cache found while signed out (the app quit before it could clear) goes.
+    init(account: AccountSession, client: CircleClient?, timeZone: @escaping () -> String = { TimeZone.current.identifier }, cache: CircleCache? = nil) {
         self.account = account
         self.client = client
         self.timeZone = timeZone
+        self.cache = cache
+        guard account.isSignedIn else {
+            cache?.remove()
+            return
+        }
+        if let snapshot = cache?.load() { restore(snapshot) }
     }
 
     /// Whether this build talks to a circle server at all (it needs the account's).
@@ -59,15 +143,24 @@ final class CircleStore {
 
     func refresh() async {
         guard let client, account.isSignedIn else { return }
-        if circles.isEmpty { listState = .loading }
+        if circles.isEmpty, listState != .loaded { listState = .loading }
+        let session = session
         do {
-            circles = try await account.withAccessToken(doing: "load your Guilds") { try await client.circles(accessToken: $0) }
+            let circles = try await account.withAccessToken(doing: "load your Guilds") { try await client.circles(accessToken: $0) }
+            guard session == self.session else { return }
+            let left = self.circles.map(\.id).filter { id in !circles.contains { $0.id == id } }
+            dropFriendsBirds(of: left.flatMap { details[$0]?.members.map(\.id) ?? [] })
+            self.circles = circles
             listState = .loaded
-            if let mutes = try? await account.withAccessToken(doing: "load your Guilds", { try await client.mutes(accessToken: $0) }) {
+            hasReadList = true
+            indexFriends()
+            cacheLater()
+            if let mutes = try? await account.withAccessToken(doing: "load your Guilds", { try await client.mutes(accessToken: $0) }), session == self.session {
                 self.mutes = mutes
             }
             await loadBlocks()
         } catch {
+            guard session == self.session else { return }
             log.error("couldn't load circles: \(String(describing: error))")
             listState = .failed(Self.message(for: error, doing: "load your Guilds"))
         }
@@ -83,8 +176,11 @@ final class CircleStore {
     }
 
     func loadDetail(id: String) async throws {
+        let session = session
         do {
-            remember(try await call { try await $0.circle(id: id, accessToken: $1) })
+            let detail = try await call { try await $0.circle(id: id, accessToken: $1) }
+            guard session == self.session else { return }
+            remember(detail)
         } catch CircleError.notFound {
             // Removed, or left on another device: it is no longer the birder's.
             forget(id)
@@ -131,13 +227,71 @@ final class CircleStore {
         let shared = card(key)
         try await call { try await $0.shareCard(shared, sightingID: sightingID, accessToken: $1) }
         for circleID in shared.circleIDs where feeds[circleID] != nil {
-            await loadFeed(circleID: circleID)
+            await refreshFeed(circleID: circleID)
         }
     }
 
     /// Reads the circle's newest finds again, replacing what was read.
     func loadFeed(circleID: String) async {
         await readFeed(circleID: circleID, cursor: nil)
+    }
+
+    /// How many pages a refresh reads looking for what's already been read: past that, it starts again from what it has read.
+    private static let refreshReach = 5
+    /// How many pages in a row it reads with nothing on them it can show: a page can be all someone blocked.
+    private static let emptyPagesReadOn = 20
+
+    /// The next page with something on it, or the feed's end, or as far as it's worth going in one go.
+    private func readPage(circleID: String, cursor: String?) async throws -> FeedPage {
+        var pages = 0
+        var reading = cursor
+        while true {
+            let from = reading
+            let page = try await call { try await $0.feed(circleID: circleID, cursor: from, accessToken: $1) }
+            pages += 1
+            guard page.items.isEmpty, let next = page.nextCursor, pages < Self.emptyPagesReadOn else { return page }
+            reading = next
+        }
+    }
+
+    /// Reads the circle's newest finds and lays them over what's been read, for what arrives by itself: a push, or the birder's own
+    /// share or block. Unlike `loadFeed`, the pages already read stay, so the merged feed's horizon stays where it was, and nothing
+    /// disappears from under a birder further down. A failure leaves the rows, and says so.
+    func refreshFeed(circleID: String) async {
+        guard let known = feeds[circleID], known.isLoaded else { return await loadFeed(circleID: circleID) }
+        feeds[circleID]?.isLoading = true
+        let session = session
+        do {
+            var newest: [FeedItem] = []
+            var first: FeedPage?
+            var cursor: String?
+            var pages = 0
+            repeat {
+                let page = try await readPage(circleID: circleID, cursor: cursor)
+                if first == nil { first = page }
+                newest += page.items
+                cursor = page.nextCursor
+                pages += 1
+            } while cursor != nil && pages < Self.refreshReach && !newest.isEmpty && !known.meets(newest)
+            guard session == self.session else { return }
+            // As it is now: a reaction, a block or another page may have landed while these were on their way.
+            var feed = feeds[circleID] ?? Feed()
+            feed.layOver(newest, nextCursor: cursor)
+            feed.isLoaded = true
+            feed.error = nil
+            feed.firstPageCount = first?.items.count ?? 0
+            feed.firstPageCursor = first?.nextCursor
+            firstPageReads[circleID] = .now
+            cacheLater()
+            feed.removeFinds(of: blocked.map(\.id))
+            feed.isLoading = false
+            feeds[circleID] = feed
+        } catch {
+            guard session == self.session else { return }
+            log.error("couldn't refresh the feed: \(String(describing: error))")
+            feeds[circleID]?.error = Self.message(for: error, doing: "load the finds")
+            feeds[circleID]?.isLoading = false
+        }
     }
 
     /// Reads the next page of the circle's finds, if there is one.
@@ -147,32 +301,204 @@ final class CircleStore {
     }
 
     private func readFeed(circleID: String, cursor: String?) async {
-        var feed = feeds[circleID] ?? Feed()
-        feed.isLoading = true
-        feeds[circleID] = feed
+        feeds[circleID, default: Feed()].isLoading = true
+        let session = session
         do {
-            let page = try await call { try await $0.feed(circleID: circleID, cursor: cursor, accessToken: $1) }
+            let page = try await readPage(circleID: circleID, cursor: cursor)
+            guard session == self.session else { return }
+            // As it is now: a reaction or a block may have changed it while this page was on its way.
+            var feed = feeds[circleID] ?? Feed()
             feed.items = cursor == nil ? page.items : feed.items + page.items.filter { item in !feed.items.contains { $0.id == item.id } }
             feed.nextCursor = page.nextCursor
             feed.isLoaded = true
             feed.error = nil
+            if cursor == nil {
+                feed.firstPageCount = page.items.count
+                feed.firstPageCursor = page.nextCursor
+                firstPageReads[circleID] = .now
+                cacheLater()
+            }
+            feed.removeFinds(of: blocked.map(\.id))
+            feed.isLoading = false
+            feeds[circleID] = feed
         } catch {
+            guard session == self.session else { return }
             log.error("couldn't load the feed: \(String(describing: error))")
-            feed.error = Self.message(for: error, doing: "load the finds")
+            feeds[circleID]?.error = Self.message(for: error, doing: "load the finds")
+            feeds[circleID]?.isLoading = false
         }
-        feed.isLoading = false
-        feeds[circleID] = feed
+    }
+
+    // MARK: - The merged feed
+
+    /// What's new across every Guild (issue #150, G3), for the Guilds tab: each Guild's loaded pages merged by time.
+    struct MergedFeed: Equatable {
+        var entries: [FindEntry] = []
+        /// A Guild has another page.
+        var hasMore = false
+        var isLoading = false
+        /// Every Guild's first page has come back, this launch or from the cache.
+        var isLoaded = false
+        var error: String?
+
+        /// There's nothing to show and nothing further to read.
+        var hasNoFinds: Bool { isLoaded && entries.isEmpty && !hasMore }
+    }
+
+    /// The Guilds' feeds as one list. It stops where a Guild's unread pages could still hold something newer, so a find never
+    /// lands in the middle of what the birder has already read: "More finds" carries on from there.
+    var mergedFeed: MergedFeed {
+        let read = circles.map { (circleID: $0.id, feed: feeds[$0.id] ?? Feed()) }
+        var entries = FindEntry.merging(read.map { ($0.circleID, $0.feed.items) }, blocked: Set(blocked.map(\.id)))
+        if let horizon = read.compactMap({ $0.feed.nextCursor == nil ? nil : $0.feed.items.last?.foundAt }).max() {
+            entries.removeAll { $0.item.foundAt < horizon }
+        }
+        return MergedFeed(
+            entries: entries,
+            hasMore: read.contains { $0.feed.nextCursor != nil },
+            isLoading: read.contains { $0.feed.isLoading },
+            isLoaded: read.allSatisfy(\.feed.isLoaded),
+            error: read.lazy.compactMap(\.feed.error).first
+        )
+    }
+
+    /// One find, for its page: as the Guild it was opened in has it, or opened from the feed across Guilds, as every Guild the birder
+    /// has read it in knows it. A row and its page say the same, so a mark from another Guild's copy stays there. A find a read
+    /// no longer holds stays as it last was, once `holdOpen` has it: only a block, or its Guilds going, takes it away.
+    func entry(id: String, openedIn circleID: String? = nil) -> FindEntry? {
+        if let live = liveEntry(id: id, openedIn: circleID) { return live }
+        guard let held = heldFinds[Self.heldFindKey(id: id, openedIn: circleID)], !blocked.contains(where: { $0.id == held.item.owner.id }),
+              circles.contains(where: { held.circleIDs.contains($0.id) })
+        else { return nil }
+        return held
+    }
+
+    /// Remembers the find on an open page, as it is now.
+    func holdOpen(id: String, openedIn circleID: String? = nil) {
+        guard let live = liveEntry(id: id, openedIn: circleID) else { return }
+        let key = Self.heldFindKey(id: id, openedIn: circleID)
+        if heldFinds[key] != live { heldFinds[key] = live }
+    }
+
+    private func liveEntry(id: String, openedIn circleID: String?) -> FindEntry? {
+        let read = circles
+            .filter { circleID == nil || $0.id == circleID }
+            .compactMap { circle in feeds[circle.id].map { (circleID: circle.id, items: $0.items.filter { $0.id == id }) } }
+        return FindEntry.merging(read, blocked: Set(blocked.map(\.id))).first
+    }
+
+    private static func heldFindKey(id: String, openedIn circleID: String?) -> String {
+        "\(circleID ?? "")|\(id)"
+    }
+
+    /// Reads these Guilds' newest finds again, side by side; every Guild's unless it says.
+    func loadMergedFeed(circleIDs: [String]? = nil) async {
+        await withDiscardingTaskGroup { group in
+            for id in circleIDs ?? circles.map(\.id) {
+                group.addTask { await self.loadFeed(circleID: id) }
+            }
+        }
+    }
+
+    /// Whether a screen coming on screen should read this Guild's newest finds: it hasn't been read this launch, though the cache
+    /// may have drawn it, or it's a while since it was. Reading a first page replaces what was read, and can move the merged feed's
+    /// horizon, so once the birder has gone further down any Guild's finds nothing moves: back from a find's page, what they were
+    /// reading is still there, until they pull to refresh.
+    func isFeedStale(_ circleID: String, now: Date = .now) -> Bool {
+        guard let read = firstPageReads[circleID], feeds[circleID] != nil else { return true }
+        let hasGoneFurther = feeds.values.contains { $0.items.count > $0.firstPageCount }
+        return !hasGoneFurther && now.timeIntervalSince(read) > Self.feedKeepsFor
+    }
+
+    /// The signed-in birder among a Guild's members: the account's ID, or until the account is read (it may not be, on a cached page
+    /// with no connection), the sign-in's, or the creator's if the birder created the circle.
+    func myID(in detail: CircleDetail) -> String? {
+        account.account?.id ?? account.identity.subject ?? (detail.circle.isCreator ? detail.circle.createdBy : nil)
+    }
+
+    /// A Guild's members as its page shows them: the blocked are gone from its faces and Compare, as their finds are. The Info sheet
+    /// still lists them, since that's where they're unblocked.
+    func visibleMembers(of detail: CircleDetail) -> [CircleMember] {
+        detail.members.filter { member in !blocked.contains { $0.id == member.id } }
+    }
+
+    private static let feedKeepsFor: TimeInterval = 60
+
+    /// The next page, from whichever Guild's next item is newest: the one whose last read find is newest, since its next find
+    /// can't be newer than that and any other's is older still. A Guild that has shown nothing, because all it has read so far is
+    /// someone blocked, goes first. It keeps reading until a new find shows or the pages run out.
+    func loadMoreMergedFeed() async {
+        let shown = mergedFeed.entries.count
+        while mergedFeed.entries.count == shown, let next = nextFeedToRead {
+            let before = feeds[next]?.nextCursor
+            await loadMoreFeed(circleID: next)
+            // A failure, or a read already on its way: it says so, and the birder can ask again.
+            if feeds[next]?.nextCursor == before { return }
+        }
+    }
+
+    private var nextFeedToRead: String? {
+        circles
+            .compactMap { circle -> (id: String, last: Date)? in
+                guard let feed = feeds[circle.id], feed.nextCursor != nil else { return nil }
+                return (circle.id, feed.items.last?.foundAt ?? .distantFuture)
+            }
+            .max { $0.last < $1.last }?
+            .id
     }
 
     /// Reads the circle's goals and their progress again. A failure keeps what was read; the card has nothing to say
     /// about it beyond the feed's own error.
     func loadGoals(circleID: String) async {
+        let session = session
         do {
-            goals[circleID] = try await call { try await $0.goals(circleID: circleID, accessToken: $1) }
+            let read = try await call { try await $0.goals(circleID: circleID, accessToken: $1) }
+            guard session == self.session else { return }
+            goals[circleID] = read
+            goalReads[circleID] = .now
+            cacheLater()
         } catch {
             log.error("couldn't load the goals: \(String(describing: error))")
         }
     }
+
+    /// A Guild's goal the birder is closest to finishing: for the line on Listen.
+    struct ClosestGoal: Equatable {
+        var circle: CircleSummary
+        var goal: CircleGoal
+    }
+
+    /// The monthly goal still running that's fewest birds from its target, across the birder's Guilds; the first listed of a tie. Nil
+    /// when nothing's running, for someone signed out, or once it's reached: a goal that's met isn't being chased. Goals can come from
+    /// the cache, so what's running is judged by the dates, not by the status last read.
+    func closestGoal(now: Date = .now) -> ClosestGoal? {
+        guard account.isSignedIn else { return nil }
+        return circles
+            .compactMap { circle -> ClosestGoal? in
+                goals[circle.id]?
+                    .first { $0.kind == .monthly && $0.startsAt <= now && now < $0.endsAt && !$0.isReached }
+                    .map { ClosestGoal(circle: circle, goal: $0) }
+            }
+            .min { $0.goal.target - $0.goal.progress < $1.goal.target - $1.goal.progress }
+    }
+
+    /// What Listen's line needs, on Listen appearing: the list once a launch, then each Guild's goals when they're a while old. Nothing
+    /// for someone signed out.
+    func loadRunningGoals(now: Date = .now) async {
+        guard client != nil, account.isSignedIn else { return }
+        // On its own task: Listen going away (a run starting, say) would cancel the read, and a cancelled list reads as a failed one.
+        await Task {
+            if !hasReadList { await refresh() }
+            let stale = circles.map(\.id).filter { id in goalReads[id].map { now.timeIntervalSince($0) > Self.goalsKeepFor } ?? true }
+            await withDiscardingTaskGroup { group in
+                for id in stale {
+                    group.addTask { await self.loadGoals(circleID: id) }
+                }
+            }
+        }.value
+    }
+
+    private static let goalsKeepFor: TimeInterval = 300
 
     /// A custom goal for the circle; the list is read again so it lands in the server's order.
     @discardableResult
@@ -187,6 +513,7 @@ final class CircleStore {
     func deleteGoal(id: String, circleID: String) async throws {
         try await call { try await $0.deleteGoal(id: id, circleID: circleID, accessToken: $1) }
         goals[circleID]?.removeAll { $0.id == id }
+        cacheLater()
     }
 
     /// A push came (issue #63): the list again, and the feeds of the circles it names (every feed the phone has read
@@ -196,7 +523,7 @@ final class CircleStore {
         await refresh()
         let open = circleIDs.isEmpty ? Array(feeds.keys) : circleIDs.filter { feeds[$0] != nil }
         for id in open {
-            await loadFeed(circleID: id)
+            await refreshFeed(circleID: id)
             // A find moves its circle's goals (issue #65).
             if goals[id] != nil { await loadGoals(circleID: id) }
         }
@@ -228,6 +555,7 @@ final class CircleStore {
             }
             if reactionTurns[item.id] == turn {
                 update(item.id) { var item = $0; item.reactions = counts; return item }
+                cacheLater()
             }
         } catch {
             log.error("couldn't react: \(String(describing: error))")
@@ -244,8 +572,11 @@ final class CircleStore {
     }
 
     func loadBlocks() async {
-        if let blocked = try? await call({ try await $0.blocks(accessToken: $1) }) {
+        let session = session
+        if let blocked = try? await call({ try await $0.blocks(accessToken: $1) }), session == self.session {
             self.blocked = blocked
+            forgetFinds(of: blocked.map(\.id))
+            indexFriends()
         }
     }
 
@@ -253,13 +584,153 @@ final class CircleStore {
     func setBlocked(_ isBlocked: Bool, accountID: String, name: String?) async throws {
         try await call { try await $0.setBlocked(isBlocked, accountID: accountID, accessToken: $1) }
         blocked.removeAll { $0.id == accountID }
-        if isBlocked { blocked.append(BlockedAccount(id: accountID, displayName: name)) }
-        for id in feeds.keys { await loadFeed(circleID: id) }
+        if isBlocked {
+            blocked.append(BlockedAccount(id: accountID, displayName: name))
+            forgetFinds(of: [accountID])
+        } else {
+            // Blocked, the server hid them. They can be read again.
+            friendsRead.remove(accountID)
+        }
+        indexFriends()
+        // A block only takes rows away, which has happened. An unblock brings back rows on pages already read, so it starts again.
+        for id in feeds.keys {
+            if isBlocked { await refreshFeed(circleID: id) } else { await loadFeed(circleID: id) }
+        }
     }
 
-    /// A friend's side of Compare birds (issue #64).
+    /// Blocked, here or on another device: their finds and birds go at once, in memory and on disk, without waiting on a
+    /// reload, which could fail.
+    private func forgetFinds(of accounts: [String]) {
+        guard !accounts.isEmpty else { return }
+        for id in feeds.keys { feeds[id]?.removeFinds(of: accounts) }
+        for id in accounts { friendBirds[id] = nil }
+        indexFriends()
+        cacheLater()
+    }
+
+    /// A friend's side of Compare birds (issue #64). The server answers not found for someone blocked, or no longer in a Guild
+    /// with the birder, and what was last read of them goes with that answer. An answer otherwise is the truth, even about
+    /// someone `blocked` still lists (unblocked on another device), unless the block landed while the answer was on its way,
+    /// which reads as the server would now answer.
+    @discardableResult
     func compare(friendID: String) async throws -> FriendBirds {
-        try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
+        let session = session
+        let wasBlocked = blocked.contains { $0.id == friendID }
+        let drops = friendsDropped[friendID, default: 0]
+        do {
+            let birds = try await call { try await $0.compare(friendID: friendID, accessToken: $1) }
+            if !wasBlocked, blocked.contains(where: { $0.id == friendID }) { throw CircleError.notFound }
+            // A Guild they shared went while this was on its way: it may count that Guild's finds, so ask again.
+            if session == self.session, friendsDropped[friendID, default: 0] != drops { return try await compare(friendID: friendID) }
+            if session == self.session {
+                friendBirds[friendID] = birds
+                friendsRead.insert(friendID)
+                indexFriends()
+            }
+            return birds
+        } catch CircleError.notFound {
+            if session == self.session {
+                friendBirds[friendID] = nil
+                indexFriends()
+            }
+            throw CircleError.notFound
+        }
+    }
+
+    // MARK: - Friends around the app
+
+    /// The friends in the birder's Guilds, by name: everyone but the birder and the blocked.
+    private var friends: [CircleMember] {
+        var seen = Set<String>()
+        var friends: [CircleMember] = []
+        for circle in circles {
+            guard let detail = details[circle.id] else { continue }
+            let me = myID(in: detail)
+            for member in visibleMembers(of: detail) where member.id != me && seen.insert(member.id).inserted {
+                friends.append(member)
+            }
+        }
+        return friends.sorted { ($0.name, $0.id) < ($1.name, $1.id) }
+    }
+
+    /// A friend's birds come from the Guilds the two share, so once one of those goes, what was read counts birds from it, even if
+    /// another Guild keeps them friends. Those friends' birds go at once, and the next screen reads them again.
+    private func dropFriendsBirds(of accounts: [String]) {
+        for id in accounts {
+            friendBirds[id] = nil
+            friendsRead.remove(id)
+            friendsDropped[id, default: 0] += 1
+        }
+        if !accounts.isEmpty { indexFriends() }
+    }
+
+    /// The friends who have this bird, by name.
+    func friends(having scientificName: String) -> [CircleMember] {
+        friendsBySpecies[scientificName] ?? []
+    }
+
+    private func indexFriends() {
+        var index: [String: [CircleMember]] = [:]
+        if !friendBirds.isEmpty {
+            for friend in friends {
+                for species in friendBirds[friend.id]?.species ?? [] where index[species.scientificName]?.last?.id != friend.id {
+                    index[species.scientificName, default: []].append(friend)
+                }
+            }
+        }
+        if index != friendsBySpecies { friendsBySpecies = index }
+    }
+
+    /// Reads each friend's birds, for a set's rows and a paper card: called by a screen showing them, once per screen rather than per
+    /// row, and each friend at most once a session, one at a time. Nothing for someone signed out or in no Guild. A screen that asks
+    /// during a read waits on that read. Any failed read stops there and leaves the rest for the next screen, so no connection costs
+    /// one call; a friend the server won't show stays read.
+    func loadFriendsBirds() async {
+        guard client != nil, account.isSignedIn else { return }
+        if let friendsSweep {
+            await friendsSweep.value
+            return
+        }
+        let session = session
+        let sweep = Task {
+            await readFriendsBirds(session: session)
+            if session == self.session { friendsSweep = nil }
+        }
+        friendsSweep = sweep
+        await sweep.value
+    }
+
+    private func readFriendsBirds(session: Int) async {
+        if !hasReadList {
+            await refresh()
+            guard hasReadList else { return }
+        }
+        for circle in circles where needsDetail(circle.id) {
+            guard session == self.session else { return }
+            do {
+                try await loadDetail(id: circle.id)
+            } catch CircleError.notFound {
+                continue
+            } catch {
+                log.error("couldn't read a Guild's members: \(String(describing: error))")
+                return
+            }
+        }
+        guard session == self.session else { return }
+        indexFriends()
+        for friend in friends where !friendsRead.contains(friend.id) {
+            guard session == self.session else { return }
+            friendsRead.insert(friend.id)
+            do {
+                try await compare(friendID: friend.id)
+            } catch CircleError.notFound {
+                continue
+            } catch {
+                log.error("couldn't read a friend's birds: \(String(describing: error))")
+                if session == self.session { friendsRead.remove(friend.id) }
+                return
+            }
+        }
     }
 
     private func update(_ itemID: String, _ change: (FeedItem) -> FeedItem) {
@@ -267,17 +738,83 @@ final class CircleStore {
             guard let index = feed.items.firstIndex(where: { $0.id == itemID }) else { continue }
             feeds[circleID]?.items[index] = change(feed.items[index])
         }
+        for (key, held) in heldFinds where held.id == itemID {
+            heldFinds[key]?.item = change(held.item)
+        }
     }
 
-    /// Signed out: nothing of the circles stays on the phone (the root calls it whenever the account signs out).
+    /// Whether a screen should read the Guild's detail: it hasn't been read this launch, though the cache may have drawn one.
+    func needsDetail(_ circleID: String) -> Bool { !freshDetails.contains(circleID) }
+
+    /// Whether a screen should read the Guild's goals: as for its detail.
+    func needsGoals(_ circleID: String) -> Bool { goalReads[circleID] == nil }
+
+    /// Signed out or the account deleted: nothing of the circles stays on the phone, in memory or on disk (the root calls it
+    /// whenever the account signs out).
     func clear() {
+        session += 1
         circles = []
         details = [:]
         feeds = [:]
         goals = [:]
+        friendBirds = [:]
+        friendsBySpecies = [:]
+        friendsRead = []
+        friendsDropped = [:]
+        friendsSweep = nil
+        hasReadList = false
+        goalReads = [:]
+        heldFinds = [:]
         mutes = Mutes()
         blocked = []
         listState = .idle
+        freshDetails = []
+        firstPageReads = [:]
+        cache?.remove()
+    }
+
+    // MARK: - The cache
+
+    private func restore(_ snapshot: CircleSnapshot) {
+        circles = snapshot.circles
+        details = snapshot.details
+        goals = snapshot.goals
+        feeds = snapshot.feeds.mapValues { page in
+            Feed(items: page.items, nextCursor: page.nextCursor, isLoaded: true, firstPageCount: page.items.count, firstPageCursor: page.nextCursor)
+        }
+        listState = .loaded
+    }
+
+    /// What goes on disk: the Guilds the birder is in now, and the first page of each feed.
+    var snapshot: CircleSnapshot {
+        let ids = Set(circles.map(\.id))
+        return CircleSnapshot(
+            circles: circles,
+            details: details.filter { ids.contains($0.key) },
+            feeds: feeds.filter { ids.contains($0.key) && $0.value.isLoaded }.mapValues { feed in
+                FeedPage(items: Array(feed.items.prefix(feed.firstPageCount)), nextCursor: feed.firstPageCursor)
+            },
+            goals: goals.filter { ids.contains($0.key) }
+        )
+    }
+
+    /// Writes the snapshot shortly: a refresh of several Guilds asks many times over and writes once.
+    private func cacheLater() {
+        guard cache != nil, !isCacheWriteWaiting else { return }
+        isCacheWriteWaiting = true
+        let session = session
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard let self else { return }
+            isCacheWriteWaiting = false
+            if session == self.session { writeCache() }
+        }
+    }
+
+    /// Writes the snapshot now, signed in. The store's own writes come through here.
+    func writeCache() {
+        guard account.isSignedIn else { return }
+        cache?.save(snapshot)
     }
 
     private func call<T>(_ body: (CircleClient, String) async throws -> T) async throws -> T {
@@ -287,20 +824,34 @@ final class CircleStore {
     }
 
     private func remember(_ detail: CircleDetail) {
+        // An answer that lands after the sign-out isn't kept.
+        guard account.isSignedIn else { return }
+        let gone = details[detail.circle.id]?.members.map(\.id).filter { id in !detail.members.contains { $0.id == id } } ?? []
         details[detail.circle.id] = detail
+        freshDetails.insert(detail.circle.id)
+        cacheLater()
         if let index = circles.firstIndex(where: { $0.id == detail.circle.id }) {
             circles[index] = detail.circle
         } else {
             circles.append(detail.circle)
         }
         if listState != .loaded { listState = .loaded }
+        dropFriendsBirds(of: gone)
+        indexFriends()
     }
 
     private func forget(_ id: String) {
+        // With no members read, anyone read may have been in it.
+        dropFriendsBirds(of: details[id]?.members.map(\.id) ?? Array(friendBirds.keys))
         circles.removeAll { $0.id == id }
         details[id] = nil
         feeds[id] = nil
         goals[id] = nil
+        freshDetails.remove(id)
+        goalReads[id] = nil
+        firstPageReads[id] = nil
+        indexFriends()
+        cacheLater()
     }
 
     /// The words for a failure, on the screen where it happened.
@@ -326,16 +877,37 @@ extension CircleStore {
     static var blocksAvailable: Bool { AccountSession.isEnabledInThisBuild }
 
     /// The app's store: the bundled server's API, or none when the build has no server (the tab then says circles
-    /// aren't available). In debug builds `-fakeCircles empty|some|offline`, or `-fakeAccount` alone, swaps in the in-memory
+    /// aren't available). In debug builds `-fakeCircles empty|one|some|shared|reference|offline`, or `-fakeAccount` alone, swaps in the in-memory
     /// fake, so the UI tests and screenshots need no network.
     static func forApp(account: AccountSession) -> CircleStore {
         #if DEBUG
         let defaults = UserDefaults.standard
         if let mode = defaults.string(forKey: "fakeCircles") ?? defaults.string(forKey: "fakeAccount").map({ _ in "empty" }) {
-            return CircleStore(account: account, client: FakeCircleClient(seeded: mode == "some", offline: mode == "offline"))
+            let client = FakeCircleClient(seeded: ["some", "shared", "reference"].contains(mode), offline: mode == "offline")
+            if mode == "one" { client.seedOneGuild() }
+            if mode == "shared" { client.seedSharedFinds() }
+            if mode == "reference" { client.seedReference() }
+            let lateFinds = defaults.integer(forKey: "fakeLateFinds")
+            client.latency = .seconds(defaults.double(forKey: "fakeCircleLatency"))
+            client.goalRisesBy = defaults.integer(forKey: "fakeGoalRises")
+            client.reactionsFail = defaults.bool(forKey: "fakeReactionsFail")
+            // `-circleCacheFile <name>` keeps the fakes' last-known content in tmp, so a UI test can relaunch over it.
+            let cache = defaults.string(forKey: "circleCacheFile").map { CircleCache(fileURL: URL.temporaryDirectory.appending(path: "\($0).json")) }
+            let store = CircleStore(account: account, client: client, cache: cache)
+            // `-fakeLateFinds <n>` (issue #150): n finds land `-fakeLateFindsAfter <seconds>` from launch, and a push says so.
+            if lateFinds > 0 {
+                let delay = defaults.double(forKey: "fakeLateFindsAfter")
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(delay))
+                    client.addLateFinds(lateFinds)
+                    await store.refreshAfterPush(circleIDs: [])
+                    LateFindsProbe.shared.hasLanded = true
+                }
+            }
+            return store
         }
         #endif
         guard let server = AccountServer.bundled() else { return CircleStore(account: account, client: nil) }
-        return CircleStore(account: account, client: HTTPCircleClient(baseURL: server.apiURL))
+        return CircleStore(account: account, client: HTTPCircleClient(baseURL: server.apiURL), cache: .forApp())
     }
 }

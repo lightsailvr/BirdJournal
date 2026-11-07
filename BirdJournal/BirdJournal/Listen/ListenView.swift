@@ -2,7 +2,6 @@ import Album
 import Identification
 import MWDATCore
 import Pack
-import SwiftData
 import SwiftUI
 
 /// The Listen tab (issue #28; issue #117's ready and active states): one Start listening action over the chosen audio
@@ -11,7 +10,11 @@ import SwiftUI
 /// `ListeningCoordinator`, so leaving the tab never ends one.
 struct ListenView: View {
     @Environment(ListeningCoordinator.self) private var run
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
+    @Environment(\.warmEngine) private var warmEngine
+    /// Whether another page covers this one: a page pushed on the tab's stack, or another tab.
+    var isCovered = false
 
     var body: some View {
         @Bindable var run = run
@@ -19,7 +22,7 @@ struct ListenView: View {
             if run.state.isActive || (run.state != .idle && !run.candidates.isEmpty) {
                 ActiveListeningView()
             } else {
-                ReadyToListenView()
+                ReadyToListenView(isCovered: isCovered)
             }
         }
         .toolbar {
@@ -32,9 +35,6 @@ struct ListenView: View {
         .sheet(item: $run.reviewing) { candidate in
             CandidateReviewSheet(candidate: candidate)
         }
-        .sheet(isPresented: $run.isReviewing) {
-            RunReviewSheet()
-        }
         .safeAreaInset(edge: .bottom) {
             // Over the review, the sheet has its own: two would each tick, with two haptics.
             if let acknowledgment = run.acknowledgment, !run.isReviewing {
@@ -45,7 +45,18 @@ struct ListenView: View {
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: run.acknowledgment)
+        // After the first frame, so Start is ready before it's tapped (issue #150). Not during a run: it holds its own engine,
+        // and if a memory warning has dropped the shared one, this would load a second beside it.
+        .task {
+            try? await Task.sleep(for: .milliseconds(300))
+            if !Task.isCancelled, !run.state.isActive { warmEngine() }
+        }
     }
+}
+
+extension EnvironmentValues {
+    /// Loads the identification engine ahead of a run. The app's root sets it; elsewhere nothing happens.
+    @Entry var warmEngine: () -> Void = {}
 }
 
 /// The calm ready state (issue #117, design guide page 11): the local set's cover as the atmosphere, the connection
@@ -55,22 +66,38 @@ private struct ReadyToListenView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
-    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
+    @Environment(CurrentPlace.self) private var place
+    @Environment(CircleStore.self) private var circles
+    @Environment(\.scenePhase) private var scenePhase
+    var isCovered = false
     @State private var choosingSource = false
 
+    /// What a new read of the place answers to: Listen appearing (a task always starts then), coming back to the front, a set
+    /// the phone has just learned, or a sighting that moves the fallback.
+    private struct PlaceRead: Equatable {
+        let sets: [String]
+        let newest: String?
+        let inFront: Bool
+    }
+
+    /// The status bar's height, which the cover runs under: the window's inset, since this page's own safe area also counts the
+    /// navigation bar, and the cover's words stay where they were without one.
+    private static var statusBarInset: CGFloat? {
+        UIApplication.shared.connectedScenes.lazy.compactMap { $0 as? UIWindowScene }.first?.keyWindow?.safeAreaInsets.top
+    }
+
     var body: some View {
-        let collection = library.collection(of: sightings)
-        let local = LocalSet.find(library: library, collection: collection, newest: sightings.first)
+        let collection = collectionStore.collection
+        let local = LocalSet(setID: place.setID, library: library, collection: collection)
         GeometryReader { proxy in
+            ScrollViewReader { scroll in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ListenCoverHeader(local: local, topInset: proxy.safeAreaInsets.top)
+                    // The cover's words sit under the status bar, level with the gear on the navigation bar.
+                    ListenCoverHeader(local: local, topInset: Self.statusBarInset ?? proxy.safeAreaInsets.top)
                     VStack(alignment: .leading, spacing: 0) {
                         AudioSourceRow(source: run.source, status: sourceStatus, isConnected: isConnected) { choosingSource = true }
-                        Text(run.source.microphoneText)
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
-                            .padding(.top, 8)
 
                         if case .ended(.failed(let message)) = run.state {
                             ErrorNotice(Self.failureTitle(message), message: message, symbol: Self.failureSymbol(message)) {
@@ -99,41 +126,41 @@ private struct ReadyToListenView: View {
                         .padding(.top, 20)
                         .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
 
-                        Text(run.source == .glasses ? "You can lock your phone and look up." : "Keep your phone out where it can hear.")
-                            .font(JournalFont.supporting)
-                            .foregroundStyle(Color.inkSecondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 12)
-
                         if let local {
-                            LocalSetSection(local: local, collection: collection, sightings: sightings)
+                            LocalSetSection(local: local, collection: collection)
+                                .id("local-set")
                         }
+                        GuildGoalLine()
+                            .padding(.top, 18)
                     }
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.top, -36)
                     .padding(.bottom, JournalLayout.sectionGap)
                 }
             }
+            .keepsItsFootUnderAPage(isCovered: isCovered)
             .ignoresSafeArea(edges: .top)
             .background(Color.paper)
-            .overlay(alignment: .topTrailing) {
-                NavigationLink(value: Route.settings) {
-                    Image(systemName: "gearshape")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(.black.opacity(0.28), in: Circle())
-                }
-                .accessibilityLabel("Settings")
-                .padding(.trailing, JournalLayout.margin - 6)
-                .padding(.top, 4)
+            #if DEBUG
+            .debugScroll(scroll, to: "local-set")
+            #endif
             }
         }
         .navigationTitle("Listen")
-        .toolbar(.hidden, for: .navigationBar)
+        // The bar stays for the gear, on real glass over the painting (issue #150); the painting carries the screen's words.
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(removing: .title)
+        .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
         .sheet(isPresented: $choosingSource) {
             AudioSourceSheet()
+        }
+        .task(id: PlaceRead(sets: collection.sets.map(\.id), newest: LocalSet.newestSetID(in: collection), inFront: scenePhase != .background)) {
+            if scenePhase != .background { await place.refresh() }
+        }
+        // After the first frame, like the engine.
+        .task {
+            try? await Task.sleep(for: .milliseconds(300))
+            if !Task.isCancelled { await circles.loadRunningGoals() }
         }
         #if DEBUG
         .task {
@@ -255,7 +282,7 @@ struct RecoveryActions: View {
 struct AudioSourceRow: View {
     let source: ListeningCoordinator.Source
     let status: String
-    /// A dot before the status: the moss of a source ready to listen, or a hollow ring.
+    /// A dot before the status: the tint for a source ready to listen, or a hollow ring.
     var isConnected: Bool?
     var isEnabled = true
     let action: () -> Void
@@ -274,7 +301,7 @@ struct AudioSourceRow: View {
                     HStack(spacing: 6) {
                         if let isConnected {
                             Circle()
-                                .fill(isConnected ? Color.moss : Color.clear)
+                                .fill(isConnected ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color.clear))
                                 .overlay(Circle().strokeBorder(isConnected ? Color.clear : Color.inkSecondary, lineWidth: 1.5))
                                 .frame(width: 8, height: 8)
                                 .accessibilityHidden(true)
@@ -296,7 +323,7 @@ struct AudioSourceRow: View {
             .frame(minHeight: 60)
             .background(Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.journalPress)
         .disabled(!isEnabled)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(source.title), \(status)")

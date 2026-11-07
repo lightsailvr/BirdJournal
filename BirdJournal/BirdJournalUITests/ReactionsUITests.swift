@@ -30,13 +30,24 @@ final class ReactionsUITests: XCTestCase {
         app.scrolledTo(lovely, limit: 24)
         XCTAssertTrue(lovely.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(lovely.value as? String, "2 reactions", "Jo's and Sam's, seeded")
+        // A real target for a thumb, whatever the pill looks like (issue #150).
+        XCTAssertGreaterThanOrEqual(lovely.frame.height, 44)
         XCTAssertFalse(lovely.isSelected)
         screenshot(app, "64-feed-reactions")
+        // Three equal pills across the row (issue #150, G9), whatever their names' lengths.
+        let together = app.buttons["react-together-\(Self.mayasPhoebe)"]
+        let jealous = app.buttons["react-jealous-\(Self.mayasPhoebe)"]
+        XCTAssertEqual(lovely.label, "Lovely find")
+        XCTAssertEqual(jealous.label, "Jealous!")
+        XCTAssertEqual(together.label, "Let's go together")
+        XCTAssertEqual(lovely.frame.width, together.frame.width, accuracy: 1)
+        XCTAssertEqual(lovely.frame.width, jealous.frame.width, accuracy: 1)
 
         lovely.tap()
         XCTAssertTrue(lovely.wait(for: \.isSelected, toEqual: true, timeout: 5))
+        // A reaction stays on the feed: it isn't a way into the find.
+        XCTAssertFalse(app.navigationBars["Maya's find"].exists)
         XCTAssertEqual(lovely.value as? String, "3 reactions")
-        let together = app.buttons["react-together-\(Self.mayasPhoebe)"]
         XCTAssertEqual(together.value as? String, "1 reaction")
         screenshot(app, "64-feed-reacted")
 
@@ -49,6 +60,179 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertEqual(app.textFields.count + app.textViews.count, 0)
     }
 
+    /// Finds land above the row the reader is on, by a push: it stays where it is, and a tap lands on what it's aimed at (issue #150).
+    /// The reader's on the feed's first row, where a find lands right above them: further down, the system holds the rows by itself,
+    /// so a row further down proves nothing. Without `.scrollPosition` this row slides down by a row's height, 191 pt.
+    @MainActor
+    private func assertRowHoldsStill(lateFinds: Int, screen: String = "circle", restingAt y: CGFloat = 140, file: StaticString = #filePath, line: UInt = #line) {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", screen, "-fakeLateFinds", "\(lateFinds)", "-fakeLateFindsAfter", "30"])
+        let sams = "00000000-0000-4000-8000-000000000003"
+        let row = app.buttons["find-\(sams)"]
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        // A slow drag, so it comes to rest where it's let go.
+        for _ in 0..<10 where row.frame.minY > y {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).press(
+                forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+                withVelocity: .slow, thenHoldForDuration: 0.3
+            )
+        }
+        Thread.sleep(forTimeInterval: 1)
+        let landed = app.staticTexts["late-finds-landed"]
+        XCTAssertFalse(landed.exists, "they landed before there was anything to compare", file: file, line: line)
+        let before = row.frame.minY
+        XCTAssertTrue(landed.waitForExistence(timeout: 90), "they never landed", file: file, line: line)
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(row.frame.minY, before, accuracy: 2, "the row moved under the reader", file: file, line: line)
+        let lovely = app.buttons["react-lovely-\(sams)"]
+        lovely.tap()
+        XCTAssertTrue(lovely.wait(for: \.isSelected, toEqual: true, timeout: 5), "the tap landed elsewhere", file: file, line: line)
+
+        // They did land, above.
+        XCTAssertTrue(app.buttons["find-late-0"].exists || app.buttons["find-late-\(lateFinds - 1)"].exists, "no late find near; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+    }
+
+    @MainActor
+    func testOneLateFindLeavesTheRowWhereItIs() {
+        assertRowHoldsStill(lateFinds: 1)
+    }
+
+    @MainActor
+    func testALateFindLeavesARowPartWayUpThePageWhereItIs() {
+        assertRowHoldsStill(lateFinds: 1, restingAt: 300)
+    }
+
+    @MainActor
+    func testFifteenLateFindsLeaveTheRowWhereItIs() {
+        assertRowHoldsStill(lateFinds: 15)
+    }
+
+    /// More than a page's worth: the refresh reads a second page to meet what's been read.
+    @MainActor
+    func testTwentyFiveLateFindsLeaveTheRowWhereItIs() {
+        assertRowHoldsStill(lateFinds: 25)
+    }
+
+    /// On the feed across Guilds, too.
+    @MainActor
+    func testALateFindLeavesARowOnTheTabWhereItIs() {
+        assertRowHoldsStill(lateFinds: 1, screen: "circles")
+    }
+
+    /// Scrolled away and back to the very top, a late find lands in sight and the header stays put, as for a birder who never scrolled.
+    @MainActor
+    private func assertBackAtTheTopAFindLandsInSight(screen: String, pulling: Bool = false, header: (XCUIApplication) -> XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", screen, "-fakeLateFinds", "1", "-fakeLateFindsAfter", "40"])
+        let row = app.buttons["find-00000000-0000-4000-8000-000000000003"]
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        if pulling {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)))
+        } else {
+            let start = row.frame.minY
+            for _ in 0..<8 where row.frame.minY > 140 {
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).press(
+                    forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+                    withVelocity: .slow, thenHoldForDuration: 0.3
+                )
+            }
+            XCTAssertLessThan(row.frame.minY, start, "it never scrolled away", file: file, line: line)
+            for _ in 0..<3 { app.swipeDown() }
+        }
+        Thread.sleep(forTimeInterval: 2)
+        let landed = app.staticTexts["late-finds-landed"]
+        XCTAssertFalse(landed.exists, "they landed before there was anything to compare", file: file, line: line)
+        let top = header(app)
+        XCTAssertTrue(top.isHittable, "not back at the top; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        let before = top.frame.minY
+        XCTAssertTrue(landed.waitForExistence(timeout: 90), "they never landed", file: file, line: line)
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(top.frame.minY, before, accuracy: 2, "the header moved under the reader", file: file, line: line)
+        XCTAssertTrue(top.isHittable, file: file, line: line)
+        let late = app.buttons["find-late-0"]
+        XCTAssertTrue(late.exists, "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        XCTAssertGreaterThan(late.frame.minY, 0, "out of sight: \(late.frame)", file: file, line: line)
+        XCTAssertLessThan(late.frame.minY, app.frame.height, "out of sight: \(late.frame)", file: file, line: line)
+    }
+
+    @MainActor
+    func testBackAtTheTopOfAGuildAFindLandsInSight() {
+        assertBackAtTheTopAFindLandsInSight(screen: "circle") { $0.buttons["Invite friends"] }
+    }
+
+    @MainActor
+    func testBackAtTheTopOfTheTabAFindLandsInSight() {
+        assertBackAtTheTopAFindLandsInSight(screen: "circles") { $0.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sunday Group'")).firstMatch }
+    }
+
+    @MainActor
+    func testAfterAPullAtTheTopAFindLandsInSight() {
+        assertBackAtTheTopAFindLandsInSight(screen: "circle", pulling: true) { $0.buttons["Invite friends"] }
+    }
+
+    /// Finds, Compare birds and back, from part way down, comes back to the same place.
+    @MainActor
+    func testFindsComeBackFromCompareWhereTheyWere() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
+        let row = app.buttons["find-00000000-0000-4000-8000-000000000003"]
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))")
+        let picker = app.segmentedControls["circlePageShowing"]
+        // The picker still on screen to tap, the header gone.
+        for _ in 0..<10 where row.frame.minY > 160 {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).press(
+                forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)),
+                withVelocity: .slow, thenHoldForDuration: 0.3
+            )
+        }
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertTrue(picker.isHittable, "\(picker.frame); screen: \(app.debugDescription.prefix(3000))")
+        let before = row.frame.minY
+        picker.buttons["Compare birds"].tap()
+        XCTAssertTrue(app.buttons["compareWith-maya"].waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(picker.isHittable, "Compare pulled the page away from the picker: \(picker.frame)")
+        picker.buttons["Finds"].tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(row.frame.minY, before, accuracy: 2)
+    }
+
+    /// The foot of a Guild's page, there and back from a find. The find's page hides the tab bar, which shouldn't move the rows.
+    @MainActor
+    func testTheFootOfAGuildStaysPutThroughAFind() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
+        // Maya's House Finch is the last find.
+        let last = app.buttons["find-00000000-0000-4000-8000-000000000005"]
+        XCTAssertTrue(app.scrolledTo(last, limit: 24), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<3 { app.swipeUp() }
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertTrue(last.isHittable, "screen: \(app.debugDescription.prefix(3000))")
+        for time in 1...2 {
+            let before = last.frame.minY
+            last.tap()
+            XCTAssertTrue(app.navigationBars["Maya's find"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+            Thread.sleep(forTimeInterval: 0.5)
+            app.navigationBars.buttons.firstMatch.tap()
+            XCTAssertTrue(last.waitForExistence(timeout: 5))
+            Thread.sleep(forTimeInterval: 3)
+            XCTAssertEqual(last.frame.minY, before, accuracy: 2, "return \(time)")
+        }
+    }
+
+    /// A reaction that doesn't land goes back, and says so beside it rather than at the far end of the feed.
+    @MainActor
+    func testAFailedReactionSaysSoBesideIt() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-fakeReactionsFail", "YES", "-autoScreen", "circle"])
+        let lovely = app.buttons["react-lovely-\(Self.mayasPhoebe)"]
+        XCTAssertTrue(app.scrolledTo(lovely, limit: 24), "screen: \(app.debugDescription.prefix(3000))")
+        lovely.tap()
+        let error = app.descendants(matching: .any)["reaction-error-\(Self.mayasPhoebe)"]
+        XCTAssertTrue(error.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(error.label.contains("send your reaction"), error.label)
+        XCTAssertEqual(error.frame.minY, lovely.frame.maxY, accuracy: 30, "beside the reaction")
+        XCTAssertLessThan(error.frame.maxY, app.frame.height, "on screen")
+        XCTAssertFalse(lovely.isSelected, "it goes back")
+        XCTAssertEqual(lovely.value as? String, "2 reactions")
+    }
+
     @MainActor
     func testComparingBirdsWithAFriend() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-seedJournal", "YES", "-autoScreen", "circle"])
@@ -57,9 +241,8 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertTrue(app.scrolledTo(picker), "screen: \(app.debugDescription.prefix(3000))")
         picker.buttons["Compare birds"].tap()
         let maya = app.buttons["compareWith-maya"]
-        // Below the goal card (issue #65): the list builds the friends only once scrolled to.
-        for _ in 0..<6 where !maya.exists || !maya.isHittable { app.swipeUp() }
         XCTAssertTrue(maya.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<6 where !maya.isHittable { app.swipeUp() }
         XCTAssertFalse(app.buttons["compareWith-fake-sub"].exists, "never yourself")
         screenshot(app, "64-compare-friends")
         maya.tap()
@@ -70,7 +253,7 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertEqual(woodpecker.label, "Acorn Woodpecker. You: Not yet. Maya: Heard.")
         let phoebe = app.descendants(matching: .any)["compare-Sayornis nigricans"]
         XCTAssertTrue(phoebe.label.hasSuffix("Maya: Seen."), phoebe.label)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH[c] 'Maya has, you haven'")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Maya has these. Go find them."].exists)
         screenshot(app, "64-compare")
     }
 }

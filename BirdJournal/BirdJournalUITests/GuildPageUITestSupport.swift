@@ -1,12 +1,28 @@
 import XCTest
 
-/// A Guild's page (issue #118) leads with its cover, emblem, members and Invite, then the goals, so the feed, the
-/// members and the settings sit further down, and the list builds only the rows on screen.
+/// A Guild's page leads with its emblem, members and Invite, then the goal, so the feed sits further down, and the page builds
+/// only the rows near the screen. The goals, the members and the settings are in its Info sheet (issue #150).
 extension XCUIApplication {
     /// Swipes up until `element` exists and is hittable, at most `limit` times; whether it got there.
     @discardableResult
     func scrolledTo(_ element: XCUIElement, limit: Int = 20) -> Bool {
         for _ in 0..<limit where !(element.exists && element.isHittable) { swipeUp() }
+        return element.exists && element.isHittable
+    }
+
+    /// The Info sheet on a Guild's page.
+    func openGuildInfo(file: StaticString = #filePath, line: UInt = #line) {
+        let info = buttons["guildInfo"]
+        XCTAssertTrue(info.waitForExistence(timeout: 10), "no Info; screen: \(debugDescription.prefix(3000))", file: file, line: line)
+        info.tap()
+        XCTAssertTrue(navigationBars.buttons["Done"].waitForExistence(timeout: 5), "no sheet; screen: \(debugDescription.prefix(3000))", file: file, line: line)
+    }
+
+    /// Scrolls the Info sheet's list until `element` can be touched; whether it got there.
+    @discardableResult
+    func scrolledInGuildInfo(to element: XCUIElement, limit: Int = 12) -> Bool {
+        let list = collectionViews.firstMatch
+        for _ in 0..<limit where !(element.exists && element.isHittable) { list.swipeUp() }
         return element.exists && element.isHittable
     }
 

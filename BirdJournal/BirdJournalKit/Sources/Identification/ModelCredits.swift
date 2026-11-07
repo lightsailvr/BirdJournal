@@ -28,7 +28,7 @@ public enum ModelCredits {
 
     public static let geomodel = ModelAttribution(
         name: "BirdNET+ geomodel v3.0.4",
-        role: "Regional filter: which species occur at a place and week of the year.",
+        role: "Place filter: which species occur at a place and week of the year.",
         license: "Apache-2.0",
         licenseURL: URL(string: "https://www.apache.org/licenses/LICENSE-2.0")!,
         sourceURL: URL(string: "https://github.com/birdnet-team/geomodel/releases/tag/v3.0.4")!,

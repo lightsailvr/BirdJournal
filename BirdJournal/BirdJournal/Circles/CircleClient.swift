@@ -3,7 +3,7 @@ import Foundation
 
 /// One of the birder's circles as the list shows it (backend `GET /v1/circles`, issue #61). Named `CircleSummary`, not
 /// `Circle`, beside SwiftUI's shape.
-struct CircleSummary: Equatable, Identifiable, Decodable, Sendable {
+struct CircleSummary: Equatable, Identifiable, Codable, Sendable {
     var id: String
     var name: String
     var createdBy: String
@@ -23,7 +23,7 @@ struct CircleSummary: Equatable, Identifiable, Decodable, Sendable {
     }
 }
 
-struct CircleMember: Equatable, Identifiable, Decodable, Sendable {
+struct CircleMember: Equatable, Identifiable, Codable, Sendable {
     var id: String
     var displayName: String?
     var joinedAt: Date
@@ -40,14 +40,22 @@ struct CircleMember: Equatable, Identifiable, Decodable, Sendable {
     var name: String { displayName ?? "A birder" }
 
     /// Avatars are initials only (spec v2, "Accounts and the app client").
-    var initials: String {
+    var initials: String { Self.initials(of: name) }
+
+    /// "MO", from "Maya Ortiz": the first two words' first letters.
+    static func initials(of name: String) -> String {
         let words = name.split(whereSeparator: \.isWhitespace).prefix(2)
         return words.compactMap(\.first).map(String.init).joined().uppercased()
+    }
+
+    /// "Maya", from "Maya Ortiz".
+    static func firstName(of name: String) -> String {
+        name.split(separator: " ").first.map(String.init) ?? name
     }
 }
 
 /// A circle's page: the circle and its current members, oldest first.
-struct CircleDetail: Equatable, Decodable, Sendable {
+struct CircleDetail: Equatable, Codable, Sendable {
     var circle: CircleSummary
     var members: [CircleMember]
 
@@ -59,6 +67,12 @@ struct CircleDetail: Equatable, Decodable, Sendable {
     init(from decoder: Decoder) throws {
         circle = try CircleSummary(from: decoder)
         members = try decoder.container(keyedBy: CodingKeys.self).decode([CircleMember].self, forKey: .members)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try circle.encode(to: encoder)
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(members, forKey: .members)
     }
 
     enum CodingKeys: String, CodingKey { case members }
@@ -93,8 +107,8 @@ struct InvitePreview: Equatable, Decodable, Sendable {
 
 /// One find in a circle's feed (backend `GET /v1/circles/<id>/feed`, issue #62): what the owner's find policy sent,
 /// with who found it and whether it is the circle's first of the species.
-struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
-    struct Owner: Equatable, Decodable, Sendable {
+struct FeedItem: Equatable, Identifiable, Codable, Sendable {
+    struct Owner: Equatable, Codable, Sendable {
         var id: String
         var displayName: String?
 
@@ -106,7 +120,7 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
         var name: String { displayName ?? "A birder" }
     }
 
-    struct Art: Equatable, Decodable, Sendable {
+    struct Art: Equatable, Codable, Sendable {
         var kind: String
         var key: String
         /// On the art CDN; nil before the stack has one. Without it the row shows the edition's blank.
@@ -143,8 +157,8 @@ struct FeedItem: Equatable, Identifiable, Decodable, Sendable {
     var edition: String? = nil
 
     /// A card shared by hand: the note, the caption and the original photo the owner chose for this circle.
-    struct SharedCard: Equatable, Decodable, Sendable {
-        struct Photo: Equatable, Decodable, Sendable {
+    struct SharedCard: Equatable, Codable, Sendable {
+        struct Photo: Equatable, Codable, Sendable {
             var key: String
             var url: URL?
         }
@@ -269,7 +283,7 @@ enum ReactionKind: String, CaseIterable, Codable, Sendable, Identifiable {
     }
 }
 
-struct ReactionCount: Equatable, Sendable {
+struct ReactionCount: Equatable, Encodable, Sendable {
     var kind: ReactionKind
     var count: Int
     /// Whether the signed-in birder gave it.
@@ -301,12 +315,15 @@ struct FriendBirds: Equatable, Decodable, Sendable {
         var scientificName: String
         var commonName: String
         var method: SightingMethod
+        /// The sets (pack ids) the friend found it in, earliest found first, so the first is the patch to show (issue #150). Empty
+        /// when none names a set, or from a server too old to say. The finder's phone's word: it may name a set nobody knows.
+        var editions: [String] = []
 
         enum CodingKeys: String, CodingKey {
             case speciesID = "species_id"
             case scientificName = "scientific_name"
             case commonName = "common_name"
-            case method
+            case method, editions
         }
     }
 
@@ -314,8 +331,19 @@ struct FriendBirds: Equatable, Decodable, Sendable {
     var species: [Species]
 }
 
+extension FriendBirds.Species {
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        speciesID = try values.decode(String.self, forKey: .speciesID)
+        scientificName = try values.decode(String.self, forKey: .scientificName)
+        commonName = try values.decode(String.self, forKey: .commonName)
+        method = try values.decode(SightingMethod.self, forKey: .method)
+        editions = try values.decodeIfPresent([String].self, forKey: .editions) ?? []
+    }
+}
+
 /// A page of the feed, newest first; `nextCursor` asks for the next.
-struct FeedPage: Equatable, Decodable, Sendable {
+struct FeedPage: Equatable, Codable, Sendable {
     var items: [FeedItem]
     var nextCursor: String?
 
@@ -327,9 +355,26 @@ struct FeedPage: Equatable, Decodable, Sendable {
 
 /// A circle's goal (backend `GET /v1/circles/<id>/goals`, issue #65): the automatic monthly goal or a custom one, with
 /// its progress, the distinct species among the circle's finds in the period.
-struct CircleGoal: Equatable, Identifiable, Decodable, Sendable {
-    enum Kind: String, Decodable, Sendable { case monthly, custom }
-    enum Status: String, Decodable, Sendable { case upcoming, active, ended }
+struct CircleGoal: Equatable, Identifiable, Codable, Sendable {
+    enum Kind: String, Codable, Sendable { case monthly, custom }
+    enum Status: String, Codable, Sendable { case upcoming, active, ended }
+
+    /// A species counted so far, with no finder (issue #150). All of it is the finder's phone's word: names come from the packs
+    /// by `scientificName`, and an edition may name a set nobody knows.
+    struct Species: Equatable, Codable, Sendable {
+        var speciesID: String
+        var scientificName: String
+        var commonName: String
+        /// The set (pack id) of its earliest find in the period that names one.
+        var edition: String?
+
+        enum CodingKeys: String, CodingKey {
+            case speciesID = "species_id"
+            case scientificName = "scientific_name"
+            case commonName = "common_name"
+            case edition
+        }
+    }
 
     var id: String
     var kind: Kind
@@ -349,9 +394,11 @@ struct CircleGoal: Equatable, Identifiable, Decodable, Sendable {
     var createdBy: FeedItem.Owner?
     /// The goal's creator or the circle's creator may delete a custom goal.
     var canDelete: Bool
+    /// What `progress` counted, earliest found first; nil from a server too old to say, and the goal is thread alone.
+    var species: [Species]? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, kind, title, target, progress, status
+        case id, kind, title, target, progress, status, species
         case startDate = "start_date"
         case endDate = "end_date"
         case startsAt = "starts_at"

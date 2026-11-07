@@ -10,7 +10,7 @@ struct AccountView: View {
     @State private var confirmingDeletion = false
 
     var body: some View {
-        List {
+        PaperList {
             switch account.status {
             case .unavailable:
                 Section {
@@ -36,7 +36,6 @@ struct AccountView: View {
                 }
             }
         }
-        .paperList()
         .navigationTitle("Account")
         .task(id: account.status) {
             if account.isSignedIn, account.account == nil { await account.loadAccount() }
@@ -66,7 +65,14 @@ struct AccountView: View {
         }
     }
 
+    @ViewBuilder
     private var signedOut: some View {
+        Section {
+            PerchedFinch()
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+        }
         Section {
             SignInButtons()
         } header: {
@@ -128,12 +134,12 @@ struct AccountView: View {
 
     /// What deleting takes, in the alert (issue #71).
     static func deletionWarning(apple: Bool) -> String {
-        var text = "This deletes your account, your finds, reactions, shared cards and photos, and your place in every Guild. A Guild you started passes to its longest-standing member. This can't be undone. Your collection stays on this iPhone."
+        var text = "This deletes your account, your finds, reactions, shared patches and photos, and your place in every Guild. A Guild you started passes to its longest-standing member. This can't be undone. Your collection stays on this iPhone."
         if apple { text += " Apple will ask you to confirm once more, so Featherguild can stop using your Apple ID." }
         return text
     }
 
-    static let optionalNote = "An account is optional. Listening, your collection and bird packs all work without one; signing in will let you join Guilds with friends."
+    static let optionalNote = "An account is optional. Listening, your collection and field-guide downloads all work without one; signing in will let you join Guilds with friends."
 }
 
 /// Sign in with Apple and with Google, as list rows: Settings → Account, the Circles tab and the join screen.

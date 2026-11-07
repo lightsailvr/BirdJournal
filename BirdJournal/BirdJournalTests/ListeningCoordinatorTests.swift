@@ -53,6 +53,306 @@ struct ListeningCoordinatorTests {
         return Harness(album: album, frames: frames, source: source, run: run, sightings: sightings, location: location, rarityPrior: rarityPrior, defaults: defaults)
     }
 
+    @Test("an add keeps the method chosen on the review sheet, and is Heard otherwise (issue #150)")
+    func addKeepsTheChosenMethod() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+
+        try #require(await run.add(run.candidates[0], method: .seen))
+        try #require(await run.add(run.candidates[1]))
+        #expect(harness.stored.filter { $0.method == .seen }.count == 1)
+        #expect(harness.stored.filter { $0.method == .heard }.count == 1)
+
+        await run.stop()
+    }
+
+    // Issue #150: Sew it and Add on a row are the review sheet's own add.
+
+    @Test("Sew it on a row sews like the review sheet: Heard, the reveal, the acknowledgment with Undo, and Undo takes it all back")
+    func sewItFromTheRow() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let finch = run.candidates[0]
+        func collection() -> CardCollection { CardCollection(sightings: harness.stored) }
+        #expect(CandidateLook(seenHere: collection().count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch)) == .newHere)
+
+        let addition = try #require(await run.addFromRow(finch, isDescribed: true))
+        #expect(addition.sewsPatch)
+        #expect(harness.stored.count == 1)
+        #expect(harness.stored.first?.method == .heard, "changeable on its sighting")
+        #expect(run.reveal?.addition == addition, "the same reveal")
+        #expect(run.reveal?.title == "Your first House Finch")
+        #expect(run.acknowledgment?.undo == addition, "the same Undo")
+        #expect(run.isAdded(finch))
+        #expect(CandidateLook(seenHere: collection().count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch)) == .added(count: 1))
+        #expect(run.hunt(in: collection()).text == "1 new patch waiting and 1 you already have")
+
+        run.undo(addition)
+        #expect(harness.stored.isEmpty)
+        #expect(run.reveal == nil)
+        #expect(run.acknowledgment == nil)
+        #expect(!run.isAdded(finch))
+        #expect(CandidateLook(seenHere: collection().count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch)) == .newHere)
+        #expect(run.hunt(in: collection()).text == "2 new patches waiting")
+
+        await run.stop()
+    }
+
+    @Test("Add on a row with a patch ticks its count like the review sheet: no reveal, the count, and Undo")
+    func addFromTheRow() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        try await waitUntil("a location") { run.coordinate != nil }
+        let finch = run.candidates[0]
+        // From an earlier run, here.
+        harness.album.mainContext.insert(Sighting(speciesID: finch.species.birdnetLabel, confirmedAt: .now.addingTimeInterval(-3_600), location: run.coordinate, soundConfidence: 0.5, source: .phone))
+        try harness.album.mainContext.save()
+        func look() -> CandidateLook {
+            CandidateLook(seenHere: CardCollection(sightings: harness.stored).count(ofSpeciesID: finch.species.birdnetLabel, at: run.coordinate), isAdded: run.isAdded(finch))
+        }
+        #expect(look() == .sewn(count: 1))
+        #expect(look().offer(isDescribed: true) == .add)
+
+        let addition = try #require(await run.addFromRow(finch, isDescribed: true))
+        #expect(!addition.sewsPatch)
+        #expect(run.reveal == nil, "a repeat isn't a new patch")
+        #expect(run.acknowledgment?.text == "House Finch seen again, 2 times")
+        #expect(run.acknowledgment?.ticksFrom == "House Finch seen again, 1 time")
+        #expect(run.acknowledgment?.undo == addition)
+        #expect(look() == .added(count: 2))
+        #expect(look().offer(isDescribed: true) == .added)
+
+        run.undo(addition)
+        #expect(look() == .sewn(count: 1))
+        #expect(harness.stored.count == 1)
+
+        await run.stop()
+    }
+
+    @Test("a bird no installed pack describes goes to its review from the row, and nothing is written")
+    func aBirdNoPackDescribesKeepsItsReview() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let finch = run.candidates[0]
+
+        #expect(CandidateLook.newHere.offer(isDescribed: false) == .review)
+        #expect(CandidateLook.sewn(count: 3).offer(isDescribed: false) == .review)
+        #expect(await run.addFromRow(finch, isDescribed: false) == nil)
+        #expect(harness.stored.isEmpty)
+        #expect(run.reveal == nil)
+        #expect(run.acknowledgment == nil)
+        #expect(run.reviewing == finch)
+
+        await run.stop()
+    }
+
+    @Test("a row added on this run reads as new again where its patch doesn't reach, since an add there sews one")
+    func looks() {
+        #expect(CandidateLook(seenHere: 0, isAdded: false) == .newHere)
+        #expect(CandidateLook(seenHere: 7, isAdded: false) == .sewn(count: 7))
+        #expect(CandidateLook(seenHere: 8, isAdded: true) == .added(count: 8))
+        #expect(CandidateLook(seenHere: 0, isAdded: true) == .newHere)
+        #expect(CandidateLook.newHere.offer(isDescribed: true) == .sewIt)
+    }
+
+    @Test("a sighting's row: your own photo if there is one, else the Atlas's reference photo, which says so; never a patch")
+    func picturesFollowTheGrammar() {
+        let url = URL(fileURLWithPath: "/reference.jpg")
+        let sighting = Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, soundConfidence: 0.5, source: .glasses)
+        let reference = RowPictureSource.of(sighting: sighting, reference: url)
+        #expect(reference == .reference(url), "no photo of yours")
+        sighting.frameImagePath = "frame.jpg"
+        let frame = RowPictureSource.of(sighting: sighting, reference: url)
+        #expect(frame == .ownPhoto(path: "frame.jpg", isGlassesFrame: true))
+        sighting.attachedPhotoPaths = ["mine.jpg"]
+        let attached = RowPictureSource.of(sighting: sighting, reference: url)
+        #expect(attached == .ownPhoto(path: "mine.jpg", isGlassesFrame: false), "the one you chose first, and it isn't cropped")
+        #expect(SightingRow.caption(attached) == "Your photo")
+        #expect(SightingRow.caption(frame) == "Your glasses snapshot")
+        #expect(SightingRow.caption(reference) == "Reference photo", "a reference photo never looks like your own")
+        #expect(SightingRow.caption(.reference(nil)) == "No photo")
+    }
+
+    // The maintainer, issue #150: the list holds still around a touch.
+
+    static let holdStart = Date(timeIntervalSince1970: 1_800_000_000)
+
+    @Test("the order holds from a finger coming down until 1.5 s after it lifts, then takes the coordinator's")
+    func theOrderHoldsAroundATouch() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        #expect(held.shown(["a", "b", "c"]) == ["a", "b", "c"], "nothing holds it: as the coordinator has it")
+
+        held.hold(.finger, showing: ["a", "b", "c"], at: start)
+        #expect(held.isHeld)
+        #expect(held.frozenAt == start)
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "a re-sort under the finger moves nothing")
+        held.tick(at: start.addingTimeInterval(15))
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "however long the finger stays down")
+
+        let lifted = start.addingTimeInterval(15)
+        held.letGo(.finger, at: lifted)
+        #expect(held.releaseAt == lifted.addingTimeInterval(1.5))
+        held.tick(at: lifted.addingTimeInterval(1.4))
+        #expect(held.shown(["c", "a", "b"]) == ["a", "b", "c"], "still holding, for the next tap")
+        held.tick(at: lifted.addingTimeInterval(1.5))
+        #expect(!held.isHeld)
+        #expect(held.frozenAt == nil)
+        #expect(held.shown(["c", "a", "b"]) == ["c", "a", "b"], "then it moves")
+    }
+
+    @Test("another touch inside the 1.5 s holds the same order, and starts the wait again when it lifts")
+    func aSecondTouchKeepsTheHold() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.letGo(.finger, at: start.addingTimeInterval(1))
+        held.hold(.finger, showing: ["b", "a"], at: start.addingTimeInterval(2))
+        #expect(held.releaseAt == nil)
+        #expect(held.frozenAt == start)
+        held.tick(at: start.addingTimeInterval(10))
+        #expect(held.shown(["b", "a"]) == ["a", "b"], "the order it was holding, not the one it's been told since")
+        held.letGo(.finger, at: start.addingTimeInterval(11))
+        #expect(held.releaseAt == start.addingTimeInterval(12.5))
+    }
+
+    @Test("scrolling and VoiceOver's focus hold it like a finger, and it moves only when the last of them lets go")
+    func everyHolderHolds() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.hold(.scroll, showing: ["b", "a"], at: start)
+        held.letGo(.finger, at: start.addingTimeInterval(1))
+        #expect(held.releaseAt == nil, "a flick still decelerating")
+        held.hold(.voiceOverFocus("a"), showing: ["b", "a"], at: start.addingTimeInterval(2))
+        held.letGo(.scroll, at: start.addingTimeInterval(3))
+        #expect(held.releaseAt == nil, "focus is on a row")
+        held.tick(at: start.addingTimeInterval(100))
+        #expect(held.shown(["b", "a"]) == ["a", "b"])
+
+        // Focus moving from one row to the next: whichever order the two reports come in, the wait doesn't finish in between.
+        held.letGo(.voiceOverFocus("a"), at: start.addingTimeInterval(101))
+        held.hold(.voiceOverFocus("b"), showing: ["b", "a"], at: start.addingTimeInterval(101))
+        held.tick(at: start.addingTimeInterval(200))
+        #expect(held.shown(["b", "a"]) == ["a", "b"])
+        held.letGo(.voiceOverFocus("b"), at: start.addingTimeInterval(201))
+        held.tick(at: start.addingTimeInterval(203))
+        #expect(!held.isHeld)
+    }
+
+    @Test("when the list leaves the screen everything lets go at once: a flick that's gone never says it's ended")
+    func leavingLetsGoOfEverything() {
+        var held = HeldListOrder<String>()
+        let start = Self.holdStart
+        held.hold(.finger, showing: ["a", "b"], at: start)
+        held.hold(.scroll, showing: ["a", "b"], at: start)
+        held.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        held.letGoOfEverything(at: start.addingTimeInterval(1))
+        #expect(held.releaseAt == start.addingTimeInterval(2.5))
+        held.tick(at: start.addingTimeInterval(2.5))
+        #expect(!held.isHeld)
+        held.letGoOfEverything(at: start.addingTimeInterval(3))
+        #expect(held.releaseAt == nil, "nothing was held")
+    }
+
+    @Test("a finger or scroll that never says it's ended lets go after 20 s, and a report refreshes that; VoiceOver's focus can stay")
+    func theSafetyNet() {
+        let start = Self.holdStart
+        var held = HeldListOrder<String>()
+        held.hold(.scroll, showing: ["a", "b"], at: start)
+        held.tick(at: start.addingTimeInterval(19))
+        #expect(held.isHeld)
+        held.tick(at: start.addingTimeInterval(20))
+        #expect(!held.isHeld, "stale")
+
+        var moving = HeldListOrder<String>()
+        moving.hold(.finger, showing: ["a", "b"], at: start)
+        moving.hold(.finger, showing: ["a", "b"], at: start.addingTimeInterval(15))
+        moving.tick(at: start.addingTimeInterval(30))
+        #expect(moving.isHeld, "a finger that's still reporting")
+
+        var focused = HeldListOrder<String>()
+        focused.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        focused.hold(.scroll, showing: ["a", "b"], at: start)
+        focused.tick(at: start.addingTimeInterval(600))
+        #expect(focused.isHeld, "focus is still on a row")
+        focused.letGo(.voiceOverFocus("a"), at: start.addingTimeInterval(601))
+        focused.tick(at: start.addingTimeInterval(603))
+        #expect(!focused.isHeld, "the stale scroll went with the net")
+    }
+
+    @Test("VoiceOver turned off with its focus on a row lets that go, and leaves a finger's hold alone")
+    func voiceOverTurnedOff() {
+        let start = Self.holdStart
+        var held = HeldListOrder<String>()
+        held.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        held.tick(at: start.addingTimeInterval(5))
+        #expect(held.isHeld, "it's still running")
+        held.tick(at: start.addingTimeInterval(10), isVoiceOverRunning: false)
+        #expect(!held.isHeld)
+
+        var both = HeldListOrder<String>()
+        both.hold(.voiceOverFocus("a"), showing: ["a", "b"], at: start)
+        both.hold(.finger, showing: ["a", "b"], at: start)
+        both.tick(at: start.addingTimeInterval(5), isVoiceOverRunning: false)
+        #expect(both.isHeld, "the finger's still down")
+        both.letGo(.finger, at: start.addingTimeInterval(6))
+        both.tick(at: start.addingTimeInterval(7.5), isVoiceOverRunning: false)
+        #expect(!both.isHeld)
+    }
+
+    @Test("a bird first heard during a hold goes at the bottom, where it moves no row, and stays in the place it was shown")
+    func aNewBirdGoesAtTheBottom() {
+        var held = HeldListOrder<String>()
+        held.hold(.finger, showing: ["a", "b"], at: Self.holdStart)
+        // The coordinator would put a calling bird first.
+        #expect(held.shown(["new", "b", "a"]) == ["a", "b", "new"])
+        held.take(["new", "b", "a"])
+        #expect(held.shown(["other", "new", "b", "a"]) == ["a", "b", "new", "other"])
+        held.take(["other", "new", "b", "a"])
+        #expect(held.shown(["new", "other", "a", "b"]) == ["a", "b", "new", "other"], "the two new birds don't swap under the thumb either")
+    }
+
+    @Test("a bird gone from the order goes from the list, even during a hold")
+    func aBirdGoneFromTheOrderGoes() {
+        var held = HeldListOrder<String>()
+        held.hold(.finger, showing: ["a", "b"], at: Self.holdStart)
+        #expect(held.shown(["b"]) == ["b"])
+    }
+
+    @Test("the summary leads with new patches waiting")
+    func summaryLeadsWithWhatsWaiting() {
+        #expect(RunHunt(newPatches: 1, alreadyHave: 2).text == "1 new patch waiting and 2 you already have")
+        #expect(RunHunt(newPatches: 2, alreadyHave: 0).text == "2 new patches waiting")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 1).text == "1 bird you already have")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 3).text == "3 birds you already have")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 0).text == "Nothing heard yet")
+        #expect(RunHunt(newPatches: 1, alreadyHave: 2).waiting == "1 new patch waiting")
+        #expect(RunHunt(newPatches: 1, alreadyHave: 2).short == "1 new patch waiting")
+        #expect(RunHunt(newPatches: 0, alreadyHave: 2).short == "2 birds you already have")
+    }
+
+    @Test("VoiceOver hears what a row shows in pictures and tint")
+    func rowsSpeak() {
+        #expect(CandidateLook.newHere.spoken(name: "Acorn Woodpecker", heard: "just now", isCalling: true) == "Acorn Woodpecker, calling now, new patch waiting")
+        #expect(CandidateLook.newHere.spoken(name: "Acorn Woodpecker", heard: "3 min ago", isCalling: false) == "Acorn Woodpecker, heard 3 min ago, new patch waiting")
+        #expect(CandidateLook.sewn(count: 7).spoken(name: "House Finch", heard: "3 min ago", isCalling: false) == "House Finch, heard 3 min ago, you have this patch, seen 7 times")
+        #expect(CandidateLook.added(count: 1).spoken(name: "Black Phoebe", heard: "just now", isCalling: true) == "Black Phoebe, calling now, added, you have this patch, seen once")
+        #expect(CandidateLook.added(count: 2).spoken(name: "Black Phoebe", heard: "just now", isCalling: false) == "Black Phoebe, added, you have this patch, seen 2 times")
+    }
+
     @Test("an add records the latest fix of the run, not the one Start took (issue #44)")
     func addRecordsTheLatestFix() async throws {
         let harness = try Self.makeHarness()
@@ -103,13 +403,13 @@ struct ListeningCoordinatorTests {
         harness.source.feed(seconds: 4.5)
         try await waitUntil("candidates appear") { run.candidates.count == 2 }
         #expect(run.candidates.map(\.species.commonName) == ["House Finch", "Blue Jay"])
-        #expect(run.summary == "2 species heard · 0 added")
+        #expect(run.hunt(in: CardCollection(sightings: harness.stored)).text == "2 new patches waiting")
         #expect(harness.stored.isEmpty, "hearing a bird saves nothing")
 
         let finch = run.candidates[0]
         let addition = try #require(await run.add(finch))
         #expect(run.isAdded(finch))
-        #expect(run.summary == "2 species heard · 1 added")
+        #expect(run.hunt(in: CardCollection(sightings: harness.stored)).text == "1 new patch waiting and 1 you already have")
         #expect(run.acknowledgment?.text == "Your first House Finch")
         #expect(run.acknowledgment?.undo == addition)
         let stored = harness.stored
@@ -162,7 +462,7 @@ struct ListeningCoordinatorTests {
 
         #expect(again.sightingID != first.sightingID)
         #expect(harness.stored.count == 2)
-        #expect(run.acknowledgment?.text == "Seen again · 2 times", "no place: the Uncharted patch, seen again")
+        #expect(run.acknowledgment?.text == "Blue Jay seen again, 2 times", "no place: the Uncharted patch, seen again")
         #expect(run.sightings.entries.count == 2)
         #expect(run.sightings.count(of: jay.species) == 2)
 
@@ -202,7 +502,7 @@ struct ListeningCoordinatorTests {
         #expect(first.patchCount == 1)
         let reveal = try #require(run.reveal)
         #expect(reveal.title == "Your first House Finch")
-        #expect(reveal.eyebrow == "New patch · Uncharted")
+        #expect(reveal.eyebrow == "New patch, Uncharted")
         #expect(run.acknowledgment?.ticksFrom == nil, "a new patch has no count to tick")
         #expect(reveal.addition == first)
         #expect(!reveal.hasPlayed, "the stitch-in is still to come")
@@ -229,8 +529,8 @@ struct ListeningCoordinatorTests {
         #expect(again.patchCount == 2)
         #expect(run.reveal == nil, "a repeat add opens no page")
         #expect(harness.stored.count == 2, "and the sighting is saved")
-        #expect(run.acknowledgment?.text == "Seen again · 2 times")
-        #expect(run.acknowledgment?.ticksFrom == "Seen again · 1 time", "what it says before it ticks")
+        #expect(run.acknowledgment?.text == "House Finch seen again, 2 times")
+        #expect(run.acknowledgment?.ticksFrom == "House Finch seen again, 1 time", "what it says before it ticks")
         #expect(run.acknowledgment?.undo == again)
 
         // A first of another species, taken back inside the window: the sighting and its reveal are gone.
@@ -277,7 +577,7 @@ struct ListeningCoordinatorTests {
         let first = try #require(run.reveal)
         #expect(first.commonName == "Blue Jay", "the order sewn")
         #expect(first.addition.patchCount == 2, "as the album has it now")
-        #expect(first.eyebrow == "New patch · Uncharted")
+        #expect(first.eyebrow == "New patch, Uncharted")
         #expect(!first.hasPlayed)
         #expect(!run.hasCeremonyWaiting, "one at a time")
 

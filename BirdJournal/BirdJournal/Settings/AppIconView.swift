@@ -50,7 +50,7 @@ struct AppIconView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        List {
+        PaperList {
             Section {
                 ForEach(AppIconChoice.all) { choice in
                     Button {
@@ -71,7 +71,7 @@ struct AppIconView: View {
                             if choice == current {
                                 Image(systemName: "checkmark")
                                     .font(.body.weight(.semibold))
-                                    .foregroundStyle(Color.moss)
+                                    .foregroundStyle(.tint)
                             }
                         }
                         .contentShape(Rectangle())
@@ -84,7 +84,6 @@ struct AppIconView: View {
                 }
             }
         }
-        .paperList()
         .navigationTitle("App icon")
         .navigationBarTitleDisplayMode(.inline)
     }

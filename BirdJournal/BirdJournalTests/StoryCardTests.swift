@@ -136,7 +136,7 @@ struct DesignTokenTests {
         try expect("JournalRule", on: "JournalPaper", atLeast: 3, in: Self.variants.filter { $0.name.hasSuffix("Increase Contrast") })
     }
 
-    @Test("the guide's page values hold where it set them")
+    @Test("the guide's page values hold where it set them, and the light page is issue #150's sage-grey")
     func guideValues() throws {
         let light = Self.variants[0].traits
         let dark = Self.variants[2].traits
@@ -146,9 +146,9 @@ struct DesignTokenTests {
             return String(format: "#%02X%02X%02X", Int((red * 255).rounded()), Int((green * 255).rounded()), Int((blue * 255).rounded()))
         }
         #expect(try hex("JournalPaper", dark) == "#10292D")
-        #expect(try hex("JournalPaper", light) == "#F4F2E9")
+        #expect(try hex("JournalPaper", light) == "#EEF1EC")
         #expect(try hex("JournalRaised", dark) == "#193A3D")
-        #expect(try hex("JournalRaised", light) == "#DFEAE5")
+        #expect(try hex("JournalRaised", light) == "#E0E8E2")
         #expect(try hex("JournalInk", dark) == "#F5F1E7")
         #expect(try hex("JournalInk", light) == "#15363A")
         #expect(try hex("JournalMoss", dark) == "#BCE3D9")
@@ -169,7 +169,7 @@ struct PaperCardAccessibilityTests {
         let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, location: griffithPark, soundConfidence: 0.8, source: .phone)
         album.mainContext.insert(sighting)
         let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PaperCardTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
-        let collection = library.collection(of: [sighting])
+        let collection = CardCollection(sightings: [sighting], sets: library.cardSets)
         let patch = try #require(collection.patch(of: sighting.identifier))
         return NavigationStack {
             ScrollView {
@@ -222,7 +222,7 @@ struct PaperCardAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("Wherever the black phoebe keeps house") || $0.hasPrefix("Where water runs") }, "the excerpt: \(labels)")
         #expect(labels.contains { $0.hasPrefix("Wingspan") }, "the biology: \(labels)")
         #expect(labels.contains { $0.hasPrefix("1 sighting here, sewn ") }, "the history: \(labels)")
-        #expect(labels.contains { $0.hasPrefix("All 1 sighting") }, "the footer: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("1 sighting") }, "the footer: \(labels)")
         #expect(labels.contains("AI illustration"), "the footer: \(labels)")
         #expect(labels.contains("Sources"), "the footer: \(labels)")
         #expect(!labels.contains { $0.hasPrefix("Black Phoebe, Citrus") }, "\(labels)")
@@ -274,8 +274,19 @@ struct PatchWordsTests {
         let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
         #expect(PatchText.tileLine(try Self.patch(count: 8, at: griffith)) == "No. 002 · seen 8×")
         #expect(PatchText.tileLine(try Self.patch(count: 3, at: nil)) == "seen 3×")
-        #expect(PatchText.editionLine(try Self.patch(count: 1, at: griffith).placement) == "Citrus edition · No. 002")
+        // Nothing about the count until there's a second sighting (issue #150).
+        #expect(PatchText.tileLine(try Self.patch(count: 1, at: griffith)) == "No. 002")
+        #expect(PatchText.tileLine(try Self.patch(count: 1, at: nil)) == "Uncharted")
+        #expect(PatchText.editionLine(try Self.patch(count: 1, at: griffith).placement) == "Citrus edition, No. 002")
         #expect(PatchText.editionLine(.uncharted) == "Uncharted")
+    }
+
+    @Test("a species' patch tile names its set, and the count with a comma from the second sighting")
+    func setLine() throws {
+        let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
+        let once = try Self.patch(count: 1, at: griffith)
+        #expect(PatchText.setLine(once) == once.placement.setName)
+        #expect(PatchText.setLine(try Self.patch(count: 8, at: griffith)) == "\(once.placement.setName), seen 8×")
     }
 
     @Test("the board takes three columns, two as the text grows, one at accessibility sizes")

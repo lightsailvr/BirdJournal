@@ -1,4 +1,5 @@
 import ImageIO
+import OSLog
 import Pack
 import SwiftUI
 
@@ -101,32 +102,69 @@ enum PatchTextures {
         }
     }
 
-    private static let cache = NSCache<NSString, Loaded>()
+    /// Safe from the decoding queue, which reads and fills it there: a screen of rows showing one patch asks for it once per row,
+    /// and only the two decoding at once can miss each other.
+    private nonisolated(unsafe) static let cache = NSCache<NSString, Loaded>()
+
+    /// From blank to lit, when the patch had to be waited for.
+    static let popIn = Animation.easeOut(duration: 0.18)
 
     static func cached(_ art: PatchArt, size: Size) -> Loaded? {
         cache.object(forKey: key(art, size))
     }
 
-    static func load(_ art: PatchArt, size: Size) async -> Loaded? {
+    /// The pictures at `size`, or else the tile's smaller ones, which stand in until those arrive.
+    static func cachedOrSmaller(_ art: PatchArt, size: Size) -> Loaded? {
+        cached(art, size: size) ?? (size == .full ? cached(art, size: .thumbnail) : nil)
+    }
+
+    /// - Parameter priority: `.low` waits behind every patch on screen for its turn.
+    static func load(_ art: PatchArt, size: Size, priority: Operation.QueuePriority = .normal) async -> Loaded? {
         if let hit = cached(art, size: size) { return hit }
         let colourPixels = size.colourPixels, layerPixels = size.layerPixels
+        let cacheKey = key(art, size)
         let flag = CancelFlag()
         let loaded: Loaded? = await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
-                decoding.addOperation {
+                let operation = BlockOperation {
+                    // Queued behind a request for the same patch, which has finished by now.
+                    if let hit = cache.object(forKey: cacheKey) {
+                        continuation.resume(returning: hit)
+                        return
+                    }
                     guard !flag.isCancelled, let colour = decode(art.colour, maxPixels: colourPixels), let layers = decode(art.layers, maxPixels: layerPixels) else {
                         continuation.resume(returning: nil)
                         return
                     }
-                    continuation.resume(returning: Loaded(colour: colour, layers: layers))
+                    let loaded = Loaded(colour: colour, layers: layers)
+                    cache.setObject(loaded, forKey: cacheKey)
+                    continuation.resume(returning: loaded)
                 }
+                operation.queuePriority = priority
+                if priority == .low { operation.qualityOfService = .utility }
+                decoding.addOperation(operation)
             }
         } onCancel: {
             flag.cancel()
         }
-        if let loaded { cache.setObject(loaded, forKey: key(art, size)) }
         return loaded
     }
+
+    /// Decodes `arts` ahead of being scrolled to (issue #150, audit R6): one at a time at low priority, so the two-at-a-time queue
+    /// always has a thread for a patch on screen, and stopping as soon as the task is cancelled.
+    static func decodeAhead(_ arts: some Sequence<PatchArt>, size: Size) async {
+        for art in arts {
+            guard !Task.isCancelled else { return }
+            _ = await load(art, size: size, priority: .low)
+        }
+    }
+
+    #if DEBUG
+    /// Nothing decoded, for a test of what happens then.
+    static func forgetAll() {
+        cache.removeAllObjects()
+    }
+    #endif
 
     /// The patch's threads, for its stitch-in: every pixel of its layers is read, so it's off the main thread too.
     nonisolated static func threads(of loaded: Loaded, art: PatchArt) async -> [StitchThread] {
@@ -164,6 +202,13 @@ enum PatchTextures {
     }
 
     private nonisolated static func decode(_ url: URL, maxPixels: Int) -> CGImage? {
+        #if DEBUG
+        // Issue #150: what a sweep counts, with patches on rows that refresh every second. A thumbnail that's stayed lazy shows up
+        // in the same log as the decoder's own lines.
+        if UserDefaults.standard.bool(forKey: "patchDecodeLog") {
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "patch-decode").info("decode \(url.lastPathComponent, privacy: .public)")
+        }
+        #endif
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,

@@ -34,6 +34,10 @@ extension PackLibrary {
         var indexURL = PackIndex.defaultURL
         #if DEBUG
         if let override = UserDefaults.standard.string(forKey: "packIndexURL").flatMap(URL.init(string:)) { indexURL = override }
+        // A fresh install's packs: no downloads and no index read yet, whatever this simulator has seen.
+        if UserDefaults.standard.bool(forKey: "freshPackStorage") {
+            return PackLibrary(bundled: bundled, storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "FreshPacks-\(UUID().uuidString)", directoryHint: .isDirectory)), indexURL: indexURL)
+        }
         #endif
         return PackLibrary(bundled: bundled, storage: storage, indexURL: indexURL)
     }
@@ -69,11 +73,6 @@ extension PackLibrary {
     /// Every set the phone knows (issue #54), as the collection places cards among them.
     var cardSets: [CardSet] {
         sets.map(CardSet.init)
-    }
-
-    /// The birder's collection over every set the phone knows: what each screen reads patches, sets and progress from.
-    func collection(of sightings: [Sighting]) -> CardCollection {
-        CardCollection(sightings: sightings, sets: cardSets)
     }
 
     /// The lens crop of the first photo any pack has of the species, the thumbnail the lists show.

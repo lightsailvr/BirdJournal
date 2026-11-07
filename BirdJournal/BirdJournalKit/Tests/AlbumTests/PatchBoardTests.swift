@@ -73,7 +73,7 @@ struct PatchBoardTests {
             sets: CardSetTests.sets
         )
         let patches = collection.patches(of: Self.finch)
-        #expect(CardCollection.Patch.speciesSummary(patches) == "2 patches · seen 3 times")
-        #expect(CardCollection.Patch.speciesSummary(Array(patches.prefix(1))) == "1 patch · seen 2 times")
+        #expect(CardCollection.Patch.speciesSummary(patches) == "2 patches, seen 3 times")
+        #expect(CardCollection.Patch.speciesSummary(Array(patches.prefix(1))) == "1 patch, seen 2 times")
     }
 }

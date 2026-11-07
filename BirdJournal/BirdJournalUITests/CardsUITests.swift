@@ -2,8 +2,8 @@ import XCTest
 
 /// Issues #132, #135 (of #131; before them #51's Legendary card): the first add of a species in a place sews its patch.
 /// Real taps on a phone run over the example soundscape, with no location, so every patch is Uncharted: the first add says
-/// "Add and sew patch" and shows the new-patch reveal (Keep listening first, issue #117), See it in my collection lands on
-/// the patch, seen once; a second add of the same species says "Add another sighting", says the count is 2 with no page and
+/// "Add and sew patch" and shows the new-patch reveal (Keep listening first, issue #117), the patch itself lands on
+/// it in the collection, seen once; a second add of the same species says "Add another sighting", says the count is 2 with no page and
 /// nothing to tap, and leaves one patch, seen twice; opening the patch replays neither. Skipped when the clip is not on
 /// disk (`scripts/download-clips.sh`). `SewingUITests` drives the stitch-in itself, on a patch with a painting.
 final class CardsUITests: XCTestCase {
@@ -23,9 +23,10 @@ final class CardsUITests: XCTestCase {
         app.launch()
 
         // The first species heard, reviewed and added.
-        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Review '")).firstMatch
+        let review = app.buttons["candidate-row-0"]
         XCTAssertTrue(review.waitForExistence(timeout: 60), "no species to review; screen: \(app.debugDescription.prefix(3000))")
-        let name = String(review.label.dropFirst("Review ".count))
+        // "House Finch, calling now, new patch waiting".
+        let name = String(review.label.prefix { $0 != "," })
         review.tap()
         let add = app.buttons["Add and sew patch"]
         XCTAssertTrue(add.waitForExistence(timeout: 10), "no Add and sew patch; screen: \(app.debugDescription.prefix(3000))")
@@ -33,11 +34,11 @@ final class CardsUITests: XCTestCase {
 
         let reveal = app.staticTexts["Your first \(name)"]
         XCTAssertTrue(reveal.waitForExistence(timeout: 10), "no new-patch reveal for \(name); screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["New patch · Uncharted"].exists, "no New patch line; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, Uncharted"].exists, "no New patch line; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Legendary'")).firstMatch.exists, "no Legendary")
         XCTAssertTrue(app.buttons["Keep listening"].exists, "no Keep listening during a run; screen: \(app.debugDescription.prefix(4000))")
-        let back = app.buttons["See it in my collection"]
-        XCTAssertTrue(back.exists)
+        let back = app.buttons["revealed-patch"]
+        XCTAssertTrue(back.exists, "the patch is the way to the collection; screen: \(app.debugDescription.prefix(4000))")
         back.tap()
         XCTAssertFalse(reveal.waitForExistence(timeout: 2), "the reveal closed")
 
@@ -53,7 +54,7 @@ final class CardsUITests: XCTestCase {
         let addAnother = app.buttons["Add another sighting"]
         XCTAssertTrue(addAnother.waitForExistence(timeout: 10))
         addAnother.tap()
-        XCTAssertTrue(app.staticTexts["Seen again · 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["\(name) seen again, 2 times"].waitForExistence(timeout: 5), "no seen-again acknowledgment; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "a repeat add is not a reveal")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "a repeat add stitches nothing")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "and opens no page")

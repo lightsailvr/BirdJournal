@@ -3,14 +3,16 @@ import CoreImage.CIFilterBuiltins
 import Foundation
 import UIKit
 
-/// Invite links (issue #61): `https://birdquest.matthewcelia.com/i/<token>`. The associated-domains entitlement opens
-/// them in the app; in a browser the domain shows a page explaining how to get it.
+/// Invite links (issues #61, #150): `https://featherguild.matthewcelia.com/i/<token>`. The associated-domains entitlement
+/// opens them in the app; in a browser the domain shows a page explaining how to get it. Links made on the former host
+/// are still out there, on phones and printed as QR codes, so they read the same way.
 enum InviteLink {
-    static let host = "birdquest.matthewcelia.com"
+    static let host = "featherguild.matthewcelia.com"
+    static let formerHost = "birdquest.matthewcelia.com"
 
     /// The invite token in a link, or nil for any other URL.
     static func token(from url: URL) -> String? {
-        guard url.scheme == "https", url.host() == host else { return nil }
+        guard url.scheme == "https", url.host() == host || url.host() == formerHost else { return nil }
         let parts = url.pathComponents.filter { $0 != "/" }
         guard parts.count == 2, parts[0] == "i" else { return nil }
         let token = parts[1]

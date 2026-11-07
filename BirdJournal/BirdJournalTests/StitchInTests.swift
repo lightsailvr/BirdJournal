@@ -269,7 +269,7 @@ struct SewingCeremonyAccessibilityTests {
         let context = harness.album.mainContext
         let all = try context.fetch(Sighting.newestFirst())
         let phoebe = try #require(all.first { $0.scientificName == "Sayornis nigricans" })
-        let placement = try #require(harness.library.collection(of: all).placement(of: phoebe.identifier))
+        let placement = try #require(CardCollection(sightings: all, sets: harness.library.cardSets).placement(of: phoebe.identifier))
         #expect(placement.setID != nil, "in the Los Angeles set")
         harness.run.showRevealForScreenshot(of: phoebe, placement: placement)
         return harness
@@ -291,11 +291,13 @@ struct SewingCeremonyAccessibilityTests {
         }
         ScreenAccessibilityTests.expectClean(labels, screen: "New patch")
         #expect(!labels.contains { $0.hasPrefix("Sewing") }, "no stitching: \(labels)")
-        #expect(labels.contains("New patch · Citrus edition"), "\(labels)")
+        #expect(labels.contains("New patch, Citrus edition"), "\(labels)")
         #expect(labels.contains("Your first Black Phoebe in Los Angeles"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn ") }, "the patch in words: \(labels)")
         #expect(labels.contains("Done"), "no run: back to where the add was: \(labels)")
         #expect(labels.contains("Share this patch"), "\(labels)")
+        #expect(!labels.contains("See it in my collection"), "the patch does that: \(labels)")
+        #expect(!labels.contains("Your sighting is already saved."), "\(labels)")
         #expect(harness.run.reveal?.hasPlayed == true, "decided once: it won't start stitching if VoiceOver goes off under the page")
     }
 
@@ -316,9 +318,34 @@ struct SewingCeremonyAccessibilityTests {
         ScreenAccessibilityTests.expectClean(labels, screen: "New patch, more waiting")
         #expect(labels.contains { $0.hasPrefix("Your first Black Phoebe") }, "\(labels)")
         #expect(labels.contains("Next patch"), "\(labels)")
-        #expect(labels.contains("Skip the rest · 1 more"), "\(labels)")
+        #expect(labels.contains("Skip the rest, 1 more"), "\(labels)")
         #expect(!labels.contains("See it in my collection"), "\(labels)")
         #expect(!labels.contains("Undo adding Black Phoebe"), "\(labels)")
+    }
+
+    @Test("the patch reads as the button it is, with where it goes")
+    func patchIsTheWayToTheCollection() async throws {
+        let harness = try Self.harness()
+        try await Self.withFlag("voiceOverPath", true) {
+            CardFlipAccessibilityTests.enableAccessibility()
+            let host = UIHostingController(rootView: harness.hosted(Color.clear.patchReveal(), typeSize: .large))
+            let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+            let window = try UIWindow(windowScene: #require(scene))
+            window.frame = CGRect(x: 0, y: 0, width: 402, height: 1400)
+            window.rootViewController = host
+            window.makeKeyAndVisible()
+            defer { window.isHidden = true }
+
+            var label: String?
+            for _ in 0..<60 {
+                try await Task.sleep(for: .milliseconds(250))
+                label = ScreenAccessibilityTests.spoken(host.view).first { $0.hasPrefix("Black Phoebe, Citrus edition patch") }
+                if label != nil { break }
+            }
+            let patch = try Self.element(in: host.view, labelled: #require(label))
+            #expect(patch?.accessibilityTraits.contains(.button) == true)
+            #expect(patch?.accessibilityHint == "Shows it in your collection.")
+        }
     }
 
     @Test("the stitch-in, if VoiceOver does land on it, is one element that says what's happening, and activating it finishes it")
@@ -377,7 +404,7 @@ struct RevealWordsTests {
 
     @Test("the number line under the name, in a set; none outside every set")
     func numberLine() {
-        #expect(PatchText.revealNumberLine(Self.placement) == "No. 019 of 160 · Los Angeles")
+        #expect(PatchText.revealNumberLine(Self.placement) == "No. 019 of 160, Los Angeles")
         #expect(PatchText.revealNumberLine(.uncharted) == nil)
     }
 }

@@ -28,6 +28,9 @@ struct PatchBoard: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let patches: [CardCollection.Patch]
 
+    /// As many as a few screens' worth: a big board's rest decode as they scroll in. Each costs about 650 KB until the cache lets go.
+    private static let decodedAhead = 48
+
     var body: some View {
         LazyVGrid(columns: PatchBoardLayout.grid(for: typeSize), spacing: 18) {
             ForEach(patches) { patch in
@@ -36,10 +39,15 @@ struct PatchBoard: View {
         }
         .padding(.vertical, 14)
         .holdsPatchLight()
+        .task(id: patches.map(\.id)) {
+            let arts = patches.prefix(Self.decodedAhead).compactMap { library.patchArt(scientificName: $0.scientificName, setID: $0.placement.setID) }
+            await PatchTextures.decodeAhead(arts, size: .thumbnail)
+        }
     }
 }
 
-/// A sewn patch on a board: it opens the patch's page.
+/// A sewn patch on a board: it rises to the touch and grows into the patch's page (issue #150, audit R1), and a long press peeks
+/// at it with its quick actions.
 struct SewnPatchTile: View {
     @Environment(PackLibrary.self) private var library
     let patch: CardCollection.Patch
@@ -48,16 +56,21 @@ struct SewnPatchTile: View {
     var line: String? = nil
     /// The patch's sentence names the bird, even where the tile's words name the edition.
     var spokenName: String? = nil
+    /// Where this tile is: its page's way back.
+    var surface = PatchLiftSurface.board
 
     var body: some View {
         let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
-        NavigationLink(value: Route.patch(patch.id)) {
+        let edition = PatchEdition.of(setID: patch.placement.setID)
+        NavigationLink(value: Route.patch(patch.id, from: surface)) {
             PatchTile(
-                state: state, edition: PatchEdition.of(setID: patch.placement.setID), tag: spokenName ?? name,
-                name: name, line: line ?? PatchText.tileLine(patch), spoken: PatchText.spoken(patch, name: spokenName ?? name, beingSewn: state == .beingSewn)
+                state: state, edition: edition, tag: spokenName ?? name,
+                name: name, line: line ?? PatchText.tileLine(patch), spoken: PatchText.spoken(patch, name: spokenName ?? name, beingSewn: state == .beingSewn),
+                lift: PatchLiftID(key: patch.id, surface: surface)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.patchLift)
+        .modifier(PatchPeekActions(patch: patch, surface: surface, state: state, edition: edition, tag: spokenName ?? name))
         .accessibilityHint("Opens the patch. Turn it over for its story.")
         .accessibilityIdentifier("board-patch")
     }
@@ -72,22 +85,32 @@ struct PatchTile: View {
     /// The bird's name, for the blank's paper tag.
     let tag: String
     let name: String
-    let line: String
+    let line: String?
     /// What VoiceOver reads: the tile is one element.
     let spoken: String
+    /// The tile a page grows out of: only the patch, not its words.
+    var lift: PatchLiftID? = nil
+    /// How wide the patch may be, in a column that's wide enough.
+    var side: CGFloat = 124
+    /// A Guild's boards are few patches and set their words larger than the Collection's.
+    var nameFont = PatchFont.tileName
+    var lineFont = PatchFont.tileLine
 
     var body: some View {
         VStack(spacing: 6) {
             PatchView(state: state, edition: edition, tag: tag)
                 // One column at accessibility sizes: the patch grows with its words.
-                .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 124)
+                .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : side)
+                .patchLiftSource(lift)
             VStack(spacing: 2) {
                 Text(name)
-                    .font(PatchFont.tileName)
+                    .font(nameFont)
                     .foregroundStyle(Color.ink)
-                Text(line)
-                    .font(PatchFont.tileLine)
-                    .foregroundStyle(Color.ink)
+                if let line {
+                    Text(line)
+                        .font(lineFont)
+                        .foregroundStyle(Color.ink)
+                }
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -104,6 +127,9 @@ struct PatchTile: View {
 enum PatchFont {
     static let tileName = Font.system(.footnote, design: .serif, weight: .semibold)
     static let tileLine = Font.caption2
+    /// On a Guild's boards (the reference's Compare, at 1.34).
+    static let boardName = Font.system(.subheadline, design: .serif, weight: .semibold)
+    static let boardLine = Font.footnote
     /// The bird's name under its patch, about 28 pt (guide page 16: 24–28).
     static let pageName = Font.system(.title, design: .serif, weight: .semibold)
     /// The count on the paper card, large.

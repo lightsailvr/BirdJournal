@@ -80,9 +80,9 @@ public struct CardCollection: Sendable, Equatable {
             count == 1 ? "once" : "\(count) times"
         }
 
-        /// A species' patches in a line: "2 patches · seen 10 times".
+        /// A species' patches in a line: "2 patches, seen 10 times".
         public static func speciesSummary(_ patches: [Patch]) -> String {
-            "\(patches.count) \(patches.count == 1 ? "patch" : "patches") · seen \(times(patches.reduce(0) { $0 + $1.count }))"
+            "\(patches.count) \(patches.count == 1 ? "patch" : "patches"), seen \(times(patches.reduce(0) { $0 + $1.count }))"
         }
     }
 
@@ -99,6 +99,8 @@ public struct CardCollection: Sendable, Equatable {
     private let species: Set<String>
     private let placements: [UUID: CardPlacement]
     private let patchByKey: [Patch.Key: Patch]
+    /// The same patches by scientific name, in the `speciesID` of the key.
+    private let patchByScientificName: [Patch.Key: Patch]
     private let keyBySighting: [UUID: Patch.Key]
     /// Scientific names collected per set id.
     private let collectedBySet: [String: Set<String>]
@@ -132,6 +134,7 @@ public struct CardCollection: Sendable, Equatable {
         keyBySighting = keys
         let byKey = grouped.mapValues { Patch(speciesID: $0.sightings[0].speciesID, placement: $0.placement, sightings: $0.sightings) }
         patchByKey = byKey
+        patchByScientificName = Dictionary(byKey.values.map { (Patch.Key(speciesID: $0.scientificName, setID: $0.placement.setID), $0) }) { first, _ in first }
         patches = byKey.values.sorted { Entry.isEarlier($1.sewn, $0.sewn) }
         collectedBySet = collected
         unchartedSpeciesCount = uncharted.count
@@ -158,6 +161,12 @@ public struct CardCollection: Sendable, Equatable {
     /// The patch with this species and placement; nil when no sighting has sewn it.
     public func patch(key: Patch.Key) -> Patch? {
         patchByKey[key]
+    }
+
+    /// The species' patch in a set, nil for Uncharted, for whoever has only its scientific name: a pack's own label for a bird
+    /// needn't be the BirdNET label its sightings carry.
+    public func patch(scientificName: String, setID: String?) -> Patch? {
+        patchByScientificName[Patch.Key(speciesID: scientificName, setID: setID)]
     }
 
     /// Whether the sighting is the one that sewed its patch: the patch's earliest surviving sighting.
@@ -242,9 +251,9 @@ public struct CardCollection: Sendable, Equatable {
         "\(patchCount) \(patchCount == 1 ? "patch" : "patches")"
     }
 
-    /// The Collection's line under its title, e.g. "7 patches · 21 sightings".
+    /// The Collection's line under its title, e.g. "7 patches, 21 sightings".
     public var summary: String {
-        "\(patchesText) · \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
+        "\(patchesText), \(sightingCount) \(sightingCount == 1 ? "sighting" : "sightings")"
     }
 }
 
@@ -265,5 +274,30 @@ public struct CollectionIntro {
 
     public func markShown() {
         defaults.set(true, forKey: Self.defaultsKey)
+    }
+}
+
+/// One collection kept between readings (issue #150): building it places every sighting in its set's polygons, so the app
+/// builds it when the sightings or the sets change, not whenever a screen draws. `update` compares what it's given with what
+/// the collection was built from, so whoever feeds it can do so on any save.
+public struct CardCollectionCache: Sendable {
+    public private(set) var collection: CardCollection
+    private var entries: [CardCollection.Entry]
+    private var sets: [CardSet]
+
+    public init(_ entries: [CardCollection.Entry], sets: [CardSet]) {
+        self.entries = entries
+        self.sets = sets
+        collection = CardCollection(entries, sets: sets)
+    }
+
+    /// Builds again if the sightings or the sets differ from the last time, and says whether it did.
+    @discardableResult
+    public mutating func update(_ entries: [CardCollection.Entry], sets: [CardSet]) -> Bool {
+        guard entries != self.entries || sets != self.sets else { return false }
+        self.entries = entries
+        self.sets = sets
+        collection = CardCollection(entries, sets: sets)
+        return true
     }
 }

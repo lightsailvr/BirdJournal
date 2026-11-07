@@ -39,6 +39,38 @@ struct PatchEdition: Equatable {
     }
 }
 
+extension PatchEdition {
+    /// The thread of an edition by its set's pack id: the accent where the birder is, and on a set's or a patch's own page
+    /// (issue #150). Uncharted (nil) has its own; a set the app doesn't know keeps today's aqua. A colorset for each, with its
+    /// Increase Contrast variants; `EditionTintTests` measures them. Unlike the cord and twill, these follow the appearance.
+    static func tint(setID: String?) -> Color {
+        switch setID {
+        case "us-ca-la": Color("EditionCitrus")
+        case "us-ca-sd": Color("EditionCoastal")
+        case "us-ca-bay": Color("EditionFog")
+        case "us-ca-desert": Color("EditionDesert")
+        case "us-fl-orlando": Color("EditionWetland")
+        case nil: Color("EditionUncharted")
+        default: .moss
+        }
+    }
+}
+
+extension PatchEdition {
+    /// An edition's thread printed on a plate's paper, the issue's values and the mock's, for Citrus: the light tints were deepened from
+    /// these for words on linen, and a stitch on paper needs 3:1, not 4.5 (`plateStock`). Increase Contrast takes the deeper tint.
+    static func paperThread(setID: String?) -> Color {
+        switch setID {
+        case "us-ca-la": Color(hex: 0x5C6420)
+        case "us-ca-sd": Color(hex: 0x1E5F86)
+        case "us-ca-bay": Color(hex: 0x4F5F66)
+        case "us-ca-desert": Color(hex: 0x9A4A2F)
+        case "us-fl-orlando": Color(hex: 0x0F6B60)
+        default: tint(setID: setID)
+        }
+    }
+}
+
 extension Color {
     /// A colour from its fixed sRGB value: for the materials and the editions, which don't change with the appearance.
     init(hex: UInt32) {

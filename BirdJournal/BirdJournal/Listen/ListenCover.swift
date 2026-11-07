@@ -1,42 +1,51 @@
 import Album
 import Pack
-import SwiftData
 import SwiftUI
 
-/// The local set the Listen tab invites the birder to (issue #117, design guide page 11): the set of their newest card,
-/// else the bundled pack's, else the first set the phone knows. Nil when the phone knows no set.
+/// The local set: the place's set with the birder's progress in it. The painting, "Your local set" and the app's tint all
+/// follow the same choice (`CurrentPlace`, issue #150).
 struct LocalSet {
     let set: PackSet
     let progress: SetProgress
 
+    /// The set shown, with its progress; nil when the phone doesn't know it.
     @MainActor
-    static func find(library: PackLibrary, collection: CardCollection, newest: Sighting?) -> LocalSet? {
-        let sets = library.sets
-        let preferred = newest.flatMap { collection.placement(of: $0.identifier)?.setID }
-        guard let set = sets.first(where: { $0.id == preferred })
-            ?? sets.first(where: { $0.id == PackIndex.bundledPackID })
-            ?? sets.first
-        else { return nil }
-        return LocalSet(set: set, progress: collection.progress(of: set.id))
+    init?(setID: String?, library: PackLibrary, collection: CardCollection) {
+        guard let setID, let set = library.set(id: setID) else { return nil }
+        self.set = set
+        progress = collection.progress(of: set.id)
     }
 
-    /// "Los Angeles · Citrus edition".
-    var title: String { "\(set.name) · \(set.edition.name)" }
-    /// "18 of 160 species collected".
-    var progressText: String { "\(progress.collected) of \(progress.total) species collected" }
+    /// The set whose regions contain the coordinate; else the set of the newest sighting, so outside every set it's your last
+    /// one; else the bundled set; else the first the phone knows. Nil when it knows none.
+    nonisolated static func choose(coordinate: Coordinate?, newestSetID: String?, sets: [CardSet], bundledID: String = PackIndex.bundledPackID) -> String? {
+        if let coordinate, let here = CardSet.containing(coordinate, in: sets) { return here.id }
+        if let newestSetID, sets.contains(where: { $0.id == newestSetID }) { return newestSetID }
+        return sets.first { $0.id == bundledID }?.id ?? sets.first?.id
+    }
+
+    nonisolated static func choose(coordinate: Coordinate?, in collection: CardCollection) -> String? {
+        choose(coordinate: coordinate, newestSetID: newestSetID(in: collection), sets: collection.sets)
+    }
+
+    /// The set of the newest sighting that's in one: an Uncharted one has none, and shouldn't lose your last set.
+    nonisolated static func newestSetID(in collection: CardCollection) -> String? {
+        collection.cards.lazy.compactMap { collection.placement(of: $0.identifier)?.setID }.first
+    }
 }
 
-/// The calm ready state's atmosphere (page 11): the local set's cover (issue #114) under the status bar, fading into the
-/// page, with the wordmark and the headline over its sky. Without a cover, the edition's designed fallback. The cover
-/// is illustrative, so it is labelled as an AI illustration and never stands for where a bird was seen.
+/// The calm ready state's atmosphere (page 11): the place's cover (issue #114) under the status bar, fading into the page, with
+/// the wordmark and the headline over its sky. It follows the place (issue #150): a new painting cross-fades in, and under Reduce
+/// Motion switches without the fade. The cover is illustrative, so it is labelled as an AI illustration and never stands for where
+/// a bird was seen.
 struct ListenCoverHeader: View {
-    @Environment(PackLibrary.self) private var library
+    @Environment(CurrentPlace.self) private var place
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     let local: LocalSet?
     /// The status bar's height, which the cover runs under.
     let topInset: CGFloat
 
     var body: some View {
-        let cover = local.flatMap { library.cover(setID: $0.set.id) }
         VStack(alignment: .leading, spacing: 6) {
             Text("FEATHERGUILD")
                 .font(.system(.caption, design: .serif, weight: .semibold))
@@ -58,20 +67,31 @@ struct ListenCoverHeader: View {
         .frame(minHeight: 300 + topInset, alignment: .top)
         .background {
             ZStack {
-                if let cover {
-                    SetCoverArt(cover: cover)
-                } else {
-                    EditionFallback(edition: local?.set.edition.name)
-                }
+                // Fixed, like the paintings, for the white words: the five sets all have one, and this is for a set that doesn't.
+                Color(hex: 0x10292D)
+                    .overlay {
+                        if let painting = place.painting {
+                            Image(uiImage: painting)
+                                .resizable()
+                                .scaledToFill()
+                                .allowsHitTesting(false)
+                                .id(place.setID)
+                                .transition(.opacity)
+                        }
+                    }
+                    .clipped()
+                    .animation(PatchMotion.reduces(system: systemReduceMotion) ? nil : .easeInOut(duration: 0.6), value: place.setID)
                 // The sky darkens behind the headline, and the land fades into the page under it.
                 LinearGradient(colors: [.black.opacity(0.45), .clear], startPoint: .top, endPoint: .center)
                 LinearGradient(colors: [.clear, Color.paper], startPoint: UnitPoint(x: 0.5, y: 0.72), endPoint: .bottom)
             }
             .accessibilityElement()
-            .accessibilityLabel(cover == nil ? "\(local?.set.edition.name ?? "Featherguild") pattern" : "\(local?.set.name ?? "Set") cover, AI illustration")
+            .accessibilityLabel("\(local?.set.name ?? "Featherguild") cover, AI illustration")
+            .accessibilityIdentifier("listen-painting")
+            .accessibilityHidden(place.painting == nil)
         }
         .overlay(alignment: .bottomTrailing) {
-            if cover != nil {
+            if place.painting != nil {
                 Text("AI illustration")
                     .font(CardFont.credit)
                     .foregroundStyle(Color.inkSecondary)
@@ -85,152 +105,146 @@ struct ListenCoverHeader: View {
     }
 }
 
-/// A set's cover, cropped from the middle to fill: the pack's full cover, or the index's thumbnail before the pack is on
-/// the phone. It decodes through the Atlas's `SetCoverImage.load`; the fallback differs from the Atlas's, so it is
-/// drawn by the header.
-private struct SetCoverArt: View {
-    let cover: SetCover
-    @State private var image: UIImage?
-
-    var body: some View {
-        Color.raised
-            .overlay {
-                if let image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .allowsHitTesting(false)
-                }
-            }
-            .clipped()
-            .task(id: cover) {
-                image = await SetCoverImage.load(cover)
-            }
-    }
-}
-
-/// The designed fallback for a set without a cover (#114's follow-up): a dusk wash in the set's edition, a low horizon
-/// and the perched bird, quiet enough to sit behind the headline in either appearance. Its colours are fixed, like the
-/// cover paintings.
-private struct EditionFallback: View {
-    let edition: String?
-
-    var body: some View {
-        ZStack(alignment: .bottom) {
-            LinearGradient(
-                colors: [Color(red: 0.063, green: 0.161, blue: 0.176), Color(red: 0.184, green: 0.373, blue: 0.361), Color(red: 0.827, green: 0.706, blue: 0.459).opacity(0.55)],
-                startPoint: .top, endPoint: .bottom
-            )
-            Ellipse()
-                .fill(Color(red: 0.098, green: 0.227, blue: 0.239))
-                .frame(height: 140)
-                .scaleEffect(x: 1.6)
-                .offset(y: 70)
-            PerchedBirdDrawing()
-                .frame(height: 90)
-                .opacity(0.5)
-                .padding(.bottom, 54)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.trailing, 36)
-        }
-    }
-}
-
-/// "Your local set" (page 11's local-set invitation): the set and its edition, how many of its species the birder has
-/// collected (distinct species, page 12), and the way to the set's page.
+/// "Your local set" (the Listen mock's lower half): the set's name, which opens its page, and how many of its birds are sewn; the
+/// thread; and the latest patches.
 struct LocalSetSection: View {
     @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(PackLibrary.self) private var library
+    @ScaledMetric(relativeTo: .body) private var patchSide: CGFloat = 80
     let local: LocalSet
     let collection: CardCollection
-    let sightings: [Sighting]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
-                    heading
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    name
                     Spacer(minLength: 8)
-                    explore
+                    count
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    heading
-                    explore
+                VStack(alignment: .leading, spacing: 2) {
+                    name
+                    count
                 }
             }
-            VStack(alignment: .leading, spacing: 6) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(local.title)
-                        Spacer(minLength: 8)
-                        Text(local.progressText)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(local.title)
-                        Text(local.progressText)
-                    }
-                }
-                .font(JournalFont.supporting)
-                .foregroundStyle(Color.ink)
-                ProgressView(value: Double(local.progress.collected), total: Double(max(local.progress.total, 1)))
-                    .tint(Color.moss)
-                    .accessibilityHidden(true)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(local.title), \(local.progressText)")
-            let latest = latestCards
-            if !latest.isEmpty {
-                let columns = Array(repeating: GridItem(.flexible(), spacing: JournalLayout.rowGap, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2)
-                FeltBoard {
-                    LazyVGrid(columns: columns, spacing: JournalLayout.rowGap) {
-                        ForEach(latest) { sighting in
-                            if let patch = collection.patch(of: sighting.identifier) {
-                                SewnPatchTile(patch: patch, name: PatchText.name(of: patch, library: library))
-                            }
-                        }
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                .holdsPatchLight()
-            } else {
+            // Another place's thread is another thread: it doesn't sew from this one's count.
+            ThreadProgress(local.progress)
+                .id(local.set.id)
+            let latest = latestPatches
+            if latest.isEmpty {
                 Text("Birds you add while listening are sewn as patches here, one for every bird in every place.")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
+                    .padding(.top, 14)
+            } else {
+                HStack(alignment: .center, spacing: 15) {
+                    ForEach(latest) { patch in
+                        LatestPatch(patch: patch, side: min(patchSide, typeSize.isAccessibilitySize ? 150 : 104))
+                    }
+                }
+                .padding(.top, 14)
+                .holdsPatchLight()
             }
         }
         .padding(.top, JournalLayout.sectionGap)
     }
 
-    private var heading: some View {
-        Text("Your local set")
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private var explore: some View {
+    /// The set's name is the way to its page. It's the section's heading for VoiceOver, which also says whose set it is.
+    private var name: some View {
         NavigationLink(value: Route.set(id: local.set.id)) {
-            HStack(spacing: 4) {
-                Text("Explore the set")
-                Image(systemName: "arrow.right")
-                    .accessibilityHidden(true)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text(local.set.name)
+                    .font(JournalFont.heading)
+                    .foregroundStyle(Color.ink)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.inkSecondary)
             }
-            .font(JournalFont.supporting.weight(.semibold))
-            .foregroundStyle(Color.moss)
             .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        .accessibilityLabel("Explore the \(local.set.name) set")
+        .buttonStyle(.plain)
+        .accessibilityLabel("Your local set, \(local.set.name)")
+        .accessibilityHint("Opens the set")
+        .accessibilityAddTraits(.isHeader)
     }
 
-    /// The newest cards of the set's species, one per species, at most two.
-    private var latestCards: [Sighting] {
+    /// The thread beside it reads this as a sentence.
+    private var count: some View {
+        Text(local.progress.sewnText)
+            .font(JournalFont.supporting)
+            .foregroundStyle(Color.ink)
+            .accessibilityHidden(true)
+    }
+
+    /// The newest patches of the set, one per species: three, or two where they grow with the text.
+    private var latestPatches: [CardCollection.Patch] {
         var seen = Set<String>()
-        var cards: [Sighting] = []
-        for sighting in sightings where collection.placement(of: sighting.identifier)?.setID == local.set.id {
-            guard seen.insert(sighting.scientificName).inserted else { continue }
-            cards.append(sighting)
-            if cards.count == (typeSize.isAccessibilitySize ? 1 : 2) { break }
+        var patches: [CardCollection.Patch] = []
+        for sighting in collection.cards where collection.placement(of: sighting.identifier)?.setID == local.set.id {
+            guard seen.insert(sighting.scientificName).inserted, let patch = collection.patch(of: sighting.identifier) else { continue }
+            patches.append(patch)
+            if patches.count == (typeSize.isAccessibilitySize ? 2 : 3) { break }
         }
-        return cards
+        return patches
+    }
+}
+
+/// The goal on Listen (issue #150, G7): the Guild closest to its monthly goal, its emblem, and how far it has to go, which is a reason
+/// to go now. It opens the Guild. It's there only for a signed-in member with a goal still running, and takes no room otherwise.
+struct GuildGoalLine: View {
+    @Environment(CircleStore.self) private var circles
+    @Environment(\.openCircle) private var openCircle
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// The reference's emblem, 110 of 900 at this screen's width.
+    private static let emblem: CGFloat = 49
+
+    var body: some View {
+        if let closest = circles.closestGoal() {
+            Button {
+                openCircle(closest.circle.id)
+            } label: {
+                AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
+                    GuildEmblem(identity: GuildIdentity(circleID: closest.circle.id), size: Self.emblem)
+                    Text("\(Text(closest.circle.name).fontWeight(.semibold)) \(GoalWords.stillToGo(closest.goal))")
+                        .font(JournalFont.body)
+                        .foregroundStyle(Color.ink)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.journalPress)
+            .accessibilityLabel("\(closest.circle.name) \(GoalWords.stillToGo(closest.goal))")
+            .accessibilityHint("Opens the Guild.")
+            .accessibilityIdentifier("listen-guild-goal")
+        }
+    }
+}
+
+/// One of the latest patches, with no words under it, opening its page.
+private struct LatestPatch: View {
+    @Environment(PackLibrary.self) private var library
+    let patch: CardCollection.Patch
+    let side: CGFloat
+
+    var body: some View {
+        let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
+        let name = PatchText.name(of: patch, library: library)
+        let edition = PatchEdition.of(setID: patch.placement.setID)
+        NavigationLink(value: Route.patch(patch.id, from: .latest)) {
+            PatchView(state: state, edition: edition, tag: name)
+                .frame(width: side)
+                .patchLiftSource(PatchLiftID(key: patch.id, surface: .latest))
+                // Its art takes no touches of its own (`PatchView`): the whole patch is what opens.
+                .contentShape(Rectangle())
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(PatchText.spoken(patch, name: name, beingSewn: state == .beingSewn))
+        }
+        .buttonStyle(.patchLift)
+        .modifier(PatchPeekActions(patch: patch, surface: .latest, state: state, edition: edition, tag: name))
+        .accessibilityHint("Opens the patch. Turn it over for its story.")
+        .accessibilityIdentifier("board-patch")
     }
 }

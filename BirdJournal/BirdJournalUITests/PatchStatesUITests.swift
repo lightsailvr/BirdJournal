@@ -48,7 +48,9 @@ final class PatchStatesUITests: XCTestCase {
         let app = launch(seeded + ["-autoScreen", "set"])
         let row = app.buttons.matching(identifier: "set-species-silhouette").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(row.label, "001, Canada Goose, not yet found here")
+        XCTAssertEqual(row.label, "001, Canada Goose, still out there")
+        XCTAssertTrue(app.staticTexts["157 still out there"].exists, "one count, once, as a heading; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(app.staticTexts["Not yet found here"].exists)
         row.tap()
         XCTAssertTrue(app.staticTexts["Canada Goose"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["Branta canadensis"].exists, "the Atlas profile")
@@ -67,7 +69,7 @@ final class PatchStatesUITests: XCTestCase {
         XCTAssertTrue(element(app, "species-set-number").exists, "its number")
         XCTAssertEqual(element(app, "species-set-number").label, "Number 1 of 160 in Los Angeles")
         XCTAssertFalse(app.buttons["board-patch"].exists, "no patch for a bird you haven't found")
-        app.buttons["Open in Field Guide"].tap()
+        app.buttons["Open in Atlas"].tap()
         XCTAssertTrue(app.staticTexts["Branta canadensis"].waitForExistence(timeout: 10), "its Atlas profile: \(app.debugDescription.prefix(3000))")
     }
 
@@ -117,7 +119,7 @@ final class PatchStatesUITests: XCTestCase {
     func testANewPatchWithoutItsPaintingGoesStraightToTheFinishedPage() throws {
         let app = launch(seeded + ["-fakePatchArt", "missing", "-autoScreen", "reveal", "-autoCardSpecies", "Sayornis nigricans"])
         XCTAssertTrue(element(app, "revealed-patch").waitForExistence(timeout: 15), "no stitching without a painting: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts["Your sighting is already saved."].exists, "the sighting is saved however the art stands")
+        XCTAssertTrue(app.buttons["Done"].exists, "the page is the same however the art stands")
     }
 
     // MARK: - Uncharted
@@ -127,7 +129,7 @@ final class PatchStatesUITests: XCTestCase {
         let app = launch(seeded + ["-autoBoard", "uncharted", "-autoScreen", "cards"])
         let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH \"Anna's Hummingbird, Uncharted patch\"")).firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts["Uncharted · 2 outside every set"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["2 outside every set"].exists, "screen: \(app.debugDescription.prefix(3000))")
         tile.tap()
         let flip = element(app, "card-flip")
         XCTAssertTrue(flip.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
@@ -201,7 +203,11 @@ final class PatchStatesUITests: XCTestCase {
     @MainActor
     func testASightingWithNoLocationExplainsItsRarityInPlainWords() throws {
         let app = launch(seeded + ["-autoScreen", "sighting", "-autoCardSpecies", "Turdus merula"])
+        XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
+        let opens = app.buttons["Rarity"]
+        for _ in 0..<8 where !opens.isHittable { app.swipeUp() }
+        opens.tap()
         let rarity = app.staticTexts["Rarity unavailable for this place and season. No location was saved with this sighting, and rarity is never guessed."]
-        XCTAssertTrue(rarity.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(rarity.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
     }
 }

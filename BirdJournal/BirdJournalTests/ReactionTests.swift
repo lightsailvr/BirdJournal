@@ -63,6 +63,15 @@ struct ReactionClientTests {
         #expect(without.reactions == ReactionCount.none)
     }
 
+    @Test("compare reads the editions a friend found each species in, earliest first")
+    func compareEditions() async throws {
+        let recorder = Recorder()
+        recorder.responses = [http(200, #"{"friend":{"id":"maya","display_name":"Maya Ortiz"},"species":[{"species_id":"s","scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","method":"seen","editions":["us-ca-sd","us-ca-la"]},{"species_id":"t","scientific_name":"Turdus merula","common_name":"Common Blackbird","method":"heard","editions":[]}]}"#)]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        let friend = try await client.compare(friendID: "maya", accessToken: "t")
+        #expect(friend.species.map(\.editions) == [["us-ca-sd", "us-ca-la"], []])
+    }
+
     @Test("compare reads the friend's species")
     func compare() async throws {
         let recorder = Recorder()
@@ -72,6 +81,7 @@ struct ReactionClientTests {
         #expect(recorder.requests[0].url?.path() == "/v1/friends/maya/compare")
         #expect(friend.friend.name == "Maya Ortiz")
         #expect(friend.species.map(\.method) == [.seen])
+        #expect(friend.species.first?.editions == [], "an older server says nothing of editions")
         await #expect(throws: CircleError.notFound) { try await client.compare(friendID: "zed", accessToken: "t") }
     }
 }
@@ -90,7 +100,7 @@ struct ReactionCountTests {
     @Test("the birder's own find says what friends gave")
     func summary() {
         #expect(ReactionBar.summary([ReactionCount(kind: .lovely, count: 2, mine: false), ReactionCount(kind: .together, count: 1, mine: false)])
-                == "Lovely find 2 · Let's go together 1")
+                == "Lovely find 2, Let's go together 1")
     }
 
     @Test("the fixed set, in order, with no comments")
@@ -137,6 +147,92 @@ struct BirdComparisonTests {
         #expect((comparison.myCount, comparison.theirCount) == (2, 2))
         #expect(BirdComparison.word(nil) == "Not yet")
         #expect(BirdComparison.word(.seen) == "Seen")
+    }
+
+    @Test("the boards: theirs you don't have yet, what you both have, only yours, each with the patch it shows")
+    func boards() throws {
+        let griffith = Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
+        let elsewhere = Coordinate(latitude: 40, longitude: 40, accuracy: 10)
+        let square = [[[CardSet.Point(longitude: 0, latitude: 0), CardSet.Point(longitude: 1, latitude: 0), CardSet.Point(longitude: 1, latitude: 1), CardSet.Point(longitude: 0, latitude: 1), CardSet.Point(longitude: 0, latitude: 0)]]]
+        let losAngeles = CardSet(id: "us-ca-la", name: "Los Angeles", edition: "Citrus", species: ["Sayornis nigricans", "Zenaida macroura"], regions: [CardSet.Region(name: "la", polygons: square)])
+        let entry = { (label: String, at: TimeInterval, place: Coordinate) in
+            CardCollection.Entry(identifier: UUID(), speciesID: label, confirmedAt: Date(timeIntervalSince1970: at), location: place)
+        }
+        let collection = CardCollection(
+            [
+                entry("Sayornis nigricans_Black Phoebe", 200, griffith),
+                entry("Calypte anna_Anna's Hummingbird", 100, elsewhere),
+                // Sewn in Los Angeles first, then Uncharted: the first patch is the one shown.
+                entry("Zenaida macroura_Mourning Dove", 100, griffith),
+                entry("Zenaida macroura_Mourning Dove", 900, elsewhere),
+            ],
+            sets: [losAngeles]
+        )
+        let comparison = BirdComparison(
+            mine: [("Sayornis nigricans_Black Phoebe", .seen), ("Calypte anna_Anna's Hummingbird", .heard), ("Zenaida macroura_Mourning Dove", .heard)],
+            theirs: [
+                .init(speciesID: "a", scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker", method: .heard, editions: ["us-ca-sd", "us-ca-la"]),
+                .init(speciesID: "b", scientificName: "Sayornis nigricans", commonName: "Black Phoebe", method: .heard, editions: ["us-ca-la"]),
+                .init(speciesID: "c", scientificName: "Sialia mexicana", commonName: "Western Bluebird", method: .seen, editions: []),
+                .init(speciesID: "d", scientificName: "Ardea alba", commonName: "Great Egret", method: .seen, editions: ["made-up"]),
+            ],
+            myPatches: collection.patches
+        )
+        let woodpecker = try #require(comparison.onlyTheirs.first { $0.commonName == "Acorn Woodpecker" })
+        #expect(woodpecker.edition == "us-ca-sd", "the edition they first found it in, not any other")
+        #expect(comparison.onlyTheirs.first { $0.commonName == "Western Bluebird" }?.edition == nil, "no edition from the server: the blank with its tag")
+        #expect(comparison.onlyTheirs.first { $0.commonName == "Great Egret" }?.edition == "made-up", "PatchEdition draws an unknown set as a plain blank")
+        #expect(comparison.both.map(\.edition) == ["us-ca-la"], "what you both have shows the friend's")
+        #expect(comparison.onlyMine.map(\.commonName) == ["Anna's Hummingbird", "Mourning Dove"])
+        #expect(comparison.onlyMine.map(\.edition) == [nil, "us-ca-la"], "your own, the earliest sewn, or Uncharted's blank")
+        // Where each goes.
+        #expect(woodpecker.route == .species(scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker"))
+        #expect(comparison.both.first?.route == .species(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"))
+        let onlyMine = try #require(comparison.onlyMine.last)
+        #expect(onlyMine.myPatch == CardCollection.Patch.Key(speciesID: "Zenaida macroura_Mourning Dove", setID: "us-ca-la"))
+        #expect(onlyMine.route == .patch(try #require(onlyMine.myPatch), from: .compare))
+    }
+
+    @Test("the friend's phone's words are never a bird's name: BirdNET names what the packs don't, and otherwise it goes nowhere")
+    func hostileNames() throws {
+        let comparison = BirdComparison(
+            mine: [],
+            theirs: [
+                .init(speciesID: "x", scientificName: "Turdus merula", commonName: "Call me 555-1234", method: .seen),
+                .init(speciesID: "y", scientificName: "Not a real bird", commonName: "Call me 555-1234", method: .seen),
+            ]
+        )
+        #expect(comparison.onlyTheirs.map(\.commonName) == ["Common Blackbird", BirdNames.unnamed], "and what nothing names goes last")
+        #expect(comparison.onlyTheirs[0].route == .species(scientificName: "Turdus merula", commonName: "Common Blackbird"))
+        #expect(comparison.onlyTheirs[1].route == nil, "no profile headed with the sender's words")
+        #expect(!comparison.onlyTheirs.contains { $0.commonName.contains("555") })
+    }
+
+    @Test("names come from the packs, then your own sightings, never the friend's phone")
+    func names() {
+        let theirs: [FriendBirds.Species] = [
+            .init(speciesID: "x", scientificName: "Sayornis nigricans", commonName: "Buy my thing", method: .seen),
+            .init(speciesID: "y", scientificName: "Not in BirdNET", commonName: "Rude words", method: .seen),
+            .init(speciesID: "z", scientificName: "Melanerpes formicivorus", commonName: "Rude words", method: .seen),
+        ]
+        let comparison = BirdComparison(
+            mine: [("Not in BirdNET_My Own Word", .heard)], theirs: theirs,
+            names: BirdNames(packs: ["Sayornis nigricans": "Pack's Phoebe"])
+        )
+        #expect(comparison.onlyTheirs.map(\.commonName) == ["Acorn Woodpecker", "Pack's Phoebe"], "sorted by what's shown")
+        #expect(comparison.both.map(\.commonName) == ["My Own Word"])
+    }
+
+    @Test("Heard or Seen stays under every patch, and the tally stays")
+    func words() {
+        let comparison = BirdComparison(
+            mine: [("Sayornis nigricans_Black Phoebe", .seen), ("Calypte anna_Anna's Hummingbird", .heard), ("Zenaida macroura_Mourning Dove", .heard)],
+            theirs: [species("Sayornis nigricans_Black Phoebe", .seen), species("Calypte anna_Anna's Hummingbird", .seen), species("Ardea alba_Great Egret", .heard)]
+        )
+        let captions = (comparison.onlyTheirs + comparison.both + comparison.onlyMine).map { BirdComparison.caption($0, friend: "Maya") }
+        #expect(captions == ["Heard by Maya", "You heard, Maya saw", "Seen by both", "Heard by you"])
+        #expect(comparison.tally(friend: "Maya") == "You have 3, Maya has 3, and you both have 2.")
+        #expect(BirdComparison.leadTitle(friend: "Maya") == "Maya has these. Go find them.")
     }
 
     @Test("nobody's birds compare to nothing")

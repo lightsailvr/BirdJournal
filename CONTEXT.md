@@ -16,11 +16,26 @@ The user-facing words for three places differ from the internal ones, which code
 
 | User-facing | Internal | Where |
 |---|---|---|
-| **Collection** | Journal | the tab with a birder's cards, sightings and species (`Journal/`); "Collection" below is already the domain word for all of one birder's cards |
-| **Atlas**, "Field guide & regional sets" | Field Guide | the tab with every species, the sets and the packs (`Guide/`, `Packs/`) |
+| **Collection** | Journal | the tab with a birder's patches, sightings and species (`Journal/`); "Collection" below is already the domain word for all of one birder's patches |
+| **Atlas**, "Field guide & sets" | Field Guide | the tab with every species, the sets and the field-guide downloads (`Guide/`, `Packs/`) |
 | **Guild** | Circle | the invite-only group (`Circles/`, `Circle*` models, `/v1/circles` routes) |
 
-The tabs still read Journal, Field Guide and Circles until #117 renames them; Circle is Guild in every user-facing string since #118 (pages, invites, pushes, the invite site).
+### Words a birder reads
+
+One word for each thing, in every string, VoiceOver label and error (#150). The words below the headings of this file are the domain's and may be what the code says; this table is what a person reads. Internal identifiers keep their names.
+
+| Word in copy | Means | Retired from copy |
+|---|---|---|
+| **Set** | A place's collection of birds | board, region |
+| **Edition** | How a set's patches look | |
+| **Place** | Plain English for where you are | |
+| **Field-guide download** | What a pack is, to a birder ("the download" or "the field guide" once it's clear; the page's title is "Downloads") | pack |
+| **Patch**, **paper card** | The collectible and its reverse | card, on its own |
+| **Sewn** | What a bird in a set is once you have its patch: "3 of 160 sewn" | species collected |
+| **Still out there** | A bird in a set you haven't found: "157 still out there", once on a page | not yet found here |
+| **Plate** | A set's painted cover printed on card stock in the Atlas, with its margin, keyline and credit | cover, on a page of the Atlas |
+
+Kept word for word: "Wonder is nearby.", "Your first patch is a bird away.", "Fourteen birds, together.", "First for the Guild", "Jealous!", "Possible matches. Add the birds you recognize."
 
 ## Listening
 
@@ -51,7 +66,7 @@ _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fall
 ## Packs
 
 **Pack**:
-A downloadable bundle for one region: species, photos, reference sounds, descriptions, stats, lore and patches.
+A downloadable bundle for one set's place: species, photos, reference sounds, descriptions, stats, lore and patches. In copy, a field-guide download.
 _Avoid_: region pack, bundle, dataset
 
 **Reference sound**:
@@ -85,14 +100,14 @@ The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thre
 _Avoid_: animation, unlock
 
 **Board**:
-Your patches in one place in Collection, on felt across the whole sheet, in collector-number order; Uncharted has one too. A bird you haven't found isn't on it.
+Your patches in one place in Collection, on felt across the whole sheet, in collector-number order; Uncharted has one too. A bird you haven't found isn't on it. The internal word: in copy it's the set.
 _Avoid_: grid, shelf
 
 **Blank**:
 An edition's shape and cord drawn by the app when the phone has no painting of a bird you did find there: its name on a paper tag, or "Being sewn" while its pack downloads. Uncharted's is the plain canvas round. Never an error patch, and never shown for a bird you haven't found (#138).
 
 **Not yet found**:
-A bird in a set with no patch of yours there. It has no patch or pattern anywhere: only a silhouette row on the set's page in the Atlas, with its number and name, and its own no-sightings page. Not a state of any board.
+A bird in a set with no patch of yours there. It has no patch or pattern anywhere: only a silhouette row on the set's page in the Atlas, with its number and name, and its own no-sightings page. Not a state of any board. In copy, "still out there".
 
 **Count**:
 How many surviving sightings a patch has: "Seen 8 times in Los Angeles".
@@ -103,7 +118,7 @@ What the sighting that created a patch did; a patch's sewn date is its earliest 
 _Avoid_: unlocked, earned (for a patch)
 
 **Card**:
-The paper card a patch turns over to (#134): its story, the species' biology and your history with the bird there. One per patch, never stored. The share image draws its front, on linen beneath the patch (#136). Art, captions and retries never make another.
+In copy always the paper card (#150). The paper card a patch turns over to (#134): its story, the species' biology and your history with the bird there. One per patch, never stored. The share image draws its front, on linen beneath the patch (#136). Art, captions and retries never make another.
 _Avoid_: trading card, edition (for the card itself), the collectible (that is the patch)
 
 **Collection**:
@@ -119,15 +134,15 @@ How unusual a species is at a sighting's place and week, saved at the add as a l
 _Avoid_: score, frequency, abundance
 
 **Set**:
-The species of one pack's region, in taxonomic order, which a birder collects toward: its progress counts the patches sewn in it. Sightings outside every set belong to the Uncharted set.
-_Avoid_: region, collection (for a set), checklist
+A place's collection of birds: the species of one pack, in taxonomic order, which a birder collects toward. Its progress counts the patches sewn in it. Sightings outside every set belong to the Uncharted set.
+_Avoid_: region, board (in copy), collection (for a set), checklist
 
 **Collector number**:
 A species' position in its set, shown as "021/160" on its own, and "No. 021" beside a name on a board or a paper card, as design guide 2.0 sets it.
 _Avoid_: card number
 
 **Edition**:
-The regional look of a set, named on its patches and cards, such as "Coastal edition"; since #131 also its patches' shape, cord, twill and stitched motif.
+How a set's patches look, named on them and on their paper cards, such as "Coastal edition"; since #131 also their shape, cord, twill and stitched motif.
 _Avoid_: variant, version
 
 **Lore**:

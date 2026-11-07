@@ -1,35 +1,46 @@
 import Album
 import Identification
 import Pack
-import SwiftData
 import SwiftUI
 
-/// The run under way (issue #28): the source with its state, the elapsed time, a modest waveform, the species heard
-/// with Review or Added on each row (a calling bird's row raised), and Stop listening pinned above the tab bar; and,
-/// once the run has ended, the same list for the review. No cover or other decoration here (issue #117, design guide
-/// page 11): the list gets the room.
+/// The run under way (issue #28), a hunt (issue #150): the source with its state and place, the elapsed time, a modest
+/// waveform, how many new patches are waiting, the species heard with Sew it, Add or Review on each row (a calling bird's row
+/// raised), and Stop listening pinned above the tab bar; and, once the run has ended, the same list for the review. No cover or
+/// other decoration here (issue #117, design guide page 11): the list gets the room.
 struct ActiveListeningView: View {
     @Environment(ListeningCoordinator.self) private var run
-    @Environment(PackLibrary.self) private var library
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// For each row's "new here" or "seen 7 times" (issue #132).
-    @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// For the summary's count of what's new and what you have.
+    @Environment(CollectionStore.self) private var collectionStore
+    @Environment(\.scenePhase) private var scenePhase
+    #if DEBUG
+    @Environment(\.openCollection) private var openCollection
+    #endif
+    /// The rows hold still around a touch; so does what's above them, while it would push them about.
+    @State private var held = HeldListOrder<Species>()
+    @State private var heldHunt: RunHunt?
 
     var body: some View {
+        ScrollViewReader { proxy in
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
                 StatusLine()
                     .padding(.top, 2)
+                if let coordinate = run.coordinate {
+                    PlaceLine(coordinate: coordinate, fixedAt: run.locationFixedAt, isRunning: run.state.isActive, heldAt: held.frozenAt)
+                        .padding(.top, 2)
+                }
 
-                ElapsedTime(startedAt: run.startedAt, isRunning: run.state.isActive)
+                ElapsedTime(startedAt: run.clockStart, stoppedAt: run.clockStoppedAt)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 22)
 
-                Waveform(levels: run.waveform, isLive: run.state == .listening && !reduceMotion)
+                RunWaveform()
                     .frame(height: 44)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 10)
-                    .accessibilityLabel(run.state == .listening ? "Listening to live audio" : "Audio paused")
 
                 if case .paused(let reason) = run.state {
                     ErrorNotice(reason.phoneTitle, message: reason.phoneText, symbol: "eyeglasses")
@@ -52,69 +63,116 @@ struct ActiveListeningView: View {
                         .padding(.top, 18)
                 }
 
-                Text(run.summary)
-                    .font(JournalFont.body)
-                    .foregroundStyle(Color.ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 10)
-                    .accessibilityAddTraits(.isHeader)
-                if let coordinate = run.coordinate {
-                    PlaceLine(coordinate: coordinate, fixedAt: run.locationFixedAt, isRunning: run.state.isActive)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 4)
-                }
-
                 if run.candidates.isEmpty {
                     HStack(spacing: 10) {
-                        if run.state == .starting { ProgressView().tint(Color.moss) }
+                        if run.state == .starting { ProgressView() }
                         Text(emptyText)
                     }
                     .font(JournalFont.body)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 16)
                 } else {
-                    // Once a second while listening, so "Heard just now" ages and a calling marker lapses on time;
-                    // rows move with the order (issue #42), animated unless motion is reduced.
-                    let collection = library.collection(of: sightings)
+                    HuntSummary(hunt: heldHunt ?? run.hunt(in: collectionStore.collection))
+                        .padding(.top, 16)
+                        .id("run-rows")
+                    // Once a second while listening, so "just now" ages and a calling marker lapses on time; rows move with
+                    // the order (issue #42), animated unless motion is reduced. Patches on these rows are plain bitmaps, and
+                    // the waveform has its own view so that its dozen updates a second don't reach them. The order holds still
+                    // around a touch; what's on a row doesn't.
                     TimelineView(.periodic(from: .now, by: run.state.isActive ? 1 : 3_600)) { context in
-                        let ordered = run.orderedCandidates
+                        let order = run.orderedCandidates
+                        let birds = order.map(\.species)
+                        let ordered = held.shown(birds).compactMap { bird in order.first { $0.species == bird } }
                         let calling = run.callingSpecies
                         VStack(spacing: 0) {
                             ForEach(Array(ordered.enumerated()), id: \.element.id) { position, candidate in
                                 let isCalling = calling.contains(candidate.species)
-                                CandidateRow(candidate: candidate, isAdded: run.isAdded(candidate), isCalling: isCalling, startedAt: run.startedAt, now: context.date, position: position, seenHere: collection.count(ofSpeciesID: candidate.species.birdnetLabel, at: run.coordinate)) {
+                                CandidateRow(candidate: candidate, isCalling: isCalling, now: context.date, position: position) {
                                     run.reviewing = candidate
+                                } voiceOverFocused: { isFocused in
+                                    setHolding(.voiceOverFocus(candidate.species), isFocused)
                                 }
                                 .padding(.horizontal, 10)
+                                // Keyed to the bird: an id with the row's position in it would make new rows at each re-sort.
+                                .id("run-row-\(candidate.species.scientificName)")
                                 .background(isCalling ? Color.raised : Color.clear, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                                 .padding(.horizontal, -10)
                                 RowRule()
                             }
                         }
                         .animation(reduceMotion ? nil : .snappy(duration: 0.4), value: ordered.map(\.id))
+                        .gesture(FingerDown { isDown in setHolding(.finger, isDown) })
+                        .onChange(of: birds) { _, birds in held.take(birds) }
                     }
                     .padding(.top, 12)
                     Text("Possible matches. Add the birds you recognize.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
                         .padding(.top, 12)
                 }
 
             }
         }
+        .onScrollPhaseChange { _, phase in
+            // A finger dragging or the flick it left. Not `.animating`: the tab's scroll-to-top with the list already at the top
+            // never reports that it's over.
+            setHolding(.scroll, phase == .interacting || phase == .decelerating)
+            #if DEBUG
+            // `-fakeLeaveDuringFlick YES`: another tab while the list decelerates, quicker than a UI test can tap one.
+            if phase == .decelerating, UserDefaults.standard.bool(forKey: "fakeLeaveDuringFlick") { openCollection(nil) }
+            #endif
+        }
+        .task(id: held.releaseAt) {
+            guard let releaseAt = held.releaseAt else { return }
+            try? await Task.sleep(for: .seconds(max(releaseAt.timeIntervalSinceNow, 0)))
+            guard !Task.isCancelled else { return }
+            held.tick(at: .now, isVoiceOverRunning: UIAccessibility.isVoiceOverRunning)
+        }
+        // The safety net's clock, only while something holds.
+        .task(id: held.isHeld) {
+            while held.isHeld, !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                if !Task.isCancelled { held.tick(at: .now, isVoiceOverRunning: UIAccessibility.isVoiceOverRunning) }
+            }
+        }
+        .onChange(of: held.isHeld) { _, isHeld in
+            if !isHeld { heldHunt = nil }
+        }
+        // Whatever was holding the list may never say it ended once one of these has happened to it.
+        .onDisappear { held.letGoOfEverything(at: .now) }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { held.letGoOfEverything(at: .now) }
+        }
+        .onChange(of: run.reviewing != nil || run.isReviewing || run.reveal != nil) { _, isCovered in
+            if isCovered { held.letGoOfEverything(at: .now) }
+        }
+        #if DEBUG
+        .debugScroll(proxy, to: UserDefaults.standard.string(forKey: "autoScrollTo") ?? "run-rows", when: !run.candidates.isEmpty)
+        #endif
+        }
         .navigationTitle(run.state.isActive ? "Listening" : "Last run")
         .navigationBarTitleDisplayMode(.large)
-        // Stop stays where a thumb can reach it, above the tab bar, however long the list grows.
-        .safeAreaInset(edge: .bottom) {
+        .holdsPatchLight()
+        // Stop stays where a thumb can reach it, above the tab bar, however long the list grows; quieter than the birds it
+        // sits under (issue #150).
+        .scrollEdgeEffectStyle(.hard, for: .bottom)
+        .safeAreaBar(edge: .bottom) {
             Group {
                 if run.state.isActive {
                     Button {
                         Task { await run.stop() }
                     } label: {
+                        // A compact pill, quieter than the rows; across the page only where its words need the room.
                         Label(run.state == .stopping ? "Stopping…" : "Stop listening", systemImage: "stop.fill")
+                            .padding(.horizontal, 8)
+                            .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : nil)
                     }
-                    .buttonStyle(.journalPrimary)
+                    .buttonStyle(.journalQuiet)
+                    // Its words wrap inside their shape rather than truncate, whatever a toast leaves of the page.
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
                     .disabled(run.state == .stopping || run.state == .starting)
                 } else {
                     Button("Done") { run.dismissEnded() }
@@ -123,12 +181,30 @@ struct ActiveListeningView: View {
             }
             .padding(.horizontal, JournalLayout.margin)
             .padding(.vertical, 10)
-            .background(.bar)
         }
     }
 }
 
 extension ActiveListeningView {
+    /// A finger, a scroll or VoiceOver's focus has come to the list, or left it.
+    fileprivate func setHolding(_ holder: HeldListOrder<Species>.Holder, _ isHolding: Bool) {
+        #if DEBUG
+        // `-fakeSheetDuringTouch YES`: a review lands a second into a finger's touch, as a run ending or a reveal can.
+        if holder == .finger, isHolding, UserDefaults.standard.bool(forKey: "fakeSheetDuringTouch") {
+            Task {
+                try? await Task.sleep(for: .seconds(1))
+                run.reviewing = run.candidates.first
+            }
+        }
+        #endif
+        if isHolding {
+            if !held.isHeld { heldHunt = run.hunt(in: collectionStore.collection) }
+            held.hold(holder, showing: run.orderedCandidates.map(\.species), at: .now)
+        } else {
+            held.letGo(holder, at: .now)
+        }
+    }
+
     /// What the empty list says: what the run is doing until a bird is heard.
     fileprivate var emptyText: String {
         switch run.state {
@@ -144,6 +220,18 @@ extension ActiveListeningView {
     }
 }
 
+/// The live level, on its own: it changes a dozen times a second, and reading it in the page would redraw the rows with it.
+private struct RunWaveform: View {
+    @Environment(ListeningCoordinator.self) private var run
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
+
+    var body: some View {
+        Waveform(levels: run.waveform, isLive: run.state == .listening && !reduceMotion)
+            .accessibilityLabel(run.state == .listening ? "Listening to live audio" : "Audio paused")
+    }
+}
+
 /// The dot and the source under the title: a filled moss dot while listening, a hollow ring while starting, paused or
 /// stopping, and a filled grey dot once ended. The shape tells them apart as well as the colour (issue #119: the
 /// system orange it used measured 2:1 on the light page, under the 3:1 a glyph needs).
@@ -153,8 +241,8 @@ private struct StatusLine: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(isWaiting ? Color.clear : color)
-                .overlay(Circle().strokeBorder(isWaiting ? color : Color.clear, lineWidth: 1.5))
+                .fill(isWaiting ? AnyShapeStyle(Color.clear) : color)
+                .overlay(Circle().strokeBorder(isWaiting ? color : AnyShapeStyle(Color.clear), lineWidth: 1.5))
                 .frame(width: 9, height: 9)
             Text(text)
                 .font(JournalFont.body)
@@ -163,11 +251,11 @@ private struct StatusLine: View {
         .accessibilityElement(children: .combine)
     }
 
-    private var color: Color {
+    private var color: AnyShapeStyle {
         switch run.state {
-        case .listening: .moss
-        case .starting, .interrupted, .paused, .resuming, .stopping: .ink
-        case .idle, .ended: .inkSecondary
+        case .listening: AnyShapeStyle(TintShapeStyle.tint)
+        case .starting, .interrupted, .paused, .resuming, .stopping: AnyShapeStyle(Color.ink)
+        case .idle, .ended: AnyShapeStyle(Color.inkSecondary)
         }
     }
 
@@ -183,7 +271,7 @@ private struct StatusLine: View {
         switch run.state {
         case .starting: return "Starting \(source == .glasses ? "the glasses" : "the microphone")…"
         case .listening: return source == .glasses ? "Glasses microphones" : "iPhone microphone"
-        case .interrupted, .paused, .resuming: return "\(source.title) · paused"
+        case .interrupted, .paused, .resuming: return "\(source.title), paused"
         case .stopping: return "Stopping…"
         case .ended(.stopped): return "Listening stopped"
         case .ended(.endedByGlasses): return "Ended by the glasses"
@@ -196,16 +284,18 @@ private struct StatusLine: View {
 /// Minutes and seconds since the run started, ticking once a second while it runs.
 struct ElapsedTime: View {
     let startedAt: Date?
-    let isRunning: Bool
+    /// Where it stands still: paused, or over.
+    let stoppedAt: Date?
     @ScaledMetric(relativeTo: .largeTitle) private var size: CGFloat = 40
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: isRunning ? 1 : 3_600)) { context in
-            Text(Self.text(from: startedAt, to: context.date))
+        TimelineView(.periodic(from: .now, by: stoppedAt == nil ? 1 : 3_600)) { context in
+            let now = stoppedAt ?? context.date
+            Text(Self.text(from: startedAt, to: now))
                 .font(.system(size: size, weight: .regular, design: .serif))
                 .monospacedDigit()
                 .foregroundStyle(Color.ink)
-                .accessibilityLabel(Self.spokenText(from: startedAt, to: context.date))
+                .accessibilityLabel(Self.spokenText(from: startedAt, to: now))
         }
     }
 
@@ -238,7 +328,7 @@ struct Waveform: View {
             HStack(alignment: .center, spacing: gap) {
                 ForEach(Array(levels.enumerated()), id: \.offset) { _, level in
                     Capsule()
-                        .fill(Color.moss.opacity(isLive ? 0.9 : 0.35))
+                        .fill(.tint.opacity(isLive ? 0.9 : 0.35))
                         .frame(width: width, height: 4 + CGFloat(level) * (geometry.size.height - 4))
                 }
             }
@@ -248,7 +338,7 @@ struct Waveform: View {
     }
 }
 
-/// "Near Griffith Park, Los Angeles · updated 3 min ago": where the next add is recorded and how fresh that fix is
+/// "Near Griffith Park, Los Angeles, updated 3 min ago": where the next add is recorded and how fresh that fix is
 /// (issue #44), ageing once a second while the run is on. The name is looked up once per kilometre of movement, so
 /// a walk does not geocode every step.
 private struct PlaceLine: View {
@@ -256,6 +346,8 @@ private struct PlaceLine: View {
     let coordinate: Coordinate
     let fixedAt: Date?
     let isRunning: Bool
+    /// While the list holds still, the line's age does too: it can wrap as it grows, which would push the rows down.
+    var heldAt: Date?
     /// The coordinate the name was looked up for, within a kilometre of the current one.
     @State private var lookedUp: Coordinate?
 
@@ -272,7 +364,7 @@ private struct PlaceLine: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: isRunning ? 1 : 3_600)) { context in
-            Text(Self.text(place: placeText, fixedAt: fixedAt, now: context.date))
+            Text(Self.text(place: placeText, fixedAt: fixedAt, now: heldAt ?? context.date))
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
                 .accessibilityIdentifier("place-line")
@@ -287,10 +379,10 @@ private struct PlaceLine: View {
         "Near \(places.name(for: lookedUp ?? coordinate) ?? coordinate.formatted)"
     }
 
-    /// "Near <place> · updated 3 min ago"; the place alone without a fix time.
+    /// "Near <place>, updated 3 min ago"; the place alone without a fix time.
     static func text(place: String, fixedAt: Date?, now: Date) -> String {
         guard let fixedAt else { return place }
-        return "\(place) · updated \(AgeText.text(seconds: now.timeIntervalSince(fixedAt)))"
+        return "\(place), updated \(AgeText.text(seconds: now.timeIntervalSince(fixedAt)))"
     }
 }
 
@@ -317,100 +409,5 @@ private struct LocationNotice: View {
                 }
             }
         }
-    }
-}
-
-/// One species heard: thumbnail, name, whether it is calling now or when it was last heard, and Review or the
-/// Added mark. The row is the same height with and without a photo, and never moves when the scores change; it
-/// moves with the list order (issue #42), a moss ring on the thumbnail and "Calling now" with a level glyph while
-/// the bird is calling.
-struct CandidateRow: View {
-    @Environment(PackLibrary.self) private var library
-    @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let candidate: Candidate
-    let isAdded: Bool
-    var isCalling = false
-    let startedAt: Date?
-    /// The moment the heard text is written against, from the screen's clock.
-    var now: Date = .now
-    /// The row's position in the list, for the UI tests.
-    var position: Int?
-    /// How many sightings of the bird are in the patch an add here would join, 0 when it would sew a new one; nil
-    /// says nothing (issue #132).
-    var seenHere: Int? = nil
-    let review: () -> Void
-
-    var body: some View {
-        let reference = library.species(scientificName: candidate.species.scientificName)
-        let stacked = typeSize.stacksRows
-        AdaptiveRow(stacked: stacked) {
-            PackImage(url: reference.flatMap { found in found.species.photos.first.map(found.pack.lensImageURL(for:)) })
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                .overlay {
-                    if isCalling {
-                        RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous)
-                            .strokeBorder(Color.moss, lineWidth: 2.5)
-                    }
-                }
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(reference?.species.commonName ?? candidate.species.commonName)
-                    .font(JournalFont.rowTitle)
-                    .foregroundStyle(Color.ink)
-                Group {
-                    if isCalling {
-                        HStack(spacing: 5) {
-                            Image(systemName: "waveform")
-                                .symbolEffect(.variableColor.iterative.reversing, isActive: !reduceMotion)
-                                .accessibilityHidden(true)
-                            Text("Calling now")
-                        }
-                        .font(JournalFont.supporting.weight(.medium))
-                        .foregroundStyle(Color.moss)
-                    } else {
-                        if isAdded {
-                            Label("Added to collection", systemImage: "checkmark.circle.fill")
-                                .font(JournalFont.supporting)
-                                .foregroundStyle(Color.inkSecondary)
-                        } else {
-                            Text([Self.heardText(candidate, startedAt: startedAt, now: now), seenHere.map(Self.seenText)].compactMap { $0 }.joined(separator: " · "))
-                                .font(JournalFont.supporting)
-                                .foregroundStyle(Color.inkSecondary)
-                        }
-                    }
-                }
-                .accessibilityIdentifier(position.map { "candidate-status-\($0)" } ?? "")
-            }
-            if !stacked { Spacer(minLength: 8) }
-            if isAdded {
-                Button(action: review) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(Color.moss)
-                        .frame(minWidth: 44, minHeight: 44)
-                }
-                .accessibilityLabel("Added. Review \(candidate.species.commonName)")
-            } else {
-                Button("Review", action: review)
-                    .buttonStyle(.journalOutlined)
-                    .accessibilityLabel("Review \(candidate.species.commonName)")
-            }
-        }
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
-        .onTapGesture(perform: review)
-    }
-
-    /// "new here" when an add would sew the bird's patch, else "seen 7 times".
-    static func seenText(_ count: Int) -> String {
-        count == 0 ? "new here" : "seen \(CardCollection.Patch.times(count))"
-    }
-
-    /// "Heard just now" within the last minute, else minutes ago, from the run's own clock.
-    static func heardText(_ candidate: Candidate, startedAt: Date?, now: Date) -> String {
-        guard let startedAt else { return "Heard" }
-        return "Heard \(AgeText.text(seconds: now.timeIntervalSince(startedAt) - candidate.lastHeardAt))"
     }
 }

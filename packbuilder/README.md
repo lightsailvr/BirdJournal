@@ -225,6 +225,12 @@ watercolours often end in.
   `packbuilder index` carries the committed `cover-thumbnail.jpg` (480 × 270 JPEG, base64) and refuses one that isn't
   the approved cover's. Commit the lock and the thumbnail together; then rebuild and pin the pack and publish the
   index, so the pack and the index show the same cover.
+- **In the app.** Every approved cover also ships in the app itself, so the Listen painting works before a set's pack is
+  on the phone and offline (issue #150): `uv run packbuilder bundle-covers` writes them at full size as JPEG, about 3 MB
+  together, with each `set.json` (so a phone that has never read the index knows which set it's in) and `covers.json`, into
+  the `Pack` target's `Covers` folder, which is committed. Run it after approving a
+  cover: `test_covers` fails while a bundled cover isn't the one its lock approved. It reads the cover cache, so the
+  chosen paintings have to be there (`packbuilder cover` paints a missing one from its seed).
 
 ## Patches
 
@@ -245,6 +251,61 @@ uv run packbuilder patch-review packs/us-ca-la --gap "Black Phoebe" --why "threa
 - **Reviewed**: every patch is reviewed on the contact sheets in `build/pack-art/<pack id>/patches/` (the reference bird beside its patch, with its state, measure and whether the dark clause was used). `patch.lock.json` pins each: the reference photo and isolation seed, the workflow and prompts versions, the edition's patch, the seed, the cut patch's SHA-256 (`<cache>/art/patches/<sha256>.png`, with `-raw.png` the painting as it came) and the review, as for pack art. A rejected patch is painted again with the next seed by the next run, with the current templates; a new prompts version alone leaves reviewed patches alone.
 - **In the pack (schema 5)**: an approved patch is written, without the pale rim of card its cut can leave along one side (`trim_rim`: that only changes the alpha, so the lock stands), as `patch/<species id>.avif`, its colour on transparency at 720 px on its longest side, and `patch/<species id>-layers.avif` at half size, its height map (thread relief plus the raised cord) in red, the cord's mask (25 px deep at 720 px) in green and the stitch order (one thread colour at a time, the largest first, the cord last) in blue (`patch_art.layers`), with a `patch` row: the files, its size, the bare twill's colour, the stitch layers' starts and its source photo. About 120 KB a species; a build with patches writes no pack art, which keeps Los Angeles inside its 200 MB budget.
 - **Running it**: about 20 s a patch on the box itself; from the Mac it waits on the tailnet (about a minute a patch on 2026-11-03). To run it on the box, copy `packbuilder/src`, `art/`, the pack's definition and locks and the isolated birds to a checkout-shaped folder there and run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli patches packbuilder/packs/<id> --comfy http://127.0.0.1:8189 --cache packbuilder/cache`, then copy `patch.lock.json`, `<cache>/art/patches/` and the sheets back.
+
+## Silhouettes
+
+A bird still out there shows its own shape on a set page, so a goose looks like a goose (#150). Nothing is painted: `packbuilder.silhouettes` takes the shape from the species' reference bird, already isolated on white in the art cache for its patch.
+
+```sh
+cd packbuilder
+uv run packbuilder silhouettes packs/us-ca-la        # derive what silhouette.lock.json lacks, then the contact sheets
+uv run packbuilder silhouette-review packs/us-ca-la --reject 22,49 --why "head down, no neck" --approve-all
+uv run packbuilder silhouette-review packs/us-ca-la --gap 154 --why "a blob: keep the glyph"
+```
+
+- **The recipe** (`derive`): everything that isn't paper (the isolated bird's background is pure white, so the threshold sits at 254: anything laxer eats an egret), specks dropped, holes filled only where they are plumage, cropped tight, the outline smoothed at four times the size, opaque white on transparency at 180 px on its longest side, 16 alpha steps. The app tints it at draw time.
+- **Which holes close**: a hole in the mask is either plumage blown to pure white (a Bald Eagle's head) or air (the gap between a gull's legs, which must stay open or its legs become a block). A ring of the bird just outside the hole tells them apart: on the 160 Los Angeles birds at least half of it is pale for plumage (the eagle's 56% and 62%) and at most 16% for air, but for one small gap by a Red-winged Blackbird's leg (57%), which closes. Pinholes close whatever is around them.
+- **The bird**: `art.silhouette.reference` in `overrides.json` (another of the pack's photos with a cached isolation, for a bird whose pose makes a poor shape), else the patch's reference in `patch.lock.json`, else the pack art's in `art.lock.json`. A species painted from text has none.
+- **The lock**: `silhouette.lock.json` pins the photo, isolation seed, recipe version, the picture's SHA-256 (its file in `<cache>/art/silhouettes/`), size, what the recipe noticed and the review. A warm lock derives nothing; a new reference or recipe derives again, and anything that comes out different is pending again.
+- **Reviewed by number**: the sheets in `build/pack-art/<pack id>/silhouettes/` show the isolated bird beside its silhouette in the set page's tile and tint, numbered as in `pack.json`, plus an overview; they say when the frame cuts the bird or it was small in its photo. Unlike a painting, a rejected silhouette would come back the same, so it stays rejected, and out of the pack, until `art.silhouette.reference` gives another bird. A gap keeps the app's glyph on purpose.
+- **In a build**: `packbuilder build` derives what the lock lacks and draws the sheets after the patches; `--no-silhouettes` skips the step (`--no-art` too), and a pack with no art lock yet has no step.
+- **In the pack**: an approved silhouette is written as `silhouette/<species id>.png` with a `silhouette` row (the file, its size, its source photo), about 1.8 KB a species. It came within schema 5, as `cover` did within 4: a reader that doesn't know the table never opens it, and an older pack has no such table, which reads as no silhouettes. Its LICENSE line credits the photo, so one whose photo left the pack stays out and is listed in `report.json`'s `unreviewed.silhouettes`.
+
+## Hero photos
+
+A bird's profile opens with its first photo, drawn filling a 3:2 slot, centred (`AttributedImage`). A portrait phone crop loses its top and bottom there, which is how Black Phoebe's profile came to open on a blurry back (#150). `packbuilder.hero_photos` reviews all of them as the profile shows them.
+
+```sh
+cd packbuilder
+uv run packbuilder hero-sheets packs/us-ca-la                                  # the first photos, flagged, and the proposals beside them
+uv run packbuilder hero-candidates packs/us-ca-la --species 4,12 --out /tmp/candidates.jpg   # the best of the cached pool, with their ids
+uv run packbuilder hero-review packs/us-ca-la --propose 4=636417717 --why "the head is cut off"
+uv run packbuilder hero-review packs/us-ca-la --accept-all --decline 24,157    # the maintainer's answer, by the sheets' numbers
+```
+
+- **The flags**: the detector's box against the slot and the photo's frame ("slot: top", "frame: right", "no bird found"). It is a hint: its box is loose, and it can't tell a head from a tail. On Los Angeles 7 of the 44 it flagged were fine, and it missed 8 of the 45 that needed replacing (a bird behind a branch has an uncut box), so the proposals come from looking at the sheets.
+- **The pool**: `hero-candidates` ranks the species' cleared photos already in `<cache>/photos/large`, under the build's own rules (license, excluded observations, size, sharpness), keeping only a whole bird in the slot, by the light on it and its sharpness. Look at them: it can't see a hand or a dead bird.
+- **A proposal is not a pin**: `"hero": {"proposed": <photo id>, "_why": ...}` in `overrides.json`, which the build ignores. `--accept` puts the photo first in `include` and leaves `"hero": {"pinned": ...}`, with the species' patch and silhouette photos pinned after it: a pack holds five photos, a sixth would push out the last, and their credits name those photos. `--decline` removes the proposal. Then rebuild the pack.
+- **It moves more than the profile**: the first photo's lens crop is also what the glasses, the Atlas rows and the journal show, and the lens score that used to pick it prefers a dark background, since the lens's display is additive. A photo on bright sand or sky reads less well there.
+
+## Mascot patches
+
+The app's six birds in glasses (the app icon choices) and the House Finch on its branch, for the launch screen, the splash, the sign-in page and the empty pages (#150, slice 11). They belong to the app, not a pack, so the prompts (`art/mascot-prompts.json`), the workflow (`art/workflows/mascot-patch.json`) and the lock (`art/mascot/mascot.lock.json`) are under `art/`.
+
+```sh
+uv run packbuilder mascot                                   # paint what the lock lacks, then the sheets in build/mascot/
+uv run packbuilder mascot --only perched-finch              # a trial
+uv run packbuilder mascot-review --approve 3 --approve 9    # the numbers on the sheets, one per bird
+uv run packbuilder mascot-review --reject great-egret --why "the bill leaves the badge"
+uv run packbuilder mascot-assets                            # the app's art from the approved patches
+```
+
+- **What it's painted from**: the app icon it replaces, kept in `art/mascot/icons/`, the bird cut out of the icon's ground by BiRefNet and laid on white. No prompt names the species; the glasses and binoculars are spelled out, and each bird's `markings` hold the colours the thread drifts on. Each round paints the looks in the prompts' `round`: a head-and-shoulders portrait or the whole bird, on the Los Angeles edition's tan twill and olive cord or on the icon's own peach.
+- **Cut at 1024 px**, the size of an app icon, from a 1152 px square canvas (`cut_from_card`, retried as a pack's patch is when a corner of the card peels into the cut). There's no measure against the reference: a thread rendering of a 3D cartoon is meant to move from it.
+- **Reviewed by number**: numbers are unique across rounds, so a number on an old sheet never means another painting. Approving writes `art/mascot/approved/<bird>.png`, with its pale rim trimmed (`trim_rim`; a thin line can survive), and records its SHA-256; `mascot_art.approved` refuses a file that isn't the one chosen. Commit the lock and the approved file together. A rejected bird paints a new round next run with the current templates; a new prompts version alone leaves pending and approved rounds alone; a new icon or workflow starts a round and takes the approval back.
+- **What ships**: `mascot-assets` writes each `.icon`'s picture and document, its Settings thumbnail and the `PerchedFinch` imageset from `mascot_art.approved`, and refuses a bird without an approved patch. `test_mascot_art.py` compares what it makes, pictures and documents, with what's committed. Each patch is first trimmed to its cord (`trimmed_to_cord`), in the app's copy only, since the approved file can keep a little card outside it. An icon is the patch and its shadow on the app's felt in petrol, flattened, with no alpha channel; the primary is 1024 px for the App Store and the alternates 512 px. Run it after approving a new patch, and commit the result with the lock.
+- **The cache** is `packbuilder/cache/mascot/` and gitignored; `mascot-review` needs the candidate you pick in it, and `mascot` paints a lost one again from its seed.
+- **Running it**: about 12 s a painting, plus a peeled retry now and then. On the box itself: copy `packbuilder/src`, the `art` files and the icons to a checkout-shaped folder (`~/birdjournal-art/mascot-run`), run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli mascot --comfy http://127.0.0.1:8189 --cache packbuilder/cache/mascot`, then copy `art/mascot/mascot.lock.json`, the cache and `build/mascot/` back.
 
 ## Rarity calibration
 
@@ -315,7 +376,7 @@ nothing, cites a fact the sheet lacks or misses the counts is sent back with wha
 | `src/packbuilder/art.py`, `comfy.py`, `fidelity.py`, `painting.py`, `contact_sheets.py`, `bakeoff.py` | Card art (#49): prompts and workflows from the repo's `art/`, the 3:4 card crop and the telephoto crop of a glasses photo, a ComfyUI client for comfybox, the painted bird's fidelity to its photo and the colour fit, painting through the fidelity gate, contact sheets, and the art model bake-off (`python -m packbuilder.bakeoff`; see `art/README.md`). |
 | `src/packbuilder/pack_art.py` | The pack-art step (#57): the reference by lighting, the lock, the review and the contact sheets. |
 | `src/packbuilder/factsheet.py`, `lore.py` | The fact sheet and the lore step (#56): the Anthropic client, the citation checks, the lock, the review and its file. |
-| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json`, `lore.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from, the pack art's sources and review, and the lore with its facts and review (committed). |
+| `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json`, `patch.lock.json`, `silhouette.lock.json`, `lore.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from, the pack art's, patches' and silhouettes' sources and review, and the lore with its facts and review (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
 | `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |

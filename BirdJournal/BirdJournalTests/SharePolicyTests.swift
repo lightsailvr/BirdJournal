@@ -44,7 +44,7 @@ struct SharePolicyTests {
         #expect(content.picture == .snapshot(framePath: "frame.jpg"))
         #expect(content.attribution == nil, "the birder's own frame needs no credit")
         let text = SharePolicy.text(for: content)
-        #expect(text.contains("Black Phoebe (Sayornis nigricans) · Sep 21, 2026 · Los Angeles, CA"))
+        #expect(text.contains("Black Phoebe (Sayornis nigricans)\nSep 21, 2026, Los Angeles, CA"))
         #expect(text.contains("“Tail dipping over the pond.”"))
         #expect(text.contains("Powered by BirdNET"))
         #expect(!text.contains("34.1") && !text.contains("118.2"), "no coordinate in the text")
@@ -54,7 +54,7 @@ struct SharePolicyTests {
         none.includeArea = false
         let bare = SharePolicy.content(for: Self.sighting, commonName: "Black Phoebe", reference: nil, area: "Los Angeles, CA", choices: none, locale: Self.english)
         #expect(bare.dateText == nil && bare.areaText == nil && bare.note == nil)
-        #expect(SharePolicy.text(for: bare) == "Black Phoebe (Sayornis nigricans)\nHeard with Featherguild · Powered by BirdNET")
+        #expect(SharePolicy.text(for: bare) == "Black Phoebe (Sayornis nigricans)\nHeard with Featherguild. Powered by BirdNET.")
     }
 
     @Test("a reference photo carries its observer, license and source; one under a license that does not allow sharing is left out")
@@ -63,7 +63,7 @@ struct SharePolicyTests {
         choices.useSnapshot = false
         let shared = SharePolicy.content(for: Self.sighting, commonName: "Black Phoebe", reference: Self.photo(license: "CC BY-NC"), area: nil, choices: choices, locale: Self.english)
         #expect(shared.picture == .reference(Self.photo(license: "CC BY-NC")))
-        #expect(shared.pictureCaption == "Reference photo · Photo: A. Birder, CC BY-NC")
+        #expect(shared.pictureCaption == "Reference. Photo: A. Birder, CC BY-NC")
         #expect(shared.attribution == "Photo: © A. Birder, some rights reserved (CC BY-NC), via iNaturalist https://www.inaturalist.org/observations/1")
         #expect(SharePolicy.text(for: shared).hasSuffix("via iNaturalist https://www.inaturalist.org/observations/1"))
 
@@ -85,7 +85,7 @@ struct SharePolicyTests {
 
         #expect(SharePolicy.mayShare(photo))
         #expect(shared.picture == .reference(photo))
-        #expect(shared.pictureCaption == "Reference photo · Photo: A. Birder, CC BY-SA")
+        #expect(shared.pictureCaption == "Reference. Photo: A. Birder, CC BY-SA")
         #expect(shared.attribution == "Photo: © A. Birder, some rights reserved (CC BY-SA), via iNaturalist https://www.inaturalist.org/observations/1")
         #expect(photo.licenseURL == URL(string: "https://creativecommons.org/licenses/by-sa/4.0/"))
     }

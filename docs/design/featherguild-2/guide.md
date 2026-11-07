@@ -2,6 +2,8 @@
 
 The text of every page of *Design Guide 2.0* (November 3, 2026), extracted from its source. The boards themselves are in [pages/](pages/).
 
+Amended on November 5, 2026 (#150): the material rule is wider than these pages say. See [the README](README.md#amendment-the-widened-material-rule-november-5-2026-150), which wins where they differ.
+
 ## Page 1
 
 Approved direction / November 2026 · supersedes 1.0

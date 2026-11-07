@@ -13,35 +13,45 @@ struct JoinCircleView: View {
     @State private var joining = false
 
     var body: some View {
-        List {
+        PaperList {
             if !circles.isAvailable {
                 Section { Text("Guilds aren't available in this build yet.").foregroundStyle(Color.inkSecondary) }
             } else if !account.isSignedIn {
                 Section {
-                    intro(title: "You're invited to a Guild", text: "Sign in with Apple or Google to see the invitation and join. Your collection and cards stay on this iPhone either way.")
+                    intro(title: "You're invited to a Guild", text: "Sign in with Apple or Google to see the invitation and join. Your collection stays on this iPhone either way.")
                 }
+                samples
                 Section { SignInButtons() }
             } else if let preview {
                 invitation(preview)
             } else if let error {
                 Section { intro(title: "Can't open this invitation", text: error) }
             } else {
-                Section { ProgressView().frame(maxWidth: .infinity) }.listRowBackground(Color.clear)
+                Section { GuildPlaceholder(rows: 1) }
             }
             if let message = account.errorMessage, !account.isSignedIn {
                 Section { InlineError(message) }
             }
         }
-        .paperList()
         .navigationTitle("Join a Guild")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: account.status) { await load() }
     }
 
+    /// What a Guild shares, in patches that are nobody's: the invitation carries no finds, and that's how it stays (issue #150, G8).
+    private var samples: some View {
+        Section {
+            SamplePatches()
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        }
+    }
+
     private func intro(title: String, text: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            GuildEmblem(identity: GuildIdentity(circleID: token), size: 56)
-            Text(title).font(JournalFont.section)
+            // Featherguild's own until the invitation says which Guild, so nothing changes under the birder at sign-in.
+            GuildEmblem(identity: GuildIdentity(circleID: "featherguild"), size: 56)
+            SectionTitle(title, size: .lead, top: 0)
             Text(text).foregroundStyle(Color.inkSecondary)
         }
         .padding(.vertical, 6)
@@ -59,6 +69,7 @@ struct JoinCircleView: View {
             .padding(.vertical, 6)
             .listRowBackground(Color.clear)
         }
+        if !preview.alreadyMember { samples }
         Section {
             if preview.alreadyMember {
                 Button("Open the Guild") { finish(preview.circle.id) }
@@ -85,7 +96,7 @@ struct JoinCircleView: View {
 
     private func details(_ preview: InvitePreview) -> String {
         let members = preview.circle.memberCount == 1 ? "1 member" : "\(preview.circle.memberCount) members"
-        let from = preview.invitedBy.map { "Invited by \($0) · " } ?? ""
+        let from = preview.invitedBy.map { "Invited by \($0). " } ?? ""
         if preview.alreadyMember { return "\(from)\(members). You're already in this Guild." }
         return "\(from)\(members). The invitation expires \(preview.expiresAt.formatted(date: .abbreviated, time: .omitted))."
     }

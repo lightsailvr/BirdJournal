@@ -20,7 +20,7 @@ struct SettingsView: View {
 
     var body: some View {
         @Bindable var run = run
-        List {
+        PaperList {
             Section {
                 Picker("Listen with", selection: $run.source) {
                     ForEach(ListeningCoordinator.Source.allCases) { Text($0.title).tag($0) }
@@ -50,24 +50,21 @@ struct SettingsView: View {
                 if let error = connection.errorMessage {
                     InlineError(error)
                 }
+                HowThisWorks("Featherguild registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             } header: {
                 Text("Glasses")
-            } footer: {
-                Text("Featherguild registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             }
 
             if AccountSession.isEnabledInThisBuild {
                 Section {
                     AccountRow()
                     Toggle("Share my finds automatically", isOn: $sharesFinds)
-                        .tint(Color.moss)
                         .accessibilityIdentifier("shareFindsToggle")
+                    HowThisWorks(SharingWords.detail(sharesFinds))
                 } header: {
                     Text("Account")
                 } footer: {
-                    Text(sharesFinds
-                         ? "Birds you add while signed in reach your Guilds as finds: the bird, Heard or Seen, the city and the time, never the exact spot. Threatened birds show as at a secret spot."
-                         : "You're private: birds you add stay on this iPhone. Finds you already shared stay in your Guilds until you remove the sighting.")
+                    Text(SharingWords.line(sharesFinds))
                 }
             }
 
@@ -81,9 +78,9 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Field guide") {
+            Section("Atlas") {
                 NavigationLink(value: Route.packs) {
-                    LabeledContent("Bird packs", value: library.packs.map(\.info.name).joined(separator: ", "))
+                    LabeledContent("Field-guide downloads", value: library.packs.map(\.info.name).joined(separator: ", "))
                 }
             }
 
@@ -111,8 +108,9 @@ struct SettingsView: View {
             }
             #endif
         }
-        .paperList()
         .navigationTitle("Settings")
+        // Listen's bar, which this is pushed from, is inline.
+        .navigationBarTitleDisplayMode(.large)
         .onAppear { iconTitle = AppIconChoice.current?.title ?? "" }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
@@ -135,9 +133,9 @@ struct GlassesDeviceRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(device.name).font(.headline)
-            Text("\(device.linkText) · \(device.state.compatibility.displayString)")
+            ShortFacts(device.linkText, device.state.compatibility.displayString)
                 .font(JournalFont.supporting)
-                .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? Color.moss : Color.inkSecondary)
+                .foregroundStyle(device.state.linkState == .connected && device.state.compatibility == .compatible ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color.inkSecondary))
             if let battery = device.state.batteryLevel {
                 Text("Battery \(battery)%\(device.state.chargingState == .charging ? ", charging" : "")")
                     .font(JournalFont.attribution)
@@ -157,6 +155,6 @@ struct GlassesDeviceRow: View {
 
 /// The privacy policy and terms (issue #71), on the invite domain's site (`infra/site/`).
 enum SiteLinks {
-    static let privacy = URL(string: "https://birdquest.matthewcelia.com/privacy")!
-    static let terms = URL(string: "https://birdquest.matthewcelia.com/terms")!
+    static let privacy = URL(string: "https://featherguild.matthewcelia.com/privacy")!
+    static let terms = URL(string: "https://featherguild.matthewcelia.com/terms")!
 }

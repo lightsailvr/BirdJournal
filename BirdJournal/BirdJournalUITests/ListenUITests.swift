@@ -21,6 +21,49 @@ final class ListenUITests: XCTestCase {
         XCTAssertTrue(started, "the screen did not change after Start; screen: \(app.debugDescription.prefix(4000))")
     }
 
+    /// Listen's own bar is inline, so that only the gear sits over the painting (issue #150). A pushed page inherits that
+    /// unless it says otherwise, and these two have large titles.
+    @MainActor
+    func testPagesPushedFromListenKeepTheirLargeTitles() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        let gear = app.buttons["Settings"]
+        XCTAssertTrue(gear.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        gear.tap()
+        let settings = app.navigationBars["Settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertGreaterThan(settings.frame.height, 80, "inline is 54 pt, large 106 pt")
+        settings.buttons.element(boundBy: 0).tap()
+
+        let localSet = app.buttons["Your local set, Los Angeles"]
+        XCTAssertTrue(localSet.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        localSet.tap()
+        // A set's page is the exception, as the reference draws it (issue #150): its plate is its title, and its search a pull away.
+        let plate = app.staticTexts["Citrus edition, 160 birds"]
+        XCTAssertTrue(plate.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertLessThan(app.navigationBars.firstMatch.frame.height, 80, "no large title over the plate")
+    }
+
+    /// Heard or Seen is on the review sheet itself (issue #150, guide board 03), Heard until the birder says otherwise.
+    @MainActor
+    func testTheReviewSheetAsksHeardOrSeen() throws {
+        let clip = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appending(path: "fixtures/clips/birdnet-example-soundscape.wav")
+        guard FileManager.default.fileExists(atPath: clip.path(percentEncoded: false)) else {
+            throw XCTSkip("no example soundscape at \(clip.path(percentEncoded: false))")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-autoPhoneListening", clip.path(percentEncoded: false), "-autoLocation", "griffith", "-autoScreen", "review"]
+        app.launch()
+        let method = app.segmentedControls["review-method"]
+        XCTAssertTrue(method.waitForExistence(timeout: 60), "no picker; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(method.buttons["Heard"].isSelected)
+        method.buttons["Seen"].tap()
+        XCTAssertTrue(method.buttons["Seen"].isSelected)
+    }
+
     /// Issue #42: a run over the example soundscape marks the bird calling now on row one, and the marker gives way
     /// to a heard time once the bird goes quiet. Skipped when the clip is not on disk (`scripts/download-clips.sh`).
     @MainActor
@@ -35,16 +78,15 @@ final class ListenUITests: XCTestCase {
         app.launchArguments = ["-inMemoryAlbum", "YES", "-autoPhoneListening", clip.path(percentEncoded: false), "-autoLocation", "denied", "-autoScreen", "listening"]
         app.launch()
 
-        let firstRow = app.staticTexts["candidate-status-0"]
+        let firstRow = app.buttons["candidate-row-0"]
         XCTAssertTrue(firstRow.waitForExistence(timeout: 60), "no species row appeared; screen: \(app.debugDescription.prefix(3000))")
-        let calling = NSPredicate(format: "label == 'Calling now'")
+        let calling = NSPredicate(format: "label CONTAINS ', calling now,'")
         let callingOnRowOne = expectation(for: calling, evaluatedWith: firstRow)
         wait(for: [callingOnRowOne], timeout: 60)
-        XCTAssertTrue(app.staticTexts["Calling now"].exists)
 
         // The soundscape has quiet stretches: within a minute some bird on the list has stopped and reads as heard.
-        let heard = NSPredicate(format: "label BEGINSWITH 'Heard'")
-        XCTAssertTrue(app.staticTexts.matching(heard).firstMatch.waitForExistence(timeout: 90), "no bird went quiet; screen: \(app.debugDescription.prefix(3000))")
+        let heard = NSPredicate(format: "label CONTAINS ', heard '")
+        XCTAssertTrue(app.buttons.matching(heard).firstMatch.waitForExistence(timeout: 90), "no bird went quiet; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(app.state, .runningForeground)
     }
 

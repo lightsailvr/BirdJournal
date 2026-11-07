@@ -76,8 +76,8 @@ struct JournalTests {
         #expect(species.map(\.count) == [2, 1])
         #expect(species[0].latest.confirmedAt == sightings[2].confirmedAt)
         #expect(species[0].scientificName == "Sayornis nigricans")
-        #expect(Journal.summary(sightingCount: 3, speciesCount: 2) == "2 species · 3 sightings")
-        #expect(Journal.summary(sightingCount: 1, speciesCount: 1) == "1 species · 1 sighting")
+        #expect(Journal.summary(sightingCount: 3, speciesCount: 2) == "2 species, 3 sightings")
+        #expect(Journal.summary(sightingCount: 1, speciesCount: 1) == "1 species, 1 sighting")
     }
 
     @Test("search matches word starts of the common or scientific name, ignoring case and accents")

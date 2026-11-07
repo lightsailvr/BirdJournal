@@ -19,7 +19,8 @@ struct PatchView: View {
     let tag: String?
     /// The painting is on its way (`PatchArtState.beingSewn`); it fills in when it arrives.
     let beingSewn: Bool
-    /// What's already decoded shows at once: a patch scrolled back to doesn't flash its blank for a frame.
+    /// What's already decoded shows at once: a patch scrolled back to doesn't flash its blank for a frame, and one growing out of
+    /// its tile doesn't turn blank on the way, as it shows the tile's picture until its own arrives.
     @State private var loaded: PatchTextures.Loaded?
     /// `art` couldn't be read. A file that won't decode is a missing painting, not a patch left loading.
     @State private var failed = false
@@ -33,7 +34,7 @@ struct PatchView: View {
         self.size = size
         self.tag = tag
         beingSewn = false
-        _loaded = State(initialValue: decoded ?? art.flatMap { PatchTextures.cached($0, size: size) })
+        _loaded = State(initialValue: decoded ?? art.flatMap { PatchTextures.cachedOrSmaller($0, size: size) })
     }
 
     /// A found bird's patch, however its painting stands: `tag` is its name, for the blank's paper tag.
@@ -44,7 +45,7 @@ struct PatchView: View {
         self.size = size
         self.tag = tag
         beingSewn = state == .beingSewn
-        _loaded = State(initialValue: decoded ?? state.art.flatMap { PatchTextures.cached($0, size: size) })
+        _loaded = State(initialValue: decoded ?? state.art.flatMap { PatchTextures.cachedOrSmaller($0, size: size) })
     }
 
     private var sewnTo: Float {
@@ -65,8 +66,10 @@ struct PatchView: View {
             .overlay {
                 if let loaded {
                     LitPatch(loaded: loaded, ground: twill, sewnTo: sewnTo, room: size == .thumbnail ? 14 : 34)
+                        .transition(.opacity)
                 } else {
                     PatchBlank(edition: edition, tag: art == nil || failed ? tag : nil, beingSewn: beingSewn)
+                        .transition(.opacity)
                 }
             }
             .allowsHitTesting(false)
@@ -79,7 +82,9 @@ struct PatchView: View {
                 }
                 let decoded = await PatchTextures.load(art, size: size)
                 guard !Task.isCancelled else { return }
-                loaded = decoded
+                // Already decoded, it was there from the first frame. A wait shows the blank, which fades into the patch (issue
+                // #150, audit R6). Only `loaded` animates: the frames of a moving light never come through here.
+                withAnimation(loaded == nil && decoded != nil ? PatchTextures.popIn : nil) { loaded = decoded }
                 failed = decoded == nil
             }
     }
@@ -225,7 +230,8 @@ private struct TiedTag: View {
     }
 }
 
-/// Reduce Motion, with the debug flag the UI tests turn it on with (the simulator's own setting can't be set per run).
+/// Reduce Motion, with the debug flag the UI tests turn it on with (the simulator's own setting can't be set per run). Every
+/// view that reads `accessibilityReduceMotion` reads it through here, patch or not, so `-reduceMotion` reaches them all.
 enum PatchMotion {
     static func reduces(system: Bool) -> Bool {
         #if DEBUG
@@ -246,7 +252,34 @@ enum PatchMotion {
 extension View {
     /// Holds the phone's light on while this surface is on screen: the lit surface's half of `PatchLight`.
     func holdsPatchLight() -> some View {
-        onAppear { PatchLight.shared.hold() }
-            .onDisappear { PatchLight.shared.release() }
+        modifier(HoldsPatchLight())
+    }
+}
+
+/// A surface stays "on screen" with the phone locked, and a run's rows stay up for a whole walk with it in a pocket (issue #150):
+/// the motion updates stop with the scene and start again, from "as held", when it's back.
+private struct HoldsPatchLight: ViewModifier {
+    @Environment(\.scenePhase) private var phase
+    @State private var isOnScreen = false
+    @State private var isHolding = false
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                isOnScreen = true
+                update()
+            }
+            .onDisappear {
+                isOnScreen = false
+                update()
+            }
+            .onChange(of: phase) { update() }
+    }
+
+    private func update() {
+        let wanted = PatchLight.isWanted(isOnScreen: isOnScreen, phase: phase)
+        guard wanted != isHolding else { return }
+        isHolding = wanted
+        if wanted { PatchLight.shared.hold() } else { PatchLight.shared.release() }
     }
 }

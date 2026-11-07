@@ -206,28 +206,14 @@ class PatchArtist:
         if not art.get("photos"):
             raise KeyError(f"{species_id}: its pack art was painted from text; a patch needs a reference bird")
         photo_id, seed = art["photos"][0], art.get("isolate_seed") or ISOLATE_SEED
-        found = self._cached_isolations(photo_id)
+        found = cached_isolations(self.cache_dir, photo_id)
         if seed in found:
             return Reference(photo_id, seed, Image.open(found[seed]).convert("RGB"))
         raise KeyError(f"{species_id}: no isolated bird for photo {photo_id} seed {seed} in {self.cache_dir / 'isolated'}; run the pack build to make it")
 
-    def _cached_isolations(self, photo_id: int) -> dict[int, Path]:
-        """The photo's isolated birds by the seed each was kept with. The cache is keyed by the isolation's first seed;
-        the lock keeps the seed of the attempt that was kept (49 and its retries, 59 and its after a rejection), which
-        the cached isolation's info records."""
-        isolate = hashlib.sha256(_isolate_prompt().encode()).hexdigest()[:10]
-        suffix = f"-{self.painter.isolate_workflow.tag}-i{isolate}"
-        found = {}
-        for image in sorted((self.cache_dir / "isolated").glob(f"{photo_id}-s*{suffix}.png")):
-            info = image.with_suffix(".json")
-            # Without its info, the seed in its name: an isolation kept on its first attempt.
-            seed = json.loads(info.read_text())["seed"] if info.exists() else int(image.name.split("-s", 1)[1].split("-", 1)[0])
-            found[seed] = image
-        return found
-
     def _isolated(self, photo_id: int, box: tuple[float, float, float, float] | None = None) -> Reference:
         """A pinned photo's isolated bird, from the cache or isolated now from its original, as pack art does."""
-        found = self._cached_isolations(photo_id)
+        found = cached_isolations(self.cache_dir, photo_id)
         if found:
             seed = min(found)
             return Reference(photo_id, seed, Image.open(found[seed]).convert("RGB"))
@@ -367,6 +353,21 @@ class PatchArtist:
         return made
 
 
+def cached_isolations(cache_dir: Path, photo_id: int) -> dict[int, Path]:
+    """The photo's isolated birds in the art cache by the seed each was kept with. The cache is keyed by the isolation's
+    first seed; the lock keeps the seed of the attempt that was kept (49 and its retries, 59 and its after a rejection),
+    which the cached isolation's info records."""
+    isolate = hashlib.sha256(_isolate_prompt().encode()).hexdigest()[:10]
+    suffix = f"-{Workflow.load('bird-isolate').tag}-i{isolate}"
+    found = {}
+    for image in sorted((Path(cache_dir) / "isolated").glob(f"{photo_id}-s*{suffix}.png")):
+        info = image.with_suffix(".json")
+        # Without its info, the seed in its name: an isolation kept on its first attempt.
+        seed = json.loads(info.read_text())["seed"] if info.exists() else int(image.name.split("-s", 1)[1].split("-", 1)[0])
+        found[seed] = image
+    return found
+
+
 def _isolate_prompt() -> str:
     from packbuilder.art import ArtPrompts
     return ArtPrompts.load().isolate
@@ -398,8 +399,8 @@ def is_dark(bird_on_white: Image.Image, threshold: float) -> bool:
     return bool(bird.any() and float(np.median(lightness[bird])) < threshold)
 
 
-def cut_from_card(painting: Image.Image) -> Image.Image:
-    """The patch cut from the white card it lies on, cropped to it and scaled to `SIZE` on its longest side. The card
+def cut_from_card(painting: Image.Image, size: int = SIZE) -> Image.Image:
+    """The patch cut from the white card it lies on, cropped to it and scaled to `size` on its longest side. The card
     is what connects to the picture's edge and stays close to the card's colour; the soft shadow, card-coloured but
     darker, is dropped by keeping only what is clearly off the card, then the convex hull of that (every edition's shape
     is convex) puts back a pale cord's edge. BiRefNet is no use here: it takes the bird as often as the patch. Raises
@@ -431,17 +432,17 @@ def cut_from_card(painting: Image.Image) -> Image.Image:
     ys, xs = np.nonzero(alpha > 0.1)
     pad = 6
     cut = cut.crop((max(xs.min() - pad, 0), max(ys.min() - pad, 0), min(xs.max() + pad, width), min(ys.max() + pad, height)))
-    scale = SIZE / max(cut.size)
+    scale = size / max(cut.size)
     return cut.resize((round(cut.width * scale), round(cut.height * scale)), Image.LANCZOS)
 
 
-def trim_rim(patch: Image.Image) -> Image.Image:
+def trim_rim(patch: Image.Image, size: int = SIZE, minimum: float = RIM_MINIMUM) -> Image.Image:
     """The cut patch without the pale crescent `cut_from_card` can leave along one side: the card under its soft shadow,
     which is why it never showed on the white review sheets, and on felt reads as a paper disc under the patch. It grows
     in from the edge through what is smooth and unsaturated, so a stitched cord stops it however pale its thread: thread
     has grain, shadow has none. The convex hull of the rest is the patch, as in the cut. A patch it would take less than
-    `RIM_MINIMUM` or more than `RIM_LIMIT` of comes back whole: it has no rim, or that isn't one. Cropped to the result and
-    scaled to `SIZE` again."""
+    `minimum` or more than `RIM_LIMIT` of comes back whole: it has no rim, or that isn't one. Cropped to the result and
+    scaled to `size` again."""
     rgba = np.asarray(patch.convert("RGBA")).astype(float)
     rgb, alpha = rgba[..., :3], rgba[..., 3]
     inside = alpha > 128
@@ -466,14 +467,14 @@ def trim_rim(patch: Image.Image) -> Image.Image:
     outline = Image.new("L", patch.size, 0)
     ImageDraw.Draw(outline).polygon([tuple(p) for p in hull], fill=255)
     shape = np.asarray(outline) > 0
-    if not RIM_MINIMUM * inside.sum() < (inside & ~shape).sum() < RIM_LIMIT * inside.sum():
+    if not minimum * inside.sum() < (inside & ~shape).sum() < RIM_LIMIT * inside.sum():
         return patch
     trimmed_alpha = np.clip(ndimage.gaussian_filter(shape.astype(float), 0.9) * 1.4 - 0.2, 0, 1) * alpha
     cut = Image.fromarray(np.dstack([rgb, trimmed_alpha]).astype(np.uint8), "RGBA")
     ys, xs = np.nonzero(trimmed_alpha > 25)
     pad = 4
     cut = cut.crop((max(xs.min() - pad, 0), max(ys.min() - pad, 0), min(xs.max() + pad, patch.width), min(ys.max() + pad, patch.height)))
-    scale = SIZE / max(cut.size)
+    scale = size / max(cut.size)
     return cut.resize((round(cut.width * scale), round(cut.height * scale)), Image.LANCZOS)
 
 

@@ -3,7 +3,6 @@ import CoreTransferable
 import ImageIO
 import OSLog
 import Pack
-import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -22,7 +21,7 @@ struct ShareCardView: View {
     @Environment(AccountSession.self) private var account
     @Environment(CircleStore.self) private var circles
     @Environment(FindOutbox.self) private var outbox
-    @Query private var sightings: [Sighting]
+    @Environment(CollectionStore.self) private var collectionStore
     let sighting: Sighting
     @State private var choices = FindPolicy.Choices()
     @State private var chosenCircles: Set<String> = []
@@ -46,7 +45,7 @@ struct ShareCardView: View {
 
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "share")
 
-    private var collection: CardCollection { library.collection(of: sightings) }
+    private var collection: CardCollection { collectionStore.collection }
     /// Whether this sighting sewed its patch.
     private var sewedPatch: Bool { collection.sewedItsPatch(sighting.identifier) }
     private var input: FindPolicy.Input {
@@ -111,11 +110,7 @@ struct ShareCardView: View {
                         .accessibilityIdentifier("share-preview")
                         .padding(.top, 4)
 
-                    Text("Include")
-                        .font(JournalFont.section)
-                        .foregroundStyle(Color.ink)
-                        .padding(.top, JournalLayout.sectionGap)
-                        .accessibilityAddTraits(.isHeader)
+                    SectionTitle("Include")
                     VStack(spacing: 0) {
                         Toggle(isOn: $choices.includeNote) { Label("Your note", systemImage: "note.text") }
                             .padding(.vertical, 10)
@@ -126,7 +121,6 @@ struct ShareCardView: View {
                             .padding(.vertical, 10)
                             .accessibilityIdentifier("share-city")
                     }
-                    .tint(Color.moss)
                     .font(JournalFont.body)
                     .foregroundStyle(Color.ink)
                     .padding(.top, 8)
@@ -144,14 +138,15 @@ struct ShareCardView: View {
                 .padding(.bottom, JournalLayout.sectionGap)
             }
             .background(Color.paper)
-            .navigationTitle("A story to share")
+            .navigationTitle("Share this patch")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(sending.isSent ? "Done" : "Cancel") { dismiss() }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
+            .scrollEdgeEffectStyle(.hard, for: .bottom)
+            .safeAreaBar(edge: .bottom) {
                 // Both ways out stay in reach whatever the scroll: Send for the circles, the card image for anywhere.
                 VStack(spacing: 8) {
                     sendStatus
@@ -169,12 +164,12 @@ struct ShareCardView: View {
                     Group {
                         if let export {
                             ShareLink(item: export, message: Text(export.text), preview: SharePreview(export.title, image: Image(uiImage: export.image))) {
-                                Label("Share card image…", systemImage: "square.and.arrow.up")
+                                Label("Share image", systemImage: "square.and.arrow.up")
                                     .frame(maxWidth: .infinity)
                             }
                             .accessibilityIdentifier("share-system")
                         } else {
-                            Label("Preparing the card…", systemImage: "square.and.arrow.up")
+                            Label("Preparing the image…", systemImage: "square.and.arrow.up")
                                 .foregroundStyle(Color.inkSecondary)
                         }
                     }
@@ -183,7 +178,6 @@ struct ShareCardView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, JournalLayout.margin)
                 .padding(.vertical, 12)
-                .background(.bar)
             }
             .task(id: patchArt) {
                 patchLoad = .loading
@@ -205,13 +199,9 @@ struct ShareCardView: View {
     // The circles.
 
     @ViewBuilder private var circlesSection: some View {
-        Text("Your Guilds")
-            .font(JournalFont.section)
-            .foregroundStyle(Color.ink)
-            .padding(.top, JournalLayout.sectionGap)
-            .accessibilityAddTraits(.isHeader)
+        SectionTitle("Your Guilds")
         if !account.isSignedIn {
-            Text("Sign in under Settings → Account to share cards with your Guilds.")
+            Text("Sign in under Settings → Account to share patches with your Guilds.")
                 .font(JournalFont.supporting)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 8)
@@ -235,13 +225,12 @@ struct ShareCardView: View {
                     .disabled(originalPhotoPath == nil)
                     .accessibilityIdentifier("share-photo")
             }
-            .tint(Color.moss)
             .font(JournalFont.body)
             .foregroundStyle(Color.ink)
             .padding(.top, 8)
             Text(originalPhotoPath == nil
                 ? "No original photo with this sighting."
-                : "Faces are blurred and the location and camera details removed before the photo leaves your iPhone. It goes to your Guilds only, never in the card image.")
+                : "Faces are blurred and the location and camera details removed before the photo leaves your iPhone. It goes to your Guilds only, never in the image.")
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 4)
@@ -256,7 +245,7 @@ struct ShareCardView: View {
         case .sent(let message):
             Label(message, systemImage: "checkmark.circle")
                 .font(JournalFont.supporting)
-                .foregroundStyle(Color.moss)
+                .foregroundStyle(.tint)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("share-sent")
         case .failed(let message):
@@ -326,8 +315,8 @@ struct ShareCardView: View {
         switch error {
         case ShareFailure.findWaiting: "This bird is still on its way to your Guilds. Try again once you're online."
         case ShareFailure.photoUnavailable, is SharedPhoto.Failure: "The original photo couldn't be prepared. Send without it, or try again."
-        case CircleError.rejected: "The server turned this card down. Try again without the photo."
-        default: CircleStore.message(for: error, doing: "share your card")
+        case CircleError.rejected: "The server turned this down. Try again without the photo."
+        default: CircleStore.message(for: error, doing: "share your patch")
         }
     }
 
@@ -335,15 +324,15 @@ struct ShareCardView: View {
 
     private var previewLabel: String {
         let name = library.commonName(for: sighting)
-        return ["Preview of the card", name, place].compactMap { $0 }.joined(separator: ", ")
+        return ["Preview of the image", name, place].compactMap { $0 }.joined(separator: ", ")
     }
 
     private var placeExplanation: String {
         if sighting.location == nil { return "No location was recorded with this sighting." }
-        if !choices.includeCity { return "No place goes with the card." }
-        if place == FindPolicy.secretSpot { return "This bird is sensitive, so the card says \"a secret spot\" instead of a city." }
-        if place == nil { return "No city is known for this sighting, so no place goes with the card." }
-        return "Only the city goes with the card, never the exact spot."
+        if !choices.includeCity { return "No place goes with it." }
+        if place == FindPolicy.secretSpot { return "This bird is sensitive, so it says \"a secret spot\" instead of a city." }
+        if place == nil { return "No city is known for this sighting, so no place goes with it." }
+        return "Only the city goes with it, never the exact spot."
     }
 
     private var isReady: Bool {
@@ -368,7 +357,7 @@ struct ShareCardView: View {
         let lore = species?.lore
         let credits = photoCredits.isEmpty ? nil : "Patch: AI illustration from a reference photo (\(photoCredits.joined(separator: "; ")))"
         let text = [SharePolicy.text(for: content), credits, lore.map(Self.loreCredit)].compactMap { $0 }.joined(separator: "\n")
-        export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName) · Featherguild")
+        export = CardExport(image: rendered.image, png: rendered.png, text: text, title: "\(content.commonName), Featherguild")
     }
 
     /// The credit of the lore the image takes its story title from (issue #116; design guide page 17: lore licenses and

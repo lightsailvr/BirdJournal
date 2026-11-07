@@ -7,12 +7,14 @@ import SwiftUI
 /// A swipe always lands on the next patch's face, even from a paper card. Opening a patch shows the patch.
 struct PatchDetailView: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var allSightings: [Sighting]
     /// The patch showing: the one opened, until a swipe.
     @State private var current: CardCollection.Patch.Key
     /// The one patch turned over to its card, if any: state here, so a swipe can put it back.
     @State private var turned: CardCollection.Patch.Key?
     @State private var isSharing = false
+    @State private var opened = false
 
     /// - Parameter startsTurned: opens on its paper card rather than the patch.
     init(key: CardCollection.Patch.Key, startsTurned: Bool = false) {
@@ -21,24 +23,29 @@ struct PatchDetailView: View {
     }
 
     var body: some View {
-        let order = library.collection(of: allSightings).browsingOrder
+        let order = collectionStore.collection.browsingOrder
         if let index = order.firstIndex(where: { $0.id == current }) {
+            // Every page takes its own from one table: filtering the album per patch is what made this page slow (issue #150).
+            let album = CardCollection.Patch.table(of: allSightings)
             TabView(selection: $current) {
                 ForEach(order) { patch in
                     PatchPage(
-                        patch: patch, sightings: patch.ownSightings(among: allSightings),
+                        patch: patch, sightings: patch.ownSightings(in: album),
                         showsCard: Binding(get: { turned == patch.id }, set: { turned = $0 ? patch.id : nil }),
                         previous: index > 0 ? { go(to: order[index - 1].id) } : nil,
                         next: index + 1 < order.count ? { go(to: order[index + 1].id) } : nil
                     )
                     .tag(patch.id)
+                    // Each page is in its own edition, the Uncharted ones too (issue #150).
+                    .tint(PatchEdition.tint(setID: patch.placement.setID))
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .tint(PatchEdition.tint(setID: order[index].placement.setID))
             .onChange(of: current) { turned = nil }
             .patchSheetBackground()
             .holdsPatchLight()
-            .navigationTitle("\(index + 1) of \(order.count)")
+            .navigationTitle("\(order[index].placement.setName), \(index + 1) of \(order.count)")
             .navigationBarTitleDisplayMode(.inline)
             // The object gets the whole height (design guide page 10); back returns to the tabs.
             .toolbar(.hidden, for: .tabBar)
@@ -51,7 +58,10 @@ struct PatchDetailView: View {
                     }
                 }
             }
-            .sensoryFeedback(.impact(weight: .light), trigger: turned)
+            .haptic(.turn, trigger: turned)
+            // Once, when the page first opens: coming back to it from its sightings isn't lifting it again.
+            .haptic(.lift, trigger: opened)
+            .onAppear { opened = true }
             .sheet(isPresented: $isSharing) {
                 if let latest = order[index].ownSightings(among: allSightings).first {
                     ShareCardView(sighting: latest)
@@ -105,11 +115,14 @@ private struct PatchPage: View {
     private var isSideways: Bool { verticalSizeClass == .compact }
 
     var body: some View {
-        if isSideways {
-            sideBySide
-        } else {
-            upright
+        Group {
+            if isSideways {
+                sideBySide
+            } else {
+                upright
+            }
         }
+        .readsFriendsBirds(when: showsCard || isSideways)
     }
 
     private var sideBySide: some View {
@@ -192,9 +205,7 @@ private struct PatchPage: View {
     private var words: some View {
         VStack(spacing: 4) {
             Text(PatchText.editionLine(patch.placement))
-                .textCase(.uppercase)
-                .font(CardFont.editionCompact)
-                .tracking(CardFont.editionTracking)
+                .font(JournalFont.supporting)
                 .foregroundStyle(Color.ink)
             Text(name)
                 .font(PatchFont.pageName)

@@ -1,6 +1,6 @@
 import XCTest
 
-/// "A story to share" (issue #66): the preview sheet's choices with their defaults, the card face as the system share,
+/// "Share this patch" (issue #66): the preview sheet's choices with their defaults, the card face as the system share,
 /// and, with an account (Debug, `ACCOUNTS_ENABLED`), a card sent by hand to the circle chosen and shown there with its
 /// note.
 final class ShareCardUITests: XCTestCase {
@@ -11,7 +11,7 @@ final class ShareCardUITests: XCTestCase {
         let share = app.navigationBars.buttons["Share"]
         XCTAssertTrue(share.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         share.tap()
-        XCTAssertTrue(app.navigationBars["A story to share"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.navigationBars["Share this patch"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         return app
     }
 
@@ -29,7 +29,7 @@ final class ShareCardUITests: XCTestCase {
         XCTAssertEqual(city.value as? String, "0")
         let explanation = app.staticTexts["share-place-explanation"]
         XCTAssertTrue(explanation.waitForExistence(timeout: 5))
-        XCTAssertTrue(explanation.label.contains("No place goes with the card"), explanation.label)
+        XCTAssertTrue(explanation.label.contains("No place goes with it"), explanation.label)
         XCTAssertTrue(app.buttons["share-system"].waitForExistence(timeout: 10), "rendered again without the place")
     }
 
@@ -50,7 +50,7 @@ final class ShareCardUITests: XCTestCase {
         let photo = app.switches["share-photo"]
         XCTAssertTrue(photo.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(photo.isEnabled, "nothing to send yet")
-        app.navigationBars["A story to share"].buttons["Cancel"].tap()
+        app.navigationBars["Share this patch"].buttons["Cancel"].tap()
 
         let attach = app.buttons["sighting-attach-photo"]
         XCTAssertTrue(attach.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
@@ -96,7 +96,7 @@ final class ShareCardUITests: XCTestCase {
         let sent = app.descendants(matching: .any)["share-sent"]
         XCTAssertTrue(sent.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(sent.label.contains("Sunday Group"), sent.label)
-        app.navigationBars["A story to share"].buttons["Done"].tap()
+        app.navigationBars["Share this patch"].buttons["Done"].tap()
 
         // A card's page hides the tab bar (issue #117): back to Collection first.
         app.navigationBars.buttons.element(boundBy: 0).tap()

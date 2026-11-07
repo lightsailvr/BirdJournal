@@ -83,7 +83,7 @@ struct ReportSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            PaperForm {
                 if sent {
                     Section {
                         Label("Thanks. Your report was sent.", systemImage: "checkmark.circle")
@@ -110,7 +110,7 @@ struct ReportSheet: View {
                         Text("Your report goes to Featherguild only, with what you saw. To stop seeing someone, block them too.")
                     }
                     if let error {
-                        Section { InlineError(error) }
+                        Section { InlineError(error, afterAction: true) }
                     }
                 }
             }
@@ -154,7 +154,7 @@ struct BlockedAccountsView: View {
     @State private var error: String?
 
     var body: some View {
-        List {
+        PaperList {
             Section {
                 if circles.blocked.isEmpty {
                     Text("You haven't blocked anyone.")
@@ -174,10 +174,9 @@ struct BlockedAccountsView: View {
                 Text("You don't see a blocked member's finds or reactions, and you aren't notified about them. They aren't told.")
             }
             if let error {
-                Section { InlineError(error) }
+                Section { InlineError(error, afterAction: true) }
             }
         }
-        .paperList()
         .navigationTitle("Blocked accounts")
         .task { await circles.loadBlocks() }
     }

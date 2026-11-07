@@ -32,7 +32,7 @@ enum PatchText {
         let spoken: String
     }
 
-    /// A bird not yet found, by its place in every set that lists it: "No. 021 of 160 · Los Angeles".
+    /// A bird not yet found, by its place in every set that lists it: "No. 021 of 160, Los Angeles".
     static func setNumbers(of scientificName: String, in sets: [PackSet]) -> [SetNumber] {
         sets.compactMap { set in
             set.species.firstIndex { $0.scientificName == scientificName }.map { index in
@@ -41,32 +41,46 @@ enum PatchText {
         }
     }
 
-    /// "No. 021 of 160 · Los Angeles".
+    /// "No. 021 of 160, Los Angeles".
     private static func numberLine(_ number: Int, of total: Int, in setName: String) -> String {
-        "No. \(CardPlacement.paddedNumber(number, of: total)) of \(total) · \(setName)"
+        "No. \(CardPlacement.paddedNumber(number, of: total)) of \(total), \(setName)"
     }
 
-    /// Under the name on the reveal: "No. 019 of 160 · Los Angeles"; nil outside every set.
+    /// Under the name on the reveal: "No. 019 of 160, Los Angeles"; nil outside every set.
     static func revealNumberLine(_ placement: CardPlacement) -> String? {
         guard case .numbered(_, let setName, _, let number, let total) = placement else { return nil }
         return numberLine(number, of: total, in: setName)
     }
 
-    /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set.
+    /// A board tile's line under the name: "No. 003 · seen 8×", or "seen 3×" outside every set. It says nothing about the
+    /// count until there's a second sighting: "No. 003", or "Uncharted" outside every set (issue #150).
     static func tileLine(_ patch: CardCollection.Patch) -> String {
-        guard case .numbered(_, _, _, let number, let total) = patch.placement else { return "seen \(patch.count)×" }
-        return "No. \(CardPlacement.paddedNumber(number, of: total)) · seen \(patch.count)×"
+        guard case .numbered(_, _, _, let number, let total) = patch.placement else {
+            return patch.count == 1 ? CardPlacement.unchartedTitle : seenCount(patch.count)
+        }
+        let numbered = "No. \(CardPlacement.paddedNumber(number, of: total))"
+        return patch.count == 1 ? numbered : "\(numbered) · \(seenCount(patch.count))"
     }
 
-    /// Under the patch on its page: "Seen 8 times in Los Angeles · sewn Sep 14".
+    /// A species' patch tile's line, under its edition: "Los Angeles", then "Los Angeles, seen 8×" from a second sighting.
+    static func setLine(_ patch: CardCollection.Patch) -> String {
+        patch.count == 1 ? patch.placement.setName : "\(patch.placement.setName), \(seenCount(patch.count))"
+    }
+
+    /// A tile's count, in the tile's few characters: "seen 8×".
+    private static func seenCount(_ count: Int) -> String {
+        "seen \(count)×"
+    }
+
+    /// Under the patch on its page: "Seen 8 times in Los Angeles, sewn Sep 14".
     static func pageLine(_ patch: CardCollection.Patch) -> String {
-        "\(patch.seenAgainText) · sewn \(patch.sewn.confirmedAt.formatted(.dateTime.month(.abbreviated).day()))"
+        "\(patch.seenAgainText), sewn \(patch.sewn.confirmedAt.formatted(.dateTime.month(.abbreviated).day()))"
     }
 
-    /// The edition line over the name: "CITRUS EDITION · NO. 003", or "UNCHARTED" (the view sets the capitals).
+    /// The edition line over the name: "Citrus edition, No. 003", or "Uncharted".
     static func editionLine(_ placement: CardPlacement) -> String {
         guard case .numbered(_, _, let edition, let number, let total) = placement else { return CardPlacement.unchartedTitle }
-        return "\(edition) · No. \(CardPlacement.paddedNumber(number, of: total))"
+        return "\(edition), No. \(CardPlacement.paddedNumber(number, of: total))"
     }
 
     /// The name a patch goes by: a pack's, else the label's own, so a bird no pack describes is still named.
@@ -78,6 +92,11 @@ enum PatchText {
     /// "1 sighting", "8 sightings".
     static func sightings(_ count: Int) -> String {
         "\(count) \(count == 1 ? "sighting" : "sightings")"
+    }
+
+    /// The way to a patch's sightings: "All 3 sightings", or "1 sighting".
+    static func allSightings(_ count: Int) -> String {
+        count == 1 ? sightings(1) : "All \(sightings(count))"
     }
 
     /// What's left of the lore after the card's excerpt: it opens below on scroll, without repeating it; nil when the

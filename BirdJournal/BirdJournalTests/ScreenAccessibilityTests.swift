@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import MapKit
 import Pack
 import SwiftData
 import SwiftUI
@@ -24,6 +25,7 @@ struct ScreenAccessibilityTests {
         let album: ModelContainer
         let frames: FrameStore
         let library: PackLibrary
+        let collectionStore: CollectionStore
         let edits: JournalEdits
         let account: AccountSession
         let circles: CircleStore
@@ -33,18 +35,21 @@ struct ScreenAccessibilityTests {
         let outbox: FindOutbox
         let pushes: PushCenter
         let places = PlaceNames()
+        let place: CurrentPlace
 
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
         ///   - session: what its downloads go through.
-        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared) throws {
+        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true) throws {
             album = try AlbumSchema.makeContainer(inMemory: true)
             frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibility-\(UUID().uuidString)", directoryHint: .isDirectory))
             let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)"))
             if let index { try storage.cacheIndex(index) }
             library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, indexURL: PackIndex.defaultURL, session: session, availableCapacity: { .max })
+            collectionStore = CollectionStore(container: album, sets: { [library] in library.cardSets })
+            place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: ScriptedLocationProvider([.denied]), defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
             edits = JournalEdits(container: album, frames: frames)
-            account = FakeAccount.session(signedIn: true)
+            account = FakeAccount.session(signedIn: signedIn)
             let client = FakeCircleClient(seeded: true)
             circles = CircleStore(account: account, client: client, timeZone: { "America/Los_Angeles" })
             connection = GlassesConnection()
@@ -76,6 +81,8 @@ struct ScreenAccessibilityTests {
             .environment(edits)
             .environment(account)
             .environment(circles)
+            .environment(collectionStore)
+            .environment(place)
             .environment(outbox)
             .environment(pushes)
             .environment(places)
@@ -126,7 +133,8 @@ struct ScreenAccessibilityTests {
         return []
     }
 
-    /// What every screen owes VoiceOver: no unlabelled element, and nothing that reads like a developer diagnostic.
+    /// What every screen owes VoiceOver: no unlabelled element, nothing that reads like a developer diagnostic, and no middle
+    /// dot (issue #150: where one stays on screen, as in `ShortFacts`, VoiceOver reads a comma or a sentence of its own).
     static func expectClean(_ labels: [String], screen: String, sourceLocation: SourceLocation = #_sourceLocation) {
         #expect(!labels.isEmpty, "\(screen): nothing reached", sourceLocation: sourceLocation)
         let unlabelled = labels.filter { $0.hasPrefix("<unlabelled") }
@@ -136,36 +144,351 @@ struct ScreenAccessibilityTests {
             for word in diagnostics where label.contains(word) {
                 Issue.record("\(screen): \"\(label)\" reads like a diagnostic (\(word))", sourceLocation: sourceLocation)
             }
+            if label.contains("·") {
+                Issue.record("\(screen): \"\(label)\" has a middle dot", sourceLocation: sourceLocation)
+            }
+        }
+    }
+
+    /// One word per thing (issue #150, `CONTEXT.md`): a set is a set, a pack is a field-guide download, and the paper card is
+    /// never just a card. For screens of the app's own words: a bird's lore can say "region", and that's fine.
+    static func expectOneWordPerThing(_ labels: [String], screen: String, sourceLocation: SourceLocation = #_sourceLocation) {
+        let retired = /(?i)\b(boards?|packs?|regions?|regional|species collected|cards?)\b/
+        for label in labels where label.replacing(/(?i)paper card/, with: "").contains(retired) {
+            Issue.record("\(screen): \"\(label)\" uses a retired word", sourceLocation: sourceLocation)
         }
     }
 
     nonisolated static let sizes: [DynamicTypeSize] = [.large, .accessibility5]
 
+    @Test("The run recap reads as one sentence: no dots, no retired words (issue #150)", arguments: sizes)
+    func runRecap(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let recap = RunRecap(startedAt: .now.addingTimeInterval(-2_520), listened: 2_520, place: "Los Angeles", birdsHeard: 3, patchNames: ["House Finch"])
+        let labels = try await Self.walk(RunRecapCard(recap: recap, pictures: []), harness: harness, typeSize: typeSize) { $0.contains(recap.spokenText) }
+        Self.expectClean(labels, screen: "Run recap")
+        Self.expectOneWordPerThing(labels, screen: "Run recap")
+        #expect(labels == [recap.spokenText], "\(labels)")
+    }
+
     @Test("Listen: the source, Start listening and the local set; the cover is one labelled image", arguments: sizes)
     func listen(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(ListenView(), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Start listening") && labels.contains("Your local set")
+            labels.contains("Start listening") && labels.contains { $0.hasPrefix("Your local set") }
         }
         Self.expectClean(labels, screen: "Listen")
+        Self.expectOneWordPerThing(labels, screen: "Listen")
         #expect(labels.contains("Start listening"), "\(labels)")
         #expect(labels.contains("Settings"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("iPhone microphone") }, "the source row: \(labels)")
-        #expect(labels.contains("Your local set"), "\(labels)")
-        #expect(labels.contains { $0.contains("of 160 species collected") }, "the set's progress: \(labels)")
+        #expect(labels.contains("Your local set, Los Angeles"), "\(labels)")
+        #expect(labels.contains { $0.contains("of 160 sewn in Los Angeles") }, "the thread reads a sentence: \(labels)")
+        #expect(labels.contains("Los Angeles cover, AI illustration"), "\(labels)")
         let start = try #require(labels.firstIndex(of: "Start listening"))
-        let local = try #require(labels.firstIndex(of: "Your local set"))
+        let local = try #require(labels.firstIndex(of: "Your local set, Los Angeles"))
         #expect(start < local, "Start listening comes before the local set")
     }
 
-    @Test("Collection: the summary, the modes and the patches, each with how often it was seen", arguments: sizes)
+    @Test("Compare reads each patch as a sentence, with Heard or Seen on both sides and the tally (issue #150)", arguments: sizes)
+    func compareBoards(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let labels = try await Self.walk(CompareBirdsView(friendID: "maya", friendName: "Maya Ortiz"), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Only you") && labels.contains { $0.contains("Maya: Not yet") }
+        }
+        Self.expectClean(labels, screen: "Compare")
+        Self.expectOneWordPerThing(labels, screen: "Compare")
+        #expect(labels.contains("Maya has these. Go find them."), "\(labels)")
+        #expect(labels.contains("Acorn Woodpecker. You: Not yet. Maya: Heard."), "\(labels)")
+        #expect(labels.contains("Black Phoebe. You: Heard. Maya: Seen."), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("You have ") && $0.contains("Maya has") }, "the tally stays: \(labels)")
+        let lead = try #require(labels.firstIndex(of: "Maya has these. Go find them."))
+        let both = try #require(labels.firstIndex(of: "You both have"))
+        let only = try #require(labels.firstIndex(of: "Only you"))
+        #expect(lead < both && both < only, "theirs first: \(labels)")
+    }
+
+    @Test("A goal says its sentence once, then each of its patches, then how many more (issue #150)", arguments: sizes)
+    func goalPatches(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        let labels = try await Self.walk(CirclePageView(id: sunday.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasSuffix(" more") }
+        }
+        Self.expectClean(labels, screen: "Guild page's goal")
+        let sentence = try #require(labels.firstIndex { $0.contains("birds, together.") }, "\(labels)")
+        #expect(labels.count { $0.contains("birds, together.") } == 1, "once: \(labels)")
+        let patch = try #require(labels.firstIndex { $0.hasSuffix("edition patch") }, "\(labels)")
+        let more = try #require(labels.firstIndex { $0.hasSuffix(" more") }, "\(labels)")
+        #expect(sentence < patch && patch < more, "\(labels)")
+    }
+
+    @Test("Listen's goal line is one sentence, only with a goal running (issue #150)", arguments: sizes)
+    func listenGoalLine(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(ListenView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("from its") }
+        }
+        Self.expectClean(labels, screen: "Listen's goal line")
+        #expect(labels.contains { $0.hasPrefix("Sunday Group is ") && $0.contains(" goal") }, "\(labels)")
+    }
+
+    @Test("A set's row names the friends who have a bird you don't (issue #150)", arguments: sizes)
+    func setFaces(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let goose = FriendBirds.Species(speciesID: "Branta canadensis_Canada Goose", scientificName: "Branta canadensis", commonName: "Canada Goose", method: .seen)
+        let egyptian = FriendBirds.Species(speciesID: "Alopochen aegyptiaca_Egyptian Goose", scientificName: "Alopochen aegyptiaca", commonName: "Egyptian Goose", method: .seen)
+        client.setMoreCompared([goose, egyptian], friendID: "maya")
+        client.setMoreCompared([egyptian], friendID: "jo")
+        let labels = try await Self.walk(SetView(id: PackIndex.bundledPackID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("have this bird") }
+        }
+        Self.expectClean(labels, screen: "Set's friends")
+        Self.expectOneWordPerThing(labels, screen: "Set's friends")
+        #expect(labels.contains("001, Canada Goose, still out there, Maya Ortiz has this bird"), "\(labels)")
+        #expect(labels.contains("002, Egyptian Goose, still out there, Jo Park and Maya Ortiz have this bird"), "\(labels)")
+        if typeSize == .large {
+            #expect(labels.contains("021, Anna's Hummingbird, still out there"), "Jo has it, and so do you, Uncharted: by species, no face: \(labels)")
+        }
+    }
+
+    @Test("Every patch of a goal reads as a sentence, and nobody's words but the packs' (issue #150)", arguments: sizes)
+    func goalBoard(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        await harness.circles.loadGoals(circleID: sunday.id)
+        let monthly = try #require(harness.circles.goals[sunday.id]?.first { $0.kind == .monthly })
+        let labels = try await Self.walk(GoalPatchesView(circleID: sunday.id, goalID: monthly.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasSuffix("edition patch") }
+        }
+        Self.expectClean(labels, screen: "A goal's patches")
+        Self.expectOneWordPerThing(labels, screen: "A goal's patches")
+        #expect(labels.contains { $0.hasSuffix("birds, together.") }, "\(labels)")
+        #expect(labels.contains { $0.hasSuffix("edition patch") }, "\(labels)")
+    }
+
+    @Test("A find no pack or BirdNET names has no way to the Atlas, and its page says whose words it is (issue #150)")
+    func findHostileName() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        let sighting = "00000000-0000-4000-8000-000000000051"
+        client.add(FeedItem(
+            sightingID: sighting, speciesID: "x", scientificName: "Not a real bird", commonName: "Call me 555-1234", method: .seen, place: nil,
+            foundAt: .now, newPatch: true, rarity: .common, art: nil, owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"),
+            circleFirst: false, isMine: false, edition: nil
+        ), to: sunday.id)
+        await harness.circles.loadFeed(circleID: sunday.id)
+        let labels = try await Self.walk(FindPageView(route: FindRoute(itemID: "maya/\(sighting)")), harness: harness) { labels in
+            labels.contains { $0.contains("Maya") }
+        }
+        #expect(labels.contains { $0.contains("Maya") }, "\(labels)")
+        #expect(!labels.contains { $0.contains("About this bird") }, "\(labels)")
+    }
+
+    @Test("A real bird with a hand-built name reads as the bird, on a feed's row and its page (issue #150)")
+    func findHandBuiltNameOnARealBird() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        let sighting = "00000000-0000-4000-8000-000000000052"
+        client.add(FeedItem(
+            sightingID: sighting, speciesID: "x", scientificName: "Haemorhous mexicanus", commonName: "Call me 555-1234", method: .seen, place: nil,
+            foundAt: .now, newPatch: true, rarity: .common, art: nil, owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"),
+            circleFirst: false, isMine: false, edition: "us-ca-la"
+        ), to: sunday.id)
+        await harness.circles.loadFeed(circleID: sunday.id)
+        let row = try await Self.walk(CirclePageView(id: sunday.id), harness: harness) { labels in
+            labels.contains { $0.contains("House Finch") }
+        }
+        #expect(row.contains { $0.contains("House Finch") }, "\(row)")
+        #expect(!row.contains { $0.contains("555") }, "\(row)")
+        let page = try await Self.walk(FindPageView(route: FindRoute(itemID: "maya/\(sighting)")), harness: harness) { labels in
+            labels.contains("House Finch")
+        }
+        #expect(page.contains("House Finch"), "\(page)")
+        #expect(!page.contains { $0.contains("555") }, "\(page)")
+    }
+
+    @Test("A friend dropped while their Compare stays open is read again, and it says they've gone rather than waiting (issue #150)")
+    func compareDroppedWhileOpen() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let store = harness.circles
+        let client = try #require(store.client as? FakeCircleClient)
+        let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
+        try await store.loadDetail(id: sunday.id)
+        var hasLeft = false
+        let labels = try await Self.walk(CompareBirdsView(friendID: "maya", friendName: "Maya Ortiz"), harness: harness) { labels in
+            if !hasLeft, labels.contains("Maya has these. Go find them.") {
+                hasLeft = true
+                Task { try? await store.leave(circleID: sunday.id) }
+            }
+            return labels.contains("Try again")
+        }
+        #expect(hasLeft)
+        #expect(labels.contains("Try again"), "\(labels)")
+        #expect(client.compareLog.filter { $0 == "maya" }.count == 2, "\(client.compareLog)")
+    }
+
+    @Test("A hand-built name never reaches Compare's screen (issue #150)")
+    func compareHostileName() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        client.setMoreCompared([FriendBirds.Species(speciesID: "x", scientificName: "Not a real bird", commonName: "Call me 555-1234", method: .seen)], friendID: "maya")
+        let labels = try await Self.walk(CompareBirdsView(friendID: "maya", friendName: "Maya Ortiz"), harness: harness) { labels in
+            labels.contains { $0.hasPrefix(BirdNames.unnamed) }
+        }
+        #expect(labels.contains("\(BirdNames.unnamed). You: Not yet. Maya: Seen."), "\(labels)")
+        #expect(!labels.contains { $0.contains("555") }, "\(labels)")
+    }
+
+    @Test("A goal that's gone says so, rather than a blank page (issue #150)")
+    func goalBoardGone() async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(GoalPatchesView(circleID: "gone", goalID: "gone"), harness: harness) { labels in
+            labels.contains { $0.contains("isn't here any more") }
+        }
+        Self.expectClean(labels, screen: "A goal that's gone")
+        #expect(labels.contains("This goal isn't here any more"), "\(labels)")
+    }
+
+    @Test("A paper card says who has the bird, in one sentence (issue #150)", arguments: sizes)
+    func cardFriends(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.loadFriendsBirds()
+        let patch = try #require(harness.collectionStore.collection.patches.first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(PatchDetailView(key: patch.id, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("this bird.") }
+        }
+        Self.expectClean(labels, screen: "A card's friends")
+        #expect(labels.contains("Jo Park and Maya Ortiz have this bird."), "\(labels)")
+    }
+
+    /// A row as a run lists it. With no run on, an add here would be Uncharted, where the seeds have Anna's Hummingbird and the
+    /// Common Blackbird, which no pack describes; the House Finch's patches are all in Los Angeles.
+    @Test("A run's rows: a new patch waiting in words, your patch and its count, and each row's one button", arguments: sizes)
+    func runRows(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        func candidate(_ scientific: String, _ common: String) -> Candidate {
+            Candidate(species: Species(index: 0, scientificName: scientific, commonName: common, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
+        }
+        let screen = VStack {
+            CandidateRow(candidate: candidate("Haemorhous mexicanus", "House Finch"), isCalling: true) {}
+            CandidateRow(candidate: candidate("Calypte anna", "Anna's Hummingbird")) {}
+            CandidateRow(candidate: candidate("Turdus merula", "Common Blackbird")) {}
+        }
+        let labels = try await Self.walk(screen, harness: harness, typeSize: typeSize) { $0.contains("Review Common Blackbird") }
+        Self.expectClean(labels, screen: "Run rows")
+        #expect(labels.contains("House Finch, calling now, new patch waiting"), "\(labels)")
+        #expect(labels.contains("Sew it, House Finch"), "\(labels)")
+        #expect(labels.contains("Anna's Hummingbird, heard just now, you have this patch, seen once"), "\(labels)")
+        #expect(labels.contains("Add Anna's Hummingbird"), "\(labels)")
+        #expect(labels.contains("Common Blackbird, heard just now, you have this patch, seen once"), "\(labels)")
+        #expect(labels.contains("Review Common Blackbird"), "a bird no pack describes: \(labels)")
+        #expect(!labels.contains("Add Common Blackbird"), "\(labels)")
+    }
+
+    /// Rows slide when the list re-sorts (issue #42), and a row's add stays under way (a glasses add waits for its photo), so a
+    /// re-sort has to move the row it already has. A list that made new rows would cross-fade them and could add a bird twice.
+    @Test("A re-sort moves a run's rows: it doesn't make new ones")
+    func aResortKeepsEachRow() async throws {
+        let harness = try Harness()
+        func stack(_ heard: [Double]) -> CandidateStack {
+            let birds = [("Haemorhous mexicanus", "House Finch"), ("Sayornis nigricans", "Black Phoebe"), ("Zenaida macroura", "Mourning Dove")]
+            return CandidateStack(candidates: zip(birds, heard).enumerated().map { index, bird in
+                Candidate(species: Species(index: index, scientificName: bird.0.0, commonName: bird.0.1, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: bird.1, admittedAt: Double(index))
+            })
+        }
+        func names(_ labels: [String]) -> [String] {
+            labels.filter { $0.contains(", heard ") }.map { String($0.prefix { $0 != "," }) }
+        }
+        harness.run.fakeStack = stack([30, 20, 10])
+        CandidateRow.appearances = 0
+        CardFlipAccessibilityTests.enableAccessibility()
+        let host = UIHostingController(rootView: harness.hosted(ActiveListeningView(), typeSize: .large))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = CGRect(x: 0, y: 0, width: 402, height: 2400)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        func wait(for order: [String]) async throws {
+            for _ in 0..<60 where names(Self.spoken(host.view)) != order {
+                try await Task.sleep(for: .milliseconds(250))
+            }
+            #expect(names(Self.spoken(host.view)) == order)
+        }
+        try await wait(for: ["House Finch", "Black Phoebe", "Mourning Dove"])
+        #expect(CandidateRow.appearances == 3, "one each")
+
+        harness.run.fakeStack = stack([30, 20, 40])
+        try await wait(for: ["Mourning Dove", "House Finch", "Black Phoebe"])
+        #expect(CandidateRow.appearances == 3, "the same three rows, moved")
+    }
+
+    @Test("A bird's profile: the Atlas leads with its photo then its story, found or not, with no patch; a found bird has a link in words", arguments: sizes)
+    func profileIsAGuidebook(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("Your patch") } && labels.contains("About this bird")
+        }
+        Self.expectClean(labels, screen: "Profile")
+        #expect(!labels.contains { $0.contains("edition patch") }, "no patch: \(labels)")
+        let name = try #require(labels.firstIndex(of: "Black Phoebe"))
+        let link = try #require(labels.firstIndex(of: "Your patch, Los Angeles"), "\(labels)")
+        let photo = try #require(labels.firstIndex { $0.hasPrefix("Reference photo") || $0.contains("Photo:") }, "\(labels)")
+        let lore = try #require(labels.firstIndex { $0.contains("Lore written from") }, "\(labels)")
+        let about = try #require(labels.firstIndex(of: "About this bird"))
+        #expect(name < photo, "the names run straight into the photo")
+        #expect(photo < link, "what's yours comes under the photo's credit")
+        #expect(link < lore)
+        #expect(lore < about)
+
+        // A bird you haven't found reads the same, with no link.
+        let unfound = try await Self.walk(BirdProfileView(scientificName: "Branta canadensis", commonName: "Canada Goose"), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("About this bird")
+        }
+        #expect(!unfound.contains { $0.hasPrefix("Your patch") }, "\(unfound)")
+        let unfoundPhoto = try #require(unfound.firstIndex { $0.hasPrefix("Reference photo") || $0.contains("Photo:") }, "\(unfound)")
+        let unfoundLore = try #require(unfound.firstIndex { $0.contains("Lore written from") }, "\(unfound)")
+        #expect(unfoundPhoto < unfoundLore)
+        #expect(unfoundLore < (unfound.firstIndex(of: "About this bird") ?? 0))
+
+        let candidate = Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
+        let review = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe", match: candidate), harness: harness, typeSize: typeSize) { $0.contains("About this bird") }
+        #expect(!review.contains { $0.contains("edition patch") || $0.hasPrefix("Your patch") }, "a review keeps its own order: \(review)")
+    }
+
+    /// The longest toast a repeat makes, at the largest text: its words wrap whole, and Undo keeps its line.
+    @Test("A named toast at the largest text keeps all its words and a whole Undo", arguments: sizes)
+    func toastFits(typeSize: DynamicTypeSize) async throws {
+        let text = "Anna's Hummingbird seen again, 12 times in Los Angeles"
+        let toast = UIHostingController(rootView: Toast(text: text, undo: {}).environment(\.dynamicTypeSize, typeSize))
+        let line = UIHostingController(rootView: Text("Undo").font(JournalFont.supporting.weight(.semibold)).environment(\.dynamicTypeSize, typeSize))
+        let oneLine = line.sizeThatFits(in: CGSize(width: 2_000, height: 2_000)).height
+        let height = toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).height
+        #expect(height >= oneLine * 2, "\(text) needs more than a line beside Undo at \(typeSize): toast \(height), a line \(oneLine)")
+        #expect(toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).width <= 402)
+    }
+
+    @Test("Collection: the set's name and count, the modes and the patches, each with how often it was seen", arguments: sizes)
     func collection(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(JournalView(state: CollectionState()), harness: harness, typeSize: typeSize) { labels in
             labels.contains { $0.contains("House Finch") } && labels.contains("Patches")
         }
         Self.expectClean(labels, screen: "Collection")
-        #expect(labels.contains { $0.hasSuffix("· 6 sightings") && $0.contains("patches") }, "the summary: \(labels)")
+        #expect(labels.contains("Los Angeles"), "the set's name, which is the menu of the others: \(labels)")
+        #expect(labels.contains("Los Angeles, 3 of 160 sewn, Citrus edition"), "its count: \(labels)")
+        #expect(!labels.contains { $0.hasSuffix(", 6 sightings") }, "the total across sets is in the menu: \(labels)")
         for mode in ["Patches", "Sightings", "Species"] {
             #expect(labels.contains(mode), "\(mode): \(labels)")
         }
@@ -197,7 +520,7 @@ struct ScreenAccessibilityTests {
         let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
         let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
         let labels = try await Self.walk(PatchDetailView(key: key, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Turn back") && labels.contains { $0.hasPrefix("All 1 sighting") }
+            labels.contains("Turn back") && labels.contains { $0.hasPrefix("1 sighting") }
         }
         Self.expectClean(labels, screen: "Paper card")
         #expect(labels.contains("Black Phoebe"), "the name: \(labels)")
@@ -227,7 +550,7 @@ struct ScreenAccessibilityTests {
         var sources: NSObject?
         for _ in 0..<60 where all == nil || sources == nil {
             try await Task.sleep(for: .milliseconds(250))
-            all = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "All 1 sighting")
+            all = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "1 sighting")
             sources = SewingCeremonyAccessibilityTests.element(in: host.view, labelled: "Sources")
         }
         let top = try #require(all).accessibilityFrame
@@ -334,32 +657,142 @@ struct ScreenAccessibilityTests {
     func speciesPatches(typeSize: DynamicTypeSize) async throws {
         let harness = try Self.sanDiegoHarness()
         let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("House Finch, Coastal edition patch") } && labels.contains("Open in Field Guide")
+            labels.contains { $0.hasPrefix("House Finch, Coastal edition patch") } && labels.contains("Open in Atlas")
         }
         Self.expectClean(labels, screen: "Species patches")
         #expect(labels.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 9 times, sewn ") }, "\(labels)")
         #expect(labels.contains { $0.hasPrefix("House Finch, Coastal edition patch, seen 6 times, sewn ") }, "the blank: \(labels)")
-        #expect(labels.contains("Open in Field Guide"), "\(labels)")
+        #expect(labels.contains("Open in Atlas"), "\(labels)")
+    }
+
+    @Test("A set's page: the plate is one labelled image and the set's name a heading, and a found bird's row says it's yours", arguments: sizes)
+    func setPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness(seeded: false)
+        let set = try #require(harness.library.set(id: PackIndex.bundledPackID))
+        let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let first = set.species[0], second = set.species[1]
+        for (species, minutesAgo) in [(first, 1.0), (first, 2.0), (second, 3.0)] {
+            harness.album.mainContext.insert(Sighting(speciesID: "\(species.scientificName)_\(species.commonName)", confirmedAt: .now.addingTimeInterval(-minutesAgo * 60), location: griffith, soundConfidence: 0.7, source: .phone))
+        }
+        try harness.album.mainContext.save()
+        let labels = try await Self.walk(SetView(id: set.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Painted plate, AI illustration") && labels.contains("002, \(second.commonName), yours, seen once")
+        }
+        Self.expectClean(labels, screen: "Set page")
+        #expect(labels.contains("Painted plate, AI illustration"), "\(labels)")
+        #expect(!labels.contains("AI illustration"), "said once, with the picture: \(labels)")
+        #expect(labels.contains(set.name), "\(labels)")
+        #expect(labels.contains("\(set.edition.name), \(set.species.count) birds"), "\(labels)")
+        #expect(labels.contains("2 of \(set.species.count) sewn"), "the thread's count, once: \(labels)")
+        #expect(labels.contains("001, \(first.commonName), yours, seen 2 times"), "\(labels)")
+        #expect(labels.contains("002, \(second.commonName), yours, seen once"), "\(labels)")
+        #expect(labels.contains("003, \(set.species[2].commonName), still out there"), "\(labels)")
+    }
+
+    @Test("A record: the facts, Heard and Seen, and two closed disclosures that VoiceOver can find", arguments: sizes)
+    func record(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(SightingDetailView(id: phoebe.persistentModelID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Rarity") && labels.contains("Identification")
+        }
+        Self.expectClean(labels, screen: "Record")
+        #expect(labels.contains("Black Phoebe"), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("How") && $0.contains("Heard with Ray-Ban Display") }, "\(labels)")
+        #expect(labels.contains("Your glasses snapshot from this sighting"), "\(labels)")
+        #expect(labels.contains("Rarity") && labels.contains("Identification"), "\(labels)")
+        #expect(!labels.contains { $0.contains("Model score") }, "closed: \(labels)")
+
+        let dove = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Zenaida macroura" })
+        let withPatch = try await Self.walk(SightingDetailView(id: dove.persistentModelID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch") }
+        }
+        #expect(withPatch.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch, seen once, sewn ") }, "\(withPatch)")
+    }
+
+    @Test("The Atlas: a tile leads with the set's name, and says the plate last", arguments: sizes)
+    func atlasTile(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let set = try #require(harness.library.set(id: PackIndex.bundledPackID))
+        let labels = try await Self.walk(FieldGuideView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("\(set.name), ") }
+        }
+        Self.expectClean(labels, screen: "Atlas")
+        let tile = try #require(labels.first { $0.hasPrefix("\(set.name), ") }, "\(labels)")
+        #expect(tile == "\(set.name), \(set.edition.name), \(set.species.count) birds, 3 of \(set.species.count) sewn, Ready offline, painted plate, AI illustration")
+        #expect(!labels.contains { $0.hasPrefix("Painted plate") }, "\(labels)")
+    }
+
+    @Test("A download's page: the plate is one labelled image, and its count is said once", arguments: sizes)
+    func packPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(PackDetailView(id: PackIndex.bundledPackID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Painted plate, AI illustration")
+        }
+        Self.expectClean(labels, screen: "Download's page")
+        #expect(labels.contains("Painted plate, AI illustration"), "\(labels)")
+        #expect(labels.filter { $0.hasSuffix(" sewn") }.count == 1, "\(labels)")
+    }
+
+    @Test("The map: each patch says which bird and when, and a cluster how many")
+    func mapPatches() async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(SightingMapView(focus: phoebe), harness: harness) { labels in
+            labels.contains { $0.hasPrefix("Black Phoebe, ") }
+        }
+        #expect(labels.contains { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+    }
+
+    @Test("A map of many sightings still offers its own controls to VoiceOver, on top of the patches on screen")
+    func manyPinsMapControls() async throws {
+        CardFlipAccessibilityTests.enableAccessibility()
+        let map = ManyPinsMapView(frame: CGRect(x: 0, y: 0, width: 402, height: 874))
+        map.showsUserTrackingButton = true
+        map.showsCompass = true
+        let griffith = CLLocationCoordinate2D(latitude: 34.1365, longitude: -118.2942)
+        map.addAnnotations((0..<(ManyPinsMapView.manyPins + 10)).map { index in
+            let pin = MKPointAnnotation()
+            pin.coordinate = CLLocationCoordinate2D(latitude: griffith.latitude + Double(index % 25) * 0.01, longitude: griffith.longitude + Double(index / 25) * 0.01)
+            return pin
+        })
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = map.frame
+        window.addSubview(map)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        var labels: [String] = []
+        for _ in 0..<40 {
+            try await Task.sleep(for: .milliseconds(250))
+            labels = (map.accessibilityElements ?? []).compactMap { ($0 as? NSObject)?.accessibilityLabel }
+            if labels.contains("Legal"), labels.contains(where: { $0.localizedCaseInsensitiveContains("track") }) { break }
+        }
+        #expect(labels.contains("Legal"), "\(labels.suffix(6))")
+        #expect(labels.contains { $0.localizedCaseInsensitiveContains("track") }, "the locate button: \(labels.suffix(6))")
     }
 
     @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)
     func notYetFound(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let set = try #require(harness.library.set(id: PackIndex.bundledPackID))
         let first = try #require(set.species.first)
         let rows = try await Self.walk(SetView(id: set.id), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("001, \(first.commonName), not yet found here")
+            labels.contains("001, \(first.commonName), still out there")
         }
         Self.expectClean(rows, screen: "Set page")
-        #expect(rows.contains("001, \(first.commonName), not yet found here"), "\(rows)")
+        Self.expectOneWordPerThing(rows, screen: "Set page")
+        #expect(rows.contains("001, \(first.commonName), still out there"), "\(rows)")
+        #expect(rows.contains("\(set.species.count - 3) still out there"), "one count, once, for the three seeded birds in the set: \(rows)")
+        #expect(rows.filter { $0.hasSuffix("still out there") }.count > 1)
 
         let page = try await Self.walk(SpeciesPatchesView(scientificName: first.scientificName, commonName: first.commonName), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Open in Field Guide") && labels.contains("Start listening")
+            labels.contains("Open in Atlas") && labels.contains("Start listening")
         }
         Self.expectClean(page, screen: "A bird not yet found")
         #expect(page.contains("No sightings of \(first.commonName) yet"), "\(page)")
         #expect(page.contains("Number 1 of \(set.species.count) in \(set.name)"), "its number, in words: \(page)")
-        #expect(page.contains("Open in Field Guide"), "the path to its Atlas profile: \(page)")
+        #expect(page.contains("Open in Atlas"), "the path to its Atlas profile: \(page)")
         #expect(!page.contains { $0.contains(" patch,") }, "no patch for a bird you haven't found: \(page)")
     }
 
@@ -370,9 +803,49 @@ struct ScreenAccessibilityTests {
             labels.contains { $0.contains("Los Angeles") } && labels.contains { $0.contains("Ready offline") }
         }
         Self.expectClean(labels, screen: "Atlas")
+        Self.expectOneWordPerThing(labels, screen: "Atlas")
         #expect(labels.contains { $0.contains("Los Angeles") }, "\(labels)")
         #expect(labels.contains { $0.contains("Ready offline") }, "\(labels)")
-        #expect(labels.contains { $0.contains("species collected") }, "\(labels)")
+        #expect(labels.contains { $0.contains(" sewn") }, "\(labels)")
+    }
+
+    @Test("The one state: a page the phone can't show says so in a StateNotice, as a heading VoiceOver reaches", arguments: sizes)
+    func statePages(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let set = try await Self.walk(SetView(id: "no-such-set"), harness: harness, typeSize: typeSize) { $0.contains("Set not found") }
+        Self.expectClean(set, screen: "A set no longer listed")
+        Self.expectOneWordPerThing(set, screen: "A set no longer listed")
+        #expect(set.contains("The list of sets no longer includes this one."), "\(set)")
+        let credits = try await Self.walk(SpeciesCreditsView(scientificName: "Nomen nescio"), harness: harness, typeSize: typeSize) { $0.contains("No field-guide download describes this bird") }
+        Self.expectClean(credits, screen: "Credits for a bird no download describes")
+    }
+
+    @Test("The mascot is decoration: VoiceOver goes straight past it to the words", arguments: sizes)
+    func mascotIsSkipped(typeSize: DynamicTypeSize) async throws {
+        let notice = StateNotice("Your first patch is a bird away.", message: "Start listening.", mark: .drawing)
+        let labels = try await Self.walk(notice, harness: try Harness(), typeSize: typeSize) { !$0.isEmpty }
+        #expect(labels == ["Your first patch is a bird away.", "Start listening."], "\(labels)")
+    }
+
+    @Test("Two short facts keep their dot on screen, and VoiceOver reads a comma")
+    func shortFacts() async throws {
+        let labels = try await Self.walk(ShortFacts("8 sec", "Jonathon Jongsma"), harness: try Harness()) { !$0.isEmpty }
+        #expect(labels == ["8 sec, Jonathon Jongsma"], "\(labels)")
+    }
+
+    @Test("The field-guide downloads: the page, one set's page and its words, none of them pack or region", arguments: sizes)
+    func fieldGuideDownloads(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let list = try await Self.walk(BirdPacksView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("On your iPhone") && labels.contains("More sets")
+        }
+        Self.expectClean(list, screen: "Field-guide downloads")
+        Self.expectOneWordPerThing(list, screen: "Field-guide downloads")
+        let page = try await Self.walk(PackDetailView(id: PackIndex.bundledPackID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("What it holds")
+        }
+        Self.expectClean(page, screen: "A field-guide download")
+        Self.expectOneWordPerThing(page, screen: "A field-guide download")
     }
 
     @Test("A Guild's page: the name and members first, Invite friends, the goal in words, the sharing setting in view", arguments: sizes)
@@ -384,11 +857,107 @@ struct ScreenAccessibilityTests {
             labels.contains { $0.contains("Invite friends") } && labels.contains { $0.contains("still to discover") }
         }
         Self.expectClean(labels, screen: "Guild page")
+        Self.expectOneWordPerThing(labels, screen: "Guild page")
         let name = try #require(labels.firstIndex { $0.contains("Sunday Group") }, "\(labels)")
         let invite = try #require(labels.firstIndex { $0.contains("Invite friends") }, "\(labels)")
         #expect(name < invite, "the Guild leads, before Invite: \(labels)")
         #expect(labels.contains { $0.contains("members") }, "\(labels)")
         #expect(labels.contains { $0.contains("still to discover") }, "the goal in words: \(labels)")
         #expect(!labels.contains { $0.localizedCaseInsensitiveContains("days left") }, "no countdown: \(labels)")
+        #expect(labels.contains { $0.contains("Sharing your finds automatically") }, "the sharing setting in view: \(labels)")
+        #expect(labels.contains { $0.contains("Pat Birder") && $0.contains("Maya Ortiz") }, "who's in it: \(labels)")
+    }
+
+    @Test("A friend's find: the bird, who found it, where the feed says, its marks and reactions, and the way to the Atlas", arguments: sizes)
+    func findPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        await harness.circles.loadMergedFeed()
+        let labels = try await Self.walk(FindPageView(route: FindRoute(itemID: "sam/00000000-0000-4000-8000-000000000003")), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("About this bird") }
+        }
+        Self.expectClean(labels, screen: "A find")
+        Self.expectOneWordPerThing(labels, screen: "A find")
+        #expect(labels.contains("California Gnatcatcher"), "\(labels)")
+        #expect(labels.contains { $0.contains("Sam Okafor") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("Heard at a secret spot") }, "the feed's words, no more: \(labels)")
+        #expect(labels.contains { $0.contains("First for the Guild") && $0.contains("Rare") }, "\(labels)")
+        #expect(labels.contains("Lovely find") && labels.contains("Jealous!") && labels.contains("Let's go together"), "\(labels)")
+        #expect(!labels.contains { $0.contains("Paper card") && $0.contains("Turn back") }, "\(labels)")
+    }
+
+    @Test("An open find stays when a read of the feed leaves it out, and goes when its owner is blocked")
+    func openFindKept() async throws {
+        let harness = try Harness()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let circles = harness.circles
+        await circles.refresh()
+        let sunday = try #require(circles.circles.first { $0.name == "Sunday Group" })
+        await circles.loadFeed(circleID: sunday.id)
+        let id = "maya/00000000-0000-4000-8000-000000000000"
+        let route = FindRoute(itemID: id, surface: .guild(sunday.id))
+        let page = FindPageView(route: route)
+        var labels = try await Self.walk(page, harness: harness) { $0.contains("Black Phoebe") }
+        #expect(labels.contains("Black Phoebe"), "\(labels)")
+
+        // A read with Maya's phoebe off its pages, as from a pull on the page beneath.
+        try await client.deleteFriendFind(id, circleID: sunday.id)
+        await circles.loadFeed(circleID: sunday.id)
+        #expect(circles.feeds[sunday.id]?.items.contains { $0.id == id } == false)
+        labels = try await Self.walk(page, harness: harness) { $0.contains("Black Phoebe") }
+        #expect(labels.contains("Black Phoebe"), "the page keeps it: \(labels)")
+        #expect(!labels.contains("This find isn't here any more"), "\(labels)")
+
+        try await client.setBlocked(true, accountID: "maya", accessToken: "t")
+        await circles.loadBlocks()
+        labels = try await Self.walk(page, harness: harness) { $0.contains("This find isn't here any more") }
+        #expect(labels.contains("This find isn't here any more"), "blocked: \(labels)")
+    }
+
+    @Test("A Guild's Info sheet: the goals, the sharing, the members and Leave", arguments: sizes)
+    func infoSheet(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        try await harness.circles.loadDetail(id: sunday.id)
+        await harness.circles.loadGoals(circleID: sunday.id)
+        let labels = try await Self.walk(CircleInfoSheet(circleID: sunday.id) {}, harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("Fall migration") }
+        }
+        Self.expectClean(labels, screen: "Guild info")
+        Self.expectOneWordPerThing(labels, screen: "Guild info")
+        #expect(labels.contains { $0.contains("Fall migration") }, "\(labels)")
+        // The list lays out only what's near the screen, and at the largest size the goals fill the window.
+        if !typeSize.isAccessibilitySize {
+            #expect(labels.contains { $0.contains("Share my finds automatically") }, "\(labels)")
+            #expect(labels.contains { $0.contains("Maya Ortiz") }, "\(labels)")
+            #expect(labels.contains { $0.contains("Leave Guild") }, "\(labels)")
+        }
+    }
+
+    @Test("The Guilds tab with two Guilds: each emblem, then what's new, naming its Guilds", arguments: sizes)
+    func allGuilds(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let labels = try await Self.walk(CirclesView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("In Sunday Group") }
+        }
+        Self.expectClean(labels, screen: "Guilds tab")
+        Self.expectOneWordPerThing(labels, screen: "Guilds tab")
+        let sunday = try #require(labels.firstIndex { $0.hasPrefix("Sunday Group") }, "\(labels)")
+        let find = try #require(labels.firstIndex { $0.contains("In Sunday Group") }, "\(labels)")
+        #expect(sunday < find, "the emblems above the feed: \(labels)")
+    }
+
+    @Test("Signed out, the sample patches are said to be samples", arguments: sizes)
+    func signedOutSamples(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness(signedIn: false)
+        let labels = try await Self.walk(CirclesView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("Sample patches") }
+        }
+        Self.expectClean(labels, screen: "Guilds, signed out")
+        Self.expectOneWordPerThing(labels, screen: "Guilds, signed out")
+        #expect(labels.contains { $0.contains("Find wonder together.") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("Sample patches") && $0.contains("Black Phoebe") }, "\(labels)")
     }
 }

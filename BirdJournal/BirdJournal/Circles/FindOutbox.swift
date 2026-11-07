@@ -130,6 +130,11 @@ final class FindOutbox {
         save()
     }
 
+    /// Whether the sighting is one this account shared as a find, sent or still on its way.
+    func isPublished(_ identifier: UUID) -> Bool {
+        published.contains { $0.identifier == identifier && $0.owner == signedInOwner }
+    }
+
     /// Whether an automatic put of the sighting is still waiting to go (offline, or backing off).
     func isWaitingToPublish(_ identifier: UUID) -> Bool {
         entries.contains { $0.identifier == identifier && $0.operation == .put && $0.owner == signedInOwner }

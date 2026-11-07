@@ -6,34 +6,37 @@ import SwiftUI
 /// the ivory inks measured 1.5–2.2:1 on it; on the page they keep the 4.5:1 `TokenPairingTests` measures.
 struct ListeningAccessory: View {
     @Environment(ListeningCoordinator.self) private var run
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     let showListen: () -> Void
 
     var body: some View {
+        let hunt = run.hunt(in: collectionStore.collection)
         HStack(spacing: 12) {
             Button(action: showListen) {
                 HStack(spacing: 10) {
                     Image(systemName: run.state == .listening ? "waveform" : "pause.circle")
-                        .foregroundStyle(Color.moss)
+                        .foregroundStyle(.tint)
                         .symbolEffect(.variableColor.iterative, isActive: run.state == .listening && !reduceMotion)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(title)
                             .font(JournalFont.supporting.weight(.semibold))
                             .foregroundStyle(Color.ink)
                         if placement != .inline {
-                            Text(run.summary)
+                            Text(hunt.short)
                                 .font(.caption)
                                 .foregroundStyle(Color.inkSecondary)
                         }
                     }
                     Spacer(minLength: 4)
-                    ElapsedTimeCompact(startedAt: run.startedAt)
+                    ElapsedTimeCompact(startedAt: run.clockStart, stoppedAt: run.clockStoppedAt)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(title). \(run.summary). Show the Listen tab.")
+            .accessibilityLabel("\(title). \(hunt.text). Show the Listen tab.")
 
             Button {
                 Task { await run.stop() }
@@ -42,9 +45,9 @@ struct ListeningAccessory: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.mossText)
                     .frame(width: 40, height: 40)
-                    .background(Color.moss, in: Circle())
+                    .background(.tint, in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.journalPress)
             .disabled(run.state == .stopping || run.state == .starting)
             .accessibilityLabel("Stop listening")
         }
@@ -66,10 +69,11 @@ struct ListeningAccessory: View {
 
 private struct ElapsedTimeCompact: View {
     let startedAt: Date?
+    let stoppedAt: Date?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            Text(ElapsedTime.text(from: startedAt, to: context.date))
+            Text(ElapsedTime.text(from: startedAt, to: stoppedAt ?? context.date))
                 .font(JournalFont.supporting.monospacedDigit())
                 .foregroundStyle(Color.inkSecondary)
         }

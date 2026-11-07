@@ -2,23 +2,24 @@ import SwiftUI
 import UIKit
 
 /// The app's design tokens: Featherguild design guide 1.0, page 9 (issue #116, replacing #28's field-journal palette).
-/// Deep teal and warm ivory: a teal page with ivory ink in the dark appearance, an ivory page with teal ink in the light
-/// one, each with an Increase Contrast variant, all from the asset catalog so the system picks the variant. The guide's
+/// Deep teal and warm ivory: a teal page with ivory ink in the dark appearance, a sage-grey page with teal ink in the light
+/// one (issue #150), each with an Increase Contrast variant, all from the asset catalog so the system picks the variant. The guide's
 /// values are starting tokens; the secondary ink, the rules and the text on an action are derived here, and
 /// `DesignTokenTests` measures every text pairing in all four variants. There is no gold since #132 (design guide 2.0
 /// retired Legendary); shared goals take the lavender accent; bird art keeps its own colours.
 extension Color {
-    /// The page: #10292D dark, #F4F2E9 light.
+    /// The page: #10292D dark, pale sage-grey #EEF1EC light (issue #150), so linen and card stock stand out against it.
     static let paper = Color("JournalPaper")
-    /// Grouped rows, panels and thumbnail placeholders: #193A3D dark, #DFEAE5 light.
+    /// Grouped rows, panels and thumbnail placeholders: #193A3D dark, #E0E8E2 light.
     static let raised = Color("JournalRaised")
     /// Primary text: #F5F1E7 dark, #15363A light.
     static let ink = Color("JournalInk")
     /// Supporting text, at least 4.5:1 on the page and on a raised surface.
     static let inkSecondary = Color("JournalInkSecondary")
-    /// Primary actions, links and the selected tab: aqua #BCE3D9 dark, teal #15363A light.
+    /// Today's aqua: #BCE3D9 dark, teal #15363A light. It's what a set the app doesn't know keeps. Everything else reads the
+    /// accent through `.tint`, since it follows the place (issue #150): `PatchEdition.tint(setID:)`, at the root.
     static let moss = Color("JournalMoss")
-    /// Text on a primary action's fill.
+    /// Text on the accent's fill, in every edition's tint.
     static let mossText = Color("JournalMossText")
     /// Fine separators; decorative, stronger under Increase Contrast.
     static let rule = Color("JournalRule")
@@ -26,6 +27,8 @@ extension Color {
     static let sharedGoal = Color("JournalSharedGoal")
     /// Text and marks on a `sharedGoal` fill.
     static let onSharedGoal = Color("JournalOnSharedGoal")
+    /// Lavender thread on the page, in `ThreadProgress`: `sharedGoal` itself, which is a pale fill in the light appearance, wouldn't show there.
+    static let togetherThread = Color("ThreadTogether")
     /// Errors and destructive actions in a page (issue #119): brick #A3322A light, salmon #F4A79B dark, at least 5.5:1
     /// on the page and a raised surface. The system red measured 3.2:1 on the light page and 3.6:1 on the dark raised
     /// surface, under the 4.5:1 text needs.
@@ -51,7 +54,7 @@ enum JournalFont {
     static let scientific = Font.system(.subheadline, design: .serif).italic()
 }
 
-/// The card's type (design guide pages 5 and 8): the bird's name upright, the story title upright and smaller, the lore
+/// The paper card's type (design guide pages 5 and 8): the bird's name upright, the story title upright and smaller, the lore
 /// in a true italic serif with generous leading, the edition in small capitals, and a quiet sans footer.
 enum CardFont {
     /// The bird's name on a card's front, about 28 pt, upright.
@@ -64,10 +67,8 @@ enum CardFont {
     static let lore = Font.system(.callout, design: .serif).italic()
     /// The lore's extra leading, in points.
     static let loreLeading: CGFloat = 5
-    /// "CITRUS EDITION", "LEGENDARY · YOUR FIRST": the edition line, set in capitals with open tracking.
-    static let edition = Font.system(.caption, design: .serif, weight: .semibold)
-    static let editionTracking: CGFloat = 1.6
-    /// The edition line on a tile.
+    /// "CITRUS EDITION": the paper card's edition line, printed in capitals with open tracking. Capitals stay here and on
+    /// the wordmark and nowhere else (issue #150).
     static let editionCompact = Font.system(.caption2, design: .serif, weight: .semibold)
     static let editionCompactTracking: CGFloat = 1
     /// A tile's name, about 17 pt.
@@ -87,6 +88,12 @@ enum JournalLayout {
     static let thumbnailRadius: CGFloat = 10
     /// Primary actions are taller than the 44 pt minimum.
     static let primaryActionHeight: CGFloat = 54
+
+    /// An outlined label's corners: a capsule's while its words sit on one line, a rounded rectangle at accessibility sizes,
+    /// where they wrap and a capsule's ends would cut them off (issue #150).
+    static func outlineRadius(_ typeSize: DynamicTypeSize, wrapped: CGFloat = cornerRadius) -> CGFloat {
+        typeSize.isAccessibilitySize ? wrapped : 999
+    }
 }
 
 extension JournalFont {
@@ -103,7 +110,7 @@ extension JournalFont {
     }
 }
 
-/// The primary action of a page: a full-width moss button with the label centred, 54 pt tall.
+/// The primary action of a page: a full-width button in the accent with the label centred, 54 pt tall.
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
@@ -112,26 +119,78 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(.body.weight(.semibold))
             .foregroundStyle(Color.mossText)
             .frame(maxWidth: .infinity, minHeight: JournalLayout.primaryActionHeight)
-            .background(Color.moss.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .background(.tint.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 
-/// A secondary action: an outlined moss capsule, 44 pt tall, faded when disabled.
+/// A secondary action: a capsule outlined in the accent, 44 pt tall, faded when disabled. At accessibility sizes it's a rounded
+/// rectangle, since its words wrap (issue #150). `colour` makes it quieter: Stop, in the ink, doesn't speak over the birds.
+/// `size: .small` draws it no taller than a row of faces beside it, still answering to 44 pt: a Guild's Invite, as the mock has it.
 struct OutlinedButtonStyle: ButtonStyle {
+    enum Size { case regular, small }
+
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// The accent when nil.
+    var colour: Color?
+    var size = Size.regular
 
     func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        let ink = colour.map(AnyShapeStyle.init) ?? AnyShapeStyle(TintShapeStyle.tint)
+        let isSmall = size == .small
+        configuration.label
+            .font((isSmall ? Font.footnote : Font.subheadline).weight(.semibold))
+            .foregroundStyle(ink)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, isSmall ? 12 : 16)
+            .padding(.vertical, isSmall ? 5 : typeSize.isAccessibilitySize ? 8 : 0)
+            .frame(minHeight: isSmall ? nil : 44)
+            .background(ink.opacity(configuration.isPressed ? 0.15 : 0), in: shape)
+            .overlay(shape.strokeBorder(ink, lineWidth: 1))
+            // The small pill's 44 pt is around what it draws.
+            .frame(minHeight: isSmall ? 44 : nil)
+            .opacity(isEnabled ? 1 : 0.4)
+            .contentShape(isSmall ? AnyShape(Rectangle()) : AnyShape(shape))
+            .pressResponse(isPressed: configuration.isPressed)
+    }
+}
+
+/// A row's button: Sew it filled with the tint, Add outlined in the ink, both smaller than the 44 pt they answer to, so the
+/// bird stays the main thing on the row. At accessibility sizes it's a rounded rectangle, since its words can wrap.
+struct RowPillStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let isFilled: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color.moss)
+            .foregroundStyle(isFilled ? Color.mossText : Color.ink)
+            .multilineTextAlignment(.center)
             .padding(.horizontal, 16)
-            .frame(minHeight: 40)
-            .background(Color.moss.opacity(configuration.isPressed ? 0.15 : 0), in: Capsule())
-            .overlay(Capsule().strokeBorder(Color.moss, lineWidth: 1))
-            .opacity(isEnabled ? 1 : 0.4)
-            .contentShape(Capsule())
+            .padding(.vertical, typeSize.isAccessibilitySize ? 8 : 0)
+            .frame(minHeight: 36)
+            .background {
+                if isFilled {
+                    shape.fill(.tint)
+                } else {
+                    shape.fill(Color.ink.opacity(configuration.isPressed ? 0.15 : 0))
+                    shape.strokeBorder(Color.ink, lineWidth: 1)
+                }
+            }
+            .opacity(isEnabled ? (configuration.isPressed && isFilled ? 0.85 : 1) : 0.4)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .pressResponse(isPressed: configuration.isPressed)
     }
+}
+
+extension ButtonStyle where Self == RowPillStyle {
+    static func journalRowPill(isFilled: Bool) -> RowPillStyle { RowPillStyle(isFilled: isFilled) }
 }
 
 extension ButtonStyle where Self == PrimaryButtonStyle {
@@ -140,6 +199,7 @@ extension ButtonStyle where Self == PrimaryButtonStyle {
 
 extension ButtonStyle where Self == OutlinedButtonStyle {
     static var journalOutlined: OutlinedButtonStyle { OutlinedButtonStyle() }
+    static var journalQuiet: OutlinedButtonStyle { OutlinedButtonStyle(colour: .ink) }
 }
 
 /// Lays a screen out on paper with the journal's margins: the standard scroll container for the tabs.
@@ -160,24 +220,85 @@ struct PaperPage<Content: View>: View {
 
 extension View {
     /// The paper background behind a list-based screen.
-    func paperList() -> some View {
+    fileprivate func paperList() -> some View {
         scrollContentBackground(.hidden).background(Color.paper)
     }
 }
 
-/// A section title in the serif with a fine rule under it.
-struct SectionTitle: View {
-    let text: String
+/// A list on the paper page with its rows on the raised surface (issue #150): a screen can't forget the row colour and fall
+/// back to the system's, near-black on the petrol page and white on the ivory one. A row or section that sets its own
+/// background keeps it.
+struct PaperList<Content: View>: View {
+    @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(text)
-                .font(JournalFont.section)
-                .foregroundStyle(Color.ink)
-            Rectangle().fill(Color.rule).frame(height: 1)
+        List {
+            Group { content }.listRowBackground(Color.raised)
         }
-        .padding(.top, JournalLayout.sectionGap)
-        .accessibilityAddTraits(.isHeader)
+        .paperList()
+    }
+}
+
+/// A form on the paper page with its rows on the raised surface, like `PaperList`.
+struct PaperForm<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        Form {
+            Group { content }.listRowBackground(Color.raised)
+        }
+        .paperList()
+    }
+}
+
+/// The one heading on a content page (issue #150): New York in the ink, no rule and no capitals, like "157 still out there".
+/// A plain-iOS list keeps the system's section headers. `.lead` is the larger first line of a page ("Maya has these. Go find
+/// them."). `top` is the space above it, and on felt or linen `onBoard` gives it a solid surface under Increase Contrast.
+struct SectionTitle: View {
+    enum Size {
+        /// Title 3, about 20 pt: the mock's "You both have".
+        case section
+        /// Title 2, about 22 pt.
+        case lead
+    }
+
+    let text: String
+    var size = Size.section
+    var top = JournalLayout.sectionGap
+    var onBoard = false
+
+    init(_ text: String, size: Size = .section, top: CGFloat = JournalLayout.sectionGap, onBoard: Bool = false) {
+        self.text = text
+        self.size = size
+        self.top = top
+        self.onBoard = onBoard
+    }
+
+    var body: some View {
+        Text(text)
+            .font(size == .lead ? JournalFont.section : JournalFont.heading)
+            .foregroundStyle(Color.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .boardLabel(isOnBoard: onBoard)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, top)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Two short facts sharing a line at a small size, where a middle dot may stay (issue #150). VoiceOver reads a comma.
+struct ShortFacts: View {
+    let first: String
+    let second: String
+
+    init(_ first: String, _ second: String) {
+        self.first = first
+        self.second = second
+    }
+
+    var body: some View {
+        Text("\(first) · \(second)")
+            .accessibilityLabel("\(first), \(second)")
     }
 }
 
@@ -233,6 +354,7 @@ struct Toast: View {
     var ticksFrom: String?
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var ticked = false
 
     /// Long enough for a review sheet to have finished closing, so the tick is seen.
@@ -247,28 +369,37 @@ struct Toast: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.moss)
-            Text(shown)
-                .font(JournalFont.supporting.weight(.medium))
-                .foregroundStyle(Color.ink)
-                .contentTransition(.numericText())
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+        AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
+            HStack(alignment: typeSize.stacksRows ? .firstTextBaseline : .center, spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.tint)
+                // The words wrap, however long a bird's name; at accessibility sizes Undo has the line below them.
+                Text(shown)
+                    .font(JournalFont.supporting.weight(.medium))
+                    .foregroundStyle(Color.ink)
+                    .contentTransition(.numericText())
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let undo {
-                Spacer(minLength: 8)
+                if !typeSize.stacksRows { Spacer(minLength: 8) }
                 Button("Undo", action: undo)
                     .font(JournalFont.supporting.weight(.semibold))
-                    .foregroundStyle(Color.moss)
+                    .foregroundStyle(.tint)
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.regularMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.rule, lineWidth: 1))
+        .frame(maxWidth: typeSize.stacksRows ? .infinity : nil, alignment: .leading)
+        .background(.regularMaterial, in: shape)
+        .overlay(shape.strokeBorder(Color.rule, lineWidth: 1))
+        // It says one short thing for a few seconds: at the largest sizes it stops growing, or it takes the page from Stop and the birds.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
-        // A light, optional haptic as the count changes: the system's haptics setting turns it off.
-        .sensoryFeedback(.impact(weight: .light), trigger: ticked)
+        .stitchTickHaptic(trigger: ticked)
         .task {
             guard ticksFrom != nil else { return }
             if !isStill {

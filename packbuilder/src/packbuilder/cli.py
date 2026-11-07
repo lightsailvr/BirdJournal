@@ -1,8 +1,17 @@
 """`packbuilder build <definition-dir> --out <pack-dir>`: builds one pack from its definition folder.
 `packbuilder set <definition-dir>`: builds the pack's set definition into set.json beside pack.json (`sets.py`).
 `packbuilder art-review <definition-dir> ...`: records the maintainer's review of the pack art in art.lock.json (`pack_art.py`).
+`packbuilder silhouettes <definition-dir>`: derives the silhouettes silhouette.lock.json lacks from the cached isolated birds and draws their contact sheets (`silhouettes.py`).
+`packbuilder silhouette-review <definition-dir>`: records the maintainer's review of them, by the sheets' numbers.
+`packbuilder hero-sheets <definition-dir>`: draws the review of every species' first photo as a bird's profile shows it, and the proposed replacements (`hero_photos.py`).
+`packbuilder hero-candidates <definition-dir> --species <numbers>`: draws the best of the cached wider pool, for choosing a replacement.
+`packbuilder hero-review <definition-dir>`: records proposals, and the maintainer's answer to them by the sheets' numbers.
 `packbuilder cover <definition-dir>`: paints the set's cover candidates the cover lock lacks and draws their contact sheet (`covers.py`).
 `packbuilder cover-review <definition-dir> --approve <n> | --reject`: records the maintainer's choice of cover in cover.lock.json.
+`packbuilder bundle-covers`: writes every approved cover into the app's `Pack` target (`covers.py`, issue #150).
+`packbuilder mascot`: paints the mascot patches `art/mascot/mascot.lock.json` lacks and draws their contact sheets (`mascot_art.py`).
+`packbuilder mascot-review --approve <n> ... | --reject <bird> ...`: records the maintainer's picks of mascot patch.
+`packbuilder mascot-assets`: makes the app's icons, thumbnails and perched finch from the approved mascot patches.
 `packbuilder art-references <definition-dir> --pack <pack-dir> --out <dir>`: exports the art worker's reference birds (`art_references.py`).
 `packbuilder lore <definition-dir>`: writes only the fact sheets and the lore the lore lock lacks, without building the pack.
 `packbuilder lore-review <definition-dir> ...`: records the maintainer's review of the lore, and of the story titles on
@@ -54,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--sound-tries", type=int, default=3, help="recordings downloaded per species and kind before the kind is a gap (default 3)")
     build.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints the pack art the lock lacks (default {COMFY}, on the tailnet)")
     build.add_argument("--no-art", action="store_true", help="skip the pack art and the set's cover (the pack then has neither)")
+    build.add_argument("--no-silhouettes", action="store_true", help="skip only the silhouettes (the pack then has none; --no-art skips them too)")
     build.add_argument("--no-cover", action="store_true", help="skip only the set's cover (the pack then has none)")
     build.add_argument("--art-sheets", type=Path, help="folder for the pack art's contact sheets (default build/pack-art/<pack id>)")
     build.add_argument("--no-lore", action="store_true", help="skip the lore (the pack then has none; the fact sheet still ships)")
@@ -92,6 +102,35 @@ def main(argv: list[str] | None = None) -> int:
     art_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a painting: the next build paints it again with new seeds (repeat)")
     art_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on a species' art: its cards fall back to the reference photo (repeat)")
     art_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
+    silhouettes = commands.add_parser("silhouettes", help="derive the silhouettes silhouette.lock.json lacks from the cached isolated birds and draw their contact sheets, without building the pack (#150)")
+    silhouettes.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json, patch.lock.json or art.lock.json (the reference birds) and silhouette.lock.json")
+    silhouettes.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the build's cache: isolated birds in <cache>/art/isolated, silhouettes written to <cache>/art/silhouettes (default: packbuilder/cache)")
+    silhouettes.add_argument("--sheets", type=Path, help="folder for the contact sheets (default build/pack-art/<pack id>/silhouettes)")
+    silhouette_review = commands.add_parser("silhouette-review", help="record the maintainer's review of the silhouettes in silhouette.lock.json")
+    silhouette_review.add_argument("definition", type=Path, help="folder holding pack.json and silhouette.lock.json")
+    silhouette_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve silhouettes: the sheets' numbers (4,12) or a species id or common name (repeat)")
+    silhouette_review.add_argument("--approve-all", action="store_true", help="approve every silhouette still pending once the rest of this answer is recorded")
+    silhouette_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject silhouettes: they stay out until art.silhouette.reference gives another bird (repeat)")
+    silhouette_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on silhouettes: the app keeps its glyph (repeat)")
+    silhouette_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
+    hero_sheets = commands.add_parser("hero-sheets", help="draw the review of every species' first photo as a bird's profile shows it, and the proposed replacements (#150)")
+    hero_sheets.add_argument("definition", type=Path, help="folder holding pack.json and overrides.json")
+    hero_sheets.add_argument("--pack", type=Path, help="the built pack (default packs/<pack id>, else build/packs/<pack id>)")
+    hero_sheets.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the build's cache: the detector and the proposals' photos (default: packbuilder/cache)")
+    hero_sheets.add_argument("--sheets", type=Path, help="folder for the sheets (default build/pack-art/<pack id>/hero)")
+    hero_candidates = commands.add_parser("hero-candidates", help="draw the best of the cached wider pool for the numbered species, for choosing a replacement (#150)")
+    hero_candidates.add_argument("definition", type=Path, help="folder holding pack.json and overrides.json")
+    hero_candidates.add_argument("--species", action="append", required=True, metavar="NUMBERS", help="the sheets' numbers (4,12; repeat)")
+    hero_candidates.add_argument("--top", type=int, default=6, help="photos per species (default 6)")
+    hero_candidates.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the build's cache (default: packbuilder/cache)")
+    hero_candidates.add_argument("--out", type=Path, required=True, help="the sheet to write")
+    hero_review = commands.add_parser("hero-review", help="record proposed first photos in overrides.json, and the maintainer's answer to them (#150)")
+    hero_review.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and the art locks")
+    hero_review.add_argument("--propose", action="append", default=[], metavar="N=PHOTO", help="propose inat photo PHOTO for the sheets' number N; the build ignores it until it's accepted (repeat)")
+    hero_review.add_argument("--why", default="", help="the reason, kept with --propose")
+    hero_review.add_argument("--accept", action="append", default=[], metavar="NUMBERS", help="pin these proposals: the sheets' numbers (4,12) or species ids (repeat)")
+    hero_review.add_argument("--accept-all", action="store_true", help="pin every proposal this answer doesn't decline")
+    hero_review.add_argument("--decline", action="append", default=[], metavar="NUMBERS", help="drop these proposals (repeat)")
     cover = commands.add_parser("cover", help="paint the set's cover candidates cover.lock.json lacks and draw their contact sheet, without building the pack")
     cover.add_argument("definition", type=Path, help="folder holding pack.json, set.json and cover.lock.json")
     cover.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
@@ -104,6 +143,10 @@ def main(argv: list[str] | None = None) -> int:
     cover_review.add_argument("--why", help="the reason, kept in the lock with --reject")
     cover_review.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache holding <cache>/covers (default: packbuilder/cache)")
     cover_review.add_argument("--sheets", type=Path, help="folder for the redrawn contact sheet (default build/pack-art/<pack id>)")
+    bundle = commands.add_parser("bundle-covers", help="write every approved cover into the app's Pack target, so the Listen painting works before a pack is on the phone")
+    bundle.add_argument("--definitions", type=Path, default=Path(__file__).resolve().parents[2] / "packs", help="the folders holding each set's cover.lock.json (default: packbuilder/packs)")
+    bundle.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache holding <cache>/covers (default: packbuilder/cache)")
+    bundle.add_argument("--out", type=Path, default=Path(__file__).resolve().parents[3] / "BirdJournal/BirdJournalKit/Sources/Pack/Covers", help="the folder the app bundles (default: the Pack target's Covers)")
     patches = commands.add_parser("patches", help="paint the embroidered patches patch.lock.json lacks and draw their contact sheets, without building the pack (issue #133)")
     patches.add_argument("definition", type=Path, help="folder holding pack.json, art.lock.json (the reference birds) and patch.lock.json")
     patches.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
@@ -144,6 +187,21 @@ def main(argv: list[str] | None = None) -> int:
     calibrate = commands.add_parser("calibrate-rarity", help="write the rarity label thresholds from the geomodel over every pack definition")
     calibrate.add_argument("--version", type=int, required=True, help="the calibration version; bump it for any new calibration")
     calibrate.add_argument("--out", type=Path, help="file to write (default: the Identification module's RarityCalibration.json)")
+    mascot = commands.add_parser("mascot", help="paint the mascot patches art/mascot/mascot.lock.json lacks and draw their contact sheets (issue #150)")
+    mascot.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
+    mascot.add_argument("--cache", type=Path, default=_mascot_cache(), help="where the references and candidates live (default: packbuilder/cache/mascot)")
+    mascot.add_argument("--lock", type=Path, help="the lock (default art/mascot/mascot.lock.json)")
+    mascot.add_argument("--sheets", type=Path, help="folder for the contact sheets (default build/mascot)")
+    mascot.add_argument("--only", action="append", default=[], metavar="BIRD", help="only these birds (repeat), for a trial")
+    mascot_review = commands.add_parser("mascot-review", help="record the maintainer's picks of mascot patch; approving writes art/mascot/approved/<bird>.png")
+    mascot_review.add_argument("--approve", action="append", type=int, default=[], metavar="N", help="approve candidate N, numbered as on the contact sheets, one per bird (repeat)")
+    mascot_review.add_argument("--reject", action="append", default=[], metavar="BIRD", help="reject a bird's round: the next `mascot` run paints a new one (repeat)")
+    mascot_review.add_argument("--why", help="the reason, kept in the lock with --reject")
+    mascot_review.add_argument("--cache", type=Path, default=_mascot_cache(), help="where the candidates live (default: packbuilder/cache/mascot)")
+    mascot_review.add_argument("--lock", type=Path, help="the lock (default art/mascot/mascot.lock.json)")
+    mascot_review.add_argument("--sheets", type=Path, help="folder for the redrawn contact sheets (default build/mascot)")
+    mascot_assets = commands.add_parser("mascot-assets", help="make the app's icons, thumbnails and perched finch from art/mascot/approved/")
+    mascot_assets.add_argument("--lock", type=Path, help="the lock (default art/mascot/mascot.lock.json)")
     args = parser.parse_args(argv)
     if args.command == "draft":
         return _draft(args)
@@ -163,10 +221,28 @@ def main(argv: list[str] | None = None) -> int:
         return _patches(args)
     if args.command == "patch-review":
         return _patch_review(args)
+    if args.command == "silhouettes":
+        return _silhouettes(args)
+    if args.command == "silhouette-review":
+        return _silhouette_review(args)
+    if args.command == "hero-sheets":
+        return _hero_sheets(args)
+    if args.command == "hero-candidates":
+        return _hero_candidates(args)
+    if args.command == "hero-review":
+        return _hero_review(args)
     if args.command == "cover":
         return _cover(args)
+    if args.command == "mascot":
+        return _mascot(args)
+    if args.command == "mascot-review":
+        return _mascot_review(args)
+    if args.command == "mascot-assets":
+        return _mascot_assets(args)
     if args.command == "cover-review":
         return _cover_review(args)
+    if args.command == "bundle-covers":
+        return _bundle_covers(args)
     if args.command == "lore-review":
         return _lore_review(args)
     if args.command == "lore":
@@ -203,6 +279,7 @@ def main(argv: list[str] | None = None) -> int:
     patch_artist = None if args.no_art else _patch_artist(args, definition)
     # A pack with patches (#133) has no pack art: its references come from the pack art's lock, painted before.
     artist = None if args.no_art or patch_artist is not None else _artist(args, definition)
+    silhouette_maker = None if args.no_art or args.no_silhouettes else _silhouette_maker(args, definition)
     cover_painter = None if args.no_art or args.no_cover else _cover_painter(args, definition, card_set)
     sheets = args.art_sheets or _art_sheets_path(definition.id)
     lore = None if args.no_lore else _lore_writer(args, definition)
@@ -214,7 +291,7 @@ def main(argv: list[str] | None = None) -> int:
         build_pack(
             definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds,
             card_set=card_set, joined=joined, artist=artist, art_sheets=sheets, lore=lore, lore_review=lore_review, cover_painter=cover_painter,
-            patch_artist=patch_artist,
+            patch_artist=patch_artist, silhouette_maker=silhouette_maker,
         )
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
@@ -343,6 +420,121 @@ def _make_patch_artist(args: argparse.Namespace, definition: PackDefinition, cli
                        cache_dir=args.cache / "art", pins=pins, originals=args.cache / "photos" / "original", find_bird=find_bird)
 
 
+def _silhouette_maker(args: argparse.Namespace, definition: PackDefinition):
+    """The silhouette step (#150) over the pack's locks; None for a pack whose art has no lock yet, so no reference birds."""
+    from packbuilder.definition import load_overrides
+    from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
+    from packbuilder.patch_art import LOCK_FILE as PATCH_LOCK, PatchLock
+    from packbuilder.silhouettes import LOCK_FILE, SilhouetteLock, SilhouetteMaker, pins_in, sources
+
+    if not (args.definition / PATCH_LOCK).exists() and not (args.definition / ART_LOCK).exists():
+        return None
+    birds = sources(PatchLock.load(args.definition / PATCH_LOCK), ArtLock.load(args.definition / ART_LOCK), pins_in(definition, load_overrides(args.definition / "overrides.json")))
+    return SilhouetteMaker(pack_id=definition.id, lock=SilhouetteLock.load(args.definition / LOCK_FILE), sources=birds, cache_dir=args.cache / "art")
+
+
+def _silhouettes(args: argparse.Namespace) -> int:
+    """The silhouettes alone (#150), in the pack's order, and their contact sheets."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    definition = PackDefinition.load(args.definition / "pack.json")
+    species = [entry.id for entry in definition.species]
+    maker = _silhouette_maker(args, definition)
+    if maker is None:
+        print(f"{definition.id} has no patch.lock.json or art.lock.json, so no reference birds", file=sys.stderr)
+        return 1
+    made = maker.make(species)
+    sheets = maker.sheets(species, made, args.sheets or _art_sheets_path(definition.id) / "silhouettes")
+    kilobytes = sum(entry["bytes"] for entry in maker.lock.species.values()) / 1024
+    print(f"{definition.id} silhouettes: {maker.derived} derived, {kilobytes:.0f} KB in all; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)
+    return 0
+
+
+def _named_species(definition: PackDefinition, values: list[str]) -> list[str]:
+    """What a review names, as species ids: the contact sheets' numbers (`4`, `004`, `4,12`, the Nth species in pack.json),
+    or a species id or common name. Raises KeyError on anything else."""
+    by_name = {key: entry.id for entry in definition.species for key in (entry.id, entry.common_name.lower())}
+    found = []
+    for value in values:
+        for token in filter(None, (part.strip() for part in value.split(","))):
+            if token.isdigit() and 1 <= int(token) <= len(definition.species):
+                found.append(definition.species[int(token) - 1].id)
+            elif token.lower() in by_name:
+                found.append(by_name[token.lower()])
+            else:
+                raise KeyError(f"{token!r} isn't on the sheets: {definition.id} has {len(definition.species)} species, numbered as in pack.json")
+    return found
+
+
+def _silhouette_review(args: argparse.Namespace) -> int:
+    from packbuilder.silhouettes import APPROVED, GAP, LOCK_FILE, PENDING, REJECTED, SilhouetteLock, review
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    lock = SilhouetteLock.load(args.definition / LOCK_FILE)
+    try:
+        review(lock, approve=_named_species(definition, args.approve), reject=_named_species(definition, args.reject),
+               gap=_named_species(definition, args.gap), approve_all=args.approve_all, why=args.why)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    counts = {state: sum(entry["review"] == state for entry in lock.species.values()) for state in (APPROVED, PENDING, REJECTED, GAP)}
+    print(f"{lock.path}: " + ", ".join(f"{count} {state}" for state, count in counts.items()), file=sys.stderr)
+    return 0
+
+
+def _hero_sheets(args: argparse.Namespace) -> int:
+    from packbuilder.definition import load_overrides
+    from packbuilder.hero_photos import first_photos, sheets
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    repo = Path(__file__).resolve().parents[3]
+    pack = args.pack or next((folder for folder in (repo / "packs" / definition.id, repo / "build" / "packs" / definition.id) if (folder / "pack.sqlite").exists()), None)
+    if pack is None:
+        print(f"no built pack for {definition.id}: run scripts/build-pack.sh or scripts/download-pack.sh", file=sys.stderr)
+        return 1
+    made, flags = sheets(definition, load_overrides(args.definition / "overrides.json"), first_photos(pack), BirdDetector(ensure_model(args.cache)), args.cache,
+                         args.sheets or _art_sheets_path(definition.id) / "hero")
+    print(f"{definition.id}: {len(flags)} first photos flagged: {', '.join(map(str, flags))}; sheets {', '.join(map(str, made))}", file=sys.stderr)
+    return 0
+
+
+def _hero_candidates(args: argparse.Namespace) -> int:
+    from packbuilder.definition import load_overrides
+    from packbuilder.hero_photos import candidate_sheet
+    from packbuilder.metadata_api import APIMetadata
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    try:
+        species = _named_species(definition, args.species)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    metadata = APIMetadata(definition.place_ids, args.cache, created_before=definition.created_before)
+    print(candidate_sheet(definition, load_overrides(args.definition / "overrides.json"), species, metadata, BirdDetector(ensure_model(args.cache)), args.cache, args.out, args.top), file=sys.stderr)
+    return 0
+
+
+def _hero_review(args: argparse.Namespace) -> int:
+    from packbuilder.definition import load_overrides
+    from packbuilder.hero_photos import propose, review, write_overrides
+
+    definition = PackDefinition.load(args.definition / "pack.json")
+    path = args.definition / "overrides.json"
+    overrides = load_overrides(path)
+    try:
+        for proposal in args.propose:
+            number, _, photo = proposal.partition("=")
+            species_id, = _named_species(definition, [number])
+            propose(definition, overrides, species_id, int(photo), args.why)
+        accepted, declined = review(definition, overrides, args.definition, accept=_named_species(definition, args.accept),
+                                    decline=_named_species(definition, args.decline), accept_all=args.accept_all)
+    except (KeyError, ValueError) as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    write_overrides(path, overrides)
+    print(f"{path}: {len(args.propose)} proposed, {len(accepted)} pinned, {len(declined)} declined", file=sys.stderr)
+    return 0
+
+
 def _art_sheets_path(pack_id: str) -> Path:
     return Path(__file__).resolve().parents[3] / "build" / "pack-art" / pack_id
 
@@ -388,6 +580,15 @@ def _cover(args: argparse.Namespace) -> int:
     return 0 if sheet is not None else 1
 
 
+def _bundle_covers(args: argparse.Namespace) -> int:
+    from packbuilder.covers import bundle_covers
+
+    covers = bundle_covers(args.definitions, args.cache / "covers", args.out)
+    total = sum((args.out / cover["file"]).stat().st_size for cover in covers.values())
+    print(f"{args.out}: {len(covers)} covers, {total / 1_000_000:.1f} MB", file=sys.stderr)
+    return 0
+
+
 def _cover_review(args: argparse.Namespace) -> int:
     from packbuilder.comfy import ComfyClient
     from packbuilder.covers import LOCK_FILE, CoverLock, CoverPainter, review
@@ -404,6 +605,53 @@ def _cover_review(args: argparse.Namespace) -> int:
     sheet = painter.sheet(args.sheets or _art_sheets_path(definition.id), definition.set.edition.name if definition.set else "")
     chosen = f", candidate {lock.cover['chosen']}; thumbnail {lock.thumbnail_path}" if lock.cover["review"] == "approved" else ""
     print(f"{lock.path}: {lock.cover['review']}{chosen}; contact sheet {sheet}", file=sys.stderr)
+    return 0
+
+
+def _mascot_cache() -> Path:
+    return Path(__file__).resolve().parents[2] / "cache" / "mascot"
+
+
+def _mascot_sheets() -> Path:
+    return Path(__file__).resolve().parents[3] / "build" / "mascot"
+
+
+def _mascot(args: argparse.Namespace) -> int:
+    from packbuilder.comfy import ComfyClient
+    from packbuilder.mascot_art import LOCK_PATH, MascotArtist, MascotLock
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    artist = MascotArtist(ComfyClient(args.comfy), MascotLock.load(args.lock or LOCK_PATH), args.cache)
+    artist.paint(args.only)
+    sheets = artist.sheets(args.sheets or _mascot_sheets())
+    print(f"mascot: {artist.painted} painted; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)
+    return 0
+
+
+def _mascot_review(args: argparse.Namespace) -> int:
+    from packbuilder.mascot_art import LOCK_PATH, MascotLock, draw_sheets, review
+
+    lock = MascotLock.load(args.lock or LOCK_PATH)
+    try:
+        review(lock, args.cache, approve=args.approve, reject=args.reject, why=args.why)
+    except ValueError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    sheets = draw_sheets(lock, args.cache, args.sheets or _mascot_sheets())
+    states = ", ".join(f"{bird}: {entry['review']}" + (f" ({entry['chosen']})" if entry.get("chosen") else "") for bird, entry in lock.birds.items())
+    print(f"{lock.path}: {states}; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)
+    return 0
+
+
+def _mascot_assets(args: argparse.Namespace) -> int:
+    from packbuilder.mascot_art import LOCK_PATH, MascotLock, StaleApproval, write_app_assets
+
+    try:
+        written = write_app_assets(MascotLock.load(args.lock or LOCK_PATH))
+    except StaleApproval as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    print(f"mascot-assets: {len(written)} files written under BirdJournal/", file=sys.stderr)
     return 0
 
 

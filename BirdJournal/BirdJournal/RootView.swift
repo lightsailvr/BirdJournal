@@ -10,8 +10,9 @@ enum Route: Hashable {
     case species(scientificName: String, commonName: String)
     case speciesCredits(scientificName: String)
     case sighting(PersistentIdentifier)
-    /// One patch, on its page with its paper card behind it (issue #134).
-    case patch(CardCollection.Patch.Key)
+    /// One patch, on its page with its paper card behind it (issue #134). `from` is the kind of tile it grows out of (issue #150);
+    /// `turned` opens it on the paper card.
+    case patch(CardCollection.Patch.Key, from: PatchLiftSurface? = nil, turned: Bool = false)
     /// A patch's sightings, or every sighting of the species.
     case sightings(SightingsScope)
     /// One species' patches across places (issue #134).
@@ -30,10 +31,14 @@ enum Route: Hashable {
     case support
     /// A circle's page (issue #61).
     case circle(id: String)
+    /// A friend's find, on its own page (issue #150, F1).
+    case find(FindRoute)
     /// The join screen an invite link opens (issue #61).
     case joinCircle(token: String)
     /// Compare birds with a friend (issue #64).
     case compareBirds(friendID: String, friendName: String)
+    /// Every patch of a goal so far (issue #150).
+    case goalPatches(circleID: String, goalID: String)
     /// The accounts the birder blocked, to unblock (issue #71).
     case blockedAccounts
 }
@@ -59,8 +64,9 @@ private struct RouteDestination: View {
             SpeciesCreditsView(scientificName: scientificName)
         case .sighting(let id):
             SightingDetailView(id: id)
-        case .patch(let key):
-            PatchDetailView(key: key)
+        case .patch(let key, let surface, let turned):
+            PatchDetailView(key: key, startsTurned: turned)
+                .patchLiftTransition(from: surface.map { PatchLiftID(key: key, surface: $0) })
         case .sightings(let scope):
             PatchSightingsView(scope: scope)
         case .speciesPatches(let scientificName, let commonName):
@@ -76,7 +82,7 @@ private struct RouteDestination: View {
         case .modelLicense(let fileName):
             LicenseTextView(title: fileName) { try ModelCredits.licenseText(fileName: fileName) }
         case .packLicense(let id):
-            LicenseTextView(title: "Pack license") {
+            LicenseTextView(title: "Field guide license") {
                 guard let pack = library.pack(id: id) else { throw PackError.notInstalled(id) }
                 return pack.info.licenseText
             }
@@ -90,10 +96,15 @@ private struct RouteDestination: View {
             SupportView()
         case .circle(let id):
             CirclePageView(id: id)
+        case .find(let route):
+            FindPageView(route: route)
+                .findLiftTransition(from: route.lift)
         case .joinCircle(let token):
             JoinCircleView(token: token)
         case .compareBirds(let friendID, let friendName):
             CompareBirdsView(friendID: friendID, friendName: friendName)
+        case .goalPatches(let circleID, let goalID):
+            GoalPatchesView(circleID: circleID, goalID: goalID)
         case .blockedAccounts:
             BlockedAccountsView()
         }
@@ -101,12 +112,14 @@ private struct RouteDestination: View {
 }
 
 extension EnvironmentValues {
-    /// Opens the Collection tab at the top of the Patches view: the new-patch reveal's "See it in my collection" (issues #51, #132).
-    @Entry var openCollection: @MainActor () -> Void = {}
+    /// Opens the Collection tab at the top of the Patches view, on one board: the new patch on the reveal (issues #51, #132, #150).
+    @Entry var openCollection: @MainActor (BoardChoice?) -> Void = { _ in }
     /// Opens the Listen tab: a species with no sightings yet (issue #53).
     @Entry var openListen: @MainActor () -> Void = {}
     /// Opens the Atlas tab: an empty collection's birds to find (issue #138).
     @Entry var openAtlas: @MainActor () -> Void = {}
+    /// How many pages are on the Guilds tab's stack: what a page there has over it (issue #150).
+    @Entry var guildsStackDepth = 0
     /// Opens a circle's page on the Guilds tab: the join screen once joined (issue #61).
     @Entry var openCircle: @MainActor (String) -> Void = { _ in }
 }
@@ -124,7 +137,9 @@ struct RootView: View {
     @Environment(CircleStore.self) private var circles
     @Environment(AccountSession.self) private var account
     @Environment(FindOutbox.self) private var findOutbox
+    @Environment(CurrentPlace.self) private var place
     @Environment(PushCenter.self) private var pushes
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
     @State private var collection = CollectionState()
@@ -137,29 +152,61 @@ struct RootView: View {
     #endif
     /// The launch splash is still over this: a ceremony waits for it, rather than starting unseen.
     var isUnderSplash = false
+    /// A patch the widget opened (issue #150), cleared once shown.
+    @Binding var pendingPatch: CardCollection.Patch.Key?
+    /// No sheet is up for a run's review to take the place of.
+    @State private var isClearForReview = false
+
+    /// A sheet, alert or the like is up. There are many, in many views, and no one place that knows of them all but UIKit.
+    private static var isSomethingPresented: Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .contains { $0.rootViewController?.presentedViewController != nil }
+    }
+
+    /// The patch's page on the Collection tab, or the tab alone if the patch has been unpicked since the widget last drew. An
+    /// open run review goes first: its skipped birds are forgotten when it closes, so it isn't closed for them.
+    private func openPendingPatch() {
+        guard let key = pendingPatch, !run.isReviewing else { return }
+        pendingPatch = nil
+        collection.mode = .cards
+        journalPath = NavigationPath()
+        tab = .journal
+        if collectionStore.collection.patch(key: key) != nil { journalPath.append(Route.patch(key)) }
+    }
+
+    /// A Guild's page on the Guilds tab. With only that Guild, the tab already is its page.
+    private func openOnGuilds(circleID: String) {
+        guard circles.circles.map(\.id) != [circleID] else { return }
+        circlesPath.append(Route.circle(id: circleID))
+    }
 
     var body: some View {
         TabView(selection: $tab) {
             SwiftUI.Tab("Listen", systemImage: "waveform", value: Tab.listen) {
                 NavigationStack(path: $listenPath) {
-                    ListenView()
+                    ListenView(isCovered: tab != .listen || !listenPath.isEmpty)
                         .appDestinations()
                 }
+                .patchStack { listenPath.append($0) }
             }
-            SwiftUI.Tab("Collection", systemImage: "leaf", value: Tab.journal) {
+            SwiftUI.Tab("Collection", image: "stitched.ring", value: Tab.journal) {
                 NavigationStack(path: $journalPath) {
                     JournalView(state: collection, isCovered: tab != .journal || !journalPath.isEmpty)
                         .appDestinations()
                 }
+                .patchStack { journalPath.append($0) }
             }
             SwiftUI.Tab("Atlas", systemImage: "map", value: Tab.guide) {
                 NavigationStack(path: $guidePath) {
                     FieldGuideView()
                         .appDestinations()
                 }
+                .patchStack { guidePath.append($0) }
             }
             // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
-            // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
+            // turns it on in Release, add what's in `BirdJournal.entitlements` to `BirdJournal-Release.entitlements`: the invite
             // links' associated domain is Debug-only until then, so a release build leaves them to the browser.
             if AccountSession.isEnabledInThisBuild {
                 SwiftUI.Tab("Guilds", systemImage: "person.3", value: Tab.circles) {
@@ -167,25 +214,49 @@ struct RootView: View {
                         CirclesView()
                             .appDestinations()
                     }
+                    .environment(\.guildsStackDepth, circlesPath.count)
+                    .patchStack { circlesPath.append($0) }
                 }
             }
         }
         .tabViewBottomAccessory(isEnabled: run.state.isActive && tab != .listen) {
             ListeningAccessory { tab = .listen }
         }
-        .tint(Color.moss)
+        // Here, so Start and both Stops say the same, and a run the glasses end does too.
+        // A run that failed says that, and only that.
+        .haptic(.startStop, trigger: run.isRunGoing) { _, _ in !run.hasFailed }
+        .haptic(.error, trigger: run.hasFailed) { _, failed in failed }
+        .haptic(.error, trigger: run.failedActions)
+        // The end of a run, from whichever tab it finds the birder on (issue #150). On the Listen tab's own view it could only be
+        // presented with that tab showing: on another, SwiftUI gave up on it and the birds heard went with it. It waits for any
+        // sheet already up to close, since only one can be: over a bird's review or New Guild it would throw away what's in it.
+        .sheet(isPresented: Binding(get: { run.isReviewing && isClearForReview }, set: { if !$0 { run.isReviewing = false } })) {
+            RunReviewSheet()
+        }
+        .task(id: run.isReviewing) {
+            isClearForReview = false
+            guard run.isReviewing else { return }
+            while !Task.isCancelled, Self.isSomethingPresented { try? await Task.sleep(for: .milliseconds(300)) }
+            if !Task.isCancelled { isClearForReview = true }
+        }
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
-        // it's up this one waits: two pages would sew the patch twice, each with its own haptics. The sheet is the Listen tab's:
-        // on another tab, after Stop on the listening strip, it isn't up until the birder comes back.
-        .patchReveal(isCovered: run.isReviewing && tab == .listen)
+        // it's up this one waits: two pages would sew the patch twice, each with its own haptics.
+        .patchReveal(isCovered: run.isReviewing)
+        // The accent follows the place (issue #150), over the reveal too; a set's page and a patch's page set their own.
+        .tint(place.setID.map(PatchEdition.tint(setID:)) ?? .moss)
         // The patches a glasses run sewed: once it's over and the app is in front, which may be a launch or two later.
         .onChange(of: scenePhase == .active && !isUnderSplash && run.hasCeremonyWaiting, initial: true) { _, ready in
             if ready { run.showNextCeremony() }
         }
-        .environment(\.openCollection) {
+        .environment(\.openCollection) { board in
             collection.mode = .cards
+            // To the top, not back to where a search open meanwhile started from.
+            collection.offsetsBeforeSearch = nil
+            collection.isSearching = false
             collection.query = ""
             collection.offsets[.cards] = 0
+            collection.topRequests += 1
+            collection.board = board
             journalPath = NavigationPath()
             tab = .journal
         }
@@ -194,7 +265,7 @@ struct RootView: View {
         .environment(\.openCircle) { circleID in
             tab = .circles
             circlesPath = NavigationPath()
-            circlesPath.append(Route.circle(id: circleID))
+            openOnGuilds(circleID: circleID)
         }
         // Signed out (from Settings or a revoked token): nothing of the circles stays on the phone.
         .onChange(of: account.isSignedIn) { _, signedIn in
@@ -221,7 +292,7 @@ struct RootView: View {
             pushes.pendingCircle = nil
             tab = .circles
             circlesPath = NavigationPath()
-            if !circleID.isEmpty { circlesPath.append(Route.circle(id: circleID)) }
+            if !circleID.isEmpty { openOnGuilds(circleID: circleID) }
         }
         // The first circle created or joined (issue #63): why pushes, before the system asks.
         .alert("Hear about your friends' finds", isPresented: Bindable(pushes).isExplaining) {
@@ -230,6 +301,8 @@ struct RootView: View {
         } message: {
             Text(PushCenter.explanation)
         }
+        .onChange(of: pendingPatch, initial: true) { openPendingPatch() }
+        .onChange(of: run.isReviewing) { openPendingPatch() }
         // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
         .onChange(of: circles.pendingInvite, initial: true) { _, token in
             guard let token, AccountSession.isEnabledInThisBuild else { return }
@@ -244,6 +317,8 @@ struct RootView: View {
         .task { await pushes.refreshPermission() }
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
+        .overlay(alignment: .topLeading) { HapticLogProbe() }
+        .overlay(alignment: .topLeading) { LateFindsProbeView() }
         .modifier(DebugLaunch(tab: $tab, journalMode: $collection.mode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }

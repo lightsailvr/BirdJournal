@@ -32,6 +32,8 @@
 		<key>TeamID</key>
 		<string>$(DEVELOPMENT_TEAM)</string>
 	</dict>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_bonjour._tcp</string>
@@ -41,7 +43,7 @@
 		<key>UIColorName</key>
 		<string>JournalPaper</string>
 		<key>UIImageName</key>
-		<string>LaunchBird</string>
+		<string>PerchedFinch</string>
 		<key>UIImageRespectsSafeAreaInsets</key>
 		<false/>
 	</dict>

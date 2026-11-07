@@ -18,6 +18,44 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["System"].isSelected)
     }
 
+    /// A list's rows sit on the raised surface, not the system's near-black (issue #150): measured from the screen, since
+    /// the colour is what a birder sees and the view tree can't say.
+    @MainActor
+    func testSettingsRowsAreOnTheRaisedSurface() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-appearance", "dark", "-autoScreen", "settings"]
+        app.launch()
+        // By its words: a section's header is a cell too, on the page's colour.
+        let row = app.cells.containing(NSPredicate(format: "label == 'Listen with'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        let shot = XCUIScreen.main.screenshot()
+        let cg = try XCTUnwrap(shot.image.cgImage)
+        let scale = shot.image.scale
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let context = try XCTUnwrap(CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        // Between "Listen with" and its value.
+        let (x, y) = ((row.frame.minX + row.frame.width * 0.38) * scale, row.frame.midY * scale)
+        context.draw(cg, in: CGRect(x: -x, y: y - CGFloat(cg.height) + 1, width: CGFloat(cg.width), height: CGFloat(cg.height)))
+        // The raised surface, #193A3D.
+        for (channel, expected) in zip(pixel.prefix(3), [UInt8(0x19), 0x3A, 0x3D]) {
+            XCTAssertLessThan(abs(Int(channel) - Int(expected)), 14, "the row is \(pixel.prefix(3))")
+        }
+    }
+
+    /// The long explanation is a tap away, not gone (issue #150).
+    @MainActor
+    func testHowThisWorksOpens() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-autoScreen", "settings"]
+        app.launch()
+        let more = app.staticTexts["How this works"].firstMatch
+        XCTAssertTrue(more.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        let detail = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Featherguild registers with the Meta AI app'")).firstMatch
+        XCTAssertFalse(detail.exists, "it starts closed")
+        more.tap()
+        XCTAssertTrue(detail.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+    }
+
     @MainActor
     func testPickingAnIconMovesTheCheck() {
         let app = XCUIApplication()
@@ -35,10 +73,76 @@ final class SettingsUITests: XCTestCase {
             XCTAssertTrue(choice.waitForExistence(timeout: 10))
             choice.tap()
             // The system's "You have changed the icon" alert belongs to SpringBoard.
+            // Under load a tap on its button can come before it takes taps, and the check moves only once it's closed.
             let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
-            if alert.waitForExistence(timeout: 5) { alert.buttons.firstMatch.tap() }
+            if alert.waitForExistence(timeout: 5) {
+                for _ in 0..<10 where alert.exists {
+                    alert.buttons.firstMatch.tap()
+                    sleep(1)
+                }
+            }
             XCTAssertTrue(choice.waitForSelected(), "\(title) is not checked")
         }
+    }
+}
+
+/// The birds in glasses on the home screen (issue #150, slice 11). `TEST_RUNNER_BIRDJOURNAL_ICON_SHOTS=<folder>` also saves what each
+/// looks like there, which is the evidence for how an icon reads at that size.
+final class AppIconHomeScreenUITests: XCTestCase {
+    private let birds = ["Red-tailed Hawk", "Blue Bird", "Great Egret", "House Finch", "Prothonotary Warbler", "Steller's Jay"]
+
+    private func openIcons(_ app: XCUIApplication) {
+        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launch()
+        app.buttons["Settings"].tap()
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "no App icon row; screen: \(app.debugDescription.prefix(3000))")
+        row.tap()
+    }
+
+    private func choose(_ title: String, in app: XCUIApplication) {
+        let choice = app.buttons[title]
+        XCTAssertTrue(choice.waitForExistence(timeout: 10), "no \(title); screen: \(app.debugDescription.prefix(3000))")
+        guard !choice.isSelected else { return }
+        choice.tap()
+        let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
+        if alert.waitForExistence(timeout: 5) { alert.buttons.firstMatch.tap() }
+        XCTAssertTrue(choice.waitForSelected(), "\(title) is not checked")
+    }
+
+    @MainActor
+    func testEachBirdReachesTheHomeScreenAndAChoiceSurvivesARelaunch() throws {
+        let app = XCUIApplication()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_ICON_SHOTS"]
+        var pictures = Set<Data>()
+        openIcons(app)
+        for bird in birds {
+            choose(bird, in: app)
+            XCUIDevice.shared.press(.home)
+            // The app's icon, not its widget (issue #150), which goes by the same name on a simulator that has one.
+            let icon = springboard.icons.matching(NSPredicate(format: "label == 'Featherguild' AND NOT (value == 'Widget')")).firstMatch
+            XCTAssertTrue(icon.waitForExistence(timeout: 10), "no icon on the home screen: \(springboard.debugDescription.prefix(2000))")
+            for _ in 0..<4 where !icon.isHittable { springboard.swipeLeft(); sleep(1) }
+            XCTAssertTrue(icon.isHittable, "the icon is on no page reached: \(springboard.debugDescription.prefix(2000))")
+            sleep(1)
+            pictures.insert(icon.screenshot().pngRepresentation)
+            if let folder {
+                let name = bird.lowercased().replacing(" ", with: "-").replacing("'", with: "")
+                try XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(filePath: folder).appending(path: "home-\(name).png"))
+            }
+            app.activate()
+            XCTAssertTrue(app.buttons[bird].waitForExistence(timeout: 10))
+        }
+
+        XCTAssertEqual(pictures.count, birds.count, "some choices left the same picture on the home screen")
+
+        // The one chosen last is still the one chosen after the app starts again, as it is after an update: iOS keeps it by name.
+        app.terminate()
+        openIcons(app)
+        XCTAssertTrue(app.buttons["Steller's Jay"].waitForSelected(), "the choice didn't survive")
+
+        choose("Red-tailed Hawk", in: app)
     }
 }
 

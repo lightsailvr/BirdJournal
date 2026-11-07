@@ -45,7 +45,7 @@ struct GlassesListeningView: View {
                 }
                 LocationRow(session: run.listening)
             } footer: {
-                Text("Glasses audio feeds BirdNET; cards show on the lens. Swipe between species, swipe down to choose a species and tap to open it, swipe down again for its details, tap \"Add to my list\". Taking the glasses off or walking out of range pauses the run; it carries on when they are back. Powered by BirdNET.")
+                Text("Glasses audio feeds BirdNET; each species shows on the lens. Swipe between species, swipe down to choose a species and tap to open it, swipe down again for its details, tap \"Add to my list\". Taking the glasses off or walking out of range pauses the run; it carries on when they are back. Powered by BirdNET.")
             }
 
             Section("On the lens") {

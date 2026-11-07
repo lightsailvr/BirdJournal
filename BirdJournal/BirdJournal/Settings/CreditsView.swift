@@ -11,7 +11,7 @@ struct CreditsView: View {
     @Environment(PackLibrary.self) private var library
 
     var body: some View {
-        List {
+        PaperList {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Label(ModelCredits.poweredBy, systemImage: "waveform")
@@ -37,7 +37,7 @@ struct CreditsView: View {
                         StatsDatasetRow(dataset: dataset)
                     }
                 } header: {
-                    Text("Card stats")
+                    Text("Bird stats")
                 }
             }
 
@@ -51,7 +51,7 @@ struct CreditsView: View {
 
             if library.packs.isEmpty {
                 Section("Photos") {
-                    Text("No bird pack is on this iPhone, so there are no photos to credit.")
+                    Text("No field guide is on this iPhone, so there are no photos to credit.")
                         .foregroundStyle(Color.inkSecondary)
                 }
             }
@@ -59,7 +59,6 @@ struct CreditsView: View {
                 PhotoCreditSections(pack: pack)
             }
         }
-        .paperList()
         .navigationTitle("Sources & credits")
     }
 }
@@ -74,11 +73,11 @@ private struct LoreCredits: View {
     var body: some View {
         let withLore = packs.reduce(0) { $0 + $1.species.count { $0.lore != nil } }
         VStack(alignment: .leading, spacing: 6) {
-            Text("Each bird's fact sheet is its card stats and sentences from its English Wikipedia article, at the article revision its pack was built from (Wikipedia contributors, CC BY-SA 4.0). Each bird's Sources & credits links that revision.")
+            Text("Each bird's fact sheet is its stats and sentences from its English Wikipedia article, at the article revision its set was built from (Wikipedia contributors, CC BY-SA 4.0). Each bird's Sources & credits links that revision.")
             if withLore > 0 {
                 Text("The lore of \(withLore) birds was written by Claude (Anthropic) from the fact sheet alone, every sentence citing the facts it rests on, and reviewed by hand. As an adaptation of the Wikipedia text it is shared under CC BY-SA 4.0.")
             }
-            Text("The caption on a card's front is written on this iPhone by Apple's on-device model from the fact sheet and the moment: the season, the time of day, Heard or Seen, and the place, never for a threatened bird. Without the model the card shows the lore's tagline.")
+            Text("A sighting's caption is written on this iPhone by Apple's on-device model from the fact sheet and the moment: the season, the time of day, Heard or Seen, and the place, never for a threatened bird. Without the model the sighting shows the lore's tagline.")
         }
         .font(JournalFont.supporting)
         .foregroundStyle(Color.inkSecondary)
@@ -146,7 +145,7 @@ private struct PhotoCreditSections: View {
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
             }
-            NavigationLink("Pack license (\(pack.info.id) v\(pack.info.version))", value: Route.packLicense(id: pack.info.id))
+            NavigationLink("Field guide license (\(pack.info.id) v\(pack.info.version))", value: Route.packLicense(id: pack.info.id))
         } header: {
             Text(pack.sounds.isEmpty ? "Photos and text: \(pack.info.name)" : "Photos, sounds and text: \(pack.info.name)")
         }

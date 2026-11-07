@@ -19,15 +19,19 @@ struct BirdJournalApp: App {
     @State private var sounds: ReferenceSounds
     @State private var places: PlaceNames
     @State private var packs: PackLibrary
+    @State private var collectionStore: CollectionStore
+    @State private var place: CurrentPlace
     @State private var journalEdits: JournalEdits
     @State private var account: AccountSession
     @State private var circles: CircleStore
     @State private var findOutbox: FindOutbox
     @State private var pushes: PushCenter
-    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
-    @State private var showingSplash = true
+    /// A patch the widget opened, until the root has shown it.
+    @State private var pendingPatch: CardCollection.Patch.Key?
     private let album: ModelContainer
     private let frames: FrameStore
+    private let runActivity: RunActivityController
+    private let latestPatch: LatestPatchPublisher?
 
     init() {
         do {
@@ -37,6 +41,9 @@ struct BirdJournalApp: App {
                 .error("Wearables.configure failed: \(error.localizedDescription)")
         }
         JournalFont.applyNavigationBarAppearance()
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "resetLaunchSplash") { UserDefaults.standard.removeObject(forKey: LaunchSplash.shownKey) }
+        #endif
         let connection = GlassesConnection()
         let album = Self.makeAlbum()
         let frames = Self.makeFrameStore()
@@ -55,7 +62,8 @@ struct BirdJournalApp: App {
         let glasses = Self.makeGlassesListeningSession(connection: connection, recorder: recorder, sightings: sightings, packs: packs, levels: levels, suppression: suppression)
         let listening = ListeningCoordinator(
             phone: phone, glasses: glasses, sightings: sightings, levels: levels,
-            defaultSource: connection.devices.isEmpty ? .phone : .glasses
+            defaultSource: connection.devices.isEmpty ? .phone : .glasses,
+            archive: Self.endedRunArchive()
         )
         self.album = album
         self.frames = frames
@@ -76,6 +84,16 @@ struct BirdJournalApp: App {
         _connection = State(initialValue: connection)
         _spike = State(initialValue: SpikeRecorder(connection: connection))
         _packs = State(initialValue: packs)
+        let collectionStore = CollectionStore(container: album, sets: { packs.cardSets })
+        _collectionStore = State(initialValue: collectionStore)
+        _place = State(initialValue: CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation()))
+        // The run on the Lock Screen, and the patch on the Home Screen (issue #150). Neither waits for a view: a run goes on
+        // behind a locked phone.
+        runActivity = RunActivityController(host: ActivityKitRunHost())
+        runActivity.follow { [weak listening, collectionStore] in listening?.snapshot(in: collectionStore.collection) ?? .idle }
+        RunStopper.stop = { [weak listening] in await listening?.stop() }
+        latestPatch = WidgetStore.shared.map { LatestPatchPublisher(store: $0, collection: collectionStore, packs: packs) }
+        latestPatch?.follow()
         let lens = Self.makeLensSession(connection: connection, packs: packs)
         _lens = State(initialValue: lens)
         _phoneListening = State(initialValue: phone)
@@ -117,6 +135,16 @@ struct BirdJournalApp: App {
         } catch {
             fatalError("album store unavailable: \(error)")
         }
+    }
+
+    /// Where a review waiting to be seen outlives the app. In debug builds it goes with the album: nothing for one in memory,
+    /// which is gone by the next launch, and a suite of its own for `-albumFile`.
+    private static func endedRunArchive() -> UserDefaults? {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "inMemoryAlbum") { return nil }
+        if let name = UserDefaults.standard.string(forKey: "albumFile") { return UserDefaults(suiteName: "album-\(name)") }
+        #endif
+        return .standard
     }
 
     /// The caption writer every add uses (issue #56): Apple's on-device model over the packs' fact sheets, with the
@@ -219,35 +247,40 @@ struct BirdJournalApp: App {
         return ListeningSession(makeSource: { MeteredAudioSource(PhoneMicAudioSource(), onLevel: meter) }, suppression: suppression)
     }
 
+    /// What picks the Listen painting's set (issue #150): the phone's last known position, which never prompts. `-autoLocation`
+    /// stands in for it in debug builds.
+    private static func makePlaceLocation() -> any LocationProvider {
+        #if DEBUG
+        return debugLocationProvider()
+        #else
+        return CoreLocationProvider()
+        #endif
+    }
+
     #if DEBUG
-    /// `-autoLocation denied|griffith` answers without a permission prompt a UI test couldn't answer.
+    /// `-autoLocation denied|griffith|…` answers without a permission prompt a UI test couldn't answer.
     private static func debugLocationProvider() -> any LocationProvider {
         switch UserDefaults.standard.string(forKey: "autoLocation") {
         case "denied": DeniedLocationProvider()
-        case "griffith": GriffithParkLocationProvider()
-        default: CoreLocationProvider()
+        case let name?: DebugPlace(rawValue: name).map(FixedLocationProvider.init) ?? CoreLocationProvider()
+        case nil: CoreLocationProvider()
         }
     }
     #endif
 
     var body: some Scene {
+        // Nothing this closure reads may change after launch: SwiftUI can call it from the thread that draws animation frames, and
+        // Swift 6 traps it there, since it belongs to the main actor (issue #150). So what changes lives in `AppSurface`, a view,
+        // whose body SwiftUI keeps on the main thread. `LaunchUITests` holds it.
         WindowGroup {
-            ZStack {
-                root
-                if showingSplash {
-                    LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
-                        .transition(.opacity)
-                        .zIndex(1)
-                }
-            }
-            .preferredColorScheme(appearance.colorScheme)
+            AppSurface { isUnderSplash in root(isUnderSplash: isUnderSplash) }
         }
         .modelContainer(album)
     }
 
     /// The app with its shared objects, under the launch splash.
-    private var root: some View {
-        RootView(isUnderSplash: showingSplash)
+    private func root(isUnderSplash: Bool) -> some View {
+        RootView(isUnderSplash: isUnderSplash, pendingPatch: $pendingPatch)
             .environment(connection)
             .environment(spike)
             .environment(lens)
@@ -262,11 +295,17 @@ struct BirdJournalApp: App {
             .environment(pushes)
             .environment(places)
             .environment(packs)
+            .environment(collectionStore)
+            .environment(place)
+            .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
             .onOpenURL { url in
-                // An invite link (issue #61) arrives here as a universal link; everything else is the toolkit's.
+                // An invite link (issue #61) arrives here as a universal link, the widget's patch as `birdjournal://patch`
+                // (issue #150); everything else is the toolkit's.
                 if let token = InviteLink.token(from: url) {
                     circles.pendingInvite = token
+                } else if let link = PatchLink(url: url) {
+                    pendingPatch = CardCollection.Patch.Key(speciesID: link.speciesID, setID: link.setID)
                 } else {
                     Task { await connection.handle(url: url) }
                 }
@@ -276,5 +315,24 @@ struct BirdJournalApp: App {
                     circles.pendingInvite = token
                 }
             }
+    }
+}
+
+/// The window's content, with the two things at this level that change: the launch splash going, and the appearance from Settings.
+private struct AppSurface<Root: View>: View {
+    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
+    @State private var showingSplash = LaunchSplash.isDue()
+    @ViewBuilder let root: (_ isUnderSplash: Bool) -> Root
+
+    var body: some View {
+        ZStack {
+            root(showingSplash)
+            if showingSplash {
+                LaunchSplash { withAnimation(.easeInOut(duration: 0.5)) { showingSplash = false } }
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+        .preferredColorScheme(appearance.colorScheme)
     }
 }

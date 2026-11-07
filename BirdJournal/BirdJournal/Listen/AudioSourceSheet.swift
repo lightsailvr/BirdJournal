@@ -11,7 +11,7 @@ struct AudioSourceSheet: View {
     var body: some View {
         @Bindable var run = run
         NavigationStack {
-            List {
+            PaperList {
                 Section {
                     ForEach(ListeningCoordinator.Source.allCases) { source in
                         Button {
@@ -31,7 +31,7 @@ struct AudioSourceSheet: View {
                                 if run.source == source {
                                     Image(systemName: "checkmark")
                                         .font(.body.weight(.semibold))
-                                        .foregroundStyle(Color.moss)
+                                        .foregroundStyle(.tint)
                                 }
                             }
                         }
@@ -74,19 +74,14 @@ struct AudioSourceSheet: View {
                     }
                 }
 
-                Section("What each source asks for") {
-                    Text("The iPhone microphone asks for microphone access the first time you start listening. Sound is analysed on the phone as it arrives and never saved.")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
-                    Text("The glasses' microphones only reach the phone inside their camera stream, so Featherguild asks Meta AI for camera and microphone access the first time. The video is not used to tell birds apart; the most recent frame is kept with a sighting you add, as a snapshot of where you were looking.")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
-                    Text("Location narrows the list to birds that live where you are. Without it every species stays possible, which means more lookalikes to review.")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
+                Section {
+                    HowThisWorks(
+                        "The iPhone microphone asks for microphone access the first time you start listening. Sound is analysed on the phone as it arrives and never saved.",
+                        "The glasses' microphones only reach the phone inside their camera stream, so Featherguild asks Meta AI for camera and microphone access the first time. The video is not used to tell birds apart; the most recent frame is kept with a sighting you add, as a snapshot of where you were looking.",
+                        "Location narrows the list to birds that live where you are. Without it every species stays possible, which means more lookalikes to review."
+                    )
                 }
             }
-            .paperList()
             .navigationTitle("Audio source")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -101,7 +96,7 @@ struct AudioSourceSheet: View {
     private func detail(for source: ListeningCoordinator.Source) -> String {
         switch source {
         case .phone: "Works anywhere. Keep the phone out where it can hear."
-        case .glasses: connection.connectedDevice != nil ? "Connected. Lock the phone and look up." : "Uses the glasses camera stream for sound."
+        case .glasses: connection.connectedDevice != nil ? "Connected. Lock the phone and look up." : "Lock the phone and look up. Sound comes through the glasses camera stream."
         }
     }
 
@@ -109,6 +104,6 @@ struct AudioSourceSheet: View {
         var parts = [device.linkText]
         if let battery = device.state.batteryLevel { parts.append("battery \(battery)%") }
         if device.state.compatibility != .compatible { parts.append(device.state.compatibility.displayString) }
-        return parts.joined(separator: " · ")
+        return parts.joined(separator: ", ")
     }
 }

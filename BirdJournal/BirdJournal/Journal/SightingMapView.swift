@@ -5,18 +5,23 @@ import Pack
 import SwiftData
 import SwiftUI
 
-/// Every located sighting in the journal on one map (issue #44), opened from a sighting's map card: that sighting's
-/// pin is selected with its callout up, every other sighting is a smaller pin, and selecting one shows its callout
-/// with Open, which pushes its detail. Pan, zoom, the user's own dot and the locate button when location is allowed,
-/// standard or satellite. No clustering in v1. Phone-only: nothing here reaches the lens or a share.
+/// Every located sighting in the journal on one map (issue #44), opened from a sighting's map card: each is a tiny flat patch in
+/// its edition's shape (issue #150, A5), and MapKit gathers the ones too close to tell apart into a cluster showing the newest. A tap on
+/// a cluster zooms into it, or lists its sightings when they're all at one spot, as a run's are. That sighting's patch is larger with
+/// its callout up, it's never gathered into a cluster, and selecting another shows its callout with Open, which pushes its detail. Pan, zoom, the user's own dot and the locate button when location is allowed, standard or satellite.
+/// Phone-only: nothing here reaches the lens or a share.
 struct SightingMapView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(PackLibrary.self) private var library
+    @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
-    @State private var position: MapCameraPosition
+    @State private var pins: [SightingPin] = []
     @State private var selection: PersistentIdentifier?
+    /// The sightings of a cluster too tight to zoom apart, listed under the map.
+    @State private var here: [PersistentIdentifier] = []
     @State private var style = Style.standard
     private let focusID: PersistentIdentifier
+    private let centre: CLLocationCoordinate2D
     private let userLocationAllowed: Bool
 
     /// The toolbar's choice of map: the standard map or satellite imagery.
@@ -33,10 +38,10 @@ struct SightingMapView: View {
             }
         }
 
-        var mapStyle: MapStyle {
+        var configuration: MKMapConfiguration {
             switch self {
-            case .standard: .standard
-            case .satellite: .imagery
+            case .standard: MKStandardMapConfiguration()
+            case .satellite: MKImageryMapConfiguration()
             }
         }
     }
@@ -45,48 +50,30 @@ struct SightingMapView: View {
     init(focus: Sighting) {
         focusID = focus.persistentModelID
         _selection = State(initialValue: focus.persistentModelID)
-        let centre = focus.location?.clCoordinate ?? CLLocationCoordinate2D()
-        _position = State(initialValue: .region(MKCoordinateRegion(center: centre, latitudinalMeters: 1_000, longitudinalMeters: 1_000)))
+        centre = focus.location?.clCoordinate ?? CLLocationCoordinate2D()
         let status = CLLocationManager().authorizationStatus
         userLocationAllowed = status == .authorizedWhenInUse || status == .authorizedAlways
     }
 
     private var located: [Sighting] { sightings.filter { $0.location != nil } }
 
+    @State private var path = NavigationPath()
     private var selected: Sighting? {
         guard let selection else { return nil }
         return located.first { $0.persistentModelID == selection }
     }
 
     var body: some View {
-        NavigationStack {
-            Map(position: $position, selection: $selection) {
-                ForEach(located) { sighting in
-                    if let centre = sighting.location?.clCoordinate {
-                        if sighting.persistentModelID == focusID {
-                            Marker(library.commonName(for: sighting), coordinate: centre)
-                                .tint(Color.moss)
-                                .tag(sighting.persistentModelID)
-                        } else {
-                            Annotation(library.commonName(for: sighting), coordinate: centre, anchor: .center) {
-                                SmallPin(isSelected: sighting.persistentModelID == selection)
-                            }
-                            .annotationTitles(.hidden)
-                            .tag(sighting.persistentModelID)
-                        }
-                    }
-                }
-                if userLocationAllowed { UserAnnotation() }
-            }
-            .mapStyle(style.mapStyle)
-            .mapControls {
-                if userLocationAllowed { MapUserLocationButton() }
-                MapCompass()
-            }
+        NavigationStack(path: $path) {
+            SightingMap(pins: pins, centre: centre, selection: $selection, here: $here, style: style, showsUser: userLocationAllowed)
             .accessibilityIdentifier("sighting-map")
             .ignoresSafeArea(edges: .bottom)
             .safeAreaInset(edge: .bottom) {
-                if let selected {
+                if !here.isEmpty {
+                    SightingsHere(sightings: sightings(in: here), focusID: focusID)
+                        .padding(.horizontal, JournalLayout.margin)
+                        .padding(.vertical, 12)
+                } else if let selected {
                     Callout(sighting: selected, isFocus: selected.persistentModelID == focusID)
                         .padding(.horizontal, JournalLayout.margin)
                         .padding(.vertical, 12)
@@ -109,20 +96,74 @@ struct SightingMapView: View {
             }
             .appDestinations()
         }
+        .patchStack(lifts: false) { path.append($0) }
+        #if DEBUG
+        .task {
+            if UserDefaults.standard.bool(forKey: "autoMapSpeciesPatches"), let focus = located.first(where: { $0.persistentModelID == focusID }) {
+                path.append(Route.speciesPatches(scientificName: focus.scientificName, commonName: library.commonName(for: focus)))
+            }
+        }
+        #endif
+        .task(id: located.map(\.persistentModelID)) {
+            pins = makePins()
+        }
+        // A download that finishes with the map open paints its blanks.
+        .onChange(of: library.packs.count) { pins = makePins() }
+    }
+
+    private func sightings(in ids: [PersistentIdentifier]) -> [Sighting] {
+        let ids = Set(ids)
+        return located.filter { ids.contains($0.persistentModelID) }
+    }
+
+    /// One pin per located sighting. A bird's painting and name are found once per bird and edition, however many sightings it has.
+    private func makePins() -> [SightingPin] {
+        let collection = collectionStore.collection
+        var birds: [CardCollection.Patch.Key: (art: PatchArt?, name: String)] = [:]
+        let pins: [SightingPin] = located.compactMap { sighting in
+            guard let coordinate = sighting.location?.clCoordinate else { return nil }
+            let setID = collection.patch(of: sighting.identifier)?.placement.setID
+            let key = CardCollection.Patch.Key(speciesID: sighting.scientificName, setID: setID)
+            let bird = birds[key] ?? (library.patchArt(scientificName: sighting.scientificName, setID: setID), library.commonName(for: sighting))
+            birds[key] = bird
+            return SightingPin(
+                id: sighting.persistentModelID, coordinate: coordinate, name: bird.name,
+                confirmedAt: sighting.confirmedAt, art: bird.art, setID: setID, isFocus: sighting.persistentModelID == focusID
+            )
+        }
+        if let focus = pins.first(where: \.isFocus) {
+            focus.othersHere = pins.count { !$0.isFocus && SightingMap.isOneSpot([focus.coordinate, $0.coordinate]) }
+        }
+        return pins
     }
 }
 
-/// Another sighting's pin: a moss dot, larger while selected.
-private struct SmallPin: View {
-    let isSelected: Bool
+/// A cluster's sightings under the map, when they're at one spot and no zoom would part them: a run's birds share its place.
+private struct SightingsHere: View {
+    let sightings: [Sighting]
+    let focusID: PersistentIdentifier
 
     var body: some View {
-        Circle()
-            .fill(Color.moss)
-            .overlay(Circle().strokeBorder(.white, lineWidth: 2))
-            .frame(width: isSelected ? 22 : 14, height: isSelected ? 22 : 14)
-            .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1)
-            .animation(.snappy(duration: 0.2), value: isSelected)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("\(sightings.count) sightings here")
+                .font(JournalFont.rowTitle)
+                .foregroundStyle(Color.ink)
+                .accessibilityAddTraits(.isHeader)
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(sightings) { sighting in
+                        Callout(sighting: sighting, isFocus: sighting.persistentModelID == focusID, isInList: true)
+                        RowRule()
+                    }
+                }
+            }
+            .frame(maxHeight: 260)
+        }
+        .padding(16)
+        .background(Color.paper, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous).strokeBorder(Color.rule, lineWidth: 1))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("sighting-map-here")
     }
 }
 
@@ -133,8 +174,11 @@ private struct Callout: View {
     @Environment(PackLibrary.self) private var library
     let sighting: Sighting
     let isFocus: Bool
+    /// One row of `SightingsHere`, which is the card.
+    var isInList = false
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous)
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(library.commonName(for: sighting))
@@ -156,9 +200,10 @@ private struct Callout: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color.paper, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous).strokeBorder(Color.rule, lineWidth: 1))
+        .padding(.vertical, isInList ? 8 : 16)
+        .padding(.horizontal, isInList ? 0 : 16)
+        .background(isInList ? Color.clear : Color.paper, in: shape)
+        .overlay(shape.strokeBorder(isInList ? Color.clear : Color.rule, lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sighting-map-callout")
         .task(id: sighting.persistentModelID) {
