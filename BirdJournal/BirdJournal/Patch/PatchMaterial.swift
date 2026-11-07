@@ -91,7 +91,7 @@ struct FeltBoard<Content: View>: View {
     }
 }
 
-/// The fibre of an Atlas plate, as the reference prints it: multiplied in full, at the mock's scale of one texture pixel to a CSS pixel,
+/// The fibre of an Atlas plate, as the reference prints it: at the mock's scale of one texture pixel to a CSS pixel,
 /// which is 1.34 pt at this screen's width. It's coarser than the paper card's, and it starts at the plate's corner, as the mock's does.
 struct PlatePaper: View {
     private static let fibre = UIImage(named: "MaterialPaper")?.cgImage
@@ -101,6 +101,8 @@ struct PlatePaper: View {
             Image(decorative: fibre, scale: 1 / 1.34)
                 .resizable(resizingMode: .tile)
                 .blendMode(.multiply)
+                // The mock's stock is a touch paler than the app's: this lands on its (222,209,181), measured on the rendered page.
+                .opacity(0.9)
         }
     }
 }

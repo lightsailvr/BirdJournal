@@ -88,15 +88,22 @@ enum MapPatchThumbnail {
     /// A cluster's picture, which is always this size, whatever the count: the patch at its centre, on the cluster's coordinate.
     static let clusterSize = CGSize(width: 84, height: 56)
 
+    /// The sighting the map opened on, with how many others share its spot: a cluster there sits right under it.
+    static func spot(_ patch: UIImage, others: Int, canvas: CGSize, tint: UIColor, ink: UIColor) -> UIImage {
+        badged(patch, words: "+\(others)", canvas: canvas, tint: tint, ink: ink)
+    }
+
     /// A patch standing for a cluster of sightings: the newest one's, with how many in its corner, in the place's tint.
     static func cluster(_ patch: UIImage, count: Int, tint: UIColor, ink: UIColor) -> UIImage {
-        let words = count < 1000 ? count.formatted() : "999+"
+        badged(patch, words: count < 1000 ? count.formatted() : "999+", canvas: clusterSize, tint: tint, ink: ink)
+    }
+
+    private static func badged(_ patch: UIImage, words: String, canvas size: CGSize, tint: UIColor, ink: UIColor) -> UIImage {
         let text = NSAttributedString(string: words, attributes: [
             .font: UIFont.systemFont(ofSize: 12, weight: .semibold),
             .foregroundColor: ink,
         ])
         let textSize = text.size()
-        let size = clusterSize
         let badge = CGSize(width: max(textSize.width + 10, 20), height: 20)
         return UIGraphicsImageRenderer(size: size).image { _ in
             let origin = CGPoint(x: (size.width - patch.size.width) / 2, y: (size.height - patch.size.height) / 2)

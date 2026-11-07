@@ -6,7 +6,7 @@ Every picture is the running app on an iPhone 17 Pro simulator at half size, tak
 |---|---|---|
 | A1 | Covers as plates on card stock, with a margin, a keyline and the credit: set tiles, set pages, pack pages | `sheets/set-against-reference`, `sheets/plates`: `set-*`, `atlas-*`, `pack-dark`, `packs-dark` |
 | A3 | True silhouettes, tinted at draw time; one heading with the count; the glyph with no pack | `sheets/silhouettes`: `set-rows-dark`, `set-mixed-dark`, `set-no-pack-dark` |
-| A5 | Flat patches on the map in the edition's shape, clustered; pins in the place's tint | `sheets/map`: `map-*`, `map-cluster-dark`, `map-editions-dark`; `record-patch-*` for the card's marker |
+| A5 | Flat patches on the map in the edition's shape, clustered; pins in the place's tint | `sheets/map`: `map-*`, `map-cluster-dark`, `map-spot-dark` (the map opened among others at one spot), `map-editions-dark`; `map-5000.txt` for 5,000 sightings; `record-patch-*` for the card's marker |
 | A6 | The record: patch or photo first, when, where and how on paper, rarity and identification in disclosures | `sheets/record`: `record-patch-*`, `record-photo-dark`, `record-disclosures-dark` |
 | F12 | A first photo's slot is the photo's shape, so the whole bird shows | `sheets/first-photos`: `photo-*` |
 | | The largest text size and Increase Contrast | `sheets/ax5`, `sheets/contrast` |
@@ -15,6 +15,7 @@ Every picture is the running app on an iPhone 17 Pro simulator at half size, tak
 
 - The "AI illustration" credit under the picture, about 14 pt more plate: the issue asks for it and the mock leaves it out.
 - The margins are the app's 22 pt against the mock's 24 at scale.
+- Measured on the rendered set page against the mock at scale, margin of the plate: paper (221,209,181) in both appearances against (222,209,181), and its deviation 4 to 5 against 4 to 5; keyline (175,175,153), the mock's; sewn stitch #5C6420, the mock's.
 - `MO`, a friend's face, belongs to slice 8. The space after a row's name is free for it, and no face is faked.
 - The reference's third bird is No. 061 and the page here is in collector order with whatever's seeded: the same rows, different birds.
 - Its page has no search; here it's there when you pull down.

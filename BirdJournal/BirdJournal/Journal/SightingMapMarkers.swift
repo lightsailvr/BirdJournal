@@ -17,6 +17,8 @@ final class SightingPin: NSObject, MKAnnotation {
     let isFocus: Bool
     /// Its callout is up.
     var isChosen = false
+    /// For the sighting the map opened on: how many others share its spot, gathered right under it.
+    var othersHere = 0
 
     init(id: PersistentIdentifier, coordinate: CLLocationCoordinate2D, name: String, confirmedAt: Date, art: PatchArt?, setID: String?, isFocus: Bool) {
         self.id = id
@@ -248,8 +250,7 @@ private final class PatchPinView: FixedPictureView {
     private var side: CGFloat { isFocus ? MapPatchThumbnail.focusSide : MapPatchThumbnail.side }
 
     override class func size(reuseIdentifier: String?) -> CGSize {
-        let extent = reuseIdentifier == focusIdentifier ? MapPatchThumbnail.focusSide + 12 : 44
-        return CGSize(width: extent, height: extent)
+        reuseIdentifier == focusIdentifier ? CGSize(width: 96, height: 72) : CGSize(width: 44, height: 44)
     }
 
     override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
@@ -268,7 +269,8 @@ private final class PatchPinView: FixedPictureView {
     override var accessibilityLabel: String? {
         get {
             guard let pin = annotation as? SightingPin else { return nil }
-            return "\(pin.name), \(pin.confirmedAt.formatted(date: .abbreviated, time: .omitted))"
+            let also = pin.othersHere > 0 ? ", and \(pin.othersHere) more here" : ""
+            return "\(pin.name), \(pin.confirmedAt.formatted(date: .abbreviated, time: .omitted))\(also)"
         }
         set {}
     }
@@ -278,7 +280,7 @@ private final class PatchPinView: FixedPictureView {
         guard let pin = annotation as? SightingPin else { return }
         let edition = PatchEdition.of(setID: pin.setID)
         let side = side
-        show(MapPatchThumbnail.immediate(art: pin.art, edition: edition, side: side))
+        showPatch(MapPatchThumbnail.immediate(art: pin.art, edition: edition, side: side), of: pin)
         showChosen(animated: false)
         loading?.cancel()
         loading = nil
@@ -286,9 +288,19 @@ private final class PatchPinView: FixedPictureView {
             loading = Task { [weak self] in
                 let done = await MapPatchThumbnail.load(art: pin.art, edition: edition, side: side)
                 guard !Task.isCancelled else { return }
-                self?.show(done)
+                self?.showPatch(done, of: pin)
             }
         }
+    }
+
+    private func showPatch(_ patch: UIImage, of pin: SightingPin) {
+        guard pin.othersHere > 0 else {
+            show(patch)
+            return
+        }
+        let tint = UIColor(PatchEdition.tint(setID: pin.setID)).resolvedColor(with: traitCollection)
+        let ink = UIColor(Color.mossText).resolvedColor(with: traitCollection)
+        show(MapPatchThumbnail.spot(patch, others: pin.othersHere, canvas: bounds.size, tint: tint, ink: ink))
     }
 
     /// A ring only for the patch that needs one: thousands of these are made for a map that shows a few.

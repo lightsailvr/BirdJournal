@@ -111,7 +111,7 @@ struct SightingMapView: View {
     private func makePins() -> [SightingPin] {
         let collection = collectionStore.collection
         var birds: [CardCollection.Patch.Key: (art: PatchArt?, name: String)] = [:]
-        return located.compactMap { sighting in
+        let pins: [SightingPin] = located.compactMap { sighting in
             guard let coordinate = sighting.location?.clCoordinate else { return nil }
             let setID = collection.patch(of: sighting.identifier)?.placement.setID
             let key = CardCollection.Patch.Key(speciesID: sighting.scientificName, setID: setID)
@@ -122,6 +122,10 @@ struct SightingMapView: View {
                 confirmedAt: sighting.confirmedAt, art: bird.art, setID: setID, isFocus: sighting.persistentModelID == focusID
             )
         }
+        if let focus = pins.first(where: \.isFocus) {
+            focus.othersHere = pins.count { !$0.isFocus && SightingMap.isOneSpot([focus.coordinate, $0.coordinate]) }
+        }
+        return pins
     }
 }
 

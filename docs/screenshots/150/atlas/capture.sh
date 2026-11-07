@@ -28,10 +28,10 @@ PY
     sheet set-against-reference 3 "$out/sheets/reference-4-set-page.jpg" "$out/set-dark.jpg" "$out/set-light.jpg"
     sheet plates 4 "$out/atlas-dark.jpg" "$out/atlas-light.jpg" "$out/pack-dark.jpg" "$out/packs-dark.jpg"
     sheet silhouettes 3 "$out/set-rows-dark.jpg" "$out/set-mixed-dark.jpg" "$out/set-no-pack-dark.jpg"
-    sheet map 4 "$out/map-dark.jpg" "$out/map-light.jpg" "$out/map-cluster-dark.jpg" "$out/map-editions-dark.jpg"
+    sheet map 5 "$out/map-dark.jpg" "$out/map-light.jpg" "$out/map-cluster-dark.jpg" "$out/map-spot-dark.jpg" "$out/map-editions-dark.jpg"
     sheet record 4 "$out/record-patch-dark.jpg" "$out/record-patch-light.jpg" "$out/record-photo-dark.jpg" "$out/record-disclosures-dark.jpg"
     sheet first-photos 4 "$out/photo-black-phoebe-dark.jpg" "$out/photo-red-tailed-hawk-dark.jpg" "$out/photo-peregrine-falcon-dark.jpg" "$out/photo-western-screech-owl-dark.jpg"
-    sheet ax5 4 "$out/set-ax5.jpg" "$out/set-rows-ax5.jpg" "$out/atlas-ax5.jpg" "$out/record-ax5.jpg" "$out/record-disclosures-ax5.jpg" "$out/map-ax5.jpg" "$out/pack-ax5.jpg" "$out/packs-ax5.jpg"
+    sheet ax5 4 "$out/set-ax5.jpg" "$out/set-rows-ax5.jpg" "$out/atlas-ax5.jpg" "$out/record-ax5.jpg" "$out/record-disclosures-ax5.jpg" "$out/map-ax5.jpg" "$out/pack-ax5.jpg" "$out/packs-rows-ax5.jpg"
     sheet contrast 4 "$out/set-contrast-dark.jpg" "$out/set-contrast-light.jpg" "$out/record-contrast-dark.jpg" "$out/record-contrast-light.jpg"
     exit 0
 fi
@@ -96,7 +96,8 @@ shot set-mixed-dark               10 "${base[@]}" -seedBoard YES -autoScreen set
 shot set-no-pack-dark              9 "${seeded[@]}" -autoScreen set -autoSet us-ca-sd -autoScrollTo set-rows
 shot pack-dark                     9 "${seeded[@]}" -autoScreen pack
 shot packs-dark                    9 "${seeded[@]}" -autoScreen packs
-shot map-cluster-dark             12 "${base[@]}" -seedGallery YES -autoCardSpecies "Haemorhous mexicanus" -autoScreen map
+shot map-cluster-dark             12 "${seeded[@]}" -seedBoard YES "${phoebe[@]}" -autoScreen map -autoMapAcross 3000
+shot map-spot-dark                12 "${base[@]}" -seedGallery YES -autoCardSpecies "Haemorhous mexicanus" -autoScreen map
 shot map-editions-dark  12 "${base[@]}" -seedGallery YES -seedJournal YES "${phoebe[@]}" -autoScreen map -autoMapAcross 500000
 shot record-photo-dark            10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting
 shot record-disclosures-dark      10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting -autoDisclosuresOpen YES -autoScrollTo sighting-disclosures
@@ -123,6 +124,8 @@ shot record-ax5            10 "${seeded[@]}" "${dove[@]}" -autoScreen sighting
 shot record-disclosures-ax5 10 "${seeded[@]}" "${phoebe[@]}" -autoScreen sighting -autoDisclosuresOpen YES -autoScrollTo sighting-disclosures
 shot map-ax5               12 "${seeded[@]}" "${phoebe[@]}" -autoScreen map
 xcrun simctl ui "$udid" content_size large
+
+# `packs-rows-ax5.jpg` is `-autoScreen packs` at the largest text size, swiped down to its rows by hand.
 
 # A silhouette and a marker stay plain bitmaps, and a record's patch and a set's rows decode once, under a moving light. As in
 # hunt/capture.sh: two 8 s windows, then the minute since launch. Each patch is two decodes, its colour and its layers.
