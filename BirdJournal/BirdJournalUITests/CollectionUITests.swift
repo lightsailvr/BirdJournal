@@ -43,7 +43,7 @@ final class CollectionUITests: XCTestCase {
     func testTheMagnifierAtTheLargestTextStaysInItsRow() throws {
         let app = launch(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
         try checkTheMagnifier(app)
-        XCTAssertLessThan(app.searchFields.firstMatch.frame.height, 70, "\(app.searchFields.firstMatch.frame)")
+        XCTAssertLessThan(app.descendants(matching: .any)["collection-search"].firstMatch.frame.height, 70, "\(app.descendants(matching: .any)["collection-search"].firstMatch.frame)")
         if let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_FEEL_SHOTS"] {
             try app.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: folder).appending(path: "search-ax5.png"))
         }
@@ -56,11 +56,11 @@ final class CollectionUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 2)
         let frame = modes.frame
         let before = pickerWords(in: app.screenshot(), at: frame)
-        let search = app.navigationBars["Collection"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search'")).firstMatch
+        let search = app.buttons["collection-search-open"]
         XCTAssertTrue(search.waitForExistence(timeout: 10), "no magnifier: \(app.debugDescription.prefix(3000))")
-        XCTAssertFalse(app.searchFields.firstMatch.exists, "no field until asked for")
+        XCTAssertFalse(app.descendants(matching: .any)["collection-search"].firstMatch.exists, "no field until asked for")
         search.tap()
-        let field = app.searchFields.firstMatch
+        let field = app.descendants(matching: .any)["collection-search"].firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10), "no field: \(app.debugDescription.prefix(3000))")
         field.typeText("House")
         let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch'")).firstMatch
@@ -158,6 +158,182 @@ final class CollectionUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1)
         app.swipeUp()
         XCTAssertEqual(Self.settledMinY(of: tile), before, accuracy: 3, "the flick went on past the foot into empty felt")
+    }
+
+    /// The keyboard comes up once, on opening: not again over the results, coming back from a patch's page or another tab.
+    @MainActor
+    func testTheKeyboardStaysDownComingBackToASearch() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES"])
+        let search = app.buttons["collection-search-open"]
+        XCTAssertTrue(search.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        search.tap()
+        let field = app.descendants(matching: .any)["collection-search"].firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "it comes up on opening")
+        field.typeText("Mallard\n")
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        let lowered = expectation(for: NSPredicate(format: "exists == NO"), evaluatedWith: app.keyboards.firstMatch)
+        wait(for: [lowered], timeout: 5)
+
+        mallard.tap()
+        XCTAssertTrue(app.buttons["card-flip"].firstMatch.waitForExistence(timeout: 10))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.keyboards.firstMatch.waitForExistence(timeout: 2), "up again over the results, from a patch's page")
+        XCTAssertTrue(field.exists, "the search is still on")
+
+        app.tabBars.buttons["Atlas"].tap()
+        Thread.sleep(forTimeInterval: 1)
+        app.tabBars.buttons["Collection"].tap()
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.keyboards.firstMatch.waitForExistence(timeout: 2), "up again over the results, from another tab")
+        XCTAssertTrue(field.exists, "the search is still on")
+    }
+
+    /// The close button's a real target, with its mark inside it, at the largest text too.
+    @MainActor
+    func testTheCloseButtonIsAFullTargetAtTheLargestText() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let search = app.buttons["collection-search-open"]
+        XCTAssertTrue(search.waitForExistence(timeout: 15))
+        search.tap()
+        let close = app.buttons["collection-search-close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 10))
+        XCTAssertGreaterThanOrEqual(close.frame.width, 44, "\(close.frame)")
+        XCTAssertGreaterThanOrEqual(close.frame.height, 44, "\(close.frame)")
+        if let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_FEEL_SHOTS"] {
+            try app.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: folder).appending(path: "search-close-ax5.png"))
+        }
+    }
+
+    /// The close button ends a search from any state: with the keyboard up or down, typed in or not.
+    @MainActor
+    private func checkClosingASearch(_ extra: [String]) throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES"] + extra)
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 15), "no board; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<3 { app.swipeUp() }
+        Thread.sleep(forTimeInterval: 1.5)
+        let tiles = app.buttons.matching(identifier: "board-patch")
+        let count = { tiles.count }
+        let shown = try XCTUnwrap(tiles.allElementsBoundByIndex.first { Self.isClearOfBars($0, in: app) }, "no patch in view; screen: \(app.debugDescription.prefix(3000))")
+        let left = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
+        let modes = app.segmentedControls["collection-mode"]
+        let leftAt = Self.settledMinY(of: left) - modes.frame.minY
+        let search = app.buttons["collection-search-open"]
+        let field = app.descendants(matching: .any)["collection-search"].firstMatch
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+
+        func expectClosed(_ how: String, line: UInt = #line) {
+            XCTAssertTrue(search.waitForExistence(timeout: 5), "\(how): the field's still open: \(app.debugDescription.prefix(2000))", line: line)
+            XCTAssertFalse(field.exists, "\(how): the field's still open", line: line)
+            XCTAssertFalse(app.keyboards.firstMatch.exists, "\(how): the keyboard's still up", line: line)
+            XCTAssertTrue(left.waitForExistence(timeout: 5), "\(how): the board didn't come back: \(app.debugDescription.prefix(2000))", line: line)
+            XCTAssertGreaterThan(count(), 3, "\(how): still filtered", line: line)
+            XCTAssertEqual(Self.settledMinY(of: left) - modes.frame.minY, leftAt, accuracy: 30, "\(how): not where it was", line: line)
+        }
+
+        // Keyboard up, nothing typed.
+        search.tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        app.buttons["collection-search-close"].tap()
+        expectClosed("keyboard up, nothing typed")
+
+        // Keyboard up, typed.
+        search.tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.typeText("Mallard")
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        app.buttons["collection-search-close"].tap()
+        expectClosed("keyboard up, typed")
+
+        // Keyboard down, typed: the keyboard's Search key lowers it.
+        search.tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.typeText("Mallard\n")
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        let lowered = NSPredicate(format: "exists == NO")
+        wait(for: [expectation(for: lowered, evaluatedWith: app.keyboards.firstMatch)], timeout: 5)
+        app.buttons["collection-search-close"].tap()
+        expectClosed("keyboard down, typed")
+    }
+
+    @MainActor
+    func testClosingASearchFromAnyStateEndsIt() throws {
+        try checkClosingASearch([])
+    }
+
+    @MainActor
+    func testClosingASearchFromAnyStateEndsItAtTheLargestText() throws {
+        try checkClosingASearch(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+    }
+
+    /// The new patch's page opens the collection at the top of the board: from far down it, and with a search open there.
+    @MainActor
+    private func checkTheRevealsPatchLandsAtTheTop(searching: Bool) throws {
+        let app = launch(["-seedBoard", "YES", "-reduceMotion", "YES", "-autoScreen", "reveal", "-autoRevealDelay", "25"])
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 15), "no board; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<4 { app.swipeUp() }
+        if searching {
+            app.buttons["collection-search-open"].tap()
+            let field = app.descendants(matching: .any)["collection-search"].firstMatch
+            XCTAssertTrue(field.waitForExistence(timeout: 10))
+            field.typeText("Mallard")
+            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch.waitForExistence(timeout: 10))
+        }
+        let patch = app.buttons["revealed-patch"]
+        XCTAssertTrue(patch.waitForExistence(timeout: 40), "no reveal: \(app.debugDescription.prefix(3000))")
+        patch.tap()
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertFalse(patch.exists, "the page closed")
+        XCTAssertFalse(app.descendants(matching: .any)["collection-search"].firstMatch.exists, "the search is over")
+        let first = app.buttons.matching(NSPredicate(format: "identifier == 'board-patch' AND label BEGINSWITH 'Canada Goose'")).firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 10), "not at the top of the board: \(app.debugDescription.prefix(3000))")
+        XCTAssertLessThan(Self.settledMinY(of: first), 500, "not at the top of the board")
+        XCTAssertGreaterThan(first.frame.minY, 200)
+    }
+
+    @MainActor
+    func testTheRevealsPatchLandsAtTheTopOfTheBoard() throws {
+        try checkTheRevealsPatchLandsAtTheTop(searching: false)
+    }
+
+    @MainActor
+    func testTheRevealsPatchLandsAtTheTopOfTheBoardWithASearchOpen() throws {
+        try checkTheRevealsPatchLandsAtTheTop(searching: true)
+    }
+
+    /// A search from far down a board starts at the top of its results, not at the old offset, and clearing it goes back.
+    @MainActor
+    func testASearchFromAScrolledBoardStartsAtTheTopAndClearingGoesBack() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 15), "no board; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<6 { app.swipeUp() }
+        Thread.sleep(forTimeInterval: 1.5)
+        let tiles = app.buttons.matching(identifier: "board-patch").allElementsBoundByIndex
+        let shown = try XCTUnwrap(tiles.first { Self.isClearOfBars($0, in: app) }, "no patch in view; screen: \(app.debugDescription.prefix(3000))")
+        let left = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
+        // Against the picker: at this size the open field's row isn't the small title's height.
+        let modes = app.segmentedControls["collection-mode"]
+        let leftAt = Self.settledMinY(of: left) - modes.frame.minY
+
+        let search = app.buttons["collection-search-open"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap()
+        let field = app.descendants(matching: .any)["collection-search"].firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.typeText("Mallard")
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+        XCTAssertGreaterThanOrEqual(Self.settledMinY(of: mallard), modes.frame.maxY - 1, "the first result's above the bar")
+
+        // The field's own clear button.
+        field.buttons.firstMatch.tap()
+        XCTAssertTrue(left.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+        // Near enough, not exact: at this size a one-column board's rows are estimated until they're seen. Clearing lands about 21 to 33 pt
+        // off here, and closing, from further down, up to 92.
+        XCTAssertEqual(Self.settledMinY(of: left) - modes.frame.minY, leftAt, accuracy: 50, "clearing it went somewhere else")
     }
 
     /// Each mode's list, scrolled, comes back where it was left, through other modes and a quick run of changes.

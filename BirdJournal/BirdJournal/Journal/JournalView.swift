@@ -2,6 +2,7 @@ import Album
 import Pack
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// The Collection tab (issue #28, renamed from Journal in #117): a felt board of a set's patches (issue #134), every
 /// sighting by day (the journal), or the distinct species, with search; a patch opens its page, a sighting the sighting
@@ -30,23 +31,9 @@ struct JournalView: View {
     @State private var offset: CGFloat = 0
     /// While a mode's saved offset is being restored, the scroll view's reports are not saved over it.
     @State private var restoring = false
+    @AccessibilityFocusState private var magnifierHasFocus: Bool
     /// The restore under way.
     @State private var settling: Task<Void, Never>?
-    /// A patch's page hides the tab bar, and the scroll view underneath gets taller. At the foot of a board that would pull the offset
-    /// back by the bar's height, so the page would land short of its tile. Room below the content for as long as that lasts keeps
-    /// the offset where it was, and nothing has to be put back. It's never seen: the page covers it.
-    @State private var hasCoverRoom = false
-    @State private var coverRoomGoing: Task<Void, Never>?
-    /// More than any tab bar.
-    private static let coverRoom: CGFloat = 140
-    /// How long the room stays after the way back. `-coverRoomSeconds <n>` holds it, for a test to flick into it.
-    private static var coverRoomSeconds: Double {
-        #if DEBUG
-        let seconds = UserDefaults.standard.double(forKey: "coverRoomSeconds")
-        if seconds > 0 { return seconds }
-        #endif
-        return 1.5
-    }
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
     /// meanwhile are not the birder's.
     var isCovered = false
@@ -71,12 +58,33 @@ struct JournalView: View {
                         .transition(modeContentTransition)
                     }
                     .padding(.horizontal, JournalLayout.margin)
-                    .padding(.bottom, JournalLayout.sectionGap + (hasCoverRoom ? Self.coverRoom : 0))
+                    .padding(.bottom, JournalLayout.sectionGap)
                 }
                 // Outside the scrolling content, under a title that doesn't collapse: the picker has nothing to ride on, so whatever a
                 // mode change does to the content or the offset, it stays exactly where it is.
                 .safeAreaBar(edge: .top) {
                     VStack(alignment: .leading, spacing: 0) {
+                        if state.isSearching {
+                            HStack(spacing: 8) {
+                                CollectionSearchField(query: $state.query, wantsFocus: $state.searchWantsFocus)
+                                    .frame(height: 40)
+                                Button(action: endSearch) {
+                                    Image(systemName: "xmark")
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(.tint)
+                                        // The mark stays inside its circle at any text size; the circle's the target.
+                                        .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                                        .frame(width: 44, height: 44)
+                                        .glassEffect(.regular.interactive(), in: .circle)
+                                        .contentShape(.circle)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Close search")
+                                .accessibilityIdentifier("collection-search-close")
+                            }
+                            // The height of the row it stands in for, so the picker stays where it was.
+                            .frame(height: 54)
+                        }
                         Picker("Show", selection: Binding(get: { state.mode }, set: { switchMode(to: $0) })) {
                             ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
                         }
@@ -104,42 +112,56 @@ struct JournalView: View {
                     if !isCovered, !restoring { state.offsets[state.mode] = max(newOffset, 0) }
                 }
                 .onScrollPhaseChange { _, phase in
-                    // The birder's own scroll wins over putting one back. The room goes too: the bar's back by the time a finger can be
-                    // on the board, and a flick mustn't reach empty felt, then be pulled back when the room goes.
-                    if phase == .interacting {
-                        stopRestoring()
-                        if !isCovered {
-                            coverRoomGoing?.cancel()
-                            hasCoverRoom = false
-                        }
-                    }
+                    // The birder's own scroll wins over putting one back.
+                    if phase == .interacting { stopRestoring() }
                 }
                 .onChange(of: isCovered) { _, covered in
-                    coverRoomGoing?.cancel()
-                    if covered {
-                        stopRestoring()
-                        hasCoverRoom = true
-                    } else {
-                        // Once the tab bar is surely back, when the room can go without anything moving.
-                        coverRoomGoing = Task { @MainActor in
-                            try? await Task.sleep(for: .seconds(Self.coverRoomSeconds))
-                            if !Task.isCancelled { hasCoverRoom = false }
-                        }
+                    if covered { stopRestoring() }
+                }
+                .keepsItsFootUnderAPage(isCovered: isCovered)
+                .onChange(of: state.query.isEmpty) { _, isEmpty in
+                    // Results start at their top, whatever the board's offset was: there, a short list's patches sit above the bar until
+                    // it's scrolled. Clearing the words goes back to where the mode was.
+                    if !isEmpty {
+                        restore(0)
+                    } else if let before = state.offsetsBeforeSearch {
+                        state.offsets = before
+                        restore(before[state.mode] ?? 0)
                     }
                 }
+                .onChange(of: state.topRequests) { restore(0) }
                 .onChange(of: state.board) {
                     // Another board starts from its first patch.
                     state.offsets[.cards] = 0
                     restore(0)
                 }
                 .background { ModeSurface(mode: state.mode).ignoresSafeArea() }
-                // A magnifier in the title's row, so nothing moves the picker: as a drawer it hid on scroll and took the picker with it.
-                .searchable(text: $state.query, placement: .toolbar, prompt: "Search birds")
-                .searchToolbarBehavior(.minimize)
+                // Search in the title's row, so nothing moves the picker, and our own: the system's in this place has a close button that
+                // does nothing with the keyboard up, and keeps the words with it down (DECISIONS.md). While it's open the navigation bar
+                // gives way to it, in the bar with the picker, since a toolbar item won't hold a field that wide.
+                .toolbarVisibility(state.isSearching ? .hidden : .automatic, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            state.offsetsBeforeSearch = state.offsets
+                            state.searchWantsFocus = true
+                            state.isSearching = true
+                        } label: {
+                            Label("Search", systemImage: "magnifyingglass")
+                        }
+                        .accessibilityFocused($magnifierHasFocus)
+                        .accessibilityIdentifier("collection-search-open")
+                    }
+                }
+                .scrollDismissesKeyboard(.immediately)
                 #if DEBUG
                 .task {
                     // Issue #119's screenshots: `-autoQuery <text>` searches once, for the no-match state.
-                    if let text = UserDefaults.standard.string(forKey: "autoQuery") { state.query = text }
+                    if let text = UserDefaults.standard.string(forKey: "autoQuery") {
+                        state.offsetsBeforeSearch = state.offsets
+                        state.isSearching = true
+                        state.query = text
+                    }
                     // Issue #138's: `-autoBoard uncharted` opens the Uncharted board.
                     if UserDefaults.standard.string(forKey: "autoBoard") == "uncharted" { state.board = .uncharted }
                 }
@@ -321,6 +343,21 @@ struct JournalView: View {
         }
     }
 
+    /// Closes the search from whatever state it's in: the field, the keyboard and the words all go, and the board goes back to where it was.
+    private func endSearch() {
+        let before = state.offsetsBeforeSearch
+        state.offsetsBeforeSearch = nil
+        state.searchWantsFocus = false
+        state.isSearching = false
+        state.query = ""
+        // The button VoiceOver was on has gone: its focus goes back to the one that opened the search.
+        magnifierHasFocus = true
+        if let before {
+            state.offsets = before
+            restore(before[state.mode] ?? 0)
+        }
+    }
+
     /// Shows `mode` where it was left: the picker stays pinned, so each mode keeps its own place.
     private func switchMode(to mode: Mode) {
         guard mode != state.mode else { return }
@@ -374,6 +411,74 @@ struct JournalView: View {
     private func stopRestoring() {
         settling?.cancel()
         restoring = false
+    }
+}
+
+/// The search field, in the title's row: the system's own search text field, so it looks and reads as one. It takes the keyboard, and
+/// VoiceOver's focus, once, on opening: not each time it comes back on screen, over the results, from a patch's page or another tab.
+/// The keyboard's Search key lowers it and keeps the results.
+private struct CollectionSearchField: UIViewRepresentable {
+    @Binding var query: String
+    /// Set when the search opens, and cleared once this has answered it.
+    @Binding var wantsFocus: Bool
+
+    final class Field: UISearchTextField {
+        var onWindow: (() -> Void)?
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if window != nil { onWindow?() }
+        }
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        let query: Binding<String>
+
+        init(query: Binding<String>) {
+            self.query = query
+        }
+
+        @objc func changed(_ field: UITextField) {
+            query.wrappedValue = field.text ?? ""
+        }
+
+        func textFieldShouldReturn(_ field: UITextField) -> Bool {
+            field.resignFirstResponder()
+            return false
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(query: $query)
+    }
+
+    func makeUIView(context: Context) -> Field {
+        let field = Field()
+        field.placeholder = "Search birds"
+        field.text = query
+        field.returnKeyType = .search
+        field.autocorrectionType = .no
+        field.delegate = context.coordinator
+        field.adjustsFontForContentSizeCategory = true
+        // It's one line in the title's row, whatever the text size.
+        field.maximumContentSizeCategory = .accessibilityMedium
+        field.accessibilityIdentifier = "collection-search"
+        field.addTarget(context.coordinator, action: #selector(Coordinator.changed), for: .editingChanged)
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let wantsFocus = $wantsFocus
+        field.onWindow = { [weak field] in
+            Task { @MainActor in
+                guard wantsFocus.wrappedValue, let field else { return }
+                wantsFocus.wrappedValue = false
+                field.becomeFirstResponder()
+                UIAccessibility.post(notification: .layoutChanged, argument: field)
+            }
+        }
+        return field
+    }
+
+    func updateUIView(_ field: Field, context: Context) {
+        if field.text != query { field.text = query }
     }
 }
 
