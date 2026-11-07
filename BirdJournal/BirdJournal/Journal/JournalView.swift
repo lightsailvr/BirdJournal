@@ -31,6 +31,7 @@ struct JournalView: View {
     @State private var offset: CGFloat = 0
     /// While a mode's saved offset is being restored, the scroll view's reports are not saved over it.
     @State private var restoring = false
+    @AccessibilityFocusState private var magnifierHasFocus: Bool
     /// The restore under way.
     @State private var settling: Task<Void, Never>?
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
@@ -65,15 +66,20 @@ struct JournalView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         if state.isSearching {
                             HStack(spacing: 8) {
-                                CollectionSearchField(query: $state.query)
+                                CollectionSearchField(query: $state.query, wantsFocus: $state.searchWantsFocus)
                                     .frame(height: 40)
                                 Button(action: endSearch) {
-                                    Label("Close search", systemImage: "xmark")
-                                        .labelStyle(.iconOnly)
-                                        .frame(width: 24, height: 28)
+                                    Image(systemName: "xmark")
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(.tint)
+                                        // The mark stays inside its circle at any text size; the circle's the target.
+                                        .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                                        .frame(width: 44, height: 44)
+                                        .glassEffect(.regular.interactive(), in: .circle)
+                                        .contentShape(.circle)
                                 }
-                                .buttonStyle(.glass)
-                                .buttonBorderShape(.circle)
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Close search")
                                 .accessibilityIdentifier("collection-search-close")
                             }
                             // The height of the row it stands in for, so the picker stays where it was.
@@ -138,10 +144,12 @@ struct JournalView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             state.offsetsBeforeSearch = state.offsets
+                            state.searchWantsFocus = true
                             state.isSearching = true
                         } label: {
                             Label("Search", systemImage: "magnifyingglass")
                         }
+                        .accessibilityFocused($magnifierHasFocus)
                         .accessibilityIdentifier("collection-search-open")
                     }
                 }
@@ -339,8 +347,11 @@ struct JournalView: View {
     private func endSearch() {
         let before = state.offsetsBeforeSearch
         state.offsetsBeforeSearch = nil
+        state.searchWantsFocus = false
         state.isSearching = false
         state.query = ""
+        // The button VoiceOver was on has gone: its focus goes back to the one that opened the search.
+        magnifierHasFocus = true
         if let before {
             state.offsets = before
             restore(before[state.mode] ?? 0)
@@ -403,17 +414,20 @@ struct JournalView: View {
     }
 }
 
-/// The search field, in the title's row: the system's own search text field, so it looks and reads as one, taking the keyboard as it's put
-/// on screen, which a SwiftUI field in a toolbar item doesn't. The keyboard's Search key lowers it and keeps the results.
+/// The search field, in the title's row: the system's own search text field, so it looks and reads as one. It takes the keyboard, and
+/// VoiceOver's focus, once, on opening: not each time it comes back on screen, over the results, from a patch's page or another tab.
+/// The keyboard's Search key lowers it and keeps the results.
 private struct CollectionSearchField: UIViewRepresentable {
     @Binding var query: String
+    /// Set when the search opens, and cleared once this has answered it.
+    @Binding var wantsFocus: Bool
 
-    /// Takes the keyboard once it's in the window.
     final class Field: UISearchTextField {
+        var onWindow: (() -> Void)?
+
         override func didMoveToWindow() {
             super.didMoveToWindow()
-            guard window != nil else { return }
-            Task { @MainActor in becomeFirstResponder() }
+            if window != nil { onWindow?() }
         }
     }
 
@@ -451,6 +465,15 @@ private struct CollectionSearchField: UIViewRepresentable {
         field.accessibilityIdentifier = "collection-search"
         field.addTarget(context.coordinator, action: #selector(Coordinator.changed), for: .editingChanged)
         field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let wantsFocus = $wantsFocus
+        field.onWindow = { [weak field] in
+            Task { @MainActor in
+                guard wantsFocus.wrappedValue, let field else { return }
+                wantsFocus.wrappedValue = false
+                field.becomeFirstResponder()
+                UIAccessibility.post(notification: .layoutChanged, argument: field)
+            }
+        }
         return field
     }
 

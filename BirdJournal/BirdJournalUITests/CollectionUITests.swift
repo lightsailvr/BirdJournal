@@ -160,6 +160,53 @@ final class CollectionUITests: XCTestCase {
         XCTAssertEqual(Self.settledMinY(of: tile), before, accuracy: 3, "the flick went on past the foot into empty felt")
     }
 
+    /// The keyboard comes up once, on opening: not again over the results, coming back from a patch's page or another tab.
+    @MainActor
+    func testTheKeyboardStaysDownComingBackToASearch() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES"])
+        let search = app.buttons["collection-search-open"]
+        XCTAssertTrue(search.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        search.tap()
+        let field = app.descendants(matching: .any)["collection-search"].firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "it comes up on opening")
+        field.typeText("Mallard\n")
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        let lowered = expectation(for: NSPredicate(format: "exists == NO"), evaluatedWith: app.keyboards.firstMatch)
+        wait(for: [lowered], timeout: 5)
+
+        mallard.tap()
+        XCTAssertTrue(app.buttons["card-flip"].firstMatch.waitForExistence(timeout: 10))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.keyboards.firstMatch.waitForExistence(timeout: 2), "up again over the results, from a patch's page")
+        XCTAssertTrue(field.exists, "the search is still on")
+
+        app.tabBars.buttons["Atlas"].tap()
+        Thread.sleep(forTimeInterval: 1)
+        app.tabBars.buttons["Collection"].tap()
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.keyboards.firstMatch.waitForExistence(timeout: 2), "up again over the results, from another tab")
+        XCTAssertTrue(field.exists, "the search is still on")
+    }
+
+    /// The close button's a real target, with its mark inside it, at the largest text too.
+    @MainActor
+    func testTheCloseButtonIsAFullTargetAtTheLargestText() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let search = app.buttons["collection-search-open"]
+        XCTAssertTrue(search.waitForExistence(timeout: 15))
+        search.tap()
+        let close = app.buttons["collection-search-close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 10))
+        XCTAssertGreaterThanOrEqual(close.frame.width, 44, "\(close.frame)")
+        XCTAssertGreaterThanOrEqual(close.frame.height, 44, "\(close.frame)")
+        if let folder = ProcessInfo.processInfo.environment["BIRDJOURNAL_FEEL_SHOTS"] {
+            try app.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: folder).appending(path: "search-close-ax5.png"))
+        }
+    }
+
     /// The close button ends a search from any state: with the keyboard up or down, typed in or not.
     @MainActor
     private func checkClosingASearch(_ extra: [String]) throws {
@@ -284,7 +331,8 @@ final class CollectionUITests: XCTestCase {
         // The field's own clear button.
         field.buttons.firstMatch.tap()
         XCTAssertTrue(left.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
-        // Near enough, not exact: at this size a one-column board's rows are estimated until they're seen, and it lands 20 to 35 pt off.
+        // Near enough, not exact: at this size a one-column board's rows are estimated until they're seen. Clearing lands about 21 to 33 pt
+        // off here, and closing, from further down, up to 92.
         XCTAssertEqual(Self.settledMinY(of: left) - modes.frame.minY, leftAt, accuracy: 50, "clearing it went somewhere else")
     }
 

@@ -17,6 +17,8 @@ final class CollectionState {
     var offsets: [JournalView.Mode: CGFloat] = [:]
     /// The search field is open.
     var isSearching = false
+    /// It's just been opened, and hasn't taken the keyboard yet.
+    var searchWantsFocus = false
     /// Where each mode was when a search started, to go back to when it's cleared.
     var offsetsBeforeSearch: [JournalView.Mode: CGFloat]?
     /// Goes up to send the page to its top from outside it.
