@@ -146,6 +146,25 @@ final class FeelUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Share this patch"].waitForExistence(timeout: 10), "no share sheet: \(app.debugDescription.prefix(3000))")
     }
 
+    /// The foot of Listen's page at the largest text, as the board's: the tile comes back where it left, with nothing put right after.
+    @MainActor
+    func testTheFootOfListenComesBackWhereItWas() throws {
+        let app = launch(["-seedJournal", "YES", "-autoScreen", "listen", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let latest = app.buttons["board-patch"].firstMatch
+        XCTAssertTrue(latest.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<8 { app.swipeUp() }
+        let before = settledFrame(of: latest).minY
+        for _ in 0..<2 {
+            latest.tap()
+            XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            XCTAssertTrue(latest.waitForExistence(timeout: 10))
+            XCTAssertEqual(latest.frame.minY, before, accuracy: 2, "the page landed elsewhere")
+            Thread.sleep(forTimeInterval: 3)
+            XCTAssertEqual(settledFrame(of: latest).minY, before, accuracy: 2, "the page's foot moved")
+        }
+    }
+
     /// A stack in a sheet: the page grows in the sheet, the peek's actions land in the sheet, and neither pushes onto the tab behind it.
     @MainActor
     func testLiftAndPeekInASheetStayInTheSheet() throws {
@@ -328,7 +347,9 @@ final class FeelUITests: XCTestCase {
 
     /// Every sample is a mix of the two ends, each pixel in the same proportion, with nothing shifted: a slide or a zoom leaves
     /// pixels no mix explains.
-    private func assertCrossFade(from start: [Double], to end: [Double], samples: [[Double]], mustCatchIt: Bool = true, file: StaticString = #filePath, line: UInt = #line) {
+    /// - Returns: how many samples caught it part way.
+    @discardableResult
+    private func assertCrossFade(from start: [Double], to end: [Double], samples: [[Double]], file: StaticString = #filePath, line: UInt = #line) -> Int {
         var partWay = 0
         var worst = 0.0
         let across = zip(start, end).map { $0 - $1 }
@@ -340,9 +361,9 @@ final class FeelUITests: XCTestCase {
             if mix > 0.1, mix < 0.9 { partWay += 1 }
             worst = max(worst, residual)
         }
-        if mustCatchIt { XCTAssertGreaterThan(partWay, 0, "never caught part way, so this proved nothing", file: file, line: line) }
         // Two fades over one surface aren't quite one mix, and measured about 13. The slide this replaced measured 32.
         XCTAssertLessThan(worst, 20, "pixels no mix of the two explains: it moved", file: file, line: line)
+        return partWay
     }
 
     /// Turns the simulator's own Reduce Motion on or off: the Lift's cross-fade is the system's, so the debug flag can't stand in. The
@@ -362,26 +383,31 @@ final class FeelUITests: XCTestCase {
         addTeardownBlock { [self] in try? setSystemReduceMotion(false) }
         Thread.sleep(forTimeInterval: 1)
         XCTAssertTrue(UIAccessibility.isReduceMotionEnabled, "the setting didn't take")
-        let app = board(["-UIAnimationDragCoefficient", "10"])
+        let app = board(["-UIAnimationDragCoefficient", "20"])
         let phoebe = tile(app, "Black Phoebe")
         XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
         Thread.sleep(forTimeInterval: 3)
         let boardShown = thumbnail(of: app.screenshot())
-        phoebe.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
-        var opening: [[Double]] = []
-        for _ in 0..<14 { opening.append(thumbnail(of: app.screenshot())) }
-        XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 20))
-        Thread.sleep(forTimeInterval: 8)
-        let pageShown = thumbnail(of: app.screenshot())
-        assertCrossFade(from: boardShown, to: pageShown, samples: opening)
+        // A tap waits for the app to settle for as long as it likes, so a try can miss the way there altogether. It has to be seen part
+        // way at least once, and whenever it's seen, it's only ever a mix.
+        var opened = 0
+        for _ in 0..<4 where opened == 0 {
+            phoebe.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
+            var opening: [[Double]] = []
+            for _ in 0..<14 { opening.append(thumbnail(of: app.screenshot())) }
+            XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 20))
+            Thread.sleep(forTimeInterval: 14)
+            let pageShown = thumbnail(of: app.screenshot())
+            opened = assertCrossFade(from: boardShown, to: pageShown, samples: opening)
 
-        app.navigationBars.buttons.element(boundBy: 0).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        var closing: [[Double]] = []
-        for _ in 0..<14 { closing.append(thumbnail(of: app.screenshot())) }
-        XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
-        Thread.sleep(forTimeInterval: 8)
-        // The way back is quicker to be caught, so it only has to be no slide when it is.
-        assertCrossFade(from: pageShown, to: thumbnail(of: app.screenshot()), samples: closing, mustCatchIt: false)
+            app.navigationBars.buttons.element(boundBy: 0).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            var closing: [[Double]] = []
+            for _ in 0..<14 { closing.append(thumbnail(of: app.screenshot())) }
+            XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
+            Thread.sleep(forTimeInterval: 14)
+            assertCrossFade(from: pageShown, to: thumbnail(of: app.screenshot()), samples: closing)
+        }
+        XCTAssertGreaterThan(opened, 0, "never caught part way, so this proved nothing")
     }
 
     // MARK: - Splash

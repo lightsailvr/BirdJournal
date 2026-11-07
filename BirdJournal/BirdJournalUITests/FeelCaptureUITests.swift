@@ -54,7 +54,7 @@ final class FeelCaptureUITests: XCTestCase {
         app.swipeUp()
         Thread.sleep(forTimeInterval: 2)
         try shot("board-scrolled", app)
-        app.navigationBars["Collection"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search'")).firstMatch.tap()
+        app.buttons["collection-search-open"].tap()
         Thread.sleep(forTimeInterval: 2)
         try shot("search", app)
     }

@@ -180,7 +180,7 @@ struct RootView: View {
         TabView(selection: $tab) {
             SwiftUI.Tab("Listen", systemImage: "waveform", value: Tab.listen) {
                 NavigationStack(path: $listenPath) {
-                    ListenView()
+                    ListenView(isCovered: tab != .listen || !listenPath.isEmpty)
                         .appDestinations()
                 }
                 .patchStack { listenPath.append($0) }
@@ -243,8 +243,12 @@ struct RootView: View {
         }
         .environment(\.openCollection) { board in
             collection.mode = .cards
+            // To the top, not back to where a search open meanwhile started from.
+            collection.offsetsBeforeSearch = nil
+            collection.isSearching = false
             collection.query = ""
             collection.offsets[.cards] = 0
+            collection.topRequests += 1
             collection.board = board
             journalPath = NavigationPath()
             tab = .journal

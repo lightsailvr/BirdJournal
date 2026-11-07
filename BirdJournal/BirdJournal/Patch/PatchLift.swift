@@ -36,6 +36,13 @@ extension View {
         modifier(PatchLiftSource(id: id))
     }
 
+    /// For a scroll view with patch tiles, under a stack whose pages hide the tab bar. The page makes it taller, and at its foot that
+    /// would pull the offset back by the bar's height, so the page would land short of its tile. Room below the content for as long
+    /// as that lasts keeps the offset where it was, and nothing has to be put back. It's never seen: the page covers it.
+    func keepsItsFootUnderAPage(isCovered: Bool) -> some View {
+        modifier(CoverRoom(isCovered: isCovered))
+    }
+
     /// A patch's page opened from the tile `id`: it grows out of it and shrinks back to it, whichever patch a swipe has reached
     /// by then, since the tile opened is where the birder's eye left the board. Under the system's Reduce Motion the zoom itself
     /// is a cross-fade with nothing moving, seen frame by frame; `.crossFade` is for sheets, and on a push draws a slide. Opened
@@ -114,6 +121,47 @@ private struct PatchLiftSource: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+private struct CoverRoom: ViewModifier {
+    let isCovered: Bool
+    @State private var isThere = false
+    @State private var going: Task<Void, Never>?
+    /// More than any tab bar.
+    private static let room: CGFloat = 140
+    /// How long the room stays after the way back. `-coverRoomSeconds <n>` holds it, for a test to flick into it.
+    private static var seconds: Double {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "coverRoomSeconds")
+        if seconds > 0 { return seconds }
+        #endif
+        return 1.5
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .contentMargins(.bottom, isThere ? Self.room : 0, for: .scrollContent)
+            .onChange(of: isCovered) { _, covered in
+                going?.cancel()
+                if covered {
+                    isThere = true
+                } else {
+                    // Once the tab bar is surely back, when the room can go without anything moving.
+                    going = Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(Self.seconds))
+                        if !Task.isCancelled { isThere = false }
+                    }
+                }
+            }
+            .onScrollPhaseChange { _, phase in
+                // The bar's back by the time a finger can be on the board, and a flick mustn't reach empty felt, then be pulled back
+                // when the room goes.
+                if phase == .interacting, !isCovered {
+                    going?.cancel()
+                    isThere = false
+                }
+            }
     }
 }
 
