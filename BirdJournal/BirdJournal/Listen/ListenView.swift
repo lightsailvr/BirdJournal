@@ -12,6 +12,8 @@ struct ListenView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.warmEngine) private var warmEngine
+    /// Whether another page covers this one: a page pushed on the tab's stack, or another tab.
+    var isCovered = false
 
     var body: some View {
         @Bindable var run = run
@@ -19,7 +21,7 @@ struct ListenView: View {
             if run.state.isActive || (run.state != .idle && !run.candidates.isEmpty) {
                 ActiveListeningView()
             } else {
-                ReadyToListenView()
+                ReadyToListenView(isCovered: isCovered)
             }
         }
         .toolbar {
@@ -67,6 +69,7 @@ private struct ReadyToListenView: View {
     @Environment(CurrentPlace.self) private var place
     @Environment(CircleStore.self) private var circles
     @Environment(\.scenePhase) private var scenePhase
+    var isCovered = false
     @State private var choosingSource = false
 
     /// What a new read of the place answers to: Listen appearing (a task always starts then), coming back to the front, a set
@@ -134,6 +137,7 @@ private struct ReadyToListenView: View {
                     .padding(.bottom, JournalLayout.sectionGap)
                 }
             }
+            .keepsItsFootUnderAPage(isCovered: isCovered)
             .ignoresSafeArea(edges: .top)
             .background(Color.paper)
             #if DEBUG
