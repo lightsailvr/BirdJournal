@@ -271,6 +271,26 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains { $0.hasSuffix("edition patch") }, "\(labels)")
     }
 
+    @Test("A find no pack or BirdNET names has no way to the Atlas, and its page says whose words it is (issue #150)")
+    func findHostileName() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        let sighting = "00000000-0000-4000-8000-000000000051"
+        client.add(FeedItem(
+            sightingID: sighting, speciesID: "x", scientificName: "Not a real bird", commonName: "Call me 555-1234", method: .seen, place: nil,
+            foundAt: .now, newPatch: true, rarity: .common, art: nil, owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"),
+            circleFirst: false, isMine: false, edition: nil
+        ), to: sunday.id)
+        await harness.circles.loadFeed(circleID: sunday.id)
+        let labels = try await Self.walk(FindPageView(route: FindRoute(itemID: "maya/\(sighting)")), harness: harness) { labels in
+            labels.contains { $0.contains("Maya") }
+        }
+        #expect(labels.contains { $0.contains("Maya") }, "\(labels)")
+        #expect(!labels.contains { $0.contains("About this bird") }, "\(labels)")
+    }
+
     @Test("A hand-built name never reaches Compare's screen (issue #150)")
     func compareHostileName() async throws {
         let harness = try Harness()

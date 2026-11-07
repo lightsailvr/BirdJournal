@@ -135,7 +135,7 @@ private struct FindSafety: ViewModifier {
     }
 }
 
-private struct FindPageContent: View {
+struct FindPageContent: View {
     @Environment(CircleStore.self) private var circles
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
@@ -272,10 +272,12 @@ private struct FindPageContent: View {
     /// The way to read about the bird, and to the viewer's own patch of it. Plain buttons: they're for operating.
     private var links: some View {
         VStack(spacing: 10) {
-            NavigationLink(value: Route.species(scientificName: item.scientificName, commonName: item.commonName)) {
-                Text("About this bird in the Atlas")
+            if let atlas = Self.atlasRoute(of: item, names: library.birdNames) {
+                NavigationLink(value: atlas) {
+                    Text("About this bird in the Atlas")
+                }
+                .accessibilityIdentifier("find-page-atlas")
             }
-            .accessibilityIdentifier("find-page-atlas")
             if let yours {
                 NavigationLink(value: Route.patch(yours.id)) {
                     Text("Your patch")
@@ -285,6 +287,12 @@ private struct FindPageContent: View {
         }
         .buttonStyle(.journalQuiet)
         .padding(.top, 4)
+    }
+
+    /// The bird in the Atlas, under the name the packs or BirdNET give it. A profile is the guidebook speaking, with no finder beside
+    /// it to report, so it never prints the finder's phone's words: a bird nothing here names has no link.
+    static func atlasRoute(of item: FeedItem, names: BirdNames) -> Route? {
+        names[item.scientificName].map { .species(scientificName: item.scientificName, commonName: $0) }
     }
 
     /// "Citrus edition, No. 021", when this phone knows the find's set and the bird's place in it.

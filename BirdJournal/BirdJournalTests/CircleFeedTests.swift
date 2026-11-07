@@ -176,6 +176,25 @@ struct LegacyFindWireTests {
     }
 }
 
+@Suite("A find's way to the Atlas")
+struct FindAtlasRouteTests {
+    private func find(_ scientific: String) -> FeedItem {
+        FeedItem(
+            sightingID: "00000000-0000-4000-8000-000000000050", speciesID: "x", scientificName: scientific, commonName: "Call me 555-1234",
+            method: .seen, place: nil, foundAt: .now, newPatch: true, rarity: .common, art: nil,
+            owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"), circleFirst: false, isMine: false, edition: nil
+        )
+    }
+
+    @Test("the profile takes the packs' name, then BirdNET's, never the finder's phone's, and with neither there's no link")
+    func names() {
+        let packs = BirdNames(packs: ["Sayornis nigricans": "Pack's Phoebe"])
+        #expect(FindPageContent.atlasRoute(of: find("Sayornis nigricans"), names: packs) == .species(scientificName: "Sayornis nigricans", commonName: "Pack's Phoebe"))
+        #expect(FindPageContent.atlasRoute(of: find("Turdus merula"), names: packs) == .species(scientificName: "Turdus merula", commonName: "Common Blackbird"))
+        #expect(FindPageContent.atlasRoute(of: find("Not a real bird"), names: packs) == nil)
+    }
+}
+
 @Suite("A feed row")
 struct FindRowTests {
     static func item(newPatch: Bool = false, first: Bool = false, rarity: RarityLabel? = .common, mine: Bool = false, place: String? = "Pasadena") -> FeedItem {
