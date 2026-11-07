@@ -46,7 +46,9 @@ public struct PackStorage: Sendable {
 
     /// Every pack installed here, in name order. A folder that no longer opens (a schema this build does not read,
     /// a half-deleted pack) is logged and skipped, never fatal; a staging folder a crash left behind is deleted.
-    public func installed() -> [InstalledPack] {
+    /// A download at or below the bundled version is redundant after an app update. Remove it while scanning,
+    /// before opening its SQLite; a cleanup failure is logged and the older copy is still excluded.
+    public func installed(replacingBundled bundled: SpeciesPack? = nil) -> [InstalledPack] {
         guard let names = try? FileManager.default.contentsOfDirectory(atPath: directory.path(percentEncoded: false)) else { return [] }
         var packs: [InstalledPack] = []
         for name in names.sorted() {
@@ -61,6 +63,15 @@ public struct PackStorage: Sendable {
             guard FileManager.default.fileExists(atPath: record.path(percentEncoded: false)) else { continue }
             do {
                 let descriptor = try JSONDecoder().decode(PackDescriptor.self, from: Data(contentsOf: record))
+                if let bundled, name == bundled.info.id, descriptor.id == bundled.info.id,
+                   descriptor.version <= bundled.info.version {
+                    do {
+                        try FileManager.default.removeItem(at: folder)
+                    } catch {
+                        Self.log.error("could not remove superseded bundled download \(name): \(String(describing: error))")
+                    }
+                    continue
+                }
                 packs.append(InstalledPack(descriptor: descriptor, pack: try SpeciesPack.open(directory: folder)))
             } catch {
                 Self.log.error("installed pack \(name) does not open: \(String(describing: error))")

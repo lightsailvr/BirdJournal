@@ -59,7 +59,7 @@ public final class PackLibrary {
         self.downloader = PackDownloader(session: session)
         self.availableCapacity = availableCapacity ?? { storage.availableCapacity() }
         self.bundledCovers = bundledCovers ?? (deferred ? BundledCovers(covers: [:]) : .shipped)
-        self.installed = deferred ? [] : storage.installed()
+        self.installed = deferred ? [] : storage.installed(replacingBundled: bundled)
         // The last good index until a fetch replaces it, so its sets work offline from launch (issue #54).
         self.index = deferred ? nil : storage.cachedIndex()
     }
@@ -83,7 +83,7 @@ public final class PackLibrary {
             }
             signposter.endInterval("Open bundled pack", opening)
             let downloads = signposter.beginInterval("Open downloaded packs")
-            let installed = storage.installed()
+            let installed = storage.installed(replacingBundled: bundled)
             signposter.endInterval("Open downloaded packs", downloads)
             let decode = signposter.beginInterval("Read cached index and sets")
             let index = storage.cachedIndex()
@@ -322,7 +322,9 @@ public final class PackLibrary {
     }
 
     private func installedPack(id: String) -> InstalledPack? {
-        installed.first { $0.id == id }
+        installed.first {
+            $0.id == id && (!isBundled(id) || $0.descriptor.version > (bundled?.info.version ?? 0))
+        }
     }
 
     private func setTransfer(_ id: String, _ status: Status?) {
