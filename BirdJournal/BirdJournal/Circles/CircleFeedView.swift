@@ -31,15 +31,19 @@ struct FindsColumn: View {
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
             ForEach(FindFeedRow.rows(of: entries)) { row in
-                switch row {
-                case .find(let entry):
-                    find(entry)
-                case .repeats(let line):
-                    repeats(line)
+                VStack(alignment: .leading, spacing: 0) {
+                    switch row {
+                    case .find(let entry):
+                        find(entry)
+                    case .repeats(let line):
+                        repeats(line)
+                    }
+                    FeedRule()
                 }
-                FeedRule()
             }
         }
+        // What a page's `.scrollPosition` holds on to, so a find landing above doesn't move a row under a thumb.
+        .scrollTargetLayout()
         #if DEBUG
         // `-autoOpenRepeats YES`, for the screenshots: every line of repeats open.
         .onChange(of: entries.count, initial: true) {
@@ -101,6 +105,39 @@ struct FindsColumn: View {
                 reactionFailure = ReactionFailure(itemID: item.id, message: CircleStore.message(for: error, doing: "send your reaction"))
             }
         }
+    }
+}
+
+extension View {
+    /// For the scroll view around a `FindsColumn`: finds landing above the row being read leave it where it is, so a tap lands on what
+    /// it was aimed at. At the very top of the page there's no row being read, whatever came before: a find lands in sight there, and
+    /// the header's controls stay put.
+    /// - Parameter isOn: the finds are showing. Coming back to them, a remembered row would scroll to the top of the view, so it's
+    ///   forgotten while they're away, and the page stays where it was.
+    func holdsTheRowBeingRead(isOn: Bool = true) -> some View {
+        modifier(RowBeingRead(isOn: isOn))
+    }
+}
+
+private struct RowBeingRead: ViewModifier {
+    let isOn: Bool
+    @State private var row: String?
+    @State private var isAtTheTop = true
+
+    func body(content: Content) -> some View {
+        content
+            .scrollPosition(id: $row, anchor: .top)
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top <= 0.5
+            } action: { _, isAtTop in
+                isAtTheTop = isAtTop
+                if isAtTop { row = nil }
+            }
+            // It reports a row as a scroll settles, which may be after the scroll view has reached the top.
+            .onChange(of: row) { _, reported in
+                if reported != nil, isAtTheTop || !isOn { row = nil }
+            }
+            .onChange(of: isOn) { row = nil }
     }
 }
 

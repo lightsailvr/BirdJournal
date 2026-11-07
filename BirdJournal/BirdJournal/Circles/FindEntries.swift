@@ -63,7 +63,8 @@ enum FindFeedRow: Equatable, Identifiable {
     var id: String {
         switch self {
         case .find(let entry): entry.id
-        case .repeats(let entries): "repeats-\(entries.first?.id ?? "")"
+        // By its oldest, so a repeat landing at its head leaves it the same row, and the reader's place.
+        case .repeats(let entries): "repeats-\(entries.last?.id ?? "")"
         }
     }
 
