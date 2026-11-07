@@ -170,7 +170,9 @@ final class CollectionUITests: XCTestCase {
         let tiles = app.buttons.matching(identifier: "board-patch").allElementsBoundByIndex
         let shown = try XCTUnwrap(tiles.first { Self.isClearOfBars($0, in: app) }, "no patch in view; screen: \(app.debugDescription.prefix(3000))")
         let left = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
-        let leftAt = Self.settledMinY(of: left)
+        // Against the picker: at this size the open field's row isn't the small title's height.
+        let modes = app.segmentedControls["collection-mode"]
+        let leftAt = Self.settledMinY(of: left) - modes.frame.minY
 
         let search = app.navigationBars["Collection"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search'")).firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 10))
@@ -180,13 +182,12 @@ final class CollectionUITests: XCTestCase {
         field.typeText("Mallard")
         let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
         XCTAssertTrue(mallard.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
-        let modes = app.segmentedControls["collection-mode"]
         XCTAssertGreaterThanOrEqual(Self.settledMinY(of: mallard), modes.frame.maxY - 1, "the first result's above the bar")
 
         // The field's own clear button.
         field.buttons.firstMatch.tap()
         XCTAssertTrue(left.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(Self.settledMinY(of: left), leftAt, accuracy: 4, "clearing it went somewhere else")
+        XCTAssertEqual(Self.settledMinY(of: left) - modes.frame.minY, leftAt, accuracy: 4, "clearing it went somewhere else")
     }
 
     /// Each mode's list, scrolled, comes back where it was left, through other modes and a quick run of changes.
