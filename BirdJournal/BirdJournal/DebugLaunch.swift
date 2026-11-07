@@ -13,6 +13,7 @@ import UIKit
 
 /// Launch flags for simulator screenshots and checks (issue #28), read once when the root appears:
 ///
+/// - `-seedReferenceBirds YES` adds the five sightings the Compare reference says are yours (issue #150).
 /// - `-seedJournal YES` adds a few sightings with generated frames, spread over a kilometre of Griffith Park so the
 ///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
 /// - `-patchLight "x,y"` puts the patches' light somewhere, as a tilt would (issue #134's screenshots; the simulator has
@@ -123,6 +124,7 @@ struct DebugLaunch: ViewModifier {
                 }
             }
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
+            if defaults.bool(forKey: "seedReferenceBirds") { DebugSeeds.seedReferenceBirds(context: context) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
             if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
@@ -541,6 +543,16 @@ enum DebugSeeds {
                 sighting.caption = CardCaption(text: "By the pond at morning, the dark sentinel kept its low perch.", generatorVersion: FixedCaptionWriter.versionString)
             }
             context.insert(sighting)
+        }
+        try? context.save()
+    }
+
+    /// The birds `5-compare.png` says are yours (issue #150), for its side-by-side: two you share with Maya, and three only you have.
+    static func seedReferenceBirds(context: ModelContext) {
+        let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let birds = ["Sayornis nigricans_Black Phoebe", "Haemorhous mexicanus_House Finch", "Calypte anna_Anna's Hummingbird", "Zenaida macroura_Mourning Dove", "Branta canadensis_Canada Goose"]
+        for (index, label) in birds.enumerated() {
+            context.insert(Sighting(speciesID: label, confirmedAt: Date.now.addingTimeInterval(Double(-index - 1) * 3600), location: griffithPark, soundConfidence: 0.8, frameImagePath: nil, source: .phone, note: nil))
         }
         try? context.save()
     }

@@ -60,6 +60,12 @@ final class FakeCircleClient: CircleClient {
     /// friend's finds would, so a test can see a thread sew on screen.
     var goalRisesBy = 0
     private var goalReads: [String: Int] = [:]
+    /// How many times any Guild's goals have been read, for the tests.
+    var goalReadCount: Int { goalReads.values.reduce(0, +) }
+    /// What a friend has beyond the feed's finds, in Compare, by friend id.
+    private var moreCompared: [String: [FriendBirds.Species]] = [:]
+    /// Every Compare asked of the server, for the tests.
+    private(set) var compareLog: [String] = []
 
     /// A read's time on the wire, which offline ends in no answer.
     private func wire() async throws {
@@ -380,6 +386,7 @@ final class FakeCircleClient: CircleClient {
     private func progressed(_ goal: CircleGoal, headStart: Int, circle: CircleSummary, now: Date) -> CircleGoal {
         var goal = goal
         goal.progress = headStart + species(in: circle.id, from: goal.startsAt, to: goal.endsAt)
+        goal.species = counted(in: circle.id, from: goal.startsAt, to: goal.endsAt, headStart: headStart)
         goal.status = now < goal.startsAt ? .upcoming : now < goal.endsAt ? .active : .ended
         goal.canDelete = goal.kind == .custom && [goal.createdBy?.id, circle.createdBy].contains(Self.me)
         if goal.isReached, goal.completedAt == nil { goal.completedAt = now }
@@ -389,6 +396,37 @@ final class FakeCircleClient: CircleClient {
     private func species(in circleID: String, from start: Date, to end: Date) -> Int {
         Set((feedItems[circleID] ?? []).filter { $0.foundAt >= start && $0.foundAt < end }.map(\.scientificName)).count
     }
+
+    /// What progress counted, earliest found first, with an edition each, as the server says: the head start's birds, which stand
+    /// in for finds older than the feed shows, then the feed's.
+    private func counted(in circleID: String, from start: Date, to end: Date, headStart: Int) -> [CircleGoal.Species] {
+        var found: [String: FeedItem] = [:]
+        var editions: [String: String] = [:]
+        for item in (feedItems[circleID] ?? []).filter({ $0.foundAt >= start && $0.foundAt < end }).sorted(by: { $0.foundAt < $1.foundAt }) {
+            if found[item.scientificName] == nil { found[item.scientificName] = item }
+            if editions[item.scientificName] == nil { editions[item.scientificName] = item.edition }
+        }
+        let early = Self.goalBirds
+            .filter { found[Sighting.scientificName(ofLabel: $0)] == nil }
+            .prefix(max(0, headStart))
+            .map { CircleGoal.Species(speciesID: $0, scientificName: Sighting.scientificName(ofLabel: $0), commonName: BirdComparison.commonName(ofLabel: $0), edition: "us-ca-la") }
+        let feed = found.values.sorted { $0.foundAt < $1.foundAt }.map {
+            CircleGoal.Species(speciesID: $0.speciesID, scientificName: $0.scientificName, commonName: $0.commonName, edition: editions[$0.scientificName])
+        }
+        return early + feed
+    }
+
+    /// Los Angeles birds for a seeded goal's head start, the last of them newest as the reference's row runs.
+    private static let goalBirds = [
+        "Buteo jamaicensis_Red-tailed Hawk", "Anas platyrhynchos_Mallard", "Melozone crissalis_California Towhee", "Spinus psaltria_Lesser Goldfinch",
+        "Mimus polyglottos_Northern Mockingbird", "Branta canadensis_Canada Goose", "Ardea alba_Great Egret", "Callipepla californica_California Quail",
+        "Sialia mexicana_Western Bluebird", "Zenaida macroura_Mourning Dove", "Melospiza melodia_Song Sparrow", "Corvus brachyrhynchos_American Crow",
+        "Pipilo maculatus_Spotted Towhee", "Ardea herodias_Great Blue Heron", "Bubo virginianus_Great Horned Owl", "Cathartes aura_Turkey Vulture",
+        "Junco hyemalis_Dark-eyed Junco", "Passer domesticus_House Sparrow", "Larus occidentalis_Western Gull", "Columba livia_Rock Dove",
+        "Fulica americana_American Coot", "Corvus corax_Northern Raven", "Egretta thula_Snowy Egret", "Buteo lineatus_Red-shouldered Hawk",
+        "Astur cooperii_Cooper's Hawk", "Selasphorus sasin_Allen's Hummingbird", "Psaltriparus minimus_American Bushtit", "Tyrannus vociferans_Cassin's Kingbird",
+        "Icterus cucullatus_Hooded Oriole", "Dryobates nuttallii_Nuttall's Woodpecker",
+    ]
 
     private static func calendar(_ zone: TimeZone) -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -442,6 +480,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func compare(friendID: String, accessToken: String) async throws -> FriendBirds {
+        compareLog.append(friendID)
         try await wire()
         let shared = order.filter { id in
             let members = circlesByID[id]?.members ?? []
@@ -449,11 +488,18 @@ final class FakeCircleClient: CircleClient {
         }
         guard friendID != Self.me, !shared.isEmpty, !blockedIDs.contains(friendID) else { throw CircleError.notFound }
         var best: [String: FriendBirds.Species] = [:]
-        for item in shared.flatMap({ feedItems[$0] ?? [] }) where item.owner.id == friendID {
+        var editions: [String: [String]] = [:]
+        // Earliest found first, so the first edition is the patch to show, as on the server.
+        for item in shared.flatMap({ feedItems[$0] ?? [] }).filter({ $0.owner.id == friendID }).sorted(by: { $0.foundAt < $1.foundAt }) {
             if best[item.scientificName]?.method != .seen {
                 best[item.scientificName] = .init(speciesID: item.speciesID, scientificName: item.scientificName, commonName: item.commonName, method: item.method)
             }
+            if let edition = item.edition, editions[item.scientificName]?.contains(edition) != true {
+                editions[item.scientificName, default: []].append(edition)
+            }
         }
+        for name in best.keys { best[name]?.editions = editions[name] ?? [] }
+        for species in moreCompared[friendID] ?? [] { best[species.scientificName] = species }
         let name = shared.lazy.compactMap { self.circlesByID[$0]?.members.first { $0.id == friendID }?.displayName }.first
         let birds = FriendBirds(friend: .init(id: friendID, displayName: name), species: best.values.sorted { $0.commonName < $1.commonName })
         if compareAnswerLatency > .zero { try? await Task.sleep(for: compareAnswerLatency) }
@@ -497,6 +543,11 @@ final class FakeCircleClient: CircleClient {
     /// A find already in a Guild, for the tests.
     func add(_ item: FeedItem, to circleID: String) {
         feedItems[circleID, default: []].append(item)
+    }
+
+    /// What a friend has beyond the feed, for the tests.
+    func setMoreCompared(_ species: [FriendBirds.Species], friendID: String) {
+        moreCompared[friendID] = species
     }
 
     /// `-fakeCircles one`: Pat in the one Guild, with Sunday Group's feed and goals, so the tab opens straight on it.
@@ -553,6 +604,19 @@ final class FakeCircleClient: CircleClient {
             goals[0].headStart = 12 - species(in: sunday, from: goals[0].goal.startsAt, to: goals[0].goal.endsAt)
             storedGoals[sunday] = goals
         }
+        // Compare as the reference draws it, and friends' faces near the top of Los Angeles.
+        moreCompared = [
+            "maya": [
+                compared("Melanerpes formicivorus_Acorn Woodpecker", .heard), compared("Sialia mexicana_Western Bluebird", .seen),
+                compared("Ardea alba_Great Egret", .seen), compared("Haemorhous mexicanus_House Finch", .seen),
+            ],
+            "jo": [compared("Anas platyrhynchos_Mallard", .seen), compared("Buteo jamaicensis_Red-tailed Hawk", .heard)],
+            "sam": [compared("Buteo jamaicensis_Red-tailed Hawk", .seen)],
+        ]
+    }
+
+    private func compared(_ label: String, _ method: SightingMethod) -> FriendBirds.Species {
+        .init(speciesID: label, scientificName: Sighting.scientificName(ofLabel: label), commonName: BirdComparison.commonName(ofLabel: label), method: method, editions: ["us-ca-la"])
     }
 
     /// Jo's hummingbird (issue #66), the one shared by hand.

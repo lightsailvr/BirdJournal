@@ -11,6 +11,7 @@ import SwiftUI
 struct PaperCardView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
+    @Environment(CircleStore.self) private var circles: CircleStore?
     let patch: CardCollection.Patch
     /// The patch's sightings, newest first.
     let sightings: [Sighting]
@@ -39,6 +40,7 @@ struct PaperCardView: View {
         .padding(.horizontal, 7)
         .padding(.bottom, 7)
         .modifier(CardStockSurface())
+        .task { await circles?.loadFriendsBirds() }
     }
 
     private func content(_ species: PackSpecies?) -> some View {
@@ -65,6 +67,7 @@ struct PaperCardView: View {
             }
             PaperRule()
             history
+            FriendsOnCard(scientificName: patch.scientificName)
             if let lore = species?.lore {
                 PaperCardMoreLore(lore: lore)
             }
@@ -274,11 +277,35 @@ private struct PaperCardMoreLore: View {
     }
 }
 
+/// Which friends have this bird, on a paper card (issue #150, A4): their faces, and their names in print. Nothing without friends who
+/// do. The blocked are never among them.
+private struct FriendsOnCard: View {
+    @Environment(CircleStore.self) private var circles: CircleStore?
+    let scientificName: String
+
+    var body: some View {
+        let friends = circles?.friends(having: scientificName) ?? []
+        if !friends.isEmpty {
+            PaperRule()
+            HStack(alignment: .center, spacing: 8) {
+                MemberFaces(members: Array(friends.prefix(2)), shown: 2, size: 26)
+                Text("\(FriendWords.have(friends)).")
+                    .font(.caption)
+                    .foregroundStyle(Color.cardInk)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("card-friends")
+        }
+    }
+}
+
 /// The paper card behind a friend's patch (issue #150, F1): the same printed card, minus what's yours. The edition line, the bird,
 /// its story and biology, read from the viewer's own pack, and no history, since these are a friend's sightings and they aren't
 /// on this iPhone. Scrolls inside the patch's footprint, or grows at accessibility text sizes, like the birder's own.
 struct FriendPaperCard: View {
     @Environment(PackLibrary.self) private var library
+    @Environment(CircleStore.self) private var circles: CircleStore?
     let species: PackSpecies
     /// "Citrus edition, No. 021", if this phone knows the find's set.
     let edition: String?
@@ -315,6 +342,7 @@ struct FriendPaperCard: View {
         .padding(.horizontal, 7)
         .padding(.bottom, 7)
         .modifier(CardStockSurface())
+        .task { await circles?.loadFriendsBirds() }
     }
 
     private var content: some View {
@@ -350,6 +378,7 @@ struct FriendPaperCard: View {
                 PaperRule()
                 BiologyGrid(stats: biology)
             }
+            FriendsOnCard(scientificName: species.scientificName)
             if let lore = species.lore {
                 PaperCardMoreLore(lore: lore)
             }

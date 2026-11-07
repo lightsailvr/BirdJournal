@@ -139,7 +139,7 @@ struct CirclePageView: View {
         }
     }
 
-    /// The month's goal, with a place for its patches (slice 8) under the thread. Without them the goal is thread alone.
+    /// The month's goal, with its patches under the thread. Without them, from an older server, the goal is thread alone.
     @ViewBuilder private var goal: some View {
         if let goals = circles.goals[id] {
             if let monthly = goals.first(where: { $0.kind == .monthly }) {
@@ -267,7 +267,7 @@ struct CirclePageView: View {
         .background(Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
         .padding(.top, 16)
         if !friends.isEmpty {
-            Text("Each species Heard, Seen or not yet, for you and a friend: plan the next walk.")
+            Text("Their patches you don't have yet, then what you both have: plan the next walk.")
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)

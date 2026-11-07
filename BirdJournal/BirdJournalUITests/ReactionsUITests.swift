@@ -80,7 +80,7 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertEqual(woodpecker.label, "Acorn Woodpecker. You: Not yet. Maya: Heard.")
         let phoebe = app.descendants(matching: .any)["compare-Sayornis nigricans"]
         XCTAssertTrue(phoebe.label.hasSuffix("Maya: Seen."), phoebe.label)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH[c] 'Maya has, you haven'")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Maya has these. Go find them."].exists)
         screenshot(app, "64-compare")
     }
 }

@@ -189,6 +189,40 @@ struct LocalSetSection: View {
     }
 }
 
+/// The goal on Listen (issue #150, G7): the Guild closest to its monthly goal, its emblem, and how far it has to go, which is a reason
+/// to go now. It opens the Guild. It's there only for a signed-in member with a goal still running, and takes no room otherwise.
+struct GuildGoalLine: View {
+    @Environment(CircleStore.self) private var circles
+    @Environment(\.openCircle) private var openCircle
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// The reference's emblem, 110 of 900 at this screen's width.
+    private static let emblem: CGFloat = 49
+
+    var body: some View {
+        if let closest = circles.closestGoal() {
+            Button {
+                openCircle(closest.circle.id)
+            } label: {
+                AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
+                    GuildEmblem(identity: GuildIdentity(circleID: closest.circle.id), size: Self.emblem)
+                    Text("\(Text(closest.circle.name).fontWeight(.semibold)) \(GoalWords.stillToGo(closest.goal))")
+                        .font(JournalFont.body)
+                        .foregroundStyle(Color.ink)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.journalPress)
+            .accessibilityLabel("\(closest.circle.name) \(GoalWords.stillToGo(closest.goal))")
+            .accessibilityHint("Opens the Guild.")
+            .accessibilityIdentifier("listen-guild-goal")
+        }
+    }
+}
+
 /// One of the latest patches, with no words under it, opening its page.
 private struct LatestPatch: View {
     @Environment(PackLibrary.self) private var library

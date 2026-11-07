@@ -552,6 +552,164 @@ struct CircleCacheTests {
 }
 
 // Issue #150, G3 and G4: the Guilds tab's merged feed, and a feed's rows.
+@Suite("Friends around the app")
+@MainActor
+struct FriendsAroundTheAppTests {
+    /// Over the seeded fake, where Pat shares Sunday Group with Maya, Jo and Sam, and Family with Robin and Lee.
+    private func seeded() -> (CircleStore, FakeCircleClient) {
+        let client = FakeCircleClient(seeded: true)
+        return (CircleStore(account: FakeAccount.session(signedIn: true), client: client), client)
+    }
+
+    @Test("each friend's species are read once, whoever asks and however often")
+    func once() async {
+        let (store, client) = seeded()
+        await store.loadFriendsBirds()
+        let friends = ["dad", "jo", "lee", "maya", "sam"]
+        #expect(client.compareLog.sorted() == friends)
+        await store.loadFriendsBirds()
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.sorted() == friends, "at most once a session per friend")
+    }
+
+    @Test("two screens asking at once read each friend once")
+    func overlapping() async {
+        let (store, client) = seeded()
+        client.latency = .milliseconds(5)
+        async let first: Void = store.loadFriendsBirds()
+        async let second: Void = store.loadFriendsBirds()
+        _ = await (first, second)
+        #expect(client.compareLog.count == 5)
+    }
+
+    @Test("a screen that has read Compare has read that friend")
+    func compareCounts() async throws {
+        let (store, client) = seeded()
+        try await store.compare(friendID: "maya")
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.filter { $0 == "maya" }.count == 1)
+    }
+
+    @Test("nothing is read until a screen asks, and nothing for someone signed out")
+    func lazily() async {
+        let (store, client) = seeded()
+        await store.refresh()
+        await store.loadRunningGoals()
+        #expect(client.compareLog.isEmpty, "not at launch, nor for Listen")
+        let signedOut = FakeCircleClient(seeded: true)
+        let out = CircleStore(account: FakeAccount.session(signedIn: false), client: signedOut)
+        await out.loadFriendsBirds()
+        #expect(signedOut.compareLog.isEmpty)
+    }
+
+    @Test("it knows who has which bird, and never the birder")
+    func who() async {
+        let (store, _) = seeded()
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Sayornis nigricans").map(\.id) == ["jo", "maya"], "by name")
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.name) == ["Maya Ortiz"])
+        #expect(store.friends(having: "Turdus merula").isEmpty)
+        #expect(!store.friendsBySpecies.values.joined().contains { $0.id == FakeCircleClient.me })
+    }
+
+    @Test("sign-out clears it, an answer on its way stays out, and the next session reads again")
+    func signOut() async throws {
+        let (store, client) = seeded()
+        await store.loadFriendsBirds()
+        #expect(!store.friendsBySpecies.isEmpty)
+        store.clear()
+        #expect(store.friendsBySpecies.isEmpty)
+        #expect(store.friendBirds.isEmpty)
+
+        client.latency = .milliseconds(100)
+        let late = Task { await store.loadFriendsBirds() }
+        try await Task.sleep(for: .milliseconds(150))
+        store.clear()
+        await late.value
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(store.friendBirds.isEmpty, "the late answer is dropped")
+        #expect(store.friendsBySpecies.isEmpty)
+        client.latency = .zero
+
+        let before = client.compareLog.count
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.count > before)
+    }
+
+    @Test("someone blocked is out at once, isn't read, and can be read again once unblocked")
+    func blocked() async throws {
+        let (store, client) = seeded()
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
+        #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
+        #expect(store.friends(having: "Sayornis nigricans").map(\.id) == ["jo"])
+
+        let reads = client.compareLog.count
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.count == reads)
+
+        try await store.setBlocked(false, accountID: "maya", name: "Maya Ortiz")
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+    }
+
+    @Test("someone already blocked at the start is never asked for")
+    func blockedBefore() async throws {
+        let client = FakeCircleClient(seeded: true)
+        try await client.setBlocked(true, accountID: "maya", accessToken: "t")
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client)
+        await store.loadFriendsBirds()
+        #expect(!client.compareLog.contains("maya"))
+        #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
+    }
+
+    @Test("a block made elsewhere comes back as not found: they go, and aren't asked again")
+    func notFound() async throws {
+        let (store, client) = seeded()
+        await store.loadFriendsBirds()
+        try await client.setBlocked(true, accountID: "jo", accessToken: "t")
+        await #expect(throws: CircleError.notFound) { try await store.compare(friendID: "jo") }
+        #expect(store.friends(having: "Calypte anna").isEmpty)
+        let reads = client.compareLog.count
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.count == reads)
+    }
+
+    @Test("leaving the only Guild shared with someone takes their face away")
+    func left() async throws {
+        let (store, _) = seeded()
+        await store.loadFriendsBirds()
+        let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
+        try await store.leave(circleID: sunday.id)
+        #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
+    }
+
+    @Test("no connection stops at the first failure, and the next screen tries again")
+    func offline() async {
+        let (store, client) = seeded()
+        await store.refresh()
+        for circle in store.circles { try? await store.loadDetail(id: circle.id) }
+        client.isOffline = true
+        await store.loadFriendsBirds()
+        #expect(client.compareLog.count == 1, "one failure, not one per friend")
+        client.isOffline = false
+        await store.loadFriendsBirds()
+        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+    }
+
+    @Test("a friend's editions come from their finds, earliest found first, and none is none")
+    func editions() async throws {
+        let client = FakeCircleClient(seeded: true)
+        client.seedSharedFinds()
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client)
+        await store.refresh()
+        let lee = try await store.compare(friendID: "lee")
+        #expect(lee.species.first { $0.commonName == "Black Phoebe" }?.editions == ["us-ca-sd"])
+        #expect(lee.species.first { $0.commonName == "House Finch" }?.editions == ["us-ca-la"])
+    }
+}
+
 @Suite("A feed's rows")
 struct FindFeedRowTests {
     private static let start = Date(timeIntervalSince1970: 1_790_000_000)

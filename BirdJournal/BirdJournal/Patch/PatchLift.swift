@@ -5,7 +5,7 @@ import SwiftUI
 /// Which kind of tile a patch was opened from. The same patch can have a tile on several pages of one stack (the board, and a
 /// species' patches pushed on top of it), and a zoom has to know which it came from.
 enum PatchLiftSurface: Hashable, Sendable {
-    case board, latest, species
+    case board, latest, species, compare
 }
 
 /// The tile a patch's page grows out of, and shrinks back to.

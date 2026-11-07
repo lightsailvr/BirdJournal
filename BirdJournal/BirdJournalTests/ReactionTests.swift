@@ -63,6 +63,15 @@ struct ReactionClientTests {
         #expect(without.reactions == ReactionCount.none)
     }
 
+    @Test("compare reads the editions a friend found each species in, earliest first")
+    func compareEditions() async throws {
+        let recorder = Recorder()
+        recorder.responses = [http(200, #"{"friend":{"id":"maya","display_name":"Maya Ortiz"},"species":[{"species_id":"s","scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","method":"seen","editions":["us-ca-sd","us-ca-la"]},{"species_id":"t","scientific_name":"Turdus merula","common_name":"Common Blackbird","method":"heard","editions":[]}]}"#)]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        let friend = try await client.compare(friendID: "maya", accessToken: "t")
+        #expect(friend.species.map(\.editions) == [["us-ca-sd", "us-ca-la"], []])
+    }
+
     @Test("compare reads the friend's species")
     func compare() async throws {
         let recorder = Recorder()
@@ -72,6 +81,7 @@ struct ReactionClientTests {
         #expect(recorder.requests[0].url?.path() == "/v1/friends/maya/compare")
         #expect(friend.friend.name == "Maya Ortiz")
         #expect(friend.species.map(\.method) == [.seen])
+        #expect(friend.species.first?.editions == [], "an older server says nothing of editions")
         await #expect(throws: CircleError.notFound) { try await client.compare(friendID: "zed", accessToken: "t") }
     }
 }
@@ -137,6 +147,65 @@ struct BirdComparisonTests {
         #expect((comparison.myCount, comparison.theirCount) == (2, 2))
         #expect(BirdComparison.word(nil) == "Not yet")
         #expect(BirdComparison.word(.seen) == "Seen")
+    }
+
+    @Test("the boards: theirs you don't have yet, what you both have, only yours, each with the patch it shows")
+    func boards() throws {
+        let collection = CardCollection(
+            [
+                .init(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: Date(timeIntervalSince1970: 200), soundConfidence: 0.8, source: .phone),
+                .init(speciesID: "Calypte anna_Anna's Hummingbird", confirmedAt: Date(timeIntervalSince1970: 100), soundConfidence: 0.8, source: .phone),
+            ]
+        )
+        let comparison = BirdComparison(
+            mine: [("Sayornis nigricans_Black Phoebe", .seen), ("Calypte anna_Anna's Hummingbird", .heard)],
+            theirs: [
+                .init(speciesID: "a", scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker", method: .heard, editions: ["us-ca-sd", "us-ca-la"]),
+                .init(speciesID: "b", scientificName: "Sayornis nigricans", commonName: "Black Phoebe", method: .heard, editions: ["us-ca-la"]),
+                .init(speciesID: "c", scientificName: "Sialia mexicana", commonName: "Western Bluebird", method: .seen, editions: []),
+                .init(speciesID: "d", scientificName: "Ardea alba", commonName: "Great Egret", method: .seen, editions: ["made-up"]),
+            ],
+            myPatches: collection.patches
+        )
+        let woodpecker = try #require(comparison.onlyTheirs.first { $0.commonName == "Acorn Woodpecker" })
+        #expect(woodpecker.edition == "us-ca-sd", "the edition they first found it in, not any other")
+        #expect(comparison.onlyTheirs.first { $0.commonName == "Western Bluebird" }?.edition == nil, "no edition from the server: the blank with its tag")
+        #expect(comparison.onlyTheirs.first { $0.commonName == "Great Egret" }?.edition == "made-up", "PatchEdition draws an unknown set as a plain blank")
+        #expect(comparison.both.map(\.edition) == ["us-ca-la"], "what you both have shows the friend's")
+        #expect(comparison.onlyMine.map(\.commonName) == ["Anna's Hummingbird"])
+        #expect(comparison.onlyMine.first?.edition == nil, "yours, here Uncharted: no set was given")
+        // Where each goes.
+        #expect(woodpecker.route == .species(scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker"))
+        #expect(comparison.both.first?.route == .species(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"))
+        let onlyMine = try #require(comparison.onlyMine.first)
+        #expect(onlyMine.route == .patch(try #require(onlyMine.myPatch), from: .compare))
+    }
+
+    @Test("names come from the packs, then your own sightings, and only then the words of the friend's phone")
+    func names() {
+        let theirs: [FriendBirds.Species] = [
+            .init(speciesID: "x", scientificName: "Sayornis nigricans", commonName: "Buy my thing", method: .seen),
+            .init(speciesID: "y", scientificName: "Calypte anna", commonName: "Rude words", method: .seen),
+            .init(speciesID: "z", scientificName: "Turdus merula", commonName: "Common Blackbird", method: .seen),
+        ]
+        let comparison = BirdComparison(
+            mine: [("Calypte anna_Anna's Hummingbird", .heard)], theirs: theirs,
+            names: ["Sayornis nigricans": "Black Phoebe"]
+        )
+        #expect(comparison.onlyTheirs.map(\.commonName) == ["Black Phoebe", "Common Blackbird"], "sorted by what's shown")
+        #expect(comparison.both.map(\.commonName) == ["Anna's Hummingbird"])
+    }
+
+    @Test("Heard or Seen stays under every patch, and the tally stays")
+    func words() {
+        let comparison = BirdComparison(
+            mine: [("Sayornis nigricans_Black Phoebe", .seen), ("Calypte anna_Anna's Hummingbird", .heard), ("Zenaida macroura_Mourning Dove", .heard)],
+            theirs: [species("Sayornis nigricans_Black Phoebe", .seen), species("Calypte anna_Anna's Hummingbird", .seen), species("Ardea alba_Great Egret", .heard)]
+        )
+        let captions = (comparison.onlyTheirs + comparison.both + comparison.onlyMine).map { BirdComparison.caption($0, friend: "Maya") }
+        #expect(captions == ["Heard by Maya", "Heard by you, seen by Maya", "Seen by you both", "Heard by you"])
+        #expect(comparison.tally(friend: "Maya") == "You have 3, Maya has 3, and you both have 2.")
+        #expect(BirdComparison.leadTitle(friend: "Maya") == "Maya has these. Go find them.")
     }
 
     @Test("nobody's birds compare to nothing")
