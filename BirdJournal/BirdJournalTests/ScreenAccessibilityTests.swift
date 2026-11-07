@@ -252,24 +252,37 @@ struct ScreenAccessibilityTests {
         #expect(CandidateRow.appearances == 3, "the same three rows, moved")
     }
 
-    @Test("A bird you've found: its profile leads with your patch and its story; in a review, the patch doesn't", arguments: sizes)
-    func profileLeadsWithYourPatch(typeSize: DynamicTypeSize) async throws {
+    @Test("A bird's profile: the Atlas leads with its photo then its story, found or not, with no patch; a found bird has a link in words", arguments: sizes)
+    func profileIsAGuidebook(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch") } && labels.contains("About this bird")
+            labels.contains { $0.hasPrefix("Your patch") } && labels.contains("About this bird")
         }
         Self.expectClean(labels, screen: "Profile")
-        let patch = try #require(labels.firstIndex { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once") }, "\(labels)")
+        #expect(!labels.contains { $0.contains("edition patch") }, "no patch: \(labels)")
         let name = try #require(labels.firstIndex(of: "Black Phoebe"))
-        let lore = try #require(labels.firstIndex { $0.hasPrefix("Lore written") || $0.contains("Lore written from") }, "\(labels)")
+        let link = try #require(labels.firstIndex(of: "Your patch, Los Angeles"), "\(labels)")
+        let photo = try #require(labels.firstIndex { $0.hasPrefix("Reference photo") || $0.contains("Photo:") }, "\(labels)")
+        let lore = try #require(labels.firstIndex { $0.contains("Lore written from") }, "\(labels)")
         let about = try #require(labels.firstIndex(of: "About this bird"))
-        #expect(patch < name)
-        #expect(name < lore)
+        #expect(name < link)
+        #expect(link < photo)
+        #expect(photo < lore)
         #expect(lore < about)
+
+        // A bird you haven't found reads the same, with no link.
+        let unfound = try await Self.walk(BirdProfileView(scientificName: "Branta canadensis", commonName: "Canada Goose"), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("About this bird")
+        }
+        #expect(!unfound.contains { $0.hasPrefix("Your patch") }, "\(unfound)")
+        let unfoundPhoto = try #require(unfound.firstIndex { $0.hasPrefix("Reference photo") || $0.contains("Photo:") }, "\(unfound)")
+        let unfoundLore = try #require(unfound.firstIndex { $0.contains("Lore written from") }, "\(unfound)")
+        #expect(unfoundPhoto < unfoundLore)
+        #expect(unfoundLore < (unfound.firstIndex(of: "About this bird") ?? 0))
 
         let candidate = Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
         let review = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe", match: candidate), harness: harness, typeSize: typeSize) { $0.contains("About this bird") }
-        #expect(!review.contains { $0.contains("edition patch") }, "\(review)")
+        #expect(!review.contains { $0.contains("edition patch") || $0.hasPrefix("Your patch") }, "a review keeps its own order: \(review)")
     }
 
     /// The longest toast a repeat makes, at the largest text: its words wrap whole, and Undo keeps its line.
@@ -282,17 +295,6 @@ struct ScreenAccessibilityTests {
         let height = toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).height
         #expect(height >= oneLine * 2, "\(text) needs more than a line beside Undo at \(typeSize): toast \(height), a line \(oneLine)")
         #expect(toast.sizeThatFits(in: CGSize(width: 402, height: 2_000)).width <= 402)
-    }
-
-    @Test("An Atlas row shows your patch of the bird in that pack's set, by its scientific name, whatever label the pack spells")
-    func atlasRowsFindYourPatch() throws {
-        let harness = try Harness()
-        let pack = try SpeciesPack.bundled()
-        let collection = harness.collectionStore.collection
-        let finch = try #require(pack.species(scientificName: "Haemorhous mexicanus"))
-        let goose = try #require(pack.species(scientificName: "Branta canadensis"))
-        #expect(RowPictureSource.of(species: finch, in: pack, collection: collection) == .patch(scientificName: "Haemorhous mexicanus", setID: pack.info.id))
-        #expect(RowPictureSource.of(species: goose, in: pack, collection: collection) == .reference(goose.photos.first.map(pack.lensImageURL(for:))))
     }
 
     @Test("Collection: the set's name and count, the modes and the patches, each with how often it was seen", arguments: sizes)

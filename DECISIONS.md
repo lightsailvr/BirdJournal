@@ -1318,3 +1318,17 @@ The issue's "Guilds" section, with what it left open:
 - **Compare keeps its screen behind the picker**, with its friends on a raised panel rather than felt, since they're rows to operate (slice 8 replaces it). The goal's patches are slice 8's too: `CompactGoal` shows thread alone, with the place for them marked.
 - **`Landscape.swift` is gone.** Nothing else drew a landscape, so the enum and palette went with `LandscapeArt`. `SetCoverImage` and `SeededRandom`, which were in that file, are in `SetCoverImage.swift`.
 - **By hand on a phone:** the reaction's pop and haptic, the zoom from a row's patch, and the row's patches at 120 Hz.
+
+## Patches only on the patches: rows and the Atlas use photos (issue #150, the maintainer, 2026-11-06)
+
+The maintainer: "patches should only be on the patches"; "the sightings should use user photos by default, and the atlas photo otherwise. species should always use the atlas photo. in the atlas, i noticed that patches show up there too, and that is incorrect because it removes the scientific nature of understanding what birds look like and the fact that the atlas is like a guidebook".
+
+This overrides issue #150's V2, A2 and stories 44 to 46, 54 and 57, and the patch row in `4-set-page.png`, and slice 5's "Rows' pictures" and "The profile" above.
+
+- **Sightings rows** have your own photo, attached then glasses, else the Atlas's reference photo. "Reference photo" is the caption that was there already, so it can't read as yours.
+- **Species rows** always have the reference photo.
+- **The Atlas has no patches in it.** A set's row for a bird you've found has the reference photo, and keeps "Yours, seen once". An unfound bird keeps its silhouette or the glyph. Search rows have the reference photo.
+- **`BirdProfileView`** has its names, then the reference photo with its credit, then the story on card stock, found or not. With a `match` it's as before. Your patch is a link in words beside your sightings, "Your patch, Los Angeles", opening its page; with several it's your newest sighting's, and the others are a tap on from the sightings. The names stay above the photo, as they have on every profile without a patch.
+- **`RowPictureSource` has no patch case**, so nothing using `RowPicture` can show one. `RowPatch` stays for a run's rows alone.
+- **Left as they are until the maintainer confirms:** a run's rows, Listen's latest patches, a sighting's own page, map pins, Guilds, Compare and goals.
+

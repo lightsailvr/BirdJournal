@@ -26,9 +26,9 @@ if [[ "${1:-}" == "--sheets" ]]; then
     sheet rows-after-add 5 "$out/run-added-dark.jpg" "$out/run-toast-dark.jpg" "$out/run-no-pack-dark.jpg" "$out/run-after-stop-dark.jpg" "$out/review-dark.jpg"
     sheet contrast 2 "$out/run-contrast-dark.jpg" "$out/run-contrast-light.jpg"
     sheet grammar-dark 4 "$out/species-dark.jpg" "$out/sightings-dark.jpg" "$out/set-dark.jpg" "$out/atlas-search-dark.jpg"
-    sheet grammar-light 3 "$out/species-light.jpg" "$out/sightings-light.jpg" "$out/set-light.jpg"
+    sheet grammar-light 4 "$out/species-light.jpg" "$out/sightings-light.jpg" "$out/set-light.jpg" "$out/atlas-search-light.jpg"
     sheet profile 4 "$out/profile-dark.jpg" "$out/profile-light.jpg" "$out/profile-gallery-dark.jpg" "$out/profile-none-dark.jpg"
-    sheet ax5 4 "$out/run-ax5.jpg" "$out/run-row-ax5.jpg" "$out/species-ax5.jpg" "$out/sightings-ax5.jpg" "$out/set-ax5.jpg" "$out/profile-ax5.jpg"
+    sheet ax5 4 "$out/run-ax5.jpg" "$out/run-row-ax5.jpg" "$out/species-ax5.jpg" "$out/sightings-ax5.jpg" "$out/set-ax5.jpg" "$out/profile-ax5.jpg" "$out/atlas-search-ax5.jpg"
     exit 0
 fi
 
@@ -92,12 +92,12 @@ for scheme in dark light; do
     shot "sightings-$scheme"  9 "${seeded[@]}" -autoScreen sightings
     shot "set-$scheme"        9 "${seeded[@]}" -seedBoard YES -autoScreen set
     shot "profile-$scheme"    9 "${seeded[@]}" -autoScreen profile
+    shot "atlas-search-$scheme" 10 "${seeded[@]}" -autoScreen guide -autoQuery "Finch"
 done
 xcrun simctl ui "$udid" appearance dark
 shot run-added-dark        14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRowAdd "House Finch"
 shot run-after-stop-dark   14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRunStops YES
 shot run-toast-dark        14 "${seeded[@]}" "${hunt[@]}" -autoScreen listening -autoRowAdd "House Finch" -autoRowAddAfter 11
-shot atlas-search-dark     10 "${seeded[@]}" -autoScreen guide -autoQuery "Finch"
 shot run-no-pack-dark      12 "${seeded[@]}" -fakeRunBirds "Melanerpes formicivorus_Acorn Woodpecker,Turdus merula_Common Blackbird,Strix nebulosa_Great Gray Owl" -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
 shot profile-gallery-dark  10 -inMemoryAlbum YES -seedGallery YES -collectionIntroShown YES -autoCardSpecies "Haemorhous mexicanus" -autoScreen profile
 shot profile-none-dark      9 -inMemoryAlbum YES -collectionIntroShown YES -autoScreen profile
@@ -117,6 +117,7 @@ shot species-ax5  9 "${seeded[@]}" -autoScreen species-list
 shot set-ax5      9 "${seeded[@]}" -seedBoard YES -autoScreen set
 shot sightings-ax5 9 "${seeded[@]}" -autoScreen sightings
 shot profile-ax5  9 "${seeded[@]}" -autoScreen profile
+shot atlas-search-ax5 10 "${seeded[@]}" -autoScreen guide -autoQuery "Finch"
 xcrun simctl ui "$udid" content_size large
 
 # The trap the brief names: patches on rows that refresh every second, under a moving light. A healthy sweep logs its frame times
@@ -147,7 +148,5 @@ if [[ -z "${CAPTURE_ONLY:-}" || "counts" =~ $CAPTURE_ONLY ]]; then
         # -seedLarge gives nearly every bird the clip hears a Los Angeles patch, so a real list that re-sorts is mostly patches.
         count "A real run over the clip, its birds sewn" count-run-clip -inMemoryAlbum YES -seedLarge 1000 -collectionIntroShown YES -autoPhoneListening "$clip" -autoLocation griffith -autoScreen listening
         count "A run holding still, three rows" count-run-still "${seeded[@]}" "${hunt[@]}" -autoScreen listening
-        count "Species rows" count-species -inMemoryAlbum YES -seedBoard YES -collectionIntroShown YES -autoScreen species-list
-        count "Set rows" count-set -inMemoryAlbum YES -seedBoard YES -collectionIntroShown YES -autoScreen set
     } | tee "$out/decode-counts.txt"
 fi

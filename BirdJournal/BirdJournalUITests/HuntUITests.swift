@@ -301,19 +301,69 @@ final class HuntUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Mourning Dove"].waitForExistence(timeout: 10) || app.staticTexts["Mourning Dove"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
+    // The maintainer, issue #150: "patches should only be on the patches". A row's picture is hidden from the tree, so these go by
+    // what each row says of it and where it opens; `RowPictureSource` has no patch to show.
+
     @MainActor
-    func testTheProfileOfABirdYouveFoundLeadsWithItsPatchWhichOpens() throws {
+    private func launchSeeded(_ screen: String, _ extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoScreen", "profile"]
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoScreen", screen] + extra
         app.launch()
-        let patch = app.buttons["profile-patch"].firstMatch
-        XCTAssertTrue(patch.waitForExistence(timeout: 15), "no patch; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(patch.isHittable)
-        XCTAssertTrue(patch.label.hasPrefix("Black Phoebe, Citrus edition patch"), patch.label)
-        let name = app.staticTexts["Black Phoebe"].firstMatch
-        XCTAssertTrue(name.exists)
-        XCTAssertLessThan(patch.frame.minY, name.frame.minY, "the patch comes first")
+        return app
+    }
+
+    @MainActor
+    func testASightingWithYourPhotoSaysSoAndOneWithoutSaysItsAReferencePhotoAndOpens() throws {
+        let app = launchSeeded("sightings")
+        let finch = button(app, beginning: "House Finch")
+        XCTAssertTrue(finch.waitForExistence(timeout: 15), "no sighting row; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(finch.label.contains("Your glasses snapshot"), finch.label)
+        XCTAssertFalse(finch.label.contains("Reference photo"), finch.label)
+        let dove = button(app, beginning: "Mourning Dove")
+        XCTAssertTrue(dove.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(dove.label.contains("Reference photo"), "a reference photo never reads as yours: \(dove.label)")
+        XCTAssertFalse(dove.label.contains("Your"), dove.label)
+        // The picture takes no touches of its own: a tap on it opens the sighting.
+        dove.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5)).tap()
+        XCTAssertTrue(app.staticTexts["Mourning Dove"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(dove.isHittable, "the sighting opened")
+    }
+
+    @MainActor
+    func testASpeciesRowOpensTheBirdsPatches() throws {
+        let app = launchSeeded("species-list")
+        let row = button(app, beginning: "Mourning Dove")
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "no species row; screen: \(app.debugDescription.prefix(3000))")
+        row.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["board-patch"].waitForExistence(timeout: 10), "its patches are one tap on; screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    @MainActor
+    func testAnAtlasSearchForAFoundBirdOpensItsProfileWithItsPhotoAndAWordLinkToThePatch() throws {
+        let app = launchSeeded("guide", ["-autoQuery", "Finch"])
+        let row = button(app, beginning: "House Finch")
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "no result; screen: \(app.debugDescription.prefix(3000))")
+        row.tap()
+        let patch = app.buttons["profile-patch"]
+        XCTAssertTrue(patch.waitForExistence(timeout: 10), "no link; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(patch.label, "Your patch, Los Angeles")
         patch.tap()
-        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the patch didn't open; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 10), "the patch's page; screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    @MainActor
+    func testTheProfileLeadsWithItsPhotoThenItsStoryFoundOrNotAndAnUnfoundBirdHasNoLink() throws {
+        let app = launchSeeded("profile", ["-autoCardSpecies", "Branta canadensis"])
+        let credit = app.staticTexts["Reference photo"].firstMatch
+        XCTAssertTrue(credit.waitForExistence(timeout: 15), "no photo; screen: \(app.debugDescription.prefix(3000))")
+        let about = app.staticTexts["About this bird"].firstMatch
+        XCTAssertTrue(about.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertLessThan(credit.frame.minY, about.frame.minY)
+        XCTAssertFalse(app.buttons["profile-patch"].exists, "a bird you haven't found has no patch to go to")
+
+        let found = launchSeeded("profile")
+        XCTAssertTrue(found.buttons["profile-patch"].waitForExistence(timeout: 15), "screen: \(found.debugDescription.prefix(3000))")
+        XCTAssertTrue(found.staticTexts["Reference photo"].firstMatch.exists, "it's the same page")
+        XCTAssertLessThan(found.buttons["profile-patch"].frame.maxY, found.staticTexts["Reference photo"].firstMatch.frame.minY, "words, above its photo")
     }
 }

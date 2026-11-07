@@ -32,7 +32,7 @@ final class AtlasUITests: XCTestCase {
         XCTAssertEqual(row.label, "001, Canada Goose, still out there")
     }
 
-    /// One of the seeded birds, found by its number: patch rows say "Yours", and a tap on one opens the bird.
+    /// One of the seeded birds, found by its number: its row has a reference photo and says "Yours", and a tap on one opens the bird.
     @MainActor
     func testAFoundBirdsRowSaysItsYoursAndOpensTheBird() {
         let app = launch(seeded + ["-autoScreen", "set"])

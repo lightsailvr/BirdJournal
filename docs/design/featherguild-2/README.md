@@ -18,7 +18,7 @@ Guide 2.0 limited material to the objects you collect, and kept guide 1.0 as the
 - **Printed matter**: the paper card, the Atlas's plates and the share image. Tracked capitals stay on the paper card's edition line and the wordmark, and nowhere else.
 - **Plain iOS**: controls, navigation, and the lists that operate something, such as Settings and a Guild's Info sheet.
 
-One picture grammar runs through every screen: a patch means someone found this bird, a photo is reference, and a silhouette means it's still out there.
+One picture grammar: a patch is on the patches, a photo is how a bird looks, and a silhouette means it's still out there. The Collection's Patches and a patch's page have patches. A Sightings row has your own photo, else the Atlas's reference photo, captioned so it never reads as yours. A Species row always has the reference photo. The Atlas is a guidebook, with no patches anywhere in it (the maintainer, 2026-11-06, in `DECISIONS.md`). A run's rows, Listen's latest patches, a sighting's page, map pins, Guilds, Compare and goals still have patches, pending the maintainer.
 
 These bans stay, with this rule in force:
 
