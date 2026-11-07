@@ -177,9 +177,12 @@ struct SightingMap: UIViewRepresentable {
 private class FixedPictureView: MKAnnotationView {
     let picture = CALayer()
 
-    init(annotation: (any MKAnnotation)?, reuseIdentifier: String?, size: CGSize) {
+    /// The view's size, for good.
+    class func size(reuseIdentifier: String?) -> CGSize { .zero }
+
+    override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        frame = CGRect(origin: .zero, size: size)
+        frame = CGRect(origin: .zero, size: Self.size(reuseIdentifier: reuseIdentifier))
         canShowCallout = false
         isAccessibilityElement = true
         accessibilityTraits = .button
@@ -209,10 +212,14 @@ private final class PatchPinView: FixedPictureView {
 
     private var side: CGFloat { isFocus ? MapPatchThumbnail.focusSide : MapPatchThumbnail.side }
 
+    override class func size(reuseIdentifier: String?) -> CGSize {
+        let extent = reuseIdentifier == focusIdentifier ? MapPatchThumbnail.focusSide + 12 : 44
+        return CGSize(width: extent, height: extent)
+    }
+
     override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
         isFocus = reuseIdentifier == Self.focusIdentifier
-        let extent = isFocus ? MapPatchThumbnail.focusSide + 12 : 44
-        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier, size: CGSize(width: extent, height: extent))
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         // MapKit reads this as the view is given its annotation, and it never changes for a view of this identifier.
         clusteringIdentifier = isFocus ? nil : "sightings"
         collisionMode = isFocus ? .none : .circle
@@ -298,8 +305,10 @@ private final class PatchPinView: FixedPictureView {
 private final class PatchClusterView: FixedPictureView {
     private var loading: Task<Void, Never>?
 
+    override class func size(reuseIdentifier: String?) -> CGSize { MapPatchThumbnail.clusterSize }
+
     override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
-        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier, size: MapPatchThumbnail.clusterSize)
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         collisionMode = .circle
         displayPriority = .defaultHigh
         accessibilityIdentifier = "map-patch-cluster"
