@@ -46,8 +46,15 @@ import UIKit
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
+/// - `-hapticLog YES` lists the haptics played where a UI test can read them (`HapticLog`). `-resetLaunchSplash YES` forgets the
+///   splash has played, and `-launchSplashSeconds <n>` holds it that long, so a UI test can catch it; `-modeFadeSeconds <n>` slows
+///   the Collection's cross-fade between modes the same way (issue #150).
+/// - `-acknowledgmentSeconds <n>` keeps an add's toast and Undo up that long.
+/// - `-coverRoomSeconds <n>` holds the room under a board after coming back from a patch's page, for a flick to try (issue #150).
+/// - `-autoMapSpeciesPatches YES` with `-autoScreen map` goes on to the bird's patches in the map sheet's own stack (issue #150).
 /// - `-reduceMotion YES` makes the card flip switch faces and the stitch-in not happen, as with the system's Reduce
-///   Motion, which a UI test cannot turn on. `-voiceOverPath YES` skips the stitch-in as VoiceOver does (issue #135).
+///   Motion. The Lift doesn't read it: its cross-fade is the system's own, so it takes the real setting
+///   (`simctl spawn <udid> defaults write com.apple.Accessibility ReduceMotionEnabled -bool true`, then relaunch). `-voiceOverPath YES` skips the stitch-in as VoiceOver does (issue #135).
 /// - `-stitchInSeconds <n>` makes the stitch-in that long, so a UI test or a screenshot can catch it part way;
 ///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).
 /// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
@@ -83,6 +90,7 @@ struct DebugLaunch: ViewModifier {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
     @Environment(CircleStore.self) private var circles
+    @Environment(FindOutbox.self) private var findOutbox
     @Environment(GlassesConnection.self) private var connection
     @Environment(\.scenePhase) private var scenePhase
     @Binding var tab: RootView.Tab
@@ -214,6 +222,8 @@ struct DebugLaunch: ViewModifier {
                 let species = defaults.string(forKey: "autoCardSpecies")
                 let all = (try? context.fetch(Sighting.newestFirst())) ?? []
                 if let newest = all.first(where: { species == nil || $0.scientificName == species }) {
+                    // As an add would have, with the fake signed in and sharing. Never a real account's real find.
+                    if defaults.string(forKey: "fakeAccount") != nil { findOutbox.added(newest.identifier, isNewPatch: true) }
                     run.showRevealForScreenshot(of: newest, placement: CardCollection(sightings: all, sets: library.cardSets).placement(of: newest.identifier) ?? .uncharted)
                 }
             case "card", "card-back":

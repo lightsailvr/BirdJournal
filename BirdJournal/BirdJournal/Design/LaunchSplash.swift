@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// The moment after the launch screen: it starts as the launch screen (`UILaunchScreen` in the Info.plist, the paper
+/// The moment after the launch screen on the first launch only (issue #150, audit F15): later launches go straight to Listen,
+/// for someone reaching for the phone because a bird is calling. It starts as the launch screen (`UILaunchScreen` in the Info.plist, the paper
 /// colour with the `PerchedFinch` image, the patch and its shadow at 240 × 240 pt in the middle of the screen), sets the app's
 /// name in the serif under the bird, then fades away over the Listen tab, which is already built underneath. It takes
 /// no touches and hides from VoiceOver, so nothing waits on it.
@@ -17,12 +18,17 @@ struct LaunchSplash: View {
     private let systemScheme = Self.systemColorScheme
 
     static let birdSize = CGSize(width: 240, height: 240)
+    /// Remembers that it played.
+    static let shownKey = "launchSplashShown"
+
+    static func isDue(in defaults: UserDefaults = .standard) -> Bool {
+        !defaults.bool(forKey: shownKey)
+    }
 
     var body: some View {
         ZStack {
             Color.paper
-            Image("PerchedFinch")
-                .resizable()
+            art
                 .frame(width: Self.birdSize.width, height: Self.birdSize.height)
                 .overlay(alignment: .bottom) {
                     Text("Featherguild")
@@ -37,11 +43,27 @@ struct LaunchSplash: View {
         .environment(\.colorScheme, systemScheme ?? appScheme)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .accessibilityIdentifier("launch-splash")
         .task {
+            // From the start: a launch killed part way through has still shown it.
+            UserDefaults.standard.set(true, forKey: Self.shownKey)
             withAnimation(.easeOut(duration: Self.titleSeconds)) { showsTitle = true }
-            try? await Task.sleep(for: .milliseconds(1100))
+            try? await Task.sleep(for: holds)
             onFinished()
         }
+    }
+
+    /// The mascot's patch: the picture the launch screen shows too, so nothing moves between them.
+    private var art: some View {
+        Image("PerchedFinch").resizable()
+    }
+
+    private var holds: Duration {
+        #if DEBUG
+        let seconds = UserDefaults.standard.double(forKey: "launchSplashSeconds")
+        if seconds > 0 { return .seconds(seconds) }
+        #endif
+        return .milliseconds(1100)
     }
 
     /// How long the name takes to set. `-splashTitleSeconds <n>` in debug builds moves the splash's end against what's running

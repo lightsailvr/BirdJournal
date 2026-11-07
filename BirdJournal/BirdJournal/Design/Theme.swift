@@ -121,6 +121,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: JournalLayout.primaryActionHeight)
             .background(.tint.opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.45), in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 
@@ -146,6 +147,7 @@ struct OutlinedButtonStyle: ButtonStyle {
             .overlay(shape.strokeBorder(ink, lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.4)
             .contentShape(shape)
+            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 
@@ -176,6 +178,7 @@ struct RowPillStyle: ButtonStyle {
             .opacity(isEnabled ? (configuration.isPressed && isFilled ? 0.85 : 1) : 0.4)
             .padding(.vertical, 4)
             .contentShape(Rectangle())
+            .pressResponse(isPressed: configuration.isPressed)
     }
 }
 
@@ -344,6 +347,7 @@ struct Toast: View {
     var ticksFrom: String?
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var systemVoiceOver
+    @Environment(ListeningCoordinator.self) private var run: ListeningCoordinator?
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var ticked = false
 
@@ -385,10 +389,11 @@ struct Toast: View {
         .frame(maxWidth: typeSize.stacksRows ? .infinity : nil, alignment: .leading)
         .background(.regularMaterial, in: shape)
         .overlay(shape.strokeBorder(Color.rule, lineWidth: 1))
+        // It says one short thing for a few seconds: at the largest sizes it stops growing, or it takes the page from Stop and the birds.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.horizontal, JournalLayout.margin)
         .accessibilityElement(children: .combine)
-        // A light, optional haptic as the count changes: the system's haptics setting turns it off.
-        .sensoryFeedback(.impact(weight: .light), trigger: ticked)
+        .haptic(.stitchTick, trigger: ticked) { _, _ in Haptic.ticks(phoneRunHoldsSession: run?.phoneRunHoldsSession ?? false) }
         .task {
             guard ticksFrom != nil else { return }
             if !isStill {

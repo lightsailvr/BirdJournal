@@ -41,6 +41,9 @@ struct BirdJournalApp: App {
                 .error("Wearables.configure failed: \(error.localizedDescription)")
         }
         JournalFont.applyNavigationBarAppearance()
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "resetLaunchSplash") { UserDefaults.standard.removeObject(forKey: LaunchSplash.shownKey) }
+        #endif
         let connection = GlassesConnection()
         let album = Self.makeAlbum()
         let frames = Self.makeFrameStore()
@@ -318,7 +321,7 @@ struct BirdJournalApp: App {
 /// The window's content, with the two things at this level that change: the launch splash going, and the appearance from Settings.
 private struct AppSurface<Root: View>: View {
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
-    @State private var showingSplash = true
+    @State private var showingSplash = LaunchSplash.isDue()
     @ViewBuilder let root: (_ isUnderSplash: Bool) -> Root
 
     var body: some View {

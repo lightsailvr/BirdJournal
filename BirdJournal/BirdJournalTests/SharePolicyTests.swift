@@ -63,7 +63,7 @@ struct SharePolicyTests {
         choices.useSnapshot = false
         let shared = SharePolicy.content(for: Self.sighting, commonName: "Black Phoebe", reference: Self.photo(license: "CC BY-NC"), area: nil, choices: choices, locale: Self.english)
         #expect(shared.picture == .reference(Self.photo(license: "CC BY-NC")))
-        #expect(shared.pictureCaption == "Reference photo. Photo: A. Birder, CC BY-NC")
+        #expect(shared.pictureCaption == "Reference. Photo: A. Birder, CC BY-NC")
         #expect(shared.attribution == "Photo: © A. Birder, some rights reserved (CC BY-NC), via iNaturalist https://www.inaturalist.org/observations/1")
         #expect(SharePolicy.text(for: shared).hasSuffix("via iNaturalist https://www.inaturalist.org/observations/1"))
 
@@ -85,7 +85,7 @@ struct SharePolicyTests {
 
         #expect(SharePolicy.mayShare(photo))
         #expect(shared.picture == .reference(photo))
-        #expect(shared.pictureCaption == "Reference photo. Photo: A. Birder, CC BY-SA")
+        #expect(shared.pictureCaption == "Reference. Photo: A. Birder, CC BY-SA")
         #expect(shared.attribution == "Photo: © A. Birder, some rights reserved (CC BY-SA), via iNaturalist https://www.inaturalist.org/observations/1")
         #expect(photo.licenseURL == URL(string: "https://creativecommons.org/licenses/by-sa/4.0/"))
     }

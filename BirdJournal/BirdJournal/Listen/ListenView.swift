@@ -310,7 +310,7 @@ struct AudioSourceRow: View {
             .frame(minHeight: 60)
             .background(Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.journalPress)
         .disabled(!isEnabled)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(source.title), \(status)")

@@ -148,6 +148,13 @@ enum FindPolicy {
         signedIn && sharing == .automatic
     }
 
+    /// What the new-patch page says about where the find went: nothing unless sharing is on, the birder is signed in and in a
+    /// Guild. Names one or two Guilds and counts more.
+    static func sharedLine(sharing: Sharing, signedIn: Bool, guilds: [String]) -> String? {
+        guard publishesAutomatically(sharing: sharing, signedIn: signedIn), !guilds.isEmpty else { return nil }
+        return guilds.count > 2 ? "Shared with your \(guilds.count) Guilds" : "Shared with \(guilds.joined(separator: " and "))"
+    }
+
     /// The find to send, or nil when the birder is private.
     static func find(for input: Input, sharing: Sharing) -> Find? {
         guard sharing == .automatic else { return nil }

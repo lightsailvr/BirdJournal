@@ -68,7 +68,7 @@ struct CircleFeedSection: View {
                 }
             }
             if let reactionError {
-                InlineError(reactionError)
+                InlineError(reactionError, afterAction: true)
             }
             if feed.nextCursor != nil {
                 Button {
@@ -109,6 +109,8 @@ struct CircleFeedSection: View {
 struct ReactionBar: View {
     let item: FeedItem
     let react: (ReactionKind, Bool) -> Void
+    /// Taps on the reactions: the haptic's trigger. A reaction taken back says so too.
+    @State private var reacted = 0
 
     var body: some View {
         if item.isMine {
@@ -125,6 +127,7 @@ struct ReactionBar: View {
                 buttons(titled: true, symbols: false)
                 buttons(titled: false, symbols: true)
             }
+            .haptic(.reaction, trigger: reacted)
         }
     }
 
@@ -138,6 +141,7 @@ struct ReactionBar: View {
             ForEach(ReactionKind.allCases) { kind in
                 let count = item.reaction(kind)
                 Button {
+                    reacted += 1
                     react(kind, !count.mine)
                 } label: {
                     HStack(spacing: 4) {

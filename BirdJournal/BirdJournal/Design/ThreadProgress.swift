@@ -39,6 +39,11 @@ struct ThreadProgress: View {
     /// The stitches drawn: behind the value for as long as it's sewing towards it.
     @State private var shown: Double?
     @State private var isOnScreen = false
+    @Environment(ListeningCoordinator.self) private var run: ListeningCoordinator?
+    /// What the haptics follow as it sews: one tick a stitch, and the last stitch's success.
+    @State private var ticks = 0
+    @State private var finishes = 0
+    @State private var felt: Task<Void, Never>?
 
     /// The mock's 3 px thread at 1.34: 8 on and 3 off.
     static let height: CGFloat = 4
@@ -136,6 +141,9 @@ struct ThreadProgress: View {
             }
         }
         .frame(height: stitchHeight)
+        .haptic(.stitchTick, trigger: ticks) { _, _ in Haptic.ticks(phoneRunHoldsSession: run?.phoneRunHoldsSession ?? false) }
+        .haptic(.stitchDone, trigger: finishes)
+        .onDisappear { felt?.cancel() }
         .allowsHitTesting(false)
         .accessibilityElement()
         .accessibilityLabel(sentence)
@@ -147,7 +155,22 @@ struct ThreadProgress: View {
 
     private func sew(from start: Int, to end: Int) {
         guard end > start else { return }
-        withAnimation(.linear(duration: min(Double(end - start) * Self.secondsPerStitch, 1))) { shown = Double(end) }
+        let duration = min(Double(end - start) * Self.secondsPerStitch, 1)
+        withAnimation(.linear(duration: duration)) { shown = Double(end) }
+        // Birds being counted say so as they're sewn. A download's thread doesn't: it's creeping along by itself.
+        guard countsBirds else { return }
+        felt?.cancel()
+        felt = Task { @MainActor in
+            let each = Duration.seconds(duration / Double(end - start))
+            for _ in start..<(end - 1) {
+                try? await Task.sleep(for: each)
+                guard !Task.isCancelled else { return }
+                ticks += 1
+            }
+            try? await Task.sleep(for: each)
+            guard !Task.isCancelled else { return }
+            finishes += 1
+        }
     }
 
     @ViewBuilder

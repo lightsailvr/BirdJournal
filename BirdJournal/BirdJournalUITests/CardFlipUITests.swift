@@ -138,7 +138,7 @@ final class CardFlipUITests: XCTestCase {
     func testAnUnchartedPatchWithNoPackSaysSoPlainly() {
         let app = launch("cards")
         // The oldest seed: a Common Blackbird no pack describes, added with no location and no photo.
-        let boards = app.navigationBars["Collection"].buttons["Set"]
+        let boards = app.buttons["collection-board"]
         XCTAssertTrue(boards.waitForExistence(timeout: 15), "no board menu; screen: \(app.debugDescription.prefix(3000))")
         boards.tap()
         let uncharted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch

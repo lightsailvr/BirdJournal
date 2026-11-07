@@ -193,7 +193,7 @@ final class SewingUITests: XCTestCase {
         let skip = next.buttons["Skip the rest, 1 more"]
         XCTAssertTrue(skip.waitForExistence(timeout: 5), "no way to skip the rest; screen: \(next.debugDescription.prefix(4000))")
         XCTAssertTrue(next.buttons["Next patch"].exists)
-        XCTAssertFalse(next.buttons["See it in my collection"].exists, "the rest first")
+        XCTAssertFalse(next.buttons["revealed-patch"].exists, "the rest first")
         skip.tap()
         XCTAssertFalse(next.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 2), "the page closed")
         XCTAssertFalse(stitching.exists, "and the junco's never started")
@@ -215,7 +215,7 @@ final class SewingUITests: XCTestCase {
         nextPatch.tap()
         XCTAssertTrue(app.staticTexts["Your first Dark-eyed Junco in Los Angeles"].waitForExistence(timeout: 5), "no second patch; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(nextPatch.exists, "the last one")
-        XCTAssertTrue(app.buttons["See it in my collection"].exists, "the last one offers the collection")
+        XCTAssertTrue(app.buttons["revealed-patch"].exists, "the last one is the way to the collection")
         XCTAssertFalse(app.buttons["Skip the rest, 1 more"].exists)
         app.buttons["Done"].firstMatch.tap()
         XCTAssertFalse(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 2), "nothing more; screen: \(app.debugDescription.prefix(4000))")

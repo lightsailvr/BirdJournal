@@ -84,6 +84,11 @@ enum PatchText {
         "\(count) \(count == 1 ? "sighting" : "sightings")"
     }
 
+    /// The way to a patch's sightings: "All 3 sightings", or "1 sighting".
+    static func allSightings(_ count: Int) -> String {
+        count == 1 ? sightings(1) : "All \(sightings(count))"
+    }
+
     /// What's left of the lore after the card's excerpt: it opens below on scroll, without repeating it; nil when the
     /// excerpt took it all.
     static func restOfLore(_ lore: String) -> String? {

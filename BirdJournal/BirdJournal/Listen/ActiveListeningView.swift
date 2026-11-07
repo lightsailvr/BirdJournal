@@ -10,6 +10,7 @@ import SwiftUI
 struct ActiveListeningView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// For the summary's count of what's new and what you have.
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.scenePhase) private var scenePhase
@@ -119,7 +120,7 @@ struct ActiveListeningView: View {
             setHolding(.scroll, phase == .interacting || phase == .decelerating)
             #if DEBUG
             // `-fakeLeaveDuringFlick YES`: another tab while the list decelerates, quicker than a UI test can tap one.
-            if phase == .decelerating, UserDefaults.standard.bool(forKey: "fakeLeaveDuringFlick") { openCollection() }
+            if phase == .decelerating, UserDefaults.standard.bool(forKey: "fakeLeaveDuringFlick") { openCollection(nil) }
             #endif
         }
         .task(id: held.releaseAt) {
@@ -162,10 +163,14 @@ struct ActiveListeningView: View {
                     Button {
                         Task { await run.stop() }
                     } label: {
+                        // A compact pill, quieter than the rows; across the page only where its words need the room.
                         Label(run.state == .stopping ? "Stopping…" : "Stop listening", systemImage: "stop.fill")
                             .padding(.horizontal, 8)
+                            .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : nil)
                     }
                     .buttonStyle(.journalQuiet)
+                    // Its words wrap inside their shape rather than truncate, whatever a toast leaves of the page.
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
                     .disabled(run.state == .stopping || run.state == .starting)
                 } else {
