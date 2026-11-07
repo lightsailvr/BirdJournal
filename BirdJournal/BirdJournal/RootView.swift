@@ -128,6 +128,7 @@ struct RootView: View {
     @Environment(FindOutbox.self) private var findOutbox
     @Environment(CurrentPlace.self) private var place
     @Environment(PushCenter.self) private var pushes
+    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: Tab = .listen
     @State private var collection = CollectionState()
@@ -140,6 +141,29 @@ struct RootView: View {
     #endif
     /// The launch splash is still over this: a ceremony waits for it, rather than starting unseen.
     var isUnderSplash = false
+    /// A patch the widget opened (issue #150), cleared once shown.
+    @Binding var pendingPatch: CardCollection.Patch.Key?
+    /// No sheet is up for a run's review to take the place of.
+    @State private var isClearForReview = false
+
+    /// A sheet, alert or the like is up. There are many, in many views, and no one place that knows of them all but UIKit.
+    private static var isSomethingPresented: Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .contains { $0.rootViewController?.presentedViewController != nil }
+    }
+
+    /// The patch's page on the Collection tab, or the tab alone if the patch has been unpicked since the widget last drew. An
+    /// open run review goes first: its skipped birds are forgotten when it closes, so it isn't closed for them.
+    private func openPendingPatch() {
+        guard let key = pendingPatch, !run.isReviewing else { return }
+        pendingPatch = nil
+        collection.mode = .cards
+        journalPath = NavigationPath()
+        tab = .journal
+        if collectionStore.collection.patch(key: key) != nil { journalPath.append(Route.patch(key)) }
+    }
 
     var body: some View {
         TabView(selection: $tab) {
@@ -165,7 +189,7 @@ struct RootView: View {
                 .patchStack { guidePath.append($0) }
             }
             // Circles need an account; #88's switch keeps both out of release builds until in-app deletion ships. When #71
-            // turns it on in Release, give Release `CODE_SIGN_ENTITLEMENTS = BirdJournal.entitlements` too: the invite
+            // turns it on in Release, add what's in `BirdJournal.entitlements` to `BirdJournal-Release.entitlements`: the invite
             // links' associated domain is Debug-only until then, so a release build leaves them to the browser.
             if AccountSession.isEnabledInThisBuild {
                 SwiftUI.Tab("Guilds", systemImage: "person.3", value: Tab.circles) {
@@ -185,10 +209,21 @@ struct RootView: View {
         .haptic(.startStop, trigger: run.isRunGoing) { _, _ in !run.hasFailed }
         .haptic(.error, trigger: run.hasFailed) { _, failed in failed }
         .haptic(.error, trigger: run.failedActions)
+        // The end of a run, from whichever tab it finds the birder on (issue #150). On the Listen tab's own view it could only be
+        // presented with that tab showing: on another, SwiftUI gave up on it and the birds heard went with it. It waits for any
+        // sheet already up to close, since only one can be: over a bird's review or New Guild it would throw away what's in it.
+        .sheet(isPresented: Binding(get: { run.isReviewing && isClearForReview }, set: { if !$0 { run.isReviewing = false } })) {
+            RunReviewSheet()
+        }
+        .task(id: run.isReviewing) {
+            isClearForReview = false
+            guard run.isReviewing else { return }
+            while !Task.isCancelled, Self.isSomethingPresented { try? await Task.sleep(for: .milliseconds(300)) }
+            if !Task.isCancelled { isClearForReview = true }
+        }
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
-        // it's up this one waits: two pages would sew the patch twice, each with its own haptics. The sheet is the Listen tab's:
-        // on another tab, after Stop on the listening strip, it isn't up until the birder comes back.
-        .patchReveal(isCovered: run.isReviewing && tab == .listen)
+        // it's up this one waits: two pages would sew the patch twice, each with its own haptics.
+        .patchReveal(isCovered: run.isReviewing)
         // The accent follows the place (issue #150), over the reveal too; a set's page and a patch's page set their own.
         .tint(place.setID.map(PatchEdition.tint(setID:)) ?? .moss)
         // The patches a glasses run sewed: once it's over and the app is in front, which may be a launch or two later.
@@ -244,6 +279,8 @@ struct RootView: View {
         } message: {
             Text(PushCenter.explanation)
         }
+        .onChange(of: pendingPatch, initial: true) { openPendingPatch() }
+        .onChange(of: run.isReviewing) { openPendingPatch() }
         // An invite link (issue #61), from a cold start or while running: the join screen on the Circles tab.
         .onChange(of: circles.pendingInvite, initial: true) { _, token in
             guard let token, AccountSession.isEnabledInThisBuild else { return }

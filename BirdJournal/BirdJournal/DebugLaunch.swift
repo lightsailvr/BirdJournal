@@ -40,7 +40,9 @@ import UIKit
 ///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
 ///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
 ///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
-///   show those refusals).
+///   show those refusals). `recap` ends a phone run on its recap, with `-autoRecapAdd YES` after adding the first bird the packs
+///   describe. `-autoRunStopAfter <seconds>` runs a phone run behind whatever else is opened, and stops it then, as Stop on the Lock
+///   Screen would. `glance` draws the Live Activity's and the widget's views in the app, since a screenshot can't reach them all.
 /// - `-autoDownloadPack <id>` (with `-packIndexURL <url>`) opens the packs and downloads that pack.
 /// - `-collectionIntroShown NO` shows the one-time "your collection so far" moment on every launch (the argument
 ///   domain overrides the remembered flag); `YES` keeps it away.
@@ -98,13 +100,26 @@ struct DebugLaunch: ViewModifier {
     @Binding var guidePath: NavigationPath
     @Binding var circlesPath: NavigationPath
     @Binding var showingDeveloper: Bool
+    @State private var showingGlance = false
 
     func body(content: Content) -> some View {
-        content.onChange(of: scenePhase) { _, phase in
+        content
+        .fullScreenCover(isPresented: $showingGlance) { GlancePreview() }
+        .onChange(of: scenePhase) { _, phase in
             if phase == .background, UserDefaults.standard.bool(forKey: "autoLensBackInBackground") { connection.injectMockInput(.back) }
         }
         .task {
             let defaults = UserDefaults.standard
+            let stopAfter = defaults.double(forKey: "autoRunStopAfter")
+            if stopAfter > 0 {
+                Task {
+                    run.source = .phone
+                    run.fakeStack = FakeRunBirds.stack
+                    await run.start()
+                    try? await Task.sleep(for: .seconds(stopAfter))
+                    await run.stop()
+                }
+            }
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
@@ -162,6 +177,21 @@ struct DebugLaunch: ViewModifier {
                     }
                     run.reviewing = run.candidates.first { library.species(scientificName: $0.species.scientificName) != nil } ?? run.candidates.first
                 }
+            case "recap":
+                // A phone run that ends on its recap (issue #150): the first bird the packs describe added, then Stop.
+                tab = .listen
+                run.source = .phone
+                await run.start()
+                for _ in 0..<240 where !run.candidates.contains(where: { library.species(scientificName: $0.species.scientificName) != nil }) {
+                    try? await Task.sleep(for: .milliseconds(250))
+                }
+                if defaults.bool(forKey: "autoRecapAdd"), let candidate = run.candidates.first(where: { library.species(scientificName: $0.species.scientificName) != nil }) {
+                    await run.add(candidate)
+                    run.dismissReveal()
+                }
+                await run.stop()
+            case "glance":
+                showingGlance = true
             case "glasses-run":
                 tab = .listen
                 connection.pairMockGlasses()

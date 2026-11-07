@@ -13,5 +13,9 @@
 		<string>applinks:featherguild.matthewcelia.com</string>
 		<string>applinks:birdquest.matthewcelia.com</string>
 	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.matthewcelia.mybirdjournal</string>
+	</array>
 </dict>
 </plist>
