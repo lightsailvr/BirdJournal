@@ -137,8 +137,8 @@ struct PackLibraryTests {
         #expect(library.bundledUpdate == nil)
     }
 
-    @Test("older and equal downloads cannot replace the bundle and are removed on launch", arguments: [-1, 0])
-    func supersededBundledDownload(versionDifference: Int) throws {
+    @Test("older and equal downloads cannot replace the bundle on synchronous or deferred launch", arguments: [-1, 0], [false, true])
+    func supersededBundledDownload(versionDifference: Int, deferred: Bool) async throws {
         let root = try Fixtures.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: root) }
         let bundled = try SpeciesPack.bundled()
@@ -151,7 +151,8 @@ struct PackLibraryTests {
         _ = try storage.install(zip: other, as: Fixtures.descriptor(for: other, version: 1))
         #expect(storage.installed().count == 2)
 
-        let library = PackLibrary(bundled: bundled, storage: storage)
+        let library = PackLibrary(bundled: deferred ? nil : bundled, storage: storage, deferred: deferred)
+        if deferred { await library.loadForLaunch() }
 
         #expect(library.bundledUpdate == nil)
         #expect(library.packs.first?.directory == bundled.directory)
