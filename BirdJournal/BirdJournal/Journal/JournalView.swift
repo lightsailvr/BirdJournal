@@ -32,6 +32,9 @@ struct JournalView: View {
     /// While a mode's saved offset is being restored, the scroll view's reports are not saved over it.
     @State private var restoring = false
     @AccessibilityFocusState private var magnifierHasFocus: Bool
+    /// The keyboard's on its way down. At a board's foot that pulls the offset back just after the restore has saved it, so the wrong
+    /// place would be remembered: the same room a patch's page gets holds it until the keyboard's gone.
+    @State private var isClosingSearch = false
     /// The restore under way.
     @State private var settling: Task<Void, Never>?
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
@@ -118,7 +121,7 @@ struct JournalView: View {
                 .onChange(of: isCovered) { _, covered in
                     if covered { stopRestoring() }
                 }
-                .keepsItsFootUnderAPage(isCovered: isCovered)
+                .keepsItsFootUnderAPage(isCovered: isCovered || isClosingSearch)
                 .onChange(of: state.query.isEmpty) { _, isEmpty in
                     // Results start at their top, whatever the board's offset was: there, a short list's patches sit above the bar until
                     // it's scrolled. Clearing the words goes back to where the mode was.
@@ -308,7 +311,9 @@ struct JournalView: View {
             ForEach(groups, id: \.board) { group in
                 SectionTitle(boardTitle(group.board), top: 10, onBoard: true)
                     .padding(.bottom, 10)
+                // A new grid for new results: the old one keeps its range from the old offset, and at the largest text stayed blank.
                 PatchBoard(patches: group.patches)
+                    .id(group.patches.map(\.id))
             }
         }
     }
@@ -344,6 +349,11 @@ struct JournalView: View {
 
     /// Closes the search from whatever state it's in: the field, the keyboard and the words all go, and the board goes back to where it was.
     private func endSearch() {
+        isClosingSearch = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(600))
+            isClosingSearch = false
+        }
         let before = state.offsetsBeforeSearch
         state.offsetsBeforeSearch = nil
         state.searchWantsFocus = false

@@ -377,37 +377,30 @@ final class FeelUITests: XCTestCase {
     }
 
     /// Under the system's Reduce Motion a patch's page cross-fades both ways. Animations are slowed so the way can be sampled.
+    /// Under the system's Reduce Motion a patch's page cross-fades both ways. Animations are slowed, the app opens the page and goes back
+    /// by itself (a tap waits for the app to settle, so a test that taps sees only the ends), and the screen is read all the while.
     @MainActor
     func testUnderReduceMotionAPatchPageCrossFadesWithNothingMoving() throws {
+        executionTimeAllowance = 300
         try setSystemReduceMotion(true)
         addTeardownBlock { [self] in try? setSystemReduceMotion(false) }
         Thread.sleep(forTimeInterval: 1)
         XCTAssertTrue(UIAccessibility.isReduceMotionEnabled, "the setting didn't take")
-        let app = board(["-UIAnimationDragCoefficient", "20"])
-        let phoebe = tile(app, "Black Phoebe")
-        XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
-        Thread.sleep(forTimeInterval: 3)
-        let boardShown = thumbnail(of: app.screenshot())
-        // A tap waits for the app to settle for as long as it likes, so a try can miss the way there altogether. It has to be seen part
-        // way at least once, and whenever it's seen, it's only ever a mix.
-        var opened = 0
-        for _ in 0..<4 where opened == 0 {
-            phoebe.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
-            var opening: [[Double]] = []
-            for _ in 0..<14 { opening.append(thumbnail(of: app.screenshot())) }
-            XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 20))
-            Thread.sleep(forTimeInterval: 14)
-            let pageShown = thumbnail(of: app.screenshot())
-            opened = assertCrossFade(from: boardShown, to: pageShown, samples: opening)
-
-            app.navigationBars.buttons.element(boundBy: 0).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-            var closing: [[Double]] = []
-            for _ in 0..<14 { closing.append(thumbnail(of: app.screenshot())) }
-            XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
-            Thread.sleep(forTimeInterval: 14)
-            assertCrossFade(from: pageShown, to: thumbnail(of: app.screenshot()), samples: closing)
+        let app = board(["-UIAnimationDragCoefficient", "10", "-autoCardSpecies", "Sayornis nigricans", "-autoLiftAfter", "12", "-autoLiftBackAfter", "14"])
+        XCTAssertTrue(tile(app, "Black Phoebe").waitForExistence(timeout: 10))
+        // Read until the page has come and gone: about 12 s to its opening and 14 s more to going back.
+        var samples: [(at: TimeInterval, pixels: [Double])] = []
+        let start = Date.now
+        while Date.now.timeIntervalSince(start) < 40 {
+            samples.append((Date.now.timeIntervalSince(start), thumbnail(of: XCUIScreen.main.screenshot())))
         }
-        XCTAssertGreaterThan(opened, 0, "never caught part way, so this proved nothing")
+        let boardShown = try XCTUnwrap(samples.first).pixels
+        let pageShown = try XCTUnwrap(samples.min { abs($0.at - 22) < abs($1.at - 22) }).pixels
+        let backShown = try XCTUnwrap(samples.last).pixels
+        let opening = samples.filter { $0.at < 22 }.map(\.pixels)
+        let closing = samples.filter { $0.at > 22 }.map(\.pixels)
+        XCTAssertGreaterThan(assertCrossFade(from: boardShown, to: pageShown, samples: opening), 0, "never caught opening part way")
+        XCTAssertGreaterThan(assertCrossFade(from: pageShown, to: backShown, samples: closing), 0, "never caught going back part way")
     }
 
     // MARK: - Splash
@@ -554,8 +547,12 @@ final class FeelUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 1)
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
         waitForHaptic("stitchDone", app)
+        Thread.sleep(forTimeInterval: 2)
+        // Each thread that sews ticks and then succeeds: the page can have more than one goal sewing.
         let log = hapticLog(app)
-        XCTAssertLessThan(log.lastIndex(of: "stitchTick") ?? -1, log.firstIndex(of: "stitchDone") ?? 0, "\(log)")
+        XCTAssertEqual(log.first, "stitchTick", "\(log)")
+        XCTAssertEqual(log.last, "stitchDone", "\(log)")
+        XCTAssertFalse(zip(log, log.dropFirst()).contains { $0 == "stitchDone" && $1 == "stitchDone" }, "a success with no stitches before it: \(log)")
     }
 
     /// The mock's compact pill, and across the page once its words need the room.

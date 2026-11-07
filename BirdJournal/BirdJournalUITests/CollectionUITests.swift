@@ -284,6 +284,9 @@ final class CollectionUITests: XCTestCase {
         }
         let patch = app.buttons["revealed-patch"]
         XCTAssertTrue(patch.waitForExistence(timeout: 40), "no reveal: \(app.debugDescription.prefix(3000))")
+        // Once it's finished arriving: a tap while it's being presented can do nothing.
+        for _ in 0..<20 where !patch.isHittable { Thread.sleep(forTimeInterval: 0.25) }
+        XCTAssertTrue(patch.isHittable)
         patch.tap()
         Thread.sleep(forTimeInterval: 2)
         XCTAssertFalse(patch.exists, "the page closed")
