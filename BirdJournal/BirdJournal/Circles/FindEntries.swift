@@ -8,6 +8,14 @@ struct FindEntry: Equatable, Identifiable, Sendable {
 
     var id: String { item.id }
 
+    /// This find, under what the packs or BirdNET call its bird. The finder's phone's words stay only for a bird nothing here names:
+    /// those sit beside the finder's name, where they can be reported.
+    func named(by names: BirdNames) -> FindEntry {
+        var entry = self
+        entry.item.commonName = names[item.scientificName] ?? item.commonName
+        return entry
+    }
+
     /// The finds of several Guilds' pages as one list, newest first, one entry per owner and sighting. The server orders a feed
     /// by time, then owner and sighting, so this does too. The blocked are left out, wherever the block was made.
     ///

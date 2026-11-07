@@ -130,7 +130,8 @@ struct CompareBirdsView: View {
     let friendID: String
     let friendName: String
     @State private var error: String?
-    /// Read once as the screen opens, not again on the way back from a bird it opened: pull to refresh reads again.
+    /// Read once as the screen opens, not again on the way back from a bird it opened: pull to refresh reads again. Except with nothing
+    /// to draw: a Guild the two shared has gone, say, while this stayed open behind another tab.
     @State private var hasRead = false
 
     /// What was last read of the friend, drawn at once and refreshed in place.
@@ -155,8 +156,8 @@ struct CompareBirdsView: View {
         .holdsPatchLight()
         .navigationTitle("You and \(firstName)")
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            guard !hasRead else { return }
+        .task(id: friend == nil) {
+            guard !hasRead || friend == nil else { return }
             hasRead = true
             await load()
         }

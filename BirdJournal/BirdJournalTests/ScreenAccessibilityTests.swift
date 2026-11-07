@@ -291,6 +291,52 @@ struct ScreenAccessibilityTests {
         #expect(!labels.contains { $0.contains("About this bird") }, "\(labels)")
     }
 
+    @Test("A real bird with a hand-built name reads as the bird, on a feed's row and its page (issue #150)")
+    func findHandBuiltNameOnARealBird() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        let sighting = "00000000-0000-4000-8000-000000000052"
+        client.add(FeedItem(
+            sightingID: sighting, speciesID: "x", scientificName: "Haemorhous mexicanus", commonName: "Call me 555-1234", method: .seen, place: nil,
+            foundAt: .now, newPatch: true, rarity: .common, art: nil, owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"),
+            circleFirst: false, isMine: false, edition: "us-ca-la"
+        ), to: sunday.id)
+        await harness.circles.loadFeed(circleID: sunday.id)
+        let row = try await Self.walk(CirclePageView(id: sunday.id), harness: harness) { labels in
+            labels.contains { $0.contains("House Finch") }
+        }
+        #expect(row.contains { $0.contains("House Finch") }, "\(row)")
+        #expect(!row.contains { $0.contains("555") }, "\(row)")
+        let page = try await Self.walk(FindPageView(route: FindRoute(itemID: "maya/\(sighting)")), harness: harness) { labels in
+            labels.contains("House Finch")
+        }
+        #expect(page.contains("House Finch"), "\(page)")
+        #expect(!page.contains { $0.contains("555") }, "\(page)")
+    }
+
+    @Test("A friend dropped while their Compare stays open is read again, and it says they've gone rather than waiting (issue #150)")
+    func compareDroppedWhileOpen() async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let store = harness.circles
+        let client = try #require(store.client as? FakeCircleClient)
+        let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
+        try await store.loadDetail(id: sunday.id)
+        var hasLeft = false
+        let labels = try await Self.walk(CompareBirdsView(friendID: "maya", friendName: "Maya Ortiz"), harness: harness) { labels in
+            if !hasLeft, labels.contains("Maya has these. Go find them.") {
+                hasLeft = true
+                Task { try? await store.leave(circleID: sunday.id) }
+            }
+            return labels.contains("Try again")
+        }
+        #expect(hasLeft)
+        #expect(labels.contains("Try again"), "\(labels)")
+        #expect(client.compareLog.filter { $0 == "maya" }.count == 2, "\(client.compareLog)")
+    }
+
     @Test("A hand-built name never reaches Compare's screen (issue #150)")
     func compareHostileName() async throws {
         let harness = try Harness()
