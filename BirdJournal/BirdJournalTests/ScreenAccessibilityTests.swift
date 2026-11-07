@@ -240,13 +240,18 @@ struct ScreenAccessibilityTests {
     @Test("A set's row names the friends who have a bird you don't (issue #150)")
     func setFaces() async throws {
         let harness = try Harness()
-        let set = try #require(harness.library.sets.first)
-        let labels = try await Self.walk(SetView(id: set.id), harness: harness) { labels in
-            labels.contains { $0.contains("has this bird") }
+        let client = try #require(harness.circles.client as? FakeCircleClient)
+        let goose = FriendBirds.Species(speciesID: "Branta canadensis_Canada Goose", scientificName: "Branta canadensis", commonName: "Canada Goose", method: .seen)
+        let egyptian = FriendBirds.Species(speciesID: "Alopochen aegyptiaca_Egyptian Goose", scientificName: "Alopochen aegyptiaca", commonName: "Egyptian Goose", method: .seen)
+        client.setMoreCompared([goose, egyptian], friendID: "maya")
+        client.setMoreCompared([egyptian], friendID: "jo")
+        let labels = try await Self.walk(SetView(id: PackIndex.bundledPackID), harness: harness) { labels in
+            labels.contains { $0.contains("have this bird") }
         }
         Self.expectClean(labels, screen: "Set's friends")
-        #expect(labels.contains { $0.contains("Acorn Woodpecker") && $0.hasSuffix("still out there, Maya Ortiz has this bird") }, "\(labels)")
-        #expect(!labels.contains { $0.contains("House Finch") && $0.contains("has this bird") }, "you have this one: \(labels)")
+        #expect(labels.contains("001, Canada Goose, still out there, Maya Ortiz has this bird"), "\(labels)")
+        #expect(labels.contains("002, Egyptian Goose, still out there, Jo Park and Maya Ortiz have this bird"), "\(labels)")
+        #expect(labels.contains("021, Anna's Hummingbird, still out there"), "Jo has it, and so do you, Uncharted: by species, no face: \(labels)")
     }
 
     @Test("A run's rows: a new patch waiting in words, your patch and its count, and each row's one button", arguments: sizes)

@@ -610,8 +610,8 @@ final class FakeCircleClient: CircleClient {
                 compared("Melanerpes formicivorus_Acorn Woodpecker", .heard), compared("Sialia mexicana_Western Bluebird", .seen),
                 compared("Ardea alba_Great Egret", .seen), compared("Haemorhous mexicanus_House Finch", .seen),
             ],
-            "jo": [compared("Anas platyrhynchos_Mallard", .seen), compared("Buteo jamaicensis_Red-tailed Hawk", .heard)],
-            "sam": [compared("Buteo jamaicensis_Red-tailed Hawk", .seen)],
+            "jo": [compared("Branta canadensis_Canada Goose", .seen), compared("Alopochen aegyptiaca_Egyptian Goose", .seen), compared("Cairina moschata_Muscovy Duck", .heard)],
+            "sam": [compared("Cairina moschata_Muscovy Duck", .seen)],
         ]
     }
 

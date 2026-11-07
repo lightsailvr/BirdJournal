@@ -125,20 +125,19 @@ final class GuildDataUITests: XCTestCase {
     @MainActor
     func testASetsRowShowsFriendsOnBirdsYouHaventFound() {
         let app = launch(["-autoScreen", "set", "-autoScrollTo", "set-rows"])
-        let silhouette = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Red-tailed Hawk'")).firstMatch
-        XCTAssertTrue(silhouette.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        let named = NSPredicate(format: "label CONTAINS 'Jo Park and Sam Okafor have this bird'")
-        let hawk = app.buttons.matching(named).firstMatch
-        XCTAssertTrue(hawk.waitForExistence(timeout: 10), "faces land as the friends are read; screen: \(app.debugDescription.prefix(3000))")
+        let duck = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Jo Park and Sam Okafor have this bird'")).firstMatch
+        XCTAssertTrue(duck.waitForExistence(timeout: 20), "faces land as the friends are read; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(duck.label.contains("Muscovy Duck"), duck.label)
 
-        // Maya has the House Finch, and so do you: no face.
-        let finch = app.buttons.matching(NSPredicate(format: "label CONTAINS 'House Finch'")).firstMatch
-        XCTAssertTrue(finch.exists)
-        XCTAssertFalse(finch.label.contains("Maya"), finch.label)
+        // Jo has the Canada Goose, and so do you: no face.
+        let goose = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Canada Goose'")).firstMatch
+        XCTAssertTrue(goose.exists)
+        XCTAssertFalse(goose.label.contains("Jo Park"), goose.label)
 
         // The row still opens the bird, faces and all.
-        hawk.tap()
-        XCTAssertTrue(app.staticTexts["Red-tailed Hawk"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledTo(duck))
+        duck.tap()
+        XCTAssertTrue(app.staticTexts["Muscovy Duck"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
@@ -153,27 +152,33 @@ final class GuildDataUITests: XCTestCase {
     @MainActor
     func testBlockingAFriendTakesTheirFaceOffTheSet() {
         let app = launch(["-autoScreen", "circle-info"])
-        // Jo, who shows on the hawk's row.
-        let jo = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Jo Park'")).firstMatch
-        XCTAssertTrue(jo.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.scrolledInGuildInfo(to: jo), "screen: \(app.debugDescription.prefix(3000))")
+        // Jo, who shows on the duck's row.
+        XCTAssertTrue(app.navigationBars.buttons["Done"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        let list = app.collectionViews.firstMatch
+        let members = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Members'")).firstMatch
+        for _ in 0..<24 where !(members.exists && members.isHittable) { list.swipeUp() }
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Jo Park'")).firstMatch
+        let jo = row.exists ? row : app.staticTexts["Jo Park"].firstMatch
+        for _ in 0..<4 where !jo.isHittable { list.swipeUp() }
+        XCTAssertTrue(jo.waitForExistence(timeout: 5), "no Jo; screen: \(app.debugDescription.prefix(3000))")
         jo.press(forDuration: 1.0)
-        let block = app.buttons["Block"].firstMatch
-        XCTAssertTrue(block.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        let block = app.buttons["Block Jo Park…"]
+        XCTAssertTrue(block.waitForExistence(timeout: 5), "no Block; screen: \(app.debugDescription.prefix(3000))")
         block.tap()
-        let confirm = app.buttons["Block Jo Park"].firstMatch
+        let confirm = (app.sheets.firstMatch.exists ? app.sheets.firstMatch : app.alerts.firstMatch).buttons["Block Jo Park"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         confirm.tap()
         app.navigationBars.buttons["Done"].firstMatch.tap()
 
         app.tabBars.buttons["Atlas"].tap()
         // From a set's plate.
-        let plate = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Los Angeles'")).firstMatch
+        let plate = element(app, "set-plate")
         XCTAssertTrue(plate.waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
         plate.tap()
-        let hawk = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Sam Okafor has this bird'")).firstMatch
-        XCTAssertTrue(hawk.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertFalse(hawk.label.contains("Jo Park"), hawk.label)
+        let duck = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Sam Okafor has this bird'")).firstMatch
+        XCTAssertTrue(duck.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(duck.label.contains("Muscovy Duck"), duck.label)
+        XCTAssertFalse(duck.label.contains("Jo Park"), duck.label)
     }
 }
 #endif
