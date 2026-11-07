@@ -151,14 +151,25 @@ struct BirdComparisonTests {
 
     @Test("the boards: theirs you don't have yet, what you both have, only yours, each with the patch it shows")
     func boards() throws {
+        let griffith = Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
+        let elsewhere = Coordinate(latitude: 40, longitude: 40, accuracy: 10)
+        let square = [[[CardSet.Point(longitude: 0, latitude: 0), CardSet.Point(longitude: 1, latitude: 0), CardSet.Point(longitude: 1, latitude: 1), CardSet.Point(longitude: 0, latitude: 1), CardSet.Point(longitude: 0, latitude: 0)]]]
+        let losAngeles = CardSet(id: "us-ca-la", name: "Los Angeles", edition: "Citrus", species: ["Sayornis nigricans", "Zenaida macroura"], regions: [CardSet.Region(name: "la", polygons: square)])
+        let entry = { (label: String, at: TimeInterval, place: Coordinate) in
+            CardCollection.Entry(identifier: UUID(), speciesID: label, confirmedAt: Date(timeIntervalSince1970: at), location: place)
+        }
         let collection = CardCollection(
             [
-                .init(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: Date(timeIntervalSince1970: 200), soundConfidence: 0.8, source: .phone),
-                .init(speciesID: "Calypte anna_Anna's Hummingbird", confirmedAt: Date(timeIntervalSince1970: 100), soundConfidence: 0.8, source: .phone),
-            ]
+                entry("Sayornis nigricans_Black Phoebe", 200, griffith),
+                entry("Calypte anna_Anna's Hummingbird", 100, elsewhere),
+                // Sewn in Los Angeles first, then Uncharted: the first patch is the one shown.
+                entry("Zenaida macroura_Mourning Dove", 100, griffith),
+                entry("Zenaida macroura_Mourning Dove", 900, elsewhere),
+            ],
+            sets: [losAngeles]
         )
         let comparison = BirdComparison(
-            mine: [("Sayornis nigricans_Black Phoebe", .seen), ("Calypte anna_Anna's Hummingbird", .heard)],
+            mine: [("Sayornis nigricans_Black Phoebe", .seen), ("Calypte anna_Anna's Hummingbird", .heard), ("Zenaida macroura_Mourning Dove", .heard)],
             theirs: [
                 .init(speciesID: "a", scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker", method: .heard, editions: ["us-ca-sd", "us-ca-la"]),
                 .init(speciesID: "b", scientificName: "Sayornis nigricans", commonName: "Black Phoebe", method: .heard, editions: ["us-ca-la"]),
@@ -172,12 +183,13 @@ struct BirdComparisonTests {
         #expect(comparison.onlyTheirs.first { $0.commonName == "Western Bluebird" }?.edition == nil, "no edition from the server: the blank with its tag")
         #expect(comparison.onlyTheirs.first { $0.commonName == "Great Egret" }?.edition == "made-up", "PatchEdition draws an unknown set as a plain blank")
         #expect(comparison.both.map(\.edition) == ["us-ca-la"], "what you both have shows the friend's")
-        #expect(comparison.onlyMine.map(\.commonName) == ["Anna's Hummingbird"])
-        #expect(comparison.onlyMine.first?.edition == nil, "yours, here Uncharted: no set was given")
+        #expect(comparison.onlyMine.map(\.commonName) == ["Anna's Hummingbird", "Mourning Dove"])
+        #expect(comparison.onlyMine.map(\.edition) == [nil, "us-ca-la"], "your own, the earliest sewn, or Uncharted's blank")
         // Where each goes.
         #expect(woodpecker.route == .species(scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker"))
         #expect(comparison.both.first?.route == .species(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"))
-        let onlyMine = try #require(comparison.onlyMine.first)
+        let onlyMine = try #require(comparison.onlyMine.last)
+        #expect(onlyMine.myPatch == CardCollection.Patch.Key(speciesID: "Zenaida macroura_Mourning Dove", setID: "us-ca-la"))
         #expect(onlyMine.route == .patch(try #require(onlyMine.myPatch), from: .compare))
     }
 

@@ -85,25 +85,31 @@ struct PatchTile: View {
     /// The bird's name, for the blank's paper tag.
     let tag: String
     let name: String
-    let line: String
+    let line: String?
     /// What VoiceOver reads: the tile is one element.
     let spoken: String
     /// The tile a page grows out of: only the patch, not its words.
     var lift: PatchLiftID? = nil
+    /// How wide the patch may be, in a column that's wide enough.
+    var side: CGFloat = 124
+    /// A Guild's boards are few patches and set their words larger than the Collection's.
+    var isLarge = false
 
     var body: some View {
         VStack(spacing: 6) {
             PatchView(state: state, edition: edition, tag: tag)
                 // One column at accessibility sizes: the patch grows with its words.
-                .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : 124)
+                .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : side)
                 .patchLiftSource(lift)
             VStack(spacing: 2) {
                 Text(name)
-                    .font(PatchFont.tileName)
+                    .font(isLarge ? PatchFont.boardName : PatchFont.tileName)
                     .foregroundStyle(Color.ink)
-                Text(line)
-                    .font(PatchFont.tileLine)
-                    .foregroundStyle(Color.ink)
+                if let line {
+                    Text(line)
+                        .font(isLarge ? PatchFont.boardLine : PatchFont.tileLine)
+                        .foregroundStyle(Color.ink)
+                }
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -120,6 +126,9 @@ struct PatchTile: View {
 enum PatchFont {
     static let tileName = Font.system(.footnote, design: .serif, weight: .semibold)
     static let tileLine = Font.caption2
+    /// On a Guild's boards (the reference's Compare, at 1.34).
+    static let boardName = Font.system(.subheadline, design: .serif, weight: .semibold)
+    static let boardLine = Font.footnote
     /// The bird's name under its patch, about 28 pt (guide page 16: 24–28).
     static let pageName = Font.system(.title, design: .serif, weight: .semibold)
     /// The count on the paper card, large.

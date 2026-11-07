@@ -188,13 +188,13 @@ struct CompareBirdsView: View {
         if !rows.isEmpty {
             SectionTitle(title, size: isLead ? .lead : .section, top: isLead ? 18 : 26, onBoard: true)
                 .id(id)
-            PatchTiles(tiles: rows.map(tile), side: isLead ? 97 : 79)
+            BoardTiles(tiles: rows.map(tile), side: isLead ? 97 : 79)
                 .padding(.top, 10)
         }
     }
 
-    private func tile(_ row: BirdComparison.Row) -> PatchTile {
-        PatchTile(
+    private func tile(_ row: BirdComparison.Row) -> BoardTile {
+        BoardTile(
             id: row.scientificName, scientificName: row.scientificName, setID: row.edition, name: row.commonName,
             caption: BirdComparison.caption(row, friend: firstName),
             spoken: "\(row.commonName). You: \(BirdComparison.word(row.mine)). \(firstName): \(BirdComparison.word(row.theirs)).",
@@ -214,14 +214,14 @@ struct CompareBirdsView: View {
     }
 }
 
-/// One patch on a board, as the reference draws them: the patch, its name, and a line under it, in an edition that may be anyone's.
-struct PatchTile: Identifiable, Equatable {
+/// One patch on a Guild's board: a bird in an edition that may be anyone's.
+struct BoardTile: Identifiable, Equatable {
     let id: String
     let scientificName: String
     /// The patch's edition. Nil, or one the phone has no painting in, is the blank; it's never drawn with another edition's.
     let setID: String?
-    /// Under the patch and on the blank's tag. Nil for a bird nothing trustworthy names, which is a bare blank.
-    let name: String?
+    /// Under the patch, and on the blank's tag.
+    let name: String
     let caption: String?
     let spoken: String
     let hint: String?
@@ -232,11 +232,13 @@ struct PatchTile: Identifiable, Equatable {
     var lift: PatchLiftID? = nil
 }
 
-/// Patches in threes, on felt, with what's on them under them. It builds only the rows near the screen, however long the board.
-struct PatchTiles: View {
+/// Patches in threes on felt, with their words under them, as the reference draws them. It builds only the rows near the screen,
+/// however long the board.
+struct BoardTiles: View {
     @Environment(\.dynamicTypeSize) private var typeSize
-    let tiles: [PatchTile]
-    /// The patch's side at the default text size.
+    @Environment(PackLibrary.self) private var library
+    let tiles: [BoardTile]
+    /// How wide a patch may be.
     let side: CGFloat
 
     private var columns: Int {
@@ -246,74 +248,21 @@ struct PatchTiles: View {
 
     var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8, alignment: .top), count: columns), alignment: .leading, spacing: 18) {
-            ForEach(tiles) { PatchTileView(tile: $0, side: side) }
-        }
-    }
-}
-
-private struct PatchTileView: View {
-    let tile: PatchTile
-    /// The patch's side at the default text size.
-    let side: CGFloat
-    @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
-
-    var body: some View {
-        if let route = tile.route {
-            NavigationLink(value: route) { label }
-                .buttonStyle(.patchLift)
-                .accessibilityHint(tile.hint ?? "")
-                .accessibilityIdentifier(tile.identifier)
-        } else {
-            label
-                .accessibilityIdentifier(tile.identifier)
-        }
-    }
-
-    private var label: some View {
-        VStack(spacing: 4) {
-            EditionPatch(scientificName: tile.scientificName, setID: tile.setID, tag: tile.name)
-                .frame(maxWidth: min(side * scale, 170))
-                .patchLiftSource(tile.lift)
-            if let name = tile.name {
-                Text(name)
-                    .font(JournalFont.rowTitle)
-                    .foregroundStyle(Color.ink)
-                    .boardLabel()
+            ForEach(tiles) { tile in
+                let picture = PatchTile(
+                    state: library.patchArtState(scientificName: tile.scientificName, setID: tile.setID), edition: PatchEdition.of(setID: tile.setID),
+                    tag: tile.name, name: tile.name, line: tile.caption, spoken: tile.spoken, lift: tile.lift, side: side, isLarge: true
+                )
+                if let route = tile.route {
+                    NavigationLink(value: route) { picture }
+                        .buttonStyle(.patchLift)
+                        .accessibilityHint(tile.hint ?? "")
+                        .accessibilityIdentifier(tile.identifier)
+                } else {
+                    picture
+                        .accessibilityIdentifier(tile.identifier)
+                }
             }
-            if let caption = tile.caption {
-                Text(caption)
-                    .font(JournalFont.attribution)
-                    .foregroundStyle(Color.ink)
-                    .boardLabel()
-            }
-        }
-        .multilineTextAlignment(.center)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity)
-        // The art takes no touches of its own (`PatchView`): the whole tile is what opens.
-        .contentShape(.rect)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(tile.spoken)
-    }
-
-}
-
-/// A patch in whichever edition it was found, which may not be one of yours: `PatchView`, on its two-at-a-time decode queue, a plain
-/// bitmap under the shader. Without that edition's painting (no pack, no painting of the bird, or a word the server passed on that
-/// names no set) it's the plain blank with the bird's name on its tag, and never another edition's patch.
-struct EditionPatch: View {
-    @Environment(PackLibrary.self) private var library
-    let scientificName: String
-    let setID: String?
-    let tag: String?
-
-    var body: some View {
-        let edition = PatchEdition.of(setID: setID)
-        let state = library.patchArtState(scientificName: scientificName, setID: setID)
-        if let tag {
-            PatchView(state: state, edition: edition, tag: tag)
-        } else {
-            PatchView(art: state.art, edition: edition)
         }
     }
 }

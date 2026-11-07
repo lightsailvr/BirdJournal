@@ -1,3 +1,5 @@
+import Album
+import Pack
 import SwiftUI
 
 /// The goal card on a Guild's page (issue #65): this month's goal, sized from the circle's last month, with its
@@ -197,7 +199,8 @@ private struct GoalPatchRow: View {
 
     @ViewBuilder
     private func patch(_ species: CircleGoal.Species, name: String?) -> some View {
-        let picture = EditionPatch(scientificName: species.scientificName, setID: species.edition, tag: nil)
+        // Too small to read a tag: its name is what VoiceOver says, and on the patch's page. A plain blank without its painting.
+        let picture = PatchView(art: library.patchArtState(scientificName: species.scientificName, setID: species.edition).art, edition: PatchEdition.of(setID: species.edition))
             .frame(width: side, height: side)
             .contentShape(.rect)
         let spoken = GoalWords.spokenPatch(name: name, edition: library.cardSets.first { $0.id == species.edition }?.edition)
@@ -254,7 +257,7 @@ struct GoalPatchesView: View {
                         .foregroundStyle(Color.ink)
                         .boardLabel()
                         .padding(.top, 2)
-                    PatchTiles(tiles: tiles(of: goal), side: 79)
+                    BoardTiles(tiles: tiles(of: goal), side: 79)
                         .padding(.top, 14)
                 }
             }
@@ -268,13 +271,13 @@ struct GoalPatchesView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func tiles(of goal: CircleGoal) -> [PatchTile] {
+    private func tiles(of goal: CircleGoal) -> [BoardTile] {
         let names = library.birdNames
         return GoalPatchSlots(goal: goal, places: .max).shown.map { species in
             let name = names[species.scientificName]
-            return PatchTile(
-                id: species.scientificName, scientificName: species.scientificName, setID: species.edition, name: name,
-                caption: name == nil ? GoalWords.unnamedBird : nil,
+            return BoardTile(
+                id: species.scientificName, scientificName: species.scientificName, setID: species.edition, name: name ?? GoalWords.unnamedBird,
+                caption: nil,
                 spoken: GoalWords.spokenPatch(name: name, edition: library.cardSets.first { $0.id == species.edition }?.edition),
                 hint: name == nil ? nil : "Opens this bird in the Atlas.",
                 route: name.map { .species(scientificName: species.scientificName, commonName: $0) },
