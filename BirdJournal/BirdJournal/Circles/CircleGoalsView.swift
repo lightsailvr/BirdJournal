@@ -167,6 +167,7 @@ struct MonthlyGoalCard: View {
                     Text(GoalWords.count(goal)).font(.subheadline.weight(.semibold))
                     Text(GoalWords.monthlyNote(goal)).font(JournalFont.supporting)
                 }
+                .fixedSize(horizontal: false, vertical: true)
             }
         }
         .foregroundStyle(Color.onSharedGoal)
