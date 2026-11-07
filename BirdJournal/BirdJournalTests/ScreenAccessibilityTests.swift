@@ -97,6 +97,8 @@ struct ScreenAccessibilityTests {
     /// the tree some time after the first render, later under a full parallel run). The window is a phone's width and tall
     /// enough that the lazy lists lay out what VoiceOver would scroll to.
     static func walk(_ screen: some View, harness: Harness, typeSize: DynamicTypeSize = .large, ready: ([String]) -> Bool) async throws -> [String] {
+        // The real app awaits its cover before presenting any ready screen (#175).
+        await harness.place.prepareForLaunch()
         CardFlipAccessibilityTests.enableAccessibility()
         let host = UIHostingController(rootView: harness.hosted(screen, typeSize: typeSize))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first

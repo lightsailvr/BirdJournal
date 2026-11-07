@@ -23,7 +23,7 @@ final class LaunchUITests: XCTestCase {
             app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circles", "-splashTitleSeconds", "5", "-launchSplashShown", "NO"]
             app.launch()
             XCTAssertTrue(app.navigationBars["Guilds"].waitForExistence(timeout: 20), "launch \(launch): \(app.debugDescription.prefix(2000))")
-            // The splash is 1.1 s from the first frame, and it fades over 0.5 s.
+            // Leave the ready Guild's animation running after the loading surface has gone.
             _ = app.buttons["No such button"].waitForExistence(timeout: 4)
             XCTAssertEqual(app.state, .runningForeground, "launch \(launch) ended")
             app.terminate()
