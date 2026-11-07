@@ -338,6 +338,11 @@ struct BirdJournalApp: App {
             .environment(place)
             .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
+            .onAppear {
+                let versions = packs.packs.map { "\($0.info.id):\($0.info.version)" }.joined(separator: ", ")
+                OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+                    .emitEvent("Launch context", "sightings: \(collectionStore.collection.sightingCount, privacy: .public); packs: \(versions, privacy: .public)")
+            }
     }
 }
 
