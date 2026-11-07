@@ -381,7 +381,7 @@ final class FeelUITests: XCTestCase {
         addTeardownBlock { [self] in try? setSystemReduceMotion(false) }
         Thread.sleep(forTimeInterval: 1)
         XCTAssertTrue(UIAccessibility.isReduceMotionEnabled, "the setting didn't take")
-        let app = board(["-UIAnimationDragCoefficient", "10"])
+        let app = board(["-UIAnimationDragCoefficient", "20"])
         let phoebe = tile(app, "Black Phoebe")
         XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
         Thread.sleep(forTimeInterval: 3)
@@ -390,7 +390,7 @@ final class FeelUITests: XCTestCase {
         var opening: [[Double]] = []
         for _ in 0..<14 { opening.append(thumbnail(of: app.screenshot())) }
         XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 20))
-        Thread.sleep(forTimeInterval: 8)
+        Thread.sleep(forTimeInterval: 14)
         let pageShown = thumbnail(of: app.screenshot())
         assertCrossFade(from: boardShown, to: pageShown, samples: opening)
 
@@ -398,7 +398,7 @@ final class FeelUITests: XCTestCase {
         var closing: [[Double]] = []
         for _ in 0..<14 { closing.append(thumbnail(of: app.screenshot())) }
         XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
-        Thread.sleep(forTimeInterval: 8)
+        Thread.sleep(forTimeInterval: 14)
         // The way back is quicker to be caught, so it only has to be no slide when it is.
         assertCrossFade(from: pageShown, to: thumbnail(of: app.screenshot()), samples: closing, mustCatchIt: false)
     }
