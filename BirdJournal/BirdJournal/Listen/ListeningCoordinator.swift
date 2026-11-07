@@ -391,8 +391,9 @@ final class ListeningCoordinator {
     /// acknowledgment, with nothing to tap (the maintainer, 2026-11-04). Either way the sighting is saved before anything shows.
     @discardableResult
     func add(_ candidate: Candidate, method: SightingMethod = .heard) async -> RunSightings.Addition? {
-        // From a recap, even one days old, the bird was met on that run, not today: the patch and the find both say when.
-        let confirmedAt = endedAt ?? .now
+        // From a recap, even one days old, the bird was met on that run, not today: the patch and the find both say when. Each add
+        // there is a millisecond after the last, so a board and the widget keep them in the order they were sewn.
+        let confirmedAt = endedAt.map { sightings.nextDate(atOrAfter: $0) } ?? .now
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone, method: method)
