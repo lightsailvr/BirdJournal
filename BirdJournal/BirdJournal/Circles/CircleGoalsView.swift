@@ -1,3 +1,5 @@
+import Album
+import Pack
 import SwiftUI
 
 /// The goal card on a Guild's page (issue #65): this month's goal, sized from the circle's last month, with its
@@ -86,32 +88,35 @@ struct CircleGoalsSection: View {
     }
 }
 
-/// This month's goal at the head of a Guild's page, on the felt (issue #150, G2): the calm headline from the target, how far it's got,
-/// and lavender thread, with this month's patches under it once there's a server to name them (slice 8). VoiceOver hears the
-/// whole sentence once. No countdown and no leaderboard.
+/// This month's goal at the head of a Guild's page, on the felt (issue #150, G2, G6): the calm headline from the target, how far it's
+/// got, and lavender thread, with this month's patches under it, or thread alone from a server too old to name them. VoiceOver hears
+/// the whole sentence once, then each patch. No countdown and no leaderboard.
 struct CompactGoal: View {
     let goal: CircleGoal
     let circleID: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    headline
-                    Spacer(minLength: 8)
-                    count
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        headline
+                        Spacer(minLength: 8)
+                        count
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        headline
+                        count
+                    }
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    headline
-                    count
-                }
+                ThreadProgress(goal: goal, circleID: circleID)
+                    .accessibilityHidden(true)
             }
-            ThreadProgress(goal: goal, circleID: circleID)
-                .accessibilityHidden(true)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(GoalWords.spokenCompact(goal))
+            .accessibilityIdentifier("goal-monthly")
+            GoalPatchRow(goal: goal, circleID: circleID)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(GoalWords.spokenCompact(goal))
-        .accessibilityIdentifier("goal-monthly")
     }
 
     private var headline: some View {
@@ -132,6 +137,160 @@ struct CompactGoal: View {
         .foregroundStyle(Color.ink)
         .fixedSize()
         .boardLabel()
+    }
+}
+
+/// What a goal's row of patches holds: newest first, since the server counts earliest first and a new bird should show, then "+N" in
+/// the last place for everything else. N makes the row add up to the goal's count, even if the list and the count disagree.
+struct GoalPatchSlots: Equatable {
+    var shown: [CircleGoal.Species]
+    var more: Int
+
+    init(goal: CircleGoal, places: Int) {
+        var seen = Set<String>()
+        let species = (goal.species ?? []).reversed().filter { seen.insert($0.scientificName).inserted }
+        let total = max(species.count, goal.progress)
+        guard !species.isEmpty, places > 0 else {
+            shown = []
+            more = 0
+            return
+        }
+        // Everything fits only if all of it is in the list; one place goes to "+N" otherwise.
+        let room = total <= places && species.count == total ? places : places - 1
+        shown = Array(species.prefix(room))
+        more = total - shown.count
+    }
+}
+
+/// This period's patches under a goal's thread (issue #150, G6): small, in a row, a blank where this phone has no painting, with "+N"
+/// past what fits. A patch opens the bird in the Atlas, and "+N" the whole board, since a goal's patches belong to nobody to open.
+private struct GoalPatchRow: View {
+    @Environment(PackLibrary.self) private var library
+    @ScaledMetric(relativeTo: .body) private var scaledSide: CGFloat = GoalPatchRow.side
+    let goal: CircleGoal
+    let circleID: String
+
+    /// The reference's seven small patches across the page: 34 px at 1.34.
+    private static let side: CGFloat = 45
+    private static let gap: CGFloat = 6
+
+    private var side: CGFloat { min(scaledSide, 72) }
+
+    var body: some View {
+        if goal.species?.isEmpty == false {
+            let names = library.birdNames
+            GeometryReader { proxy in
+                let places = max(1, Int((proxy.size.width + Self.gap) / (side + Self.gap)))
+                let slots = GoalPatchSlots(goal: goal, places: places)
+                let gap = places > 1 ? (proxy.size.width - CGFloat(places) * side) / CGFloat(places - 1) : 0
+                HStack(spacing: gap) {
+                    ForEach(slots.shown, id: \.scientificName) { species in
+                        patch(species, name: names[species.scientificName])
+                    }
+                    if slots.more > 0 { more(slots.more) }
+                }
+            }
+            .frame(height: side)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("\(goal.title) patches")
+            .accessibilityIdentifier("goal-patches")
+        }
+    }
+
+    @ViewBuilder
+    private func patch(_ species: CircleGoal.Species, name: String?) -> some View {
+        // Too small to read a tag, as on a row: VoiceOver says its name, and so does the page it opens.
+        let picture = RowPatch(scientificName: species.scientificName, setID: species.edition)
+            .frame(width: side, height: side)
+            .contentShape(.rect)
+        let spoken = GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: species.edition))
+        if let name {
+            NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: name)) { picture }
+                .buttonStyle(.patchLift)
+                .accessibilityLabel(spoken)
+                .accessibilityHint("Opens this bird in the Atlas.")
+                .accessibilityIdentifier("goal-patch-\(species.scientificName)")
+        } else {
+            picture
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(spoken)
+                .accessibilityIdentifier("goal-patch-\(species.scientificName)")
+        }
+    }
+
+    private func more(_ count: Int) -> some View {
+        NavigationLink(value: Route.goalPatches(circleID: circleID, goalID: goal.id)) {
+            Text("+\(count)")
+                .font(JournalFont.supporting.weight(.semibold))
+                .monospacedDigit()
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+                .foregroundStyle(Color.ink)
+                .frame(width: side, height: side)
+                .background(Color.raised, in: .circle)
+                .overlay(Circle().strokeBorder(Color.ink.opacity(0.35), lineWidth: 1))
+                .contentShape(.circle)
+        }
+        .buttonStyle(.patchLift)
+        .accessibilityLabel("\(count) more")
+        .accessibilityHint("Shows every patch of this goal.")
+        .accessibilityIdentifier("goal-patches-more")
+    }
+}
+
+/// Every patch of a goal so far, as a board on felt, for what "+N" stands for. Newest first, with no finder: a goal names nobody.
+struct GoalPatchesView: View {
+    @Environment(CircleStore.self) private var circles
+    @Environment(PackLibrary.self) private var library
+    let circleID: String
+    let goalID: String
+
+    private var goal: CircleGoal? { circles.goals[circleID]?.first { $0.id == goalID } }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                if let goal {
+                    SectionTitle(GoalWords.headline(goal), size: .lead, top: 8, onBoard: true)
+                    Text(GoalWords.tally(goal))
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.ink)
+                        .boardLabel()
+                        .padding(.top, 2)
+                    BoardTiles(tiles: tiles(of: goal), side: 79)
+                        .padding(.top, 14)
+                } else {
+                    // Deleted from under the page, or its month ended and a read took it.
+                    StateNotice("This goal isn't here any more", message: "It may have been deleted, or its days may be over.", mark: .symbol("flag.checkered"), messageInk: .ink)
+                        .boardLabel()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
+                        .accessibilityIdentifier("goal-patches-gone")
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, JournalLayout.margin)
+            .padding(.bottom, JournalLayout.sectionGap)
+        }
+        .patchSheetBackground()
+        .holdsPatchLight()
+        .navigationTitle(goal?.title ?? "Goal")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func tiles(of goal: CircleGoal) -> [BoardTile] {
+        let names = library.birdNames
+        return GoalPatchSlots(goal: goal, places: .max).shown.map { species in
+            let name = names[species.scientificName]
+            return BoardTile(
+                id: species.scientificName, scientificName: species.scientificName, setID: species.edition, name: name ?? BirdNames.unnamed,
+                caption: nil,
+                spoken: GoalWords.spokenPatch(name: name, edition: library.editionLabel(setID: species.edition)),
+                hint: name == nil ? nil : "Opens this bird in the Atlas.",
+                route: name.map { .species(scientificName: species.scientificName, commonName: $0) },
+                identifier: "goal-patch-\(species.scientificName)"
+            )
+        }
     }
 }
 
@@ -238,6 +397,17 @@ enum GoalWords {
     /// "November goal. Fourteen birds, together. 9 of 14 species. 5 still to discover."
     static func spokenCompact(_ goal: CircleGoal) -> String {
         [goal.title, headline(goal), "\(count(goal)).", "\(monthlyNote(goal))"].map { $0.hasSuffix(".") ? $0 : "\($0)." }.joined(separator: " ")
+    }
+
+    /// "Black Phoebe, Citrus edition patch"; "Black Phoebe, patch".
+    static func spokenPatch(name: String?, edition: String?) -> String {
+        "\(name ?? BirdNames.unnamed), \(edition.map { "\($0) patch" } ?? "patch")"
+    }
+
+    /// The goal on Listen, after the Guild's name: "is 2 birds from its November goal".
+    static func stillToGo(_ goal: CircleGoal) -> String {
+        let left = max(0, goal.target - goal.progress)
+        return "is \(left) \(left == 1 ? "bird" : "birds") from its \(goal.title)"
     }
 
     /// "Fourteen birds, together.": the target spelled out (in figures past a hundred), the guide's calm headline.

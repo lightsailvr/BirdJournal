@@ -128,3 +128,11 @@ struct MemberFaces: View {
         .accessibilityHidden(true)
     }
 }
+
+/// Who else has a bird, in words.
+enum FriendWords {
+    /// "Maya Ortiz has this bird"; "Maya Ortiz, Jo Park and Sam Okafor have this bird".
+    static func have(_ friends: [CircleMember]) -> String {
+        "\(friends.map(\.name).formatted(.list(type: .and))) \(friends.count == 1 ? "has" : "have") this bird"
+    }
+}

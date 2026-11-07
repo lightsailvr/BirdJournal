@@ -60,6 +60,11 @@ public final class ONNXBirdModel: BirdModel {
         session = Mutex(try ONNXRuntime.makeSession(modelPath: modelURL.path))
     }
 
+    /// The species the model can name, without loading the model.
+    public static func bundledLabels() throws -> [Species] {
+        try AcousticLabels.load(from: ONNXRuntime.bundledModelURL(labelsFileName))
+    }
+
     /// The model files shipped in the package resource bundle.
     public static func bundled() throws -> ONNXBirdModel {
         try ONNXBirdModel(modelURL: ONNXRuntime.bundledModelURL(modelFileName), labelsURL: ONNXRuntime.bundledModelURL(labelsFileName))

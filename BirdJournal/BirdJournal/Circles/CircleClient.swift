@@ -307,17 +307,31 @@ struct FriendBirds: Equatable, Decodable, Sendable {
         var scientificName: String
         var commonName: String
         var method: SightingMethod
+        /// The sets (pack ids) the friend found it in, earliest found first, so the first is the patch to show (issue #150). Empty
+        /// when none names a set, or from a server too old to say. The finder's phone's word: it may name a set nobody knows.
+        var editions: [String] = []
 
         enum CodingKeys: String, CodingKey {
             case speciesID = "species_id"
             case scientificName = "scientific_name"
             case commonName = "common_name"
-            case method
+            case method, editions
         }
     }
 
     var friend: FeedItem.Owner
     var species: [Species]
+}
+
+extension FriendBirds.Species {
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        speciesID = try values.decode(String.self, forKey: .speciesID)
+        scientificName = try values.decode(String.self, forKey: .scientificName)
+        commonName = try values.decode(String.self, forKey: .commonName)
+        method = try values.decode(SightingMethod.self, forKey: .method)
+        editions = try values.decodeIfPresent([String].self, forKey: .editions) ?? []
+    }
 }
 
 /// A page of the feed, newest first; `nextCursor` asks for the next.
@@ -337,6 +351,23 @@ struct CircleGoal: Equatable, Identifiable, Codable, Sendable {
     enum Kind: String, Codable, Sendable { case monthly, custom }
     enum Status: String, Codable, Sendable { case upcoming, active, ended }
 
+    /// A species counted so far, with no finder (issue #150). All of it is the finder's phone's word: names come from the packs
+    /// by `scientificName`, and an edition may name a set nobody knows.
+    struct Species: Equatable, Codable, Sendable {
+        var speciesID: String
+        var scientificName: String
+        var commonName: String
+        /// The set (pack id) of its earliest find in the period that names one.
+        var edition: String?
+
+        enum CodingKeys: String, CodingKey {
+            case speciesID = "species_id"
+            case scientificName = "scientific_name"
+            case commonName = "common_name"
+            case edition
+        }
+    }
+
     var id: String
     var kind: Kind
     var title: String
@@ -355,9 +386,11 @@ struct CircleGoal: Equatable, Identifiable, Codable, Sendable {
     var createdBy: FeedItem.Owner?
     /// The goal's creator or the circle's creator may delete a custom goal.
     var canDelete: Bool
+    /// What `progress` counted, earliest found first; nil from a server too old to say, and the goal is thread alone.
+    var species: [Species]? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, kind, title, target, progress, status
+        case id, kind, title, target, progress, status, species
         case startDate = "start_date"
         case endDate = "end_date"
         case startsAt = "starts_at"

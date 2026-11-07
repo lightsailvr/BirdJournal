@@ -63,6 +63,8 @@ struct PaperCardView: View {
                 PaperRule()
                 BiologyGrid(stats: biology)
             }
+            // Above the history, so it's in view without scrolling: a card that's full cuts the history off, which says there's more.
+            FriendsOnCard(scientificName: patch.scientificName)
             PaperRule()
             history
             if let lore = species?.lore {
@@ -274,6 +276,30 @@ private struct PaperCardMoreLore: View {
     }
 }
 
+/// Which friends have this bird, on a paper card (issue #150, A4): their faces, and their names in print. Nothing without friends who
+/// do. The blocked are never among them. Whoever turns the card over asks for them (`readsFriendsBirds`): both faces of a card are
+/// built from the start, and browsing patches shouldn't read anyone's birds.
+private struct FriendsOnCard: View {
+    @Environment(CircleStore.self) private var circles: CircleStore?
+    let scientificName: String
+
+    var body: some View {
+        let friends = circles?.friends(having: scientificName) ?? []
+        if !friends.isEmpty {
+            PaperRule()
+            HStack(alignment: .center, spacing: 8) {
+                MemberFaces(members: Array(friends.prefix(2)), shown: 2, size: 26)
+                Text("\(FriendWords.have(friends)).")
+                    .font(.caption)
+                    .foregroundStyle(Color.cardInk)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("card-friends")
+        }
+    }
+}
+
 /// The paper card behind a friend's patch (issue #150, F1): the same printed card, minus what's yours. The edition line, the bird,
 /// its story and biology, read from the viewer's own pack, and no history, since these are a friend's sightings and they aren't
 /// on this iPhone. Scrolls inside the patch's footprint, or grows at accessibility text sizes, like the birder's own.
@@ -350,6 +376,7 @@ struct FriendPaperCard: View {
                 PaperRule()
                 BiologyGrid(stats: biology)
             }
+            FriendsOnCard(scientificName: species.scientificName)
             if let lore = species.lore {
                 PaperCardMoreLore(lore: lore)
             }
@@ -402,5 +429,23 @@ private struct BiologyGrid: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card-stats")
+    }
+}
+
+extension View {
+    /// Reads friends' birds once a paper card is showing, for the names on it.
+    func readsFriendsBirds(when isShowingCard: Bool) -> some View {
+        modifier(ReadsFriendsBirds(isShowingCard: isShowingCard))
+    }
+}
+
+private struct ReadsFriendsBirds: ViewModifier {
+    @Environment(CircleStore.self) private var circles: CircleStore?
+    let isShowingCard: Bool
+
+    func body(content: Content) -> some View {
+        content.task(id: isShowingCard) {
+            if isShowingCard { await circles?.loadFriendsBirds() }
+        }
     }
 }
