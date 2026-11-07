@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import MapKit
 import Pack
 import SwiftData
 import SwiftUI
@@ -557,6 +558,34 @@ struct ScreenAccessibilityTests {
             labels.contains { $0.hasPrefix("Black Phoebe, ") }
         }
         #expect(labels.contains { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+    }
+
+    @Test("A map of many sightings still offers its own controls to VoiceOver, on top of the patches on screen")
+    func manyPinsMapControls() async throws {
+        CardFlipAccessibilityTests.enableAccessibility()
+        let map = ManyPinsMapView(frame: CGRect(x: 0, y: 0, width: 402, height: 874))
+        map.showsUserTrackingButton = true
+        map.showsCompass = true
+        let griffith = CLLocationCoordinate2D(latitude: 34.1365, longitude: -118.2942)
+        map.addAnnotations((0..<(ManyPinsMapView.manyPins + 10)).map { index in
+            let pin = MKPointAnnotation()
+            pin.coordinate = CLLocationCoordinate2D(latitude: griffith.latitude + Double(index % 25) * 0.01, longitude: griffith.longitude + Double(index / 25) * 0.01)
+            return pin
+        })
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = map.frame
+        window.addSubview(map)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        var labels: [String] = []
+        for _ in 0..<40 {
+            try await Task.sleep(for: .milliseconds(250))
+            labels = (map.accessibilityElements ?? []).compactMap { ($0 as? NSObject)?.accessibilityLabel }
+            if labels.contains("Legal"), labels.contains(where: { $0.localizedCaseInsensitiveContains("track") }) { break }
+        }
+        #expect(labels.contains("Legal"), "\(labels.suffix(6))")
+        #expect(labels.contains { $0.localizedCaseInsensitiveContains("track") }, "the locate button: \(labels.suffix(6))")
     }
 
     @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)

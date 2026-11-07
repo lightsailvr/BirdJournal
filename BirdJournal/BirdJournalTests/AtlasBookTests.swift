@@ -142,6 +142,14 @@ struct AtlasBookTests {
 
     // MARK: - The record
 
+    @Test("an empty answer from the geocoder is no name, so the place keeps its coordinate rather than reading \"Near\"")
+    func emptyPlaceName() {
+        #expect(PlaceNames.usableName(cityWithContext: "Los Angeles, CA", city: "Los Angeles") == "Los Angeles, CA")
+        #expect(PlaceNames.usableName(cityWithContext: "", city: "Los Angeles") == "Los Angeles")
+        #expect(PlaceNames.usableName(cityWithContext: " ", city: "") == nil)
+        #expect(PlaceNames.usableName(cityWithContext: nil, city: nil) == nil)
+    }
+
     @Test("a record says how you met the bird, and changes with Heard and Seen")
     func how() {
         let sighting = Sighting(speciesID: "\(Self.goose)_Canada Goose", confirmedAt: .now, soundConfidence: 0.8, source: .phone)
