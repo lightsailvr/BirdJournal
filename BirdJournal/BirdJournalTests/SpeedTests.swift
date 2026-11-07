@@ -2,6 +2,7 @@ import Album
 import Foundation
 import Identification
 import Observation
+import Pack
 import Synchronization
 import SwiftData
 import SwiftUI
@@ -42,6 +43,22 @@ struct CollectionStoreTests {
 
     private func fresh(_ container: ModelContainer, sets: [CardSet]) throws -> CardCollection {
         CardCollection(sightings: try container.mainContext.fetch(FetchDescriptor<Sighting>()), sets: sets)
+    }
+
+    @Test("launch starts empty without fetching, then publishes the background snapshot and keeps following saves")
+    func deferredLaunch() async throws {
+        let container = try AlbumSchema.makeContainer(inMemory: true)
+        container.mainContext.insert(sighting())
+        try container.mainContext.save()
+        let store = CollectionStore(container: container, deferred: true, sets: { Self.sets })
+        #expect(store.collection.sightingCount == 0)
+        try await store.loadForLaunch()
+        #expect(store.collection == (try fresh(container, sets: Self.sets)))
+        container.mainContext.insert(sighting(Self.phoebe, minutes: 5))
+        try container.mainContext.save()
+        #expect(store.collection.patchCount == 2)
+        try await store.loadForLaunch()
+        #expect(store.collection.patchCount == 2, "loading twice never replaces the live collection")
     }
 
     @Test("it starts from the album, and every save reaches it before the save returns")
@@ -312,5 +329,23 @@ struct GuildPlaceholderTests {
             #expect(labels.filter { $0 == "Loading" }.count == 1, "\(labels)")
             #expect(!labels.contains { $0.contains("A bird in a Guild") }, "the sample words aren't read: \(labels)")
         }
+    }
+}
+
+@Suite("Deferred launch packs")
+@MainActor
+struct LaunchPackTests {
+    @Test("the launch library reads nothing until awaited, then publishes packs and the offline sets once")
+    func loadsOffMain() async throws {
+        let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "LaunchPacks-\(UUID().uuidString)"))
+        let library = PackLibrary(bundled: nil, storage: storage, deferred: true)
+        #expect(library.packs.isEmpty)
+        #expect(library.sets.isEmpty)
+        await library.loadForLaunch()
+        #expect(library.bundled != nil)
+        #expect(library.sets.contains { $0.id == "us-ca-desert" })
+        let pack = library.bundled
+        await library.loadForLaunch()
+        #expect(library.bundled == pack)
     }
 }

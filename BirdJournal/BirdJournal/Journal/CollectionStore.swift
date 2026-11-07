@@ -16,22 +16,27 @@ final class CollectionStore {
     @ObservationIgnored private let container: ModelContainer
     @ObservationIgnored private let readSets: () -> [CardSet]
     @ObservationIgnored private var saves: (any NSObjectProtocol)?
+    @ObservationIgnored private var loaded: Bool
+    @ObservationIgnored private var revision = 0
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "album")
 
     /// - Parameter sets: every set the phone knows, read under observation, so a pack download or a new index reaches it.
-    init(container: ModelContainer, sets: @escaping () -> [CardSet]) {
+    init(container: ModelContainer, deferred: Bool = false, sets: @escaping () -> [CardSet]) {
+        loaded = !deferred
         self.container = container
         readSets = sets
         #if DEBUG
         let started = ContinuousClock.now
-        defer { SpeedProbe.refreshed(in: ContinuousClock.now - started); SpeedProbe.built() }
+        defer {
+            if !deferred { SpeedProbe.refreshed(in: ContinuousClock.now - started); SpeedProbe.built() }
+        }
         #endif
-        let known = sets()
+        let known = deferred ? [] : sets()
         self.sets = known
-        let cache = CardCollectionCache(Self.entries(in: container) ?? [], sets: known)
+        let cache = CardCollectionCache(deferred ? [] : Self.entries(in: container) ?? [], sets: known)
         self.cache = cache
         collection = cache.collection
-        watchSets()
+        if !deferred { watchSets() }
         saves = NotificationCenter.default.addObserver(forName: ModelContext.didSave, object: nil, queue: nil) { [weak self, container] note in
             guard (note.object as? ModelContext)?.container === container else { return }
             if Thread.isMainThread {
@@ -42,6 +47,40 @@ final class CollectionStore {
         }
     }
 
+    /// Fetches using a background context; only Sendable entries and the finished collection cross actors. A save
+    /// during the read invalidates it, so a late snapshot can never overwrite a just-added sighting.
+    func loadForLaunch() async throws {
+        guard !loaded else { return }
+        #if DEBUG
+        let started = ContinuousClock.now
+        #endif
+        let container = container
+        while true {
+            let generation = revision
+            let known = readSets()
+            let snapshot = try await Task.detached(priority: .userInitiated) {
+                let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+                let state = signposter.beginInterval("Build collection")
+                defer { signposter.endInterval("Build collection", state) }
+                let context = ModelContext(container)
+                let entries = try context.fetch(FetchDescriptor<Sighting>()).map(CardCollection.Entry.init)
+                return CardCollectionCache(entries, sets: known)
+            }.value
+            try Task.checkCancellation()
+            guard generation == revision, known == readSets() else { continue }
+            cache = snapshot
+            collection = snapshot.collection
+            sets = known
+            loaded = true
+            #if DEBUG
+            SpeedProbe.refreshed(in: ContinuousClock.now - started)
+            SpeedProbe.built()
+            #endif
+            watchSets()
+            return
+        }
+    }
+
     isolated deinit {
         if let saves { NotificationCenter.default.removeObserver(saves) }
     }
@@ -49,6 +88,8 @@ final class CollectionStore {
     /// Reads the album and the sets again, building only if something the collection reads differs. An album that can't be
     /// read keeps the last collection.
     private func refresh() {
+        revision += 1
+        guard loaded else { return }
         #if DEBUG
         let started = ContinuousClock.now
         defer { SpeedProbe.refreshed(in: ContinuousClock.now - started) }
@@ -67,8 +108,10 @@ final class CollectionStore {
     private func watchSets() {
         sets = withObservationTracking { readSets() } onChange: { [weak self] in
             Task { @MainActor in
-                self?.watchSets()
-                self?.refresh()
+                guard let self else { return }
+                let previous = self.sets
+                self.watchSets()
+                if previous != self.sets { self.refresh() }
             }
         }
     }

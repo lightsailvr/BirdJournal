@@ -15,10 +15,10 @@ extension PackLibrary {
     /// stays identifiable by name, spec user story 40), the downloads under Application Support, and the index on
     /// GitHub Releases. In debug builds `-packIndexURL <url>` points the index elsewhere, for simulator runs against a
     /// local server.
-    static func forApp() -> PackLibrary {
+    static func forApp(deferred: Bool = false) -> PackLibrary {
         let bundled: SpeciesPack?
         do {
-            bundled = try SpeciesPack.bundled()
+            bundled = deferred ? nil : try SpeciesPack.bundled()
         } catch {
             log.error("bundled pack unavailable: \(String(describing: error))")
             bundled = nil
@@ -36,10 +36,10 @@ extension PackLibrary {
         if let override = UserDefaults.standard.string(forKey: "packIndexURL").flatMap(URL.init(string:)) { indexURL = override }
         // A fresh install's packs: no downloads and no index read yet, whatever this simulator has seen.
         if UserDefaults.standard.bool(forKey: "freshPackStorage") {
-            return PackLibrary(bundled: bundled, storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "FreshPacks-\(UUID().uuidString)", directoryHint: .isDirectory)), indexURL: indexURL)
+            return PackLibrary(bundled: bundled, storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "FreshPacks-\(UUID().uuidString)", directoryHint: .isDirectory)), indexURL: indexURL, deferred: deferred)
         }
         #endif
-        return PackLibrary(bundled: bundled, storage: storage, indexURL: indexURL)
+        return PackLibrary(bundled: bundled, storage: storage, indexURL: indexURL, deferred: deferred)
     }
 
     /// What the species card shows: the best photo and the description fields the first pack that has the species

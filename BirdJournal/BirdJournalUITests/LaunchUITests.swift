@@ -5,6 +5,18 @@ import XCTest
 /// which Swift 6 holds to the main actor, the app trapped. Here a Guild's goal is sewing when the splash ends, on every launch.
 final class LaunchUITests: XCTestCase {
     @MainActor
+    func testSlowRepeatLaunchShowsProgressUntilTheStoresAreReady() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-launchSplashShown", "YES", "-launchWaitForTap", "YES", "-autoLocation", "denied", "-reduceMotion", "YES"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Opening your journal…"].waitForExistence(timeout: 5))
+        app.buttons["Continue"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["Opening your journal…"].exists)
+        app.terminate()
+    }
+
+    @MainActor
     func testTheSplashEndingDuringAnAnimationDoesntEndTheApp() {
         for launch in 1...4 {
             let app = XCUIApplication()

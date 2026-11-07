@@ -22,8 +22,7 @@ final class CurrentPlace {
 
     static let rememberedKey = "currentPlaceSetID"
 
-    /// Reads the remembered set and decodes its cover here, on the main actor at launch, so the first frame already has it. With
-    /// nothing remembered, or a set the phone no longer knows, it's the choice with no coordinate.
+    /// Selects the remembered set without decoding an image. `prepareForLaunch` fills its painting before Listen is shown.
     init(library: PackLibrary, collection: @escaping () -> CardCollection, location: any LocationProvider, defaults: UserDefaults = .standard) {
         self.library = library
         self.collection = collection
@@ -32,12 +31,16 @@ final class CurrentPlace {
         let remembered = defaults.string(forKey: Self.rememberedKey).flatMap { id in library.set(id: id) != nil ? id : nil }
         let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection())
         setID = id
+    }
+
+    func prepareForLaunch() async {
+        let remembered = defaults.string(forKey: Self.rememberedKey).flatMap { id in library.set(id: id) != nil ? id : nil }
+        let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection())
         let cover = id.flatMap(library.cover(setID:))
-        // A pack's AVIF holds its thread while it decodes, so that one waits for the first read, off the main actor. All five
-        // sets have a bundled JPEG; this is for a set that doesn't.
-        if case .pack = cover { return }
+        let image = await SetCoverImage.load(cover)
+        setID = id
         shownCover = cover
-        painting = SetCoverImage.decoded(cover)
+        painting = image
     }
 
     /// One read of the last known position, and the set it picks. If that's a different set (or a better cover of the same one),

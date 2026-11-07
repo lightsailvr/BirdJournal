@@ -61,6 +61,7 @@ final class LatestPatchPublisher {
             MainActor.assumeIsolated { self?.publish() }
         }
         observe()
+        publish()
     }
 
     private func observe() {
@@ -85,13 +86,21 @@ final class LatestPatchPublisher {
 
     private func publish() {
         publishing?.cancel()
-        publishing = Task { await write() }
+        publishing = Task(priority: .utility) {
+            // Keep first interaction clear of shader compilation and the widget's first PNG encoding. New updates
+            // coalesce during the settling period; cancelling must not publish an obsolete patch.
+            do { try await Task.sleep(for: .seconds(2)) } catch { return }
+            await write()
+        }
     }
 
     /// Brings the files up to date, if the rule says they need it. With no picture of a new patch nothing is written, since the
     /// words would then name a bird the old picture isn't of, and the rule tries again next time. A painting that wouldn't
     /// decode is written as the blank it drew, marked as no painting, so the rule tries that again too, as for a plain one.
     func write() async {
+        let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
+        let interval = signposter.beginInterval("Publish widget")
+        defer { signposter.endInterval("Publish widget", interval) }
         var new = snapshot()
         let rewrite = WidgetSnapshot.rewrite(from: store.snapshot(), to: new, hasPatchImage: store.hasPatchImage)
         guard rewrite != .nothing else { return }
@@ -122,10 +131,12 @@ final class LatestPatchPublisher {
         // Asked after the decode, which can outlast the app's moment in front.
         if isInFront() {
             let image = FlatPatch.render(loaded: loaded, edition: edition, tag: latest.name, width: patchWidth, scale: patchScale)
-            return image?.pngData().map { DrawnPatch(png: $0, isLit: loaded != nil) }
+            let png = await Task.detached(priority: .utility) { image?.pngData() }.value
+            return png.map { DrawnPatch(png: $0, isLit: loaded != nil) }
         }
         guard let loaded else { return nil }
         let image = FlatPatch.unlit(loaded: loaded, edition: edition, width: patchWidth, scale: patchScale)
-        return image.pngData().map { DrawnPatch(png: $0, isLit: false) }
+        let png = await Task.detached(priority: .utility) { image.pngData() }.value
+        return png.map { DrawnPatch(png: $0, isLit: false) }
     }
 }

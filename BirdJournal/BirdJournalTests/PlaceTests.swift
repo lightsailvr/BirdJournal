@@ -99,7 +99,9 @@ struct PlaceTests {
         let defaults = Self.defaults(name: suite)
         let place = Self.place(library, at: Self.joshuaTree, defaults: defaults)
         #expect(place.setID == "us-ca-la")
-        #expect(place.painting != nil, "before anything's been awaited")
+        #expect(place.painting == nil, "init never decodes on the main actor")
+        await place.prepareForLaunch()
+        #expect(place.painting != nil)
         let first = place.painting
 
         await place.refresh()
@@ -119,6 +121,7 @@ struct PlaceTests {
 
         let noFix = Self.place(library, at: Self.joshuaTree, defaults: defaults)
         #expect(noFix.setID == "us-ca-desert", "the first frame")
+        await noFix.prepareForLaunch()
         #expect(noFix.painting?.size == CGSize(width: 1536, height: 864))
 
         let backInLA = Self.place(library, at: Self.griffith, defaults: defaults)
@@ -155,6 +158,7 @@ struct PlaceTests {
         let library = try Self.library()
         let defaults = Self.defaults()
         let place = Self.place(library, at: nil, defaults: defaults)
+        await place.prepareForLaunch()
         let painting = place.painting
         await place.refresh()
         #expect(place.setID == "us-ca-la")
