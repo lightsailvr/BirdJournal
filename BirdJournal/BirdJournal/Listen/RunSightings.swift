@@ -66,6 +66,12 @@ final class RunSightings {
         }
     }
 
+    /// `date`, or just after the newest sighting this run has added if that's later: what keeps adds with one date in order.
+    func nextDate(atOrAfter date: Date) -> Date {
+        guard let newest = records.values.map(\.confirmedAt).max(), newest >= date else { return date }
+        return newest.addingTimeInterval(0.001)
+    }
+
     func isAdded(_ species: Species) -> Bool {
         entries.contains { $0.candidate.species == species }
     }

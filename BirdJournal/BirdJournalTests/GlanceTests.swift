@@ -496,6 +496,39 @@ struct RunEndTests {
         #expect(find.foundAt != FindPolicy.minute(.now))
     }
 
+    @Test("birds added from one recap keep the order they were sewn, through an Undo and a relaunch, all on the run's date")
+    func addsFromARecapKeepTheirOrder() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let started = Date.now.addingTimeInterval(-3 * 86_400)
+        let ended = started.addingTimeInterval(1_800)
+        let names = ["Haemorhous mexicanus_House Finch", "Sayornis nigricans_Black Phoebe", "Calypte anna_Anna's Hummingbird", "Zenaida macroura_Mourning Dove"]
+        let birds = names.enumerated().map { index, label in
+            let parts = label.split(separator: "_").map(String.init)
+            return Candidate(species: Species(index: index, scientificName: parts[0], commonName: parts[1], taxonomicClass: "Aves"), score: 0.9, windowsAboveThreshold: 2, firstHeardAt: 60, lastHeardAt: 120, admittedAt: 60)
+        }
+        let waiting = EndedRun(source: "phone", startedAt: started, endedAt: ended, listened: 1_800, coordinate: griffith, birds: birds.map(EndedRun.Bird.init), added: [])
+        harness.defaults.set(try JSONEncoder().encode(waiting), forKey: ListeningCoordinator.endedRunKey)
+
+        var run = harness.relaunched()
+        let newestFirst = { CardCollection(harness.stored.map(CardCollection.Entry.init), sets: []).patches.map(\.speciesID) }
+        try #require(await run.add(birds[0]))
+        let second = try #require(await run.add(birds[1]))
+        #expect(newestFirst() == [names[1], names[0]])
+        #expect(harness.stored.first { $0.speciesID == names[0] }?.confirmedAt == ended, "the first is the run's end itself")
+
+        run.undo(second)
+        try #require(await run.add(birds[2]))
+        #expect(newestFirst() == [names[2], names[0]], "an Undo leaves room, and no tie")
+
+        run = harness.relaunched()
+        try #require(await run.add(birds[3]))
+        #expect(newestFirst() == [names[3], names[2], names[0]], "the next launch carries on from them")
+
+        let calendar = Calendar.current
+        #expect(harness.stored.allSatisfy { $0.confirmedAt >= ended && $0.confirmedAt.timeIntervalSince(ended) < 1 && calendar.isDate($0.confirmedAt, inSameDayAs: ended) })
+    }
+
     @Test("killed with its review waiting, the next launch opens on it, with the birds, the place, the time and the adds; Done forgets it")
     func reviewOutlivesTheApp() async throws {
         let harness = try ListeningCoordinatorTests.makeHarness()
