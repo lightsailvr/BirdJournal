@@ -283,24 +283,6 @@ final class HuntUITests: XCTestCase {
         wait(for: [expectation(for: scrolled, evaluatedWith: NSObject())], timeout: 10)
     }
 
-    @MainActor
-    func testASightingWithYourPhotoKeepsItAndOneWithoutShowsItsPatchAndTheRowsTakeTheirTaps() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedJournal", "YES", "-autoScreen", "sightings"]
-        app.launch()
-        // The House Finch has a glasses photo and says so; the Mourning Dove has its patch, which needs no words.
-        let finch = button(app, beginning: "House Finch")
-        XCTAssertTrue(finch.waitForExistence(timeout: 15), "no sighting row; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(finch.label.contains("Your glasses snapshot"), finch.label)
-        let dove = button(app, beginning: "Mourning Dove")
-        XCTAssertTrue(dove.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertFalse(dove.label.contains("photo"), dove.label)
-        XCTAssertFalse(dove.label.contains("snapshot"), dove.label)
-        // A row with a patch on it still opens: the patch takes no touches of its own.
-        dove.tap()
-        XCTAssertTrue(app.navigationBars["Mourning Dove"].waitForExistence(timeout: 10) || app.staticTexts["Mourning Dove"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-    }
-
     // The maintainer, issue #150: "patches should only be on the patches". A row's picture is hidden from the tree, so these go by
     // what each row says of it and where it opens; `RowPictureSource` has no patch to show.
 
@@ -325,8 +307,8 @@ final class HuntUITests: XCTestCase {
         XCTAssertFalse(dove.label.contains("Your"), dove.label)
         // The picture takes no touches of its own: a tap on it opens the sighting.
         dove.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5)).tap()
-        XCTAssertTrue(app.staticTexts["Mourning Dove"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertFalse(dove.isHittable, "the sighting opened")
+        // A sighting's own page keeps its patch: that's the mark of the bird you found.
+        XCTAssertTrue(app.descendants(matching: .any)["sighting-patch"].waitForExistence(timeout: 10), "the sighting opened; screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
