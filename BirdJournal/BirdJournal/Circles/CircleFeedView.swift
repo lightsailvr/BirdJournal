@@ -9,6 +9,7 @@ import SwiftUI
 /// on each, the birder's own shows what friends gave. Each find opens its page. No comments.
 struct FindsColumn: View {
     @Environment(CircleStore.self) private var circles
+    @Environment(PackLibrary.self) private var library
     let entries: [FindEntry]
     /// Where the finds are: their pages' way back.
     let surface: FindLiftSurface
@@ -29,8 +30,9 @@ struct FindsColumn: View {
     }
 
     var body: some View {
+        let names = library.birdNames
         LazyVStack(alignment: .leading, spacing: 0) {
-            ForEach(FindFeedRow.rows(of: entries)) { row in
+            ForEach(FindFeedRow.rows(of: entries.map { $0.named(by: names) })) { row in
                 VStack(alignment: .leading, spacing: 0) {
                     switch row {
                     case .find(let entry):

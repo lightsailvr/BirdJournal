@@ -35,6 +35,7 @@ struct FindRoute: Hashable, Sendable {
 /// pack describes the bird; without that pack it's the name and no card. Report and Block are in its menu.
 struct FindPageView: View {
     @Environment(CircleStore.self) private var circles
+    @Environment(PackLibrary.self) private var library
     @Environment(\.dismiss) private var dismiss
     let route: FindRoute
     @State private var reporting: ReportDraft?
@@ -46,7 +47,7 @@ struct FindPageView: View {
     var body: some View {
         Group {
             if let entry = circles.entry(id: id, openedIn: route.openedIn) {
-                FindPageContent(entry: entry, error: error)
+                FindPageContent(entry: entry.named(by: library.birdNames), error: error)
                     .toolbar {
                         if !entry.item.isMine {
                             ToolbarItem(placement: .topBarTrailing) {

@@ -1321,6 +1321,21 @@ The issue's "Guilds" section, with what it left open:
 - **`Landscape.swift` is gone.** Nothing else drew a landscape, so the enum and palette went with `LandscapeArt`. `SetCoverImage` and `SeededRandom`, which were in that file, are in `SetCoverImage.swift`.
 - **By hand on a phone:** the reaction's pop and haptic, the zoom from a row's patch, and the row's patches at 120 Hz.
 
+## Patches only on the patches: rows and the Atlas use photos (issue #150, the maintainer, 2026-11-06)
+
+The maintainer: "patches should only be on the patches"; "the sightings should use user photos by default, and the atlas photo otherwise. species should always use the atlas photo. in the atlas, i noticed that patches show up there too, and that is incorrect because it removes the scientific nature of understanding what birds look like and the fact that the atlas is like a guidebook".
+
+This overrides issue #150's V2, A2 and stories 44 to 46, 54 and 57, and the patch row in `4-set-page.png`, and slice 5's "Rows' pictures" and "The profile" above.
+
+- **Sightings rows** have your own photo, attached then glasses, else the Atlas's reference photo. "Reference photo" is the caption that was there already, so it can't read as yours.
+- **Species rows** always have the reference photo.
+- **The Atlas has no patches in it.** A set's row for a bird you've found has the reference photo, and keeps "Yours, seen once". An unfound bird keeps its silhouette or the glyph. Search rows have the reference photo.
+- **`BirdProfileView`**: the names run straight into the reference photo, in the same place for every bird, found or not. Under its credit come your sightings and, if you have it, your patch as a link in words, "Your patch, Los Angeles", opening its page; with several it's your newest sighting's, and the others are a tap on from the sightings. Then the story on card stock. With a `match` it's as before. Above the photo, the links pushed it about 60% down the screen at the largest text.
+- **`RowPictureSource` has no patch case**, so nothing using `RowPicture` can show one. `RowPatch` stays for a run's rows alone.
+- **What keeps its patches, confirmed by the maintainer:** a run's rows, Listen's latest patches, a sighting's own page, map pins, Guilds, Compare and goals, "because it's the mark of the bird you found. the issue was wanting users to understand what the bird actually looks like."
+- **The reasoning:** a patch marks a bird you found, and a photo teaches what the bird looks like, so the places you read to learn a bird show the photo.
+
+
 
 ## Guild data, the app half: Compare as boards, a goal's patches, the goal on Listen, friends around the app (issue #150, slice 8) — built 2026-11-06
 

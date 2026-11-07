@@ -210,7 +210,6 @@ struct JournalView: View {
                 .padding(.top, 6)
             if state.mode == .sightings {
                 SightingsByDay(sightings: shown)
-                    .holdsPatchLight()
             } else {
                 if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
                     SetProgressList(collection: collection)
@@ -623,22 +622,17 @@ private struct SightingsByDay: View {
     }
 }
 
-/// One sighting: your own photo when there is one, since that's evidence, else its patch, else the reference photo for the
-/// moment before the collection has it (issue #150, V2). Then the name, the time and the source, and whose photo it is.
+/// One sighting: your own photo when there is one, since that's evidence, else the Atlas's reference photo (the maintainer, issue
+/// #150). Then the name, the time and the source, and whose photo it is, so a reference photo never reads as yours.
 struct SightingRow: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
-    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let sighting: Sighting
     var showsDate = false
 
     var body: some View {
-        let source = RowPictureSource.of(
-            sighting: sighting,
-            patch: collectionStore.collection.patch(of: sighting.identifier),
-            reference: library.thumbnailURL(scientificName: sighting.scientificName)
-        )
+        let source = RowPictureSource.of(sighting: sighting, reference: library.thumbnailURL(scientificName: sighting.scientificName))
         AdaptiveRow(stacked: typeSize.stacksRows) {
             RowPicture(source: source, side: 84)
             VStack(alignment: .leading, spacing: 3) {
@@ -673,11 +667,11 @@ struct SightingRow: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// Whose picture it is, so a reference photo never looks like your own. A patch needs no caption.
+    /// Whose picture it is, so a reference photo never looks like your own.
     static func caption(_ source: RowPictureSource) -> String? {
         switch source {
         case .ownPhoto(_, let isGlassesFrame): isGlassesFrame ? "Your glasses snapshot" : "Your photo"
-        case .patch, .silhouette: nil
+        case .silhouette: nil
         case .reference(let url): url == nil ? "No photo" : "Reference photo"
         }
     }
@@ -771,11 +765,11 @@ struct SetProgressRow: View {
     }
 }
 
-/// The Species list: one row per bird added, with your newest patch of it, how many sightings and when last, each opening its
-/// patches (issues #134, #150). Lazy, so a long list asks for only the patches on screen.
+/// The Species list: one row per bird added, with how many sightings and when last, each opening its
+/// patches (issue #134). Its picture is always the Atlas's reference photo (the maintainer, issue #150). Lazy, so a long list asks
+/// for only the photos on screen.
 private struct SpeciesRows: View {
     @Environment(PackLibrary.self) private var library
-    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let entries: [Journal.SpeciesEntry]
 
@@ -785,7 +779,7 @@ private struct SpeciesRows: View {
                 let reference = library.species(scientificName: entry.scientificName)
                 NavigationLink(value: Route.speciesPatches(scientificName: entry.scientificName, commonName: reference?.species.commonName ?? entry.commonName)) {
                     AdaptiveRow(stacked: typeSize.stacksRows) {
-                        RowPicture(source: .of(patch: collectionStore.collection.patch(of: entry.latest.identifier), reference: library.thumbnailURL(scientificName: entry.scientificName)))
+                        RowPicture(source: .reference(library.thumbnailURL(scientificName: entry.scientificName)))
                         VStack(alignment: .leading, spacing: 3) {
                             Text(reference?.species.commonName ?? entry.commonName)
                                 .font(JournalFont.rowTitle)
@@ -811,7 +805,6 @@ private struct SpeciesRows: View {
             }
         }
         .padding(.top, 16)
-        .holdsPatchLight()
     }
 }
 
