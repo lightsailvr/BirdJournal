@@ -341,13 +341,15 @@ final class HuntUITests: XCTestCase {
         let about = app.staticTexts["About this bird"].firstMatch
         XCTAssertTrue(about.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertLessThan(credit.frame.minY, about.frame.minY)
-        let unfoundPhotoY = credit.frame.minY
+        let photo = { (app: XCUIApplication) in app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Reference photo:'")).firstMatch }
+        XCTAssertTrue(photo(app).exists, "screen: \(app.debugDescription.prefix(3000))")
+        let unfoundPhotoY = photo(app).frame.minY
         XCTAssertFalse(app.buttons["profile-patch"].exists, "a bird you haven't found has no patch to go to")
 
         let found = launchSeeded("profile")
         XCTAssertTrue(found.buttons["profile-patch"].waitForExistence(timeout: 15), "screen: \(found.debugDescription.prefix(3000))")
         XCTAssertTrue(found.staticTexts["Reference photo"].firstMatch.exists, "it's the same page")
         XCTAssertGreaterThan(found.buttons["profile-patch"].frame.minY, found.staticTexts["Reference photo"].firstMatch.frame.maxY, "words, under the photo's credit")
-        XCTAssertEqual(found.staticTexts["Reference photo"].firstMatch.frame.minY, unfoundPhotoY, accuracy: 1, "the photo sits in the same place, found or not")
+        XCTAssertEqual(photo(found).frame.minY, unfoundPhotoY, accuracy: 1, "the photo's top sits in the same place, found or not")
     }
 }
