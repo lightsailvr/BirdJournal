@@ -545,7 +545,7 @@ struct SightingRow: View {
     static func caption(_ source: RowPictureSource) -> String? {
         switch source {
         case .ownPhoto(_, let isGlassesFrame): isGlassesFrame ? "Your glasses snapshot" : "Your photo"
-        case .patch: nil
+        case .patch, .silhouette: nil
         case .reference(let url): url == nil ? "No photo" : "Reference photo"
         }
     }

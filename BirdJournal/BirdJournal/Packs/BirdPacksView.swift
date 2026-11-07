@@ -139,9 +139,12 @@ struct PackRow: View {
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            SetCoverImage(setID: setID)
-                .frame(width: 96, height: 72)
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+            PlatePicture(setID: setID, aspect: 4 / 3)
+                .padding(5)
+                // At accessibility sizes the row has stacked and the credit has grown, so it takes the room.
+                .frame(maxWidth: typeSize.stacksRows ? .infinity : 104)
+                .modifier(CardStockSurface(.plate))
+                // The row says what it is: a credit on every row is noise, and the set's own pages say it.
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)

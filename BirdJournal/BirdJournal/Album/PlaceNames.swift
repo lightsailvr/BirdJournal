@@ -50,8 +50,15 @@ final class PlaceNames {
         // A city with its context, or a city, and nothing finer: the name is shown on the phone as the approximate
         // place and shared as the "general area", so a street never comes back from here (issue #28).
         let representations = item.addressRepresentations
-        guard let name = representations?.cityWithContext ?? representations?.cityName else { return }
+        guard let name = Self.usableName(cityWithContext: representations?.cityWithContext, city: representations?.cityName) else { return }
         names[key] = name
+    }
+
+    /// What the geocoder said, if it said anything: it can answer with an empty string, which is no name at all, so the coordinate keeps showing.
+    nonisolated static func usableName(cityWithContext: String?, city: String?) -> String? {
+        [cityWithContext, city]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { !$0.isEmpty }
     }
 }
 

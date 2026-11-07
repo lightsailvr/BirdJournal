@@ -10,6 +10,8 @@ import SwiftUI
 struct SightingPhotos: View {
     @Environment(JournalEdits.self) private var edits
     let sighting: Sighting
+    /// Already at the head of the page, so only its words and Remove are here.
+    var leadPath: String? = nil
     @State private var pickerItem: PhotosPickerItem?
     @State private var failure: String?
     @State private var removing: String?
@@ -17,7 +19,7 @@ struct SightingPhotos: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(sighting.attachedPhotoPaths, id: \.self) { path in
-                AttachedPhoto(path: path)
+                if path != leadPath { AttachedPhoto(path: path) }
                 Text("Your photo. It stays on this iPhone unless you choose it when you share this sighting.")
                     .font(JournalFont.attribution)
                     .foregroundStyle(Color.inkSecondary)
@@ -100,7 +102,7 @@ struct SightingPhotos: View {
 
 /// An attached photo, whole and fitted to the page. It takes no touches (DECISIONS.md "Clipped images take no
 /// touches"), and is read at a size for the page, since a library photo can be far larger than the screen.
-private struct AttachedPhoto: View {
+struct AttachedPhoto: View {
     private static let maxPixels = 1_200
     /// A portrait photo at full width would take more than the screen.
     private static let maxHeight: CGFloat = 360

@@ -262,7 +262,7 @@ private struct TrailingChevronLabel: LabelStyle {
 }
 
 /// A fine rule on the card.
-private struct PaperRule: View {
+struct PaperRule: View {
     var body: some View {
         Rectangle().fill(Color.cardEdge.opacity(0.3)).frame(height: 1).accessibilityHidden(true)
     }

@@ -261,6 +261,46 @@ struct TokenPairingTests {
         }
     }
 
+    @Test("an Atlas plate is the mock's paper in both appearances: its colour and its grain")
+    func plateIsOnePaper() async throws {
+        let stock = Color.clear.frame(width: 300, height: 300).modifier(CardStockSurface(.plate))
+        let middle = CGRect(x: 60, y: 60, width: 180, height: 180)
+        let dark = try await Self.renderImage(stock, traits: UITraitCollection(userInterfaceStyle: .dark), size: 300)
+        let light = try await Self.renderImage(stock, traits: UITraitCollection(userInterfaceStyle: .light), size: 300)
+        let darkMean = try #require(Self.mean(dark, in: middle))
+        let lightMean = try #require(Self.mean(light, in: middle))
+        #expect(Self.distance(darkMean, lightMean) < 0.02, "\(Self.hex(darkMean)), \(Self.hex(lightMean))")
+        let mock = UIColor(red: 222 / 255, green: 209 / 255, blue: 181 / 255, alpha: 1)
+        #expect(Self.distance(darkMean, mock) < 0.1, "\(Self.hex(darkMean)) against the mock's #DED1B5")
+        for image in [dark, light] {
+            let extremes = try #require(Self.luminanceExtremes(image))
+            #expect(DesignTokenTests.contrast(extremes.darkest, extremes.lightest) > 1.1, "it has a grain: \(Self.hex(extremes.darkest))...\(Self.hex(extremes.lightest))")
+        }
+    }
+
+    @Test("an Atlas plate's ink and every edition's printed stitch clear its fibre, the deeper tint under Increase Contrast")
+    func plateStock() async throws {
+        let stock = Color.clear.modifier(CardStockSurface(.plate))
+        for variant in DesignTokenTests.variants {
+            let image = try await Self.renderImage(stock, traits: variant.traits, size: 300)
+            let extremes = try #require(Self.luminanceExtremes(image))
+            let light = UITraitCollection { traits in
+                traits.userInterfaceStyle = .light
+                traits.accessibilityContrast = variant.traits.accessibilityContrast
+            }
+            let ink = Self.worst(try DesignTokenTests.color("CollectibleInk", light), on: extremes)
+            #expect(ink >= 4.5, "the ink on a plate, \(variant.name) (\(Self.hex(extremes.darkest))...\(Self.hex(extremes.lightest))): \(String(format: "%.2f", ink)):1")
+            for tint in EditionTintTests.tints {
+                let ratio = Self.worst(try DesignTokenTests.color(tint, light), on: extremes)
+                #expect(ratio >= 3, "\(tint)'s stitch on a plate, \(variant.name): \(String(format: "%.2f", ratio)):1")
+            }
+            for setID in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"] {
+                let ratio = Self.worst(UIColor(PatchEdition.paperThread(setID: setID)), on: extremes)
+                #expect(ratio >= 3, "\(setID)'s printed stitch, \(variant.name): \(String(format: "%.2f", ratio)):1")
+            }
+        }
+    }
+
     @Test("a paper tag's words clear 4.5:1 on the plain stock it's cut from")
     func paperTag() throws {
         let ink = try DesignTokenTests.color("CollectibleInk", UITraitCollection(userInterfaceStyle: .light))

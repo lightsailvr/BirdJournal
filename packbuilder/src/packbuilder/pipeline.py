@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from packbuilder.covers import CoverPainter
     from packbuilder.pack_art import PackArtist
     from packbuilder.patch_art import PatchArtist
+    from packbuilder.silhouettes import SilhouetteMaker
 
 log = logging.getLogger("packbuilder")
 
@@ -91,7 +92,7 @@ def build_pack(
     definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None,
     sounds: SoundPicker | None = None, card_set: dict | None = None, joined: dict[str, JoinedSpecies] | None = None, artist: PackArtist | None = None,
     art_sheets: Path | None = None, lore: LoreWriter | None = None, lore_review: Path | None = None, cover_painter: CoverPainter | None = None,
-    patch_artist: PatchArtist | None = None,
+    patch_artist: PatchArtist | None = None, silhouette_maker: SilhouetteMaker | None = None,
 ) -> WrittenPack:
     """`card_set` is the pinned set definition (`sets.py`) the pack carries; None writes an empty set table. `joined` is
     the joined stats, threatened flags and type lines (`stats.join`); None leaves their tables empty. `artist` paints
@@ -100,7 +101,8 @@ def build_pack(
     lock lacks from it and its review file into `lore_review`; None builds a pack without lore. `cover_painter` paints
     the set's cover the cover lock lacks (issue #114) and draws its contact sheet into `art_sheets` too; None builds a
     pack without a cover. `patch_artist` paints the patches the patch lock lacks (issue #133) and draws their contact
-    sheets into `art_sheets`/patches; a pack with patches has no pack art."""
+    sheets into `art_sheets`/patches; a pack with patches has no pack art. `silhouette_maker` derives the silhouettes the
+    silhouette lock lacks from the cached isolated birds (#150) and draws their contact sheets into `art_sheets`/silhouettes."""
     raw_overrides = load_overrides(overrides_path)
     shared = shared_photo_ids(definition.species, metadata)
     if shared:
@@ -124,6 +126,13 @@ def build_pack(
         if art_sheets is not None:
             sheets = patch_artist.sheets(ids, patches, art_sheets / "patches")
             log.info("patch contact sheets: %s", ", ".join(str(sheet) for sheet in sheets))
+    silhouettes = None
+    if silhouette_maker is not None:
+        ids = [r.entry.id for r in results]
+        silhouettes = silhouette_maker.make(ids)
+        if art_sheets is not None:
+            sheets = silhouette_maker.sheets(ids, silhouettes, art_sheets / "silhouettes")
+            log.info("silhouette contact sheets: %s", ", ".join(str(sheet) for sheet in sheets))
     cover = None
     if cover_painter is not None:
         cover = cover_painter.paint()
@@ -142,16 +151,18 @@ def build_pack(
     built_at = options.built_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     written = write_pack(definition, results, options.out_dir, built_at=built_at, archive_path=options.archive_path, card_set=card_set, joined=joined, art=art,
                          facts=facts, lore=written_lore, cover=cover, patches=patches,
-                         patch_versions=f"{patch_artist.workflow.tag} patch-prompts@{patch_artist.prompts.version}" if patch_artist else "")
+                         patch_versions=f"{patch_artist.workflow.tag} patch-prompts@{patch_artist.prompts.version}" if patch_artist else "",
+                         silhouettes=silhouettes, silhouette_version=silhouette_maker.version if silhouette_maker else "")
     gaps = [r.entry.common_name for r in results if r.gap]
     undescribed = [r.entry.common_name for r in results if r.description is None]
     silent = [r.entry.common_name for r in results if r.sounds is not None and r.sounds.gap]
     unreviewed = [r.entry.common_name for r in results if art is not None and patches is None and not (r.entry.id in art and art[r.entry.id].settled)]
     unreviewed_patches = [r.entry.common_name for r in results if patches is not None and not (r.entry.id in patches and patches[r.entry.id].settled)]
+    unreviewed_silhouettes = [r.entry.common_name for r in results if silhouettes is not None and not (r.entry.id in silhouettes and silhouettes[r.entry.id].settled)]
     unapproved_lore = [r.entry.common_name for r in results if written_lore is not None and not (r.entry.id in written_lore and written_lore[r.entry.id].ships)]
     untitled = [species_id for species_id, entry in (written_lore or {}).items() if entry.ships and not entry.shipped_title]
     log.info(
-        "wrote %s (%d species, %d photos, %d sounds%s%s%s%s%s%s%s%s)",
+        "wrote %s (%d species, %d photos, %d sounds%s%s%s%s%s%s%s%s%s)",
         written.directory, len(results), sum(len(r.photos) for r in results), sum(len(r.sounds.sounds) for r in results if r.sounds),
         f", {sum(a.ships for a in art.values())} paintings" if art is not None and patches is None else f", {sum(p.ships for p in patches.values())} patches" if patches is not None else "",
         f"; photo gaps: {', '.join(gaps)}" if gaps else "",
@@ -159,6 +170,7 @@ def build_pack(
         f"; no sound: {', '.join(silent)}" if silent else "",
         f"; art not approved yet: {len(unreviewed)} species" if unreviewed else "",
         f"; patches not approved yet: {len(unreviewed_patches)} species" if unreviewed_patches else "",
+        f"; silhouettes not approved yet: {len(unreviewed_silhouettes)} species" if unreviewed_silhouettes else "",
         f"; lore not approved yet: {len(unapproved_lore)} species" if unapproved_lore else "",
         f"; story title not approved yet: {len(untitled)} species" if untitled else "",
     )

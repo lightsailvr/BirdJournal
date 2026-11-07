@@ -1,10 +1,11 @@
 """Writes the pack directory: pack.sqlite, lens/ and phone/ JPEGs, sounds/ clips, art/ (the reviewed pack art as AVIF, #57),
-cover.avif (the set's approved cover, #114), LICENSE (every photo, sound, art and text credit), report.json (counts, chosen ids, and the photo, description, sound and
+silhouette/ (the reviewed silhouettes, #150), cover.avif (the set's approved cover, #114), LICENSE (every photo, sound, art and text credit), report.json (counts, chosen ids, and the photo, description, sound and
 art gaps), and optionally a zip of it (the download format for other regions, DECISIONS.md "Species pack")."""
 
 from __future__ import annotations
 
 import json
+import logging
 import shutil
 import sqlite3
 import zipfile
@@ -30,6 +31,9 @@ if TYPE_CHECKING:
     from packbuilder.lore import Lore
     from packbuilder.pack_art import Artwork
     from packbuilder.patch_art import Patch
+    from packbuilder.silhouettes import Silhouette
+
+log = logging.getLogger("packbuilder.writer")
 
 ART_QUALITY = 60
 """Pack art is 864 x 1152 (3:4) AVIF, which iOS decodes natively: at this quality a painting is about 120 KB, half a
@@ -177,6 +181,14 @@ CREATE TABLE patch (
     source_photo_ids TEXT NOT NULL,
     workflow_version TEXT NOT NULL
 );
+CREATE TABLE silhouette (
+    species_id TEXT PRIMARY KEY REFERENCES species(id),
+    file TEXT NOT NULL,
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    source_photo_ids TEXT NOT NULL,
+    workflow_version TEXT NOT NULL
+);
 CREATE TABLE cover (
     file TEXT NOT NULL,
     workflow_version TEXT NOT NULL,
@@ -193,7 +205,10 @@ disagree. Every other schema-4 table has one row per species once its ticket fil
 `cover` (#114) has at most one row, the set's approved cover; empty means the pack has none. `patch` (#133) has a row
 per species with an approved patch: `file` the colour on transparency (AVIF), `layers_file` the height, cord and stitch
 order in its red, green and blue at half size (AVIF, 4:4:4), `width` and `height` the colour's, `ground` the bare
-twill's "#RRGGBB", `stitch_bounds` the stitch layers' starts on the order's 0..255 as JSON."""
+twill's "#RRGGBB", `stitch_bounds` the stitch layers' starts on the order's 0..255 as JSON. `silhouette` (#150) has a row
+per species with an approved silhouette: `file` an opaque shape on transparency (PNG, luminance and alpha), which the app
+tints, `width` and `height` its size. It came within schema 5, like `cover` within 4: a reader that doesn't know it never
+opens it, and a pack written before it has no such table, which a reader takes as no silhouettes."""
 
 
 @dataclass(frozen=True)
@@ -258,6 +273,7 @@ def write_pack(
     definition: PackDefinition, results: list[SpeciesResult], out_dir: Path, built_at: str, archive_path: Path | None = None, card_set: dict | None = None,
     joined: dict[str, JoinedSpecies] | None = None, art: dict[str, Artwork] | None = None, facts: dict[str, list[Fact]] | None = None,
     lore: dict[str, Lore] | None = None, cover: Cover | None = None, patches: dict[str, Patch] | None = None, patch_versions: str = "",
+    silhouettes: dict[str, Silhouette] | None = None, silhouette_version: str = "",
 ) -> WrittenPack:
     """`joined` is the joined stats, threatened flags and type lines by scientific name (`stats.join`); None leaves
     their tables empty. `art` is each species' pack art by species id (`pack_art.py`); only approved paintings are
@@ -266,7 +282,9 @@ def write_pack(
     writes empty tables and, for the lore, no lore gaps. `cover` is the set's cover (`covers.py`), written only when
 approved; None (a build without art) writes an empty `cover` table. `patches` is each species' patch (`patch_art.py`),
 of which only the approved are written, as their colour and layers; `patch_versions` names the workflow and prompts they
-were painted with. A build with patches writes no pack art."""
+were painted with. A build with patches writes no pack art. `silhouettes` is each species' silhouette (`silhouettes.py`),
+of which only the approved whose photo is in the pack are written, since its credit names that photo; None writes an
+empty `silhouette` table and reports nothing unreviewed."""
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -328,6 +346,18 @@ were painted with. A build with patches writes no pack art."""
     if patches is not None:
         art = None
 
+    silhouette_rows = []
+    shipped_silhouettes = {}
+    for result in results:
+        silhouette = (silhouettes or {}).get(result.entry.id)
+        if silhouette is None or not silhouette.ships:
+            continue
+        if not set(silhouette.photos) <= {chosen.candidate.photo_id for chosen in result.photos}:
+            log.error("the silhouette of %s stays out: its photo %s isn't in the pack, so it couldn't be credited", result.entry.common_name, list(silhouette.photos))
+            continue
+        silhouette_rows.append(_write_silhouette(out_dir, result, silhouette, silhouette_version))
+        shipped_silhouettes[result.entry.id] = silhouette
+
     art_rows = []
     for result in results:
         artwork = (art or {}).get(result.entry.id)
@@ -353,7 +383,7 @@ were painted with. A build with patches writes no pack art."""
         for result in results if (written := (lore or {}).get(result.entry.id)) is not None and written.ships
     ]
 
-    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined), art=art, facts=bool(fact_rows), lore=lore, cover=cover, patches=patches)
+    license_text = _license_text(definition, results, built_at, card_set, stats=bool(joined), art=art, facts=bool(fact_rows), lore=lore, cover=cover, patches=patches, silhouettes=shipped_silhouettes)
     (out_dir / "LICENSE").write_text(license_text)
 
     database = out_dir / "pack.sqlite"
@@ -375,6 +405,7 @@ were painted with. A build with patches writes no pack art."""
         db.executemany("INSERT INTO sound VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sound_rows)
         db.executemany("INSERT INTO pack_art VALUES (?, ?, ?, ?)", art_rows)
         db.executemany("INSERT INTO patch VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", patch_rows)
+        db.executemany("INSERT INTO silhouette VALUES (?, ?, ?, ?, ?, ?)", silhouette_rows)
         db.executemany("INSERT INTO fact VALUES (?, ?, ?, ?)", fact_rows)
         db.executemany("INSERT INTO lore VALUES (?, ?, ?, ?, ?)", lore_rows)
         if cover_row is not None:
@@ -386,7 +417,7 @@ were painted with. A build with patches writes no pack art."""
         db.commit()
         db.execute("VACUUM")
 
-    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined, art, lore, cover, patches), indent=2) + "\n")
+    (out_dir / "report.json").write_text(json.dumps(_report(definition, results, built_at, joined, art, lore, cover, patches, silhouettes, shipped_silhouettes), indent=2) + "\n")
 
     archive = None
     if archive_path is not None:
@@ -427,7 +458,7 @@ def _description_columns(description: Description | None) -> tuple[str | None, s
 
 def _license_text(
     definition: PackDefinition, results: list[SpeciesResult], built_at: str, card_set: dict | None = None, stats: bool = False, art: dict[str, Artwork] | None = None,
-    facts: bool = False, lore: dict[str, Lore] | None = None, cover: Cover | None = None, patches: dict[str, Patch] | None = None,
+    facts: bool = False, lore: dict[str, Lore] | None = None, cover: Cover | None = None, patches: dict[str, Patch] | None = None, silhouettes: dict[str, Silhouette] | None = None,
 ) -> str:
     carried = {Credit.of(chosen.candidate).license for result in results for chosen in result.photos}
     lines = [
@@ -470,6 +501,7 @@ def _license_text(
             lines.append(f"  {result.entry.common_name}, {chosen.kind}: {chosen.candidate.credit_line}")
     lines += _art_credits(results, art) if art else []
     lines += _patch_credits(results, patches) if patches else []
+    lines += _silhouette_credits(results, silhouettes) if silhouettes else []
     lines += _cover_credits(cover) if cover is not None and cover.ships else []
     lines += ["", "Text credits", "============"]
     for result in results:
@@ -494,6 +526,40 @@ def _write_patch(out_dir: Path, result: SpeciesResult, patch: Patch, versions: s
     ground = "#{:02X}{:02X}{:02X}".format(*made.ground)
     return (result.entry.id, colour, layered, made.colour.width, made.colour.height, ground, json.dumps(list(made.bounds)),
             json.dumps(list(patch.photos)), versions)
+
+
+def _write_silhouette(out_dir: Path, result: SpeciesResult, silhouette: Silhouette, version: str) -> tuple:
+    """One approved silhouette in `silhouette/`, and its row."""
+    folder = out_dir / "silhouette"
+    folder.mkdir(exist_ok=True)
+    file = f"silhouette/{result.entry.id}.png"
+    shutil.copyfile(silhouette.file, out_dir / file)
+    with Image.open(silhouette.file) as opened:
+        width, height = opened.size
+    return (result.entry.id, file, width, height, json.dumps(list(silhouette.photos)), version)
+
+
+def _silhouette_credits(results: list[SpeciesResult], silhouettes: dict[str, Silhouette]) -> list[str]:
+    """Silhouettes (#150): each is a derivative of the pack photo it names, by way of its AI isolated bird."""
+    lines = [
+        "",
+        "Silhouettes",
+        "===========",
+        "",
+        "Each species' silhouette in silhouette/ is the outline of its bird in the photo of that species named below, whose",
+        "photographer and license are as in the photo credits, isolated from that photo by FLUX.3 Image Klein (Black Forest Labs,",
+        "FLUX Kommunity License; https://bfl.ai/legal) and reviewed by hand; the silhouette is a derivative of the photo, credited",
+        "the same way. Silhouettes from CC BY-SA photos are shared under CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0/).",
+        "",
+    ]
+    for result in results:
+        silhouette = silhouettes.get(result.entry.id)
+        if silhouette is None:
+            continue
+        photos = {chosen.candidate.photo_id: chosen for chosen in result.photos}
+        for chosen in (photos[photo_id] for photo_id in silhouette.photos):
+            lines.append(f"  {result.entry.common_name}: shape taken from photo {chosen.candidate.photo_id}, {Credit.of(chosen.candidate).line} — {chosen.candidate.source_url}")
+    return lines
 
 
 def _patch_credits(results: list[SpeciesResult], patches: dict[str, Patch]) -> list[str]:
@@ -619,6 +685,7 @@ def _one_of(licenses: set[str]) -> str:
 def _report(
     definition: PackDefinition, results: list[SpeciesResult], built_at: str, joined: dict[str, JoinedSpecies] | None = None, art: dict[str, Artwork] | None = None,
     lore: dict[str, Lore] | None = None, cover: Cover | None = None, patches: dict[str, Patch] | None = None,
+    silhouettes: dict[str, Silhouette] | None = None, shipped_silhouettes: dict[str, Silhouette] | None = None,
 ) -> dict:
     report = {
         "pack": definition.id,
@@ -658,6 +725,14 @@ def _report(
         # pack with any is not ready to publish.
         report["gaps"]["patches"] = [r.entry.id for r in results if r.entry.id in patches and patches[r.entry.id].review == "gap"]
         report.setdefault("unreviewed", {})["patches"] = [r.entry.id for r in results if r.entry.id not in patches or not patches[r.entry.id].settled]
+    if silhouettes is not None:
+        # Silhouettes (#150): a reviewed gap keeps the glyph on purpose; one not approved, or whose photo left the pack,
+        # isn't shipped either, and a pack with any is not ready to publish.
+        report["gaps"]["silhouettes"] = [r.entry.id for r in results if r.entry.id in silhouettes and silhouettes[r.entry.id].review == "gap"]
+        report.setdefault("unreviewed", {})["silhouettes"] = [
+            r.entry.id for r in results
+            if r.entry.id not in (shipped_silhouettes or {}) and not (r.entry.id in silhouettes and silhouettes[r.entry.id].review == "gap")
+        ]
     if cover is not None:
         # The set's cover (#114): a pack whose cover isn't approved ships without one, and isn't ready to publish.
         report["cover"] = {"review": cover.review, "ships": cover.ships, "seed": cover.seed}
