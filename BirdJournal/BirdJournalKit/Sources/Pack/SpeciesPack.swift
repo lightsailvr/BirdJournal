@@ -83,6 +83,11 @@ public struct SpeciesPack: Sendable, Hashable {
         directory.appending(path: patch.layersFile)
     }
 
+    /// A species' silhouette on disk: white on transparency, for the app to tint as it draws.
+    public func silhouetteURL(for silhouette: PackSilhouette) -> URL {
+        directory.appending(path: silhouette.file)
+    }
+
     /// The set's cover on disk, when the pack has one.
     public var coverURL: URL? {
         cover.map { directory.appending(path: $0.file) }
@@ -137,6 +142,9 @@ public struct PackSpecies: Sendable, Hashable, Identifiable {
     /// The species' embroidered patch in this pack's edition (issue #133); nil for a pack before schema 5 or a species
     /// without an approved patch.
     public var patch: PackPatch? = nil
+    /// Its true shape, for a set page's rows while the bird is still out there (issue #150); nil in a pack without them, and for a
+    /// bird left out on purpose, which keep the app's glyph.
+    public var silhouette: PackSilhouette? = nil
     /// The card stats (issue #55); nil for a pack before schema 4 or one built without them, and for a species the
     /// datasets lack (a known gap of the pack build, listed in its `report.json`).
     public var stats: PackStats? = nil
@@ -242,6 +250,20 @@ public struct PackPatch: Sendable, Hashable {
         self.stitchBounds = stitchBounds
         self.sourcePhotoIDs = sourcePhotoIDs
         self.workflowVersion = workflowVersion
+    }
+}
+
+/// One `silhouette` row (issue #150): the species' shape, taken from its isolated reference bird and reviewed by number.
+public struct PackSilhouette: Sendable, Hashable {
+    /// White luminance plus alpha, `silhouette/<species id>.png`, 180 px on its longest side. The app tints it at draw time.
+    public let file: String
+    public let width: Int
+    public let height: Int
+
+    public init(file: String, width: Int, height: Int) {
+        self.file = file
+        self.width = width
+        self.height = height
     }
 }
 
@@ -493,7 +515,11 @@ extension SpeciesPack {
         }
         if info.schemaVersion >= 5 {
             let patches = try readPatches(database)
-            for index in species.indices { species[index].patch = patches[species[index].id] }
+            let silhouettes = try readSilhouettes(database)
+            for index in species.indices {
+                species[index].patch = patches[species[index].id]
+                species[index].silhouette = silhouettes[species[index].id]
+            }
         }
         let cover = info.schemaVersion >= 4 ? try readCover(database) : nil
         return SpeciesPack(info: info, directory: directory, species: species, set: set, cover: cover)
@@ -581,6 +607,20 @@ extension SpeciesPack {
                              stitchBounds: stitchBounds, sourcePhotoIDs: sourcePhotoIDs, workflowVersion: workflow)
         }
         return Dictionary(rows.map { ($0.speciesID, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Each species' `silhouette` row, by species id; empty for a pack built before them, which has no such table: they came
+    /// within schema 5, as `cover` came within 4.
+    private static func readSilhouettes(_ database: SQLiteDatabase) throws -> [String: PackSilhouette] {
+        let tables = try database.rows("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'silhouette'") { $0.text(0) }
+        guard !tables.isEmpty else { return [:] }
+        let rows = try database.rows("SELECT species_id, file, width, height FROM silhouette") { row in
+            guard let speciesID = row.text(0), let file = row.text(1), let width = row.int(2), let height = row.int(3) else {
+                throw PackError.malformedRow(table: "silhouette")
+            }
+            return (speciesID, PackSilhouette(file: file, width: width, height: height))
+        }
+        return Dictionary(rows, uniquingKeysWith: { first, _ in first })
     }
 
     /// The one `set_definition` row's JSON; nil while the table is empty.

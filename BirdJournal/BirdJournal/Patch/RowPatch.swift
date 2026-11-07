@@ -9,6 +9,8 @@ enum RowPictureSource: Equatable {
     case ownPhoto(path: String, isGlassesFrame: Bool)
     case patch(scientificName: String, setID: String?)
     case reference(URL?)
+    /// A bird still out there, on a set's row: its shape, or the glyph when there's none (nil).
+    case silhouette(URL?)
 
     /// A row about something other than a sighting.
     static func of(patch: CardCollection.Patch?, reference: URL?) -> RowPictureSource {
@@ -31,6 +33,13 @@ enum RowPictureSource: Equatable {
             reference: species.photos.first.map(pack.lensImageURL(for:))
         )
     }
+
+    /// A set's row: your patch in that set, else the bird's silhouette, if the set's own pack is on the phone and has one.
+    static func ofSetRow(scientificName: String, setID: String, patch: CardCollection.Patch?, pack: SpeciesPack?) -> RowPictureSource {
+        if patch != nil { return .patch(scientificName: scientificName, setID: setID) }
+        guard let pack, let silhouette = pack.species(scientificName: scientificName)?.silhouette else { return .silhouette(nil) }
+        return .silhouette(pack.silhouetteURL(for: silhouette))
+    }
 }
 
 /// A row's picture, at `side` points at the default text size. VoiceOver skips it: the row's words say what it means.
@@ -48,6 +57,9 @@ struct RowPicture: View {
                 RowPatch(scientificName: scientificName, setID: setID)
             case .reference(let url):
                 PackImage(url: url)
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+            case .silhouette(let url):
+                SpeciesSilhouette(url: url)
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
             }
         }

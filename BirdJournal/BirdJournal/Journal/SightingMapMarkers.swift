@@ -1,0 +1,425 @@
+import Album
+import CoreLocation
+import MapKit
+import SwiftData
+import SwiftUI
+
+/// One sighting on the map.
+final class SightingPin: NSObject, MKAnnotation {
+    let id: PersistentIdentifier
+    let coordinate: CLLocationCoordinate2D
+    /// Not the annotation's `title`, which would have MapKit draw a callout of its own over the patch: ours is under the map.
+    let name: String
+    let confirmedAt: Date
+    let art: PatchArt?
+    /// The patch's set, nil for Uncharted: its shape, and the place's tint.
+    let setID: String?
+    let isFocus: Bool
+    /// Its callout is up.
+    var isChosen = false
+    /// For the sighting the map opened on: how many others share its spot, gathered right under it.
+    var othersHere = 0
+
+    init(id: PersistentIdentifier, coordinate: CLLocationCoordinate2D, name: String, confirmedAt: Date, art: PatchArt?, setID: String?, isFocus: Bool) {
+        self.id = id
+        self.coordinate = coordinate
+        self.name = name
+        self.confirmedAt = confirmedAt
+        self.art = art
+        self.setID = setID
+        self.isFocus = isFocus
+    }
+}
+
+/// The map, with what VoiceOver walks kept to what's on screen once there are many sightings. MapKit makes a view for every annotation in
+/// the visible area, clustered or not, and its own `accessibilityElements` compares each against all the others, on every question VoiceOver or
+/// a UI test asks: at 5,000 sightings one answer took tens of seconds and the main thread stayed at 100%. Past `manyPins`, the elements are
+/// the patches and clusters you can see, top to bottom, then the map's own controls (the locate button, the compass, Legal). Its street and
+/// place labels stay out: the sighting's place is in words under the map. Fewer than that, MapKit's own answer holds.
+final class ManyPinsMapView: MKMapView {
+    static let manyPins = 500
+
+    private var cached: [Any]?
+    private var cachedAt: CFTimeInterval = 0
+
+    override var accessibilityElements: [Any]? {
+        get {
+            guard annotations.count > Self.manyPins else { return super.accessibilityElements }
+            // It's asked once per index it hands out.
+            let now = CACurrentMediaTime()
+            if let cached, now - cachedAt < 0.5 { return cached }
+            var patches: [MKAnnotationView] = []
+            var controls: [UIView] = []
+            collect(from: self, patches: &patches, controls: &controls)
+            let shown = patches
+                .filter { !$0.isHidden && $0.alpha > 0 && $0.cluster == nil && bounds.contains($0.convert(CGPoint(x: $0.bounds.midX, y: $0.bounds.midY), to: self)) }
+                .sorted { ($0.frame.minY, $0.frame.minX) < ($1.frame.minY, $1.frame.minX) }
+            let elements: [Any] = shown + controls
+            cached = elements
+            cachedAt = now
+            return elements
+        }
+        set { super.accessibilityElements = newValue }
+    }
+
+    /// One walk of the map's views: it doesn't go inside an annotation view, and it stops at anything that speaks for itself.
+    private func collect(from view: UIView, patches: inout [MKAnnotationView], controls: inout [UIView]) {
+        for subview in view.subviews {
+            if let patch = subview as? MKAnnotationView {
+                patches.append(patch)
+            } else if subview.isHidden || subview.alpha == 0 || subview.accessibilityElementsHidden {
+                continue
+            } else if subview.isAccessibilityElement, subview.accessibilityLabel?.isEmpty == false {
+                controls.append(subview)
+            } else {
+                collect(from: subview, patches: &patches, controls: &controls)
+            }
+        }
+    }
+}
+
+/// `MKMapView`, since SwiftUI's `Map` has no clustering. Which sighting is chosen is ours: MapKit reports a tap and is left with nothing
+/// selected, so the choice is the same whether its patch is on the map or gathered into a cluster.
+struct SightingMap: UIViewRepresentable {
+    let pins: [SightingPin]
+    let centre: CLLocationCoordinate2D
+    @Binding var selection: PersistentIdentifier?
+    @Binding var here: [PersistentIdentifier]
+    let style: SightingMapView.Style
+    let showsUser: Bool
+
+    /// A cluster tighter than this, in metres, is listed rather than zoomed into: GPS can't part it, and its sightings may share one fix.
+    static let tightestZoom: CLLocationDistance = 50
+
+    /// Whether zooming would part these coordinates, or they're at one spot.
+    static func isOneSpot(_ coordinates: [CLLocationCoordinate2D]) -> Bool {
+        guard let first = coordinates.first else { return true }
+        let start = MKMapPoint(first)
+        return coordinates.allSatisfy { start.distance(to: MKMapPoint($0)) < tightestZoom }
+    }
+
+    private static let pinID = "sighting-pin"
+    private static let clusterID = "sighting-cluster"
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> MKMapView {
+        let map = ManyPinsMapView()
+        map.delegate = context.coordinator
+        map.register(PatchPinView.self, forAnnotationViewWithReuseIdentifier: Self.pinID)
+        map.register(PatchPinView.self, forAnnotationViewWithReuseIdentifier: PatchPinView.focusIdentifier)
+        map.register(PatchClusterView.self, forAnnotationViewWithReuseIdentifier: Self.clusterID)
+        var across: CLLocationDistance = 1_000
+        #if DEBUG
+        // `-autoMapAcross <metres>`: a wider map to begin with, for the screenshots of more than one edition.
+        let wider = UserDefaults.standard.double(forKey: "autoMapAcross")
+        if wider > 0 { across = wider }
+        #endif
+        map.setRegion(MKCoordinateRegion(center: centre, latitudinalMeters: across, longitudinalMeters: across), animated: false)
+        map.showsCompass = true
+        map.showsUserLocation = showsUser
+        map.showsUserTrackingButton = showsUser
+        map.preferredConfiguration = style.configuration
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped(_:)))
+        tap.cancelsTouchesInView = false
+        tap.delegate = context.coordinator
+        map.addGestureRecognizer(tap)
+        context.coordinator.style = style
+        return map
+    }
+
+    func updateUIView(_ map: MKMapView, context: Context) {
+        let coordinator = context.coordinator
+        coordinator.onSelect = { selection = $0 }
+        coordinator.onHere = { here = $0 }
+        if coordinator.style != style {
+            coordinator.style = style
+            map.preferredConfiguration = style.configuration
+        }
+        if !coordinator.pins.elementsEqual(pins, by: ===) {
+            coordinator.show(pins, on: map)
+        }
+        if coordinator.chosen != selection {
+            coordinator.choose(selection, on: map)
+        }
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate, UIGestureRecognizerDelegate {
+        var pins: [SightingPin] = []
+        var style = SightingMapView.Style.standard
+        var chosen: PersistentIdentifier?
+        var onSelect: (PersistentIdentifier?) -> Void = { _ in }
+        var onHere: ([PersistentIdentifier]) -> Void = { _ in }
+        private var feeding: Task<Void, Never>?
+
+        /// A few at a time, the opening sighting first. MapKit spends about a millisecond a view adding every annotation in the visible area,
+        /// clustered or not, all in one go on the main thread: 18 s at 20,000 sightings with the screen frozen. The cost is MapKit's and stays,
+        /// but this way the map answers while it fills.
+        func show(_ new: [SightingPin], on map: MKMapView) {
+            feeding?.cancel()
+            map.removeAnnotations(map.annotations.filter { $0 is SightingPin })
+            pins = new
+            chosen = nil
+            let ordered = new.filter(\.isFocus) + new.filter { !$0.isFocus }
+            // Twenty goes: each one also makes MapKit cluster again, so smaller batches cost more in all (at 20,000, 46 s of CPU in hundreds).
+            let batch = max(100, ordered.count / 20)
+            feeding = Task { [weak map] in
+                for start in stride(from: 0, to: ordered.count, by: batch) {
+                    guard !Task.isCancelled, let map else { return }
+                    map.addAnnotations(Array(ordered[start..<min(start + batch, ordered.count)]))
+                    guard start + batch < ordered.count else { return }
+                    try? await Task.sleep(for: .milliseconds(16))
+                }
+            }
+        }
+
+        func choose(_ id: PersistentIdentifier?, on map: MKMapView) {
+            chosen = id
+            for pin in pins where pin.isChosen || pin.id == id {
+                pin.isChosen = pin.id == id
+                (map.view(for: pin) as? PatchPinView)?.showChosen(animated: true)
+            }
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: any MKAnnotation) -> MKAnnotationView? {
+            switch annotation {
+            case is MKClusterAnnotation: mapView.dequeueReusableAnnotationView(withIdentifier: SightingMap.clusterID, for: annotation)
+            case let pin as SightingPin:
+                mapView.dequeueReusableAnnotationView(withIdentifier: pin.isFocus ? PatchPinView.focusIdentifier : SightingMap.pinID, for: annotation)
+            default: nil  // the birder's own dot
+            }
+        }
+
+        func mapView(_ mapView: MKMapView, didSelect annotation: any MKAnnotation) {
+            if let cluster = annotation as? MKClusterAnnotation {
+                mapView.deselectAnnotation(cluster, animated: false)
+                let members = cluster.memberAnnotations.compactMap { $0 as? SightingPin }
+                if SightingMap.isOneSpot(members.map(\.coordinate)) {
+                    onSelect(nil)
+                    onHere(members.sorted { $0.confirmedAt > $1.confirmedAt }.map(\.id))
+                } else {
+                    mapView.showAnnotations(members, animated: !UIAccessibility.isReduceMotionEnabled)
+                }
+            } else if let pin = annotation as? SightingPin {
+                mapView.deselectAnnotation(pin, animated: false)
+                // The opening sighting is out of the clusters: the rest of its spot may be right under it.
+                let start = MKMapPoint(pin.coordinate)
+                let spot = pin.isFocus ? pins.filter { start.distance(to: MKMapPoint($0.coordinate)) < SightingMap.tightestZoom } : []
+                if spot.count > 1 {
+                    onSelect(nil)
+                    onHere(spot.sorted { $0.confirmedAt > $1.confirmedAt }.map(\.id))
+                } else {
+                    onHere([])
+                    onSelect(pin.id)
+                }
+            }
+        }
+
+        /// A chosen patch gathered into a cluster by a zoom: the callout shouldn't name a bird the map no longer shows.
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            guard let chosen, let pin = pins.first(where: { $0.id == chosen }), !pin.isFocus, mapView.view(for: pin)?.cluster != nil else { return }
+            onSelect(nil)
+        }
+
+        /// A tap on the map itself puts the callout away.
+        @objc func tapped(_ tap: UITapGestureRecognizer) {
+            guard let map = tap.view as? MKMapView else { return }
+            var view = map.hitTest(tap.location(in: map), with: nil)
+            while let current = view {
+                if current is MKAnnotationView { return }
+                view = current.superview
+            }
+            onHere([])
+            onSelect(nil)
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+            true
+        }
+    }
+}
+
+/// An annotation view of a fixed size, whose picture is a sublayer. Setting `MKAnnotationView.image`, or nilling it on reuse, tells MapKit the
+/// view's metrics changed, and it clusters again, which makes more views and sets more pictures: at 5,000 sightings a pan never settled
+/// (issue #150's review; `AtlasUITests.testTheMapAnswersAtFiveThousandSightings`). A new picture here changes nothing MapKit reads.
+private class FixedPictureView: MKAnnotationView {
+    let picture = CALayer()
+
+    /// The view's size, for good.
+    class func size(reuseIdentifier: String?) -> CGSize { .zero }
+
+    override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        frame = CGRect(origin: .zero, size: Self.size(reuseIdentifier: reuseIdentifier))
+        canShowCallout = false
+        isAccessibilityElement = true
+        accessibilityTraits = .button
+        picture.frame = bounds
+        picture.contentsGravity = .center
+        picture.actions = ["contents": NSNull(), "contentsScale": NSNull()]
+        layer.addSublayer(picture)
+    }
+
+    required init?(coder: NSCoder) { fatalError("made in code") }
+
+    func show(_ image: UIImage) {
+        picture.contentsScale = image.scale
+        picture.contents = image.cgImage
+    }
+}
+
+/// A sighting's patch, in a view as big as a tap's target: a plain picture, its ring in the place's tint while it's chosen. The sighting
+/// the map opened on is larger and stays out of every cluster, with nothing colliding with it, so the map always shows the bird its
+/// callout names, and a cluster near it stays too.
+private final class PatchPinView: FixedPictureView {
+    static let focusIdentifier = "sighting-pin-focus"
+
+    private let isFocus: Bool
+    private var ring: CAShapeLayer?
+    private var loading: Task<Void, Never>?
+
+    private var side: CGFloat { isFocus ? MapPatchThumbnail.focusSide : MapPatchThumbnail.side }
+
+    override class func size(reuseIdentifier: String?) -> CGSize {
+        reuseIdentifier == focusIdentifier ? CGSize(width: 96, height: 72) : CGSize(width: 44, height: 44)
+    }
+
+    override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
+        isFocus = reuseIdentifier == Self.focusIdentifier
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        // MapKit reads this as the view is given its annotation, and it never changes for a view of this identifier.
+        clusteringIdentifier = isFocus ? nil : "sightings"
+        collisionMode = isFocus ? .none : .circle
+        displayPriority = isFocus ? .required : .defaultHigh
+        zPriority = isFocus ? .max : .defaultUnselected
+        accessibilityIdentifier = "map-patch"
+    }
+
+    required init?(coder: NSCoder) { fatalError("made in code") }
+
+    override var accessibilityLabel: String? {
+        get {
+            guard let pin = annotation as? SightingPin else { return nil }
+            let also = pin.othersHere > 0 ? ", and \(pin.othersHere) more here" : ""
+            return "\(pin.name), \(pin.confirmedAt.formatted(date: .abbreviated, time: .omitted))\(also)"
+        }
+        set {}
+    }
+
+    override func prepareForDisplay() {
+        super.prepareForDisplay()
+        guard let pin = annotation as? SightingPin else { return }
+        let edition = PatchEdition.of(setID: pin.setID)
+        let side = side
+        showPatch(MapPatchThumbnail.immediate(art: pin.art, edition: edition, side: side), of: pin)
+        showChosen(animated: false)
+        loading?.cancel()
+        loading = nil
+        if !MapPatchThumbnail.isFinished(art: pin.art, edition: edition, side: side) {
+            loading = Task { [weak self] in
+                let done = await MapPatchThumbnail.load(art: pin.art, edition: edition, side: side)
+                guard !Task.isCancelled else { return }
+                self?.showPatch(done, of: pin)
+            }
+        }
+    }
+
+    private func showPatch(_ patch: UIImage, of pin: SightingPin) {
+        guard pin.othersHere > 0 else {
+            show(patch)
+            return
+        }
+        let tint = UIColor(PatchEdition.tint(setID: pin.setID)).resolvedColor(with: traitCollection)
+        let ink = UIColor(Color.mossText).resolvedColor(with: traitCollection)
+        show(MapPatchThumbnail.spot(patch, others: pin.othersHere, canvas: bounds.size, tint: tint, ink: ink))
+    }
+
+    /// A ring only for the patch that needs one: thousands of these are made for a map that shows a few.
+    private func makeRing(for pin: SightingPin) -> CAShapeLayer {
+        let ring = self.ring ?? {
+            let ring = CAShapeLayer()
+            ring.fillColor = nil
+            ring.lineWidth = 2.5
+            ring.actions = ["hidden": NSNull()]
+            layer.addSublayer(ring)
+            self.ring = ring
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self]) { (view: PatchPinView, _) in
+                view.paintRing()
+            }
+            return ring
+        }()
+        let edition = PatchEdition.of(setID: pin.setID)
+        let rect = MapPatchThumbnail.patchRect(edition: edition, side: side)
+        let offset = CGPoint(x: (bounds.width - rect.width) / 2, y: (bounds.height - rect.height) / 2)
+        let centred = CGRect(origin: offset, size: rect.size)
+        ring.path = PatchOutline(shape: edition.shape).path(in: centred.insetBy(dx: -1.5, dy: -1.5)).cgPath
+        return ring
+    }
+
+    private func paintRing() {
+        guard let pin = annotation as? SightingPin else { return }
+        ring?.strokeColor = UIColor(PatchEdition.tint(setID: pin.setID)).resolvedColor(with: traitCollection).cgColor
+    }
+
+    func showChosen(animated: Bool) {
+        let pin = annotation as? SightingPin
+        let isChosen = pin?.isChosen ?? false
+        if isChosen, let pin {
+            _ = makeRing(for: pin)
+            paintRing()
+        }
+        ring?.isHidden = !isChosen
+        // Under the view's own bounds, which MapKit reads.
+        let scale = isChosen ? CATransform3DMakeScale(1.2, 1.2, 1) : CATransform3DIdentity
+        if animated, !UIAccessibility.isReduceMotionEnabled {
+            UIView.animate(withDuration: 0.2) { self.layer.sublayerTransform = scale }
+        } else {
+            layer.sublayerTransform = scale
+        }
+    }
+}
+
+/// A cluster of sightings: the newest one's patch, with how many.
+private final class PatchClusterView: FixedPictureView {
+    private var loading: Task<Void, Never>?
+
+    override class func size(reuseIdentifier: String?) -> CGSize { MapPatchThumbnail.clusterSize }
+
+    override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        collisionMode = .circle
+        displayPriority = .defaultHigh
+        accessibilityIdentifier = "map-patch-cluster"
+        registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self]) { (view: PatchClusterView, _) in
+            view.draw()
+        }
+    }
+
+    required init?(coder: NSCoder) { fatalError("made in code") }
+
+    override func prepareForDisplay() {
+        super.prepareForDisplay()
+        draw()
+    }
+
+    private func draw() {
+        guard let cluster = annotation as? MKClusterAnnotation else { return }
+        let members = cluster.memberAnnotations.compactMap { $0 as? SightingPin }
+        guard let newest = members.max(by: { $0.confirmedAt < $1.confirmedAt }) else { return }
+        accessibilityLabel = "\(members.count) sightings, the newest \(newest.name)"
+        let edition = PatchEdition.of(setID: newest.setID)
+        let tint = UIColor(PatchEdition.tint(setID: newest.setID)).resolvedColor(with: traitCollection)
+        let ink = UIColor(Color.mossText).resolvedColor(with: traitCollection)
+        let count = members.count
+        show(MapPatchThumbnail.cluster(MapPatchThumbnail.immediate(art: newest.art, edition: edition), count: count, tint: tint, ink: ink))
+        loading?.cancel()
+        loading = nil
+        if !MapPatchThumbnail.isFinished(art: newest.art, edition: edition) {
+            loading = Task { [weak self] in
+                let done = await MapPatchThumbnail.load(art: newest.art, edition: edition)
+                guard !Task.isCancelled else { return }
+                self?.show(MapPatchThumbnail.cluster(done, count: count, tint: tint, ink: ink))
+            }
+        }
+    }
+}
