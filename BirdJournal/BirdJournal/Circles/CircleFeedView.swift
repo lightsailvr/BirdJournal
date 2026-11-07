@@ -112,12 +112,15 @@ extension View {
     /// For the scroll view around a `FindsColumn`: finds landing above the row being read leave it where it is, so a tap lands on what
     /// it was aimed at. At the very top of the page there's no row being read, whatever came before: a find lands in sight there, and
     /// the header's controls stay put.
-    func holdsTheRowBeingRead() -> some View {
-        modifier(RowBeingRead())
+    /// - Parameter isOn: the finds are showing. Coming back to them, a remembered row would scroll to the top of the view, so it's
+    ///   forgotten while they're away, and the page stays where it was.
+    func holdsTheRowBeingRead(isOn: Bool = true) -> some View {
+        modifier(RowBeingRead(isOn: isOn))
     }
 }
 
 private struct RowBeingRead: ViewModifier {
+    let isOn: Bool
     @State private var row: String?
     @State private var isAtTheTop = true
 
@@ -132,8 +135,9 @@ private struct RowBeingRead: ViewModifier {
             }
             // It reports a row as a scroll settles, which may be after the scroll view has reached the top.
             .onChange(of: row) { _, reported in
-                if reported != nil, isAtTheTop { row = nil }
+                if reported != nil, isAtTheTop || !isOn { row = nil }
             }
+            .onChange(of: isOn) { row = nil }
     }
 }
 

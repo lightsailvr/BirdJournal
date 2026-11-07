@@ -39,7 +39,7 @@ struct CirclePageView: View {
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.bottom, JournalLayout.sectionGap)
             }
-            .holdsTheRowBeingRead()
+            .holdsTheRowBeingRead(isOn: showing == .finds)
             .onScrollGeometryChange(for: CGFloat.self) { $0.containerSize.height } action: { _, height in pageHeight = height }
             // The tab opened straight onto this page, or pushed it: anything more on the stack is over it.
             .keepsItsFootUnderAPage(isCovered: stackDepth > (newGuild == nil ? 1 : 0))
