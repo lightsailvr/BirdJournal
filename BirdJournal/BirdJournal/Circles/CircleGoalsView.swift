@@ -18,11 +18,11 @@ struct CircleGoalsSection: View {
             if let goals {
                 ForEach(goals) { goal in
                     if goal.kind == .monthly {
-                        MonthlyGoalCard(goal: goal)
+                        MonthlyGoalCard(goal: goal, circleID: circleID)
                             .listRowBackground(Color.clear)
                             .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
                     } else {
-                        CustomGoalRow(goal: goal, timeZone: timeZone)
+                        CustomGoalRow(goal: goal, circleID: circleID, timeZone: timeZone)
                             .swipeActions {
                                 if goal.canDelete { Button("Delete", role: .destructive) { deleting = goal } }
                             }
@@ -91,6 +91,7 @@ struct CircleGoalsSection: View {
 /// whole sentence once. No countdown and no leaderboard.
 struct CompactGoal: View {
     let goal: CircleGoal
+    let circleID: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -105,7 +106,7 @@ struct CompactGoal: View {
                     count
                 }
             }
-            ThreadProgress(goal: goal)
+            ThreadProgress(goal: goal, circleID: circleID)
                 .accessibilityHidden(true)
         }
         .accessibilityElement(children: .ignore)
@@ -139,6 +140,7 @@ struct CompactGoal: View {
 /// No countdown and no leaderboard, and no gold.
 struct MonthlyGoalCard: View {
     let goal: CircleGoal
+    let circleID: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -153,7 +155,7 @@ struct MonthlyGoalCard: View {
             }
             Text(GoalWords.headline(goal))
                 .font(JournalFont.section)
-            ThreadProgress(goal: goal, thread: .onLavender)
+            ThreadProgress(goal: goal, circleID: circleID, thread: .onLavender)
                 .accessibilityHidden(true)
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline) {
@@ -179,6 +181,7 @@ struct MonthlyGoalCard: View {
 /// A custom goal: its title, its days, who made it, the count and a bar.
 struct CustomGoalRow: View {
     let goal: CircleGoal
+    let circleID: String
     let timeZone: String
 
     var body: some View {
@@ -195,7 +198,7 @@ struct CustomGoalRow: View {
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(Color.ink)
             }
-            ThreadProgress(goal: goal)
+            ThreadProgress(goal: goal, circleID: circleID)
                 .accessibilityHidden(true)
             Text(GoalWords.customNote(goal, timeZone: timeZone))
                 .font(JournalFont.supporting)

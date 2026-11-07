@@ -142,7 +142,7 @@ struct CirclePageView: View {
     @ViewBuilder private var goal: some View {
         if let goals = circles.goals[id] {
             if let monthly = goals.first(where: { $0.kind == .monthly }) {
-                CompactGoal(goal: monthly)
+                CompactGoal(goal: monthly, circleID: id)
             }
         } else {
             GuildPlaceholder(rows: 1)

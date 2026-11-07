@@ -563,6 +563,7 @@ extension CircleStore {
             if mode == "shared" { client.seedSharedFinds() }
             if mode == "reference" { client.seedReference() }
             client.latency = .seconds(defaults.double(forKey: "fakeCircleLatency"))
+            client.goalRisesBy = defaults.integer(forKey: "fakeGoalRises")
             // `-circleCacheFile <name>` keeps the fakes' last-known content in tmp, so a UI test can relaunch over it.
             let cache = defaults.string(forKey: "circleCacheFile").map { CircleCache(fileURL: URL.temporaryDirectory.appending(path: "\($0).json")) }
             return CircleStore(account: account, client: client, cache: cache)

@@ -56,6 +56,11 @@ final class FakeCircleClient: CircleClient {
     /// How long Compare's answer takes to come back once the server has read it, for the tests of what lands meanwhile.
     var compareAnswerLatency: Duration = .zero
 
+    /// `-fakeGoalRises <n>` (issue #150): every read of a Guild's goals after the first finds them `n` birds further on, as a
+    /// friend's finds would, so a test can see a thread sew on screen.
+    var goalRisesBy = 0
+    private var goalReads: [String: Int] = [:]
+
     /// A read's time on the wire, which offline ends in no answer.
     private func wire() async throws {
         if latency > .zero { try? await Task.sleep(for: latency) }
@@ -310,7 +315,9 @@ final class FakeCircleClient: CircleClient {
         let zone = TimeZone(identifier: detail.circle.timeZone) ?? .gmt
         ensureMonthly(detail.circle, zone: zone)
         let now = now()
-        let goals = (storedGoals[circleID] ?? []).map { progressed($0.goal, headStart: $0.headStart, circle: detail.circle, now: now) }
+        let rise = goalRisesBy * (goalReads[circleID] ?? 0)
+        goalReads[circleID, default: 0] += 1
+        let goals = (storedGoals[circleID] ?? []).map { progressed($0.goal, headStart: $0.headStart + rise, circle: detail.circle, now: now) }
         let thisMonth = Self.calendar(zone).dateInterval(of: .month, for: now)?.start
         let monthly = goals.filter { $0.kind == .monthly && $0.startsAt == thisMonth }
         let order: [CircleGoal.Status: Int] = [.active: 0, .upcoming: 1, .ended: 2]
