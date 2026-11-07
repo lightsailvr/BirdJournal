@@ -648,6 +648,30 @@ struct FindFeedRowTests {
         #expect(entry?.item.card?.note == "Hello")
     }
 
+    @Test("a CDN thumbnail shows only if it's the find's own edition's patch")
+    func thumbnails() {
+        let url = URL(string: "https://cdn.example.com/x.png")!
+        var find = Self.item("a")
+        find.edition = "us-ca-sd"
+        find.art = .init(kind: "pack", key: "packs/us-ca-sd/patch/x.png", url: url)
+        #expect(FindPatchPicture.thumbnail(of: find) == url)
+        find.art = .init(kind: "pack", key: "packs/us-ca-la/patch/x.png", url: url)
+        #expect(FindPatchPicture.thumbnail(of: find) == nil, "never another edition's")
+        find.art = .init(kind: "pack", key: "packs/us-ca-sd/x.jpg", url: url)
+        #expect(FindPatchPicture.thumbnail(of: find) == nil, "not a patch")
+        find.edition = nil
+        find.art = .init(kind: "pack", key: "packs/us-ca-sd/patch/x.png", url: url)
+        #expect(FindPatchPicture.thumbnail(of: find) == nil)
+    }
+
+    @Test("a repeat's page says who met it again, the same way")
+    func repeatHeadline() {
+        var find = Self.item("a")
+        #expect(FindRow.fullHeadline(find) == "maya heard this bird again")
+        find.method = .seen
+        #expect(FindRow.fullHeadline(find) == "maya saw this bird again")
+    }
+
     @Test("the blocked are left out")
     func blocked() {
         let entries = FindEntry.merging([("c1", [Self.item("a"), Self.item("b", owner: "jo")])], blocked: ["maya"])

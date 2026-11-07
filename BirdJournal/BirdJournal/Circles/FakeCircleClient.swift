@@ -492,6 +492,13 @@ final class FakeCircleClient: CircleClient {
         feedItems[circleID, default: []].append(item)
     }
 
+    /// `-fakeCircles one`: Pat in the one Guild, with Sunday Group's feed and goals, so the tab opens straight on it.
+    func seedOneGuild() {
+        let id = add(name: "Sunday Group", creator: (Self.me, Self.myName), others: [("maya", "Maya Ortiz"), ("jo", "Jo Park"), ("sam", "Sam Okafor")], at: Date(timeIntervalSince1970: 1_790_000_000))
+        seedFeed(circleID: id)
+        seedGoals(circleID: id)
+    }
+
     /// `-fakeCircles shared`, on top of the seeds (issue #150): Family gets a feed too. Jo joins it, her hummingbird is in both
     /// Guilds, Lee has a run of repeats and two patches from an edition the phone doesn't have, one of a bird no pack on the
     /// phone describes. A find's First for the Guild goes to the earliest of its species, so the repeats have older finds.

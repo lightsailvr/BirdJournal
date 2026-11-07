@@ -1259,3 +1259,20 @@ A live list re-sorts as birds call, and since a row's Sew it and Add act at once
 - **A long toast at the largest text** stacks its words over a whole Undo, in a rounded rectangle, since slice 5's named toast no longer fit beside it.
 - **A launch argument can't hold an apostrophe**: a `-fakeRunBirds` with "Anna's Hummingbird" in it came up with none of its flags.
 
+
+## Guilds: finds open, the page on felt, the tab across Guilds (issue #150, slice 7) — built 2026-11-06
+
+The issue's "Guilds" section, with what it left open:
+
+- **A merged row never says more of where the bird was than the copy that says least.** A find's copies can differ between Guilds: a card shared by hand to one with its place left out, and the automatic find in another. The merged entry drops the place if any copy dropped it, and says a secret spot if any copy does. It keeps a card, a mark and a new patch from any copy.
+- **The merged feed stops at a horizon.** Merging by time alone would let a page read later put a find above what's been read. So it shows only what's newer than the newest last-read find of any Guild with unread pages, and "More finds" reads from that Guild, whose next item can't be older than anyone's. Nothing lands in the middle. A Guild whose read pages hold only blocked accounts' finds has nothing to compare, so it's read first.
+- **Reading a first page replaces what was read.** `.task` runs again on the way back from a find, which didn't matter when a row opened nothing, and would now throw away the pages under the row. `CircleStore.isFeedStale` reads again only what hasn't been read this launch, or after a minute if the birder hasn't gone past the first page. Pull to refresh always reads.
+- **A run of repeats needs two.** One repeat stays its own quiet row, with its reactions. "Within a day" is counted from the run's newest find, and anything led or marked ends the run. The line reads "Lee Birder found 3 birds again", since a run can mix Heard and Seen.
+- **A row's headline uses the first name, as the reference does** ("Maya sewed a new patch"). VoiceOver and the find's page keep the full name.
+- **A CDN thumbnail is used only if its key names the find's own edition.** Both are the finder's phone's words. The page shows the same picture as the row, so a zoom doesn't change patch on the way.
+- **The friend's paper card has no history.** `FriendPaperCard` shares the story and biology with `PaperCardView` and leaves out the count, the sightings and "All sightings", since those belong to the card's owner.
+- **The Invite pill and the sizes follow the reference at 1.34 where the tokens allow:** the name is `JournalFont.title` (largeTitle measured 18 % wide of the mock), the goal `JournalFont.heading`, a bird's name `JournalFont.section`. The reaction pills are 44 pt tall against the mock's 39, as the issue requires. "Let's go together" wraps at default text, since the issue's full names win over the mock's "Let's go".
+- **The reference's order isn't kept in the fixture.** Its Maya, "3 days ago", sits above Jo, "yesterday", which a feed sorted by time can't do. `-fakeCircles reference` makes Jo's 4 days ago.
+- **Compare keeps its screen behind the picker**, with its friends on a raised panel rather than felt, since they're rows to operate (slice 8 replaces it). The goal's patches are slice 8's too: `CompactGoal` shows thread alone, with the place for them marked.
+- **`Landscape.swift` is gone.** Nothing else drew a landscape, so the enum and palette went with `LandscapeArt`. `SetCoverImage` and `SeededRandom`, which were in that file, are in `SetCoverImage.swift`.
+- **By hand on a phone:** the reaction's pop and haptic, the zoom from a row's patch, and the row's patches at 120 Hz.

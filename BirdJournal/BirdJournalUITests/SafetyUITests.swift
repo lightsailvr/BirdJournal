@@ -114,7 +114,8 @@ final class SafetyUITests: XCTestCase {
         app.buttons["Harassment or bullying"].tap()
         app.buttons["reportSend"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["reportSent"].waitForExistence(timeout: 5), "not sent; screen: \(app.debugDescription.prefix(3000))")
-        app.buttons["Done"].tap()
+        // Over the Info sheet, which has a Done of its own.
+        app.navigationBars["Report member"].buttons["Done"].tap()
     }
 
     /// Report and Block are in plain sight on a find (issue #150), without knowing about touch and hold.

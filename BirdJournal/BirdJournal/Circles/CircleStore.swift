@@ -552,13 +552,14 @@ extension CircleStore {
     static var blocksAvailable: Bool { AccountSession.isEnabledInThisBuild }
 
     /// The app's store: the bundled server's API, or none when the build has no server (the tab then says circles
-    /// aren't available). In debug builds `-fakeCircles empty|some|shared|reference|offline`, or `-fakeAccount` alone, swaps in the in-memory
+    /// aren't available). In debug builds `-fakeCircles empty|one|some|shared|reference|offline`, or `-fakeAccount` alone, swaps in the in-memory
     /// fake, so the UI tests and screenshots need no network.
     static func forApp(account: AccountSession) -> CircleStore {
         #if DEBUG
         let defaults = UserDefaults.standard
         if let mode = defaults.string(forKey: "fakeCircles") ?? defaults.string(forKey: "fakeAccount").map({ _ in "empty" }) {
             let client = FakeCircleClient(seeded: ["some", "shared", "reference"].contains(mode), offline: mode == "offline")
+            if mode == "one" { client.seedOneGuild() }
             if mode == "shared" { client.seedSharedFinds() }
             if mode == "reference" { client.seedReference() }
             client.latency = .seconds(defaults.double(forKey: "fakeCircleLatency"))

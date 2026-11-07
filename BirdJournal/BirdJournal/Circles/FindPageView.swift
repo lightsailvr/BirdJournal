@@ -166,6 +166,14 @@ private struct FindPageContent: View {
         .haptic(.turn, trigger: turned)
         .haptic(.lift, trigger: opened)
         .onAppear { opened = true }
+        #if DEBUG
+        .task {
+            if UserDefaults.standard.bool(forKey: "autoCardBack"), species != nil {
+                UserDefaults.standard.removeObject(forKey: "autoCardBack")
+                turned = true
+            }
+        }
+        #endif
     }
 
     @ViewBuilder private var patch: some View {
@@ -192,7 +200,7 @@ private struct FindPageContent: View {
 
     /// The patch centred in the footprint: a blank with its tag if the phone has no painting of it in this edition.
     private var face: some View {
-        PatchView(state: library.patchArtState(scientificName: item.scientificName, setID: item.edition), edition: PatchEdition.of(setID: item.edition), size: .full, tag: item.commonName)
+        FindPatchPicture(item: item, size: .full)
             .padding(.horizontal, 22)
             .frame(maxWidth: Self.footprint.width, minHeight: typeSize.isAccessibilitySize ? 300 : Self.footprint.height)
             .contentShape(Rectangle())

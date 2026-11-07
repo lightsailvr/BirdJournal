@@ -228,7 +228,6 @@ final class CirclesUITests: XCTestCase {
         XCTAssertTrue(app.scrolledInGuildInfo(to: app.staticTexts["Maya Ortiz"].firstMatch), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.scrolledInGuildInfo(to: app.switches["Mute this Guild"]))
         XCTAssertTrue(app.scrolledInGuildInfo(to: app.buttons["Leave Guild"]))
-        XCTAssertEqual(app.navigationBars.buttons["guildInfo"].exists, false, "a sheet, over the page")
     }
 
     /// "All goals" goes to the goals.

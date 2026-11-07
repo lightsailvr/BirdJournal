@@ -38,6 +38,12 @@ struct FindsColumn: View {
                     .padding(.top, 12)
             }
         }
+        #if DEBUG
+        // `-autoOpenRepeats YES`, for the screenshots: every line of repeats open.
+        .onChange(of: entries.count, initial: true) {
+            if UserDefaults.standard.bool(forKey: "autoOpenRepeats") { expanded.formUnion(entries.map(\.id)) }
+        }
+        #endif
     }
 
     private func find(_ entry: FindEntry) -> some View {
@@ -245,6 +251,8 @@ struct ReactionBar: View {
                     }
                 }
             }
+            // As tall as the one with the most lines, so the three stay equal.
+            .fixedSize(horizontal: false, vertical: true)
             .haptic(.reaction, trigger: reacted)
         }
     }
@@ -260,6 +268,7 @@ struct ReactionBar: View {
 private struct ReactionPill: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.dynamicTypeSize) private var typeSize
     let kind: ReactionKind
     let count: ReactionCount
     let sightingID: String
@@ -280,9 +289,9 @@ private struct ReactionPill: View {
                 .foregroundStyle(count.mine ? AnyShapeStyle(Color.mossText) : AnyShapeStyle(Color.ink))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity, minHeight: 44, maxHeight: .infinity)
                 .background { pill }
-                .contentShape(.capsule)
+                .contentShape(.rect)
                 .keyframeAnimator(initialValue: 1.0, trigger: pops) { content, scale in
                     content.scaleEffect(isStill ? 1 : scale)
                 } keyframes: { _ in
@@ -306,14 +315,19 @@ private struct ReactionPill: View {
             .contentTransition(.numericText(value: Double(count.count)))
     }
 
+    /// A capsule, or a rounded rectangle at accessibility sizes, where its words may wrap (issue #150).
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: JournalLayout.outlineRadius(typeSize), style: .continuous)
+    }
+
     @ViewBuilder private var pill: some View {
         if count.mine {
-            Capsule().fill(.tint)
+            shape.fill(.tint)
         } else {
             // Stronger, and ringed, under Increase Contrast.
-            Capsule().fill(Color.ink.opacity(contrast == .increased ? 0.22 : 0.1))
+            shape.fill(Color.ink.opacity(contrast == .increased ? 0.22 : 0.1))
                 .overlay {
-                    if contrast == .increased { Capsule().strokeBorder(Color.ink, lineWidth: 1) }
+                    if contrast == .increased { shape.strokeBorder(Color.ink, lineWidth: 1) }
                 }
         }
     }
@@ -448,9 +462,10 @@ struct FindRow: View {
         "\(familiar(item)) \(item.newPatch ? "sewed a new patch" : "shared a sighting")"
     }
 
-    /// "Maya Ortiz sewed a new patch", on the find's own page.
+    /// "Maya Ortiz sewed a new patch", on the find's own page; "Jo Park heard this bird again" for a repeat.
     static func fullHeadline(_ item: FeedItem) -> String {
-        "\(subject(item)) \(item.newPatch ? "sewed a new patch" : isLed(item) ? "shared a sighting" : "saw this bird again")"
+        let again = "\(item.method == .seen ? "saw" : "heard") this bird again"
+        return "\(subject(item)) \(item.newPatch ? "sewed a new patch" : isLed(item) ? "shared a sighting" : again)"
     }
 
     /// "Heard in Pasadena, 2 hours ago", "Seen at a secret spot, 2 hours ago", or "Heard, 2 hours ago" without a place.
@@ -606,38 +621,47 @@ struct SharedCardExtras: View {
     }
 }
 
-/// What leads a find (guide 2.0 page 8): the finder's patch in its edition, lit like every other. A phone without that edition's
-/// pack shows the patch's thumbnail from the art CDN if the server names that edition's, then the edition's blank with the bird's
-/// name on its tag: a pack without patches (#58), a stored find naming a watercolour's thumbnail (retired by #137). A plain
-/// bitmap under the shader, on the two-at-a-time queue. Never another edition's patch. An edition this phone has never heard of
-/// (the server doesn't check it) is drawn as the plain blank, like Uncharted's.
+/// What leads a find (guide 2.0 page 8): the finder's patch in its edition at about `side` points, a little larger with the text.
 struct FindPatch: View {
-    @Environment(PackLibrary.self) private var library
     let item: FeedItem
     let side: CGFloat
-    var size = PatchTextures.Size.thumbnail
 
     @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
 
     var body: some View {
         let shown = min(side * scale, side * 1.3)
+        FindPatchPicture(item: item)
+            .frame(width: shown, height: shown)
+            .holdsPatchLight()
+    }
+}
+
+/// A find's patch, lit like every other. A phone without that edition's pack shows the patch's thumbnail from the art CDN if the
+/// server names that edition's, then the edition's blank with the bird's name on its tag: a pack without patches (#58), a stored
+/// find naming a watercolour's thumbnail (retired by #137). A plain bitmap under the shader, on the two-at-a-time queue. Never
+/// another edition's patch. An edition this phone has never heard of (the server doesn't check it) is the plain blank, like
+/// Uncharted's. A decoration: the row or the page says what it is.
+struct FindPatchPicture: View {
+    @Environment(PackLibrary.self) private var library
+    let item: FeedItem
+    var size = PatchTextures.Size.thumbnail
+
+    var body: some View {
+        let state = library.patchArtState(scientificName: item.scientificName, setID: item.edition)
         Group {
-            let state = library.patchArtState(scientificName: item.scientificName, setID: item.edition)
             if state.art == nil, state != .beingSewn, let url = Self.thumbnail(of: item) {
                 AsyncImage(url: url) { phase in
-                    if let image = phase.image { image.resizable().scaledToFit() } else { blank(state) }
+                    if let image = phase.image { image.resizable().scaledToFit() } else { patch(state) }
                 }
             } else {
-                PatchView(state: state, edition: PatchEdition.of(setID: item.edition), size: size, tag: item.commonName)
+                patch(state)
             }
         }
-        .frame(width: shown, height: shown)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-        .holdsPatchLight()
     }
 
-    private func blank(_ state: PatchArtState) -> some View {
+    private func patch(_ state: PatchArtState) -> some View {
         PatchView(state: state, edition: PatchEdition.of(setID: item.edition), size: size, tag: item.commonName)
     }
 

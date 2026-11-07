@@ -26,6 +26,8 @@ import UIKit
 /// - `-seedNewestAt <place>` adds a sighting just now at one of `-autoLocation`'s places, so its set is the newest sighting's.
 /// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
 ///   the species' patches (issue #134).
+/// - `-autoScreen find` opens a find's page (`-autoFind <owner>/<sighting>`, by default Maya's Black Phoebe), and `circle-info` a
+///   Guild's Info sheet (issue #150). `-fakeCircles one|shared|reference` seeds one Guild, finds in two, and the reference picture's.
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Patches view), `sightings`,
 ///   `reveal` (the new-patch reveal of the newest seeded sighting, over the Listen tab; over a phone run with
