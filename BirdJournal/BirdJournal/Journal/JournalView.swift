@@ -7,7 +7,7 @@ import UIKit
 /// The Collection tab (issue #28, renamed from Journal in #117): a felt board of a set's patches (issue #134), every
 /// sighting by day (the journal), or the distinct species, with search; a patch opens its page, a sighting the sighting
 /// and a species its patches. The mode picker stays pinned under the title, and the mode, the search, the board and each
-/// mode's scroll offset live in the root's `CollectionState`, so coming back finds them as they were (design guide page
+/// mode's search-return offset live in the root's `CollectionState`, so coming back finds them as they were (design guide page
 /// 10). Removals can be undone for a few seconds. The first time the collection has a patch, a one-time "your collection
 /// so far" moment introduces it.
 struct JournalView: View {
@@ -53,17 +53,16 @@ struct JournalView: View {
             } else {
                 let collection = collectionStore.collection
                 ScrollView {
-                    // One mode fading out over the next: in a stack they'd sit one above the other meanwhile.
-                    ZStack(alignment: .topLeading) {
-                        LazyVStack(alignment: .leading, spacing: 0) {
-                            content(collection)
-                        }
-                        .id(state.mode)
-                        .transition(modeContentTransition)
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        content(collection)
                     }
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.bottom, JournalLayout.sectionGap)
                 }
+                // A new native scroll view starts at the top before its lazy stack lays out (issue #180). Only the
+                // scrolling content changes identity: the pinned picker, search field and navigation bar stay put.
+                .id(state.mode)
+                .transition(.identity)
                 // Outside the scrolling content, under a title that doesn't collapse: the picker has nothing to ride on, so whatever a
                 // mode change does to the content or the offset, it stays exactly where it is.
                 .safeAreaBar(edge: .top) {
@@ -368,12 +367,16 @@ struct JournalView: View {
         }
     }
 
-    /// Shows `mode` where it was left: the picker stays pinned, so each mode keeps its own place.
+    /// A different mode starts at its top; only returning from a page or search keeps the current mode's place.
     private func switchMode(to mode: Mode) {
         guard mode != state.mode else { return }
-        let saved = state.offsets[mode] ?? 0
+        stopRestoring()
+        position = ScrollPosition(edge: .top)
+        offset = 0
+        state.offsets[mode] = 0
+        // Clearing a search after switching modes must not resurrect that mode's old position either.
+        if state.offsetsBeforeSearch != nil { state.offsetsBeforeSearch?[mode] = 0 }
         withAnimation(modeFade) { state.mode = mode }
-        restore(saved)
     }
 
     /// The surface cross-fades from one mode to the next (issue #150, audit F10); under Reduce Motion, quickly.
@@ -385,18 +388,9 @@ struct JournalView: View {
         return .easeInOut(duration: reduceMotion ? 0.12 : 0.25)
     }
 
-    /// Both modes share one scroll view, which moves to the new mode's place soon after the change. So what's on the surface doesn't
-    /// fade across that move, where it would be seen to jump: the old mode has gone first, and the new one comes up after it.
-    private var modeContentTransition: AnyTransition {
-        .asymmetric(
-            insertion: .opacity.animation(.easeOut(duration: reduceMotion ? 0.08 : 0.17).delay(0.08)),
-            removal: .opacity.animation(.easeOut(duration: 0.05))
-        )
-    }
-
-    /// Scrolls to `saved` once the shown mode has laid out, without saving the offsets passed on the way. The scroll
-    /// view's reported offset and `scrollTo(y:)` can differ by the collapsing title's height, so a second step corrects
-    /// by whatever the first one missed. A newer change takes over from one still under way.
+    /// Restores the current mode after a search, once its content has laid out. A single native scroll is
+    /// clamped by the scroll view; never add an offset discrepancy to the target, since lazy content or a stale
+    /// geometry report can make that correction overshoot the end. A newer request cancels the pending one.
     private func restore(_ saved: CGFloat) {
         restoring = true
         settling?.cancel()
@@ -406,12 +400,6 @@ struct JournalView: View {
             position.scrollTo(y: saved)
             try? await Task.sleep(for: .milliseconds(80))
             guard !Task.isCancelled else { return }
-            let missed = saved - offset
-            if abs(missed) > 1 {
-                position.scrollTo(y: saved + missed)
-                try? await Task.sleep(for: .milliseconds(80))
-                guard !Task.isCancelled else { return }
-            }
             restoring = false
             state.offsets[state.mode] = max(offset, 0)
         }
