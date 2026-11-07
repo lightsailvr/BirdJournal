@@ -29,6 +29,41 @@ final class SightingPin: NSObject, MKAnnotation {
     }
 }
 
+/// The map, with what VoiceOver walks kept to what's on screen once there are many sightings. MapKit makes a view for every annotation in
+/// the visible area, clustered or not, and its own `accessibilityElements` compares each against all the others, on every question VoiceOver or
+/// a UI test asks: at 5,000 sightings one answer took tens of seconds and the main thread stayed at 100%. Past `manyPins`, the elements are
+/// the patches and clusters you can see, top to bottom, which leaves out the map's own labels and buttons: the sighting's place is in words
+/// under the map. Fewer than that, MapKit's own answer holds.
+private final class ManyPinsMapView: MKMapView {
+    static let manyPins = 500
+
+    private var cached: [Any]?
+    private var cachedAt: CFTimeInterval = 0
+
+    override var accessibilityElements: [Any]? {
+        get {
+            guard annotations.count > Self.manyPins else { return super.accessibilityElements }
+            // It's asked once per index it hands out.
+            let now = CACurrentMediaTime()
+            if let cached, now - cachedAt < 0.5 { return cached }
+            let shown = annotationViews(in: self)
+                .filter { !$0.isHidden && $0.alpha > 0 && $0.cluster == nil && bounds.contains($0.convert(CGPoint(x: $0.bounds.midX, y: $0.bounds.midY), to: self)) }
+                .sorted { ($0.frame.minY, $0.frame.minX) < ($1.frame.minY, $1.frame.minX) }
+            cached = shown
+            cachedAt = now
+            return shown
+        }
+        set { super.accessibilityElements = newValue }
+    }
+
+    private func annotationViews(in view: UIView) -> [MKAnnotationView] {
+        view.subviews.flatMap { subview -> [MKAnnotationView] in
+            if let annotation = subview as? MKAnnotationView { return [annotation] }
+            return annotationViews(in: subview)
+        }
+    }
+}
+
 /// `MKMapView`, since SwiftUI's `Map` has no clustering. Which sighting is chosen is ours: MapKit reports a tap and is left with nothing
 /// selected, so the choice is the same whether its patch is on the map or gathered into a cluster.
 struct SightingMap: UIViewRepresentable {
@@ -55,7 +90,7 @@ struct SightingMap: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> MKMapView {
-        let map = MKMapView()
+        let map = ManyPinsMapView()
         map.delegate = context.coordinator
         map.register(PatchPinView.self, forAnnotationViewWithReuseIdentifier: Self.pinID)
         map.register(PatchPinView.self, forAnnotationViewWithReuseIdentifier: PatchPinView.focusIdentifier)
