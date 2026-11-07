@@ -178,6 +178,15 @@ struct LegacyFindWireTests {
 
 @Suite("A find's way to the Atlas")
 struct FindAtlasRouteTests {
+    @Test("a row prints the packs' or BirdNET's name for a real bird, and the finder's words only for a bird nothing names")
+    func rowNames() {
+        let packs = BirdNames(packs: ["Sayornis nigricans": "Pack's Phoebe"])
+        let name = { (scientific: String) in FindEntry(item: find(scientific), circleIDs: ["c"]).named(by: packs).item.commonName }
+        #expect(name("Sayornis nigricans") == "Pack's Phoebe")
+        #expect(name("Turdus merula") == "Common Blackbird")
+        #expect(name("Not a real bird") == "Call me 555-1234", "beside the finder's name, with Report")
+    }
+
     private func find(_ scientific: String) -> FeedItem {
         FeedItem(
             sightingID: "00000000-0000-4000-8000-000000000050", speciesID: "x", scientificName: scientific, commonName: "Call me 555-1234",
