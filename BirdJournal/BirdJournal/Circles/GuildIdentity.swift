@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// A Guild's look (issue #118, design guide page 13): a simple nature-derived emblem, chosen from the circle's ID so every
-/// member sees the same one and nothing new is stored or sent. Emblems are identity, not ranks or purchases: one mark on a
+/// A Guild's look (issues #118, #181): a stored mark and tone when chosen, with its ID's stable hash as the fallback.
+/// Emblems are identity, not ranks or purchases: one mark on a
 /// calm disc in aqua or a muted local colour, never gold (there is none since #132).
 struct GuildIdentity: Equatable {
     /// One emblem tone: the deep disc and the light mark on it, the same in both appearances.
@@ -26,6 +26,22 @@ struct GuildIdentity: Equatable {
 
     let mark: String
     let tone: Tone
+
+    init(mark: String, tone: Tone) {
+        self.mark = mark
+        self.tone = tone
+    }
+
+    init(circle: CircleSummary) {
+        if let emblem = circle.emblem, Self.marks.contains(emblem.mark),
+           let tone = Self.tones.first(where: { $0.name == emblem.tone }) {
+            self.init(mark: emblem.mark, tone: tone)
+        } else {
+            self.init(circleID: circle.id)
+        }
+    }
+
+    var emblem: CircleEmblem { CircleEmblem(mark: mark, tone: tone.name) }
 
     init(circleID: String) {
         let seed = SeededRandom.seed(circleID)

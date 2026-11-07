@@ -38,7 +38,8 @@ final class FindRecorder: CircleClient {
     func photoUpload(sightingID: UUID, accessToken: String) async throws -> PhotoUpload { throw CircleError.server(503) }
     func uploadPhoto(_ jpeg: Data, to upload: PhotoUpload) async throws {}
     func circles(accessToken: String) async throws -> [CircleSummary] { try await inner.circles(accessToken: accessToken) }
-    func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail { try await inner.createCircle(named: name, timeZone: timeZone, accessToken: accessToken) }
+    func createCircle(named name: String, timeZone: String, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail { try await inner.createCircle(named: name, timeZone: timeZone, emblem: emblem, accessToken: accessToken) }
+    func updateCircle(id: String, name: String?, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail { return try await inner.updateCircle(id: id, name: name, emblem: emblem, accessToken: accessToken) }
     func circle(id: String, accessToken: String) async throws -> CircleDetail { try await inner.circle(id: id, accessToken: accessToken) }
     func createInvite(circleID: String, accessToken: String) async throws -> CircleInvite { try await inner.createInvite(circleID: circleID, accessToken: accessToken) }
     func invitePreview(token: String, accessToken: String) async throws -> InvitePreview { try await inner.invitePreview(token: token, accessToken: accessToken) }

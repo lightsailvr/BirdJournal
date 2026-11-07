@@ -4,7 +4,7 @@ holds at most 20 accounts; an account can be in several circles.
 
 Items, beside the account's (tables.py):
 
-- `CIRCLE#<id>` / `META`: the name, the creator, the time zone, `created_at` and `member_count` (current members).
+- `CIRCLE#<id>` / `META`: the name, the creator, the time zone, `created_at`, `member_count` (current members), and an optional `emblem` (mark and tone).
 - `CIRCLE#<id>` / `MEMBER#<sub>`: one per account that ever joined: `joined_at`, and `left_at` once it left or was
   removed (`removed_at` too when the creator removed it). Members by circle, with joined and left times.
 - `ACCOUNT#<sub>` / `CIRCLE#<id>`: the account's current circles (circles by member), written and deleted in the same
@@ -28,6 +28,7 @@ from typing import Any
 from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from boto3.dynamodb.conditions import Attr
 from botocore.exceptions import ClientError
 
 from birdjournal_api.accounts import AccountStore
@@ -38,6 +39,8 @@ INVITE_LIFETIME = timedelta(days=7)
 # Expired invites stay readable this long, so an old link says "expired" rather than "not found".
 INVITE_KEPT_AFTER_EXPIRY = timedelta(days=30)
 TRANSACTION_ATTEMPTS = 4
+EMBLEM_MARKS = frozenset({"leaf.fill", "bird.fill", "tree.fill", "water.waves", "mountain.2.fill", "sun.horizon.fill", "camera.macro", "wind", "moon.stars.fill", "drop.fill"})
+EMBLEM_TONES = frozenset({"aqua", "slate", "sage", "clay", "reed", "mist"})
 
 
 class CircleError(Exception):
@@ -49,7 +52,7 @@ class NotFound(CircleError):
 
 
 class Forbidden(CircleError):
-    """Only the creator removes members."""
+    """Only the creator edits the Guild or removes members."""
 
 
 class CircleFull(CircleError):
@@ -80,6 +83,7 @@ class Circle:
     created_at: datetime
     time_zone: str
     member_count: int
+    emblem: dict[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -199,7 +203,7 @@ class CircleStore:
 
     # Writes.
 
-    def create(self, subject: str, name: str, time_zone: str) -> CircleDetail:
+    def create(self, subject: str, name: str, time_zone: str, emblem: dict[str, str] | None = None) -> CircleDetail:
         """A new circle with its creator as the only member."""
         self._accounts.get_or_create(subject)
         circle_id = str(uuid4())
@@ -214,6 +218,7 @@ class CircleStore:
                         "created_at": now,
                         "time_zone": time_zone,
                         "member_count": 1,
+                        **({"emblem": emblem} if emblem is not None else {}),
                     },
                     "attribute_not_exists(pk)",
                 ),
@@ -221,6 +226,39 @@ class CircleStore:
                 _put({**_membership_key(subject, circle_id), "joined_at": now}, "attribute_not_exists(pk)"),
             ]
         )
+        return self.detail(subject, circle_id)
+
+    def update(self, subject: str, circle_id: str, name: str | None, emblem: dict[str, str] | None) -> CircleDetail:
+        """Only the current creator can rename or choose a Guild's emblem.
+
+        The creator condition is checked by the write, so a concurrent handoff cannot let the old creator edit it.
+        A creator is always a current member (the membership/handoff transaction maintains that invariant).
+        """
+        detail = self.detail(subject, circle_id)
+        if detail.circle.created_by != subject:
+            raise Forbidden()
+        names = {}
+        values = {}
+        updates = []
+        for key, value in (("name", name), ("emblem", emblem)):
+            if value is not None:
+                names[f"#{key}"] = key
+                values[f":{key}"] = value
+                updates.append(f"#{key} = :{key}")
+        if not updates:
+            raise ValueError("Choose a name or emblem to update")
+        try:
+            self._table.update_item(
+                Key=_meta_key(circle_id),
+                UpdateExpression="SET " + ", ".join(updates),
+                ExpressionAttributeNames=names,
+                ExpressionAttributeValues=values,
+                ConditionExpression=Attr("created_by").eq(subject),
+            )
+        except self._table.meta.client.exceptions.ConditionalCheckFailedException:
+            # Recheck membership so a former creator receives the same hidden-circle response as every non-member.
+            self.detail(subject, circle_id)
+            raise Forbidden() from None
         return self.detail(subject, circle_id)
 
     def create_invite(self, subject: str, circle_id: str) -> Invite:
@@ -596,4 +634,5 @@ def _circle(item: dict[str, Any]) -> Circle:
         created_at=_parse(item["created_at"]),
         time_zone=item["time_zone"],
         member_count=int(item["member_count"]),
+        emblem=item.get("emblem"),
     )

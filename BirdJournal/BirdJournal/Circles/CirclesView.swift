@@ -283,7 +283,7 @@ private struct GuildEmblemTile: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            GuildEmblem(identity: GuildIdentity(circleID: circle.id), size: 68)
+            GuildEmblem(identity: GuildIdentity(circle: circle), size: 68)
             Text(circle.name)
                 .font(JournalFont.attribution.weight(.medium))
                 .foregroundStyle(Color.ink)
@@ -317,58 +317,7 @@ struct JoinWithAnInvite: View {
 
 /// Names a new Guild; the birder is its creator and first member.
 struct NewCircleSheet: View {
-    @Environment(CircleStore.self) private var circles
-    @Environment(\.dismiss) private var dismiss
-    @State private var name = ""
-    @State private var saving = false
-    @State private var error: String?
-    @FocusState private var focused: Bool
-
-    private var trimmed: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
-
-    var body: some View {
-        NavigationStack {
-            PaperList {
-                Section {
-                    TextField("Guild name", text: $name)
-                        .focused($focused)
-                        .submitLabel(.done)
-                        .onSubmit(create)
-                } footer: {
-                    Text("Up to 40 characters. Everyone in the Guild sees it.")
-                }
-                if let error {
-                    Section { InlineError(error, afterAction: true) }
-                }
-            }
-            .navigationTitle("New Guild")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    if saving { ProgressView() } else {
-                        Button("Create", action: create).disabled(trimmed.isEmpty || trimmed.count > 40)
-                    }
-                }
-            }
-            .onAppear { focused = true }
-        }
-        .presentationDetents([.medium])
-    }
-
-    private func create() {
-        guard !trimmed.isEmpty, trimmed.count <= 40, !saving else { return }
-        saving = true
-        Task {
-            do {
-                try await circles.create(named: trimmed)
-                dismiss()
-            } catch {
-                self.error = CircleStore.message(for: error, doing: "create the Guild")
-            }
-            saving = false
-        }
-    }
+    var body: some View { GuildEditorSheet(circle: nil) }
 }
 
 /// The Guilds can't be read (issue #119): offline, or the server out of reach. What happened in plain words, that the

@@ -124,11 +124,25 @@ final class FakeCircleClient: CircleClient {
         return order.compactMap { circlesByID[$0] }.filter { $0.members.contains { $0.id == Self.me } }.map { summary($0) }
     }
 
-    func createCircle(named name: String, timeZone: String, accessToken: String) async throws -> CircleDetail {
+    func createCircle(named name: String, timeZone: String, emblem: CircleEmblem? = nil, accessToken: String) async throws -> CircleDetail {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard (1...40).contains(trimmed.count) else { throw CircleError.rejected }
         let id = add(name: trimmed, creator: (Self.me, Self.myName), others: [], at: now(), timeZone: timeZone)
+        circlesByID[id]?.circle.emblem = emblem
         return try await circle(id: id, accessToken: accessToken)
+    }
+
+    func updateCircle(id: String, name: String?, emblem: CircleEmblem?, accessToken: String) async throws -> CircleDetail {
+        var detail = try await circle(id: id, accessToken: accessToken)
+        guard detail.circle.isCreator else { throw CircleError.creatorOnly }
+        if let name {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard (1...40).contains(trimmed.count) else { throw CircleError.rejected }
+            detail.circle.name = trimmed
+        }
+        if let emblem { detail.circle.emblem = emblem }
+        circlesByID[id] = detail
+        return detail
     }
 
     func circle(id: String, accessToken: String) async throws -> CircleDetail {

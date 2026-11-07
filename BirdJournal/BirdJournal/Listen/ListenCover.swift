@@ -205,7 +205,7 @@ struct GuildGoalLine: View {
                 openCircle(closest.circle.id)
             } label: {
                 AdaptiveRow(stacked: typeSize.stacksRows, spacing: 12) {
-                    GuildEmblem(identity: GuildIdentity(circleID: closest.circle.id), size: Self.emblem)
+                    GuildEmblem(identity: GuildIdentity(circle: closest.circle), size: Self.emblem)
                     Text("\(Text(closest.circle.name).fontWeight(.semibold)) \(GoalWords.stillToGo(closest.goal))")
                         .font(JournalFont.body)
                         .foregroundStyle(Color.ink)
