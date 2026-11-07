@@ -192,6 +192,63 @@ struct ScreenAccessibilityTests {
 
     /// A row as a run lists it. With no run on, an add here would be Uncharted, where the seeds have Anna's Hummingbird and the
     /// Common Blackbird, which no pack describes; the House Finch's patches are all in Los Angeles.
+    @Test("Compare reads each patch as a sentence, with Heard or Seen on both sides and the tally (issue #150)", arguments: sizes)
+    func compareBoards(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let labels = try await Self.walk(CompareBirdsView(friendID: "maya", friendName: "Maya Ortiz"), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Only you") && labels.contains { $0.contains("Maya: Not yet") }
+        }
+        Self.expectClean(labels, screen: "Compare")
+        Self.expectOneWordPerThing(labels, screen: "Compare")
+        #expect(labels.contains("Maya has these. Go find them."), "\(labels)")
+        #expect(labels.contains("Acorn Woodpecker. You: Not yet. Maya: Heard."), "\(labels)")
+        #expect(labels.contains("Black Phoebe. You: Heard. Maya: Seen."), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("You have ") && $0.contains("Maya has") }, "the tally stays: \(labels)")
+        let lead = try #require(labels.firstIndex(of: "Maya has these. Go find them."))
+        let both = try #require(labels.firstIndex(of: "You both have"))
+        let only = try #require(labels.firstIndex(of: "Only you"))
+        #expect(lead < both && both < only, "theirs first: \(labels)")
+    }
+
+    @Test("A goal says its sentence once, then each of its patches, then how many more (issue #150)", arguments: sizes)
+    func goalPatches(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        await harness.circles.refresh()
+        let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
+        let labels = try await Self.walk(CirclePageView(id: sunday.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasSuffix(" more") }
+        }
+        Self.expectClean(labels, screen: "Guild page's goal")
+        let sentence = try #require(labels.firstIndex { $0.contains("birds, together.") }, "\(labels)")
+        #expect(labels.count { $0.contains("birds, together.") } == 1, "once: \(labels)")
+        let patch = try #require(labels.firstIndex { $0.hasSuffix("edition patch") }, "\(labels)")
+        let more = try #require(labels.firstIndex { $0.hasSuffix(" more") }, "\(labels)")
+        #expect(sentence < patch && patch < more, "\(labels)")
+    }
+
+    @Test("Listen's goal line is one sentence, only with a goal running (issue #150)", arguments: sizes)
+    func listenGoalLine(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(ListenView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.contains("from its") }
+        }
+        Self.expectClean(labels, screen: "Listen's goal line")
+        #expect(labels.contains { $0.hasPrefix("Sunday Group is ") && $0.contains(" goal") }, "\(labels)")
+    }
+
+    @Test("A set's row names the friends who have a bird you don't (issue #150)")
+    func setFaces() async throws {
+        let harness = try Harness()
+        let set = try #require(harness.library.sets.first)
+        let labels = try await Self.walk(SetView(id: set.id), harness: harness) { labels in
+            labels.contains { $0.contains("has this bird") }
+        }
+        Self.expectClean(labels, screen: "Set's friends")
+        #expect(labels.contains { $0.contains("Acorn Woodpecker") && $0.hasSuffix("still out there, Maya Ortiz has this bird") }, "\(labels)")
+        #expect(!labels.contains { $0.contains("House Finch") && $0.contains("has this bird") }, "you have this one: \(labels)")
+    }
+
     @Test("A run's rows: a new patch waiting in words, your patch and its count, and each row's one button", arguments: sizes)
     func runRows(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()

@@ -41,7 +41,7 @@ import UIKit
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
 ///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
-///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
+///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `goal-patches` (every patch of its month), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
 ///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
 ///   show those refusals). `recap` ends a phone run on its recap, with `-autoRecapAdd YES` after adding the first bird the packs
 ///   describe. `-autoRunStopAfter <seconds>` runs a phone run behind whatever else is opened, and stops it then, as Stop on the Lock
@@ -330,6 +330,17 @@ struct DebugLaunch: ViewModifier {
                     let me = circles.account.account?.id
                     if let friend = circles.details[first.id]?.members.first(where: { $0.id != me && $0.id != FakeCircleClient.me }) {
                         circlesPath.append(Route.compareBirds(friendID: friend.id, friendName: friend.name))
+                    }
+                }
+            case "goal-patches":
+                // The first circle's page, then every patch of its month (issue #150).
+                tab = .circles
+                await circles.refresh()
+                if let first = circles.circles.first {
+                    circlesPath.append(Route.circle(id: first.id))
+                    await circles.loadGoals(circleID: first.id)
+                    if let monthly = circles.goals[first.id]?.first(where: { $0.kind == .monthly }) {
+                        circlesPath.append(Route.goalPatches(circleID: first.id, goalID: monthly.id))
                     }
                 }
             case "circle-new":

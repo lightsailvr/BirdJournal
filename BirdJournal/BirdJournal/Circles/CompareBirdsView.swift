@@ -167,7 +167,8 @@ struct CompareBirdsView: View {
                         .boardLabel()
                 }
                 board(comparison.onlyTheirs, title: BirdComparison.leadTitle(friend: firstName), isLead: true)
-                board(comparison.both, title: "You both have", id: "compare-both")
+                board(comparison.both, title: "You both have")
+                    .id("compare-both")
                 board(comparison.onlyMine, title: "Only you")
                 Text("\(firstName)'s side is what they shared to Guilds you're both in. Yours is everything on this iPhone.")
                     .font(JournalFont.attribution)
@@ -184,10 +185,9 @@ struct CompareBirdsView: View {
     }
 
     @ViewBuilder
-    private func board(_ rows: [BirdComparison.Row], title: String, isLead: Bool = false, id: String? = nil) -> some View {
+    private func board(_ rows: [BirdComparison.Row], title: String, isLead: Bool = false) -> some View {
         if !rows.isEmpty {
             SectionTitle(title, size: isLead ? .lead : .section, top: isLead ? 18 : 26, onBoard: true)
-                .id(id)
             BoardTiles(tiles: rows.map(tile), side: isLead ? 97 : 79)
                 .padding(.top, 10)
         }
