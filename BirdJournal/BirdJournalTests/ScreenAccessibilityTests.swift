@@ -665,6 +665,28 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains("Open in Atlas"), "\(labels)")
     }
 
+    @Test("The species page includes sightings with different stored labels for the same scientific name, newest first")
+    func speciesSightingsUseScientificName() async throws {
+        let harness = try Harness(seeded: false)
+        let older = Sighting(speciesID: "Haemorhous mexicanus_Original common name", confirmedAt: .now.addingTimeInterval(-3600), soundConfidence: 0.7, source: .phone)
+        older.note = "The earlier encounter"
+        let newer = Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, soundConfidence: 0.7, source: .phone)
+        newer.note = "The newest encounter"
+        let other = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, soundConfidence: 0.7, source: .phone)
+        other.note = "A different species"
+        for sighting in [older, newer, other] { harness.album.mainContext.insert(sighting) }
+        try harness.album.mainContext.save()
+        let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness) { labels in
+            labels.contains { $0.contains("The earlier encounter") } && labels.contains { $0.contains("The newest encounter") }
+        }
+        Self.expectClean(labels, screen: "Species inline sightings")
+        let newestIndex = try #require(labels.firstIndex { $0.contains("The newest encounter") })
+        let oldestIndex = try #require(labels.firstIndex { $0.contains("The earlier encounter") })
+        #expect(newestIndex < oldestIndex)
+        #expect(!labels.contains { $0.contains("A different species") })
+        #expect(labels.contains("2 sightings"))
+    }
+
     @Test("A set's page: the plate is one labelled image and the set's name a heading, and a found bird's row says it's yours", arguments: sizes)
     func setPage(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness(seeded: false)

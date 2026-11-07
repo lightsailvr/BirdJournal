@@ -58,6 +58,11 @@ struct SewnPatchTile: View {
     var spokenName: String? = nil
     /// Where this tile is: its page's way back.
     var surface = PatchLiftSurface.board
+    /// A species' hero keeps the same tile actions, at the patch page's scale and decoding resolution.
+    var side: CGFloat = 124
+    var pictureSize = PatchTextures.Size.thumbnail
+    var nameFont = PatchFont.tileName
+    var lineFont = PatchFont.tileLine
 
     var body: some View {
         let state = library.patchArtState(scientificName: patch.scientificName, setID: patch.placement.setID)
@@ -66,7 +71,8 @@ struct SewnPatchTile: View {
             PatchTile(
                 state: state, edition: edition, tag: spokenName ?? name,
                 name: name, line: line ?? PatchText.tileLine(patch), spoken: PatchText.spoken(patch, name: spokenName ?? name, beingSewn: state == .beingSewn),
-                lift: PatchLiftID(key: patch.id, surface: surface)
+                lift: PatchLiftID(key: patch.id, surface: surface), side: side, pictureSize: pictureSize,
+                nameFont: nameFont, lineFont: lineFont
             )
         }
         .buttonStyle(.patchLift)
@@ -92,15 +98,16 @@ struct PatchTile: View {
     var lift: PatchLiftID? = nil
     /// How wide the patch may be, in a column that's wide enough.
     var side: CGFloat = 124
+    var pictureSize = PatchTextures.Size.thumbnail
     /// A Guild's boards are few patches and set their words larger than the Collection's.
     var nameFont = PatchFont.tileName
     var lineFont = PatchFont.tileLine
 
     var body: some View {
         VStack(spacing: 6) {
-            PatchView(state: state, edition: edition, tag: tag)
+            PatchView(state: state, edition: edition, size: pictureSize, tag: tag)
                 // One column at accessibility sizes: the patch grows with its words.
-                .frame(maxWidth: typeSize.isAccessibilitySize ? 200 : side)
+                .frame(maxWidth: typeSize.isAccessibilitySize ? max(200, side) : side)
                 .patchLiftSource(lift)
             VStack(spacing: 2) {
                 Text(name)

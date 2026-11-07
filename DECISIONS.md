@@ -1364,3 +1364,7 @@ No behaviour or look changes, except the two the review asked for: the review sh
 - **Shared helpers:** `CircleMember.initials(of:)` and `firstName(of:)` for a feed find's owner and Compare's friend; `String.capitalizedFirst` in `Design/` for the run's recap title too; `PackLibrary.set(id:)` for a set by id; `OutlinedButtonStyle(colour:size: .small)` for a Guild's Invite, which had its own style.
 - **`RowPatch` keeps its name** for a run's rows and a Guild goal's patches: both are a row of small patches.
 - **Notes for later, left alone:** splitting `CircleStore`, one cap for the small patches' sizes and one way to load them, and the copy namespaces' names.
+
+## Species page: the patch as hero, sightings inline (issue #179, 2026-11-07)
+
+The species page centres its names and patches. One patch is 286 pt, the patch page's picture size; several keep that size in a snapping horizontal carousel, or a vertical reading column at accessibility text sizes. The full-width filled **Open in Atlas** action follows them. All sightings follow on matte paper, newest first, each opening its own record. They use the same scientific-name scope as the page, including older stored labels with a different common name. The separate species **All sightings** page is gone; a patch's paper card and peek keep their patch-specific list. A bird not yet found keeps its photo, set numbers and listening link, with Atlas as its primary action.
