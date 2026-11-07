@@ -7,7 +7,7 @@ Before (6d943af's three map files), 45 s and still going when sampled, the stack
 After, the same gesture:
 323.6  79.3 304.1   9.5   0.0   0.0   0.0   0.0   0.2   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0   0.0
 
-The guard, AtlasUITests.testTheMapAnswersAtFiveThousandSightings, real taps with accessibility on: a cluster's tap, three pans and Done took 7.7 s, against a limit of 60.
+The guard, AtlasUITests.testTheMapAnswersAtFiveThousandSightings, real taps with accessibility on: a cluster's tap, three pans and Done took 7.7 s alone and 8.9 s in the full suite, against a limit of 60.
 On 6d943af's files the app stayed at 100% under the test's first query and it couldn't begin: MapKit's own accessibilityElements compares each annotation view with all the others, which is why ManyPinsMapView exists.
 
 Memory: about 950 MB resident on the simulator with this map open. Not looked into further.
