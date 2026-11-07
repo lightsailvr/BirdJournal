@@ -19,18 +19,42 @@ final class CircleStore {
         var firstPageCount = 0
         var firstPageCursor: String?
 
+        /// Whether the finds just read, newest first, come down as far as what's been read: if not, there may be finds between.
+        func meets(_ newest: [FeedItem]) -> Bool {
+            guard let reach = newest.last.map({ ($0.foundAt, $0.id) }) else { return false }
+            return items.contains { ($0.foundAt, $0.id) >= reach }
+        }
+
         /// The newest finds, as just read, laid over what's been read: what's older than they reach stays, and with it the place
-        /// to read on from, so a birder further down keeps their rows. What's gone from within their reach is gone. Reaching the
-        /// feed's end, there's nothing older to keep.
+        /// to read on from, so a birder further down keeps their rows. What's gone from within their reach is gone.
+        ///
+        /// Reaching the feed's end, there's nothing older to keep. Not coming down as far as what's been read, there may be finds
+        /// between that a marked one could be among, so they replace it and read on from there, and "More finds" reaches everything.
+        /// Having read nothing it can show (the server leaves a blocked account's finds out after it pages), it can't say what's
+        /// changed, so the rows stay.
         mutating func layOver(_ newest: [FeedItem], nextCursor cursor: String?) {
-            let reach = newest.last.map { ($0.foundAt, $0.id) }
-            let older = cursor == nil ? [] : items.filter { old in
-                guard let reach else { return false }
-                return (old.foundAt, old.id) < reach && !newest.contains { $0.id == old.id }
+            guard cursor != nil else {
+                items = newest
+                nextCursor = nil
+                return
             }
+            guard let reach = newest.last.map({ ($0.foundAt, $0.id) }) else {
+                if items.isEmpty { nextCursor = cursor }
+                return
+            }
+            guard meets(newest) else {
+                items = newest
+                nextCursor = cursor
+                return
+            }
+            let older = items.filter { old in (old.foundAt, old.id) < reach && !newest.contains { $0.id == old.id } }
             items = newest + older
             if older.isEmpty { nextCursor = cursor }
         }
+
+        /// There's nothing here and nothing further to read. Rows can be empty with a cursor still leading on, when all that's been
+        /// read so far is someone blocked, and "No finds yet" wouldn't be true.
+        var hasNoFinds: Bool { isLoaded && items.isEmpty && nextCursor == nil }
 
         /// Takes these accounts' finds out, keeping the first page's count true.
         mutating func removeFinds(of accounts: [String]) {
@@ -212,9 +236,23 @@ final class CircleStore {
         await readFeed(circleID: circleID, cursor: nil)
     }
 
-    /// How many pages a refresh reads looking for what's already been read: past that, something's missing between them until the
-    /// next pull.
+    /// How many pages a refresh reads looking for what's already been read: past that, it starts again from what it has read.
     private static let refreshReach = 5
+    /// How many pages in a row it reads with nothing on them it can show: a page can be all someone blocked.
+    private static let emptyPagesReadOn = 20
+
+    /// The next page with something on it, or the feed's end, or as far as it's worth going in one go.
+    private func readPage(circleID: String, cursor: String?) async throws -> FeedPage {
+        var pages = 0
+        var reading = cursor
+        while true {
+            let from = reading
+            let page = try await call { try await $0.feed(circleID: circleID, cursor: from, accessToken: $1) }
+            pages += 1
+            guard page.items.isEmpty, let next = page.nextCursor, pages < Self.emptyPagesReadOn else { return page }
+            reading = next
+        }
+    }
 
     /// Reads the circle's newest finds and lays them over what's been read, for what arrives by itself: a push, or the birder's own
     /// share or block. Unlike `loadFeed`, the pages already read stay, so the merged feed's horizon stays where it was, and nothing
@@ -229,13 +267,12 @@ final class CircleStore {
             var cursor: String?
             var pages = 0
             repeat {
-                let reading = cursor
-                let page = try await call { try await $0.feed(circleID: circleID, cursor: reading, accessToken: $1) }
+                let page = try await readPage(circleID: circleID, cursor: cursor)
                 if first == nil { first = page }
                 newest += page.items
                 cursor = page.nextCursor
                 pages += 1
-            } while cursor != nil && pages < Self.refreshReach && !newest.contains(where: { item in known.items.contains { $0.id == item.id } })
+            } while cursor != nil && pages < Self.refreshReach && !newest.isEmpty && !known.meets(newest)
             guard session == self.session else { return }
             // As it is now: a reaction, a block or another page may have landed while these were on their way.
             var feed = feeds[circleID] ?? Feed()
@@ -267,7 +304,7 @@ final class CircleStore {
         feeds[circleID, default: Feed()].isLoading = true
         let session = session
         do {
-            let page = try await call { try await $0.feed(circleID: circleID, cursor: cursor, accessToken: $1) }
+            let page = try await readPage(circleID: circleID, cursor: cursor)
             guard session == self.session else { return }
             // As it is now: a reaction or a block may have changed it while this page was on its way.
             var feed = feeds[circleID] ?? Feed()
@@ -303,6 +340,9 @@ final class CircleStore {
         /// Every Guild's first page has come back, this launch or from the cache.
         var isLoaded = false
         var error: String?
+
+        /// There's nothing to show and nothing further to read.
+        var hasNoFinds: Bool { isLoaded && entries.isEmpty && !hasMore }
     }
 
     /// The Guilds' feeds as one list. It stops where a Guild's unread pages could still hold something newer, so a find never
@@ -847,12 +887,24 @@ extension CircleStore {
             if mode == "one" { client.seedOneGuild() }
             if mode == "shared" { client.seedSharedFinds() }
             if mode == "reference" { client.seedReference() }
+            let lateFinds = defaults.integer(forKey: "fakeLateFinds")
             client.latency = .seconds(defaults.double(forKey: "fakeCircleLatency"))
             client.goalRisesBy = defaults.integer(forKey: "fakeGoalRises")
             client.reactionsFail = defaults.bool(forKey: "fakeReactionsFail")
             // `-circleCacheFile <name>` keeps the fakes' last-known content in tmp, so a UI test can relaunch over it.
             let cache = defaults.string(forKey: "circleCacheFile").map { CircleCache(fileURL: URL.temporaryDirectory.appending(path: "\($0).json")) }
-            return CircleStore(account: account, client: client, cache: cache)
+            let store = CircleStore(account: account, client: client, cache: cache)
+            // `-fakeLateFinds <n>` (issue #150): n finds land `-fakeLateFindsAfter <seconds>` from launch, and a push says so.
+            if lateFinds > 0 {
+                let delay = defaults.double(forKey: "fakeLateFindsAfter")
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(delay))
+                    client.addLateFinds(lateFinds)
+                    await store.refreshAfterPush(circleIDs: [])
+                    LateFindsProbe.shared.hasLanded = true
+                }
+            }
+            return store
         }
         #endif
         guard let server = AccountServer.bundled() else { return CircleStore(account: account, client: nil) }

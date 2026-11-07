@@ -1,6 +1,28 @@
 #if DEBUG
 import Album
 import Foundation
+import SwiftUI
+
+/// Says when `-fakeLateFinds` has landed, where only a UI test will read it (issue #150), so it can compare a row before and after.
+@MainActor @Observable
+final class LateFindsProbe {
+    static let shared = LateFindsProbe()
+    var hasLanded = false
+}
+
+struct LateFindsProbeView: View {
+    var body: some View {
+        if LateFindsProbe.shared.hasLanded {
+            Text("landed")
+                .font(.system(size: 1))
+                .frame(width: 1, height: 1)
+                .clipped()
+                .opacity(0.02)
+                .allowsHitTesting(false)
+                .accessibilityIdentifier("late-finds-landed")
+        }
+    }
+}
 
 /// The debug fake circle server (`-fakeCircles empty|some`, issue #61): circles, members and invites in memory, with
 /// the backend's rules (20 members, seven-day invites, the creator removes). The fake account is "Pat Birder"
@@ -242,9 +264,10 @@ final class FakeCircleClient: CircleClient {
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage {
         _ = try await circle(id: circleID, accessToken: accessToken)
         if failingFeeds.contains(circleID) { throw CircleError.server(500) }
-        // A blocked account's finds are left out, as the server does (issue #71).
-        let items = (feedItems[circleID] ?? []).filter { !blockedIDs.contains($0.owner.id) }
-        let firsts = Dictionary(grouping: items, by: \.scientificName).compactMapValues { $0.min { ($0.foundAt, $0.id) < ($1.foundAt, $1.id) }?.id }
+        let items = feedItems[circleID] ?? []
+        // First for the Guild counts only what's shown to this reader.
+        let shown = items.filter { !blockedIDs.contains($0.owner.id) }
+        let firsts = Dictionary(grouping: shown, by: \.scientificName).compactMapValues { $0.min { ($0.foundAt, $0.id) < ($1.foundAt, $1.id) }?.id }
         let sorted = items
             .map { item in
                 var item = item
@@ -253,10 +276,18 @@ final class FakeCircleClient: CircleClient {
                 return item
             }
             .sorted { ($0.foundAt, $0.id) > ($1.foundAt, $1.id) }
-        let start = cursor.flatMap(Int.init) ?? 0
-        let page = Array(sorted.dropFirst(start).prefix(HTTPCircleClient.feedPageSize))
-        let next = start + page.count < sorted.count ? String(start + page.count) : nil
-        return FeedPage(items: page, nextCursor: next)
+        // A cursor is the key of the last find read, as the server's is (`finds.py`), so finds landing since don't shift it. A blocked
+        // account's finds are left out after the page is cut, as there too: a page can be short, or empty, with a cursor still
+        // leading on (issue #71).
+        let rest = cursor.map { key in sorted.filter { Self.cursor(of: $0) < key } } ?? sorted
+        let page = Array(rest.prefix(HTTPCircleClient.feedPageSize))
+        let next = rest.count > page.count ? page.last.map(Self.cursor(of:)) : nil
+        return FeedPage(items: page.filter { !blockedIDs.contains($0.owner.id) }, nextCursor: next)
+    }
+
+    /// Sorts as the feed does, by time then id, whatever the find.
+    private static func cursor(of item: FeedItem) -> String {
+        String(format: "%020.6f|%@", item.foundAt.timeIntervalSince1970, item.id)
     }
 
     func registerDevice(token: String, environment: PushEnvironment, accessToken: String) async throws {
@@ -553,6 +584,17 @@ final class FakeCircleClient: CircleClient {
         detail.members.append(CircleMember(id: id, displayName: id, joinedAt: now(), isCreator: false))
         detail.circle.memberCount = detail.members.count
         circlesByID[circleID] = detail
+    }
+
+    /// Finds landing in the first Guild, by Maya, newest first: what a push would be about.
+    func addLateFinds(_ count: Int) {
+        guard let circle = order.first(where: { circlesByID[$0]?.members.contains { $0.id == Self.me } == true }) else { return }
+        for index in 0..<count {
+            add(seededFind(
+                sighting: "late-\(index)", owner: ("maya", "Maya Ortiz"), label: "Sayornis nigricans_Black Phoebe", method: .seen, place: "Pasadena",
+                rarity: .common, newPatch: true, edition: "us-ca-la", daysAgo: Double(index) / 86_400
+            ), to: circle)
+        }
     }
 
     /// A friend's find gone from a Guild, as when they remove the sighting, for the tests.

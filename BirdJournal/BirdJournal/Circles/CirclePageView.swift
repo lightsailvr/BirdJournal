@@ -19,6 +19,10 @@ struct CirclePageView: View {
     @State private var error: String?
     @State private var showing: Showing = .finds
     @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
+    /// How much of the page shows, which is the least Compare can take up: see `compareSection`.
+    @State private var pageHeight: CGFloat = 0
+    /// How many pages are on the Guilds tab's stack.
+    @Environment(\.guildsStackDepth) private var stackDepth
 
     enum Showing: Hashable {
         case finds
@@ -35,6 +39,10 @@ struct CirclePageView: View {
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.bottom, JournalLayout.sectionGap)
             }
+            .holdsTheRowBeingRead(isOn: showing == .finds)
+            .onScrollGeometryChange(for: CGFloat.self) { $0.containerSize.height } action: { _, height in pageHeight = height }
+            // The tab opened straight onto this page, or pushed it: anything more on the stack is over it.
+            .keepsItsFootUnderAPage(isCovered: stackDepth > (newGuild == nil ? 1 : 0))
             #if DEBUG
             .debugScroll(proxy, to: "guild-feed", when: circles.feeds[id]?.isLoaded == true)
             #endif
@@ -106,7 +114,7 @@ struct CirclePageView: View {
                 .id("guild-feed")
                 switch showing {
                 case .finds: finds
-                case .compare: compare(detail)
+                case .compare: compareSection(detail)
                 }
                 if let error {
                     InlineError(error, afterAction: true)
@@ -215,10 +223,12 @@ struct CirclePageView: View {
         let feed = circles.feeds[id] ?? .init()
         let entries = feed.items.map { FindEntry(item: $0, circleIDs: [id]) }
         if entries.isEmpty {
-            if feed.isLoaded {
+            if feed.hasNoFinds {
                 StateNotice("No finds yet", message: "Birds your Guild adds while sharing show here.", messageInk: .ink)
                     .boardLabel()
                     .accessibilityIdentifier("feedEmpty")
+            } else if feed.isLoaded {
+                // All it's read so far is someone blocked: "More finds" below reads on.
             } else if let error = feed.error {
                 InlineError(error).boardLabel().padding(.top, 16)
             } else {
@@ -238,6 +248,15 @@ struct CirclePageView: View {
         if let error = feed.error, !entries.isEmpty {
             InlineError(error).boardLabel().padding(.top, 12)
         }
+    }
+
+    /// Compare, with room for the page to stay where it is. The picker is on screen to be tapped, so a screenful under it is all that
+    /// keeps a short section from pulling the page back, and Finds come back to where they were.
+    private func compareSection(_ detail: CircleDetail) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            compare(detail)
+        }
+        .frame(minHeight: pageHeight, alignment: .top)
     }
 
     /// Compare birds: the friends in the Guild, each opening the two of you side by side. Rows to operate, so they sit on their own
