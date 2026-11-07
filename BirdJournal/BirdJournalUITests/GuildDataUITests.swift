@@ -147,6 +147,7 @@ final class GuildDataUITests: XCTestCase {
         XCTAssertTrue(friends.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(friends.label.contains("Maya Ortiz"), friends.label)
         XCTAssertTrue(friends.label.hasSuffix("this bird."), friends.label)
+        XCTAssertTrue(friends.isHittable, "in view without scrolling the card")
     }
 
     @MainActor
@@ -172,8 +173,9 @@ final class GuildDataUITests: XCTestCase {
 
         app.tabBars.buttons["Atlas"].tap()
         // From a set's plate.
-        let plate = element(app, "set-plate")
-        XCTAssertTrue(plate.waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        let plate = app.buttons["guide-set-us-ca-la"]
+        XCTAssertTrue(plate.waitForExistence(timeout: 8) || app.scrolledTo(plate), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.scrolledTo(plate), "screen: \(app.debugDescription.prefix(3000))")
         plate.tap()
         let duck = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Sam Okafor has this bird'")).firstMatch
         XCTAssertTrue(duck.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")

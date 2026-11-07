@@ -79,7 +79,7 @@ xcrun simctl ui "$udid" appearance dark
 dark_and_light dark
 shot compare-both-dark   10 "${base[@]}" -autoScreen compare -autoScrollTo compare-both
 shot goal-board-dark     10 "${base[@]}" -autoScreen goal-patches
-shot card-dark           10 "${base[@]}" -autoScreen card-back -autoCardSpecies "Sayornis nigricans" -autoCardScroll card-friends
+shot card-dark           10 "${base[@]}" -autoScreen card-back -autoCardSpecies "Sayornis nigricans"
 # Every patch without its painting, as on a phone without the pack.
 shot compare-blanks-dark 10 "${base[@]}" -autoScreen compare -fakePatchArt missing
 shot goal-blanks-dark    10 "${base[@]}" -autoScreen circle -fakePatchArt missing
@@ -93,7 +93,7 @@ shot compare-ax5 12 "${base[@]}" -autoScreen compare
 shot goal-ax5    12 "${base[@]}" -autoScreen circle
 shot listen-ax5  12 "${base[@]}" -autoScreen listen -autoScrollTo local-set
 shot set-ax5     12 "${base[@]}" -autoScreen set -autoScrollTo set-rows
-shot card-ax5    12 "${base[@]}" -autoScreen card-back -autoCardSpecies "Sayornis nigricans" -autoCardScroll card-friends
+shot card-ax5    12 "${base[@]}" -autoScreen card-back -autoCardSpecies "Sayornis nigricans"
 xcrun simctl ui "$udid" content_size large
 
 # Increase Contrast, in both appearances.

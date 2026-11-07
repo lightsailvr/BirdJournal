@@ -65,9 +65,10 @@ struct PaperCardView: View {
                 PaperRule()
                 BiologyGrid(stats: biology)
             }
+            // Above the history, so it's in view without scrolling: a card that's full cuts the history off, which says there's more.
+            FriendsOnCard(scientificName: patch.scientificName)
             PaperRule()
             history
-            FriendsOnCard(scientificName: patch.scientificName)
             if let lore = species?.lore {
                 PaperCardMoreLore(lore: lore)
             }
