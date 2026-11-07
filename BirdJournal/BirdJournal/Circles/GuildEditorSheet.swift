@@ -52,6 +52,7 @@ struct GuildEditorSheet: View {
                         }
                     }
                     .accessibilityIdentifier("guildEmblemMark")
+                    .accessibilityValue(Self.markNames[GuildIdentity.marks.firstIndex(of: identity.mark) ?? 0])
                     Picker("Colour", selection: Binding(
                         get: { identity.tone.name },
                         set: { emblem = CircleEmblem(mark: identity.mark, tone: $0) }
@@ -61,6 +62,7 @@ struct GuildEditorSheet: View {
                         }
                     }
                     .accessibilityIdentifier("guildEmblemTone")
+                    .accessibilityValue(identity.tone.name.capitalized)
                     if circle == nil, emblem != nil {
                         Button("Choose automatically") { emblem = nil }
                     }

@@ -186,8 +186,8 @@ final class CirclesUITests: XCTestCase {
         edit.tap()
         XCTAssertTrue(app.textFields["guildName"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.textFields["guildName"].value as? String, "Lake Birders")
-        XCTAssertTrue(app.buttons["guildEmblemMark"].label.contains("Bird"), app.debugDescription)
-        XCTAssertTrue(app.buttons["guildEmblemTone"].label.contains("Sage"), app.debugDescription)
+        XCTAssertEqual(app.buttons["guildEmblemMark"].value as? String, "Bird", app.debugDescription)
+        XCTAssertEqual(app.buttons["guildEmblemTone"].value as? String, "Sage", app.debugDescription)
         let picture = XCTAttachment(screenshot: app.screenshot())
         picture.name = "Guild icon editor"
         picture.lifetime = .keepAlways
