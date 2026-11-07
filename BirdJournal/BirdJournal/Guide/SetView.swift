@@ -4,8 +4,8 @@ import SwiftUI
 import UIKit
 
 /// One set's page (issue #54, the reference's `4-set-page.png`): its plate, then one count of what's still out there, then its
-/// species in collector order, each with its number; a species with a patch in the set shows the patch, and one not yet
-/// found there shows its true silhouette, so browsing the set is a small game of shapes (issue #150, A3). Reached from the Atlas's
+/// species in collector order, each with its number; a species you've found in the set shows its reference photo, since the Atlas
+/// is a guidebook with no patches in it (the maintainer, issue #150), and one not yet found there shows its true silhouette, so browsing the set is a small game of shapes (issue #150, A3). Reached from the Atlas's
 /// plates and the Collection's set progress; every row opens the bird's profile. Works for a set whose pack isn't downloaded: the
 /// names come from the set definition, and a bird keeps the glyph until its pack is on the phone.
 struct SetView: View {
@@ -61,7 +61,7 @@ struct SetView: View {
                             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: species.commonName)) {
                                 SetSpeciesRow(
                                     number: CardPlacement.paddedNumber(offset + 1, of: set.species.count), species: species,
-                                    patch: patch, picture: .ofSetRow(scientificName: species.scientificName, setID: set.id, patch: patch, pack: pack),
+                                    patch: patch, picture: .ofSetRow(scientificName: species.scientificName, isFound: patch != nil, reference: library.thumbnailURL(scientificName: species.scientificName), pack: pack),
                                     friends: yours.contains(species.scientificName) ? [] : circles.friends(having: species.scientificName)
                                 )
                             }
@@ -84,7 +84,6 @@ struct SetView: View {
             }
             }
             .background(Color.paper)
-            .holdsPatchLight()
             .task { await circles.loadFriendsBirds() }
             .navigationTitle(set.name)
             .navigationBarTitleDisplayMode(.inline)
@@ -107,9 +106,9 @@ struct SetView: View {
     }
 }
 
-/// One species of a set, as the reference draws it: your patch or its silhouette, the number above the name, and "Yours, seen once"
-/// once it's sewn. A silhouette needs no words: the heading above counts them. After the name, up to two faces of friends who have a
-/// bird you don't (issue #150, A4).
+/// One species of a set: the reference photo of a bird you've found or the silhouette of one you haven't, the number above the name,
+/// and "Yours, seen once" once it's sewn. A silhouette needs no words: the heading above counts them. After the name, up to two faces
+/// of friends who have a bird you don't (issue #150, A4).
 private struct SetSpeciesRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// e.g. "021".

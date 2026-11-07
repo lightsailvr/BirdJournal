@@ -112,7 +112,6 @@ struct FieldGuideView: View {
                         }
                     }
                     .padding(.top, 12)
-                    .holdsPatchLight()
                 }
             }
             .padding(.horizontal, JournalLayout.margin)
@@ -243,17 +242,15 @@ private struct PacksCard: View {
     }
 }
 
-/// One bird in the guide: your patch of it in this pack's set if you have one, else the reference photo (issue #150, V2), then
-/// its names and a hint of habitat.
+/// One bird in the guide: its reference photo, whether or not you've found it, then its names and a hint of habitat.
 private struct GuideRow: View {
-    @Environment(CollectionStore.self) private var collectionStore
     @Environment(\.dynamicTypeSize) private var typeSize
     let pack: SpeciesPack
     let species: PackSpecies
 
     var body: some View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            RowPicture(source: .of(species: species, in: pack, collection: collectionStore.collection))
+            RowPicture(source: .reference(species.photos.first.map(pack.lensImageURL(for:))))
             VStack(alignment: .leading, spacing: 3) {
                 Text(species.commonName)
                     .font(JournalFont.rowTitle)

@@ -167,26 +167,22 @@ struct ListeningCoordinatorTests {
         #expect(CandidateLook.newHere.offer(isDescribed: true) == .sewIt)
     }
 
-    @Test("a row's picture: your own photo where the row is about a sighting, then your patch, then the reference photo")
+    @Test("a sighting's row: your own photo if there is one, else the Atlas's reference photo, which says so; never a patch")
     func picturesFollowTheGrammar() {
         let url = URL(fileURLWithPath: "/reference.jpg")
-        let entry = CardCollection.Entry(identifier: UUID(), speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now)
-        let patch = CardCollection([entry]).patch(of: entry.identifier)
-        let patchSource = RowPictureSource.patch(scientificName: "Haemorhous mexicanus", setID: nil)
-        let sighting = Sighting(speciesID: entry.speciesID, confirmedAt: .now, soundConfidence: 0.5, source: .glasses)
-        #expect(RowPictureSource.of(sighting: sighting, patch: patch, reference: url) == patchSource, "no photo of yours")
+        let sighting = Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, soundConfidence: 0.5, source: .glasses)
+        let reference = RowPictureSource.of(sighting: sighting, reference: url)
+        #expect(reference == .reference(url), "no photo of yours")
         sighting.frameImagePath = "frame.jpg"
-        let frame = RowPictureSource.of(sighting: sighting, patch: patch, reference: url)
+        let frame = RowPictureSource.of(sighting: sighting, reference: url)
         #expect(frame == .ownPhoto(path: "frame.jpg", isGlassesFrame: true))
         sighting.attachedPhotoPaths = ["mine.jpg"]
-        let attached = RowPictureSource.of(sighting: sighting, patch: patch, reference: url)
+        let attached = RowPictureSource.of(sighting: sighting, reference: url)
         #expect(attached == .ownPhoto(path: "mine.jpg", isGlassesFrame: false), "the one you chose first, and it isn't cropped")
-        #expect(RowPictureSource.of(patch: patch, reference: url) == patchSource)
-        #expect(RowPictureSource.of(patch: nil, reference: url) == .reference(url))
         #expect(SightingRow.caption(attached) == "Your photo")
         #expect(SightingRow.caption(frame) == "Your glasses snapshot")
-        #expect(SightingRow.caption(patchSource) == nil, "a patch needs no caption")
-        #expect(SightingRow.caption(.reference(url)) == "Reference photo", "a reference photo never looks like your own")
+        #expect(SightingRow.caption(reference) == "Reference photo", "a reference photo never looks like your own")
+        #expect(SightingRow.caption(.reference(nil)) == "No photo")
     }
 
     // The maintainer, issue #150: the list holds still around a touch.

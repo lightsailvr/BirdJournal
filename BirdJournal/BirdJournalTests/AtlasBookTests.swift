@@ -27,7 +27,7 @@ struct AtlasBookTests {
     @Test("a bird still out there shows its silhouette from the set's own pack, tinted at draw time from a file on disk")
     func silhouetteRow() throws {
         let pack = try SpeciesPack.bundled()
-        let source = RowPictureSource.ofSetRow(scientificName: Self.goose, setID: Self.setID, patch: nil, pack: pack)
+        let source = RowPictureSource.ofSetRow(scientificName: Self.goose, isFound: false, reference: nil, pack: pack)
         guard case .silhouette(let url?) = source else {
             Issue.record("\(source)")
             return
@@ -37,9 +37,9 @@ struct AtlasBookTests {
 
     @Test("with the set's pack not on the phone, or no silhouette for the bird, it's the glyph")
     func glyphFallback() throws {
-        #expect(RowPictureSource.ofSetRow(scientificName: Self.goose, setID: Self.setID, patch: nil, pack: nil) == .silhouette(nil), "no pack")
+        #expect(RowPictureSource.ofSetRow(scientificName: Self.goose, isFound: false, reference: nil, pack: nil) == .silhouette(nil), "no pack")
         let pack = try SpeciesPack.bundled()
-        #expect(RowPictureSource.ofSetRow(scientificName: "Nonesuch nonesuch", setID: Self.setID, patch: nil, pack: pack) == .silhouette(nil), "not in the pack")
+        #expect(RowPictureSource.ofSetRow(scientificName: "Nonesuch nonesuch", isFound: false, reference: nil, pack: pack) == .silhouette(nil), "not in the pack")
         // A pack built before silhouettes: the same database, with no such table.
         let folder = URL.temporaryDirectory.appending(path: "AtlasBookTests-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -52,19 +52,15 @@ struct AtlasBookTests {
         sqlite3_close(connection)
         let older = try SpeciesPack.open(directory: folder)
         #expect(older.species.count == 160)
-        #expect(RowPictureSource.ofSetRow(scientificName: Self.goose, setID: Self.setID, patch: nil, pack: older) == .silhouette(nil), "a pack built before silhouettes")
+        #expect(RowPictureSource.ofSetRow(scientificName: Self.goose, isFound: false, reference: nil, pack: older) == .silhouette(nil), "a pack built before silhouettes")
     }
 
-    @Test("a bird you have shows your patch in that set, pack or no pack")
-    func patchRow() throws {
+    @Test("a bird you've found shows its reference photo, pack or no pack: the Atlas has no patches in it")
+    func foundBirdRow() throws {
         let pack = try SpeciesPack.bundled()
-        let set = try #require(pack.set)
-        let sighting = Sighting(speciesID: "\(Self.goose)_Canada Goose", confirmedAt: .now, soundConfidence: 0.8, source: .phone)
-        sighting.location = Coordinate(latitude: 34.1, longitude: -118.3, accuracy: 10)
-        let cards = collection(with: [sighting], sets: [CardSet(set)])
-        let patch = try #require(cards.patch(scientificName: Self.goose, setID: Self.setID))
+        let url = URL(fileURLWithPath: "/reference.jpg")
         for pack in [pack, nil] {
-            #expect(RowPictureSource.ofSetRow(scientificName: Self.goose, setID: Self.setID, patch: patch, pack: pack) == .patch(scientificName: Self.goose, setID: Self.setID))
+            #expect(RowPictureSource.ofSetRow(scientificName: Self.goose, isFound: true, reference: url, pack: pack) == .reference(url))
         }
     }
 
