@@ -494,7 +494,9 @@ final class FakeCircleClient: CircleClient {
         ensureMonthly(circle, zone: zone)
         if var monthly = storedGoals[circleID]?.first {
             monthly.goal.target = 14
-            monthly.headStart = 9
+            // 9 of 14 whatever the date: the seeded finds are days old, so how many fall in this month changes as it goes on. A plain
+            // head start of 9 reached the target once all five species were in the month, about six days in.
+            monthly.headStart = 9 - species(in: circleID, from: monthly.goal.startsAt, to: monthly.goal.endsAt)
             storedGoals[circleID] = [monthly]
         }
         custom("Fall migration", 30, from: -20, to: 9, by: ("maya", "Maya Ortiz"), headStart: 19)
