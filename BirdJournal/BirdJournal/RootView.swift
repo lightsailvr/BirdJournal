@@ -311,6 +311,7 @@ struct RootView: View {
         #if DEBUG
         .sheet(isPresented: $showingDeveloper) { DeveloperView() }
         .overlay(alignment: .topLeading) { HapticLogProbe() }
+        .overlay(alignment: .topLeading) { LateFindsProbeView() }
         .modifier(DebugLaunch(tab: $tab, journalMode: $collection.mode, listenPath: $listenPath, journalPath: $journalPath, guidePath: $guidePath, circlesPath: $circlesPath, showingDeveloper: $showingDeveloper))
         #endif
     }

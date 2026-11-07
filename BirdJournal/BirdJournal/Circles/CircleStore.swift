@@ -721,6 +721,7 @@ extension CircleStore {
                     try? await Task.sleep(for: .seconds(delay))
                     client.addLateFinds(lateFinds)
                     await store.refreshAfterPush(circleIDs: [])
+                    LateFindsProbe.shared.hasLanded = true
                 }
             }
             return store

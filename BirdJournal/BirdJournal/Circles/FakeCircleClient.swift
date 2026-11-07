@@ -1,6 +1,28 @@
 #if DEBUG
 import Album
 import Foundation
+import SwiftUI
+
+/// Says when `-fakeLateFinds` has landed, where only a UI test will read it (issue #150), so it can compare a row before and after.
+@MainActor @Observable
+final class LateFindsProbe {
+    static let shared = LateFindsProbe()
+    var hasLanded = false
+}
+
+struct LateFindsProbeView: View {
+    var body: some View {
+        if LateFindsProbe.shared.hasLanded {
+            Text("landed")
+                .font(.system(size: 1))
+                .frame(width: 1, height: 1)
+                .clipped()
+                .opacity(0.02)
+                .allowsHitTesting(false)
+                .accessibilityIdentifier("late-finds-landed")
+        }
+    }
+}
 
 /// The debug fake circle server (`-fakeCircles empty|some`, issue #61): circles, members and invites in memory, with
 /// the backend's rules (20 members, seven-day invites, the creator removes). The fake account is "Pat Birder"

@@ -61,33 +61,34 @@ final class ReactionsUITests: XCTestCase {
     }
 
     /// Finds land above the row the reader is on, by a push: it stays where it is, and a tap lands on what it's aimed at (issue #150).
+    /// The reader's on the feed's first row, where a find lands right above them: further down, the system holds the rows by itself,
+    /// so a row further down proves nothing. Without `.scrollPosition` this row slides down by a row's height, 191 pt.
     @MainActor
-    private func assertRowHoldsStill(lateFinds: Int, file: StaticString = #filePath, line: UInt = #line) {
-        let launched = Date.now
-        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle", "-fakeLateFinds", "\(lateFinds)", "-fakeLateFindsAfter", "30"])
-        let row = app.buttons["find-\(Self.mayasPhoebe)"]
-        XCTAssertTrue(app.scrolledTo(row, limit: 24), "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
-        // On the row, with the feed's first rows above the viewport. A drag, so it comes to rest where it's let go.
-        let lovely = app.buttons["react-lovely-\(Self.mayasPhoebe)"]
-        for _ in 0..<8 where row.frame.minY > 200 {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).press(
+    private func assertRowHoldsStill(lateFinds: Int, screen: String = "circle", restingAt y: CGFloat = 140, file: StaticString = #filePath, line: UInt = #line) {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", screen, "-fakeLateFinds", "\(lateFinds)", "-fakeLateFindsAfter", "30"])
+        let sams = "00000000-0000-4000-8000-000000000003"
+        let row = app.buttons["find-\(sams)"]
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        // A slow drag, so it comes to rest where it's let go.
+        for _ in 0..<10 where row.frame.minY > y {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).press(
                 forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
                 withVelocity: .slow, thenHoldForDuration: 0.3
             )
         }
         Thread.sleep(forTimeInterval: 1)
+        let landed = app.staticTexts["late-finds-landed"]
+        XCTAssertFalse(landed.exists, "they landed before there was anything to compare", file: file, line: line)
         let before = row.frame.minY
-        let sinceLaunch = Date.now.timeIntervalSince(launched)
-        XCTAssertLessThan(sinceLaunch, 28, "the finds may have landed already, so this proves nothing", file: file, line: line)
-        Thread.sleep(forTimeInterval: 34 - sinceLaunch)
+        XCTAssertTrue(landed.waitForExistence(timeout: 90), "they never landed", file: file, line: line)
+        Thread.sleep(forTimeInterval: 1)
         XCTAssertEqual(row.frame.minY, before, accuracy: 2, "the row moved under the reader", file: file, line: line)
+        let lovely = app.buttons["react-lovely-\(sams)"]
         lovely.tap()
         XCTAssertTrue(lovely.wait(for: \.isSelected, toEqual: true, timeout: 5), "the tap landed elsewhere", file: file, line: line)
 
         // They did land, above.
-        let late = app.buttons["find-late-0"]
-        for _ in 0..<(8 + lateFinds) where !late.exists { app.swipeDown() }
-        XCTAssertTrue(late.waitForExistence(timeout: 5), "no late find; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        XCTAssertTrue(app.buttons["find-late-0"].exists || app.buttons["find-late-\(lateFinds - 1)"].exists, "no late find near; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
     }
 
     @MainActor
@@ -96,8 +97,25 @@ final class ReactionsUITests: XCTestCase {
     }
 
     @MainActor
-    func testManyLateFindsLeaveTheRowWhereItIs() {
-        assertRowHoldsStill(lateFinds: 16)
+    func testALateFindLeavesARowPartWayUpThePageWhereItIs() {
+        assertRowHoldsStill(lateFinds: 1, restingAt: 300)
+    }
+
+    @MainActor
+    func testFifteenLateFindsLeaveTheRowWhereItIs() {
+        assertRowHoldsStill(lateFinds: 15)
+    }
+
+    /// More than a page's worth: the refresh reads a second page to meet what's been read.
+    @MainActor
+    func testTwentyFiveLateFindsLeaveTheRowWhereItIs() {
+        assertRowHoldsStill(lateFinds: 25)
+    }
+
+    /// On the feed across Guilds, too.
+    @MainActor
+    func testALateFindLeavesARowOnTheTabWhereItIs() {
+        assertRowHoldsStill(lateFinds: 1, screen: "circles")
     }
 
     /// A reaction that doesn't land goes back, and says so beside it rather than at the far end of the feed.
