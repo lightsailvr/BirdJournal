@@ -9,8 +9,8 @@ import SwiftUI
 /// stats at a glance (#55), the other photos, and the sources with the full credits a tap away; sections the pack has
 /// no text or sound for are left out rather than filled. Reached from the guide, the journal and a candidate review
 /// (with `match`, the live detection). Outside a review it links to the bird's gallery of cards (issue #53).
-/// The Atlas is a guidebook with no patches in it (the maintainer, issue #150): found or not, it leads with the reference photo, then
-/// the story on card stock. If you have the bird, a link in words opens your patch. A review keeps its own order.
+/// The Atlas is a guidebook with no patches in it (the maintainer, issue #150): found or not, the names run straight into the reference
+/// photo, then the links to your sightings and your patch in words, then the story on card stock. A review keeps its own order.
 struct BirdProfileView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
@@ -34,14 +34,6 @@ struct BirdProfileView: View {
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 2)
 
-                if match == nil {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 10) { yourLinks(name: name) }
-                        VStack(alignment: .leading, spacing: 10) { yourLinks(name: name) }
-                    }
-                    .padding(.top, 12)
-                }
-
                 if let match {
                     // No score in the headline: it lives in the "About this match" disclosure, explained.
                     Text("Heard \(match.windowsAboveThreshold)× this run")
@@ -50,9 +42,13 @@ struct BirdProfileView: View {
                         .padding(.top, 8)
                 }
 
+                // The names run straight into the photo, in the same place for every bird; what's yours comes under its credit.
                 if let reference {
-                    ProfileContent(pack: reference.pack, species: reference.species, match: match)
+                    ProfileContent(pack: reference.pack, species: reference.species, match: match) {
+                        if match == nil { yours(name: name) }
+                    }
                 } else {
+                    if match == nil { yours(name: name) }
                     NameOnlyProfile(match: match)
                 }
             }
@@ -62,6 +58,14 @@ struct BirdProfileView: View {
         #endif
         }
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func yours(name: String) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { yourLinks(name: name) }
+            VStack(alignment: .leading, spacing: 10) { yourLinks(name: name) }
+        }
+        .padding(.top, 12)
     }
 
     /// Your sightings, and your patch if you have one, with your newest sighting's when there are several: all of them are a tap on
@@ -137,16 +141,19 @@ private struct ProfileLore: View {
     }
 }
 
-private struct ProfileContent: View {
+private struct ProfileContent<Yours: View>: View {
     let pack: SpeciesPack
     let species: PackSpecies
     let match: Candidate?
+    /// Your sightings and your patch, under the photo's credit.
+    @ViewBuilder var yours: Yours
 
     var body: some View {
         if let hero = species.photos.first {
             AttributedImage(pack: pack, photo: hero)
                 .padding(.top, 16)
         }
+        yours
 
         if match == nil, let lore = species.lore {
             ProfileStoryCard(lore: lore)

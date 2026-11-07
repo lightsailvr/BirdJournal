@@ -45,8 +45,91 @@ private func goal(
     )
 }
 
+private func counted(_ names: [String], edition: String? = "us-ca-la") -> [CircleGoal.Species] {
+    names.map { CircleGoal.Species(speciesID: "\($0)_x", scientificName: $0, commonName: "Words from a phone", edition: edition) }
+}
+
+@Suite("A goal's patches")
+struct GoalPatchSlotsTests {
+    private func withSpecies(_ count: Int, progress: Int? = nil) -> CircleGoal {
+        var goal = goal(kind: .monthly, progress: progress ?? count, target: 14)
+        goal.species = counted((0..<count).map { "bird \($0)" })
+        return goal
+    }
+
+    @Test("newest first, all of them when they fit")
+    func fits() {
+        let slots = GoalPatchSlots(goal: withSpecies(7), places: 7)
+        #expect(slots.shown.first?.scientificName == "bird 6", "the server counts earliest first, and a new bird should show")
+        #expect(slots.shown.count == 7)
+        #expect(slots.more == 0)
+    }
+
+    @Test("past what fits, the last place says how many more")
+    func more() {
+        let slots = GoalPatchSlots(goal: withSpecies(12), places: 7)
+        #expect(slots.shown.count == 6)
+        #expect(slots.more == 6)
+    }
+
+    @Test("the row adds up to the goal's count even if the server's list and count disagree, and doesn't crash")
+    func disagreeing() {
+        let short = GoalPatchSlots(goal: withSpecies(3, progress: 12), places: 7)
+        #expect(short.shown.count == 3)
+        #expect(short.more == 9)
+        let long = GoalPatchSlots(goal: withSpecies(5, progress: 2), places: 7)
+        #expect(long.shown.count == 5)
+        #expect(long.more == 0)
+        #expect(GoalPatchSlots(goal: withSpecies(3), places: 1).shown.isEmpty)
+        #expect(GoalPatchSlots(goal: withSpecies(3), places: 1).more == 3)
+        #expect(GoalPatchSlots(goal: withSpecies(3), places: 0).shown.isEmpty)
+    }
+
+    @Test("a server too old to name them, or a goal with none yet, leaves thread alone")
+    func none() {
+        #expect(GoalPatchSlots(goal: goal(progress: 4), places: 7) == GoalPatchSlots(goal: withSpecies(0), places: 7))
+        #expect(GoalPatchSlots(goal: goal(progress: 4), places: 7).shown.isEmpty)
+        #expect(GoalPatchSlots(goal: goal(progress: 4), places: 7).more == 0)
+    }
+
+    @Test("a repeat in the list is one patch")
+    func repeated() {
+        var goal = withSpecies(2)
+        goal.species?.append(contentsOf: counted(["bird 0"]))
+        #expect(GoalPatchSlots(goal: goal, places: 7).shown.map(\.scientificName).sorted() == ["bird 0", "bird 1"])
+    }
+
+    @Test("what VoiceOver says of one never uses the server's words")
+    func spoken() {
+        #expect(GoalWords.spokenPatch(name: "Black Phoebe", edition: "Citrus edition") == "Black Phoebe, Citrus edition patch")
+        #expect(GoalWords.spokenPatch(name: "Black Phoebe", edition: nil) == "Black Phoebe, patch")
+        #expect(GoalWords.spokenPatch(name: nil, edition: nil) == "A bird this iPhone can't name, patch")
+    }
+
+    @Test("the line on Listen")
+    func stillToGo() {
+        var goal = goal(kind: .monthly, progress: 12, target: 14)
+        goal.title = "November goal"
+        #expect(GoalWords.stillToGo(goal) == "is 2 birds from its November goal")
+        goal.progress = 13
+        #expect(GoalWords.stillToGo(goal) == "is 1 bird from its November goal")
+    }
+}
+
 @Suite("Goals over HTTP")
 struct GoalClientTests {
+    @Test("a goal's species are read, and may be absent")
+    func species() async throws {
+        let recorder = Recorder()
+        let withSpecies = monthlyJSON.dropLast(1) + #","species":[{"species_id":"s_x","scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","edition":"us-ca-la"},{"species_id":"t_x","scientific_name":"Turdus merula","common_name":"Common Blackbird","edition":null}]}"#
+        recorder.responses = [http(200, "{\"goals\":[\(withSpecies),\(customJSON)]}")]
+        let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
+        let goals = try await client.goals(circleID: "c", accessToken: "t")
+        #expect(goals[0].species?.map(\.scientificName) == ["Sayornis nigricans", "Turdus merula"])
+        #expect(goals[0].species?.map(\.edition) == ["us-ca-la", nil])
+        #expect(goals[1].species == nil, "an older server")
+    }
+
     @Test("a circle's goals are read and decoded with their progress")
     func list() async throws {
         let recorder = Recorder()
@@ -141,6 +224,92 @@ struct GoalWordsTests {
 }
 
 #if DEBUG
+@Suite("The goal on Listen")
+@MainActor
+struct GoalOnListenTests {
+    private let now = Date(timeIntervalSince1970: 1_793_692_800)
+
+    private func monthly(id: String = "monthly", progress: Int, target: Int = 14, ending: TimeInterval = 86_400) -> CircleGoal {
+        var goal = goal(kind: .monthly, progress: progress, target: target, startsAt: now.addingTimeInterval(-86_400), endsAt: now.addingTimeInterval(ending), creator: nil)
+        goal.id = id
+        goal.title = "November goal"
+        return goal
+    }
+
+    /// A store that believes it has read these, as the cache would draw them.
+    private func store(_ goals: [(String, [CircleGoal])], signedIn: Bool = true) -> CircleStore {
+        let circles = goals.map { CircleSummary(id: $0.0, name: "Guild \($0.0)", createdBy: "x", createdAt: now, timeZone: "UTC", memberCount: 2, isCreator: false) }
+        let url = URL.temporaryDirectory.appending(path: "goal-on-listen-\(UUID().uuidString)/last-known.json")
+        let cache = CircleCache(fileURL: url)
+        cache.save(CircleSnapshot(circles: circles, goals: Dictionary(uniqueKeysWithValues: goals)))
+        cache.finishWrites()
+        return CircleStore(account: FakeAccount.session(signedIn: signedIn), client: FakeCircleClient(seeded: false), cache: cache)
+    }
+
+    @Test("it names the Guild closest to its monthly goal")
+    func closest() {
+        let store = store([("far", [monthly(progress: 1)]), ("near", [monthly(progress: 12)]), ("mid", [monthly(progress: 5, target: 10)])])
+        #expect(store.closestGoal(now: now)?.circle.id == "near")
+    }
+
+    @Test("a tie goes to the first listed")
+    func tie() {
+        let store = store([("a", [monthly(progress: 12)]), ("b", [monthly(progress: 2, target: 4)])])
+        #expect(store.closestGoal(now: now)?.circle.id == "a")
+    }
+
+    @Test("a custom goal, a goal reached and a month that's over don't count, even from the cache")
+    func onlyRunning() {
+        var custom = monthly(progress: 13)
+        custom.kind = .custom
+        let reached = monthly(progress: 14)
+        let over = monthly(progress: 13, ending: -1)
+        #expect(store([("c", [custom]), ("r", [reached]), ("o", [over])]).closestGoal(now: now) == nil)
+    }
+
+    @Test("signed out, there's no line and nothing is read")
+    func signedOut() async {
+        let client = FakeCircleClient(seeded: true)
+        let store = CircleStore(account: FakeAccount.session(signedIn: false), client: client)
+        await store.loadRunningGoals()
+        #expect(store.circles.isEmpty)
+        #expect(store.closestGoal() == nil)
+    }
+
+    @Test("Listen reads the list and each Guild's goals, and not again straight away")
+    func reads() async throws {
+        let client = FakeCircleClient(seeded: true)
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client)
+        await store.loadRunningGoals()
+        let closest = try #require(store.closestGoal())
+        #expect(closest.circle.name == "Sunday Group")
+        let reads = client.goalReadCount
+        #expect(reads == store.circles.count)
+        await store.loadRunningGoals()
+        #expect(client.goalReadCount == reads)
+        await store.loadRunningGoals(now: .now.addingTimeInterval(600))
+        #expect(client.goalReadCount == reads * 2, "a while later, again")
+    }
+
+    @Test("the line goes on sign-out")
+    func clears() async {
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: FakeCircleClient(seeded: true))
+        await store.loadRunningGoals()
+        #expect(store.closestGoal() != nil)
+        store.clear()
+        #expect(store.closestGoal() == nil)
+    }
+
+    @Test("a seeded goal's species match its count, with an edition each")
+    func seeded() async throws {
+        let store = CircleStore(account: FakeAccount.session(signedIn: true), client: FakeCircleClient(seeded: true))
+        await store.loadRunningGoals()
+        let goal = try #require(store.closestGoal()?.goal)
+        #expect(goal.species?.count == goal.progress)
+        #expect(goal.species?.allSatisfy { $0.edition != nil } == true)
+    }
+}
+
 @Suite("Goals in the store")
 @MainActor
 struct CircleGoalStoreTests {

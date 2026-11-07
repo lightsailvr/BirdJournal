@@ -13,6 +13,7 @@ import UIKit
 
 /// Launch flags for simulator screenshots and checks (issue #28), read once when the root appears:
 ///
+/// - `-seedReferenceBirds YES` adds the five sightings the Compare reference says are yours (issue #150).
 /// - `-seedJournal YES` adds a few sightings with generated frames, spread over a kilometre of Griffith Park so the
 ///   map shows several pins (with `-inMemoryAlbum YES` nothing touches the album on disk).
 /// - `-patchLight "x,y"` puts the patches' light somewhere, as a tilt would (issue #134's screenshots; the simulator has
@@ -40,7 +41,7 @@ import UIKit
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
 ///   signedOut|signedIn` and `-fakeCircles empty|some`): `circles` (the tab: the sign-in invitation, no circles, or the
-///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
+///   list), `circle` (the first circle's page), `compare` (Compare birds with its first friend), `goal-patches` (every patch of its month), `circle-invite` (its invitation, QR code and link), `circle-goal` (its new-goal sheet, issue #65), `circle-new` (the
 ///   name sheet), `join` (the join screen for `-autoInvite <token>`, by default `fake-invite`; `expired` and `full`
 ///   show those refusals). `recap` ends a phone run on its recap, with `-autoRecapAdd YES` after adding the first bird the packs
 ///   describe. `-autoRunStopAfter <seconds>` runs a phone run behind whatever else is opened, and stops it then, as Stop on the Lock
@@ -125,6 +126,7 @@ struct DebugLaunch: ViewModifier {
                 }
             }
             if defaults.bool(forKey: "seedJournal") { DebugSeeds.seedJournal(context: context, frames: frameStore) }
+            if defaults.bool(forKey: "seedReferenceBirds") { DebugSeeds.seedReferenceBirds(context: context) }
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
             if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
@@ -335,6 +337,17 @@ struct DebugLaunch: ViewModifier {
                     let me = circles.account.account?.id
                     if let friend = circles.details[first.id]?.members.first(where: { $0.id != me && $0.id != FakeCircleClient.me }) {
                         circlesPath.append(Route.compareBirds(friendID: friend.id, friendName: friend.name))
+                    }
+                }
+            case "goal-patches":
+                // The first circle's page, then every patch of its month (issue #150).
+                tab = .circles
+                await circles.refresh()
+                if let first = circles.circles.first {
+                    circlesPath.append(Route.circle(id: first.id))
+                    await circles.loadGoals(circleID: first.id)
+                    if let monthly = circles.goals[first.id]?.first(where: { $0.kind == .monthly }) {
+                        circlesPath.append(Route.goalPatches(circleID: first.id, goalID: monthly.id))
                     }
                 }
             case "circle-new":
@@ -548,6 +561,16 @@ enum DebugSeeds {
                 sighting.caption = CardCaption(text: "By the pond at morning, the dark sentinel kept its low perch.", generatorVersion: FixedCaptionWriter.versionString)
             }
             context.insert(sighting)
+        }
+        try? context.save()
+    }
+
+    /// The birds `5-compare.png` says are yours (issue #150), for its side-by-side: two you share with Maya, and three only you have.
+    static func seedReferenceBirds(context: ModelContext) {
+        let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let birds = ["Sayornis nigricans_Black Phoebe", "Haemorhous mexicanus_House Finch", "Calypte anna_Anna's Hummingbird", "Zenaida macroura_Mourning Dove", "Branta canadensis_Canada Goose"]
+        for (index, label) in birds.enumerated() {
+            context.insert(Sighting(speciesID: label, confirmedAt: Date.now.addingTimeInterval(Double(-index - 1) * 3600), location: griffithPark, soundConfidence: 0.8, frameImagePath: nil, source: .phone, note: nil))
         }
         try? context.save()
     }

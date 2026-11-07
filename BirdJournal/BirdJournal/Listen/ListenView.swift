@@ -67,6 +67,7 @@ private struct ReadyToListenView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(CurrentPlace.self) private var place
+    @Environment(CircleStore.self) private var circles
     @Environment(\.scenePhase) private var scenePhase
     var isCovered = false
     @State private var choosingSource = false
@@ -128,6 +129,8 @@ private struct ReadyToListenView: View {
                             LocalSetSection(local: local, collection: collection)
                                 .id("local-set")
                         }
+                        GuildGoalLine()
+                            .padding(.top, 18)
                     }
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.top, -36)
@@ -152,6 +155,11 @@ private struct ReadyToListenView: View {
         }
         .task(id: PlaceRead(sets: collection.sets.map(\.id), newest: LocalSet.newestSetID(in: collection), inFront: scenePhase != .background)) {
             if scenePhase != .background { await place.refresh() }
+        }
+        // After the first frame, like the engine.
+        .task {
+            try? await Task.sleep(for: .milliseconds(300))
+            if !Task.isCancelled { await circles.loadRunningGoals() }
         }
         #if DEBUG
         .task {

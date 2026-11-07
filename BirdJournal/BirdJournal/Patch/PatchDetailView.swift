@@ -115,11 +115,14 @@ private struct PatchPage: View {
     private var isSideways: Bool { verticalSizeClass == .compact }
 
     var body: some View {
-        if isSideways {
-            sideBySide
-        } else {
-            upright
+        Group {
+            if isSideways {
+                sideBySide
+            } else {
+                upright
+            }
         }
+        .readsFriendsBirds(when: showsCard || isSideways)
     }
 
     private var sideBySide: some View {

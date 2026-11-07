@@ -11,6 +11,7 @@ import UIKit
 struct SetView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
+    @Environment(CircleStore.self) private var circles
     let id: String
     @State private var query = ""
     /// The plate names the set, so the bar only does once the plate has scrolled away.
@@ -30,6 +31,8 @@ struct SetView: View {
             let collection = collectionStore.collection
             let progress = collection.progress(of: set.id)
             let pack = library.pack(id: set.id)
+            // By species, wherever you found it: a friend's face says "you haven't found this bird", not "not in this edition".
+            let yours = Set(collection.patches.map(\.scientificName))
             ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -58,7 +61,8 @@ struct SetView: View {
                             NavigationLink(value: Route.species(scientificName: species.scientificName, commonName: species.commonName)) {
                                 SetSpeciesRow(
                                     number: CardPlacement.paddedNumber(offset + 1, of: set.species.count), species: species,
-                                    patch: patch, picture: .ofSetRow(scientificName: species.scientificName, isFound: patch != nil, reference: library.thumbnailURL(scientificName: species.scientificName), pack: pack)
+                                    patch: patch, picture: .ofSetRow(scientificName: species.scientificName, isFound: patch != nil, reference: library.thumbnailURL(scientificName: species.scientificName), pack: pack),
+                                    friends: yours.contains(species.scientificName) ? [] : circles.friends(having: species.scientificName)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -80,6 +84,7 @@ struct SetView: View {
             }
             }
             .background(Color.paper)
+            .task { await circles.loadFriendsBirds() }
             .navigationTitle(set.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -101,9 +106,9 @@ struct SetView: View {
     }
 }
 
-/// One species of a set: the reference photo of a bird you've found or the silhouette of one you haven't, the number above the name, and "Yours, seen once"
-/// once it's sewn. A silhouette needs no words: the heading above counts them. The space after the name is free for a friend's
-/// face (slice 8).
+/// One species of a set: the reference photo of a bird you've found or the silhouette of one you haven't, the number above the name,
+/// and "Yours, seen once" once it's sewn. A silhouette needs no words: the heading above counts them. After the name, up to two faces
+/// of friends who have a bird you don't (issue #150, A4).
 private struct SetSpeciesRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// e.g. "021".
@@ -112,6 +117,8 @@ private struct SetSpeciesRow: View {
     /// Yours, in this set.
     let patch: CardCollection.Patch?
     let picture: RowPictureSource
+    /// Friends who have this bird, if you don't.
+    var friends: [CircleMember] = []
 
     /// The reference's tile, 138 of 900, at this screen's width.
     private static let pictureSide: CGFloat = 63
@@ -139,12 +146,16 @@ private struct SetSpeciesRow: View {
                 }
             }
             Spacer(minLength: 4)
+            if !friends.isEmpty {
+                MemberFaces(members: Array(friends.prefix(2)), shown: 2)
+                    .accessibilityIdentifier("set-species-friends")
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel([number, species.commonName, yours?.lowercased() ?? "still out there"].joined(separator: ", "))
+        .accessibilityLabel(([number, species.commonName, yours?.lowercased() ?? "still out there"] + (friends.isEmpty ? [] : [FriendWords.have(friends)])).joined(separator: ", "))
         .accessibilityIdentifier(patch != nil ? "set-species-collected" : "set-species-silhouette")
     }
 }
