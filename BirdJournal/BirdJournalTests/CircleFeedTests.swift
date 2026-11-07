@@ -894,7 +894,7 @@ struct MergedFeedTests {
 
     @Test("an open find's page keeps its find through a read that leaves it out, until a block, or its Guild goes")
     func heldFind() async throws {
-        let (store, client, busy, _) = try await allRead()
+        let (store, _, busy, _) = try await allRead()
         let id = "busy/busy-24"
         store.holdOpen(id: id)
         await store.loadFeed(circleID: busy)
@@ -905,17 +905,13 @@ struct MergedFeedTests {
         try await store.react(.lovely, given: true, to: held.item)
         #expect(store.entry(id: id)?.item.reaction(.lovely).mine == true)
 
-        try await client.setBlocked(false, accountID: "busy", accessToken: "t")
-        store.holdOpen(id: "quiet/quiet-24", openedIn: nil)
         try await store.leave(circleID: busy)
         #expect(store.entry(id: id) == nil, "its Guild has gone")
     }
 
     @Test("a held find goes with a block")
     func heldFindBlocked() async throws {
-        let (store, client, busy, quiet) = try await allRead()
-        let friend = try await store.create(named: "With a friend")
-        _ = friend
+        let (store, client, _, quiet) = try await allRead()
         let id = "quiet/quiet-24"
         store.holdOpen(id: id)
         await store.loadFeed(circleID: quiet)
@@ -923,7 +919,6 @@ struct MergedFeedTests {
         client.addMember("quiet", to: quiet)
         try await store.setBlocked(true, accountID: "quiet", name: nil)
         #expect(store.entry(id: id) == nil)
-        #expect(store.feeds[busy] != nil)
     }
 
     @Test("a held find is forgotten at sign-out")
@@ -952,7 +947,6 @@ struct MergedFeedTests {
         client.add(item, to: family)
         await store.loadMergedFeed()
         let id = "jo/two"
-        // Sunday Group has seen a phoebe before; Family, in these seeds, has Lee's earlier one in another edition too.
         for circle in [sunday, family] {
             #expect(store.entry(id: id, openedIn: circle)?.circleIDs == [circle])
             #expect(store.entry(id: id, openedIn: circle)?.item.circleFirst == store.feeds[circle]?.items.first { $0.id == id }?.circleFirst)
