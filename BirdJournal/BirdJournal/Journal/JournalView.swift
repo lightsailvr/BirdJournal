@@ -32,21 +32,8 @@ struct JournalView: View {
     @State private var restoring = false
     /// The restore under way.
     @State private var settling: Task<Void, Never>?
-    /// A patch's page hides the tab bar, and the scroll view underneath gets taller. At the foot of a board that would pull the offset
-    /// back by the bar's height, so the page would land short of its tile. Room below the content for as long as that lasts keeps
-    /// the offset where it was, and nothing has to be put back. It's never seen: the page covers it.
-    @State private var hasCoverRoom = false
-    @State private var coverRoomGoing: Task<Void, Never>?
-    /// More than any tab bar.
-    private static let coverRoom: CGFloat = 140
-    /// How long the room stays after the way back. `-coverRoomSeconds <n>` holds it, for a test to flick into it.
-    private static var coverRoomSeconds: Double {
-        #if DEBUG
-        let seconds = UserDefaults.standard.double(forKey: "coverRoomSeconds")
-        if seconds > 0 { return seconds }
-        #endif
-        return 1.5
-    }
+    /// Where each mode was when a search started, to go back to when it's cleared.
+    @State private var offsetsBeforeSearch: [Mode: CGFloat]?
     /// Whether another page covers this one: a page pushed on the tab's stack, or another tab. Offsets reported
     /// meanwhile are not the birder's.
     var isCovered = false
@@ -71,7 +58,7 @@ struct JournalView: View {
                         .transition(modeContentTransition)
                     }
                     .padding(.horizontal, JournalLayout.margin)
-                    .padding(.bottom, JournalLayout.sectionGap + (hasCoverRoom ? Self.coverRoom : 0))
+                    .padding(.bottom, JournalLayout.sectionGap)
                 }
                 // Outside the scrolling content, under a title that doesn't collapse: the picker has nothing to ride on, so whatever a
                 // mode change does to the content or the offset, it stays exactly where it is.
@@ -104,27 +91,23 @@ struct JournalView: View {
                     if !isCovered, !restoring { state.offsets[state.mode] = max(newOffset, 0) }
                 }
                 .onScrollPhaseChange { _, phase in
-                    // The birder's own scroll wins over putting one back. The room goes too: the bar's back by the time a finger can be
-                    // on the board, and a flick mustn't reach empty felt, then be pulled back when the room goes.
-                    if phase == .interacting {
-                        stopRestoring()
-                        if !isCovered {
-                            coverRoomGoing?.cancel()
-                            hasCoverRoom = false
-                        }
-                    }
+                    // The birder's own scroll wins over putting one back.
+                    if phase == .interacting { stopRestoring() }
                 }
                 .onChange(of: isCovered) { _, covered in
-                    coverRoomGoing?.cancel()
-                    if covered {
-                        stopRestoring()
-                        hasCoverRoom = true
+                    if covered { stopRestoring() }
+                }
+                .keepsItsFootUnderAPage(isCovered: isCovered)
+                .onChange(of: state.query.isEmpty) { _, isEmpty in
+                    // Results start at their top, whatever the board's offset was: there, a short list's patches sit above the bar until
+                    // it's scrolled. Clearing the search goes back to where each mode was.
+                    if isEmpty {
+                        state.offsets = offsetsBeforeSearch ?? state.offsets
+                        offsetsBeforeSearch = nil
+                        restore(state.offsets[state.mode] ?? 0)
                     } else {
-                        // Once the tab bar is surely back, when the room can go without anything moving.
-                        coverRoomGoing = Task { @MainActor in
-                            try? await Task.sleep(for: .seconds(Self.coverRoomSeconds))
-                            if !Task.isCancelled { hasCoverRoom = false }
-                        }
+                        offsetsBeforeSearch = state.offsets
+                        restore(0)
                     }
                 }
                 .onChange(of: state.board) {

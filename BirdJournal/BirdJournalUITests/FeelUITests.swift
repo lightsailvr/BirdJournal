@@ -146,6 +146,25 @@ final class FeelUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Share this patch"].waitForExistence(timeout: 10), "no share sheet: \(app.debugDescription.prefix(3000))")
     }
 
+    /// The foot of Listen's page at the largest text, as the board's: the tile comes back where it left, with nothing put right after.
+    @MainActor
+    func testTheFootOfListenComesBackWhereItWas() throws {
+        let app = launch(["-seedJournal", "YES", "-autoScreen", "listen", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let latest = app.buttons["board-patch"].firstMatch
+        XCTAssertTrue(latest.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<8 { app.swipeUp() }
+        let before = settledFrame(of: latest).minY
+        for _ in 0..<2 {
+            latest.tap()
+            XCTAssertTrue(element(app, "patch-face").waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            XCTAssertTrue(latest.waitForExistence(timeout: 10))
+            XCTAssertEqual(latest.frame.minY, before, accuracy: 2, "the page landed elsewhere")
+            Thread.sleep(forTimeInterval: 3)
+            XCTAssertEqual(settledFrame(of: latest).minY, before, accuracy: 2, "the page's foot moved")
+        }
+    }
+
     /// A stack in a sheet: the page grows in the sheet, the peek's actions land in the sheet, and neither pushes onto the tab behind it.
     @MainActor
     func testLiftAndPeekInASheetStayInTheSheet() throws {

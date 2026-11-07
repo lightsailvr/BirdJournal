@@ -160,6 +160,34 @@ final class CollectionUITests: XCTestCase {
         XCTAssertEqual(Self.settledMinY(of: tile), before, accuracy: 3, "the flick went on past the foot into empty felt")
     }
 
+    /// A search from far down a board starts at the top of its results, not at the old offset, and clearing it goes back.
+    @MainActor
+    func testASearchFromAScrolledBoardStartsAtTheTopAndClearingGoesBack() throws {
+        let app = launch(["-seedJournal", "NO", "-seedBoard", "YES", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 15), "no board; screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<6 { app.swipeUp() }
+        Thread.sleep(forTimeInterval: 1.5)
+        let tiles = app.buttons.matching(identifier: "board-patch").allElementsBoundByIndex
+        let shown = try XCTUnwrap(tiles.first { Self.isClearOfBars($0, in: app) }, "no patch in view; screen: \(app.debugDescription.prefix(3000))")
+        let left = app.buttons.matching(NSPredicate(format: "label == %@", shown.label)).firstMatch
+        let leftAt = Self.settledMinY(of: left)
+
+        let search = app.navigationBars["Collection"].buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search'")).firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap()
+        let field = app.searchFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.typeText("Mallard")
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+        XCTAssertTrue(mallard.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+        let modes = app.segmentedControls["collection-mode"]
+        XCTAssertGreaterThanOrEqual(Self.settledMinY(of: mallard), modes.frame.maxY - 1, "the first result's above the bar")
+
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertTrue(left.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(Self.settledMinY(of: left), leftAt, accuracy: 4, "clearing it went somewhere else")
+    }
+
     /// Each mode's list, scrolled, comes back where it was left, through other modes and a quick run of changes.
     @MainActor
     func testEachModeKeepsItsScrollPositionThroughChanges() throws {
