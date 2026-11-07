@@ -213,7 +213,7 @@ extension FindRowTests {
     func newPatch() {
         let item = Self.item(newPatch: true, first: true)
         #expect(FindRow.isLed(item))
-        #expect(FindRow.headline(item) == "Maya Ortiz sewed a new patch")
+        #expect(FindRow.headline(item) == "Maya sewed a new patch")
         #expect(FindRow.headline(Self.item(newPatch: true, mine: true)) == "You sewed a new patch")
         #expect(FindRow.howAndWhere(item).hasPrefix("Heard in Pasadena, "))
         #expect(FindRow.spoken(item).hasPrefix("Black Phoebe. Heard by Maya Ortiz. Pasadena, "))
@@ -240,7 +240,7 @@ extension FindRowTests {
         var shared = Self.item()
         shared.card = FeedItem.SharedCard(note: "By the gate.", caption: nil, photo: nil)
         #expect(FindRow.isLed(shared))
-        #expect(FindRow.headline(shared) == "Maya Ortiz shared a sighting")
+        #expect(FindRow.headline(shared) == "Maya shared a sighting")
         #expect(!FindRow.isLed(Self.item()), "nobody shared it, so it can't say they did")
     }
 }
@@ -550,3 +550,230 @@ struct CircleCacheTests {
         #expect(store.friendBirds.isEmpty)
     }
 }
+
+// Issue #150, G3 and G4: the Guilds tab's merged feed, and a feed's rows.
+@Suite("A feed's rows")
+struct FindFeedRowTests {
+    private static let start = Date(timeIntervalSince1970: 1_790_000_000)
+
+    private static func item(_ sighting: String, owner: String = "maya", hoursAgo: Double = 0, newPatch: Bool = false, first: Bool = false, rarity: RarityLabel? = .common, card: Bool = false) -> FeedItem {
+        FeedItem(
+            sightingID: sighting, speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", commonName: "Black Phoebe", method: .heard, place: "Pasadena",
+            foundAt: start.addingTimeInterval(-hoursAgo * 3600), newPatch: newPatch, rarity: rarity, art: nil,
+            owner: .init(id: owner, displayName: owner), circleFirst: first, isMine: false,
+            card: card ? .init(note: "Hello", caption: nil, photo: nil) : nil
+        )
+    }
+
+    private static func rows(_ items: [FeedItem]) -> [[String]] {
+        FindFeedRow.rows(of: items.map { FindEntry(item: $0, circleIDs: ["c"]) }).map { row in
+            switch row {
+            case .find(let entry): [entry.item.sightingID]
+            case .repeats(let entries): entries.map(\.item.sightingID)
+            }
+        }
+    }
+
+    @Test("a member's consecutive repeats within a day gather into one line")
+    func gathers() {
+        #expect(Self.rows([Self.item("a", hoursAgo: 1), Self.item("b", hoursAgo: 2), Self.item("c", hoursAgo: 20)]) == [["a", "b", "c"]])
+    }
+
+    @Test("one repeat alone stays its own quiet row")
+    func oneAlone() {
+        #expect(Self.rows([Self.item("a")]) == [["a"]])
+    }
+
+    @Test("another member's repeat ends the run")
+    func anotherMember() {
+        #expect(Self.rows([Self.item("a", hoursAgo: 1), Self.item("b", owner: "jo", hoursAgo: 2), Self.item("c", hoursAgo: 3)]) == [["a"], ["b"], ["c"]])
+    }
+
+    @Test("a day is counted from the newest in the run")
+    func aDay() {
+        #expect(Self.rows([Self.item("a", hoursAgo: 0), Self.item("b", hoursAgo: 24), Self.item("c", hoursAgo: 25), Self.item("d", hoursAgo: 26)]) == [["a", "b"], ["c", "d"]])
+    }
+
+    @Test("a new patch, a shared card and any mark stand alone, and end the run", arguments: [
+        item("m", hoursAgo: 2, newPatch: true),
+        item("m", hoursAgo: 2, card: true),
+        item("m", hoursAgo: 2, first: true),
+        item("m", hoursAgo: 2, rarity: .rare),
+        item("m", hoursAgo: 2, rarity: .exceptional),
+    ])
+    func standsAlone(find: FeedItem) {
+        let run = [Self.item("a", hoursAgo: 0), Self.item("b", hoursAgo: 1), find, Self.item("c", hoursAgo: 3), Self.item("d", hoursAgo: 4)]
+        #expect(Self.rows(run) == [["a", "b"], ["m"], ["c", "d"]])
+    }
+
+    @Test("an uncommon bird isn't a mark, so it gathers")
+    func uncommonGathers() {
+        #expect(Self.rows([Self.item("a", rarity: .uncommon), Self.item("b", hoursAgo: 1, rarity: nil)]) == [["a", "b"]])
+    }
+
+    @Test("two Guilds' copies of a find are one entry naming both, newest first")
+    func merges() {
+        let entries = FindEntry.merging([
+            ("c1", [Self.item("a", hoursAgo: 1), Self.item("b", hoursAgo: 3)]),
+            ("c2", [Self.item("c", hoursAgo: 2), Self.item("b", hoursAgo: 3)]),
+        ])
+        #expect(entries.map(\.item.sightingID) == ["a", "c", "b"])
+        #expect(entries.map(\.circleIDs) == [["c1"], ["c2"], ["c1", "c2"]])
+    }
+
+    @Test("the same sighting number from two owners is two finds")
+    func twoOwners() {
+        let entries = FindEntry.merging([("c1", [Self.item("a")]), ("c2", [Self.item("a", owner: "jo")])])
+        #expect(entries.count == 2)
+    }
+
+    @Test("an entry never says more of where the bird was than the copy that says least")
+    func placeStaysHidden() {
+        var hidden = Self.item("a")
+        hidden.place = nil
+        #expect(FindEntry.merging([("c1", [Self.item("a")]), ("c2", [hidden])]).first?.item.place == nil)
+        #expect(FindEntry.merging([("c1", [hidden]), ("c2", [Self.item("a")])]).first?.item.place == nil)
+        var secret = Self.item("a")
+        secret.place = FindPolicy.secretSpot
+        #expect(FindEntry.merging([("c1", [Self.item("a")]), ("c2", [secret])]).first?.item.place == FindPolicy.secretSpot)
+        #expect(FindEntry.merging([("c1", [secret]), ("c2", [Self.item("a")])]).first?.item.place == FindPolicy.secretSpot)
+    }
+
+    @Test("an entry keeps a card and a mark from either copy")
+    func keepsExtras() {
+        let entry = FindEntry.merging([("c1", [Self.item("a")]), ("c2", [Self.item("a", first: true, card: true)])]).first
+        #expect(entry?.item.circleFirst == true)
+        #expect(entry?.item.card?.note == "Hello")
+    }
+
+    @Test("the blocked are left out")
+    func blocked() {
+        let entries = FindEntry.merging([("c1", [Self.item("a"), Self.item("b", owner: "jo")])], blocked: ["maya"])
+        #expect(entries.map(\.item.owner.id) == ["jo"])
+    }
+}
+
+#if DEBUG
+@Suite("The merged feed")
+@MainActor
+struct MergedFeedTests {
+    private func store(seeded: Bool = true) -> (CircleStore, FakeCircleClient) {
+        let client = FakeCircleClient(seeded: seeded)
+        return (CircleStore(account: FakeAccount.session(signedIn: true), client: client), client)
+    }
+
+    private func put(_ client: FakeCircleClient, _ circleID: String, _ count: Int, owner: String, startingAt start: Date, every interval: TimeInterval) {
+        for index in 0..<count {
+            client.add(FeedItem(
+                sightingID: "\(owner)-\(index)", speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", commonName: "Black Phoebe",
+                method: .seen, place: nil, foundAt: start.addingTimeInterval(-Double(index) * interval), newPatch: true, rarity: .common, art: nil,
+                owner: .init(id: owner, displayName: owner), circleFirst: false, isMine: false
+            ), to: circleID)
+        }
+    }
+
+    @Test("a find in two Guilds is one row naming both")
+    func oneRow() async throws {
+        let (store, client) = store()
+        client.seedSharedFinds()
+        await store.refresh()
+        await store.loadMergedFeed()
+        let feed = store.mergedFeed
+        #expect(feed.isLoaded)
+        let shared = try #require(feed.entries.first { $0.item.sightingID == "00000000-0000-4000-8000-000000000001" })
+        let names = shared.circleIDs.compactMap { id in store.circles.first { $0.id == id }?.name }
+        #expect(names == ["Sunday Group", "Family"])
+        #expect(feed.entries.count == Set(feed.entries.map(\.id)).count)
+    }
+
+    @Test("the next page comes from whichever Guild's next item is newest, and nothing lands above what's already shown")
+    func pages() async throws {
+        let (store, client) = store(seeded: false)
+        let busy = try await store.create(named: "Busy").circle.id
+        let quiet = try await store.create(named: "Quiet").circle.id
+        let now = Date(timeIntervalSince1970: 1_790_000_000)
+        // Busy has 25 finds an hour apart. Quiet has 25 a day apart, so most of Quiet is older than all of Busy.
+        put(client, busy, 25, owner: "busy", startingAt: now, every: 3600)
+        put(client, quiet, 25, owner: "quiet", startingAt: now.addingTimeInterval(-1800), every: 86_400)
+        await store.refresh()
+        await store.loadMergedFeed()
+        let times = { store.mergedFeed.entries.map(\.item.foundAt) }
+        #expect(times() == times().sorted(by: >))
+        // Busy's first page reaches back 19 hours, so a find of Busy's newer than most of Quiet's first page may still be unread:
+        // it shows Busy's 20 and the one of Quiet's inside those hours.
+        let shown = store.mergedFeed.entries.map(\.id)
+        #expect(shown.count == 21)
+
+        await store.loadMoreMergedFeed()
+        #expect(store.feeds[busy]?.items.count == 25, "Busy's next find is the newest unread")
+        #expect(store.feeds[quiet]?.items.count == 20)
+        #expect(Array(store.mergedFeed.entries.map(\.id).prefix(shown.count)) == shown, "nothing lands above what's shown")
+
+        await store.loadMoreMergedFeed()
+        #expect(store.feeds[quiet]?.items.count == 25)
+        #expect(!store.mergedFeed.hasMore)
+        #expect(store.mergedFeed.entries.count == 50)
+        #expect(times() == times().sorted(by: >))
+    }
+
+    @Test("a block made elsewhere takes a friend's finds out of the merged feed")
+    func blocks() async throws {
+        let (store, client) = store()
+        client.seedSharedFinds()
+        await store.refresh()
+        await store.loadMergedFeed()
+        #expect(store.mergedFeed.entries.contains { $0.item.owner.id == "jo" })
+        // On another phone.
+        try await client.setBlocked(true, accountID: "jo", accessToken: "t")
+        await store.loadBlocks()
+        #expect(!store.mergedFeed.entries.contains { $0.item.owner.id == "jo" })
+        #expect(store.entry(id: "jo/00000000-0000-4000-8000-000000000001") == nil, "an open find's page has nothing to show")
+    }
+
+    @Test("a reaction reaches the merged row, and both Guilds' copies")
+    func reaction() async throws {
+        let (store, client) = store()
+        client.seedSharedFinds()
+        await store.refresh()
+        await store.loadMergedFeed()
+        let shared = try #require(store.mergedFeed.entries.first { $0.item.sightingID == "00000000-0000-4000-8000-000000000001" })
+        try await store.react(.lovely, given: true, to: shared.item)
+        #expect(store.entry(id: shared.id)?.item.reaction(.lovely).mine == true)
+        for id in shared.circleIDs {
+            #expect(store.feeds[id]?.items.first { $0.id == shared.id }?.reaction(.lovely).count == 1)
+        }
+    }
+
+    @Test("Lee's repeats gather, in the seeds the UI tests use")
+    func seededRepeats() async throws {
+        let (store, client) = store()
+        client.seedSharedFinds()
+        await store.refresh()
+        await store.loadMergedFeed()
+        let rows = FindFeedRow.rows(of: store.mergedFeed.entries)
+        guard case .repeats(let line) = rows.first else {
+            Issue.record("the newest row is Lee's line: \(rows.first?.id ?? "")")
+            return
+        }
+        #expect(line.map(\.item.commonName) == ["House Finch", "Mourning Dove", "House Finch"])
+    }
+
+    @Test("the merged feed outlives a launch through the cache, and goes on sign-out")
+    func cache() async throws {
+        let url = URL.temporaryDirectory.appending(path: "merged-\(UUID().uuidString)/last-known.json")
+        let client = FakeCircleClient(seeded: true)
+        client.seedSharedFinds()
+        let cache = CircleCache(fileURL: url)
+        let first = CircleStore(account: FakeAccount.session(signedIn: true), client: client, cache: cache)
+        await first.refresh()
+        await first.loadMergedFeed()
+        first.writeCache()
+        cache.finishWrites()
+        let next = CircleStore(account: FakeAccount.session(signedIn: true), client: FakeCircleClient(seeded: false, offline: true), cache: CircleCache(fileURL: url))
+        #expect(next.mergedFeed.entries.map(\.id) == first.mergedFeed.entries.map(\.id))
+        #expect(next.mergedFeed.isLoaded)
+        next.clear()
+        #expect(next.mergedFeed.entries.isEmpty)
+    }
+}
+#endif

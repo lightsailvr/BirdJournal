@@ -106,27 +106,7 @@ struct PaperCardView: View {
 
     @ViewBuilder private func story(_ species: PackSpecies?) -> some View {
         if let lore = species?.lore {
-            VStack(spacing: 6) {
-                if let title = lore.title?.nilIfEmpty {
-                    Text(title)
-                        .font(CardFont.storyTitle)
-                        .foregroundStyle(Color.cardInk)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityIdentifier("card-story-title")
-                }
-                if let excerpt = LoreExcerpt.front(lore.text) {
-                    Text(excerpt)
-                        .font(CardFont.lore)
-                        .lineSpacing(CardFont.loreLeading)
-                        .foregroundStyle(Color.cardInk)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("card-lore-excerpt")
-                }
-            }
-            .frame(maxWidth: .infinity)
+            PaperCardStory(lore: lore)
         }
     }
 
@@ -183,16 +163,8 @@ struct PaperCardView: View {
         return "\(patch.count == 1 ? "sighting" : "sightings") here, sewn \(sewn)\(here)"
     }
 
-    @ViewBuilder private func moreLore(_ lore: PackLore) -> some View {
-        if let rest = PatchText.restOfLore(lore.text) {
-            PaperRule()
-            Text(rest)
-                .font(CardFont.lore)
-                .lineSpacing(CardFont.loreLeading)
-                .foregroundStyle(Color.cardInk)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("card-lore-rest")
-        }
+    private func moreLore(_ lore: PackLore) -> some View {
+        PaperCardMoreLore(lore: lore)
     }
 
     /// Stays in view under the scrolling text.
@@ -248,6 +220,138 @@ struct PaperCardView: View {
             .fixedSize()
             .accessibilityIdentifier("card-sources")
         }
+    }
+}
+
+/// The story on a paper card: its title and the lore's excerpt.
+private struct PaperCardStory: View {
+    let lore: PackLore
+
+    var body: some View {
+        VStack(spacing: 6) {
+            if let title = lore.title?.nilIfEmpty {
+                Text(title)
+                    .font(CardFont.storyTitle)
+                    .foregroundStyle(Color.cardInk)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("card-story-title")
+            }
+            if let excerpt = LoreExcerpt.front(lore.text) {
+                Text(excerpt)
+                    .font(CardFont.lore)
+                    .lineSpacing(CardFont.loreLeading)
+                    .foregroundStyle(Color.cardInk)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("card-lore-excerpt")
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+/// The rest of the lore, below the card's history.
+private struct PaperCardMoreLore: View {
+    let lore: PackLore
+
+    var body: some View {
+        if let rest = PatchText.restOfLore(lore.text) {
+            PaperRule()
+            Text(rest)
+                .font(CardFont.lore)
+                .lineSpacing(CardFont.loreLeading)
+                .foregroundStyle(Color.cardInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("card-lore-rest")
+        }
+    }
+}
+
+/// The paper card behind a friend's patch (issue #150, F1): the same printed card, minus what's yours. The edition line, the bird,
+/// its story and biology, read from the viewer's own pack, and no history, since these are a friend's sightings and they aren't
+/// on this iPhone. Scrolls inside the patch's footprint, or grows at accessibility text sizes, like the birder's own.
+struct FriendPaperCard: View {
+    @Environment(PackLibrary.self) private var library
+    let species: PackSpecies
+    /// "Citrus edition, No. 021", if this phone knows the find's set.
+    let edition: String?
+    let isReadingView: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if isReadingView {
+                content
+            } else {
+                ScrollView { content }
+                    .scrollBounceBehavior(.basedOnSize)
+                    .scrollIndicators(.visible)
+                    .accessibilityIdentifier("card-back-scroll")
+            }
+            HStack(spacing: 8) {
+                Spacer(minLength: 0)
+                NavigationLink(value: Route.speciesCredits(scientificName: species.scientificName)) {
+                    Label("Sources", systemImage: "chevron.right")
+                        .labelStyle(TrailingChevronLabel())
+                        .frame(minHeight: 30)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .fixedSize()
+                .accessibilityIdentifier("card-sources")
+            }
+            .font(.caption)
+            .foregroundStyle(Color.cardEdge)
+            .padding(.horizontal, 14)
+            .padding(.top, 2)
+            .padding(.bottom, 6)
+        }
+        .padding(.top, 22)
+        .padding(.horizontal, 7)
+        .padding(.bottom, 7)
+        .modifier(CardStockSurface())
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let edition {
+                Text(edition)
+                    .textCase(.uppercase)
+                    .font(CardFont.editionCompact)
+                    .tracking(CardFont.editionCompactTracking)
+                    .foregroundStyle(Color.cardEdge)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel(edition)
+                    .accessibilityIdentifier("card-heading")
+            }
+            VStack(spacing: 1) {
+                Text(species.commonName)
+                    .font(CardFont.birdName)
+                    .foregroundStyle(Color.cardInk)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("card-name")
+                Text(species.scientificName)
+                    .font(CardFont.scientific)
+                    .foregroundStyle(Color.cardInkSecondary)
+            }
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
+            if let lore = species.lore {
+                PaperCardStory(lore: lore)
+            }
+            let biology = PatchText.biology(species)
+            if !biology.isEmpty {
+                PaperRule()
+                BiologyGrid(stats: biology)
+            }
+            if let lore = species.lore {
+                PaperCardMoreLore(lore: lore)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.bottom, 10)
     }
 }
 

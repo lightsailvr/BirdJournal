@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// A Guild's look (issue #118, design guide page 13): a simple nature-derived emblem and a habitat cover, both chosen
-/// from the circle's ID so every member sees the same ones and nothing new is stored or sent. Emblems are identity, not
-/// ranks or purchases: one mark on a calm disc in aqua or a muted local colour, never gold (there is none since
-/// #132). The habitat cover is a designed `LandscapeArt`, illustrative, never a place.
+/// A Guild's look (issue #118, design guide page 13): a simple nature-derived emblem, chosen from the circle's ID so every
+/// member sees the same one and nothing new is stored or sent. Emblems are identity, not ranks or purchases: one mark on a
+/// calm disc in aqua or a muted local colour, never gold (there is none since #132).
 struct GuildIdentity: Equatable {
     /// One emblem tone: the deep disc and the light mark on it, the same in both appearances.
     struct Tone: Equatable {
@@ -25,20 +24,13 @@ struct GuildIdentity: Equatable {
         Tone(name: "mist", disc: 0x2E4A55, mark: 0xD2E4EA),
     ]
 
-    /// Habitats a Guild may wear: the wide, quiet landscapes (the editions' own stay with their sets).
-    static let habitats: [Landscape] = [.forest, .wetland, .coastal, .meadow, .hills, .fog]
-
     let mark: String
     let tone: Tone
-    let habitat: Landscape
-    let seed: UInt64
 
     init(circleID: String) {
         let seed = SeededRandom.seed(circleID)
-        self.seed = seed
         mark = Self.marks[Int(seed % UInt64(Self.marks.count))]
         tone = Self.tones[Int((seed >> 8) % UInt64(Self.tones.count))]
-        habitat = Self.habitats[Int((seed >> 16) % UInt64(Self.habitats.count))]
     }
 }
 
@@ -68,16 +60,6 @@ struct GuildEmblem: View {
         .frame(width: size, height: size)
         .overlay(Circle().strokeBorder(Color.paper, lineWidth: max(2, size / 22)))
         .accessibilityHidden(true)
-    }
-}
-
-/// The habitat cover across the top of a Guild's card and page.
-struct GuildCover: View {
-    let identity: GuildIdentity
-
-    var body: some View {
-        LandscapeArt(landscape: identity.habitat, seed: identity.seed)
-            .accessibilityHidden(true)
     }
 }
 

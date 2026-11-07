@@ -209,6 +209,74 @@ final class CircleStore {
         }
     }
 
+    // MARK: - The merged feed
+
+    /// What's new across every Guild (issue #150, G3), for the Guilds tab: each Guild's loaded pages merged by time.
+    struct MergedFeed: Equatable {
+        var entries: [FindEntry] = []
+        /// A Guild has another page.
+        var hasMore = false
+        var isLoading = false
+        /// Every Guild's first page has come back, this launch or from the cache.
+        var isLoaded = false
+        var error: String?
+    }
+
+    /// The Guilds' feeds as one list. It stops where a Guild's unread pages could still hold something newer, so a find never
+    /// lands in the middle of what the birder has already read: "More finds" carries on from there.
+    var mergedFeed: MergedFeed {
+        let read = circles.map { (circleID: $0.id, feed: feeds[$0.id] ?? Feed()) }
+        var entries = FindEntry.merging(read.map { ($0.circleID, $0.feed.items) }, blocked: Set(blocked.map(\.id)))
+        if let horizon = read.compactMap({ $0.feed.nextCursor == nil ? nil : $0.feed.items.last?.foundAt }).max() {
+            entries.removeAll { $0.item.foundAt < horizon }
+        }
+        return MergedFeed(
+            entries: entries,
+            hasMore: read.contains { $0.feed.nextCursor != nil },
+            isLoading: read.contains { $0.feed.isLoading },
+            isLoaded: read.allSatisfy(\.feed.isLoaded),
+            error: read.lazy.compactMap(\.feed.error).first
+        )
+    }
+
+    /// One find, as every Guild the birder has read it in knows it; nil once it's gone.
+    func entry(id: String) -> FindEntry? {
+        let read = circles.compactMap { circle in feeds[circle.id].map { (circleID: circle.id, items: $0.items.filter { $0.id == id }) } }
+        return FindEntry.merging(read, blocked: Set(blocked.map(\.id))).first
+    }
+
+    /// Reads every Guild's newest finds again, side by side.
+    func loadMergedFeed() async {
+        await withDiscardingTaskGroup { group in
+            for circle in circles {
+                group.addTask { await self.loadFeed(circleID: circle.id) }
+            }
+        }
+    }
+
+    /// The next page, from whichever Guild's next item is newest: the one whose last read find is newest, since its next find
+    /// can't be newer than that and any other's is older still. A Guild that has shown nothing, because all it has read so far is
+    /// someone blocked, goes first. It keeps reading until a new find shows or the pages run out.
+    func loadMoreMergedFeed() async {
+        let shown = mergedFeed.entries.count
+        while mergedFeed.entries.count == shown, let next = nextFeedToRead {
+            let before = feeds[next]?.nextCursor
+            await loadMoreFeed(circleID: next)
+            // A failure, or a read already on its way: it says so, and the birder can ask again.
+            if feeds[next]?.nextCursor == before { return }
+        }
+    }
+
+    private var nextFeedToRead: String? {
+        circles
+            .compactMap { circle -> (id: String, last: Date)? in
+                guard let feed = feeds[circle.id], feed.nextCursor != nil else { return nil }
+                return (circle.id, feed.items.last?.foundAt ?? .distantFuture)
+            }
+            .max { $0.last < $1.last }?
+            .id
+    }
+
     /// Reads the circle's goals and their progress again. A failure keeps what was read; the card has nothing to say
     /// about it beyond the feed's own error.
     func loadGoals(circleID: String) async {
@@ -469,13 +537,15 @@ extension CircleStore {
     static var blocksAvailable: Bool { AccountSession.isEnabledInThisBuild }
 
     /// The app's store: the bundled server's API, or none when the build has no server (the tab then says circles
-    /// aren't available). In debug builds `-fakeCircles empty|some|offline`, or `-fakeAccount` alone, swaps in the in-memory
+    /// aren't available). In debug builds `-fakeCircles empty|some|shared|reference|offline`, or `-fakeAccount` alone, swaps in the in-memory
     /// fake, so the UI tests and screenshots need no network.
     static func forApp(account: AccountSession) -> CircleStore {
         #if DEBUG
         let defaults = UserDefaults.standard
         if let mode = defaults.string(forKey: "fakeCircles") ?? defaults.string(forKey: "fakeAccount").map({ _ in "empty" }) {
-            let client = FakeCircleClient(seeded: mode == "some", offline: mode == "offline")
+            let client = FakeCircleClient(seeded: ["some", "shared", "reference"].contains(mode), offline: mode == "offline")
+            if mode == "shared" { client.seedSharedFinds() }
+            if mode == "reference" { client.seedReference() }
             client.latency = .seconds(defaults.double(forKey: "fakeCircleLatency"))
             // `-circleCacheFile <name>` keeps the fakes' last-known content in tmp, so a UI test can relaunch over it.
             let cache = defaults.string(forKey: "circleCacheFile").map { CircleCache(fileURL: URL.temporaryDirectory.appending(path: "\($0).json")) }

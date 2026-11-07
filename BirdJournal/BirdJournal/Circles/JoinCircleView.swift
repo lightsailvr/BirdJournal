@@ -20,6 +20,7 @@ struct JoinCircleView: View {
                 Section {
                     intro(title: "You're invited to a Guild", text: "Sign in with Apple or Google to see the invitation and join. Your collection stays on this iPhone either way.")
                 }
+                samples
                 Section { SignInButtons() }
             } else if let preview {
                 invitation(preview)
@@ -35,6 +36,15 @@ struct JoinCircleView: View {
         .navigationTitle("Join a Guild")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: account.status) { await load() }
+    }
+
+    /// What a Guild shares, in patches that are nobody's: the invitation carries no finds, and that's how it stays (issue #150, G8).
+    private var samples: some View {
+        Section {
+            SamplePatches()
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        }
     }
 
     private func intro(title: String, text: String) -> some View {
@@ -58,6 +68,7 @@ struct JoinCircleView: View {
             .padding(.vertical, 6)
             .listRowBackground(Color.clear)
         }
+        if !preview.alreadyMember { samples }
         Section {
             if preview.alreadyMember {
                 Button("Open the Guild") { finish(preview.circle.id) }
