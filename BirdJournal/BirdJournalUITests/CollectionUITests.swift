@@ -183,7 +183,8 @@ final class CollectionUITests: XCTestCase {
         let modes = app.segmentedControls["collection-mode"]
         XCTAssertGreaterThanOrEqual(Self.settledMinY(of: mallard), modes.frame.maxY - 1, "the first result's above the bar")
 
-        app.buttons["Close"].firstMatch.tap()
+        // The field's own clear button.
+        field.buttons.firstMatch.tap()
         XCTAssertTrue(left.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
         XCTAssertEqual(Self.settledMinY(of: left), leftAt, accuracy: 4, "clearing it went somewhere else")
     }
