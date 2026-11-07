@@ -106,6 +106,16 @@ struct PackCoverTests {
         #expect(library.cover(setID: "test-pack")?.credit == "AI illustration: FLUX.3 Image Klein, set-cover@1 cover-prompts@1, seed 2471396767")
     }
 
+    @Test("deferred launch preserves an explicitly empty bundled-cover source")
+    func deferredEmptyCovers() async throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let library = PackLibrary(bundled: nil, storage: PackStorage(directory: root), bundledCovers: .none, deferred: true)
+        await library.loadForLaunch()
+        #expect(library.sets.map(\.id) == [PackIndex.bundledPackID])
+        #expect(library.cover(setID: "us-ca-sd") == nil)
+    }
+
     @Test("the five approved covers ship with the app at full size, each with its credit")
     func shippedCovers() throws {
         for id in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"] {

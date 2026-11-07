@@ -40,6 +40,7 @@ public final class PackLibrary {
     @ObservationIgnored private let availableCapacity: () -> Int64?
     @ObservationIgnored private var launchLoaded: Bool
     @ObservationIgnored private var bundledCovers: BundledCovers
+    @ObservationIgnored private let readBundledCovers: @Sendable () -> BundledCovers
 
     /// Free space a download must leave besides the zip and its unpacked copy.
     public static let storageHeadroom: Int64 = 100 << 20
@@ -49,7 +50,7 @@ public final class PackLibrary {
     /// - Parameter bundledCovers: the set covers and definitions that ship with the app.
     public init(
         bundled: SpeciesPack?, storage: PackStorage, indexURL: URL = PackIndex.defaultURL, session: URLSession = .shared,
-        availableCapacity: (() -> Int64?)? = nil, bundledCovers: BundledCovers? = nil, deferred: Bool = false
+        availableCapacity: (() -> Int64?)? = nil, bundledCovers: @autoclosure @escaping @Sendable () -> BundledCovers = .shipped, deferred: Bool = false
     ) {
         self.launchLoaded = !deferred
         self.bundled = bundled
@@ -58,7 +59,8 @@ public final class PackLibrary {
         self.session = session
         self.downloader = PackDownloader(session: session)
         self.availableCapacity = availableCapacity ?? { storage.availableCapacity() }
-        self.bundledCovers = bundledCovers ?? (deferred ? BundledCovers(covers: [:]) : .shipped)
+        self.readBundledCovers = bundledCovers
+        self.bundledCovers = deferred ? .none : bundledCovers()
         self.installed = deferred ? [] : storage.installed(replacingBundled: bundled)
         // The last good index until a fetch replaces it, so its sets work offline from launch (issue #54).
         self.index = deferred ? nil : storage.cachedIndex()
@@ -69,6 +71,7 @@ public final class PackLibrary {
     public func loadForLaunch() async {
         guard !launchLoaded else { return }
         let storage = storage
+        let readBundledCovers = readBundledCovers
         let snapshot = await Task.detached(priority: .userInitiated) {
             let signposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
             let state = signposter.beginInterval("Open packs")
@@ -87,7 +90,7 @@ public final class PackLibrary {
             signposter.endInterval("Open downloaded packs", downloads)
             let decode = signposter.beginInterval("Read cached index and sets")
             let index = storage.cachedIndex()
-            let covers = BundledCovers.shipped
+            let covers = readBundledCovers()
             signposter.endInterval("Read cached index and sets", decode)
             return (bundled, installed, index, covers)
         }.value
