@@ -10,7 +10,6 @@ struct RunReviewSheet: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openCollection) private var openCollection
-    @State private var reviewing: Candidate?
     @State private var path = NavigationPath()
     @Environment(\.scenePhase) private var scenePhase
     @Environment(CollectionStore.self) private var collectionStore
