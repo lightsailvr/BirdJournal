@@ -123,6 +123,15 @@ struct AtlasBookTests {
         #expect(done !== blank, "a painting, not the blank")
     }
 
+    @Test("a cluster's picture is one size whatever its count, so a new count or painting changes nothing MapKit lays out")
+    func clusterIsOneSize() {
+        let patch = MapPatchThumbnail.draw(painting: nil, edition: PatchEdition.of(setID: Self.setID))
+        for count in [2, 31, 999, 5000] {
+            let picture = MapPatchThumbnail.cluster(patch, count: count, tint: .red, ink: .white)
+            #expect(picture.size == MapPatchThumbnail.clusterSize, "\(count)")
+        }
+    }
+
     @Test("a cluster is listed when no zoom would part it, and zoomed into when one would")
     func oneSpot() {
         let griffith = CLLocationCoordinate2D(latitude: 34.1365, longitude: -118.2942)

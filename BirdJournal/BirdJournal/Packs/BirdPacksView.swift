@@ -141,7 +141,8 @@ struct PackRow: View {
         AdaptiveRow(stacked: typeSize.stacksRows) {
             PlatePicture(setID: setID, aspect: 4 / 3)
                 .padding(5)
-                .frame(width: 104)
+                // At accessibility sizes the row has stacked and the credit has grown, so it takes the room.
+                .frame(maxWidth: typeSize.stacksRows ? .infinity : 104)
                 .modifier(CardStockSurface(.plate))
                 // The row says what it is: a credit on every row is noise, and the set's own pages say it.
                 .accessibilityHidden(true)

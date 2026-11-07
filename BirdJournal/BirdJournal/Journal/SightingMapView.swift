@@ -8,7 +8,7 @@ import SwiftUI
 /// Every located sighting in the journal on one map (issue #44), opened from a sighting's map card: each is a tiny flat patch in
 /// its edition's shape (issue #150, A5), and MapKit gathers the ones too close to tell apart into a cluster showing the newest. A tap on
 /// a cluster zooms into it, or lists its sightings when they're all at one spot, as a run's are. That sighting's patch is larger with
-/// its callout up, and selecting another shows its callout with Open, which pushes its detail. Pan, zoom, the user's own dot and the locate button when location is allowed, standard or satellite.
+/// its callout up, it's never gathered into a cluster, and selecting another shows its callout with Open, which pushes its detail. Pan, zoom, the user's own dot and the locate button when location is allowed, standard or satellite.
 /// Phone-only: nothing here reaches the lens or a share.
 struct SightingMapView: View {
     @Environment(\.dismiss) private var dismiss
@@ -69,7 +69,7 @@ struct SightingMapView: View {
             .ignoresSafeArea(edges: .bottom)
             .safeAreaInset(edge: .bottom) {
                 if !here.isEmpty {
-                    SightingsHere(sightings: located.filter { here.contains($0.persistentModelID) }, focusID: focusID)
+                    SightingsHere(sightings: sightings(in: here), focusID: focusID)
                         .padding(.horizontal, JournalLayout.margin)
                         .padding(.vertical, 12)
                 } else if let selected {
@@ -102,24 +102,24 @@ struct SightingMapView: View {
         .onChange(of: library.packs.count) { pins = makePins() }
     }
 
+    private func sightings(in ids: [PersistentIdentifier]) -> [Sighting] {
+        let ids = Set(ids)
+        return located.filter { ids.contains($0.persistentModelID) }
+    }
+
     /// One pin per located sighting. A bird's painting and name are found once per bird and edition, however many sightings it has.
     private func makePins() -> [SightingPin] {
         let collection = collectionStore.collection
-        var arts: [CardCollection.Patch.Key: PatchArt?] = [:]
+        var birds: [CardCollection.Patch.Key: (art: PatchArt?, name: String)] = [:]
         return located.compactMap { sighting in
             guard let coordinate = sighting.location?.clCoordinate else { return nil }
             let setID = collection.patch(of: sighting.identifier)?.placement.setID
             let key = CardCollection.Patch.Key(speciesID: sighting.scientificName, setID: setID)
-            let art: PatchArt?
-            if let known = arts[key] {
-                art = known
-            } else {
-                art = library.patchArt(scientificName: sighting.scientificName, setID: setID)
-                arts[key] = art
-            }
+            let bird = birds[key] ?? (library.patchArt(scientificName: sighting.scientificName, setID: setID), library.commonName(for: sighting))
+            birds[key] = bird
             return SightingPin(
-                id: sighting.persistentModelID, coordinate: coordinate, name: library.commonName(for: sighting),
-                confirmedAt: sighting.confirmedAt, art: art, setID: setID, isFocus: sighting.persistentModelID == focusID
+                id: sighting.persistentModelID, coordinate: coordinate, name: bird.name,
+                confirmedAt: sighting.confirmedAt, art: bird.art, setID: setID, isFocus: sighting.persistentModelID == focusID
             )
         }
     }
@@ -137,7 +137,7 @@ private struct SightingsHere: View {
                 .foregroundStyle(Color.ink)
                 .accessibilityAddTraits(.isHeader)
             ScrollView {
-                VStack(spacing: 0) {
+                LazyVStack(spacing: 0) {
                     ForEach(sightings) { sighting in
                         Callout(sighting: sighting, isFocus: sighting.persistentModelID == focusID, isInList: true)
                         RowRule()

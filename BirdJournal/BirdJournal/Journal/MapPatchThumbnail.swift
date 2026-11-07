@@ -3,7 +3,8 @@ import UIKit
 
 /// A sighting's patch on the map (issue #150, A5): a flat picture in the edition's shape, tiny, with no shader under it. The painting
 /// comes through `PatchTextures`, on its two-at-a-time decode queue, and the map holds only the small bitmap drawn from it, so a map
-/// of thousands of sightings decodes each bird once. A bird with no painting on the phone is the edition's bare cloth and cord.
+/// of thousands of sightings decodes each bird once. These go in a sublayer of a view of a fixed size, never in `MKAnnotationView.image`
+/// (`SightingMapMarkers`). A bird with no painting on the phone is the edition's bare cloth and cord.
 enum MapPatchThumbnail {
     /// The longest side of a patch on the map, and of the one the map was opened on.
     static let side: CGFloat = 38
@@ -13,6 +14,8 @@ enum MapPatchThumbnail {
 
     /// The drawn pictures, by painting, edition and size.
     private nonisolated(unsafe) static let cache = NSCache<NSString, UIImage>()
+    /// The decodes under way, by the same key.
+    private static var inFlight: [NSString: Task<UIImage, Never>] = [:]
 
     /// The patch's rectangle inside a picture of `side`.
     static func patchRect(edition: PatchEdition, side: CGFloat) -> CGRect {
@@ -59,29 +62,48 @@ enum MapPatchThumbnail {
         return image
     }
 
-    /// The finished picture, decoding the painting if it must: the blank if there's none or it won't decode.
+    /// The finished picture, decoding the painting if it must: the blank if there's none or it won't decode. Thousands of sightings
+    /// wait on one decode of their bird, not one each.
     static func load(art: PatchArt?, edition: PatchEdition, side: CGFloat = side) async -> UIImage {
         let cacheKey = key(art: art, edition: edition, side: side)
         if let done = cache.object(forKey: cacheKey) { return done }
-        guard let art, let loaded = await PatchTextures.load(art, size: .thumbnail) else { return blank(edition: edition, side: side) }
-        let image = draw(painting: loaded.colourBitmap, edition: edition, side: side)
-        cache.setObject(image, forKey: cacheKey)
-        return image
+        guard let art else { return blank(edition: edition, side: side) }
+        if let waiting = inFlight[cacheKey] { return await waiting.value }
+        let loading = Task { @MainActor in
+            defer { inFlight[cacheKey] = nil }
+            guard let loaded = await PatchTextures.load(art, size: .thumbnail) else { return blank(edition: edition, side: side) }
+            let image = draw(painting: loaded.colourBitmap, edition: edition, side: side)
+            cache.setObject(image, forKey: cacheKey)
+            return image
+        }
+        inFlight[cacheKey] = loading
+        return await loading.value
     }
 
-    /// A patch standing for a cluster of sightings: the newest one's, with how many in the corner, in the place's tint.
+    /// Whether `immediate` has the finished picture already.
+    static func isFinished(art: PatchArt?, edition: PatchEdition, side: CGFloat = side) -> Bool {
+        art == nil || cache.object(forKey: key(art: art, edition: edition, side: side)) != nil
+    }
+
+    /// A cluster's picture, which is always this size, whatever the count: the patch at its centre, on the cluster's coordinate.
+    static let clusterSize = CGSize(width: 84, height: 56)
+
+    /// A patch standing for a cluster of sightings: the newest one's, with how many in its corner, in the place's tint.
     static func cluster(_ patch: UIImage, count: Int, tint: UIColor, ink: UIColor) -> UIImage {
-        let text = NSAttributedString(string: count.formatted(), attributes: [
+        let words = count < 1000 ? count.formatted() : "999+"
+        let text = NSAttributedString(string: words, attributes: [
             .font: UIFont.systemFont(ofSize: 12, weight: .semibold),
             .foregroundColor: ink,
         ])
         let textSize = text.size()
+        let size = clusterSize
         let badge = CGSize(width: max(textSize.width + 10, 20), height: 20)
-        let reach = badge.width * 0.45
-        let size = CGSize(width: patch.size.width + reach, height: patch.size.height + badge.height * 0.3)
         return UIGraphicsImageRenderer(size: size).image { _ in
-            patch.draw(at: CGPoint(x: 0, y: badge.height * 0.3))
-            let frame = CGRect(x: size.width - badge.width, y: 0, width: badge.width, height: badge.height)
+            let origin = CGPoint(x: (size.width - patch.size.width) / 2, y: (size.height - patch.size.height) / 2)
+            patch.draw(at: origin)
+            // At the patch's corner, and always inside the picture.
+            let x = min(origin.x + patch.size.width - badge.width * 0.55, size.width - badge.width)
+            let frame = CGRect(origin: CGPoint(x: x, y: max(origin.y - badge.height * 0.3, 0)), size: badge)
             tint.setFill()
             UIBezierPath(roundedRect: frame, cornerRadius: badge.height / 2).fill()
             text.draw(at: CGPoint(x: frame.midX - textSize.width / 2, y: frame.midY - textSize.height / 2))

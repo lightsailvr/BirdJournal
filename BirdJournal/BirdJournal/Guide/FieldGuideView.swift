@@ -174,7 +174,8 @@ struct SetTile: View {
                 NavigationLink(value: Route.set(id: set.id)) {
                     SetPlate(set: set, progress: progress, showsReadyOffline: installed)
                         .contentShape(Rectangle())
-                        .accessibilityElement(children: .combine)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(SetPlate.spokenTile(set: set, progress: progress, isReadyOffline: installed))
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("guide-set-\(set.id)")

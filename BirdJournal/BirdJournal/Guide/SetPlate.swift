@@ -9,6 +9,11 @@ struct PlatePicture: View {
     /// The reference's plate, 742 by 355, cropped from the middle of a 16:9 cover.
     static let aspect: CGFloat = 742 / 355
 
+    /// The mock's, opaque and outside the picture, so it holds over dark trees as well as a pale sky.
+    private static let keyline = Color(hex: 0xAFAF99)
+    /// The mock's one CSS pixel, at this screen's width: four of the device's.
+    private static let keylineWidth: CGFloat = 4 / 3
+
     let setID: String
     var aspect = PlatePicture.aspect
 
@@ -16,13 +21,16 @@ struct PlatePicture: View {
         VStack(alignment: .trailing, spacing: 3) {
             SetCoverImage(setID: setID)
                 .aspectRatio(aspect, contentMode: .fit)
-                .overlay(Rectangle().strokeBorder(Color.cardEdge.opacity(0.35), lineWidth: 1))
+                .padding(Self.keylineWidth)
+                .background(Self.keyline)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Painted plate, AI illustration")
                 .accessibilityAddTraits(.isImage)
             Text("AI illustration")
                 .font(CardFont.credit)
                 .foregroundStyle(Color.cardInk)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .accessibilityHidden(true)
         }
     }
@@ -36,6 +44,12 @@ struct SetPlate: View {
     let progress: SetProgress
     /// The Atlas's tile says so, keeping it apart from the birder's progress. A set's own page doesn't need it.
     var showsReadyOffline = false
+
+    /// What VoiceOver hears for the Atlas's tile, the set's name first.
+    static func spokenTile(set: PackSet, progress: SetProgress, isReadyOffline: Bool) -> String {
+        ([set.name, "\(set.edition.name), \(set.species.count) birds", progress.sewnText] + (isReadyOffline ? ["Ready offline"] : []) + ["painted plate, AI illustration"])
+            .joined(separator: ", ")
+    }
 
     /// The mock's name at 1.34, between the type scale's title 2 and title.
     @ScaledMetric(relativeTo: .title) private var titleSize: CGFloat = 24
@@ -66,6 +80,8 @@ struct SetPlate: View {
             .foregroundStyle(Color.cardInk)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
+            // On a set's page VoiceOver starts here, not on the picture above it.
+            .accessibilitySortPriority(1)
     }
 
     /// "Citrus edition, 160 birds".
@@ -83,7 +99,7 @@ struct PlateProgress: View {
     var showsReadyOffline = false
 
     var body: some View {
-        ThreadProgress(progress)
+        ThreadProgress(progress, onPaper: true)
             .accessibilityHidden(true)
             .padding(.top, 13)
         ViewThatFits(in: .horizontal) {

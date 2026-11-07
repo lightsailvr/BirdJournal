@@ -265,6 +265,11 @@ final class ManualAudioSource: FrameKeepingAudioSource {
         continuation.finish()
     }
 
+    /// The stream ending by itself, as a source that gives out does.
+    func giveOut() {
+        continuation.finish()
+    }
+
     /// What the next photo delivers; nil stands for a capture that failed or timed out.
     var photo: Data?
 

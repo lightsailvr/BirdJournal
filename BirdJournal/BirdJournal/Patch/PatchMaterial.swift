@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The materials of what you collect (issue #134, guide page 16): felt, card stock and the shadow. Chrome stays native and
 /// matte: these belong to the patches, their board and their paper card, never to controls, lists or navigation.
@@ -90,11 +91,26 @@ struct FeltBoard<Content: View>: View {
     }
 }
 
+/// The fibre of an Atlas plate, as the reference prints it: multiplied in full, at the mock's scale of one texture pixel to a CSS pixel,
+/// which is 1.34 pt at this screen's width. It's coarser than the paper card's, and it starts at the plate's corner, as the mock's does.
+struct PlatePaper: View {
+    private static let fibre = UIImage(named: "MaterialPaper")?.cgImage
+
+    var body: some View {
+        if let fibre = Self.fibre {
+            Image(decorative: fibre, scale: 1 / 1.34)
+                .resizable(resizingMode: .tile)
+                .blendMode(.multiply)
+        }
+    }
+}
+
 /// Paper card stock: the ivory under its fibre texture, a fine inner keyline, and a slot punched at the top, like the
 /// backer a patch is sold on. Printed matter: no embossing, foil or glows. Everything on it reads in the light scheme.
 /// On the linen (the light appearance) the fibre is eased so the card measures lighter than the cloth under it, and a fine
 /// edge sets it off; on the felt it glows as it is (issue #150). A `.plate` is a page of the Atlas, printed rather than sold on a
-/// card: the same stock with its fibre showing more on the dark page, the mock's warmer paper, without the backer's slot and inner keyline.
+/// card, and the same paper in both appearances (`PlatePaper`): it has no backer's slot or inner keyline, and it isn't eased for linen, since
+/// a plate sits on the page.
 struct CardStockSurface: ViewModifier {
     enum Kind {
         case backer, plate
@@ -102,9 +118,12 @@ struct CardStockSurface: ViewModifier {
 
     static let radius: CGFloat = 8
     private let kind: Kind
+    /// The backer's slot: a patch's card has one, a printed page doesn't.
+    private let isPunched: Bool
 
-    init(_ kind: Kind = .backer) {
+    init(_ kind: Kind = .backer, isPunched: Bool = true) {
         self.kind = kind
+        self.isPunched = isPunched
     }
 
     /// The page's appearance: this modifier reads it from outside the light scheme it sets below.
@@ -117,16 +136,20 @@ struct CardStockSurface: ViewModifier {
             .background {
                 Color.cardStock
                     .overlay {
-                        Image("MaterialPaper")
-                            .resizable(resizingMode: .tile)
-                            .blendMode(.multiply)
-                            .opacity(onLinen ? 0.15 : (kind == .plate ? 0.72 : 0.5))
+                        if kind == .plate {
+                            PlatePaper()
+                        } else {
+                            Image("MaterialPaper")
+                                .resizable(resizingMode: .tile)
+                                .blendMode(.multiply)
+                                .opacity(onLinen ? 0.15 : 0.5)
+                        }
                     }
                     .clipShape(shape)
                     // On the stock, not the card: on the whole card the type would take it too.
                     .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 6)
                     .overlay {
-                        if onLinen { shape.strokeBorder(Color.cardEdge.opacity(0.55), lineWidth: 1) }
+                        if onLinen, kind == .backer { shape.strokeBorder(Color.cardEdge.opacity(0.55), lineWidth: 1) }
                     }
                     .accessibilityHidden(true)
             }
@@ -139,7 +162,7 @@ struct CardStockSurface: ViewModifier {
                 }
             }
             .overlay(alignment: .top) {
-                if kind == .backer {
+                if kind == .backer, isPunched {
                     Capsule()
                         .fill(Color.black.opacity(0.32))
                         .overlay(Capsule().strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5))

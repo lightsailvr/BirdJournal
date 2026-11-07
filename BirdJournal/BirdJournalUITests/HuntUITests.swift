@@ -144,6 +144,8 @@ final class HuntUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-seedBoard", "YES", "-fakeRunReorderEvery", "1", "-fakeRunBirds", Self.movingBirds,
+            // A row takes this test a few seconds to read, and the hold has to outlast that once the finger's up.
+            "-listHoldSettle", "8",
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
         ]
         app.launch()
@@ -157,14 +159,17 @@ final class HuntUITests: XCTestCase {
         // The row's own button is the row's width less the pill, which sits to its right.
         let frame = row.frame
         let spot = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.maxX + 30, dy: frame.midY))
+        let touched = Date.now
         spot.press(forDuration: 2.5)
         let said = app.staticTexts.matching(NSPredicate(format: "label CONTAINS ' seen again, 2 times in Los Angeles'")).firstMatch
         XCTAssertTrue(said.waitForExistence(timeout: 1), "the press added nothing; screen: \(app.debugDescription.prefix(4000))")
         let added = said.label.components(separatedBy: " seen again").first ?? ""
         XCTAssertTrue(row.label.hasPrefix("\(added), added"), "\(added) moved from under the finger: the row there is \(row.label)")
 
-        // And it's let go: within a few seconds of the finger lifting, the list is moving again.
-        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != added }, evaluatedWith: NSObject())], timeout: 15)
+        // And it's let go: within a few seconds of the finger lifting, the list is moving again. This ends before the 20 s after the
+        // touch when a finger that never said it lifted would be let go anyway (`HeldListOrder.staleAfter`), so only the lift can pass it.
+        let left = max(touched.addingTimeInterval(19).timeIntervalSinceNow, 1)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != added }, evaluatedWith: NSObject())], timeout: left)
     }
 
     /// Scrolling counts as touching, with the finger nowhere near a row: here it's on the timer. These birds move three times a

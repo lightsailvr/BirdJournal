@@ -73,8 +73,14 @@ final class SettingsUITests: XCTestCase {
             XCTAssertTrue(choice.waitForExistence(timeout: 10))
             choice.tap()
             // The system's "You have changed the icon" alert belongs to SpringBoard.
+            // Under load a tap on its button can come before it takes taps, and the check moves only once it's closed.
             let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
-            if alert.waitForExistence(timeout: 5) { alert.buttons.firstMatch.tap() }
+            if alert.waitForExistence(timeout: 5) {
+                for _ in 0..<10 where alert.exists {
+                    alert.buttons.firstMatch.tap()
+                    sleep(1)
+                }
+            }
             XCTAssertTrue(choice.waitForSelected(), "\(title) is not checked")
         }
     }
@@ -114,7 +120,8 @@ final class AppIconHomeScreenUITests: XCTestCase {
         for bird in birds {
             choose(bird, in: app)
             XCUIDevice.shared.press(.home)
-            let icon = springboard.icons["Featherguild"]
+            // The app's icon, not its widget (issue #150), which goes by the same name on a simulator that has one.
+            let icon = springboard.icons.matching(NSPredicate(format: "label == 'Featherguild' AND NOT (value == 'Widget')")).firstMatch
             XCTAssertTrue(icon.waitForExistence(timeout: 10), "no icon on the home screen: \(springboard.debugDescription.prefix(2000))")
             for _ in 0..<4 where !icon.isHittable { springboard.swipeLeft(); sleep(1) }
             XCTAssertTrue(icon.isHittable, "the icon is on no page reached: \(springboard.debugDescription.prefix(2000))")

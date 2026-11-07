@@ -121,6 +121,43 @@ final class AtlasUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 10), "the sighting's page; \(screen(app))")
     }
 
+    /// Issue #150's review: tap a cluster and pan straight away, at 5,000 sightings. A picture set through `MKAnnotationView.image` made MapKit
+    /// cluster again and again, the main thread stayed busy for over three and a half minutes and Done didn't answer. Printed, for the PR.
+    @MainActor
+    func testTheMapAnswersAtFiveThousandSightings() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-albumFile", "atlas-map-5000", "-collectionIntroShown", "YES", "-seedLarge", "5000", "-autoScreen", "map", "-autoMapAcross", "30000"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["On the map"].waitForExistence(timeout: 120), screen(app))
+        let cluster = element(app, "map-patch-cluster")
+        XCTAssertTrue(cluster.waitForExistence(timeout: 60), screen(app))
+
+        let start = Date()
+        cluster.tap()
+        let map = app.windows.firstMatch
+        map.swipeLeft(velocity: .fast)
+        map.swipeUp(velocity: .fast)
+        let done = app.buttons["Done"]
+        done.tap()
+        let bar = app.navigationBars["On the map"]
+        XCTAssertTrue(bar.waitForNonExistence(timeout: 60), "Done didn't answer; \(screen(app))")
+        let seconds = Date().timeIntervalSince(start)
+        print("MAP-5000: a cluster's tap, two pans and Done took \(String(format: "%.1f", seconds)) s")
+        XCTAssertLessThan(seconds, 60)
+    }
+
+    /// The map opens on a sighting that's among others at one spot: it stays on the map, and a tap on it lists the spot.
+    @MainActor
+    func testTheOpeningSightingStaysOutOfTheClustersAndListsItsSpot() {
+        let app = launch(["-seedGallery", "YES", "-autoCardSpecies", "Haemorhous mexicanus", "-autoScreen", "map"])
+        XCTAssertTrue(app.navigationBars["On the map"].waitForExistence(timeout: 20), screen(app))
+        let patches = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'House Finch'"))
+        XCTAssertTrue(patches.firstMatch.waitForExistence(timeout: 15), "the bird the callout names is on the map; \(screen(app))")
+        XCTAssertTrue(app.otherElements["sighting-map-callout"].staticTexts["House Finch"].exists, screen(app))
+        patches.firstMatch.tap()
+        XCTAssertTrue(app.otherElements["sighting-map-here"].waitForExistence(timeout: 5), screen(app))
+    }
+
     // MARK: - The record
 
     @MainActor
