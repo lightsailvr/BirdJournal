@@ -85,6 +85,24 @@ class BuildInfoTests(unittest.TestCase):
         subfolder.mkdir()
         self.assertEqual(self.generate(repository=subfolder)["BirdJournalBuildCommit"], "unknown")
 
+    def test_xcode_expands_cloud_and_local_build_numbers_before_processing_plists(self):
+        # Xcode overrides generated CFBundleVersion with CURRENT_PROJECT_VERSION. Inspect its
+        # actual expansion so a generated input plist alone cannot give a false passing test.
+        command = [
+            "xcodebuild", "-project", str(ROOT / "BirdJournal/BirdJournal.xcodeproj"),
+            "-scheme", "BirdJournal-Release", "-configuration", "Release",
+            "-destination", "generic/platform=iOS Simulator", "-skipMacroValidation",
+            "-showBuildSettings", "-json",
+        ]
+        for cloud_number, expected in [(None, "1"), ("42", "42")]:
+            environment = dict(self.environment)
+            if cloud_number is not None:
+                environment["CI_BUILD_NUMBER"] = cloud_number
+                environment["CI_XCODE_CLOUD"] = "TRUE"
+            output = subprocess.check_output(command, env=environment, text=True)
+            app = next(item for item in json.loads(output) if item["target"] == "BirdJournal")
+            self.assertEqual(app["buildSettings"]["CURRENT_PROJECT_VERSION"], expected)
+
     def test_app_widget_and_test_targets_inherit_the_one_version_file(self):
         project = json.loads(subprocess.check_output(
             ["plutil", "-convert", "json", "-o", "-", str(ROOT / "BirdJournal/BirdJournal.xcodeproj/project.pbxproj")]
