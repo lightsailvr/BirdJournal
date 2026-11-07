@@ -60,6 +60,22 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertEqual(app.textFields.count + app.textViews.count, 0)
     }
 
+    /// A reaction that doesn't land goes back, and says so beside it rather than at the far end of the feed.
+    @MainActor
+    func testAFailedReactionSaysSoBesideIt() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-fakeReactionsFail", "YES", "-autoScreen", "circle"])
+        let lovely = app.buttons["react-lovely-\(Self.mayasPhoebe)"]
+        XCTAssertTrue(app.scrolledTo(lovely, limit: 24), "screen: \(app.debugDescription.prefix(3000))")
+        lovely.tap()
+        let error = app.descendants(matching: .any)["reaction-error-\(Self.mayasPhoebe)"]
+        XCTAssertTrue(error.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(error.label.contains("send your reaction"), error.label)
+        XCTAssertEqual(error.frame.minY, lovely.frame.maxY, accuracy: 30, "beside the reaction")
+        XCTAssertLessThan(error.frame.maxY, app.frame.height, "on screen")
+        XCTAssertFalse(lovely.isSelected, "it goes back")
+        XCTAssertEqual(lovely.value as? String, "2 reactions")
+    }
+
     @MainActor
     func testComparingBirdsWithAFriend() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-seedJournal", "YES", "-autoScreen", "circle"])

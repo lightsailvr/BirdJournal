@@ -49,7 +49,8 @@ struct JoinCircleView: View {
 
     private func intro(title: String, text: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            GuildEmblem(identity: GuildIdentity(circleID: token), size: 56)
+            // Featherguild's own until the invitation says which Guild, so nothing changes under the birder at sign-in.
+            GuildEmblem(identity: GuildIdentity(circleID: "featherguild"), size: 56)
             SectionTitle(title, size: .lead, top: 0)
             Text(text).foregroundStyle(Color.inkSecondary)
         }

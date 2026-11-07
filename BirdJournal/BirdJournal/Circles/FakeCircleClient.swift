@@ -61,6 +61,11 @@ final class FakeCircleClient: CircleClient {
     var goalRisesBy = 0
     private var goalReads: [String: Int] = [:]
 
+    /// The Guilds whose feeds can't be read, as with a server failing for one, for the tests.
+    var failingFeeds: Set<String> = []
+    /// `-fakeReactionsFail YES`: no reaction lands, so the screens' failures can be seen.
+    var reactionsFail = false
+
     /// A read's time on the wire, which offline ends in no answer.
     private func wire() async throws {
         if latency > .zero { try? await Task.sleep(for: latency) }
@@ -230,6 +235,7 @@ final class FakeCircleClient: CircleClient {
 
     func feed(circleID: String, cursor: String?, accessToken: String) async throws -> FeedPage {
         _ = try await circle(id: circleID, accessToken: accessToken)
+        if failingFeeds.contains(circleID) { throw CircleError.server(500) }
         // A blocked account's finds are left out, as the server does (issue #71).
         let items = (feedItems[circleID] ?? []).filter { !blockedIDs.contains($0.owner.id) }
         let firsts = Dictionary(grouping: items, by: \.scientificName).compactMapValues { $0.min { ($0.foundAt, $0.id) < ($1.foundAt, $1.id) }?.id }
@@ -428,6 +434,7 @@ final class FakeCircleClient: CircleClient {
     }
 
     func setReaction(_ kind: ReactionKind, given: Bool, owner: String, sightingID: String, accessToken: String) async throws -> [ReactionCount] {
+        if reactionsFail { throw CircleError.server(500) }
         let id = "\(owner)/\(sightingID)"
         let mine = Set(order.filter { circlesByID[$0]?.members.contains { $0.id == Self.me } == true })
         guard owner != Self.me else { throw CircleError.rejected }
@@ -492,6 +499,19 @@ final class FakeCircleClient: CircleClient {
                 edition: "us-ca-la"
             ))
         }
+    }
+
+    /// Someone in a Guild with Pat, for the tests.
+    func addMember(_ id: String, to circleID: String) {
+        guard var detail = circlesByID[circleID], !detail.members.contains(where: { $0.id == id }) else { return }
+        detail.members.append(CircleMember(id: id, displayName: id, joinedAt: now(), isCreator: false))
+        detail.circle.memberCount = detail.members.count
+        circlesByID[circleID] = detail
+    }
+
+    /// A friend's find gone from a Guild, as when they remove the sighting, for the tests.
+    func deleteFriendFind(_ itemID: String, circleID: String) async throws {
+        feedItems[circleID]?.removeAll { $0.id == itemID }
     }
 
     /// A find already in a Guild, for the tests.

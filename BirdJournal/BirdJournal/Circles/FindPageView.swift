@@ -15,6 +15,12 @@ struct FindRoute: Hashable, Sendable {
         return surface.map { FindLiftID(itemID: itemID, surface: $0) }
     }
 
+    /// The Guild it was opened in; nil from the feed across Guilds.
+    var openedIn: String? {
+        if case .guild(let id) = surface { return id }
+        return nil
+    }
+
     /// The Guild it was opened in, for a report: where the birder saw it.
     func reportingCircle(of entry: FindEntry) -> String? {
         if case .guild(let id) = surface, entry.circleIDs.contains(id) { return id }
@@ -39,7 +45,7 @@ struct FindPageView: View {
 
     var body: some View {
         Group {
-            if let entry = circles.entry(id: id) {
+            if let entry = circles.entry(id: id, openedIn: route.openedIn) {
                 FindPageContent(entry: entry, error: error)
                     .toolbar {
                         if !entry.item.isMine {
@@ -60,16 +66,20 @@ struct FindPageView: View {
                     .navigationTitle(entry.item.isMine ? "Your find" : "\(entry.item.owner.firstName)'s find")
                     .tint(PatchEdition.tint(setID: entry.item.edition))
             } else {
-                // Blocked or removed from under the page, here or on another phone.
+                // Blocked, here or on another phone, or the Guild has gone.
                 PaperPage {
-                    StateNotice("This find isn't here any more", message: "It may have been removed from the Guild.", mark: .symbol("bird"))
+                    StateNotice("This find isn't here any more", message: "You may have blocked who found it, or left the Guild.", mark: .symbol("bird"))
                 }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
+        // A read of the feeds that leaves this find out (a pull underneath, a page dropped) doesn't take it off an open page.
+        .onChange(of: circles.entry(id: id, openedIn: route.openedIn), initial: true) {
+            circles.holdOpen(id: id, openedIn: route.openedIn)
+        }
         .findSafety(reporting: $reporting, blocking: $blocking, subject: { _ in
-            "\(circles.entry(id: id)?.item.owner.name ?? "this member")'s find"
+            "\(circles.entry(id: id, openedIn: route.openedIn)?.item.owner.name ?? "this member")'s find"
         }, blocked: {
             error = $0
             if $0 == nil { dismiss() }
