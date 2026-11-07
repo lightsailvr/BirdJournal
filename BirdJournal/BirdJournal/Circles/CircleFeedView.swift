@@ -31,15 +31,19 @@ struct FindsColumn: View {
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
             ForEach(FindFeedRow.rows(of: entries)) { row in
-                switch row {
-                case .find(let entry):
-                    find(entry)
-                case .repeats(let line):
-                    repeats(line)
+                VStack(alignment: .leading, spacing: 0) {
+                    switch row {
+                    case .find(let entry):
+                        find(entry)
+                    case .repeats(let line):
+                        repeats(line)
+                    }
+                    FeedRule()
                 }
-                FeedRule()
             }
         }
+        // What a page's `.scrollPosition` holds on to, so a find landing above doesn't move a row under a thumb.
+        .scrollTargetLayout()
         #if DEBUG
         // `-autoOpenRepeats YES`, for the screenshots: every line of repeats open.
         .onChange(of: entries.count, initial: true) {

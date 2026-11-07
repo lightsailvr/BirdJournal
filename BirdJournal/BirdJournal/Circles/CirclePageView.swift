@@ -19,6 +19,8 @@ struct CirclePageView: View {
     @State private var error: String?
     @State private var showing: Showing = .finds
     @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
+    /// The row the reader is on, which stays where it is when finds land above it.
+    @State private var readingRow: String?
 
     enum Showing: Hashable {
         case finds
@@ -35,6 +37,7 @@ struct CirclePageView: View {
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.bottom, JournalLayout.sectionGap)
             }
+            .scrollPosition(id: $readingRow, anchor: .top)
             #if DEBUG
             .debugScroll(proxy, to: "guild-feed", when: circles.feeds[id]?.isLoaded == true)
             #endif
@@ -215,10 +218,12 @@ struct CirclePageView: View {
         let feed = circles.feeds[id] ?? .init()
         let entries = feed.items.map { FindEntry(item: $0, circleIDs: [id]) }
         if entries.isEmpty {
-            if feed.isLoaded {
+            if feed.hasNoFinds {
                 StateNotice("No finds yet", message: "Birds your Guild adds while sharing show here.", messageInk: .ink)
                     .boardLabel()
                     .accessibilityIdentifier("feedEmpty")
+            } else if feed.isLoaded {
+                // All it's read so far is someone blocked: "More finds" below reads on.
             } else if let error = feed.error {
                 InlineError(error).boardLabel().padding(.top, 16)
             } else {

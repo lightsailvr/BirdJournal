@@ -161,6 +161,8 @@ private struct AllGuildsPage: View {
     @State private var reporting: ReportDraft?
     @State private var blocking: BlockedAccount?
     @State private var error: String?
+    /// The row the reader is on, which stays where it is when finds land above it.
+    @State private var readingRow: String?
 
     var body: some View {
         let feed = circles.mergedFeed
@@ -183,6 +185,7 @@ private struct AllGuildsPage: View {
             .padding(.horizontal, JournalLayout.margin)
             .padding(.bottom, JournalLayout.sectionGap)
         }
+        .scrollPosition(id: $readingRow, anchor: .top)
         .patchSheetBackground()
         .holdsPatchLight()
         .navigationTitle("Guilds")
@@ -211,10 +214,12 @@ private struct AllGuildsPage: View {
 
     @ViewBuilder private func finds(_ feed: CircleStore.MergedFeed) -> some View {
         if feed.entries.isEmpty {
-            if feed.isLoaded {
+            if feed.hasNoFinds {
                 StateNotice("No finds yet", message: "Birds your Guilds add while sharing show here.", messageInk: .ink)
                     .boardLabel()
                     .accessibilityIdentifier("feedEmpty")
+            } else if feed.isLoaded {
+                // All it's read so far is someone blocked: "More finds" below reads on.
             } else if let message = feed.error {
                 GuildsUnreachable(message: message) { Task { await circles.loadMergedFeed() } }
                     .padding(.top, 12)

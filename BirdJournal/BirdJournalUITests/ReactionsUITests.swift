@@ -60,6 +60,46 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertEqual(app.textFields.count + app.textViews.count, 0)
     }
 
+    /// Finds land above the row the reader is on, by a push: it stays where it is, and a tap lands on what it's aimed at (issue #150).
+    @MainActor
+    private func assertRowHoldsStill(lateFinds: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let launched = Date.now
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle", "-fakeLateFinds", "\(lateFinds)", "-fakeLateFindsAfter", "30"])
+        let row = app.buttons["find-\(Self.mayasPhoebe)"]
+        XCTAssertTrue(app.scrolledTo(row, limit: 24), "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        // On the row, with the feed's first rows above the viewport. A drag, so it comes to rest where it's let go.
+        let lovely = app.buttons["react-lovely-\(Self.mayasPhoebe)"]
+        for _ in 0..<8 where row.frame.minY > 200 {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).press(
+                forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+                withVelocity: .slow, thenHoldForDuration: 0.3
+            )
+        }
+        Thread.sleep(forTimeInterval: 1)
+        let before = row.frame.minY
+        let sinceLaunch = Date.now.timeIntervalSince(launched)
+        XCTAssertLessThan(sinceLaunch, 28, "the finds may have landed already, so this proves nothing", file: file, line: line)
+        Thread.sleep(forTimeInterval: 34 - sinceLaunch)
+        XCTAssertEqual(row.frame.minY, before, accuracy: 2, "the row moved under the reader", file: file, line: line)
+        lovely.tap()
+        XCTAssertTrue(lovely.wait(for: \.isSelected, toEqual: true, timeout: 5), "the tap landed elsewhere", file: file, line: line)
+
+        // They did land, above.
+        let late = app.buttons["find-late-0"]
+        for _ in 0..<(8 + lateFinds) where !late.exists { app.swipeDown() }
+        XCTAssertTrue(late.waitForExistence(timeout: 5), "no late find; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+    }
+
+    @MainActor
+    func testOneLateFindLeavesTheRowWhereItIs() {
+        assertRowHoldsStill(lateFinds: 1)
+    }
+
+    @MainActor
+    func testManyLateFindsLeaveTheRowWhereItIs() {
+        assertRowHoldsStill(lateFinds: 16)
+    }
+
     /// A reaction that doesn't land goes back, and says so beside it rather than at the far end of the feed.
     @MainActor
     func testAFailedReactionSaysSoBesideIt() {
