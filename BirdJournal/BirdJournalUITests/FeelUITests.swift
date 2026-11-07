@@ -379,6 +379,8 @@ final class FeelUITests: XCTestCase {
     /// Under the system's Reduce Motion a patch's page cross-fades both ways. Animations are slowed so the way can be sampled.
     @MainActor
     func testUnderReduceMotionAPatchPageCrossFadesWithNothingMoving() throws {
+        // Its four tries can take about 200 s, past the script's default for one test.
+        executionTimeAllowance = 300
         try setSystemReduceMotion(true)
         addTeardownBlock { [self] in try? setSystemReduceMotion(false) }
         Thread.sleep(forTimeInterval: 1)
