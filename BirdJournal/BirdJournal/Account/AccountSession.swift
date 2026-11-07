@@ -252,8 +252,8 @@ final class AccountSession {
 
 extension AccountSession {
     /// The build-time switch (issue #88): `ACCOUNTS_ENABLED`, a Swift compilation condition set in the project's Debug
-    /// configuration only. App Review 5.1.1(v) wants in-app account deletion wherever sign-in is offered, so Release
-    /// builds leave the account out until deletion ships (#71); then add `ACCOUNTS_ENABLED` to Release too.
+    /// and Release configurations. Release took it once in-app account deletion shipped (#71), as App Review 5.1.1(v)
+    /// asks wherever sign-in is offered; drop it from Release to ship a build without the account and circles.
     static var isEnabledInThisBuild: Bool {
         #if ACCOUNTS_ENABLED
         true
