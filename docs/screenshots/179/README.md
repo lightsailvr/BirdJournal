@@ -13,3 +13,5 @@ docs/screenshots/179/capture.sh EFB251CE-0904-4033-AFE0-2AB3DD70CA14 after
 ```
 
 The script captures 12 screenshots and restores the simulator's text size to default and appearance to dark. It uses only in-memory fixtures. At AX5, scroll down to inspect the rest of the reading layout and action/list; the first viewport deliberately doesn't shrink the patch or text to fit.
+
+`after/` contains the matching 12 screenshots after the redesign. Reviewed one/several/no-patch layouts in light and dark, including AX5 wrapping and the vertical reading layout. The targeted Gallery UI tests passed navigation into the patch, Atlas, and a sighting; the Swift Testing accessibility cases passed at default and AX5, including sightings stored under two labels for the same scientific name.
