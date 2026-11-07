@@ -16,6 +16,8 @@ struct ThreadProgress: View {
     enum Thread: Equatable {
         /// One set's edition; nil is Uncharted.
         case edition(setID: String?)
+        /// One set's edition, printed on an Atlas plate: `PatchEdition.paperThread`.
+        case printed(setID: String?)
         /// Lavender, on the page or felt: "together".
         case together
         /// Lavender's ink, on a lavender card.
@@ -59,12 +61,12 @@ struct ThreadProgress: View {
         self.thread = thread
     }
 
-    /// A set's birds, in its own edition's thread.
-    init(_ progress: SetProgress) {
+    /// A set's birds, in its own edition's thread, or as it's printed on a plate.
+    init(_ progress: SetProgress, onPaper: Bool = false) {
         value = Double(progress.collected)
         total = Double(progress.total)
         sentence = "\(progress.sewnText) in \(progress.name)"
-        thread = .edition(setID: progress.setID)
+        thread = onPaper ? .printed(setID: progress.setID) : .edition(setID: progress.setID)
         countsBirds = true
         memoryKey = "set-\(progress.setID)"
     }
@@ -177,6 +179,7 @@ struct ThreadProgress: View {
         let stitches = Stitches(count: count, sewn: sewn)
         switch thread {
         case .edition(let setID): stitches.fill(PatchEdition.tint(setID: setID))
+        case .printed(let setID): stitches.fill(contrast == .increased ? PatchEdition.tint(setID: setID) : PatchEdition.paperThread(setID: setID))
         case .together: stitches.fill(Color.togetherThread)
         case .onLavender: stitches.fill(Color.onSharedGoal)
         }

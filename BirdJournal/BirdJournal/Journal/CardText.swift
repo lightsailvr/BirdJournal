@@ -56,6 +56,12 @@ enum CardText {
         originalPhotoPath(sighting) == nil ? "No photo attached" : "Photo attached"
     }
 
+    /// How the birder met it, on a sighting's record: "Heard with iPhone microphone"; "Seen, and heard with Ray-Ban Display".
+    static func how(_ sighting: Sighting) -> String {
+        let device = sighting.source == .glasses ? "Ray-Ban Display" : "iPhone microphone"
+        return sighting.method == .seen ? "Seen, and heard with \(device)" : "Heard with \(device)"
+    }
+
     static func article(for name: String) -> String {
         name.first.map { "AEIOU".contains($0) } == true ? "an" : "a"
     }

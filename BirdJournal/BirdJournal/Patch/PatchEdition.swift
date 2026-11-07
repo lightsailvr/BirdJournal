@@ -56,6 +56,21 @@ extension PatchEdition {
     }
 }
 
+extension PatchEdition {
+    /// An edition's thread printed on a plate's paper, the issue's values and the mock's, for Citrus: the light tints were deepened from
+    /// these for words on linen, and a stitch on paper needs 3:1, not 4.5 (`plateStock`). Increase Contrast takes the deeper tint.
+    static func paperThread(setID: String?) -> Color {
+        switch setID {
+        case "us-ca-la": Color(hex: 0x5C6420)
+        case "us-ca-sd": Color(hex: 0x1E5F86)
+        case "us-ca-bay": Color(hex: 0x4F5F66)
+        case "us-ca-desert": Color(hex: 0x9A4A2F)
+        case "us-fl-orlando": Color(hex: 0x0F6B60)
+        default: tint(setID: setID)
+        }
+    }
+}
+
 extension Color {
     /// A colour from its fixed sRGB value: for the materials and the editions, which don't change with the appearance.
     init(hex: UInt32) {

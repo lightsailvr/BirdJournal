@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import MapKit
 import Pack
 import SwiftData
 import SwiftUI
@@ -478,6 +479,113 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 9 times, sewn ") }, "\(labels)")
         #expect(labels.contains { $0.hasPrefix("House Finch, Coastal edition patch, seen 6 times, sewn ") }, "the blank: \(labels)")
         #expect(labels.contains("Open in Atlas"), "\(labels)")
+    }
+
+    @Test("A set's page: the plate is one labelled image and the set's name a heading, and a found bird's row says it's yours", arguments: sizes)
+    func setPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness(seeded: false)
+        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
+        let first = set.species[0], second = set.species[1]
+        for (species, minutesAgo) in [(first, 1.0), (first, 2.0), (second, 3.0)] {
+            harness.album.mainContext.insert(Sighting(speciesID: "\(species.scientificName)_\(species.commonName)", confirmedAt: .now.addingTimeInterval(-minutesAgo * 60), location: griffith, soundConfidence: 0.7, source: .phone))
+        }
+        try harness.album.mainContext.save()
+        let labels = try await Self.walk(SetView(id: set.id), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Painted plate, AI illustration") && labels.contains("002, \(second.commonName), yours, seen once")
+        }
+        Self.expectClean(labels, screen: "Set page")
+        #expect(labels.contains("Painted plate, AI illustration"), "\(labels)")
+        #expect(!labels.contains("AI illustration"), "said once, with the picture: \(labels)")
+        #expect(labels.contains(set.name), "\(labels)")
+        #expect(labels.contains("\(set.edition.name), \(set.species.count) birds"), "\(labels)")
+        #expect(labels.contains("2 of \(set.species.count) sewn"), "the thread's count, once: \(labels)")
+        #expect(labels.contains("001, \(first.commonName), yours, seen 2 times"), "\(labels)")
+        #expect(labels.contains("002, \(second.commonName), yours, seen once"), "\(labels)")
+        #expect(labels.contains("003, \(set.species[2].commonName), still out there"), "\(labels)")
+    }
+
+    @Test("A record: the facts, Heard and Seen, and two closed disclosures that VoiceOver can find", arguments: sizes)
+    func record(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(SightingDetailView(id: phoebe.persistentModelID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Rarity") && labels.contains("Identification")
+        }
+        Self.expectClean(labels, screen: "Record")
+        #expect(labels.contains("Black Phoebe"), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("How") && $0.contains("Heard with Ray-Ban Display") }, "\(labels)")
+        #expect(labels.contains("Your glasses snapshot from this sighting"), "\(labels)")
+        #expect(labels.contains("Rarity") && labels.contains("Identification"), "\(labels)")
+        #expect(!labels.contains { $0.contains("Model score") }, "closed: \(labels)")
+
+        let dove = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Zenaida macroura" })
+        let withPatch = try await Self.walk(SightingDetailView(id: dove.persistentModelID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch") }
+        }
+        #expect(withPatch.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch, seen once, sewn ") }, "\(withPatch)")
+    }
+
+    @Test("The Atlas: a tile leads with the set's name, and says the plate last", arguments: sizes)
+    func atlasTile(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let set = try #require(harness.library.sets.first { $0.id == PackIndex.bundledPackID })
+        let labels = try await Self.walk(FieldGuideView(), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("\(set.name), ") }
+        }
+        Self.expectClean(labels, screen: "Atlas")
+        let tile = try #require(labels.first { $0.hasPrefix("\(set.name), ") }, "\(labels)")
+        #expect(tile == "\(set.name), \(set.edition.name), \(set.species.count) birds, 3 of \(set.species.count) sewn, Ready offline, painted plate, AI illustration")
+        #expect(!labels.contains { $0.hasPrefix("Painted plate") }, "\(labels)")
+    }
+
+    @Test("A download's page: the plate is one labelled image, and its count is said once", arguments: sizes)
+    func packPage(typeSize: DynamicTypeSize) async throws {
+        let harness = try Harness()
+        let labels = try await Self.walk(PackDetailView(id: PackIndex.bundledPackID), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Painted plate, AI illustration")
+        }
+        Self.expectClean(labels, screen: "Download's page")
+        #expect(labels.contains("Painted plate, AI illustration"), "\(labels)")
+        #expect(labels.filter { $0.hasSuffix(" sewn") }.count == 1, "\(labels)")
+    }
+
+    @Test("The map: each patch says which bird and when, and a cluster how many")
+    func mapPatches() async throws {
+        let harness = try Harness()
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let labels = try await Self.walk(SightingMapView(focus: phoebe), harness: harness) { labels in
+            labels.contains { $0.hasPrefix("Black Phoebe, ") }
+        }
+        #expect(labels.contains { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+    }
+
+    @Test("A map of many sightings still offers its own controls to VoiceOver, on top of the patches on screen")
+    func manyPinsMapControls() async throws {
+        CardFlipAccessibilityTests.enableAccessibility()
+        let map = ManyPinsMapView(frame: CGRect(x: 0, y: 0, width: 402, height: 874))
+        map.showsUserTrackingButton = true
+        map.showsCompass = true
+        let griffith = CLLocationCoordinate2D(latitude: 34.1365, longitude: -118.2942)
+        map.addAnnotations((0..<(ManyPinsMapView.manyPins + 10)).map { index in
+            let pin = MKPointAnnotation()
+            pin.coordinate = CLLocationCoordinate2D(latitude: griffith.latitude + Double(index % 25) * 0.01, longitude: griffith.longitude + Double(index / 25) * 0.01)
+            return pin
+        })
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = map.frame
+        window.addSubview(map)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        var labels: [String] = []
+        for _ in 0..<40 {
+            try await Task.sleep(for: .milliseconds(250))
+            labels = (map.accessibilityElements ?? []).compactMap { ($0 as? NSObject)?.accessibilityLabel }
+            if labels.contains("Legal"), labels.contains(where: { $0.localizedCaseInsensitiveContains("track") }) { break }
+        }
+        #expect(labels.contains("Legal"), "\(labels.suffix(6))")
+        #expect(labels.contains { $0.localizedCaseInsensitiveContains("track") }, "the locate button: \(labels.suffix(6))")
     }
 
     @Test("Not yet found: a set's silhouette rows have the number and name in words; the bird's page has its number and the way on", arguments: sizes)

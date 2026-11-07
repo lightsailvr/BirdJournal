@@ -203,7 +203,11 @@ final class PatchStatesUITests: XCTestCase {
     @MainActor
     func testASightingWithNoLocationExplainsItsRarityInPlainWords() throws {
         let app = launch(seeded + ["-autoScreen", "sighting", "-autoCardSpecies", "Turdus merula"])
+        XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
+        let opens = app.buttons["Rarity"]
+        for _ in 0..<8 where !opens.isHittable { app.swipeUp() }
+        opens.tap()
         let rarity = app.staticTexts["Rarity unavailable for this place and season. No location was saved with this sighting, and rarity is never guessed."]
-        XCTAssertTrue(rarity.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(rarity.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
     }
 }
