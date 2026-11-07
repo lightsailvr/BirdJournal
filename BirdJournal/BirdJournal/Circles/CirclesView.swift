@@ -161,8 +161,8 @@ private struct AllGuildsPage: View {
     @State private var reporting: ReportDraft?
     @State private var blocking: BlockedAccount?
     @State private var error: String?
-    /// The row the reader is on, which stays where it is when finds land above it.
-    @State private var readingRow: String?
+    /// How many pages are on the Guilds tab's stack, over this one.
+    @Environment(\.guildsStackDepth) private var stackDepth
 
     var body: some View {
         let feed = circles.mergedFeed
@@ -185,7 +185,8 @@ private struct AllGuildsPage: View {
             .padding(.horizontal, JournalLayout.margin)
             .padding(.bottom, JournalLayout.sectionGap)
         }
-        .scrollPosition(id: $readingRow, anchor: .top)
+        .holdsTheRowBeingRead()
+        .keepsItsFootUnderAPage(isCovered: stackDepth > 0)
         .patchSheetBackground()
         .holdsPatchLight()
         .navigationTitle("Guilds")

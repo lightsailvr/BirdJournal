@@ -108,6 +108,35 @@ struct FindsColumn: View {
     }
 }
 
+extension View {
+    /// For the scroll view around a `FindsColumn`: finds landing above the row being read leave it where it is, so a tap lands on what
+    /// it was aimed at. At the very top of the page there's no row being read, whatever came before: a find lands in sight there, and
+    /// the header's controls stay put.
+    func holdsTheRowBeingRead() -> some View {
+        modifier(RowBeingRead())
+    }
+}
+
+private struct RowBeingRead: ViewModifier {
+    @State private var row: String?
+    @State private var isAtTheTop = true
+
+    func body(content: Content) -> some View {
+        content
+            .scrollPosition(id: $row, anchor: .top)
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top <= 0.5
+            } action: { _, isAtTop in
+                isAtTheTop = isAtTop
+                if isAtTop { row = nil }
+            }
+            // It reports a row as a scroll settles, which may be after the scroll view has reached the top.
+            .onChange(of: row) { _, reported in
+                if reported != nil, isAtTheTop { row = nil }
+            }
+    }
+}
+
 /// The fine rule between finds.
 private struct FeedRule: View {
     var body: some View {

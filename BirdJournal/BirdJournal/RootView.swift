@@ -114,6 +114,8 @@ extension EnvironmentValues {
     @Entry var openListen: @MainActor () -> Void = {}
     /// Opens the Atlas tab: an empty collection's birds to find (issue #138).
     @Entry var openAtlas: @MainActor () -> Void = {}
+    /// How many pages are on the Guilds tab's stack: what a page there has over it (issue #150).
+    @Entry var guildsStackDepth = 0
     /// Opens a circle's page on the Guilds tab: the join screen once joined (issue #61).
     @Entry var openCircle: @MainActor (String) -> Void = { _ in }
 }
@@ -208,6 +210,7 @@ struct RootView: View {
                         CirclesView()
                             .appDestinations()
                     }
+                    .environment(\.guildsStackDepth, circlesPath.count)
                     .patchStack { circlesPath.append($0) }
                 }
             }

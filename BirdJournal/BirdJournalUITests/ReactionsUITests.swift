@@ -118,6 +118,105 @@ final class ReactionsUITests: XCTestCase {
         assertRowHoldsStill(lateFinds: 1, screen: "circles")
     }
 
+    /// Scrolled away and back to the very top, a late find lands in sight and the header stays put, as for a birder who never scrolled.
+    @MainActor
+    private func assertBackAtTheTopAFindLandsInSight(screen: String, pulling: Bool = false, header: (XCUIApplication) -> XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", screen, "-fakeLateFinds", "1", "-fakeLateFindsAfter", "40"])
+        let row = app.buttons["find-00000000-0000-4000-8000-000000000003"]
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        if pulling {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)))
+        } else {
+            let start = row.frame.minY
+            for _ in 0..<8 where row.frame.minY > 140 {
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).press(
+                    forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+                    withVelocity: .slow, thenHoldForDuration: 0.3
+                )
+            }
+            XCTAssertLessThan(row.frame.minY, start, "it never scrolled away", file: file, line: line)
+            for _ in 0..<3 { app.swipeDown() }
+        }
+        Thread.sleep(forTimeInterval: 2)
+        let landed = app.staticTexts["late-finds-landed"]
+        XCTAssertFalse(landed.exists, "they landed before there was anything to compare", file: file, line: line)
+        let top = header(app)
+        XCTAssertTrue(top.isHittable, "not back at the top; screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        let before = top.frame.minY
+        XCTAssertTrue(landed.waitForExistence(timeout: 90), "they never landed", file: file, line: line)
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(top.frame.minY, before, accuracy: 2, "the header moved under the reader", file: file, line: line)
+        XCTAssertTrue(top.isHittable, file: file, line: line)
+        let late = app.buttons["find-late-0"]
+        XCTAssertTrue(late.exists, "screen: \(app.debugDescription.prefix(3000))", file: file, line: line)
+        XCTAssertGreaterThan(late.frame.minY, 0, "out of sight: \(late.frame)", file: file, line: line)
+        XCTAssertLessThan(late.frame.minY, app.frame.height, "out of sight: \(late.frame)", file: file, line: line)
+    }
+
+    @MainActor
+    func testBackAtTheTopOfAGuildAFindLandsInSight() {
+        assertBackAtTheTopAFindLandsInSight(screen: "circle") { $0.buttons["Invite friends"] }
+    }
+
+    @MainActor
+    func testBackAtTheTopOfTheTabAFindLandsInSight() {
+        assertBackAtTheTopAFindLandsInSight(screen: "circles") { $0.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sunday Group'")).firstMatch }
+    }
+
+    @MainActor
+    func testAfterAPullAtTheTopAFindLandsInSight() {
+        assertBackAtTheTopAFindLandsInSight(screen: "circle", pulling: true) { $0.buttons["Invite friends"] }
+    }
+
+    /// Finds, Compare birds and back, from part way down, comes back to the same place.
+    @MainActor
+    func testFindsComeBackFromCompareWhereTheyWere() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
+        let row = app.buttons["find-00000000-0000-4000-8000-000000000003"]
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "screen: \(app.debugDescription.prefix(3000))")
+        let picker = app.segmentedControls["circlePageShowing"]
+        // The picker still on screen to tap, the header gone.
+        for _ in 0..<10 where row.frame.minY > 160 {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).press(
+                forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)),
+                withVelocity: .slow, thenHoldForDuration: 0.3
+            )
+        }
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertTrue(picker.isHittable, "\(picker.frame); screen: \(app.debugDescription.prefix(3000))")
+        let before = row.frame.minY
+        picker.buttons["Compare birds"].tap()
+        XCTAssertTrue(app.buttons["compareWith-maya"].waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(picker.isHittable, "Compare pulled the page away from the picker: \(picker.frame)")
+        picker.buttons["Finds"].tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertEqual(row.frame.minY, before, accuracy: 2)
+    }
+
+    /// The foot of a Guild's page, there and back from a find. The find's page hides the tab bar, which shouldn't move the rows.
+    @MainActor
+    func testTheFootOfAGuildStaysPutThroughAFind() {
+        let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
+        // Maya's House Finch is the last find.
+        let last = app.buttons["find-00000000-0000-4000-8000-000000000005"]
+        XCTAssertTrue(app.scrolledTo(last, limit: 24), "screen: \(app.debugDescription.prefix(3000))")
+        for _ in 0..<3 { app.swipeUp() }
+        Thread.sleep(forTimeInterval: 1)
+        XCTAssertTrue(last.isHittable, "screen: \(app.debugDescription.prefix(3000))")
+        for time in 1...2 {
+            let before = last.frame.minY
+            last.tap()
+            XCTAssertTrue(app.navigationBars["Maya's find"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+            Thread.sleep(forTimeInterval: 0.5)
+            app.navigationBars.buttons.firstMatch.tap()
+            XCTAssertTrue(last.waitForExistence(timeout: 5))
+            Thread.sleep(forTimeInterval: 3)
+            XCTAssertEqual(last.frame.minY, before, accuracy: 2, "return \(time)")
+        }
+    }
+
     /// A reaction that doesn't land goes back, and says so beside it rather than at the far end of the feed.
     @MainActor
     func testAFailedReactionSaysSoBesideIt() {

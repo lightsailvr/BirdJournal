@@ -19,8 +19,10 @@ struct CirclePageView: View {
     @State private var error: String?
     @State private var showing: Showing = .finds
     @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
-    /// The row the reader is on, which stays where it is when finds land above it.
-    @State private var readingRow: String?
+    /// How much of the page shows, which is the least Compare can take up: see `compareSection`.
+    @State private var pageHeight: CGFloat = 0
+    /// How many pages are on the Guilds tab's stack.
+    @Environment(\.guildsStackDepth) private var stackDepth
 
     enum Showing: Hashable {
         case finds
@@ -37,7 +39,10 @@ struct CirclePageView: View {
                     .padding(.horizontal, JournalLayout.margin)
                     .padding(.bottom, JournalLayout.sectionGap)
             }
-            .scrollPosition(id: $readingRow, anchor: .top)
+            .holdsTheRowBeingRead()
+            .onScrollGeometryChange(for: CGFloat.self) { $0.containerSize.height } action: { _, height in pageHeight = height }
+            // The tab opened straight onto this page, or pushed it: anything more on the stack is over it.
+            .keepsItsFootUnderAPage(isCovered: stackDepth > (newGuild == nil ? 1 : 0))
             #if DEBUG
             .debugScroll(proxy, to: "guild-feed", when: circles.feeds[id]?.isLoaded == true)
             #endif
@@ -109,7 +114,7 @@ struct CirclePageView: View {
                 .id("guild-feed")
                 switch showing {
                 case .finds: finds
-                case .compare: compare(detail)
+                case .compare: compareSection(detail)
                 }
                 if let error {
                     InlineError(error, afterAction: true)
@@ -243,6 +248,15 @@ struct CirclePageView: View {
         if let error = feed.error, !entries.isEmpty {
             InlineError(error).boardLabel().padding(.top, 12)
         }
+    }
+
+    /// Compare, with room for the page to stay where it is. The picker is on screen to be tapped, so a screenful under it is all that
+    /// keeps a short section from pulling the page back, and Finds come back to where they were.
+    private func compareSection(_ detail: CircleDetail) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            compare(detail)
+        }
+        .frame(minHeight: pageHeight, alignment: .top)
     }
 
     /// Compare birds: the friends in the Guild, each opening the two of you side by side. Rows to operate, so they sit on their own
