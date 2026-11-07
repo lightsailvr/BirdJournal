@@ -164,8 +164,6 @@ private struct FindCard: View {
         VStack(alignment: .leading, spacing: 10) {
             NavigationLink(value: Route.find(FindRoute(itemID: item.id, surface: surface))) {
                 FindRow(item: item, guilds: guilds, lift: FindLiftID(itemID: item.id, surface: surface))
-                    // Clear of the menu at the row's corner.
-                    .padding(.trailing, item.isMine ? 0 : 30)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
             }
@@ -342,6 +340,9 @@ struct FindRow: View {
         .accessibilityIdentifier("find-\(item.sightingID)")
     }
 
+    /// The first line stays clear of the menu at the row's corner.
+    private var clearOfMenu: CGFloat { item.isMine ? 0 : 30 }
+
     private var led: some View {
         VStack(alignment: .leading, spacing: 10) {
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 16))
@@ -349,7 +350,9 @@ struct FindRow: View {
                 FindPatch(item: item, side: 104)
                     .findLiftSource(lift)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(Self.headline(item)).font(JournalFont.supporting)
+                    Text(Self.headline(item))
+                        .font(JournalFont.supporting)
+                        .padding(.trailing, clearOfMenu)
                     Text(item.commonName).font(JournalFont.section)
                     Text(Self.howAndWhere(item)).font(JournalFont.supporting)
                     if let guilds {
@@ -371,7 +374,9 @@ struct FindRow: View {
     /// "Maya Ortiz heard a Black Phoebe again in Pasadena, 2 hours ago".
     private var seenAgain: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(Self.seenAgainLine(item)).font(JournalFont.supporting)
+            Text(Self.seenAgainLine(item))
+                .font(JournalFont.supporting)
+                .padding(.trailing, clearOfMenu)
             if let guilds {
                 Text(Self.inGuilds(guilds)).font(JournalFont.attribution)
             }

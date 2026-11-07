@@ -299,11 +299,19 @@ struct DebugLaunch: ViewModifier {
                 defaults.set(true, forKey: "autoSource")
             case "circles":
                 tab = .circles
-            case "circle", "circle-invite", "circle-goal", "circle-report":
+            case "find":
+                // A find's page (issue #150): `-autoFind <owner>/<sighting>`, on the first Guild, by default Maya's Black Phoebe.
+                tab = .circles
+                await circles.refresh()
+                await circles.loadMergedFeed()
+                let find = defaults.string(forKey: "autoFind") ?? "maya/00000000-0000-4000-8000-000000000000"
+                circlesPath.append(Route.find(FindRoute(itemID: find)))
+            case "circle", "circle-invite", "circle-goal", "circle-report", "circle-info":
                 tab = .circles
                 await circles.refresh()
                 if let first = circles.circles.first {
                     if screen == "circle-invite" { defaults.set(true, forKey: "autoCircleInvite") }
+                    if screen == "circle-info" { defaults.set(true, forKey: "autoCircleInfo") }
                     if screen == "circle-report" { defaults.set(true, forKey: "autoCircleReport") }
                     if screen == "circle-goal" { defaults.set(true, forKey: "autoNewGoal") }
                     circlesPath.append(Route.circle(id: first.id))

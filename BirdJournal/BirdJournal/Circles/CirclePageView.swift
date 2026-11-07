@@ -54,6 +54,7 @@ struct CirclePageView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Info", systemImage: "info") { showingInfo = true }
+                    .tint(Color.ink)
                     .disabled(detail == nil)
                     .accessibilityIdentifier("guildInfo")
             }
@@ -104,7 +105,6 @@ struct CirclePageView: View {
                     Text("Compare birds").tag(Showing.compare)
                 }
                 .pickerStyle(.segmented)
-                .controlSize(.large)
                 .accessibilityIdentifier("circlePageShowing")
                 .padding(.top, 10)
                 .id("guild-feed")
@@ -133,7 +133,7 @@ struct CirclePageView: View {
             GuildEmblem(identity: GuildIdentity(circleID: detail.circle.id), size: 102)
             VStack(alignment: .leading, spacing: 6) {
                 Text(detail.circle.name)
-                    .font(JournalFont.largeTitle)
+                    .font(JournalFont.title)
                     .foregroundStyle(Color.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .boardLabel()
@@ -336,7 +336,7 @@ private struct FacesAndInvite: View {
             Button(action: invite) {
                 Text("Invite")
             }
-            .buttonStyle(.journalQuiet)
+            .buttonStyle(.journalRowPill(isFilled: false))
             .disabled(detail.circle.memberCount >= 20)
             .accessibilityLabel("Invite friends")
             .accessibilityValue(detail.circle.memberCount >= 20 ? "This Guild is full" : "")

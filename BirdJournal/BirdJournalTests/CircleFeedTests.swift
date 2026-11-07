@@ -594,16 +594,18 @@ struct FindFeedRowTests {
         #expect(Self.rows([Self.item("a", hoursAgo: 0), Self.item("b", hoursAgo: 24), Self.item("c", hoursAgo: 25), Self.item("d", hoursAgo: 26)]) == [["a", "b"], ["c", "d"]])
     }
 
-    @Test("a new patch, a shared card and any mark stand alone, and end the run", arguments: [
-        item("m", hoursAgo: 2, newPatch: true),
-        item("m", hoursAgo: 2, card: true),
-        item("m", hoursAgo: 2, first: true),
-        item("m", hoursAgo: 2, rarity: .rare),
-        item("m", hoursAgo: 2, rarity: .exceptional),
-    ])
-    func standsAlone(find: FeedItem) {
-        let run = [Self.item("a", hoursAgo: 0), Self.item("b", hoursAgo: 1), find, Self.item("c", hoursAgo: 3), Self.item("d", hoursAgo: 4)]
-        #expect(Self.rows(run) == [["a", "b"], ["m"], ["c", "d"]])
+    @Test("a new patch, a shared card and any mark stand alone, and end the run")
+    func standsAlone() {
+        for find in [
+            Self.item("m", hoursAgo: 2, newPatch: true),
+            Self.item("m", hoursAgo: 2, card: true),
+            Self.item("m", hoursAgo: 2, first: true),
+            Self.item("m", hoursAgo: 2, rarity: .rare),
+            Self.item("m", hoursAgo: 2, rarity: .exceptional),
+        ] {
+            let run = [Self.item("a", hoursAgo: 0), Self.item("b", hoursAgo: 1), find, Self.item("c", hoursAgo: 3), Self.item("d", hoursAgo: 4)]
+            #expect(Self.rows(run) == [["a", "b"], ["m"], ["c", "d"]])
+        }
     }
 
     @Test("an uncommon bird isn't a mark, so it gathers")

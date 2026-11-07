@@ -115,7 +115,7 @@ struct CompactGoal: View {
 
     private var headline: some View {
         Text(GoalWords.headline(goal))
-            .font(JournalFont.section)
+            .font(JournalFont.heading)
             .foregroundStyle(Color.ink)
             .fixedSize(horizontal: false, vertical: true)
             .boardLabel()
