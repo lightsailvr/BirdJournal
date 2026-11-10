@@ -67,11 +67,15 @@ extension EnvironmentValues {
 
 enum CaptureCameras {
     /// The phone's rear camera. In debug builds `-fakeCamera ready|denied|unavailable` stands one in (`StandInCaptureCamera`),
-    /// for the simulator, which has no camera, and for a UI test, which couldn't answer the permission prompt.
+    /// for the simulator, which has no camera, and for a UI test, which couldn't answer the permission prompt. For a
+    /// screenshot, `-fakeCameraZoom 2.6` opens it zoomed and `-fakeCameraFocus 0.3,0.4` with focus held at that point.
     static func forApp() -> any CaptureCamera {
         #if DEBUG
-        if let mode = UserDefaults.standard.string(forKey: "fakeCamera").flatMap(StandInCaptureCamera.Mode.init(rawValue:)) {
-            return StandInCaptureCamera(mode)
+        let defaults = UserDefaults.standard
+        if let mode = defaults.string(forKey: "fakeCamera").flatMap(StandInCaptureCamera.Mode.init(rawValue:)) {
+            let zoom = defaults.object(forKey: "fakeCameraZoom") == nil ? nil : defaults.double(forKey: "fakeCameraZoom")
+            let focus = (defaults.string(forKey: "fakeCameraFocus") ?? "").split(separator: ",").compactMap { Double($0) }
+            return StandInCaptureCamera(mode, opensAt: zoom, focusedAt: focus.count == 2 ? UnitPoint(x: focus[0], y: focus[1]) : nil)
         }
         #endif
         return PhoneCaptureCamera()
@@ -111,11 +115,19 @@ final class StandInCaptureCamera: CaptureCamera {
     @ObservationIgnored private let mode: Mode
     @ObservationIgnored private let lenses: RearCameraFacts
     @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private let opening: (zoom: Double?, focus: UnitPoint?)
 
-    /// - Parameter lenses: the rear camera it stands in for; an iPhone 17 Pro's unless a test says otherwise.
-    init(_ mode: Mode = .ready, lenses: RearCameraFacts = StandInCaptureCamera.iPhone17Pro, now: @escaping () -> Date = Date.init) {
+    /// - Parameters:
+    ///   - lenses: the rear camera it stands in for; an iPhone 17 Pro's unless a test says otherwise.
+    ///   - zoom: where its zoom stands when it opens, for a screenshot; the wide lens otherwise.
+    ///   - focus: where focus is held when it opens, for a screenshot; nowhere otherwise.
+    init(
+        _ mode: Mode = .ready, lenses: RearCameraFacts = StandInCaptureCamera.iPhone17Pro, opensAt zoom: Double? = nil, focusedAt focus: UnitPoint? = nil,
+        now: @escaping () -> Date = Date.init
+    ) {
         self.mode = mode
         self.lenses = lenses
+        self.opening = (zoom, focus)
         self.now = now
     }
 
@@ -125,7 +137,11 @@ final class StandInCaptureCamera: CaptureCamera {
         case .denied: .denied
         case .unavailable: .unavailable
         }
-        if state == .ready, zoom == .fixed { zoom = CaptureZoom(lenses) }
+        if state == .ready, zoom == .fixed {
+            zoom = CaptureZoom(lenses)
+            if let factor = opening.zoom { zoom.set(factor) }
+            focusPoint = opening.focus?.withinThePicture
+        }
     }
 
     func stop() {
@@ -158,6 +174,8 @@ final class StandInCaptureCamera: CaptureCamera {
                     .font(.system(size: 72))
                     .foregroundStyle(.white.opacity(0.9))
                     .scaleEffect(min(max(zoom.factor, 0.5), 8))
+                    // Zoomed in it is larger than the viewfinder, and a clipped picture still takes touches.
+                    .allowsHitTesting(false)
             }
             .clipped()
             .accessibilityHidden(true)
