@@ -1400,6 +1400,11 @@ This overrides the earlier first-install-only splash and synchronous cover decod
 
 Switching Patches, Sightings or Species starts the destination at the top. This supersedes #117's per-mode scroll memory and #150's delayed mode restore: a fresh scroll view identity resets its native offset and lazy range together, while its pinned picker and search controls keep their identity. The material still animates between modes. Returning from a patch/sighting page or another tab keeps the current mode's position, and clearing a search restores it with one native scroll; the former second offset correction is gone because a lazy estimate or stale geometry could push it past the content's end.
 
+Two things hold that up, both found when the app's tests stopped passing on `dev` (2026-11-10):
+
+- The scroll view's `.id` sits inside a stack of its own, and the picker's bar, the surface and the toolbar hang on the stack. An id is the identity of the scroll view together with every modifier after it, so with the id at the head of the chain each mode change built a new picker, surface and toolbar: the surface cut instead of fading. The content has its own short transition again (the old mode out in 50 ms, the new one in after it), so the two are never on the surface together and neither waits for the surface's fade.
+- A mode change is one transaction, with the mode written first inside it. The mode lives in an `@Observable` object, which tells SwiftUI in `willSet`, before the new value is stored. With plain state writes still waiting when the animated mode write began, SwiftUI drew those at once from inside that `willSet`, and sometimes the mode's own change with them, reading the old mode; nothing asked again, and the old mode stayed on screen until the tab was shown again. Never write state plainly and then an observable property under `withAnimation` in the same handler.
+
 ## Version and local build identity (issue #182, 2026-11-07)
 
 - `BirdJournal/Version.xcconfig` is the single version source inherited by every target in Debug and Release. The maintainer confirmed **0.1.0** for this first recorded beta. Bump the marketing version when striking a release from `dev` to `main`; use `0.x` while in beta. The app and widget never override it separately.
