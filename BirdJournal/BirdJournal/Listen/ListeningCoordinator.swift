@@ -153,6 +153,8 @@ final class ListeningCoordinator {
     var isReviewing = false
     /// The candidate the birder is reviewing, nil when none.
     var reviewing: Candidate?
+    /// "Capture a sighting" is open (issue #186): the camera, then the naming of the photo it took.
+    var isCapturing = false
 
     let phone: ListeningSession
     let glasses: GlassesListeningSession
@@ -397,25 +399,51 @@ final class ListeningCoordinator {
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone, method: method)
-            keepEndedRun()
-            if addition.sewsPatch {
-                let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
-                self.reveal = reveal
-                acknowledge(reveal.title, undo: addition)
-            } else {
-                acknowledge(
-                    Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount),
-                    ticksFrom: Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount - 1),
-                    undo: addition
-                )
-            }
+            announce(addition, commonName: candidate.species.commonName)
             return addition
         } catch {
-            Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
-            failedActions += 1
-            acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
+            addFailed(error)
             return nil
         }
+    }
+
+    /// Writes a bird the birder named from `photo` to the journal (issue #186, of #185): Seen, with the photo as its original
+    /// photo, at the photo's own time and the place the run has. From there it is an add like any other: the first in a
+    /// placement sews the patch and opens its ceremony, a repeat ticks the count, and the acknowledgment carries Undo. The
+    /// phone took the photo, whichever microphones the run is listening with.
+    @discardableResult
+    func addSeen(_ bird: NameableBird, photo: CapturedPhoto) -> RunSightings.Addition? {
+        do {
+            let addition = try sightings.addSeen(bird, photo: photo.data, takenAt: photo.takenAt, location: coordinate, source: .phone)
+            announce(addition, commonName: bird.commonName)
+            return addition
+        } catch {
+            addFailed(error)
+            return nil
+        }
+    }
+
+    /// What follows every add, once its sighting is saved: the ceremony of a new patch, or the count of one seen again, and
+    /// the acknowledgment with its Undo.
+    private func announce(_ addition: RunSightings.Addition, commonName: String) {
+        keepEndedRun()
+        if addition.sewsPatch {
+            let reveal = Reveal(addition: addition, commonName: commonName)
+            self.reveal = reveal
+            acknowledge(reveal.title, undo: addition)
+        } else {
+            acknowledge(
+                Self.seenAgainText(commonName, addition.placement, count: addition.patchCount),
+                ticksFrom: Self.seenAgainText(commonName, addition.placement, count: addition.patchCount - 1),
+                undo: addition
+            )
+        }
+    }
+
+    private func addFailed(_ error: any Error) {
+        Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
+        failedActions += 1
+        acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
     }
 
     /// The Sew it or Add on a bird's row (issue #150, L2): the review sheet's own add, with its reveal, count and Undo, as Heard,
@@ -446,7 +474,7 @@ final class ListeningCoordinator {
         if reveal.isFromGlasses {
             // Only now: killed part way through the stitch-in, it hasn't played.
             pendingCeremonies.removeAll { $0 == reveal.addition.identifier }
-        } else if sightings.entries.contains(where: { $0.id == reveal.addition.sightingID }) {
+        } else if sightings.identifiers.contains(reveal.addition.identifier) {
             acknowledge(reveal.title, undo: reveal.addition)
         }
     }
@@ -465,7 +493,8 @@ final class ListeningCoordinator {
         guard isReviewing, let archive, let startedAt, let endedAt, let runSource else { return }
         let run = EndedRun(
             source: runSource.rawValue, startedAt: startedAt, endedAt: endedAt, listened: clock.listened(from: startedAt, to: endedAt),
-            coordinate: coordinate, birds: candidates.map(EndedRun.Bird.init), added: sightings.entries.map { .init(identifier: $0.identifier, bird: .init($0.candidate)) }
+            coordinate: coordinate, birds: candidates.map(EndedRun.Bird.init), added: sightings.entries.map { .init(identifier: $0.identifier, bird: .init($0.candidate)) },
+            seen: sightings.seen.map(\.identifier)
         )
         archive.set(try? JSONEncoder().encode(run), forKey: Self.endedRunKey)
     }
@@ -485,6 +514,7 @@ final class ListeningCoordinator {
         endedAt = run.endedAt
         clock = ListeningClock(alreadyPaused: run.endedAt.timeIntervalSince(run.startedAt) - run.listened)
         sightings.restore(run.added.map { ($0.identifier, $0.bird.candidate) })
+        sightings.restoreSeen(run.seen ?? [])
         listOrder = currentOrder()
         isReviewing = true
     }
@@ -655,6 +685,8 @@ nonisolated struct EndedRun: Codable, Equatable, Sendable {
     let coordinate: Coordinate?
     let birds: [Bird]
     let added: [Added]
+    /// The sightings of birds seen and named on the run (issue #186); nil in a run written down before there were any.
+    var seen: [UUID]? = nil
 
     var candidates: [Candidate] { birds.map(\.candidate) }
 }

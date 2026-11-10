@@ -19,7 +19,7 @@ struct ListenView: View {
     var body: some View {
         @Bindable var run = run
         Group {
-            if run.state.isActive || (run.state != .idle && !run.candidates.isEmpty) {
+            if run.state.isActive || (run.state != .idle && !(run.candidates.isEmpty && run.sightings.seen.isEmpty)) {
                 ActiveListeningView()
             } else {
                 ReadyToListenView(isCovered: isCovered)
@@ -34,6 +34,10 @@ struct ListenView: View {
         }
         .sheet(item: $run.reviewing) { candidate in
             CandidateReviewSheet(candidate: candidate)
+        }
+        // The camera and the naming of its photo (issue #186), over the tab bar too: a camera has the whole screen.
+        .fullScreenCover(isPresented: $run.isCapturing) {
+            CaptureSightingView()
         }
         .safeAreaInset(edge: .bottom) {
             // Over the review, the sheet has its own: two would each tick, with two haptics.

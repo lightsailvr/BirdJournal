@@ -1,8 +1,10 @@
 import Album
 import Foundation
 import Identification
+import ImageIO
 import OSLog
 import SwiftData
+import UniformTypeIdentifiers
 
 /// Writes confirmed sightings to the album (spec "Album store"): the frame goes to the `FrameStore`, the record to
 /// SwiftData. One per app, over the container the screens query.
@@ -49,24 +51,54 @@ final class SightingRecorder {
         source: SightingSource,
         method: SightingMethod = .heard
     ) throws -> Recorded {
-        let speciesID = candidate.species.birdnetLabel
-        let context = container.mainContext
-        let surviving = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))
-        let sets = sets()
-        let existing = CardCollection(sightings: surviving, sets: sets).count(ofSpeciesID: speciesID, at: location)
-        let sighting = Sighting(
-            speciesID: speciesID,
+        try write(Sighting(
+            speciesID: candidate.species.birdnetLabel,
             confirmedAt: confirmedAt,
             location: location,
             soundConfidence: Double(candidate.score),
             frameImagePath: try frame.map { try frames.write(jpeg: $0) },
             source: source,
             method: method
-        )
-        sighting.rarity = raritySnapshot(scientificName: candidate.species.scientificName, location: location, at: confirmedAt)
+        ))
+    }
+
+    /// Saves one sighting of a bird the birder named from `photo` (issue #186, of #185): Seen, marked as named by the birder,
+    /// with no match score, at the photo's own time and the place given. The photo is kept as it came and is the sighting's
+    /// original photo, one of the birder's own. From there it is a sighting like any other: its rarity is read for its
+    /// place and week, it is placed in its set, and it sews its bird's patch there or adds to it.
+    /// - Parameter source: the device that took the photo.
+    @discardableResult
+    func recordSeen(_ bird: NameableBird, photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> Recorded {
+        let path = try frames.write(photo, pathExtension: Self.pathExtension(of: photo))
+        let sighting = Sighting(speciesID: bird.speciesID, confirmedAt: takenAt, location: location, soundConfidence: 0, source: source, method: .seen, namedByBirder: true)
+        sighting.attachedPhotoPaths = [path]
+        do {
+            return try write(sighting)
+        } catch {
+            // No sighting, so nothing would ever remove the file.
+            try? FileManager.default.removeItem(at: frames.url(for: path))
+            throw error
+        }
+    }
+
+    /// Writes a new sighting with the rarity for its place and week, and says what it did to its bird's patch.
+    private func write(_ sighting: Sighting) throws -> Recorded {
+        let speciesID = sighting.speciesID
+        let location = sighting.location
+        let context = container.mainContext
+        let surviving = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))
+        let sets = sets()
+        let existing = CardCollection(sightings: surviving, sets: sets).count(ofSpeciesID: speciesID, at: location)
+        sighting.rarity = raritySnapshot(scientificName: sighting.scientificName, location: location, at: sighting.confirmedAt)
         context.insert(sighting)
         try context.save()
         return Recorded(sighting: sighting, sewsPatch: existing == 0, patchCount: existing + 1, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets))
+    }
+
+    /// The extension a photo's file takes, from what the picture is (a camera gives HEIC or JPEG); "jpg" when it can't be told.
+    static func pathExtension(of photo: Data) -> String {
+        guard let source = CGImageSourceCreateWithData(photo as CFData, nil), let type = CGImageSourceGetType(source) else { return "jpg" }
+        return UTType(type as String)?.preferredFilenameExtension ?? "jpg"
     }
 
     /// Gives each sighting saved before rarity existed its snapshot from its saved coordinate and date, once per album

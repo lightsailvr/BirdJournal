@@ -58,15 +58,24 @@ struct SightingDetailView: View {
 
                     SightingFacts(name: commonName, sighting: sighting, place: placeText(for: sighting))
 
-                    Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
-                        ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+                    if sighting.namedByBirder {
+                        // Nothing heard it, so there's no Heard to choose (issue #186).
+                        Text("You saw this bird and named it from your photo.")
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 12)
+                            .accessibilityIdentifier("sighting-named-by-you")
+                    } else {
+                        Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
+                            ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.top, 16)
+                        Text(sighting.method == .heard ? "Choose Seen if you saw the bird too." : "You saw this bird.")
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 6)
                     }
-                    .pickerStyle(.segmented)
-                    .padding(.top, 16)
-                    Text(sighting.method == .heard ? "Choose Seen if you saw the bird too." : "You saw this bird.")
-                        .font(JournalFont.attribution)
-                        .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 6)
                     if let caption = sighting.caption?.text.nilIfEmpty {
                         Text(caption)
                             .font(CardFont.lore)
@@ -89,7 +98,7 @@ struct SightingDetailView: View {
                                     Color.clear.contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("Map of where you heard this bird. Opens every sighting on a map.")
+                                .accessibilityLabel("Map of where you \(sighting.namedByBirder ? "saw" : "heard") this bird. Opens every sighting on a map.")
                                 .accessibilityIdentifier("sighting-map-card")
                             }
                             .padding(.top, 16)
@@ -425,14 +434,16 @@ struct FactRow: View {
     }
 }
 
-/// The saved score, explained, and whether there's a photo to go with it.
+/// The saved score, explained, and whether there's a photo to go with it. A bird the birder named has no score, and says so.
 private struct SightingMatchDetails: View {
     let sighting: Sighting
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            LabeledContent("Model score", value: sighting.soundConfidence.formatted(.number.precision(.fractionLength(2))))
-            Text("BirdNET's best single-window score for this species when it was added, between 0 and 1. It is not a calibrated probability, and it does not make the sighting certain: you did, when you added it.")
+            if let score = CardText.matchScore(sighting) {
+                LabeledContent("Model score", value: score)
+            }
+            Text(CardText.identification(sighting))
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)

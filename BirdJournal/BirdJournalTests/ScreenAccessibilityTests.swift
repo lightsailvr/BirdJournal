@@ -72,9 +72,12 @@ struct ScreenAccessibilityTests {
 
         /// `screen` on a navigation stack with the app's destinations and shared objects.
         func hosted(_ screen: some View, typeSize: DynamicTypeSize) -> some View {
-            NavigationStack {
-                screen.appDestinations()
-            }
+            shared(NavigationStack { screen.appDestinations() }, typeSize: typeSize)
+        }
+
+        /// `screen` with the app's shared objects and no navigation stack around it: for one that brings its own, as a sheet does.
+        func shared(_ screen: some View, typeSize: DynamicTypeSize) -> some View {
+            screen
             .environment(connection)
             .environment(run)
             .environment(sounds)
@@ -96,11 +99,12 @@ struct ScreenAccessibilityTests {
     /// The labels VoiceOver reaches on `screen`, walked again until `ready` holds or fifteen seconds pass (SwiftUI fills
     /// the tree some time after the first render, later under a full parallel run). The window is a phone's width and tall
     /// enough that the lazy lists lay out what VoiceOver would scroll to.
-    static func walk(_ screen: some View, harness: Harness, typeSize: DynamicTypeSize = .large, ready: ([String]) -> Bool) async throws -> [String] {
+    /// - Parameter inStack: false for a screen that brings its own navigation stack, as a sheet does.
+    static func walk(_ screen: some View, harness: Harness, typeSize: DynamicTypeSize = .large, inStack: Bool = true, ready: ([String]) -> Bool) async throws -> [String] {
         // The real app awaits its cover before presenting any ready screen (#175).
         await harness.place.prepareForLaunch()
         CardFlipAccessibilityTests.enableAccessibility()
-        let host = UIHostingController(rootView: harness.hosted(screen, typeSize: typeSize))
+        let host = UIHostingController(rootView: inStack ? AnyView(harness.hosted(screen, typeSize: typeSize)) : AnyView(harness.shared(screen, typeSize: typeSize)))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
         window.frame = CGRect(x: 0, y: 0, width: 402, height: 2400)

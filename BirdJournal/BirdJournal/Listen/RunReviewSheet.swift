@@ -30,8 +30,8 @@ struct RunReviewSheet: View {
     /// then holds it.
     private var sewn: [CardCollection.Patch] {
         var seen = Set<CardCollection.Patch.Key>()
-        return run.sightings.entries.compactMap { entry in
-            guard collection.sewedItsPatch(entry.identifier), let patch = collection.patch(of: entry.identifier), seen.insert(patch.id).inserted else { return nil }
+        return run.sightings.identifiers.compactMap { identifier in
+            guard collection.sewedItsPatch(identifier), let patch = collection.patch(of: identifier), seen.insert(patch.id).inserted else { return nil }
             return patch
         }
     }

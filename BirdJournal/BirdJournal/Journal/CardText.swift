@@ -45,8 +45,8 @@ enum CardText {
         return name ?? location.formatted
     }
 
-    /// The original photo kept with the sighting: the birder's own attached photo, else the glasses photo from the add.
-    /// Evidence, never art.
+    /// The original photo kept with the sighting: the birder's own photo (the capture a seen bird was named from, or one
+    /// attached from the library), else the glasses photo from the add. Evidence, never art.
     static func originalPhotoPath(_ sighting: Sighting) -> String? {
         sighting.attachedPhotoPaths.first ?? sighting.frameImagePath
     }
@@ -56,10 +56,26 @@ enum CardText {
         originalPhotoPath(sighting) == nil ? "No photo attached" : "Photo attached"
     }
 
-    /// How the birder met it, on a sighting's record: "Heard with iPhone microphone"; "Seen, and heard with Ray-Ban Display".
+    /// How the birder met it, on a sighting's record: "Heard with iPhone microphone"; "Seen, and heard with Ray-Ban Display";
+    /// and for a bird they named from a photo (issue #186), which nothing heard, "Seen, photographed with iPhone".
     static func how(_ sighting: Sighting) -> String {
+        if sighting.namedByBirder {
+            return "Seen, photographed with \(sighting.source == .glasses ? "Ray-Ban Display" : "iPhone")"
+        }
         let device = sighting.source == .glasses ? "Ray-Ban Display" : "iPhone microphone"
         return sighting.method == .seen ? "Seen, and heard with \(device)" : "Heard with \(device)"
+    }
+
+    /// BirdNET's match score as a sighting's page shows it, "0.82"; nil for a bird the birder named, which has none.
+    static func matchScore(_ sighting: Sighting, locale: Locale = .current) -> String? {
+        sighting.namedByBirder ? nil : sighting.soundConfidence.formatted(.number.precision(.fractionLength(2)).locale(locale))
+    }
+
+    /// What a sighting's page says about how the bird was identified: what the score is and is not, or that there is none.
+    static func identification(_ sighting: Sighting) -> String {
+        sighting.namedByBirder
+            ? "You named this bird from your photo. BirdNET did not hear it, so there is no match score."
+            : "BirdNET's best single-window score for this species when it was added, between 0 and 1. It is not a calibrated probability, and it does not make the sighting certain: you did, when you added it."
     }
 
     static func article(for name: String) -> String {

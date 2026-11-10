@@ -87,6 +87,11 @@ import UIKit
 ///   Listen tab, the file standing in for the stream; `-autoLensAdd "House Finch,Dark-eyed Junco"` adds those birds on the
 ///   lens with mock inputs as they're heard, and `-autoLensBackInBackground YES` ends the run from the lens when the app
 ///   goes to the background (issue #135). `-albumFile <name>` keeps the album in a file of its own, for relaunching over it.
+/// - `-fakeCamera ready|denied|unavailable` puts a stand-in behind "Capture a sighting" (issue #186: the simulator has no
+///   camera, and a UI test can't answer the permission prompt): ready with a drawn viewfinder and a generated photo, or
+///   refused, or with no camera to give. `-autoScreen capture` starts a phone run as `listening` does and opens the camera
+///   over it; `-autoScreen name-bird` goes on to "Name this bird" with a stand-in photo, and `-autoQuery <text>` searches
+///   there once.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -157,7 +162,7 @@ struct DebugLaunch: ViewModifier {
             switch screen {
             case "listen":
                 tab = .listen
-            case "listening", "review":
+            case "listening", "review", "capture", "name-bird":
                 tab = .listen
                 run.source = .phone
                 run.fakeStack = FakeRunBirds.stack
@@ -174,6 +179,10 @@ struct DebugLaunch: ViewModifier {
                 }
                 if defaults.bool(forKey: "autoRunStops") {
                     await run.stop()
+                }
+                if screen == "capture" || screen == "name-bird" {
+                    if screen == "name-bird" { defaults.set(true, forKey: "autoNameBird") }
+                    run.isCapturing = true
                 }
                 if screen == "review" {
                     // The WAV's first admissions take a few windows; wait for a bird the packs describe, so the
