@@ -122,6 +122,10 @@ final class HuntUITests: XCTestCase {
         let app = try launchRun()
         let review = app.buttons["Review Common Blackbird"]
         XCTAssertTrue(review.waitForExistence(timeout: 60), "no Review; screen: \(app.debugDescription.prefix(3000))")
+        // The fourth row starts under Stop since "Capture a sighting" joined the page (issue #186), where a tap would land on
+        // the bar (and `isHittable` says yes all the same): the list is scrolled up first.
+        app.swipeUp()
+        XCTAssertLessThan(review.frame.maxY, app.buttons["Stop listening"].frame.minY, "the row didn't come out from under Stop")
         review.tap()
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "no review; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
