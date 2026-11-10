@@ -152,9 +152,9 @@ struct PaperCardView: View {
             }
         }
         .task(id: sightings.prefix(Self.latestShown).compactMap(\.location).count) {
-            for sighting in sightings.prefix(Self.latestShown) {
-                if let location = sighting.location { await places.resolve(location) }
-            }
+            // Read before the first lookup: a sighting can be gone by the time one comes back, and reading it then traps.
+            let locations = sightings.prefix(Self.latestShown).compactMap(\.location)
+            for location in locations { await places.resolve(location) }
         }
     }
 
