@@ -34,7 +34,8 @@ enum CaptureFailure: Error, Equatable {
 /// the tests (`StandInCaptureCamera`), which have none. The screen reads its state, shows its viewfinder and presses its
 /// shutter, and knows nothing of AVFoundation.
 ///
-/// The seam for #187's controls: zoom, the lens steps and tap to focus are added here, and the stand-in reports them.
+/// Its controls (issue #187) are here too: the zoom with the lens steps the phone has, and focus where the birder taps. There
+/// is no flash to control: no camera behind this fires one.
 @MainActor
 protocol CaptureCamera: AnyObject, Observable {
     var state: CaptureCameraState { get }
@@ -42,10 +43,21 @@ protocol CaptureCamera: AnyObject, Observable {
     func start() async
     /// Closes the camera; nothing is kept running behind the naming sheet or the run.
     func stop()
-    /// Takes one photo with the flash off.
+    /// Takes one photo with the flash off, then lets the camera focus by itself again.
     func takePhoto() async throws -> CapturedPhoto
     /// What the camera sees, to fill the viewfinder.
     var viewfinder: AnyView { get }
+
+    /// The lens steps this camera has, how far it zooms and where the zoom stands: `.fixed` until the camera is open.
+    var zoom: CaptureZoom { get }
+    /// Zooms to `factor`, as a birder reads it, kept within the camera's range. A lens button asks for it smoothly, so the
+    /// picture glides there; a pinch asks for each factor at once, so the picture stays under the fingers.
+    func setZoom(_ factor: Double, smoothly: Bool)
+    /// Where in the viewfinder focus and exposure are held, (0, 0) being its top left corner; nil while the camera chooses
+    /// for itself, as it does until a tap and again after the shot.
+    var focusPoint: UnitPoint? { get }
+    /// Focuses and exposes at a point of the viewfinder, and holds there.
+    func focus(at point: UnitPoint)
 }
 
 extension EnvironmentValues {
@@ -66,6 +78,13 @@ enum CaptureCameras {
     }
 }
 
+extension UnitPoint {
+    /// The nearest point inside the picture: a tap on the viewfinder's very edge can land a hair outside it.
+    var withinThePicture: UnitPoint {
+        UnitPoint(x: min(max(x, 0), 1), y: min(max(y, 0), 1))
+    }
+}
+
 #if DEBUG
 /// A camera with no camera: it is ready at once (or denied, or unavailable, as asked), its viewfinder is a drawing, and its
 /// shutter hands over the generated frame the seeds use. `-fakeCamera <mode>` puts it behind "Capture a sighting".
@@ -75,14 +94,28 @@ final class StandInCaptureCamera: CaptureCamera {
         case ready, denied, unavailable
     }
 
+    /// An iPhone 17 Pro's rear camera, as AVFoundation describes it: the ultra-wide, the wide and the telephoto, each with a
+    /// full-quality crop at twice its own start, read at half the camera's own factor. So: 0.5, 1, 2, 4 and 8.
+    nonisolated static let iPhone17Pro = RearCameraFacts(
+        minimum: 1, maximum: 189,
+        lenses: [.init(start: 1, fullQualityCrops: [2]), .init(start: 2, fullQualityCrops: [2]), .init(start: 8, fullQualityCrops: [2])],
+        displayMultiplier: 0.5
+    )
+
     private(set) var state = CaptureCameraState.starting
     /// How many photos it has taken, for a test to read.
     private(set) var photosTaken = 0
+    /// The zoom it has been set to: what a test asserts a lens button or a pinch did.
+    private(set) var zoom = CaptureZoom.fixed
+    private(set) var focusPoint: UnitPoint?
     @ObservationIgnored private let mode: Mode
+    @ObservationIgnored private let lenses: RearCameraFacts
     @ObservationIgnored private let now: () -> Date
 
-    init(_ mode: Mode = .ready, now: @escaping () -> Date = Date.init) {
+    /// - Parameter lenses: the rear camera it stands in for; an iPhone 17 Pro's unless a test says otherwise.
+    init(_ mode: Mode = .ready, lenses: RearCameraFacts = StandInCaptureCamera.iPhone17Pro, now: @escaping () -> Date = Date.init) {
         self.mode = mode
+        self.lenses = lenses
         self.now = now
     }
 
@@ -92,6 +125,7 @@ final class StandInCaptureCamera: CaptureCamera {
         case .denied: .denied
         case .unavailable: .unavailable
         }
+        if state == .ready, zoom == .fixed { zoom = CaptureZoom(lenses) }
     }
 
     func stop() {
@@ -101,9 +135,21 @@ final class StandInCaptureCamera: CaptureCamera {
     func takePhoto() async throws -> CapturedPhoto {
         guard state == .ready else { throw CaptureFailure.notReady }
         photosTaken += 1
+        focusPoint = nil
         return CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: now())
     }
 
+    func setZoom(_ factor: Double, smoothly: Bool) {
+        guard state == .ready else { return }
+        zoom.set(factor)
+    }
+
+    func focus(at point: UnitPoint) {
+        guard state == .ready else { return }
+        focusPoint = point.withinThePicture
+    }
+
+    /// A drawing that zooms: the bird grows and shrinks with the factor, so a lens button's effect shows on the simulator.
     var viewfinder: AnyView {
         AnyView(
             ZStack {
@@ -111,7 +157,9 @@ final class StandInCaptureCamera: CaptureCamera {
                 Image(systemName: "bird.fill")
                     .font(.system(size: 72))
                     .foregroundStyle(.white.opacity(0.9))
+                    .scaleEffect(min(max(zoom.factor, 0.5), 8))
             }
+            .clipped()
             .accessibilityHidden(true)
         )
     }
