@@ -60,6 +60,7 @@ final class PhoneCaptureCamera: CaptureCamera {
             // What the phone said and what was made of it, to read in Console on a phone no test has run on.
             Self.logger.info("rear camera: \(String(describing: facts), privacy: .public); lens buttons \(String(describing: self.zoom.lenses), privacy: .public), zoom to \(self.zoom.range.upperBound, privacy: .public)")
         }
+        // The camera opened on the wide lens; opened again, it goes back to where the zoom stood.
         camera.zoom(to: zoom.deviceFactor, smoothly: false)
         state = .ready
     }
@@ -196,6 +197,12 @@ private nonisolated final class RearCamera: NSObject, AVCapturePhotoCaptureDeleg
             rotation = AVCaptureDevice.RotationCoordinator(device: camera, previewLayer: nil)
             sceneObserver = NotificationCenter.default.addObserver(forName: AVCaptureDevice.subjectAreaDidChangeNotification, object: camera, queue: nil) { [weak self] _ in
                 self?.sceneChanged?()
+            }
+            // On the wide lens before the first picture: behind a camera whose first lens is the ultra-wide, factor 1 is not it.
+            let wide = CGFloat(CaptureZoom(Self.facts(of: camera)).deviceFactor)
+            if (try? camera.lockForConfiguration()) != nil {
+                camera.videoZoomFactor = min(max(wide, camera.minAvailableVideoZoomFactor), camera.maxAvailableVideoZoomFactor)
+                camera.unlockForConfiguration()
             }
         }
         if !session.isRunning { session.startRunning() }

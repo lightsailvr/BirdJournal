@@ -1,7 +1,8 @@
 import Foundation
 
 /// What a rear camera says about its zoom (issue #187, of #185), in the camera's own factors, where 1 is its widest view.
-/// `PhoneCaptureCamera` reads it from AVFoundation; the tests and the stand-in write one by hand.
+/// `PhoneCaptureCamera` reads it from AVFoundation; the tests and the stand-in write one by hand. A lens here is one of the
+/// phone's camera lenses, nothing to do with the glasses' lens (`Lens/`, `LensSession`).
 nonisolated struct RearCameraFacts: Equatable, Sendable {
     /// One lens behind the camera.
     struct Lens: Equatable, Sendable {

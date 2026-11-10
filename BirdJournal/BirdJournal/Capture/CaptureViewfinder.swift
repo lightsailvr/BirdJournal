@@ -11,7 +11,7 @@ struct CaptureViewfinder: View {
     var body: some View {
         let zoom = camera.zoom
         GeometryReader { box in
-            ZStack(alignment: .bottom) {
+            ZStack {
                 camera.viewfinder
                     .contentShape(Rectangle())
                     .gesture(SpatialTapGesture().onEnded { tap in
@@ -47,14 +47,18 @@ struct CaptureViewfinder: View {
                         // A new tap is a new square, arriving again.
                         .id(point)
                 }
-
+            }
+            // The picture and the square on it keep to the viewfinder's corners; the buttons don't, so with the phone on
+            // its side, where the viewfinder is narrower than the row, every button is still whole and takes its tap.
+            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+            .overlay(alignment: .bottom) {
                 LensButtons(zoom: zoom) { camera.setZoom($0, smoothly: true) }
+                    .fixedSize()
                     .padding(.bottom, 10)
             }
             .accessibilityElement(children: .contain)
         }
         .aspectRatio(3 / 4, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
     }
 }
 

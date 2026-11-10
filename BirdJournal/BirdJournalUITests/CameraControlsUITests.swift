@@ -70,8 +70,8 @@ final class CameraControlsUITests: XCTestCase {
         let shutter = app.buttons["capture-shutter"]
         let viewfinder = element(app, "capture-viewfinder")
         for lens in lenses.allElementsBoundByIndex {
-            XCTAssertGreaterThanOrEqual(lens.frame.width, 44, lens.identifier)
-            XCTAssertGreaterThanOrEqual(lens.frame.height, 44, lens.identifier)
+            XCTAssertGreaterThan(lens.frame.width, 43.9, lens.identifier)
+            XCTAssertGreaterThan(lens.frame.height, 43.9, lens.identifier)
             XCTAssertTrue(lens.isHittable, lens.identifier)
             XCTAssertGreaterThan(lens.frame.minY, screen.height * 0.6, "\(lens.identifier) is in the lower part of the screen")
             XCTAssertLessThan(lens.frame.maxY, shutter.frame.minY, "\(lens.identifier) is above the shutter")
@@ -149,5 +149,29 @@ final class CameraControlsUITests: XCTestCase {
 
         app.buttons["capture-shutter"].tap()
         XCTAssertTrue(app.navigationBars["Name this bird"].waitForExistence(timeout: 15), "no naming; screen: \(app.debugDescription.prefix(3000))")
+    }
+
+    /// On its side the screen leaves the viewfinder narrower than the row of buttons: the ones that reach past its edges
+    /// must still take a thumb.
+    @MainActor
+    func testWithThePhoneOnItsSideEveryLensButtonStillTakesItsTap() throws {
+        let app = try launchCamera()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { @MainActor in XCUIDevice.shared.orientation = .portrait }
+        let shutter = app.buttons["capture-shutter"]
+        XCTAssertTrue(shutter.waitForExistence(timeout: 10))
+        let screen = app.windows.firstMatch.frame
+        XCTAssertGreaterThan(screen.width, screen.height, "the screen turned")
+
+        for step in ["0.5", "8", "1", "4", "2"] {
+            let lens = app.buttons["capture-lens-\(step)"]
+            XCTAssertTrue(lens.isHittable, "\(step); screen: \(app.debugDescription.prefix(3000))")
+            XCTAssertGreaterThan(lens.frame.width, 43.9, step)
+            XCTAssertFalse(lens.frame.intersects(shutter.frame), "\(step) is clear of the shutter")
+            lens.tap()
+            XCTAssertEqual(viewfinderValue(app, becomes: "\(step) times zoom"), "\(step) times zoom")
+        }
+        XCTAssertTrue(shutter.isHittable)
+        XCUIDevice.shared.orientation = .portrait
     }
 }

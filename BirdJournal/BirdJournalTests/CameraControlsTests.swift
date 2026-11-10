@@ -78,7 +78,7 @@ struct CameraControlsTests {
     /// The camera screen over `camera`, in a window with app accessibility on, for as long as `body` runs. `elements` walks
     /// what VoiceOver reaches at that moment, top to bottom.
     static func onTheCameraScreen(
-        _ camera: StandInCaptureCamera, harness: Screens.Harness, typeSize: DynamicTypeSize = .large,
+        _ camera: StandInCaptureCamera, harness: Screens.Harness, typeSize: DynamicTypeSize = .large, screen: CGSize = CGSize(width: 402, height: 874),
         _ body: (_ elements: () -> [NSObject]) async throws -> Void
     ) async throws {
         await harness.place.prepareForLaunch()
@@ -86,7 +86,7 @@ struct CameraControlsTests {
         let host = UIHostingController(rootView: harness.shared(CaptureCameraView(camera: camera, taken: { _ in }, close: {}), typeSize: typeSize))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
-        window.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
+        window.frame = CGRect(origin: .zero, size: screen)
         window.rootViewController = host
         window.makeKeyAndVisible()
         host.view.layoutIfNeeded()
@@ -209,6 +209,25 @@ struct CameraControlsTests {
             _ = try await camera.takePhoto()
             found = try await Self.settled(elements) { Self.element("Viewfinder", in: $0)?.accessibilityValue == "1 times zoom" }
             #expect(Self.element("Viewfinder", in: found)?.accessibilityValue == "1 times zoom")
+        }
+    }
+
+    @Test("With the phone on its side every lens button is still whole: full size, on the screen, side by side and clear of the shutter")
+    func onItsSide() async throws {
+        let harness = try Screens.Harness()
+        let screen = CGSize(width: 874, height: 402)
+        try await Self.onTheCameraScreen(StandInCaptureCamera(.ready), harness: harness, screen: screen) { elements in
+            let found = try await Self.settled(elements) { Self.lensButtons($0).count == 5 }
+            let frames = Self.lensButtons(found).map(\.accessibilityFrame)
+            let shutter = try #require(Self.element("Take photo", in: found), "\(Self.labels(found))").accessibilityFrame
+            #expect(frames.count == 5)
+            for frame in frames {
+                // 44 points, give or take what a float loses on the way to the screen.
+                #expect(frame.width > 43.9 && frame.height > 43.9, "\(frame)")
+                #expect(CGRect(origin: .zero, size: screen).contains(frame), "\(frame)")
+                #expect(!frame.intersects(shutter), "\(frame) against the shutter's \(shutter)")
+            }
+            #expect(zip(frames, frames.dropFirst()).allSatisfy { $0.maxX <= $1.minX + 0.5 }, "\(frames)")
         }
     }
 }
