@@ -9,8 +9,9 @@ import UIKit
 
 // Issue #186 (of #185): a bird that is seen and not heard. The birder takes a photo and names it, and the named photo is a
 // sighting like any other: Seen, with the photo as its original photo, the photo's time, the run's place and the rarity for
-// that place and week; it sews its patch or adds to it, is published as a find that says "saw", and can be undone, photo
-// and all. It is marked as named by the birder, and nothing shows a match score for it.
+// that place and week; it sews its patch or adds to it, is published as a find that says "saw", and can be undone. It is
+// marked as named by the birder, and nothing shows a match score for it. Since #188 the photo is kept from the shutter on, so
+// Undo takes the name back and leaves the photo waiting (`UnnamedSightingTests`).
 @Suite("Seen sightings")
 @MainActor
 struct SeenSightingTests {
@@ -117,8 +118,8 @@ struct SeenSightingTests {
         #expect(fixture.stored.map(\.namedByBirder) == [true, false])
     }
 
-    @Test("the run lists a seen bird with its name, its time and its photo; Undo removes the sighting and its photo, and only that one")
-    func undoRemovesTheSightingAndItsPhoto() throws {
+    @Test("the run lists a seen bird with its name, its time and its photo; Undo removes the sighting, and only that one, and its photo waits unnamed (issue #188)")
+    func undoRemovesTheSightingAndKeepsItsPhoto() throws {
         let fixture = try Self.makeFixture()
         let first = try fixture.ledger.addSeen(Self.allens, photo: Data([1]), takenAt: Self.taken, location: Self.losFeliz, source: .phone)
         let second = try fixture.ledger.addSeen(Self.finch, photo: Data([2]), takenAt: Self.taken.addingTimeInterval(60), location: Self.losFeliz, source: .phone)
@@ -133,18 +134,19 @@ struct SeenSightingTests {
         #expect(fixture.stored.map(\.identifier) == [second.identifier])
         #expect(fixture.ledger.seen.map(\.identifier) == [second.identifier])
         #expect(fixture.ledger.identifiers == [second.identifier])
-        #expect(fixture.files.count == 1)
-        #expect(!fixture.files.contains(firstPhoto), "the photo goes with the sighting")
+        #expect(fixture.ledger.unnamed.map(\.photoPath) == [firstPhoto], "the photo waits for a name again")
+        #expect(fixture.files.count == 2, "Undo loses no photo")
 
         try fixture.ledger.undo(first)
         try fixture.ledger.undo(second)
         #expect(fixture.stored.isEmpty)
         #expect(fixture.ledger.seen.isEmpty)
-        #expect(fixture.files.isEmpty)
+        #expect(fixture.ledger.unnamed.count == 2)
+        #expect(fixture.files.count == 2)
 
         try fixture.ledger.addSeen(Self.allens, photo: Data([3]), takenAt: Self.taken, location: nil, source: .phone)
         fixture.ledger.reset()
-        #expect(fixture.ledger.seen.isEmpty && fixture.ledger.identifiers.isEmpty, "a new run starts with none; the album keeps the sighting")
+        #expect(fixture.ledger.seen.isEmpty && fixture.ledger.identifiers.isEmpty && fixture.ledger.unnamed.isEmpty, "a new run starts with none; the album keeps the sighting")
         #expect(fixture.stored.count == 1)
     }
 
@@ -158,7 +160,7 @@ struct SeenSightingTests {
 
     // MARK: - On a run
 
-    @Test("on a run a seen bird is an add like any other: the capture's time, the run's place, the reveal of a new patch, the acknowledgment with Undo, and Undo takes it all back")
+    @Test("on a run a seen bird is an add like any other: the capture's time, the run's place, the reveal of a new patch, the acknowledgment with Undo, and Undo takes the add back")
     func addOnARun() async throws {
         let harness = try ListeningCoordinatorTests.makeHarness()
         let run = harness.run
@@ -199,7 +201,8 @@ struct SeenSightingTests {
         #expect(harness.stored.isEmpty)
         #expect(run.sightings.seen.isEmpty)
         let files = (try? FileManager.default.contentsOfDirectory(atPath: harness.frames.path(percentEncoded: false))) ?? []
-        #expect(files.isEmpty, "the photos went with them: \(files)")
+        #expect(files.count == 2, "the photos wait, unnamed (issue #188): \(files)")
+        #expect(run.sightings.unnamed.count == 2)
 
         await run.stop()
     }
