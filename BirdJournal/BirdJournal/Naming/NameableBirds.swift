@@ -24,8 +24,9 @@ nonisolated struct NameableBird: Identifiable, Hashable, Sendable {
 /// (`NameSearch`). A pure value, built once from the packs on the phone and the label list; the names are split once, since
 /// there are some ten thousand and the search runs on every keystroke.
 ///
-/// The seam for what orders the results: #189's suggestions and ranking, and the lens's dictation (#194), replace `search`'s
-/// alphabetical order here, not in the sheet.
+/// What orders the results is here and not in the sheet (issue #189): `search(_:in:)` takes what the run has heard and what
+/// the geomodel expects at the place, suggests from them before anything is typed, and ranks a typed search by them. The
+/// lens's dictation (#194) ranks its matches by the same `Context.Standing`.
 nonisolated struct NameableBirds: Sendable {
     /// A bird a field-guide download describes, as its pack names it.
     struct FieldGuideBird: Hashable, Sendable {
@@ -47,22 +48,29 @@ nonisolated struct NameableBirds: Sendable {
         /// Where a bird stands before its name is looked at: heard this run, in the run's order; else likely here, the
         /// likeliest first; else neither. The smaller, the sooner it is offered.
         struct Standing: Comparable, Sendable {
+            /// 0 heard, 1 likely, 2 neither.
             fileprivate let tier: Int
-            fileprivate let place: Float
+            /// Within the tier: the position in the run's order, or the occurrence, negated.
+            fileprivate let order: Float
 
             /// Heard this run or likely here.
             var isSuggested: Bool { tier < 2 }
 
             static func < (lhs: Standing, rhs: Standing) -> Bool {
-                lhs.tier != rhs.tier ? lhs.tier < rhs.tier : lhs.place < rhs.place
+                lhs.tier != rhs.tier ? lhs.tier < rhs.tier : lhs.order < rhs.order
             }
         }
 
+        /// The standing of the bird with this scientific name. Birds that stand the same are told apart by whoever asks:
+        /// the search, by name.
         func standing(ofScientificName name: String) -> Standing {
-            if let position = heard.firstIndex(of: name) { return Standing(tier: 0, place: Float(position)) }
-            if let occurrence = occurrence?[name], occurrence >= NameableBirds.likelyFloor { return Standing(tier: 1, place: -occurrence) }
-            return Standing(tier: 2, place: 0)
+            if let position = heard.firstIndex(of: name) { return Standing(tier: 0, order: Float(position)) }
+            if let occurrence = occurrence?[name], occurrence >= NameableBirds.likelyFloor { return Standing(tier: 1, order: -occurrence) }
+            return Standing(tier: 2, order: 0)
         }
+
+        /// Nothing heard and no place: every bird stands the same.
+        var isEmpty: Bool { heard.isEmpty && occurrence == nil }
     }
 
     /// What a search found.
@@ -72,9 +80,10 @@ nonisolated struct NameableBirds: Sendable {
         /// "Likely here now", before anything is typed: the field guides' birds the geomodel finds most likely at the
         /// photo's place and week, the likeliest first, without those heard.
         var likely: [NameableBird] = []
-        /// "In your field guides": by common name.
+        /// "In your field guides": the matches among them, those heard this run or likely here first and the rest by common
+        /// name; with nothing typed and no likely birds to suggest, all of them by name.
         var fieldGuide: [NameableBird] = []
-        /// "All birds": by common name, the first of them when there are many.
+        /// "All birds": the other matches in the same order, the first of them when there are many.
         var others: [NameableBird] = []
         /// How many more other birds matched than `others` lists.
         var moreOthers = 0
@@ -164,7 +173,7 @@ nonisolated struct NameableBirds: Sendable {
     /// `entries`, which are by name, by their standing in `context` and then by name; only those whose standing `keep` passes.
     private static func ordered(_ entries: [Entry], in context: Context, keep: (Context.Standing) -> Bool = { _ in true }) -> [NameableBird] {
         // Nothing heard and no place: every bird stands the same, and the order by name is the answer.
-        guard context != .none else { return keep(context.standing(ofScientificName: "")) ? entries.map(\.bird) : [] }
+        guard !context.isEmpty else { return keep(context.standing(ofScientificName: "")) ? entries.map(\.bird) : [] }
         return entries.enumerated()
             .compactMap { position, entry -> (standing: Context.Standing, position: Int, bird: NameableBird)? in
                 let standing = context.standing(ofScientificName: entry.bird.scientificName)

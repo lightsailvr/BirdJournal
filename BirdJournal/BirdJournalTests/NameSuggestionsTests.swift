@@ -241,6 +241,28 @@ extension CaptureAccessibilityTests {
         #expect(labels.contains("Choose the bird in your photo."), "\(labels)")
     }
 
+    @Test("Name this bird on a run with no place: Heard this run, then the field guides' birds by name, and nothing called likely", arguments: Screens.sizes)
+    func suggestionsWithoutAPlace(typeSize: DynamicTypeSize) async throws {
+        let harness = try Screens.Harness()
+        harness.run.fakeStack = CandidateStack(candidates: [Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1_000_000, admittedAt: 0)])
+        await harness.run.start()
+        #expect(harness.run.coordinate == nil)
+        let screen = NameBirdView(photo: Self.photo()) {}.environment(\.occurrenceModel, Self.geomodel)
+        let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
+            labels.contains("In your field guides") && labels.contains { $0.hasPrefix("Allen's Hummingbird, ") }
+        }
+        await harness.run.stop()
+
+        Screens.expectClean(labels, screen: "Name this bird, no place")
+        #expect(labels.contains { $0.hasSuffix(", Place not recorded") }, "\(labels)")
+        let heard = try #require(labels.firstIndex(of: "Heard this run"), "\(labels)")
+        let phoebe = try #require(labels.firstIndex { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+        let guides = try #require(labels.firstIndex(of: "In your field guides"), "\(labels)")
+        let allens = try #require(labels.firstIndex { $0.hasPrefix("Allen's Hummingbird, ") }, "\(labels)")
+        #expect(heard < phoebe && phoebe < guides && guides < allens, "\(labels)")
+        #expect(!labels.contains("Likely here now"), "no place, so the section is left out: \(labels)")
+    }
+
     @Test("the run's birds are offered only while there is a run: calling now first while it listens, none once it is dismissed")
     func heardOnlyWithARun() async throws {
         let idle = try Screens.Harness()

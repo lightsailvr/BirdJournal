@@ -85,19 +85,20 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(pill.label.hasPrefix("Still listening, "), pill.label)
         shutter.tap()
 
-        // Name this bird: the photo, the field guides' birds, and nothing to add until one is chosen.
+        // Name this bird: the photo, the suggestions (#189), and nothing to add until a bird is chosen.
         XCTAssertTrue(app.navigationBars["Name this bird"].waitForExistence(timeout: 15), "no naming; screen: \(app.debugDescription.prefix(3000))")
         let photo = element(app, "name-bird-photo")
         XCTAssertTrue(photo.waitForExistence(timeout: 5))
         XCTAssertTrue(photo.label.hasPrefix("Your photo, Today, "), photo.label)
         XCTAssertTrue(photo.label.contains("Near "), "the run's place: \(photo.label)")
-        XCTAssertTrue(app.staticTexts["In your field guides"].waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["Likely here now"].waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         let add = app.buttons["name-bird-add"]
         XCTAssertFalse(add.isEnabled, "nothing chosen")
 
         search(app, for: "calypte")
         let anna = app.buttons["name-bird-Calypte anna"]
         XCTAssertTrue(anna.waitForExistence(timeout: 10), "the scientific name finds it; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["In your field guides"].exists, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(anna.label, "Anna's Hummingbird, Los Angeles, New to you here")
         XCTAssertFalse(app.buttons["name-bird-Selasphorus sasin"].exists, "the search kept only the match")
         anna.tap()
@@ -144,8 +145,9 @@ final class CaptureUITests: XCTestCase {
         search(app, for: "zzzz")
         XCTAssertTrue(app.staticTexts["No birds match “zzzz”"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.staticTexts["In your field guides"].exists)
+        XCTAssertFalse(app.staticTexts["Likely here now"].exists)
         app.buttons["Clear search"].tap()
-        XCTAssertTrue(app.staticTexts["In your field guides"].waitForExistence(timeout: 10), "clearing brings the field guides back")
+        XCTAssertTrue(app.staticTexts["Likely here now"].waitForExistence(timeout: 10), "clearing brings the suggestions back")
 
         // Cancel discards the photo: back on the run with nothing seen.
         app.buttons["Cancel"].tap()
@@ -199,6 +201,61 @@ final class CaptureUITests: XCTestCase {
         app.buttons["Close camera"].tap()
         XCTAssertTrue(capture.waitForExistence(timeout: 10), "back on the run")
         XCTAssertTrue(app.buttons["Stop listening"].exists)
+    }
+
+    /// Issue #189: before anything is typed the sheet offers the bird the run has heard, then the field guide's birds the
+    /// geomodel finds most likely in Griffith Park this week (the bundled geomodel, so which birds depends on the date the
+    /// test runs). Typing replaces both with the search, clearing the field brings them back, and a suggestion is chosen and
+    /// added like any other bird.
+    @MainActor
+    func testTheSheetOpensOnWhatTheRunHeardAndWhatIsLikelyHereAndTypingReplacesThem() throws {
+        let app = try launchRun()
+        capture(app)
+
+        let heard = app.staticTexts["Heard this run"]
+        XCTAssertTrue(heard.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
+        let likely = app.staticTexts["Likely here now"]
+        XCTAssertTrue(likely.exists, "screen: \(app.debugDescription.prefix(3000))")
+        let finch = app.buttons["name-bird-Haemorhous mexicanus"]
+        XCTAssertTrue(finch.exists, "the run's bird; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(finch.label, "House Finch, Los Angeles, New to you here")
+        XCTAssertLessThan(heard.frame.minY, finch.frame.minY)
+        XCTAssertLessThan(finch.frame.maxY, likely.frame.minY + 1, "the run's bird sits under Heard this run, above the likely birds")
+        XCTAssertFalse(app.staticTexts["In your field guides"].exists, "the suggestions stand in for the list by name")
+        XCTAssertFalse(app.staticTexts["All birds"].exists)
+        let suggested = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier != %@", "name-bird-", "name-bird-add"))
+        XCTAssertGreaterThan(suggested.count, 2, "likely birds are listed under the heading; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(app.buttons.matching(identifier: "name-bird-Haemorhous mexicanus").count, 1, "the bird heard isn't listed again as likely")
+
+        // Typing replaces both with the search. The keyboard stays up, as it does while a birder types.
+        let field = app.textFields["name-bird-search"]
+        field.tap()
+        field.typeText("calypte")
+        XCTAssertTrue(app.buttons["name-bird-Calypte anna"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(heard.exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertFalse(likely.exists)
+        XCTAssertFalse(finch.exists)
+        XCTAssertTrue(app.staticTexts["In your field guides"].exists)
+
+        // Clearing the field brings them back.
+        app.buttons["Clear text"].tap()
+        XCTAssertTrue(heard.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(likely.exists)
+        XCTAssertFalse(app.staticTexts["In your field guides"].exists)
+        field.typeText("\n")  // the keyboard away: the suggestions and the pinned add are all in reach
+
+        // The bird the run heard was the one at the feeder: chosen without typing, and added as seen.
+        XCTAssertTrue(finch.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        finch.tap()
+        let add = app.buttons["name-bird-add"]
+        XCTAssertTrue(add.isEnabled)
+        XCTAssertEqual(add.label, "Add and sew patch")
+        add.tap()
+        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
+        app.buttons["Keep listening"].tap()
+        let row = app.buttons["seen-row-Haemorhous mexicanus"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(row.label, "House Finch, Seen, your photo, New patch")
     }
 
     /// A glasses run on Mock Device Kit, the clip standing in for its stream: the button is there too, and the phone's camera

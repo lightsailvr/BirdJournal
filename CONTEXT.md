@@ -63,6 +63,10 @@ _Avoid_: evidence, detection type
 What a sighting is when the birder named its bird themselves, from their photo of it, and BirdNET heard nothing to match (#186). It is always Seen and has no match score, and nothing shows one for it: not the run, its page, its paper card or a share. In every other way it is a sighting like any other: it sews its patch or adds to its count, counts toward its set, and is published as a find that says "saw". The sighting carries the mark (`namedByBirder`).
 _Avoid_: manual sighting, unverified sighting, self-reported
 
+**Likely here**:
+What a bird is at a place and week when the geomodel's occurrence for it there is at or above the floor identification admits a bird at. "Name this bird" lists the likeliest of the field guides' birds under "Likely here now", after "Heard this run" (the run's candidates), and orders a search by the same two (#189). Not rarity, which is a label saved on a sighting.
+_Avoid_: probable, expected, common here (Common is a rarity label), suggestion (in copy)
+
 **Original photo**:
 The unaltered picture kept with a sighting: the glasses' photo from the add, or one of the birder's own, which is the photo a seen bird was named from (taken with the capture camera on the phone, #186) or one attached from the library. Evidence, never art.
 _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fallback for it)

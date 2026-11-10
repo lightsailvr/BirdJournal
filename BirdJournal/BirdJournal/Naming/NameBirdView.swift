@@ -109,6 +109,7 @@ struct NameBirdView: View {
             }.value
             guard !Task.isCancelled else { return }
             (names, context) = loaded
+            dropAChoiceOutOfSight()
         }
         .task(id: run.coordinate) {
             if let coordinate = run.coordinate { await places.resolve(coordinate) }
@@ -121,7 +122,6 @@ struct NameBirdView: View {
         #endif
         // A choice the page no longer shows would be added unseen.
         .onChange(of: query) { dropAChoiceOutOfSight() }
-        .onChange(of: context) { dropAChoiceOutOfSight() }
     }
 
     private func dropAChoiceOutOfSight() {
