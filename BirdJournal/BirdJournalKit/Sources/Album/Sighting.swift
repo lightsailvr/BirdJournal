@@ -91,6 +91,7 @@ public enum AlbumSchemaV2: VersionedSchema {
 /// (Heard unless the birder says otherwise), the rarity snapshot taken at the add, the caption, the art state and the
 /// original photos the birder attached beside the glasses photo. Every field the collection needs arrives in this one
 /// version, so later work fills them in without another migration. A card is not stored apart: it is the sighting.
+/// The album as shipped up to #185. Kept so the migration plan can name it.
 public enum AlbumSchemaV3: VersionedSchema {
     public static let versionIdentifier = Schema.Version(3, 0, 0)
     public static var models: [any PersistentModel.Type] { [Sighting.self] }
@@ -152,9 +153,82 @@ public enum AlbumSchemaV3: VersionedSchema {
     }
 }
 
-public typealias Sighting = AlbumSchemaV3.Sighting
+/// The album since a seen bird could be captured and named (issue #186, of #185): a sighting also says whether the birder
+/// named the bird themselves. Every stored sighting was heard by BirdNET, so adding the column with its default is a
+/// lightweight migration.
+public enum AlbumSchemaV4: VersionedSchema {
+    public static let versionIdentifier = Schema.Version(4, 0, 0)
+    public static var models: [any PersistentModel.Type] { [Sighting.self] }
 
-/// How the birder met the bird on a sighting. Every add is Heard; the birder changes it on the phone.
+    @Model
+    public final class Sighting {
+        /// Stable across launches, backups and edits; what finds and the collection's tie-break refer to.
+        /// A sighting migrated from schema 2 gets a fresh one in the migration stage.
+        public var identifier: UUID = UUID()
+        /// BirdNET label, e.g. "Sayornis nigricans_Black Phoebe". Names and photos come from the species pack.
+        public var speciesID: String
+        public var confirmedAt: Date
+        public var location: Coordinate?
+        /// BirdNET's match score at the add. Meaningless, 0 and never shown, on a sighting `namedByBirder`.
+        public var soundConfidence: Double
+        /// The glasses photo from the add (or the stream frame standing in for it), relative to the `FrameStore`.
+        public var frameImagePath: String?
+        /// The device the sighting came from: the one that heard the bird, or took the photo of one the birder named.
+        public var source: SightingSource
+        /// What the birder wrote about this sighting on the phone, nil until they do.
+        public var note: String?
+        public var method: SightingMethod = SightingMethod.heard
+        /// How unusual the bird was at the add's place and week, saved once and never recomputed; nil without a
+        /// location.
+        public var rarity: RaritySnapshot?
+        public var caption: CardCaption?
+        /// Scene and photo art as JSON (issues #68 to #70, retired by #137). Nothing writes it for a new sighting, but
+        /// stored sightings keep what they have: read through `art`, and no schema version was needed to retire it.
+        public var artState: Data?
+        /// Original photos of the birder's own, relative to the `FrameStore`, oldest first: one attached from the library,
+        /// or the capture a seen bird was named from (issue #186). Evidence, never art.
+        public var attachedPhotoPaths: [String] = []
+        /// The birder named the bird themselves, from a photo of it (issue #186): BirdNET matched nothing, so there is no
+        /// match score to show and nothing to explain about one. False for every add of a candidate.
+        public var namedByBirder: Bool = false
+
+        public init(
+            identifier: UUID = UUID(),
+            speciesID: String,
+            confirmedAt: Date,
+            location: Coordinate? = nil,
+            soundConfidence: Double,
+            frameImagePath: String? = nil,
+            source: SightingSource,
+            note: String? = nil,
+            method: SightingMethod = .heard,
+            namedByBirder: Bool = false
+        ) {
+            self.identifier = identifier
+            self.speciesID = speciesID
+            self.confirmedAt = confirmedAt
+            self.location = location
+            self.soundConfidence = soundConfidence
+            self.frameImagePath = frameImagePath
+            self.source = source
+            self.note = note
+            self.method = method
+            self.namedByBirder = namedByBirder
+        }
+
+        /// What a stored sighting's art state says: the only use left is its files, which go with it (`filePaths`).
+        /// Art that can't be read is treated as none, so a sighting always opens.
+        public var art: CardArt {
+            get { artState.flatMap { try? JSONDecoder().decode(CardArt.self, from: $0) } ?? CardArt() }
+            set { artState = newValue == CardArt() ? nil : try? JSONEncoder().encode(newValue) }
+        }
+    }
+}
+
+public typealias Sighting = AlbumSchemaV4.Sighting
+
+/// How the birder met the bird on a sighting. An add of a candidate is Heard unless the birder says otherwise, there or
+/// later on the phone; a bird they named from a photo is Seen.
 public enum SightingMethod: String, Codable, Sendable, CaseIterable {
     case heard
     case seen
@@ -291,9 +365,10 @@ public struct ArtJob: Codable, Sendable, Equatable {
 }
 
 /// How the album moves between schema versions: a lightweight stage to schema 2; to schema 3 a custom stage that gives
-/// every sighting its own identifier and the method Heard (a column default would give them all the same identifier).
+/// every sighting its own identifier and the method Heard (a column default would give them all the same identifier);
+/// and a lightweight stage to schema 4, whose new column's default is right for every sighting there is.
 public enum AlbumMigrationPlan: SchemaMigrationPlan {
-    public static var schemas: [any VersionedSchema.Type] { [AlbumSchemaV1.self, AlbumSchemaV2.self, AlbumSchemaV3.self] }
+    public static var schemas: [any VersionedSchema.Type] { [AlbumSchemaV1.self, AlbumSchemaV2.self, AlbumSchemaV3.self, AlbumSchemaV4.self] }
     public static var stages: [MigrationStage] {
         [
             .lightweight(fromVersion: AlbumSchemaV1.self, toVersion: AlbumSchemaV2.self),
@@ -304,13 +379,14 @@ public enum AlbumMigrationPlan: SchemaMigrationPlan {
                 }
                 try context.save()
             }),
+            .lightweight(fromVersion: AlbumSchemaV3.self, toVersion: AlbumSchemaV4.self),
         ]
     }
 }
 
 /// The album's persistent schema and container factory.
 public enum AlbumSchema {
-    public static let models: [any PersistentModel.Type] = AlbumSchemaV3.models
+    public static let models: [any PersistentModel.Type] = AlbumSchemaV4.models
 
     /// The app's album: on disk in the default store, migrated through `AlbumMigrationPlan`; or in memory.
     public static func makeContainer(inMemory: Bool = false) throws -> ModelContainer {
@@ -323,7 +399,7 @@ public enum AlbumSchema {
     }
 
     private static func makeContainer(_ configuration: ModelConfiguration) throws -> ModelContainer {
-        try ModelContainer(for: Schema(versionedSchema: AlbumSchemaV3.self), migrationPlan: AlbumMigrationPlan.self, configurations: [configuration])
+        try ModelContainer(for: Schema(versionedSchema: AlbumSchemaV4.self), migrationPlan: AlbumMigrationPlan.self, configurations: [configuration])
     }
 }
 
