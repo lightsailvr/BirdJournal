@@ -19,7 +19,7 @@ struct ListenView: View {
     var body: some View {
         @Bindable var run = run
         Group {
-            if run.state.isActive || (run.state != .idle && !(run.candidates.isEmpty && run.sightings.seen.isEmpty)) {
+            if run.state.isActive || (run.state != .idle && run.lastRunHasSomething) {
                 ActiveListeningView()
             } else {
                 ReadyToListenView(isCovered: isCovered)

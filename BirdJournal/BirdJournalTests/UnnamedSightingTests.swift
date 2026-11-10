@@ -284,4 +284,184 @@ struct UnnamedSightingTests {
         try fixture.ledger.delete(second)
         #expect(fixture.captures.isEmpty && fixture.files.isEmpty)
     }
+
+    // MARK: - On a run, and after it
+
+    @Test("on a run the shutter writes the photo at the run's place, from the phone, with nothing announced; naming it is an add like any other, at the photo's own time and place; Undo leaves the photo waiting, and a delete removes it")
+    func captureAndNameOnARun() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        try await waitUntil("the run has its place") { run.coordinate != nil }
+        let place = try #require(run.coordinate)
+        let photo = CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: Date.now.addingTimeInterval(-90))
+        func captures() -> [Capture] { (try? harness.album.mainContext.fetch(Capture.newestFirst())) ?? [] }
+        func files() -> [String] { (try? FileManager.default.contentsOfDirectory(atPath: harness.frames.path(percentEncoded: false))) ?? [] }
+
+        let unnamed = try #require(run.capture(photo))
+
+        #expect(unnamed.takenAt == photo.takenAt)
+        #expect(unnamed.location == place, "the run's place at the shutter")
+        #expect(unnamed.source == .phone)
+        #expect(run.sightings.unnamed == [unnamed])
+        #expect(captures().map(\.identifier) == [unnamed.id], "in the album before any name")
+        #expect(harness.stored.isEmpty)
+        #expect(run.reveal == nil && run.acknowledgment == nil, "nothing has been added yet")
+
+        let addition = try #require(run.name(unnamed, as: SeenSightingTests.finch))
+
+        let sighting = try #require(harness.stored.first)
+        #expect(sighting.confirmedAt == photo.takenAt)
+        #expect(sighting.location == place)
+        #expect(sighting.rarity?.label == .rare, "read for the capture's place: \(String(describing: sighting.rarity))")
+        #expect(addition.sewsPatch)
+        #expect(run.reveal?.addition == addition, "the stitch-in's page")
+        #expect(run.acknowledgment?.text == "Your first House Finch")
+        #expect(run.acknowledgment?.undo == addition)
+        #expect(run.sightings.unnamed.isEmpty)
+        #expect(run.sightings.seen.map(\.commonName) == ["House Finch"])
+        #expect(captures().isEmpty)
+
+        run.undo(addition)
+        #expect(harness.stored.isEmpty)
+        #expect(run.reveal == nil && run.acknowledgment == nil)
+        let waiting = try #require(run.sightings.unnamed.first)
+        #expect(waiting.photoPath == unnamed.photoPath && waiting.takenAt == photo.takenAt && waiting.location == place, "Undo takes the name back; the photo waits again")
+        #expect(files() == [unnamed.photoPath])
+
+        #expect(run.delete(waiting))
+        #expect(run.sightings.unnamed.isEmpty)
+        #expect(captures().isEmpty)
+        #expect(files().isEmpty, "the photo went with it: \(files())")
+
+        await run.stop()
+    }
+
+    @Test("a capture named after its run has ended follows the rule for an add made on the phone: the stitch-in's page opens at the add, with Undo, and nothing is held for later; the sighting has the photo's time, not the run's end")
+    func namedAfterTheRunHasEnded() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        try await waitUntil("the run has its place") { run.coordinate != nil }
+        let place = try #require(run.coordinate)
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let photo = CapturedPhoto(data: Data([1]), takenAt: Date.now.addingTimeInterval(-30))
+        let unnamed = try #require(run.capture(photo))
+        await run.stop()
+        #expect(run.isReviewing)
+        #expect(run.sightings.unnamed == [unnamed], "it waits in the run's review")
+        let endedAt = try #require(run.endedAt)
+
+        let addition = try #require(run.name(unnamed, as: SeenSightingTests.allens))
+
+        #expect(addition.sewsPatch)
+        let reveal = try #require(run.reveal, "the page opens at the add")
+        #expect(reveal.addition == addition)
+        #expect(!reveal.isFromGlasses && !reveal.hasPlayed, "played now, on the phone")
+        #expect(run.pendingCeremonies.isEmpty, "nothing waits for later")
+        #expect(run.acknowledgment?.undo == addition)
+        let sighting = try #require(harness.stored.first)
+        #expect(sighting.confirmedAt == photo.takenAt, "the photo's time")
+        #expect(sighting.confirmedAt < endedAt)
+        #expect(sighting.location == place)
+        run.finishCeremony()
+        #expect(run.acknowledgment?.undo == addition, "Undo starts again once the stitch-in is over")
+        run.dismissReveal()
+        #expect(run.sightings.identifiers == [addition.identifier], "the recap counts its patch")
+        #expect(run.sightings.seen.map(\.identifier) == [addition.identifier])
+    }
+
+    @Test("a run's unnamed sightings come back with its review after the app was killed and are named there; with no run at all, one is named from the album the same way")
+    func unnamedOutliveTheApp() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        harness.source.feed(seconds: 4.5)
+        try await waitUntil("candidates appear") { run.candidates.count == 2 }
+        let first = try #require(run.capture(CapturedPhoto(data: Data([1]), takenAt: Date.now.addingTimeInterval(-60))))
+        let second = try #require(run.capture(CapturedPhoto(data: Data([2]), takenAt: Date.now.addingTimeInterval(-30))))
+        await run.stop()
+        #expect(run.isReviewing)
+
+        let relaunched = harness.relaunched()
+        #expect(relaunched.isReviewing)
+        #expect(relaunched.sightings.unnamed == [first, second], "the review lists them again")
+        let addition = try #require(relaunched.name(first, as: SeenSightingTests.allens))
+        #expect(relaunched.reveal?.addition == addition)
+        #expect(relaunched.sightings.seen.map(\.identifier) == [addition.identifier])
+        #expect(relaunched.sightings.unnamed == [second])
+        relaunched.dismissReveal()
+        relaunched.dismissEnded()
+
+        // A later launch, the review seen and gone: the second still waits in the album, and is named from the Collection.
+        let later = harness.relaunched()
+        #expect(!later.isReviewing && later.state == .idle)
+        #expect(later.sightings.unnamed.isEmpty, "no run, so none of a run's")
+        let again = try #require(later.name(second, as: SeenSightingTests.finch))
+        #expect(again.sewsPatch)
+        #expect(later.reveal?.addition == again, "the phone's rule, with no run at all")
+        #expect(later.reveal?.isFromGlasses == false)
+        #expect(later.acknowledgment?.undo == again)
+        later.finishCeremony()
+        #expect(later.acknowledgment?.undo == again, "Undo starts again once the stitch-in is over")
+        #expect(later.sightings.seen.isEmpty, "not seen on a run of this launch")
+        #expect(harness.stored.map(\.confirmedAt) == [second.takenAt, first.takenAt], "each at its photo's time")
+
+        later.undo(again)
+        #expect(harness.stored.count == 1)
+        #expect(later.reveal == nil)
+        let captures = try harness.album.mainContext.fetch(Capture.newestFirst())
+        #expect(captures.map(\.photoPath) == [second.photoPath], "back in the album, waiting")
+    }
+
+    @Test("a run that heard nothing and took a photo still has its page when it ends, until the photo is named or deleted")
+    func aRunOfOnlyAPhotoKeepsItsPage() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        #expect(!run.lastRunHasSomething)
+        let unnamed = try #require(run.capture(CapturedPhoto(data: Data([1]), takenAt: .now)))
+        await run.stop()
+
+        #expect(!run.isReviewing, "no birds heard, so no review")
+        #expect(run.lastRunHasSomething, "the photo still to name")
+        #expect(run.delete(unnamed))
+        #expect(!run.lastRunHasSomething)
+    }
+
+    // MARK: - Words
+
+    @Test("an unnamed sighting's row says whose photo it is and when it was taken: minutes within the hour, then the time of day, then the date")
+    func rowWords() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        let locale = Locale(identifier: "en_US")
+        // Noon on 15 January 2027 in Los Angeles.
+        let now = Date(timeIntervalSince1970: 1_800_000_000 + 12 * 3_600)
+        func row(_ secondsAgo: TimeInterval) -> [String] {
+            UnnamedSightingText.row(takenAt: now.addingTimeInterval(-secondsAgo), now: now, calendar: calendar, locale: locale).map { $0.replacing("\u{202F}", with: " ") }
+        }
+
+        #expect(UnnamedSightingText.title == "Unnamed sighting")
+        #expect(row(20) == ["Your photo", "just now"])
+        #expect(row(125) == ["Your photo", "2 min ago"])
+        #expect(row(59 * 60) == ["Your photo", "59 min ago"])
+        #expect(row(2 * 3_600) == ["Your photo", "Today, 10:00 AM"])
+        #expect(row(3 * 86_400).first == "Your photo")
+        #expect(row(3 * 86_400).last?.hasPrefix("Jan 12, 2027") == true, "\(row(3 * 86_400))")
+        #expect(NameBirdText.line(row(125)) == "Your photo · 2 min ago")
+        #expect(UnnamedSightingText.spoken(takenAt: now.addingTimeInterval(-125), now: now, calendar: calendar, locale: locale) == "Unnamed sighting, Your photo, 2 min ago, Name it", "one sentence, no middle dot")
+    }
+
+    private func waitUntil(_ what: String, timeout: Duration = .seconds(30), _ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now + timeout
+        while !condition() {
+            guard ContinuousClock.now < deadline else {
+                Issue.record("timed out waiting until \(what)")
+                throw CancellationError()
+            }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+    }
 }
