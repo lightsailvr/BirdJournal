@@ -3,11 +3,11 @@ import ImageIO
 import Pack
 import SwiftUI
 
-/// "Name this bird" (issue #186, of #185): the photo just taken with its time and place, and a search over bird names. The
-/// birds of the field-guide downloads on the phone come first, each with the set its patch would go in and "New to you here"
-/// or "Seen 2 times here"; below them, every other bird BirdNET knows by name. Choosing one and pressing the pinned "Add and
-/// sew patch" (or "Add sighting") writes the sighting, Seen, with the photo as its original photo, and closes; the run then
-/// shows what any add does.
+/// "Name this bird" (issue #186, of #185): the photo just taken with its time and place, and a search field over bird
+/// names. The birds of the field-guide downloads on the phone come first, each with the set its patch would go in and "New
+/// to you here" or "Seen 2 times here"; below them, every other bird BirdNET knows by name. Choosing one and pressing the
+/// pinned "Add and sew patch" (or "Add sighting") writes the sighting, Seen, with the photo as its original photo, and
+/// closes; the run then shows what any add does.
 ///
 /// In this ticket Cancel discards the photo. #188 keeps it as an unnamed sighting instead and adds "Name it later"; #189
 /// fills the page before anything is typed; #190 opens this sheet again to change a sighting's bird.
@@ -25,6 +25,7 @@ struct NameBirdView: View {
     @State private var chosen: NameableBird?
     @State private var isAdding = false
     @State private var failed = false
+    @FocusState private var isSearching: Bool
 
     /// The sightings of `bird` in the patch an add here would join; 0 when the add would sew a new patch.
     private func seenHere(_ bird: NameableBird) -> Int {
@@ -45,21 +46,21 @@ struct NameBirdView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     CapturedPhotoHeader(photo: photo, place: NameBirdText.place(location: run.coordinate, name: run.coordinate.flatMap(places.name(for:))))
                         .padding(.top, 8)
+                    searchField
+                        .padding(.top, 16)
+                    if query.trimmingCharacters(in: .whitespaces).isEmpty {
+                        // Before anything is typed only the field guides' birds are listed: the rest are found by name.
+                        hint(NameBirdText.searchHint)
+                            .padding(.top, 8)
+                    }
                     if let results {
                         if results.isEmpty {
-                            if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                                hint("Search for the bird by its common or scientific name.")
-                                    .padding(.top, 16)
-                            } else {
+                            if !query.trimmingCharacters(in: .whitespaces).isEmpty {
                                 NoSearchMatch(query: query) { query = "" }
                                     .padding(.top, 12)
                             }
                         } else {
                             section("In your field guides", birds: results.fieldGuide)
-                            if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                                hint("Not here? Search for any other bird by its common or scientific name.")
-                                    .padding(.top, 16)
-                            }
                             section("All birds", birds: results.others)
                             if let more = NameBirdText.more(results.moreOthers) {
                                 hint(more)
@@ -76,8 +77,6 @@ struct NameBirdView: View {
             }
             .navigationTitle("Name this bird")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search birds by name")
-            .autocorrectionDisabled()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: close)
@@ -108,6 +107,41 @@ struct NameBirdView: View {
         .onChange(of: query) {
             if let chosen, let results = names?.search(query), !(results.fieldGuide + results.others).contains(chosen) { self.chosen = nil }
         }
+    }
+
+    /// The search, under the photo and on the page: the bar keeps the sheet's title and its Cancel while a name is typed,
+    /// which the system's search field would take over.
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Color.inkSecondary)
+                .accessibilityHidden(true)
+            TextField("Search birds by name", text: $query)
+                .font(JournalFont.body)
+                .foregroundStyle(Color.ink)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .focused($isSearching)
+                .accessibilityIdentifier("name-bird-search")
+            if !query.isEmpty {
+                Button {
+                    query = ""
+                    isSearching = true
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color.inkSecondary)
+                        .frame(minWidth: 30, minHeight: 30)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear text")
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 46)
+        .background(Color.raised, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous).strokeBorder(Color.rule, lineWidth: 1))
     }
 
     private func hint(_ text: String) -> some View {
@@ -155,6 +189,8 @@ struct NameBirdView: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        // Pinned over the list: past this size it would leave no room for the birds it is choosing among.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .padding(.horizontal, JournalLayout.margin)
         .padding(.vertical, 12)
     }
@@ -180,10 +216,12 @@ private struct CapturedPhotoHeader: View {
     let place: String
     @State private var image: UIImage?
     @ScaledMetric(relativeTo: .body) private var side: CGFloat = 96
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let taken = NameBirdText.taken(photo.takenAt)
-        HStack(alignment: .center, spacing: 14) {
+        // At the largest sizes the words go under the picture: beside it they'd have a column a word wide.
+        AdaptiveRow(stacked: typeSize.stacksRows) {
             Color.raised
                 .overlay {
                     if let image {
@@ -207,7 +245,7 @@ private struct CapturedPhotoHeader: View {
             .font(JournalFont.supporting)
             .foregroundStyle(Color.inkSecondary)
             .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Your photo, \(taken), \(place)")

@@ -54,6 +54,7 @@ struct ActiveListeningView: View {
                     .disabled(run.state == .starting || run.state == .stopping)
                     .accessibilityHint("Opens the camera. The run keeps listening.")
                     .accessibilityIdentifier("capture-sighting")
+                    .frame(maxWidth: .infinity)
                     .padding(.top, 16)
                 }
 

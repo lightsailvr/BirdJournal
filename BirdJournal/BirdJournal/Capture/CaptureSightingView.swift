@@ -87,10 +87,18 @@ struct CaptureCameraView: View {
                             "Camera access is off",
                             message: "Featherguild uses the camera to photograph a bird you've seen, for a sighting you name. Allow the camera in Settings > Featherguild."
                         ) {
-                            Button("Open Settings") {
+                            Button {
                                 if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                            } label: {
+                                // White on the camera's black: the tint's light green under white words measured too little.
+                                Text("Open Settings")
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(.black)
+                                    .padding(.horizontal, 22)
+                                    .frame(minHeight: 44)
+                                    .background(.white, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.journalPress)
                             .accessibilityIdentifier("capture-open-settings")
                         }
                     case .unavailable:
@@ -130,28 +138,34 @@ struct CaptureCameraView: View {
         .task { await camera.start() }
     }
 
+    /// In the middle of the camera's room where it fits, and scrolling where the text is too large to.
     private func notice<Action: View>(_ title: String, message: String, @ViewBuilder action: () -> Action) -> some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                Image(systemName: "camera")
-                    .font(.largeTitle)
-                    .accessibilityHidden(true)
-                Text(title)
-                    .font(JournalFont.section)
-                    .accessibilityAddTraits(.isHeader)
-                Text(message)
-                    .font(JournalFont.body)
-                    .fixedSize(horizontal: false, vertical: true)
-                action()
-                    .padding(.top, 6)
-            }
-            .foregroundStyle(.white)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 28)
-            .frame(maxWidth: .infinity)
+        let words = noticeWords(title, message: message, action: action)
+        return ViewThatFits(in: .vertical) {
+            words
+            ScrollView { words }
         }
-        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    private func noticeWords<Action: View>(_ title: String, message: String, @ViewBuilder action: () -> Action) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: "camera")
+                .font(.largeTitle)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(JournalFont.section)
+                .accessibilityAddTraits(.isHeader)
+            Text(message)
+                .font(JournalFont.body)
+                .fixedSize(horizontal: false, vertical: true)
+            action()
+                .padding(.top, 6)
+        }
+        .foregroundStyle(.white)
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 28)
+        .frame(maxWidth: .infinity)
     }
 
     private func shoot() {
@@ -190,8 +204,10 @@ private struct ListeningPill: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .background(.black.opacity(0.55), in: Capsule())
-                .overlay(Capsule().strokeBorder(.white.opacity(0.25), lineWidth: 1))
+                .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.25), lineWidth: 1))
+                // A line of status over the viewfinder: past this size it would be the screen.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(words.showsClock ? "\(words.text), \(CaptureCameraText.spokenClock(from: run.clockStart, to: now))" : words.text)
                 .accessibilityIdentifier("capture-listening")

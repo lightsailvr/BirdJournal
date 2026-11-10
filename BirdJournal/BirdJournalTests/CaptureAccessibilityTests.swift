@@ -107,7 +107,7 @@ struct CaptureAccessibilityTests {
         // No run, so no place: every add here would be Uncharted.
         #expect(labels.contains("Allen's Hummingbird, Uncharted, New to you here"), "\(labels)")
         #expect(!labels.contains("All birds"), "the rest are found by typing: \(labels)")
-        #expect(labels.contains { $0.hasPrefix("Not here? Search for any other bird") }, "\(labels)")
+        #expect(labels.contains(NameBirdText.searchHint), "\(labels)")
         #expect(labels.contains("Add sighting"), "\(labels)")
         #expect(labels.contains("Choose the bird in your photo."), "\(labels)")
     }
@@ -130,7 +130,7 @@ struct CaptureAccessibilityTests {
         let all = try #require(found.firstIndex(of: "All birds"))
         #expect(guides < all, "field guides first: \(found)")
         #expect(found.contains { $0.hasPrefix("And ") && $0.hasSuffix(" more. Keep typing to narrow them down.") }, "\(found)")
-        #expect(!found.contains { $0.hasPrefix("Not here?") }, "\(found)")
+        #expect(!found.contains(NameBirdText.searchHint), "the hint goes once something is typed: \(found)")
 
         UserDefaults.standard.set("zzzz", forKey: "autoQuery")
         let none = try await Screens.walk(NameBirdView(photo: Self.photo()) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in

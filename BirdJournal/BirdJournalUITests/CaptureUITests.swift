@@ -52,8 +52,11 @@ final class CaptureUITests: XCTestCase {
 
     @MainActor
     private func search(_ app: XCUIApplication, for text: String) {
-        let field = app.searchFields.firstMatch
+        let field = app.textFields["name-bird-search"]
         XCTAssertTrue(field.waitForExistence(timeout: 10), "no search field; screen: \(app.debugDescription.prefix(3000))")
+        if let typed = field.value as? String, typed != field.placeholderValue, !typed.isEmpty {
+            app.buttons["Clear text"].tap()
+        }
         field.tap()
         // Return puts the keyboard away, so the results and the pinned add are all in reach.
         field.typeText(text + "\n")

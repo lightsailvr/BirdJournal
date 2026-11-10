@@ -29,6 +29,9 @@ enum NameBirdText {
         return seenHere == 0 ? "\(name), new to you here." : "\(name), seen \(CardCollection.Patch.times(seenHere)) here."
     }
 
+    /// Under the search field before anything is typed, when only the field guides' birds are listed.
+    static let searchHint = "Search by a bird's common or scientific name. Any bird BirdNET knows can be named, not only those in your field guides."
+
     /// "And 212 more. Keep typing to narrow them down."; nil when every match is listed.
     static func more(_ count: Int) -> String? {
         count > 0 ? "And \(count) more. Keep typing to narrow them down." : nil

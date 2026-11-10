@@ -91,7 +91,8 @@ import UIKit
 ///   camera, and a UI test can't answer the permission prompt): ready with a drawn viewfinder and a generated photo, or
 ///   refused, or with no camera to give. `-autoScreen capture` starts a phone run as `listening` does and opens the camera
 ///   over it; `-autoScreen name-bird` goes on to "Name this bird" with a stand-in photo, and `-autoQuery <text>` searches
-///   there once.
+///   there once. `-autoSeen "Calypte anna,Selasphorus sasin"` names a stand-in photo as each of those birds once the run is
+///   on, past its reveal: rows under "Seen this run".
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -179,6 +180,15 @@ struct DebugLaunch: ViewModifier {
                 }
                 if defaults.bool(forKey: "autoRunStops") {
                     await run.stop()
+                }
+                if let seen = defaults.string(forKey: "autoSeen") {
+                    let fieldGuide = library.fieldGuideBirds
+                    let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                    for bird in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }) {
+                        run.addSeen(bird, photo: CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
+                        run.finishCeremony()
+                        run.dismissReveal()
+                    }
                 }
                 if screen == "capture" || screen == "name-bird" {
                     if screen == "name-bird" { defaults.set(true, forKey: "autoNameBird") }
