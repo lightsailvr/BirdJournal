@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import OSLog
 import Pack
 
 /// A bird a seen sighting can be named (issue #186): one a field-guide download on the phone describes, or any other bird
@@ -77,6 +78,9 @@ nonisolated struct NameableBirds: Sendable {
         var others: [NameableBird] = []
         /// How many more other birds matched than `others` lists.
         var moreOthers = 0
+
+        /// Every bird listed, in the order the lists show them: for a caller with no sections to draw, as the lens (#194).
+        var birds: [NameableBird] { heard + likely + fieldGuide + others }
 
         /// Nothing to list.
         var isEmpty: Bool { heard.isEmpty && likely.isEmpty && fieldGuide.isEmpty && others.isEmpty }
@@ -173,6 +177,21 @@ nonisolated struct NameableBirds: Sendable {
     /// The bird with this scientific name, if it can be named.
     func bird(scientificName: String) -> NameableBird? {
         byScientificName[scientificName]
+    }
+}
+
+nonisolated extension NameableBirds.Context {
+    /// What the run heard, and what the geomodel expects at the photo's place in the week it was taken. With no place the
+    /// geomodel isn't asked and no bird is likely; a geomodel that can't be read leaves the same. Reading it is an inference,
+    /// so this is called off the main actor.
+    init(heard: [String], place: Coordinate?, takenAt: Date, occurrenceModel: any SpeciesOccurrenceModel, calendar: Calendar = .current) {
+        self.init(heard: heard)
+        guard let place else { return }
+        do {
+            occurrence = try occurrenceModel.occurrence(in: GeoContext(latitude: place.latitude, longitude: place.longitude, date: takenAt, calendar: calendar))
+        } catch {
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "naming").error("no likely birds: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 

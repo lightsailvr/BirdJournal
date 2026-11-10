@@ -1,6 +1,8 @@
 import Album
 import Foundation
 import Identification
+import Pack
+import Synchronization
 import Testing
 @testable import BirdJournal
 
@@ -114,5 +116,71 @@ struct NameSuggestionsTests {
         let plain = Self.names.search("hummingbird")
         #expect(plain.fieldGuide.map(\.commonName) == ["Allen's Hummingbird", "Anna's Hummingbird"])
         #expect(plain.others.map(\.commonName) == ["Amazilia Hummingbird", "Black-chinned Hummingbird", "Ruby-throated Hummingbird"])
+    }
+
+    static let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 10)
+
+    /// 9 November 2026 in Los Angeles: week 42 of BirdNET's 48.
+    static func november() throws -> (date: Date, calendar: Calendar) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        return (try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 9, hour: 9, minute: 41))), calendar)
+    }
+
+    @Test("the geomodel is read at the photo's place and week; with no place it isn't asked, and nothing is likely")
+    func contextAtAPlace() throws {
+        let (taken, calendar) = try Self.november()
+        let model = SpyOccurrence()
+        let here = NameableBirds.Context(heard: ["Calypte anna"], place: Self.griffithPark, takenAt: taken, occurrenceModel: model, calendar: calendar)
+        #expect(here.heard == ["Calypte anna"])
+        #expect(here.occurrence == ["Haemorhous mexicanus": 1, "Cyanocitta cristata": 0.01], "what the model says there")
+        #expect(model.asked.withLock { $0 } == [GeoContext(latitude: 34.1365, longitude: -118.2942, week: 42)], "the week the photo was taken in")
+
+        let nowhere = NameableBirds.Context(heard: ["Calypte anna"], place: nil, takenAt: taken, occurrenceModel: model, calendar: calendar)
+        #expect(nowhere == NameableBirds.Context(heard: ["Calypte anna"]))
+        #expect(model.asked.withLock { $0.count } == 1, "no place, nothing to ask")
+
+        struct Unreadable: SpeciesOccurrenceModel {
+            func occurrence(in context: GeoContext) throws -> [String: Float] { throw CocoaError(.fileReadCorruptFile) }
+        }
+        let unread = NameableBirds.Context(heard: [], place: Self.griffithPark, takenAt: taken, occurrenceModel: Unreadable(), calendar: calendar)
+        #expect(unread == .none, "a geomodel that can't be read leaves the names and the search")
+    }
+
+    @Test("the bundled geomodel at Griffith Park in November: the hummingbird that lives there is likely, and leads its search")
+    func bundledGeomodel() throws {
+        let (taken, calendar) = try Self.november()
+        let pack = try SpeciesPack.bundled()
+        let names = NameableBirds(fieldGuide: pack.species.map { .init(scientificName: $0.scientificName, commonName: $0.commonName) }, labels: try ONNXBirdModel.bundledLabels())
+        let here = NameableBirds.Context(heard: [], place: Self.griffithPark, takenAt: taken, occurrenceModel: try ONNXGeoModel.bundled(), calendar: calendar)
+        let occurrence = try #require(here.occurrence)
+
+        // The geomodel's reading is broad, a range map more than a count: nearly every bird of the Los Angeles field guide
+        // is likely here, and the twelve suggested are the commonest of the season.
+        let suggested = names.search("", in: here)
+        #expect(suggested.likely.count == 12)
+        #expect(suggested.fieldGuide.isEmpty, "the likely birds stand in for the list by name")
+        #expect(suggested.likely.allSatisfy { $0.isInFieldGuide })
+        #expect(suggested.likely.contains { $0.commonName == "House Finch" } && suggested.likely.contains { $0.commonName == "Mourning Dove" }, "\(suggested.likely.map(\.commonName))")
+        let readings = suggested.likely.compactMap { occurrence[$0.scientificName] }
+        #expect(readings == readings.sorted(by: >) && readings.allSatisfy { $0 > 0.9 }, "the likeliest first: \(readings)")
+
+        // A search is where the place tells: the hummingbirds that live in Los Angeles before the world's.
+        let hummingbirds = names.search("hummingbird", in: here)
+        #expect(hummingbirds.fieldGuide.map(\.commonName) == ["Anna's Hummingbird", "Allen's Hummingbird", "Black-chinned Hummingbird"])
+        #expect(hummingbirds.others.prefix(2).map(\.commonName) == ["Rufous Hummingbird", "Costa's Hummingbird"], "western hummingbirds no field guide here describes")
+        #expect(names.search("hummingbird").others.first?.commonName.hasPrefix("A") == true, "by name without a place")
+    }
+
+    @Test("the birds in the order they are listed, for a caller with no sections to draw")
+    func orderedBirds() {
+        let here = NameableBirds.Context(heard: ["Haemorhous mexicanus"], occurrence: Self.losAngeles)
+        #expect(Self.names.search("", in: here).birds.map(\.commonName) == ["House Finch", "Black Phoebe", "Anna's Hummingbird", "Allen's Hummingbird"])
+        #expect(
+            Self.names.search("hummingbird", in: here).birds.map(\.commonName)
+                == ["Anna's Hummingbird", "Allen's Hummingbird", "Black-chinned Hummingbird", "Amazilia Hummingbird", "Ruby-throated Hummingbird"]
+        )
+        #expect(Self.names.search("", in: .init(heard: ["Sayornis phoebe"])).birds.map(\.commonName) == ["Eastern Phoebe", "Allen's Hummingbird", "Anna's Hummingbird", "Black Phoebe", "House Finch", "Say's Phoebe"])
+        #expect(Self.names.search("penguin", in: here).birds.isEmpty)
     }
 }
