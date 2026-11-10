@@ -56,7 +56,8 @@ struct CaptureSightingView: View {
 
 /// The camera inside the app: a way to close, a pill saying the run is still listening with its clock, the viewfinder, and
 /// the shutter. Before the camera is open it says why not: the first use asks for it, a denial is explained with the way to
-/// Settings, and a phone with no camera to give says that. #187 adds the lens buttons, zoom and focus; #192 the library.
+/// Settings, and a phone with no camera to give says that. The lens buttons, the zoom and the focus are the viewfinder's
+/// (`CaptureViewfinder`, #187); #192 adds the library.
 struct CaptureCameraView: View {
     @Environment(\.openURL) private var openURL
     let camera: any CaptureCamera
@@ -82,8 +83,21 @@ struct CaptureCameraView: View {
                     Spacer(minLength: 0)
                     ListeningPill()
                     Spacer(minLength: 0)
-                    // Balances Close, so the pill sits in the middle.
-                    Color.clear.frame(width: 44, height: 44).accessibilityHidden(true)
+                    // Opposite Close, so the pill sits in the middle: the flash, which is off and stays off (#187). It is
+                    // said, not offered: there is nothing to press.
+                    if camera.state == .ready {
+                        Image(systemName: "bolt.slash.fill")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            // A mark in the bar: it stops growing where the pill beside it does.
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                            .accessibilityElement()
+                            .accessibilityLabel("Flash off")
+                            .accessibilityIdentifier("capture-flash-off")
+                    } else {
+                        Color.clear.frame(width: 44, height: 44).accessibilityHidden(true)
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -91,12 +105,7 @@ struct CaptureCameraView: View {
                 Group {
                     switch camera.state {
                     case .ready:
-                        camera.viewfinder
-                            .aspectRatio(3 / 4, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                            .accessibilityElement()
-                            .accessibilityLabel("Viewfinder")
-                            .accessibilityAddTraits(.isImage)
+                        CaptureViewfinder(camera: camera)
                     case .starting:
                         ProgressView("Opening the camera")
                             .tint(.white)

@@ -89,7 +89,8 @@ import UIKit
 ///   goes to the background (issue #135). `-albumFile <name>` keeps the album in a file of its own, for relaunching over it.
 /// - `-fakeCamera ready|denied|unavailable` puts a stand-in behind "Capture a sighting" (issue #186: the simulator has no
 ///   camera, and a UI test can't answer the permission prompt): ready with a drawn viewfinder and a generated photo, or
-///   refused, or with no camera to give. `-autoScreen capture` starts a phone run as `listening` does and opens the camera
+///   refused, or with no camera to give (`-fakeCameraZoom 2.6` and `-fakeCameraFocus 0.3,0.4` open it zoomed and with focus
+///   held there, issue #187). `-autoScreen capture` starts a phone run as `listening` does and opens the camera
 ///   over it; `-autoScreen name-bird` goes on to "Name this bird" with a stand-in photo, and `-autoQuery <text>` searches
 ///   there once. `-autoSeen "Calypte anna,Selasphorus sasin"` names a stand-in photo as each of those birds once the run is
 ///   on, past its reveal: rows under "Seen this run". `-autoUnnamed <n>` takes that many stand-in photos on the run and leaves
