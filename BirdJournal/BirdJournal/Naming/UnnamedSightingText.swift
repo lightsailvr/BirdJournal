@@ -23,10 +23,16 @@ enum UnnamedSightingText {
     static let keep = "Keep photo"
 
     /// The row's line, in parts: whose photo it is and when it was taken. "just now" and minutes within the hour, as a run's
-    /// rows say it; after that the time of day, and on another day the date, since one can wait for weeks.
+    /// rows say it; after that the time of day; and on another day the day alone, "Nov 9" or "Nov 9, 2025", since one can
+    /// wait for weeks and the row has "Name it" beside it. The sheet it opens says the time as well.
     static func row(takenAt: Date, now: Date = .now, calendar: Calendar = .current, locale: Locale = .current) -> [String] {
         let age = max(now.timeIntervalSince(takenAt), 0)
-        return ["Your photo", age < 3_600 ? AgeText.text(seconds: age) : NameBirdText.taken(takenAt, now: now, calendar: calendar, locale: locale)]
+        if age < 3_600 { return ["Your photo", AgeText.text(seconds: age)] }
+        if calendar.isDate(takenAt, inSameDayAs: now) { return ["Your photo", NameBirdText.taken(takenAt, now: now, calendar: calendar, locale: locale)] }
+        var day = Date.FormatStyle(locale: locale, calendar: calendar).month(.abbreviated).day()
+        if calendar.component(.year, from: takenAt) != calendar.component(.year, from: now) { day = day.year() }
+        day.timeZone = calendar.timeZone
+        return ["Your photo", takenAt.formatted(day)]
     }
 
     /// "Unnamed sighting, Your photo, 2 min ago, Name it": the row as VoiceOver reads it.

@@ -93,14 +93,16 @@ struct CaptureAccessibilityTests {
     @Test("Name this bird: the photo with its time and place, the search, the field guides' birds each in a sentence, and the pinned add", arguments: Screens.sizes)
     func nameThisBird(typeSize: DynamicTypeSize) async throws {
         let harness = try Screens.Harness()
-        let labels = try await Screens.walk(NameBirdView(photo: Self.photo()) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let labels = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("In your field guides") && labels.contains { $0.hasPrefix("Allen's Hummingbird, ") }
         }
         Screens.expectClean(labels, screen: "Name this bird")
         Screens.expectOneWordPerThing(labels, screen: "Name this bird")
         Self.expectNoScore(labels, screen: "Name this bird")
         #expect(labels.contains("Name this bird"), "\(labels)")
-        #expect(labels.contains("Cancel"), "\(labels)")
+        #expect(labels.contains("Name it later"), "closing keeps the photo (issue #188): \(labels)")
+        #expect(labels.contains("Delete photo"), "\(labels)")
+        #expect(!labels.contains("Cancel"), "\(labels)")
         #expect(labels.contains("Search birds by name"), "the search field's prompt: \(labels)")
         #expect(labels.contains { $0.hasPrefix("Your photo, Today, ") && $0.hasSuffix(", Place not recorded") }, "\(labels)")
         #expect(labels.contains("In your field guides"), "\(labels)")
@@ -118,7 +120,7 @@ struct CaptureAccessibilityTests {
         defer { UserDefaults.standard.removeObject(forKey: "autoQuery") }
 
         UserDefaults.standard.set("hummingbird", forKey: "autoQuery")
-        let found = try await Screens.walk(NameBirdView(photo: Self.photo()) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let found = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("All birds")
         }
         Screens.expectClean(found, screen: "Name this bird, searched")
@@ -133,7 +135,7 @@ struct CaptureAccessibilityTests {
         #expect(!found.contains(NameBirdText.searchHint), "the hint goes once something is typed: \(found)")
 
         UserDefaults.standard.set("zzzz", forKey: "autoQuery")
-        let none = try await Screens.walk(NameBirdView(photo: Self.photo()) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let none = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("Clear search")
         }
         Screens.expectClean(none, screen: "Name this bird, no match")

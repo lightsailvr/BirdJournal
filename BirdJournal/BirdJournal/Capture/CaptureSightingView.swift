@@ -1,20 +1,24 @@
 import SwiftUI
 
-/// "Capture a sighting" (issue #186, of #185), over the run: the camera, then, once the shutter has given a photo, "Name this
-/// bird". The run goes on listening underneath the whole time, and the camera says so. Closing the camera takes nothing;
-/// in this ticket cancelling the naming discards the photo (#188 keeps it as an unnamed sighting).
+/// "Capture a sighting" (issues #186 and #188, of #185), over the run: the camera, then, once the shutter has given a photo,
+/// "Name this bird". The run goes on listening underneath the whole time, and the camera says so. Closing the camera takes
+/// nothing. The photo is written to the album at the shutter, as an unnamed sighting, before the naming opens: "Name it
+/// later", or anything else that closes this, leaves it waiting on the run's page.
 struct CaptureSightingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.makeCaptureCamera) private var makeCamera
+    @Environment(ListeningCoordinator.self) private var run
     @State private var camera: (any CaptureCamera)?
-    @State private var photo: CapturedPhoto?
+    /// The photo just taken, saved and waiting for its name.
+    @State private var unnamed: UnnamedSighting?
+    @State private var couldNotSave = false
 
     var body: some View {
         Group {
-            if let photo {
-                NameBirdView(photo: photo) { dismiss() }
+            if let unnamed {
+                NameBirdView(unnamed: unnamed) { dismiss() }
             } else if let camera {
-                CaptureCameraView(camera: camera, taken: { photo = $0 }, close: { dismiss() })
+                CaptureCameraView(camera: camera, taken: save, close: { dismiss() })
             } else {
                 Color.black.ignoresSafeArea()
             }
@@ -25,13 +29,28 @@ struct CaptureSightingView: View {
             // `-autoScreen name-bird`: straight to the naming of a stand-in photo, for the screenshots.
             if UserDefaults.standard.bool(forKey: "autoNameBird") {
                 UserDefaults.standard.removeObject(forKey: "autoNameBird")
-                photo = CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now)
+                save(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
             }
             #endif
         }
         // The camera is for the shot: it isn't left open behind the naming, or after the cover has gone.
-        .onChange(of: photo) { camera?.stop() }
+        .onChange(of: unnamed) { camera?.stop() }
         .onDisappear { camera?.stop() }
+        // The camera stays open behind this, for another try.
+        .alert("The photo couldn't be saved", isPresented: $couldNotSave) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Nothing was kept. Take it again.")
+        }
+    }
+
+    /// The shutter's photo goes to the album before anything else happens to it.
+    private func save(_ photo: CapturedPhoto) {
+        if let saved = run.capture(photo) {
+            unnamed = saved
+        } else {
+            couldNotSave = true
+        }
     }
 }
 

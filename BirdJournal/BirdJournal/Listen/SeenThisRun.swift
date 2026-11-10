@@ -1,29 +1,69 @@
 import Album
-import ImageIO
 import Pack
 import SwiftUI
 
-/// "Seen this run" (issue #186, of #185), above the birds heard: a row for each bird the birder photographed and named on
-/// this run, with the photo, the bird's name, and "Seen · your photo · New patch" or its patch's count. No match score: the
-/// birder named it. A row opens its sighting.
-///
-/// #188 adds the photos not yet named to this section, with "Name it".
+/// "Seen this run" (issues #186 and #188, of #185), above the birds heard on the run's page and in the run's review: a row for
+/// each photo the birder took on this run, in the order taken. One that has its name shows the bird, "Seen · your photo · New
+/// patch" or its patch's count, and opens its sighting; no match score, since the birder named it. One still waiting is an
+/// "Unnamed sighting" with "Name it", which opens "Name this bird" for it. Naming a row leaves it where it was.
 struct SeenThisRun: View {
     let seen: [RunSightings.Seen]
+    /// The photos of this run not yet named.
+    var unnamed: [UnnamedSighting] = []
+    /// A line under the rows: the review says what becomes of the photos still unnamed.
+    var footnote: String? = nil
+    @State private var naming: UnnamedSighting?
+
+    /// One photo of the run, named or not.
+    enum Row: Identifiable, Equatable {
+        case seen(RunSightings.Seen)
+        case unnamed(UnnamedSighting)
+
+        var id: String {
+            switch self {
+            case .seen(let entry): "seen-\(entry.identifier)"
+            case .unnamed(let unnamed): "unnamed-\(unnamed.id)"
+            }
+        }
+
+        var takenAt: Date {
+            switch self {
+            case .seen(let entry): entry.seenAt
+            case .unnamed(let unnamed): unnamed.takenAt
+            }
+        }
+    }
+
+    /// The run's photos in the order taken, whether or not each has its name yet; two of one moment, named first.
+    static func rows(seen: [RunSightings.Seen], unnamed: [UnnamedSighting]) -> [Row] {
+        let all = seen.map(Row.seen) + unnamed.map(Row.unnamed)
+        return all.enumerated().sorted { ($0.element.takenAt, $0.offset) < ($1.element.takenAt, $1.offset) }.map(\.element)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionTitle("Seen this run", top: 22)
             VStack(spacing: 0) {
-                ForEach(seen) { entry in
-                    SeenRow(entry: entry)
+                ForEach(Self.rows(seen: seen, unnamed: unnamed)) { row in
+                    switch row {
+                    case .seen(let entry): SeenRow(entry: entry)
+                    case .unnamed(let unnamed): UnnamedSightingRow(unnamed: unnamed) { naming = unnamed }
+                    }
                     RowRule()
                 }
             }
             .padding(.top, 6)
+            if let footnote, !unnamed.isEmpty {
+                Text(footnote)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 12)
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("seen-this-run")
+        .namesUnnamedSighting($naming)
     }
 }
 
@@ -39,7 +79,7 @@ private struct SeenRow: View {
         let parts = NameBirdText.seenRow(sewedPatch: collection.sewedItsPatch(entry.identifier), count: collection.patch(of: entry.identifier)?.count ?? 1)
         NavigationLink(value: Route.sighting(entry.id)) {
             AdaptiveRow(stacked: typeSize.stacksRows) {
-                SeenPhoto(path: entry.photoPath)
+                BirderPhoto(path: entry.photoPath)
                     .rowPicture()
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
@@ -63,47 +103,5 @@ private struct SeenRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("seen-row-\(entry.scientificName)")
-    }
-}
-
-/// The birder's photo in a row's slot, filled from the middle. It takes no touches (DECISIONS.md "Clipped images take no
-/// touches"), and is read at the slot's size: a camera's picture is twelve megapixels or more.
-private struct SeenPhoto: View {
-    private static let maxPixels = 360
-
-    @Environment(\.frameStore) private var frameStore
-    let path: String?
-    @State private var image: UIImage?
-
-    var body: some View {
-        Color.raised
-            .overlay {
-                if let image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .allowsHitTesting(false)
-                } else {
-                    Image(systemName: "camera")
-                        .foregroundStyle(Color.inkSecondary)
-                }
-            }
-            .clipped()
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-            .task(id: path) {
-                guard let path, let url = frameStore?.url(for: path) else { return }
-                image = await Task.detached(priority: .userInitiated) { Self.fitted(at: url) }.value
-            }
-    }
-
-    nonisolated private static func fitted(at url: URL) -> UIImage? {
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixels,
-        ]
-        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary).map(UIImage.init(cgImage:))
     }
 }

@@ -432,7 +432,7 @@ struct UnnamedSightingTests {
 
     // MARK: - Words
 
-    @Test("an unnamed sighting's row says whose photo it is and when it was taken: minutes within the hour, then the time of day, then the date")
+    @Test("an unnamed sighting's row says whose photo it is and when it was taken: minutes within the hour, then the time of day, then the day")
     func rowWords() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "America/Los_Angeles")!
@@ -448,8 +448,8 @@ struct UnnamedSightingTests {
         #expect(row(125) == ["Your photo", "2 min ago"])
         #expect(row(59 * 60) == ["Your photo", "59 min ago"])
         #expect(row(2 * 3_600) == ["Your photo", "Today, 10:00 AM"])
-        #expect(row(3 * 86_400).first == "Your photo")
-        #expect(row(3 * 86_400).last?.hasPrefix("Jan 12, 2027") == true, "\(row(3 * 86_400))")
+        #expect(row(3 * 86_400) == ["Your photo", "Jan 12"], "another day this year: the day, short enough to sit beside Name it")
+        #expect(row(30 * 86_400) == ["Your photo", "Dec 16, 2026"], "another year says which")
         #expect(NameBirdText.line(row(125)) == "Your photo · 2 min ago")
         #expect(UnnamedSightingText.spoken(takenAt: now.addingTimeInterval(-125), now: now, calendar: calendar, locale: locale) == "Unnamed sighting, Your photo, 2 min ago, Name it", "one sentence, no middle dot")
     }
