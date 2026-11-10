@@ -71,6 +71,8 @@ struct CaptureCameraView: View {
                             .font(.body.weight(.semibold))
                             .foregroundStyle(.white)
                             .frame(width: 44, height: 44)
+                            // A mark in the bar: it stops growing where the pill beside it does.
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                             .accessibilityElement()
                             .accessibilityLabel("Flash off")
                             .accessibilityIdentifier("capture-flash-off")

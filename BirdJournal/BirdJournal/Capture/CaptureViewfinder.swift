@@ -113,11 +113,11 @@ private struct FocusSquare: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .strokeBorder(.white, lineWidth: 1.5)
+            .strokeBorder(.white, lineWidth: 2)
             .shadow(color: .black.opacity(0.7), radius: 1.5)
             .frame(width: 76, height: 76)
             .scaleEffect(arrived || PatchMotion.reduces(system: systemReduceMotion) ? 1 : 1.35)
-            .opacity(rested ? 0.6 : 1)
+            .opacity(rested ? 0.75 : 1)
             .onAppear {
                 withAnimation(.easeOut(duration: 0.22)) { arrived = true }
                 withAnimation(.easeOut(duration: 0.4).delay(1.2)) { rested = true }
