@@ -24,6 +24,10 @@ struct JournalView: View {
     /// The photos waiting for a name (issue #188): "To name", at the top of the Sightings. They are no sightings.
     @Query(Capture.newestFirst()) private var captures: [Capture]
     @State private var naming: UnnamedSighting?
+    /// The add last made from "To name": its acknowledgment shows here, where it was made. No other add's does.
+    @State private var namedHere: RunSightings.Addition?
+    /// The acknowledgment that was up when "Name this bird" opened, to tell a new one from it when the sheet closes.
+    @State private var acknowledgedBefore: UUID?
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
     @Environment(ListeningCoordinator.self) private var run
@@ -178,6 +182,14 @@ struct JournalView: View {
         .navigationTitle("Collection")
         .toolbarTitleDisplayMode(.inlineLarge)
         .namesUnnamedSighting($naming)
+        .onChange(of: naming) { _, naming in
+            if naming != nil {
+                acknowledgedBefore = run.acknowledgment?.id
+            } else if let acknowledgment = run.acknowledgment, acknowledgment.id != acknowledgedBefore {
+                // The sheet closed on an add.
+                namedHere = acknowledgment.undo
+            }
+        }
         .task(id: sightings.isEmpty) {
             // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()
@@ -191,10 +203,11 @@ struct JournalView: View {
                 Toast(text: "Removed \(removed.commonName)", undo: { edits.undoRemoval() })
                     .padding(.bottom, 8)
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
-            } else if !isCovered, !run.isReviewing, let acknowledgment = run.acknowledgment {
-                // A photo named from "To name" (issue #188) is an add made here: its acknowledgment and its Undo show here
-                // too. Only the words: the count's tick and its haptic are the Listen tab's toast's, which is still there.
-                Toast(text: acknowledgment.text, undo: acknowledgment.undo.map { addition in { run.undo(addition) } })
+            } else if !isCovered, !run.isReviewing, let acknowledgment = run.acknowledgment, let addition = acknowledgment.undo, addition == namedHere {
+                // A photo named from "To name" (issue #188) is an add made here, so its acknowledgment and its Undo show here
+                // too; an add made on the Listen tab keeps to that tab. Only the words: the count's tick and its haptic are
+                // the Listen tab's toast's, which is still there.
+                Toast(text: acknowledgment.text, undo: { run.undo(addition) })
                     .id(acknowledgment.id)
                     .padding(.bottom, 8)
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
