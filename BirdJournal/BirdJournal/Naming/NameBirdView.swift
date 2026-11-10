@@ -9,19 +9,27 @@ import SwiftUI
 /// pinned "Add and sew patch" (or "Add sighting") writes the sighting, Seen, with the photo as its original photo, and
 /// closes; the run then shows what any add does.
 ///
-/// In this ticket Cancel discards the photo. #188 keeps it as an unnamed sighting instead and adds "Name it later"; #189
-/// fills the page before anything is typed; #190 opens this sheet again to change a sighting's bird.
+/// Before anything is typed the page suggests (issue #189): "Heard this run", the run's birds with those calling first,
+/// then "Likely here now", the field guides' birds the geomodel finds most likely at the run's place in the week of the
+/// photo. Typing replaces both with the search, and clearing the field brings them back. `NameableBirds.search(_:in:)`
+/// decides all of it; this view draws what it returns.
+///
+/// In this ticket Cancel discards the photo. #188 keeps it as an unnamed sighting instead and adds "Name it later"; #190
+/// opens this sheet again to change a sighting's bird.
 struct NameBirdView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(PlaceNames.self) private var places
+    @Environment(\.occurrenceModel) private var occurrenceModel
     let photo: CapturedPhoto
     /// Closes the sheet: after the add, or on Cancel.
     let close: () -> Void
     @State private var query = ""
     /// Nil while the label list is read.
     @State private var names: NameableBirds?
+    /// What the run had heard when the sheet opened, and what the geomodel expects at its place in the photo's week.
+    @State private var context = NameableBirds.Context.none
     @State private var chosen: NameableBird?
     @State private var isAdding = false
     @State private var failed = false
@@ -40,7 +48,7 @@ struct NameBirdView: View {
     }
 
     var body: some View {
-        let results = names?.search(query)
+        let results = names?.search(query, in: context)
         NavigationStack {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
@@ -49,7 +57,7 @@ struct NameBirdView: View {
                     searchField
                         .padding(.top, 16)
                     if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                        // Before anything is typed only the field guides' birds are listed: the rest are found by name.
+                        // Before anything is typed the page suggests, from the run and the field guides: the rest are found by name.
                         hint(NameBirdText.searchHint)
                             .padding(.top, 8)
                     }
@@ -60,6 +68,8 @@ struct NameBirdView: View {
                                     .padding(.top, 12)
                             }
                         } else {
+                            section(NameBirdText.heardTitle, birds: results.heard)
+                            section(NameBirdText.likelyTitle, birds: results.likely)
                             section("In your field guides", birds: results.fieldGuide)
                             section("All birds", birds: results.others)
                             if let more = NameBirdText.more(results.moreOthers) {
@@ -86,13 +96,19 @@ struct NameBirdView: View {
             .scrollEdgeEffectStyle(.hard, for: .bottom)
             .safeAreaBar(edge: .bottom) { addBar }
         }
-        .task {
-            guard names == nil else { return }
-            let fieldGuide = library.fieldGuideBirds
-            // Without the label list the field guides' birds can still be named.
-            names = await Task.detached(priority: .userInitiated) {
-                (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+        // The names and the suggestions arrive together, so the page opens on its suggestions and not on a list they replace.
+        // A place that arrives later reads the geomodel again.
+        .task(id: run.coordinate) {
+            // What the run has heard is read once, as the sheet opens: the list holds still while a bird is chosen from it.
+            let heard = names == nil ? run.heardScientificNames : context.heard
+            let known = names, fieldGuide = library.fieldGuideBirds, place = run.coordinate, takenAt = photo.takenAt, model = occurrenceModel
+            let loaded = await Task.detached(priority: .userInitiated) {
+                // Without the label list the field guides' birds can still be named.
+                let names = known ?? (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                return (names, NameableBirds.Context(heard: heard, place: place, takenAt: takenAt, occurrenceModel: model))
             }.value
+            guard !Task.isCancelled else { return }
+            (names, context) = loaded
         }
         .task(id: run.coordinate) {
             if let coordinate = run.coordinate { await places.resolve(coordinate) }
@@ -103,10 +119,13 @@ struct NameBirdView: View {
             if let text = UserDefaults.standard.string(forKey: "autoQuery") { query = text }
         }
         #endif
-        // A choice the search no longer shows would be added unseen.
-        .onChange(of: query) {
-            if let chosen, let results = names?.search(query), !(results.fieldGuide + results.others).contains(chosen) { self.chosen = nil }
-        }
+        // A choice the page no longer shows would be added unseen.
+        .onChange(of: query) { dropAChoiceOutOfSight() }
+        .onChange(of: context) { dropAChoiceOutOfSight() }
+    }
+
+    private func dropAChoiceOutOfSight() {
+        if let chosen, let results = names?.search(query, in: context), !results.birds.contains(chosen) { self.chosen = nil }
     }
 
     /// The search, under the photo and on the page: the bar keeps the sheet's title and its Cancel while a name is typed,

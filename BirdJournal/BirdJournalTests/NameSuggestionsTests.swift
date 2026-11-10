@@ -2,6 +2,7 @@ import Album
 import Foundation
 import Identification
 import Pack
+import SwiftUI
 import Synchronization
 import Testing
 @testable import BirdJournal
@@ -182,5 +183,95 @@ struct NameSuggestionsTests {
         )
         #expect(Self.names.search("", in: .init(heard: ["Sayornis phoebe"])).birds.map(\.commonName) == ["Eastern Phoebe", "Allen's Hummingbird", "Anna's Hummingbird", "Black Phoebe", "House Finch", "Say's Phoebe"])
         #expect(Self.names.search("penguin", in: here).birds.isEmpty)
+    }
+}
+
+// Issue #189: the suggestions on "Name this bird" as VoiceOver reaches them, in the serialized suite that walks the capture's
+// other screens (they share a window and `-autoQuery`).
+extension CaptureAccessibilityTests {
+    /// A geomodel with one answer wherever it is asked.
+    struct FixedOccurrence: SpeciesOccurrenceModel {
+        var expected: [String: Float]
+        func occurrence(in context: GeoContext) throws -> [String: Float] { expected }
+    }
+
+    static let griffithPark = LocationFix.fix(latitude: 34.1365, longitude: -118.2942, accuracy: 10, at: .now)
+    static let geomodel = FixedOccurrence(expected: ["Haemorhous mexicanus": 0.99, "Sayornis nigricans": 0.95, "Calypte anna": 0.9, "Selasphorus sasin": 0.5, "Archilochus colubris": 0.001])
+
+    /// A run in Griffith Park that heard a House Finch, quiet now, and then a Black Phoebe, still calling.
+    static func runThatHeardTwo() async throws -> Screens.Harness {
+        let harness = try Screens.Harness(location: [griffithPark])
+        func heard(_ index: Int, _ scientific: String, _ common: String, last: Double) -> Candidate {
+            Candidate(species: Species(index: index, scientificName: scientific, commonName: common, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: last, admittedAt: Double(index))
+        }
+        harness.run.fakeStack = CandidateStack(candidates: [heard(0, "Haemorhous mexicanus", "House Finch", last: -120), heard(1, "Sayornis nigricans", "Black Phoebe", last: 1_000_000)])
+        await harness.run.start()
+        #expect(harness.run.coordinate != nil)
+        return harness
+    }
+
+    @Test("Name this bird on a run: Heard this run with the bird calling first, then Likely here now, the likeliest first, and no list by name", arguments: Screens.sizes)
+    func suggestions(typeSize: DynamicTypeSize) async throws {
+        let harness = try await Self.runThatHeardTwo()
+        let screen = NameBirdView(photo: Self.photo()) {}.environment(\.occurrenceModel, Self.geomodel)
+        let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
+            labels.contains("Likely here now") && labels.contains { $0.hasPrefix(typeSize == .large ? "Allen's Hummingbird, " : "Anna's Hummingbird, ") }
+        }
+        await harness.run.stop()
+
+        Screens.expectClean(labels, screen: "Name this bird, suggestions")
+        Screens.expectOneWordPerThing(labels, screen: "Name this bird, suggestions")
+        Self.expectNoScore(labels, screen: "Name this bird, suggestions")
+        let search = try #require(labels.firstIndex(of: "Search birds by name"), "\(labels)")
+        let heard = try #require(labels.firstIndex(of: "Heard this run"), "\(labels)")
+        let phoebe = try #require(labels.firstIndex { $0.hasPrefix("Black Phoebe, Los Angeles") }, "\(labels)")
+        let finch = try #require(labels.firstIndex { $0.hasPrefix("House Finch, Los Angeles") }, "\(labels)")
+        let likely = try #require(labels.firstIndex(of: "Likely here now"), "\(labels)")
+        let annas = try #require(labels.firstIndex { $0.hasPrefix("Anna's Hummingbird, Los Angeles") }, "\(labels)")
+        #expect(search < heard && heard < phoebe && phoebe < finch, "the bird calling now before the one heard earlier: \(labels)")
+        #expect(finch < likely && likely < annas, "then the likely birds: \(labels)")
+        // At the largest size the rows are a screen tall, and the lazy list has not laid the fourth out in the test's window.
+        if typeSize == .large {
+            let allens = try #require(labels.firstIndex { $0.hasPrefix("Allen's Hummingbird, Los Angeles") }, "\(labels)")
+            #expect(annas < allens, "the likeliest first, not the first by name: \(labels)")
+        }
+        #expect(labels.count { $0.hasPrefix("House Finch, ") } == 1 && labels.count { $0.hasPrefix("Black Phoebe, ") } == 1, "a bird heard isn't listed again as likely: \(labels)")
+        #expect(!labels.contains("In your field guides") && !labels.contains("All birds"), "\(labels)")
+        #expect(labels.contains(NameBirdText.searchHint), "\(labels)")
+        #expect(labels.contains("Choose the bird in your photo."), "\(labels)")
+    }
+
+    @Test("the run's birds are offered only while there is a run: calling now first while it listens, none once it is dismissed")
+    func heardOnlyWithARun() async throws {
+        let idle = try Screens.Harness()
+        idle.run.fakeStack = CandidateStack(candidates: [Candidate(species: Species(index: 0, scientificName: "Haemorhous mexicanus", commonName: "House Finch", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1, admittedAt: 1)])
+        #expect(idle.run.heardScientificNames.isEmpty, "no run")
+
+        let harness = try await Self.runThatHeardTwo()
+        #expect(harness.run.heardScientificNames == ["Sayornis nigricans", "Haemorhous mexicanus"], "the phoebe is calling; the finch was admitted first")
+        await harness.run.stop()
+        #expect(Set(harness.run.heardScientificNames) == ["Sayornis nigricans", "Haemorhous mexicanus"], "an ended run, as its review has it, still has its birds")
+        harness.run.dismissEnded()
+        #expect(harness.run.heardScientificNames.isEmpty)
+    }
+
+    @Test("Typing replaces the suggestions with the search, a likely bird before the others it matches", arguments: Screens.sizes)
+    func suggestionsGiveWayToASearch(typeSize: DynamicTypeSize) async throws {
+        let harness = try await Self.runThatHeardTwo()
+        defer { UserDefaults.standard.removeObject(forKey: "autoQuery") }
+        UserDefaults.standard.set("hummingbird", forKey: "autoQuery")
+        let screen = NameBirdView(photo: Self.photo()) {}.environment(\.occurrenceModel, Self.geomodel)
+        let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
+            labels.contains("All birds")
+        }
+        await harness.run.stop()
+
+        Screens.expectClean(labels, screen: "Name this bird, searched on a run")
+        #expect(!labels.contains("Heard this run") && !labels.contains("Likely here now"), "\(labels)")
+        let guides = try #require(labels.firstIndex(of: "In your field guides"), "\(labels)")
+        let annas = try #require(labels.firstIndex { $0.hasPrefix("Anna's Hummingbird, ") }, "\(labels)")
+        let allens = try #require(labels.firstIndex { $0.hasPrefix("Allen's Hummingbird, ") }, "\(labels)")
+        #expect(guides < annas && annas < allens, "the likelier hummingbird first, not the first by name: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("House Finch, ") }, "only what matches: \(labels)")
     }
 }
