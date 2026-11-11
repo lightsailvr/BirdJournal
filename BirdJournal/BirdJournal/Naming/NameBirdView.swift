@@ -21,6 +21,8 @@ struct NameBirdView: View {
     @Environment(PlaceNames.self) private var places
     /// The photo being named, with when and where it was taken.
     let unnamed: UnnamedSighting
+    /// For a photo just chosen from the library (issue #192): whether the date and place above are the photo's own.
+    var note: String? = nil
     /// Closes the sheet: after the add, on "Name it later", or after a delete.
     let close: () -> Void
     @State private var query = ""
@@ -52,6 +54,11 @@ struct NameBirdView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     CapturedPhotoHeader(unnamed: unnamed, place: NameBirdText.place(location: unnamed.location, name: unnamed.location.flatMap(places.name(for:))))
                         .padding(.top, 8)
+                    if let note {
+                        hint(note)
+                            .padding(.top, 10)
+                            .accessibilityIdentifier("name-bird-photo-note")
+                    }
                     searchField
                         .padding(.top, 16)
                     if query.trimmingCharacters(in: .whitespaces).isEmpty {
