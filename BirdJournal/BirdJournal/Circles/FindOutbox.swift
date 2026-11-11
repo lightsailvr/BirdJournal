@@ -152,6 +152,15 @@ final class FindOutbox {
         enqueue(.put, identifier, owner: owner)
     }
 
+    /// A published sighting was given another bird (issue #190): its find is put again, as that bird. Whether it sewed its
+    /// patch was frozen at the add, for the bird it was then, so it is taken again from the change: true when the new
+    /// bird had no patch where the sighting is. Others change nothing.
+    func birdChanged(_ identifier: UUID, isNewPatch: Bool) {
+        guard let owner = owner(of: identifier) else { return }
+        for index in published.indices where published[index].identifier == identifier { published[index].newPatch = isNewPatch }
+        enqueue(.put, identifier, owner: owner)
+    }
+
     /// A sighting was removed: its find, if it has one, is deleted.
     func removed(_ identifier: UUID) {
         guard let owner = owner(of: identifier) else { return }

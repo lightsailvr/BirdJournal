@@ -110,8 +110,13 @@ extension Announcer {
 /// `operation` ignores cancellation, which a task group would wait for. Whichever side finishes first cancels
 /// the other, so no sleeping timeout task outlives a wait that succeeded.
 func completes(within timeout: Duration, _ operation: @escaping @Sendable () async -> Bool) async -> Bool {
+    await value(within: timeout, operation) ?? false
+}
+
+/// Runs `operation` and returns what it gives, or nil once `timeout` passes, on the same terms as `completes`.
+func value<Value: Sendable>(within timeout: Duration, _ operation: @escaping @Sendable () async -> Value) async -> Value? {
     let race = FirstToFinish()
-    return await withCheckedContinuation { continuation in
+    return await withCheckedContinuation { (continuation: CheckedContinuation<Value?, Never>) in
         let work = Task {
             let result = await operation()
             if race.claim() { continuation.resume(returning: result) }
@@ -119,7 +124,7 @@ func completes(within timeout: Duration, _ operation: @escaping @Sendable () asy
         race.timeout = Task {
             try? await Task.sleep(for: timeout)
             work.cancel()
-            if race.claim() { continuation.resume(returning: false) }
+            if race.claim() { continuation.resume(returning: nil) }
         }
     }
 }

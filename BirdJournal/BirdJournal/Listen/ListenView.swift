@@ -19,7 +19,7 @@ struct ListenView: View {
     var body: some View {
         @Bindable var run = run
         Group {
-            if run.state.isActive || (run.state != .idle && !run.candidates.isEmpty) {
+            if run.showsRun {
                 ActiveListeningView()
             } else {
                 ReadyToListenView(isCovered: isCovered)
@@ -34,6 +34,10 @@ struct ListenView: View {
         }
         .sheet(item: $run.reviewing) { candidate in
             CandidateReviewSheet(candidate: candidate)
+        }
+        // The camera and the naming of its photo (issue #186), over the tab bar too: a camera has the whole screen.
+        .fullScreenCover(isPresented: $run.isCapturing) {
+            CaptureSightingView()
         }
         .safeAreaInset(edge: .bottom) {
             // Over the review, the sheet has its own: two would each tick, with two haptics.
@@ -125,6 +129,13 @@ private struct ReadyToListenView: View {
                         .disabled(run.state == .starting)
                         .padding(.top, 20)
                         .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
+                        .id("start-listening")
+
+                        // A bird that's seen and not heard needs no run (issue #191): the run's own button, camera and
+                        // naming. Outlined and under Start, which stays the one filled action on the page.
+                        CaptureSightingButton(hint: "Opens the camera. You don't need to be listening.")
+                            .disabled(run.state == .starting)
+                            .padding(.top, 12)
 
                         if let local {
                             LocalSetSection(local: local, collection: collection)
@@ -143,6 +154,7 @@ private struct ReadyToListenView: View {
             .background(Color.paper)
             #if DEBUG
             .debugScroll(scroll, to: "local-set")
+            .debugScroll(scroll, to: "start-listening")
             #endif
             }
         }

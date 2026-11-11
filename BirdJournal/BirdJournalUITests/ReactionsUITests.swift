@@ -31,7 +31,8 @@ final class ReactionsUITests: XCTestCase {
         XCTAssertTrue(lovely.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(lovely.value as? String, "2 reactions", "Jo's and Sam's, seeded")
         // A real target for a thumb, whatever the pill looks like (issue #150).
-        XCTAssertGreaterThanOrEqual(lovely.frame.height, 44)
+        // Less a hair: the frame comes back through the screen's pixels, and 44 pt has read 43.99999.
+        XCTAssertGreaterThanOrEqual(lovely.frame.height, 44 - 0.01)
         XCTAssertFalse(lovely.isSelected)
         screenshot(app, "64-feed-reactions")
         // Three equal pills across the row (issue #150, G9), whatever their names' lengths.

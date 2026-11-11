@@ -19,7 +19,9 @@ import UIKit
 /// - `-patchLight "x,y"` puts the patches' light somewhere, as a tilt would (issue #134's screenshots; the simulator has
 ///   no motion; "l0.5,u0.6" for left and up, since a launch argument can't start with a minus); `-patchLightSweep YES` circles it and logs frame times under the `patch-light` category.
 /// - `-fakeLibraryPhoto YES`: "Attach a photo" on a sighting hands over a generated picture instead of opening the system
-///   picker, which XCUITest can't drive.
+///   picker, which XCUITest can't drive. The capture camera's library button does the same (issue #192), with a picture that
+///   carries a date and a place of its own, 18 April 2026 in San Diego (`DebugSeeds.libraryPhotoJPEG`): a UI test can pick
+///   in the real picker there (`LibraryCaptureUITests`), but doesn't know what a simulator's pictures carry.
 /// - `-seedBoard YES` adds one sighting each of the bundled pack's first 30 birds in Griffith Park: a board that scrolls.
 /// - `-seedLarge <n>` fills the album to n sightings over three years, for profiling (issue #150). With `-albumFile <name>` it
 ///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and
@@ -90,6 +92,30 @@ import UIKit
 ///   Listen tab, the file standing in for the stream; `-autoLensAdd "House Finch,Dark-eyed Junco"` adds those birds on the
 ///   lens with mock inputs as they're heard, and `-autoLensBackInBackground YES` ends the run from the lens when the app
 ///   goes to the background (issue #135). `-albumFile <name>` keeps the album in a file of its own, for relaunching over it.
+/// - `-fakeCamera ready|denied|unavailable` puts a stand-in behind "Capture a sighting" (issue #186: the simulator has no
+///   camera, and a UI test can't answer the permission prompt): ready with a drawn viewfinder and a generated photo, or
+///   refused, or with no camera to give (`-fakeCameraZoom 2.6` and `-fakeCameraFocus 0.3,0.4` open it zoomed and with focus
+///   held there, issue #187). `-autoScreen capture` starts a phone run as `listening` does and opens the camera
+///   over it; `-autoScreen name-bird` goes on to "Name this bird" with a stand-in photo, and `-autoQuery <text>` searches
+///   there once. `-autoSeen "Calypte anna,Selasphorus sasin"` names a stand-in photo as each of those birds once the run is
+///   on, past its reveal: rows under "Seen this run". `-autoUnnamed <n>` takes that many stand-in photos on the run and leaves
+///   them unnamed (issue #188), before `-autoRunStops` ends it; `-seedSeen "Selasphorus sasin"` puts a sighting the birder
+///   named of each of those birds in the album at launch, seen in Griffith Park in the last hours, and `-autoChangeBird YES`
+///   opens "Change bird" on a sighting's page (issue #190); `-seedUnnamed <n>` puts that many in the album at launch, taken
+///   in Griffith Park on earlier days, as earlier runs would have left them: the Collection's "To name".
+/// - `-autoScreen idle-capture` opens the camera from the idle Listen tab, with no run (issue #191), and `idle-name-bird`
+///   goes on to "Name this bird" with a stand-in photo taken there; `-autoLocation` says where the phone is. With
+///   `-autoScreen listen`, `-autoIdleSeen "Calypte anna"` names a stand-in photo taken with no run as that bird, past its
+///   reveal: the acknowledgment on the idle tab.
+/// - `-autoLensCapture <n>` on a `glasses-run` takes that many photos from the lens's "Capture a sighting" (issue #193), by Mock
+///   Device Kit's inputs, before `-autoLensAdd` adds its birds; `-autoGlassesCamera YES` gives that run's stand-in stream a
+///   drawn camera frame, without which the lens has no picture to take. After each photo the lens asks for the bird's name
+///   (issue #194): `-autoLensSay "annas humming bird"` has the mock's glasses hear that, and the first bird offered is
+///   chosen; without it the photo is named later. `-autoGlassesMicrophone denied` takes the glasses' microphone
+///   permission away once the run is on, so the lens never asks and the run's page offers to turn dictation on.
+///   `-dictationSilenceSeconds <s>` is how long any lens listens for a first word (default 8),
+///   `-dictationPauseSeconds <s>` how long words wait for more before they are matched (default 3), and
+///   `-dictationKeepsStream NO` takes the camera stream off while it listens (`DictationSettings`).
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -135,6 +161,20 @@ struct DebugLaunch: ViewModifier {
             if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
             let large = defaults.integer(forKey: "seedLarge")
             if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
+            for index in 0..<defaults.integer(forKey: "seedUnnamed") {
+                _ = try? run.sightings.recorder.recordCapture(photo: DebugSeeds.frameJPEG(), takenAt: Date.now.addingTimeInterval(-86_400 * Double(index + 1)), location: DebugPlace.griffith.coordinate, source: .phone)
+            }
+            if let seen = defaults.string(forKey: "seedSeen") {
+                // Written by the recorder alone, as a naming on an earlier day left them: no run, no reveal.
+                let fieldGuide = library.fieldGuideBirds
+                let names = NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
+                let recorder = run.sightings.recorder
+                for (index, bird) in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }).enumerated() {
+                    if let capture = try? recorder.recordCapture(photo: DebugSeeds.frameJPEG(), takenAt: Date.now.addingTimeInterval(-3_600 * Double(index + 1)), location: DebugPlace.griffith.coordinate, source: .phone) {
+                        _ = try? recorder.name(capture, as: bird)
+                    }
+                }
+            }
             if defaults.bool(forKey: "speedTour") {
                 let tour = SpeedTour(
                     context: context, run: run, library: library, circles: circles,
@@ -160,7 +200,22 @@ struct DebugLaunch: ViewModifier {
             switch screen {
             case "listen":
                 tab = .listen
-            case "listening", "review":
+                if let seen = defaults.string(forKey: "autoIdleSeen") {
+                    let fieldGuide = library.fieldGuideBirds
+                    let names = NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
+                    let place = defaults.string(forKey: "autoLocation").flatMap(DebugPlace.init(rawValue:))?.coordinate
+                    for bird in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }) {
+                        guard let unnamed = try? run.sightings.capture(photo: DebugSeeds.frameJPEG(), takenAt: .now, location: place, source: .phone, onThisRun: false) else { continue }
+                        run.name(unnamed, as: bird)
+                        run.finishCeremony()
+                        run.dismissReveal()
+                    }
+                }
+            case "idle-capture", "idle-name-bird":
+                tab = .listen
+                if screen == "idle-name-bird" { defaults.set(true, forKey: "autoNameBird") }
+                run.isCapturing = true
+            case "listening", "review", "capture", "name-bird":
                 tab = .listen
                 run.source = .phone
                 run.fakeStack = FakeRunBirds.stack
@@ -175,8 +230,24 @@ struct DebugLaunch: ViewModifier {
                     run.finishCeremony()
                     run.dismissReveal()
                 }
+                for _ in 0..<defaults.integer(forKey: "autoUnnamed") {
+                    run.capture(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
+                }
                 if defaults.bool(forKey: "autoRunStops") {
                     await run.stop()
+                }
+                if let seen = defaults.string(forKey: "autoSeen") {
+                    let fieldGuide = library.fieldGuideBirds
+                    let names = NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
+                    for bird in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }) {
+                        run.addSeen(bird, photo: CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
+                        run.finishCeremony()
+                        run.dismissReveal()
+                    }
+                }
+                if screen == "capture" || screen == "name-bird" {
+                    if screen == "name-bird" { defaults.set(true, forKey: "autoNameBird") }
+                    run.isCapturing = true
                 }
                 if screen == "review" {
                     // The WAV's first admissions take a few windows; wait for a bird the packs describe, so the
@@ -212,6 +283,10 @@ struct DebugLaunch: ViewModifier {
                 // This launch's choice, not one for the simulator's next UI test to find remembered.
                 defaults.removeObject(forKey: ListeningCoordinator.sourceKey)
                 let lens = MockLensAdds(lens: run.glasses.lens, connection: connection, sightings: run.sightings)
+                if defaults.string(forKey: "autoGlassesMicrophone") == "denied" { connection.denyMockMicrophone() }
+                for _ in 0..<defaults.integer(forKey: "autoLensCapture") {
+                    await lens.capture(saying: defaults.string(forKey: "autoLensSay"))
+                }
                 for name in (defaults.string(forKey: "autoLensAdd") ?? "").split(separator: ",") {
                     await lens.add(String(name))
                 }
@@ -468,15 +543,20 @@ final class PacedAudioSource: AudioSource {
     }
 }
 
-/// A glasses run's stream for the simulator, where the mock injects no audio: a file at a microphone's pace, and no camera.
+/// A glasses run's stream for the simulator, where the mock injects no audio: a file at a microphone's pace, and no camera,
+/// or with `hasCamera` (`-autoGlassesCamera YES`, issue #193) a drawn frame standing in for the stream's, so the lens's
+/// viewfinders show a picture and a photo taken there is that frame.
 final class PacedGlassesAudioSource: FrameKeepingAudioSource {
     private let base: PacedAudioSource
+    private let frame: CameraFrame?
 
-    init(url: URL) {
+    init(url: URL, hasCamera: Bool = false) {
         base = PacedAudioSource(WAVFileAudioSource(url: url))
+        let jpeg = hasCamera ? DebugSeeds.frameJPEG() : nil
+        frame = jpeg.map { jpeg in CameraFrame(jpegData: { jpeg }) }
     }
 
-    var latestFrame: CameraFrame? { nil }
+    var latestFrame: CameraFrame? { frame }
     func start() async throws -> AsyncStream<AudioChunk> { try await base.start() }
     func stop() async { await base.stop() }
     func capturePhoto() async -> Data? { nil }
@@ -523,6 +603,44 @@ struct MockLensAdds {
         _ = await wait(seconds: 2) { lens.page == .list }
     }
 
+    /// Takes a photo from the lens as a wearer would (issue #193): up to "Capture a sighting", a tap, a moment for the
+    /// viewfinder's echo window, and a tap on the viewfinder; then back to the list, with the highlight on the first bird again.
+    /// Where the lens asks for the bird's name (issue #194), the mock's glasses hear `words` and the first bird offered is
+    /// chosen; with no words, or no bird for them, the photo is left to be named later.
+    func capture(saying words: String? = nil) async {
+        guard await wait(seconds: 120, until: { lens.inputsState == .active }) else { return }
+        for _ in 0...lens.stack.count where !lens.machine.isCaptureRowHighlighted {
+            let before = lens.inputRecords.count
+            connection.injectMockInput(.navUp)
+            _ = await wait(seconds: 1) { lens.inputRecords.count > before }
+        }
+        let taken = sightings.unnamed.count + sightings.seen.count
+        connection.injectMockInput(.select)
+        guard await wait(seconds: 2, until: { lens.page == .captureViewfinder }) else { return }
+        try? await Task.sleep(for: .milliseconds(1200))
+        connection.injectMockInput(.select)
+        _ = await wait(seconds: 10) { sightings.unnamed.count + sightings.seen.count > taken }
+        _ = await wait(seconds: 5) { lens.page == .captureSaved || lens.page == .captureNaming }
+        if lens.page == .captureNaming {
+            if let words, await wait(seconds: 5, until: { connection.mockSpeechIsListening }) {
+                connection.simulateMockSpeech(words, isFinal: true)
+                if await wait(seconds: 10, until: { lens.page == .captureMatches }), lens.machine.naming?.matches.isEmpty == false {
+                    connection.injectMockInput(.select)
+                    _ = await wait(seconds: 5) { lens.page == .captureAdded }
+                }
+            } else {
+                // A tap while the glasses listen: name it later.
+                connection.injectMockInput(.select)
+                _ = await wait(seconds: 2) { lens.page == .captureSaved }
+            }
+        }
+        // Swipe right leaves the saved page, the birds' page and "Added" alike.
+        connection.injectMockInput(.navRight)
+        _ = await wait(seconds: 2) { lens.page == .list }
+        connection.injectMockInput(.navDown)
+        _ = await wait(seconds: 1) { !lens.machine.isCaptureRowHighlighted }
+    }
+
     private func wait(seconds: Double, until condition: () -> Bool) async -> Bool {
         let deadline = ContinuousClock.now + .seconds(seconds)
         while !condition() {
@@ -530,6 +648,67 @@ struct MockLensAdds {
             try? await Task.sleep(for: .milliseconds(50))
         }
         return true
+    }
+}
+
+/// The Developer lens's stand-in for a run when a bird's name is said (issue #194): that lens has no run behind it, so
+/// this knows the photos it took, matches what the mock's glasses heard against the names (the birds of the fake stack as
+/// heard this run, no place), and names a photo through the coordinator, as the phone would.
+final class MockLensNaming {
+    private let run: ListeningCoordinator
+    private let fieldGuide: [NameableBirds.FieldGuideBird]
+    private var names: NameableBirds?
+    /// The photos taken from the lens, by the lens's number for each.
+    var captured: [Int: UnnamedSighting] = [:]
+    private var offered: [String: NameableBird] = [:]
+
+    init(run: ListeningCoordinator, fieldGuide: [NameableBirds.FieldGuideBird]) {
+        self.run = run
+        self.fieldGuide = fieldGuide
+    }
+
+    func source(heard: @escaping () -> [String]) -> LensNameSource {
+        LensNameSource(
+            matches: { [self] words, capture in
+                if names == nil {
+                    let fieldGuide = fieldGuide
+                    names = await Task.detached { NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide) }.value
+                }
+                guard let names, let unnamed = captured[capture] else { return [] }
+                let birds = names.spoken(words, in: NameableBirds.Context(heard: heard()))
+                offered = Dictionary(birds.map { ($0.scientificName, $0) }, uniquingKeysWith: { first, _ in first })
+                return birds.map { bird in
+                    LensNameMatch(id: bird.scientificName, commonName: bird.commonName, isNewPatch: run.sightings.recorder.patchCount(ofSpeciesID: bird.speciesID, at: unnamed.location) == 0)
+                }
+            },
+            name: { [self] capture, match in
+                guard let unnamed = captured[capture], let bird = offered[match.id] else { return .notWritten }
+                guard let addition = run.name(unnamed, as: bird) else {
+                    // Named or deleted on the phone meanwhile, or the save failed and the photo still waits.
+                    return run.sightings.recorder.capture(unnamed.id) == nil ? .gone : .notWritten
+                }
+                captured[capture] = nil
+                return .named(LensNamedCapture(addition, commonName: bird.commonName))
+            }
+        )
+    }
+}
+
+// A photo taken and named in one step, for the launch flags and the tests: the app itself always writes the photo at the
+// shutter (`capture`) and names it afterwards (`name`). If the naming fails the photo is kept, unnamed.
+extension RunSightings {
+    /// - Parameter source: the device that took the photo.
+    @discardableResult
+    func addSeen(_ bird: NameableBird, photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> Addition {
+        try name(capture(photo: photo, takenAt: takenAt, location: location, source: source), as: bird)
+    }
+}
+
+extension ListeningCoordinator {
+    @discardableResult
+    func addSeen(_ bird: NameableBird, photo: CapturedPhoto) -> RunSightings.Addition? {
+        guard let unnamed = capture(photo) else { return nil }
+        return name(unnamed, as: bird)
     }
 }
 

@@ -72,7 +72,8 @@ final class FindsUITests: XCTestCase {
         // A reaction here shows on the feed on the way back.
         lovely.tap()
         XCTAssertTrue(lovely.wait(for: \.isSelected, toEqual: true, timeout: 5))
-        XCTAssertGreaterThanOrEqual(lovely.frame.height, 44)
+        // Less a hair, as on the feed: 44 pt has read 43.99999.
+        XCTAssertGreaterThanOrEqual(lovely.frame.height, 44 - 0.01)
         app.navigationBars.buttons.firstMatch.tap()
         let feedLovely = app.buttons["react-lovely-\(Self.mayasPhoebe)"]
         XCTAssertTrue(feedLovely.waitForExistence(timeout: 5))

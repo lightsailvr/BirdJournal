@@ -21,8 +21,15 @@ struct JournalView: View {
 
     @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    /// The photos waiting for a name (issue #188): "To name", at the top of the Sightings. They are no sightings.
+    @Query(Capture.newestFirst()) private var captures: [Capture]
+    @State private var naming: UnnamedSighting?
+    /// The add last made from "To name", as the naming sheet reported it: its acknowledgment shows here, where it was made.
+    /// No other add's does.
+    @State private var namedHere: RunSightings.Addition?
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
+    @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     @Bindable var state: CollectionState
@@ -49,20 +56,24 @@ struct JournalView: View {
     var body: some View {
         Group {
             if sightings.isEmpty {
-                EmptyJournal()
+                EmptyJournal(unnamed: captures.map(UnnamedSighting.init)) { naming = $0 }
             } else {
                 let collection = collectionStore.collection
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        content(collection)
+                // The stack is what keeps its identity. An id on the scroll view alone is the identity of everything hung on it
+                // below as well, so each mode change made a new picker, surface and toolbar, and the surface cut instead of fading.
+                ZStack {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            content(collection)
+                        }
+                        .padding(.horizontal, JournalLayout.margin)
+                        .padding(.bottom, JournalLayout.sectionGap)
                     }
-                    .padding(.horizontal, JournalLayout.margin)
-                    .padding(.bottom, JournalLayout.sectionGap)
+                    // A new native scroll view starts at the top before its lazy stack lays out (issue #180). Only the
+                    // scrolling content changes identity: the pinned picker, search field and navigation bar stay put.
+                    .id(state.mode)
+                    .transition(modeContentTransition)
                 }
-                // A new native scroll view starts at the top before its lazy stack lays out (issue #180). Only the
-                // scrolling content changes identity: the pinned picker, search field and navigation bar stay put.
-                .id(state.mode)
-                .transition(.identity)
                 // Outside the scrolling content, under a title that doesn't collapse: the picker has nothing to ride on, so whatever a
                 // mode change does to the content or the offset, it stays exactly where it is.
                 .safeAreaBar(edge: .top) {
@@ -173,6 +184,7 @@ struct JournalView: View {
         }
         .navigationTitle("Collection")
         .toolbarTitleDisplayMode(.inlineLarge)
+        .namesUnnamedSighting($naming) { namedHere = $0 }
         .task(id: sightings.isEmpty) {
             // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()
@@ -186,9 +198,18 @@ struct JournalView: View {
                 Toast(text: "Removed \(removed.commonName)", undo: { edits.undoRemoval() })
                     .padding(.bottom, 8)
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+            } else if !isCovered, !run.isReviewing, let acknowledgment = run.acknowledgment, let addition = acknowledgment.undo, addition == namedHere {
+                // A photo named from "To name" (issue #188) is an add made here, so its acknowledgment and its Undo show here
+                // too; an add made on the Listen tab keeps to that tab. Only the words: the count's tick and its haptic are
+                // the Listen tab's toast's, which is still there.
+                Toast(text: acknowledgment.text, undo: { run.undo(addition) })
+                    .id(acknowledgment.id)
+                    .padding(.bottom, 8)
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: edits.pendingRemoval)
+        .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: run.acknowledgment)
     }
 
     @ViewBuilder
@@ -209,6 +230,10 @@ struct JournalView: View {
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 6)
             if state.mode == .sightings {
+                // A search is over birds' names, and these have none yet.
+                if state.query.isEmpty, !captures.isEmpty {
+                    ToNameGroup(unnamed: captures.map(UnnamedSighting.init)) { naming = $0 }
+                }
                 SightingsByDay(sightings: shown)
             } else {
                 if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
@@ -370,13 +395,19 @@ struct JournalView: View {
     /// A different mode starts at its top; only returning from a page or search keeps the current mode's place.
     private func switchMode(to mode: Mode) {
         guard mode != state.mode else { return }
-        stopRestoring()
-        position = ScrollPosition(edge: .top)
-        offset = 0
-        state.offsets[mode] = 0
-        // Clearing a search after switching modes must not resurrect that mode's old position either.
-        if state.offsetsBeforeSearch != nil { state.offsetsBeforeSearch?[mode] = 0 }
-        withAnimation(modeFade) { state.mode = mode }
+        // One transaction, with the mode written first. Written after the rest and alone in the animation, the mode's change found
+        // the others waiting under a different transaction: SwiftUI drew those at once, from inside the mode's `willSet`, and at
+        // times drew the mode's own change there too, while it still read the old mode. Nothing asked for it again, so the old
+        // mode stayed on screen until something else redrew the page (seen after a patch's page closed, two times in three).
+        withAnimation(modeFade) {
+            state.mode = mode
+            stopRestoring()
+            position = ScrollPosition(edge: .top)
+            offset = 0
+            state.offsets[mode] = 0
+            // Clearing a search after switching modes must not resurrect that mode's old position either.
+            if state.offsetsBeforeSearch != nil { state.offsetsBeforeSearch?[mode] = 0 }
+        }
     }
 
     /// The surface cross-fades from one mode to the next (issue #150, audit F10); under Reduce Motion, quickly.
@@ -386,6 +417,15 @@ struct JournalView: View {
         if seconds > 0 { return .linear(duration: seconds) }
         #endif
         return .easeInOut(duration: reduceMotion ? 0.12 : 0.25)
+    }
+
+    /// What's on the surface doesn't wait for the surface's fade, and the two modes are never both there: the old one has gone
+    /// first, and the new one comes up after it.
+    private var modeContentTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity.animation(.easeOut(duration: reduceMotion ? 0.08 : 0.17).delay(0.08)),
+            removal: .opacity.animation(.easeOut(duration: 0.05))
+        )
     }
 
     /// Restores the current mode after a search, once its content has laid out. A single native scroll is
@@ -500,9 +540,21 @@ private struct ModeSurface: View {
 private struct EmptyJournal: View {
     @Environment(\.openListen) private var openListen
     @Environment(\.openAtlas) private var openAtlas
+    /// Photos waiting for a name (issue #188): with no sighting yet, naming one is the nearest way to the first patch.
+    var unnamed: [UnnamedSighting] = []
+    var name: (UnnamedSighting) -> Void = { _ in }
 
     var body: some View {
         ScrollView {
+            if !unnamed.isEmpty {
+                // On paper, as the Sightings list has them: the rows aren't drawn for the felt.
+                ToNameGroup(unnamed: unnamed, top: 14, name: name)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+                    .background(Color.paper, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                    .padding(.horizontal, JournalLayout.margin)
+                    .padding(.top, 12)
+            }
             StateNotice(
                 "Your first patch is a bird away.",
                 message: "Start listening, review the birds you hear and add the ones you recognize. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count.",

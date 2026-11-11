@@ -90,4 +90,22 @@ struct JournalTests {
         #expect(!Journal.matches(query: "lack", commonName: "Black Phoebe", scientificName: "Sayornis nigricans"), "no match inside a word")
         #expect(!Journal.matches(query: "black finch", commonName: "Black Phoebe", scientificName: "Sayornis nigricans"), "every term must match")
     }
+
+    // Issue #186: naming a seen bird searches every bird BirdNET knows on each keystroke, so the names are split once.
+    @Test("names split once match a query as the one-off search does")
+    func searchOverPreparedWords() {
+        let phoebe = NameSearch.Words(["Black Phoebe", "Sayornis nigricans"])
+        let anna = NameSearch.Words(["Anna's Hummingbird", "Calypte anna"])
+        #expect(NameSearch.Query("").isEmpty)
+        #expect(NameSearch.Query("   ").isEmpty)
+        #expect(NameSearch.Query("").matches(phoebe), "an empty query matches everything")
+        #expect(NameSearch.Query("phoe").matches(phoebe))
+        #expect(NameSearch.Query("SAYO nig").matches(phoebe))
+        #expect(NameSearch.Query("anna's").matches(anna))
+        #expect(NameSearch.Query("calyp").matches(anna), "the scientific name too")
+        #expect(NameSearch.Query("Núñez").matches(NameSearch.Words(["Nunez's Bird"])))
+        #expect(!NameSearch.Query("lack").matches(phoebe), "no match inside a word")
+        #expect(!NameSearch.Query("black finch").matches(phoebe), "every term must match")
+        #expect(!NameSearch.Query("phoe").matches(anna))
+    }
 }

@@ -15,7 +15,7 @@ enum RowPictureSource: Equatable {
     /// A row about a sighting.
     static func of(sighting: Sighting, reference: URL?) -> RowPictureSource {
         if let path = CardText.originalPhotoPath(sighting) {
-            return .ownPhoto(path: path, isGlassesFrame: path == sighting.frameImagePath)
+            return .ownPhoto(path: path, isGlassesFrame: CardText.originalPhotoIsGlassesFrame(sighting))
         }
         return .reference(reference)
     }

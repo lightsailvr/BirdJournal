@@ -7,6 +7,7 @@ import MWDATInputs
 import MWDATMockDevice
 import SwiftData
 import Testing
+import UIKit
 @testable import BirdJournal
 
 // Pause, disconnect and error handling on Mock Device Kit (issue #10). The mock does not pause a session on a doff
@@ -109,6 +110,48 @@ extension MockDeviceKitTests {
                     #expect(run.lens.phase == .stopped(.phone))
                     #expect(run.listening.phase == .idle)
                     #expect(source.isStopped)
+                }
+            }
+        }
+
+        @Test("a doff with the capture viewfinder open: the page waits with nothing saved, the viewfinder is back with the glasses, and a tap there still takes the photo (issue #193)")
+        func doffDuringCapture() async throws {
+            try await withMockDisplay { glasses in
+                let source = ManualAudioSource()
+                try await Self.withRun(source: source) { run in
+                    // No bird yet, so "Capture a sighting" is the highlighted row: a tap opens its viewfinder.
+                    let input = glasses.services.input
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .captureViewfinder }
+                    try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder"] }
+
+                    glasses.doff()
+                    try await waitUntil { Self.isDoffed(glasses) }
+                    glasses.powerOff()
+                    try await waitUntil { run.phase == .paused(.glassesOff) }
+                    #expect(run.lens.phase == .suspended)
+                    #expect(run.lens.page == .captureViewfinder, "the page waits where the wearer left it")
+                    #expect(run.sightings.unnamed.isEmpty)
+
+                    glasses.powerOn()
+                    glasses.don()
+                    try await waitUntil(timeout: .seconds(30)) { run.phase == .listening }
+                    #expect(run.lens.page == .captureViewfinder)
+                    try await waitUntil { run.lens.inputsState == .active }
+                    // The viewfinder asks for the stream again on the new session, and shows its frames.
+                    try await waitUntil(timeout: .seconds(2)) { source.streamChecks == ["viewfinder", "viewfinder"] }
+                    let jpeg = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64)).image { context in
+                        UIColor.red.setFill()
+                        context.fill(CGRect(x: 0, y: 0, width: 64, height: 64))
+                    }.jpegData(compressionQuality: 0.9)
+                    source.latestFrame = CameraFrame(jpegData: { jpeg })
+                    // The mock's doff and return can take less than the echo window that began when the viewfinder opened.
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(5)) { run.lens.page == .captureSaved }
+                    #expect(run.sightings.unnamed.count == 1)
+                    #expect(run.sightings.unnamed.first?.source == .glasses)
+                    #expect(run.errorMessage == nil)
                 }
             }
         }

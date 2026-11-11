@@ -393,8 +393,8 @@ final class CollectionUITests: XCTestCase {
         XCTAssertEqual(Self.settledMinY(of: row), expected.y, accuracy: 4)
     }
 
-    /// A pinned segment's automatic scroll-to-visible hit point may be stale after returning from a page.
-    /// Tap its visible centre once, then wait for the selected-state snapshot; never retry the interaction.
+    /// One tap on the segment's centre, then the picker has to say so: never a second tap. A tap whose mode didn't reach the
+    /// screen was the app's doing (a mode change drawn before its new value was stored), not a stale snapshot.
     @MainActor
     private func selectMode(_ title: String, in picker: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
         let segment = picker.buttons[title]

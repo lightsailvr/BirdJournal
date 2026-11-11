@@ -40,7 +40,9 @@ struct ScreenAccessibilityTests {
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
         ///   - session: what its downloads go through.
-        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true) throws {
+        ///   - location: what a phone run is told of where it is, and the camera opened with no run (issue #191); by default
+        ///     that it may not know.
+        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true, location: [LocationFix] = [.denied]) throws {
             album = try AlbumSchema.makeContainer(inMemory: true)
             frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibility-\(UUID().uuidString)", directoryHint: .isDirectory))
             let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)"))
@@ -58,10 +60,13 @@ struct ScreenAccessibilityTests {
             let phone = ListeningSession(
                 loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
                 makeSource: { ManualAudioSource() },
-                location: ScriptedLocationProvider([.denied])
+                location: ScriptedLocationProvider(location)
             )
             let glasses = GlassesListeningSession(recorder: recorder, sightings: sightings, loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, location: ScriptedLocationProvider([.denied]))
-            run = ListeningCoordinator(phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: UserDefaults(suiteName: "screen-ax-\(UUID().uuidString)")!)
+            run = ListeningCoordinator(
+                phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: UserDefaults(suiteName: "screen-ax-\(UUID().uuidString)")!,
+                captureLocation: ScriptedLocationProvider(location)
+            )
             sounds = ReferenceSounds(player: MockSoundPlayer(), session: SpyPlaybackSession(), suppression: AudioSuppression(), phoneRunHoldsSession: { false })
             outbox = FindOutbox(account: account, client: client, fileURL: nil, sharing: { .automatic }, payload: { _, _ in nil })
             pushes = PushCenter(account: account, client: client, authorizer: FakeNotificationAuthorizer(permission: .authorized), defaults: UserDefaults(suiteName: "screen-ax-push-\(UUID().uuidString)")!, registerForRemoteNotifications: {})
@@ -72,9 +77,12 @@ struct ScreenAccessibilityTests {
 
         /// `screen` on a navigation stack with the app's destinations and shared objects.
         func hosted(_ screen: some View, typeSize: DynamicTypeSize) -> some View {
-            NavigationStack {
-                screen.appDestinations()
-            }
+            shared(NavigationStack { screen.appDestinations() }, typeSize: typeSize)
+        }
+
+        /// `screen` with the app's shared objects and no navigation stack around it: for one that brings its own, as a sheet does.
+        func shared(_ screen: some View, typeSize: DynamicTypeSize) -> some View {
+            screen
             .environment(connection)
             .environment(run)
             .environment(sounds)
@@ -96,11 +104,12 @@ struct ScreenAccessibilityTests {
     /// The labels VoiceOver reaches on `screen`, walked again until `ready` holds or fifteen seconds pass (SwiftUI fills
     /// the tree some time after the first render, later under a full parallel run). The window is a phone's width and tall
     /// enough that the lazy lists lay out what VoiceOver would scroll to.
-    static func walk(_ screen: some View, harness: Harness, typeSize: DynamicTypeSize = .large, ready: ([String]) -> Bool) async throws -> [String] {
+    /// - Parameter inStack: false for a screen that brings its own navigation stack, as a sheet does.
+    static func walk(_ screen: some View, harness: Harness, typeSize: DynamicTypeSize = .large, inStack: Bool = true, ready: ([String]) -> Bool) async throws -> [String] {
         // The real app awaits its cover before presenting any ready screen (#175).
         await harness.place.prepareForLaunch()
         CardFlipAccessibilityTests.enableAccessibility()
-        let host = UIHostingController(rootView: harness.hosted(screen, typeSize: typeSize))
+        let host = UIHostingController(rootView: inStack ? AnyView(harness.hosted(screen, typeSize: typeSize)) : AnyView(harness.shared(screen, typeSize: typeSize)))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
         window.frame = CGRect(x: 0, y: 0, width: 402, height: 2400)
