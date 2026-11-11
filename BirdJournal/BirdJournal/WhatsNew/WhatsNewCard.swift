@@ -66,6 +66,10 @@ struct WhatsNewCard: View {
     @AccessibilityFocusState private var titleFocused: Bool
     /// How far a finger has pulled the card from where it rests.
     @State private var pull: CGFloat = 0
+    /// The changes rest at their top. Always so when they fit; when they scroll, a pull down from anywhere else scrolls them.
+    @State private var changesAtTop = true
+    /// Whether the drag under way pulls the card: it began with the changes at their top. Nil between drags.
+    @State private var dragPulls: Bool?
 
     /// The mascot's patch: its side, and how much of it sits on the card rather than above it.
     private static let patchSide: CGFloat = 104
@@ -81,6 +85,10 @@ struct WhatsNewCard: View {
                 ScrollView { content }
                     .scrollBounceBehavior(.basedOnSize)
                     .scrollIndicators(.visible)
+                    .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y + $0.contentInsets.top <= 0.5 } action: { _, atTop in
+                        changesAtTop = atTop
+                    }
+                    .onDisappear { changesAtTop = true }
                     .accessibilityIdentifier("whats-new-scroll")
             }
             Button("Got it", action: dismiss)
@@ -110,15 +118,24 @@ struct WhatsNewCard: View {
         // Clear of the home indicator, with the bottom safe area ignored.
         .padding(.bottom, 22)
         .offset(y: pull)
-        .gesture(
+        // Alongside the changes' own scrolling, which would otherwise keep every drag that starts on them: a release with
+        // five changes scrolls on a phone, and a pull down has to put that card away too.
+        .simultaneousGesture(
             DragGesture(minimumDistance: 12)
-                // Down follows the finger; up gives a little and no more.
+                // Down follows the finger; up gives a little and no more. Changes that scroll take the drag for themselves
+                // unless it began at their top, and then only its way down.
                 .onChanged { drag in
-                    pull = drag.translation.height > 0 ? drag.translation.height : -sqrt(-drag.translation.height)
+                    let pulls = dragPulls ?? changesAtTop
+                    dragPulls = pulls
+                    guard pulls else { return }
+                    let height = drag.translation.height
+                    pull = height > 0 ? height : changesAtTop ? -sqrt(-height) : 0
                 }
                 // Far enough, or thrown: it goes on down from where it is. Otherwise it settles back.
                 .onEnded { drag in
-                    if drag.translation.height > Self.pullToDismiss || drag.predictedEndTranslation.height > Self.pullToDismiss * 3 {
+                    let pulled = dragPulls ?? changesAtTop
+                    dragPulls = nil
+                    if pulled, drag.translation.height > Self.pullToDismiss || drag.predictedEndTranslation.height > Self.pullToDismiss * 3 {
                         dismiss()
                     } else {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { pull = 0 }
