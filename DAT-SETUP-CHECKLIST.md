@@ -305,12 +305,15 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
        long listening is away (the phone's waveform is flat) and whether the stream ever fails to come back.
      - If it works with the stream on: does the phone's waveform keep moving during a dictation, and does the wearer's
        own voice ever put a bird on the species list (the run is still listening, and nothing suppresses it)?
-     - Either way, record the answer in DECISIONS.md and set the switch's default to match (`DictationSettings`).
+     - Either way, record the answer in DECISIONS.md and set the switch's default to match
+       (`DictationSettings.keepsStreamByDefault`: a Release build never reads the Developer screen's toggle, so the
+       default in code is what ships).
    - **Partial and final words.** Do words appear while speaking (partial results), and does a final result come by
      itself at a pause? If no final ever comes, the lens takes the words as final 3 s after the last one
      (`GlassesDictation.Limits.pause`): record the wait from the end of the name to the birds, and whether 3 s is right.
      Say nothing: the lens gives up after 8 s (`Limits.silence`) and reads "Photo saved". Record whether Speech stops by
-     itself sooner ("Speech stopped with nothing heard").
+     itself sooner ("Speech stopped with nothing heard"). Say "Anna's humming" and stop: a name cut off part way through
+     a word should still offer its bird (the review of #185).
    - **What the recogniser writes.** Say ten birds of the walk, among them Anna's Hummingbird, Black Phoebe, California
      Towhee, Bushtit, Lesser Goldfinch, Red-tailed Hawk, Mourning Dove, and one outside the field guide. For each, note
      what the log says was heard and whether the bird was the first of the three offered, in the three, or missing. A
@@ -318,12 +321,22 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - **The pages.** The birds' page (the "You said" line, three birds, "Say it again", "Name it later", the hint) fits the
      lens; on the mock it is about 420 of the 600 pixels, and "Say the bird's name" with its photo about 450. "New
      patch" is beside a bird you have no patch of here and not beside one you have. Swipe down and up move the highlight and stop at the ends; a tap on a bird shows "Added", the
-     bird, "Seen", the set, and "New patch, sewn on your phone." or "Seen again · N times". "Say it again" listens again
+     bird, "Seen", the set (no such line outside every set), and "New patch, sewn on your phone." or "Seen again · N
+     times". "Say it again" listens again
      (does Speech come back on the same session every time?). "Name it later", and a tap while the lens listens, read
      "Photo saved" / "Name it on your phone.". Words no bird answers to read "No bird by that name".
+   - **Echoed taps.** A tap that lands within a second of the press that opened "Say the bird's name" (after "Say it
+     again"), "Photo saved" or "Added" is taken for that press again and dropped, as on the viewfinders. Record whether
+     a select on a row is ever delivered twice (the Developer screen's input log), and whether a deliberate second tap
+     ever feels swallowed.
+   - **The phone gets there first.** With the birds listed on the lens, name the photo on the phone (its row under
+     "Seen this run"), then tap a bird on the lens: it reads "Nothing to name" / "That photo was named or deleted on
+     your phone.", and swipe right is the list.
    - **On the phone.** While the run is on, the named photo is under "Seen this run" with the bird's name and nothing
      else happens on the phone. After Stop the stitch-in of a new patch plays once, as for an add on the lens. The
-     sighting's page says "Seen, photographed with Ray-Ban Display", at the place and time of the photo.
+     sighting's page says "Seen, photographed with Ray-Ban Display", at the place and time of the photo. Its photo is
+     shown at the journal's crop on its row, in "Name this bird" and on its page ("Your glasses snapshot"): check that
+     the bird sits where the viewfinder's frame had it, and that "View original photo" shows the whole frame.
    - **Without the permission.** If Meta AI lets the microphone be taken away while a run is on, do it and take a photo:
      the lens goes straight to "Photo saved", and the run's page on the phone shows "Say the bird's name on your glasses"
      with "Allow in Meta AI", which opens Meta AI. If it cannot be taken away mid-run, record that: the offer then never
