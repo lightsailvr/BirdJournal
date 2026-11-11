@@ -118,13 +118,21 @@ final class SightingRecorder {
     /// How many surviving sightings of `speciesID` are in the placement a sighting at `location` would have: zero when the
     /// next one would sew the bird's patch there. What the lens reads for "New patch" beside a bird it offers (issue #194).
     func patchCount(ofSpeciesID speciesID: String, at location: Coordinate?) -> Int {
-        let surviving = (try? container.mainContext.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))) ?? []
-        return CardCollection(sightings: surviving, sets: sets()).count(ofSpeciesID: speciesID, at: location)
+        (try? count(ofSpeciesID: speciesID, at: location, in: sets())) ?? 0
+    }
+
+    /// The surviving sightings of `speciesID` in the placement one at `location` has among `sets`, without the sighting
+    /// `excluding` when it is given: what says whether a write sews the bird's patch there or adds to it.
+    private func count(ofSpeciesID speciesID: String, at location: Coordinate?, in sets: [CardSet], excluding: UUID? = nil) throws -> Int {
+        var surviving = try container.mainContext.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))
+        if let excluding { surviving.removeAll { $0.identifier == excluding } }
+        return CardCollection(sightings: surviving, sets: sets).count(ofSpeciesID: speciesID, at: location)
     }
 
     /// Takes a naming back: the sighting goes and its photo waits for a name again, as a capture with the sighting's time,
     /// place and source. Nil, with nothing changed, for a sighting that was not named from a photo it still has. Undo never
-    /// removes a photo: only a delete does.
+    /// removes the photo that was named: only a delete does. A capture holds that one photo, so anything else attached to
+    /// the sighting since the naming (in the seconds its Undo is offered) goes with the sighting, as when one is removed.
     func takeBackName(of sighting: Sighting) throws -> Capture? {
         guard sighting.namedByBirder, let photo = sighting.attachedPhotoPaths.first else { return nil }
         let others = sighting.filePaths.filter { $0 != photo }
@@ -151,11 +159,9 @@ final class SightingRecorder {
     func changeBird(of sighting: Sighting, to bird: NameableBird) throws -> Recorded {
         let speciesID = bird.speciesID
         let location = sighting.location
-        let identifier = sighting.identifier
         let context = container.mainContext
-        let others = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID && $0.identifier != identifier }))
         let sets = sets()
-        let existing = CardCollection(sightings: others, sets: sets).count(ofSpeciesID: speciesID, at: location)
+        let existing = try count(ofSpeciesID: speciesID, at: location, in: sets, excluding: sighting.identifier)
         sighting.speciesID = speciesID
         sighting.rarity = raritySnapshot(scientificName: bird.scientificName, location: location, at: sighting.confirmedAt)
         sighting.caption = nil
@@ -171,8 +177,7 @@ final class SightingRecorder {
     /// Removes a capture and its photo from the album: the one thing that loses a photo.
     func delete(_ capture: Capture) throws {
         let path = capture.photoPath
-        container.mainContext.delete(capture)
-        try container.mainContext.save()
+        try deleteAndSave(capture)
         try? FileManager.default.removeItem(at: frames.url(for: path))
     }
 
@@ -186,9 +191,8 @@ final class SightingRecorder {
         let speciesID = sighting.speciesID
         let location = sighting.location
         let context = container.mainContext
-        let surviving = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))
         let sets = sets()
-        let existing = CardCollection(sightings: surviving, sets: sets).count(ofSpeciesID: speciesID, at: location)
+        let existing = try count(ofSpeciesID: speciesID, at: location, in: sets)
         sighting.rarity = raritySnapshot(scientificName: sighting.scientificName, location: location, at: sighting.confirmedAt)
         context.insert(sighting)
         try context.save()
@@ -238,9 +242,21 @@ final class SightingRecorder {
     /// Removes a sighting and its files from the album.
     func delete(_ sighting: Sighting) throws {
         let files = sighting.filePaths
-        container.mainContext.delete(sighting)
-        try container.mainContext.save()
+        try deleteAndSave(sighting)
         for path in files { try? FileManager.default.removeItem(at: frames.url(for: path)) }
+    }
+
+    /// Deletes one record, or nothing: a delete whose save fails is taken back, so it does not go through with the next
+    /// save of something else and leave the record's files behind with no record.
+    private func deleteAndSave(_ model: some PersistentModel) throws {
+        let context = container.mainContext
+        context.delete(model)
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
     }
 }
 
