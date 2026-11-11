@@ -17,6 +17,14 @@ import UIKit
 /// lists under "Seen this run" and names. Landing on the species list and opening the viewfinder check that
 /// the stream is up and put it back if not (#46). Start from the phone, then pocket it: nothing here needs the screen.
 ///
+/// The photo can be named on the lens too (issue #194). Once it is written the run asks the lens for the bird's name,
+/// if it has the names to match against and the glasses' microphone permission (checked silently: without it the lens
+/// goes straight to "Photo saved. Name it on your phone." and `dictationNeedsPermission` has the phone offer to turn it
+/// on). What the lens hears is matched against the names with the naming sheet's ranking (`NameableBirds.spoken`), over
+/// the birds this run has heard and those likely where and when the photo was taken; a tap on a bird names the unnamed
+/// sighting through the run's ledger, as the phone would, and a patch it sews waits for its stitch-in on the phone as a
+/// lens add's does. While the glasses listen, the camera stream stays on or comes off by `DictationSettings`.
+///
 /// Order: the device session (which waits for connected display glasses), camera and microphone permission, the
 /// lens (so the wearer sees the empty species list while the models load), then the listening session over the stream. The run ends from the phone, from Back on the root,
 /// or when the glasses end the session with a quit (two-finger tap); each path tears down the same way.
@@ -95,6 +103,9 @@ final class GlassesListeningSession {
     /// Hears each photo captured from the lens once it is written as an unnamed sighting (issue #193): the run's ledger
     /// already lists it; the phone writes down a review that is waiting.
     @ObservationIgnored var onCaptured: ((UnnamedSighting) -> Void)?
+    /// A photo was taken on the lens and its name could not be asked for, because the glasses' microphone permission is
+    /// not granted (issue #194): the phone offers to turn dictation on (`allowDictation()`).
+    private(set) var dictationNeedsPermission = false
 
     /// Engine, location and the live list.
     let listening: ListeningSession
@@ -107,6 +118,19 @@ final class GlassesListeningSession {
     /// The run's sightings, shared with the phone's "Add to collection" (issue #28) so both add each species once.
     let sightings: RunSightings
     @ObservationIgnored private let policy: ReconnectPolicy
+    /// The names a photo can be given, read once and off the main actor; nil on a run whose lens never asks for a name.
+    @ObservationIgnored private let loadNames: (@Sendable () async -> NameableBirds?)?
+    @ObservationIgnored private var namesTask: Task<NameableBirds?, Never>?
+    /// Where the birds likely at a photo's place and week are read from.
+    @ObservationIgnored private let occurrenceModel: any SpeciesOccurrenceModel
+    /// Whether the camera stream stays on while the glasses listen for a name, read as each dictation starts.
+    @ObservationIgnored private let dictationKeepsStream: () -> Bool
+    /// The stream a dictation took off, until the dictation is over.
+    @ObservationIgnored private var dictationHold: (any DictationStreamHold)?
+    /// The photos taken on the lens this run that have no name yet, by the lens's number for each.
+    @ObservationIgnored private var captured: [Int: UnnamedSighting] = [:]
+    /// The birds last offered for each of them, by scientific name: what a tap on the lens names.
+    @ObservationIgnored private var offered: [Int: [String: NameableBird]] = [:]
     @ObservationIgnored private var session: DeviceSession?
     @ObservationIgnored private var source: (any FrameKeepingAudioSource)?
     @ObservationIgnored private var sourceEventTask: Task<Void, Never>?
@@ -130,13 +154,20 @@ final class GlassesListeningSession {
         reconnect: ReconnectPolicy = ReconnectPolicy(),
         profile: @escaping (Species) -> SpeciesProfile? = { _ in nil },
         image: @escaping (LensImage) -> UIImage? = { _ in nil },
-        suppression: AudioSuppression? = nil
+        suppression: AudioSuppression? = nil,
+        names: (@Sendable () async -> NameableBirds?)? = nil,
+        occurrenceModel: any SpeciesOccurrenceModel = BundledIdentification.geoModel,
+        dictationLimits: GlassesDictation.Limits = GlassesDictation.Limits(),
+        dictationKeepsStream: @escaping () -> Bool = { DictationSettings.keepsStream() }
     ) {
         self.wearables = wearables
         self.connection = connection
         self.sightings = sightings ?? RunSightings(recorder: recorder)
         self.makeSource = makeSource
         self.policy = reconnect
+        loadNames = names
+        self.occurrenceModel = occurrenceModel
+        self.dictationKeepsStream = dictationKeepsStream
         // The closures reach back into the run; both objects live as long as it does.
         let box = WeakBox()
         listening = ListeningSession(
@@ -153,8 +184,17 @@ final class GlassesListeningSession {
             connection: connection,
             profile: profile,
             image: image,
+            dictationLimits: dictationLimits,
             onEffect: { effect in box.run?.handle(effect) }
         )
+        if names != nil {
+            lens.names = LensNameSource(
+                matches: { words, capture in await box.run?.birds(named: words, forCapture: capture) ?? [] },
+                name: { capture, match in box.run?.name(capture, as: match) },
+                willListen: { await box.run?.dictationWillListen() },
+                didListen: { box.run?.dictationDidListen() }
+            )
+        }
         lens.viewfinderFrame = { box.run?.source?.latestFrame }
         lens.onStreamNeeded = { reason in
             Task { await box.run?.source?.ensureStreaming(reason) }
@@ -193,6 +233,9 @@ final class GlassesListeningSession {
         phase = .starting
         errorMessage = nil
         sightings.reset()
+        captured = [:]
+        offered = [:]
+        dictationNeedsPermission = false
         stopTask = nil
         lastSessionError = nil
         do {
@@ -429,8 +472,9 @@ final class GlassesListeningSession {
         case .openViewfinder, .openCaptureViewfinder, .playSound, .stopSound:
             // The lens shows its viewfinders and plays its clips itself.
             break
-        case .capturePhoto:
-            // The lens asks for a capture's photo through `onCapture`, with a number to answer by.
+        case .capturePhoto, .listenForName, .nameCapture:
+            // The lens asks for a capture's photo through `onCapture`, with a number to answer by, and for the birds a
+            // name may be and the naming itself through its `names`.
             break
         }
     }
@@ -455,15 +499,101 @@ final class GlassesListeningSession {
             do {
                 let unnamed = try sightings.capture(photo: jpeg, takenAt: takenAt, location: location, source: .glasses)
                 onCaptured?(unnamed)
-                // The photo is safe from here on. Dictation of the bird's name starts here (issue #194), with `unnamed`
-                // to name; whatever goes wrong after this, the phone has the photo.
-                lens.captureSaved(id)
+                // The photo is safe from here on: whatever goes wrong after this, the phone has it. The lens asks for
+                // the bird's name if the glasses can hear one (issue #194), else says the photo waits on the phone.
+                captured[id] = unnamed
+                let askName = await canAskName()
+                let picture = askName ? await Task.detached(priority: .userInitiated) { DisplayCardBuilder.capturedPhotoImage(jpeg) }.value : nil
+                lens.captureSaved(id, askName: askName, photo: picture)
             } catch {
                 errorMessage = "Could not save the photo: \(error.localizedDescription)"
                 Self.logger.error("capture failed: \(error.localizedDescription, privacy: .public)")
                 lens.captureFailed(id)
             }
         }
+    }
+
+    // MARK: - Saying the bird's name (issue #194)
+
+    /// Whether the lens can ask for a bird's name now: the run has the names, and the glasses' microphone permission is
+    /// granted. The permission is only read here, never asked for: asking opens Meta AI, which is for the phone to offer
+    /// (`allowDictation()`), not for a wearer with the phone in a pocket.
+    private func canAskName() async -> Bool {
+        guard loadNames != nil, phase == .listening else { return false }
+        guard let status = try? await wearables.checkPermissionStatus(.microphone) else { return false }
+        dictationNeedsPermission = status != .granted
+        return status == .granted
+    }
+
+    /// Asks for the glasses' microphone permission, which opens Meta AI: what the phone's offer does, after it has said
+    /// why. Returns whether it was granted.
+    @discardableResult
+    func allowDictation() async -> Bool {
+        do {
+            let granted = try await wearables.requestPermission(.microphone) == .granted
+            dictationNeedsPermission = !granted
+            return granted
+        } catch {
+            Self.logger.error("dictation permission: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+    }
+
+    /// The names, read the first time a photo needs them.
+    private func names() async -> NameableBirds? {
+        guard let loadNames else { return nil }
+        if namesTask == nil { namesTask = Task.detached(priority: .userInitiated) { await loadNames() } }
+        return await namesTask?.value
+    }
+
+    /// The birds `words` may name for the photo of capture `capture`, the closest first, each with whether naming the
+    /// photo as it would sew its patch. Ranked as "Name this bird" ranks a search: the birds this run has heard, in the
+    /// lens's list order, then those likely where and when the photo was taken.
+    private func birds(named words: String, forCapture capture: Int) async -> [LensNameMatch] {
+        guard let unnamed = captured[capture], let names = await names() else { return [] }
+        let machine = lens.machine
+        let order = machine.order.indices.count == machine.stack.count ? machine.order.indices : Array(machine.stack.candidates.indices)
+        let heard = order.map { machine.stack.candidates[$0].species.scientificName }
+        let model = occurrenceModel, place = unnamed.location, takenAt = unnamed.takenAt
+        // The geomodel is read for the photo's place and week, and ten thousand names are compared: off the main actor.
+        let birds = await Task.detached(priority: .userInitiated) {
+            names.spoken(words, in: NameableBirds.Context(heard: heard, place: place, takenAt: takenAt, occurrenceModel: model), limit: LensNaming.matchLimit)
+        }.value
+        offered[capture] = Dictionary(birds.map { ($0.scientificName, $0) }, uniquingKeysWith: { first, _ in first })
+        return birds.map { bird in
+            LensNameMatch(id: bird.scientificName, commonName: bird.commonName, isNewPatch: sightings.recorder.patchCount(ofSpeciesID: bird.speciesID, at: unnamed.location) == 0)
+        }
+    }
+
+    /// Names the photo of capture `capture` as the bird the wearer tapped: the unnamed sighting becomes a sighting, Seen,
+    /// through the run's ledger, exactly as naming it on the phone would, except that nothing is celebrated on a phone
+    /// in a pocket: a patch it sews waits for its stitch-in as a lens add's does (`onPatchSewn`). Nil when it could not
+    /// be written (the phone named or deleted the photo meanwhile, or the save failed): the photo is where it was.
+    private func name(_ capture: Int, as match: LensNameMatch) -> LensNamedCapture? {
+        guard let unnamed = captured[capture], let bird = offered[capture]?[match.id] else { return nil }
+        do {
+            let addition = try sightings.name(unnamed, as: bird)
+            captured[capture] = nil
+            offered[capture] = nil
+            if addition.sewsPatch { onPatchSewn?(addition.identifier) }
+            return LensNamedCapture(commonName: bird.commonName, place: addition.placement.setName, earned: addition.sewsPatch ? .newPatch : .seenAgain(count: addition.patchCount))
+        } catch {
+            Self.logger.error("naming from the lens failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// The glasses are about to listen for a name. With the switch off the camera stream comes off the session first,
+    /// as it does for a reference clip, and the run hears nothing until the dictation is over.
+    private func dictationWillListen() async {
+        guard !dictationKeepsStream(), let hold = source as? any DictationStreamHold else { return }
+        dictationHold = hold
+        await hold.holdForDictation()
+    }
+
+    private func dictationDidListen() {
+        dictationHold?.releaseAfterDictation()
+        dictationHold = nil
     }
 
     /// Writes a new sighting through the run's ledger, which the phone shares, and tells the lens what it earned: a new

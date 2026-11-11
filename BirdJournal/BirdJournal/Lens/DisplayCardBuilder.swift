@@ -11,21 +11,25 @@ import UIKit
 /// pure module names them, the pack (or the fake stack) holds the pixels. A photo the caller cannot load is left
 /// out. Taps on the card's button are delivered to `onAction`; list rows are not tappable, the app moves their
 /// selection itself from Inputs. The viewfinder shows `viewfinder`, the camera's latest frame already sized for the
-/// lens, or says it is waiting for one.
+/// lens, or says it is waiting for one. "Say the bird's name" (issue #194) shows `capturedPhoto`, the picture just
+/// taken, small, and is drawn without it when there is none; the rows a photo is named from are drawn like the list's.
 enum DisplayCardBuilder {
     /// Padding around the card on the 600-pixel canvas; the pack's lens crops are cut to the width this leaves.
     nonisolated static let padding: CGFloat = 24
     /// The box a viewfinder frame is scaled to fit: the card's width, and the height the name and hint leave.
     nonisolated static let viewfinderSize = CGSize(width: 600 - 2 * padding, height: 420)
+    /// The box the photo on "Say the bird's name" is scaled to fit: a thumbnail, with room under it for the words heard.
+    nonisolated static let capturedPhotoSize = CGSize(width: 600 - 2 * padding, height: 260)
 
     static func flexBox(
         for card: LensCard,
         image: (LensImage) -> UIImage?,
         viewfinder: UIImage? = nil,
+        capturedPhoto: UIImage? = nil,
         onAction: @escaping @Sendable (LensAction) -> Void
     ) -> FlexBox {
         // A photo the caller cannot load is left out, so the children are gathered before the builder runs.
-        let children = card.elements.compactMap { component($0, image: image, viewfinder: viewfinder, onAction: onAction) }
+        let children = card.elements.compactMap { component($0, image: image, viewfinder: viewfinder, capturedPhoto: capturedPhoto, onAction: onAction) }
         return FlexBox(direction: .column, spacing: 12, crossAlignment: .stretch) {
             for child in children {
                 child
@@ -40,6 +44,7 @@ enum DisplayCardBuilder {
         _ element: LensElement,
         image: (LensImage) -> UIImage?,
         viewfinder: UIImage?,
+        capturedPhoto: UIImage?,
         onAction: @escaping @Sendable (LensAction) -> Void
     ) -> (any ViewComponent)? {
         switch element {
@@ -97,7 +102,54 @@ enum DisplayCardBuilder {
                 Image(image: viewfinder, sizePreset: .fill, cornerRadius: .medium)
             }
             .alignSelf(.center)
+        case .capturedPhoto:
+            guard let capturedPhoto else { return nil }
+            return FlexBox(direction: .row) {
+                Image(image: capturedPhoto, sizePreset: .fill, cornerRadius: .medium)
+            }
+            .alignSelf(.center)
+        case .choices(let rows):
+            return FlexBox(direction: .column, spacing: 8, crossAlignment: .stretch) {
+                for row in rows {
+                    Self.choiceRow(row)
+                }
+            }
         }
+    }
+
+    /// The photo just taken, scaled down to fit `capturedPhotoSize` and cropped as the journal will show it
+    /// (`FrameCrop.albumZoom`): a bundled image is laid out at its pixel size, and the send carries no more than the lens
+    /// shows. Nil for data that is no picture. Safe to call off the main actor.
+    nonisolated static func capturedPhotoImage(_ photo: Data) -> UIImage? {
+        guard let image = UIImage(data: photo), image.size.width > 0, image.size.height > 0 else { return nil }
+        let crop = FrameCrop.centerRect(in: image.size)
+        let scale = min(capturedPhotoSize.width / crop.width, capturedPhotoSize.height / crop.height, 1)
+        let size = CGSize(width: (crop.width * scale).rounded(), height: (crop.height * scale).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(x: -crop.minX * scale, y: -crop.minY * scale, width: image.size.width * scale, height: image.size.height * scale))
+        }
+    }
+
+    /// One row a photo is named from (issue #194), marked like a list row: a caret and a card background on the
+    /// highlighted one; a bird's name, with "New patch" beside it when the naming would sew one, or one of the two ways on.
+    private static func choiceRow(_ row: LensChoiceRow) -> FlexBox {
+        FlexBox(direction: .row, spacing: 12, crossAlignment: .center) {
+            if row.isSelected {
+                Icon(name: .caretRight, style: .filled)
+            }
+            FlexBox(direction: .row) {
+                Text(row.label, style: .body, color: row.isSelected ? .primary : .secondary)
+            }
+            .flexGrow(1)
+            .flexShrink(1)
+            if let detail = row.detail {
+                Text(detail, style: .meta, color: .secondary)
+            }
+        }
+        .padding(EdgeInsets(top: 8, bottom: 8, leading: 12, trailing: 12))
+        .background(row.isSelected ? .card : .none)
     }
 
     /// The camera frame scaled down to fit `viewfinderSize`, so the send carries no more pixels than the lens shows,

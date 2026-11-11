@@ -102,6 +102,13 @@ final class SightingRecorder {
         }
     }
 
+    /// How many surviving sightings of `speciesID` are in the placement a sighting at `location` would have: zero when the
+    /// next one would sew the bird's patch there. What the lens reads for "New patch" beside a bird it offers (issue #194).
+    func patchCount(ofSpeciesID speciesID: String, at location: Coordinate?) -> Int {
+        let surviving = (try? container.mainContext.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))) ?? []
+        return CardCollection(sightings: surviving, sets: sets()).count(ofSpeciesID: speciesID, at: location)
+    }
+
     /// Takes a naming back: the sighting goes and its photo waits for a name again, as a capture with the sighting's time,
     /// place and source. Nil, with nothing changed, for a sighting that was not named from a photo it still has. Undo never
     /// removes a photo: only a delete does.

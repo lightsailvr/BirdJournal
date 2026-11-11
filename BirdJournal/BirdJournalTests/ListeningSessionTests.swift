@@ -244,7 +244,7 @@ nonisolated final class SpyOccurrence: SpeciesOccurrenceModel {
 /// stream in the run tests (issue #9), with whatever camera frame the test sets, and records the sessions it was
 /// suspended from and resumed on (issue #10).
 @MainActor
-final class ManualAudioSource: FrameKeepingAudioSource {
+final class ManualAudioSource: FrameKeepingAudioSource, DictationStreamHold {
     let sampleRate = 32_000
     var latestFrame: CameraFrame?
     private(set) var isStopped = false
@@ -290,6 +290,12 @@ final class ManualAudioSource: FrameKeepingAudioSource {
     /// Every moment the run asked for the stream, oldest first.
     var streamChecks: [String] = []
     func ensureStreaming(_ reason: String) async { streamChecks.append(reason) }
+
+    /// How often the stream was taken off for a dictation of a bird's name (issue #194), and let go again.
+    private(set) var dictationHolds = 0
+    private(set) var dictationReleases = 0
+    func holdForDictation() async { dictationHolds += 1 }
+    func releaseAfterDictation() { dictationReleases += 1 }
 
     func suspend() async {
         suspensions += 1

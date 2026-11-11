@@ -106,6 +106,8 @@ nonisolated struct NameableBirds: Sendable {
     private struct Entry: Sendable {
         let bird: NameableBird
         let words: NameSearch.Words
+        /// The bird's common names as they are said, for `spoken(_:in:limit:)`.
+        let spoken: SpokenName.Names
     }
 
     private let fieldGuide: [Entry]
@@ -127,12 +129,16 @@ nonisolated struct NameableBirds: Sendable {
                 scientificName: entry.scientificName, commonName: entry.commonName, isInFieldGuide: true
             )
             // BirdNET's own name for it finds it too, where the pack spells it differently.
-            described.append(Entry(bird: bird, words: NameSearch.Words([entry.commonName, entry.scientificName, label?.commonName ?? ""])))
+            described.append(Entry(
+                bird: bird, words: NameSearch.Words([entry.commonName, entry.scientificName, label?.commonName ?? ""]),
+                spoken: SpokenName.Names([entry.commonName, label?.commonName ?? ""])
+            ))
         }
         let rest = birds.filter { !seen.contains($0.scientificName) }.map { species in
             Entry(
                 bird: NameableBird(speciesID: species.birdnetLabel, scientificName: species.scientificName, commonName: species.commonName, isInFieldGuide: false),
-                words: NameSearch.Words([species.commonName, species.scientificName])
+                words: NameSearch.Words([species.commonName, species.scientificName]),
+                spoken: SpokenName.Names([species.commonName])
             )
         }
         self.fieldGuide = described.sorted(by: Self.byName)
@@ -181,6 +187,30 @@ nonisolated struct NameableBirds: Sendable {
             }
             .sorted { $0.standing != $1.standing ? $0.standing < $1.standing : $0.position < $1.position }
             .map(\.bird)
+    }
+
+    /// The birds what was said to the glasses may name (issue #194), the closest first, at most `limit`: what the lens
+    /// offers after a dictation. A recogniser does not write bird names as a birder types them, so the match is by the
+    /// common name as it is said (`SpokenName`): the whole name or a run of its words, letter for letter, by ear, or a few
+    /// sounds off. The words people say around a name ("it's a") are dropped.
+    ///
+    /// The closest come first: the whole name before a part of one, and as written before by ear. Birds as close as each
+    /// other are in the order "Name this bird" lists a search in: one heard this run first, then one likely here, the
+    /// likeliest first (`Context.Standing`), then the field guides' birds before the others, and by name.
+    func spoken(_ words: String, in context: Context = .none, limit: Int = 3) -> [NameableBird] {
+        guard let said = SpokenName.said(words) else { return [] }
+        var found: [(closeness: SpokenName.Closeness, standing: Context.Standing, position: Int, bird: NameableBird)] = []
+        // Each list is by name and the field guides' is first: the position across both is the last of the tie-breakers.
+        for (position, entry) in (fieldGuide + others).enumerated() {
+            guard let closeness = entry.spoken.closeness(to: said) else { continue }
+            found.append((closeness, context.standing(ofScientificName: entry.bird.scientificName), position, entry.bird))
+        }
+        found.sort { lhs, rhs in
+            if lhs.closeness != rhs.closeness { return lhs.closeness < rhs.closeness }
+            if lhs.standing != rhs.standing { return lhs.standing < rhs.standing }
+            return lhs.position < rhs.position
+        }
+        return found.prefix(limit).map(\.bird)
     }
 
     /// The bird with this scientific name, if it can be named.

@@ -242,6 +242,28 @@ final class GlassesConnection {
         }
     }
 
+    /// What the mock's glasses hear, as the toolkit's Speech would report it (issue #194): words so far, or the final
+    /// ones. Dropped by the mock unless Speech is listening.
+    func simulateMockSpeech(_ words: String, isFinal: Bool) {
+        mockGlasses?.services.speech.simulateTranscription(text: words, isFinal: isFinal, confidence: 0.9)
+    }
+
+    /// A recognition error on the mock's glasses, which ends the dictation.
+    func simulateMockSpeechError() {
+        mockGlasses?.services.speech.simulateError(errorCode: 5, message: "simulated by the Developer screen")
+    }
+
+    /// Takes the glasses' microphone permission away on the mock, as a wearer who never allowed it, or took it back: the
+    /// lens then cannot ask for a bird's name, and asking for the permission is refused until `-autoGlassesMicrophone`
+    /// is gone.
+    func denyMockMicrophone() {
+        MockDeviceKit.shared.permissions.set(.microphone, .denied)
+        MockDeviceKit.shared.permissions.setRequestResult(.microphone, result: .denied)
+    }
+
+    /// Whether the mock's Speech is listening: only while the lens asks for a bird's name.
+    var mockSpeechIsListening: Bool { mockGlasses?.services.speech.isListening ?? false }
+
     func injectMockInput(_ input: MockInput) {
         guard let kit = mockGlasses?.services.input else { return }
         switch input {

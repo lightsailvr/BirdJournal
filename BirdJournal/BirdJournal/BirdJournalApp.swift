@@ -214,7 +214,7 @@ struct BirdJournalApp: App {
     /// the species (bundled first, then downloads, read live so a pack downloaded mid-run counts), and a species no
     /// pack has shows by name alone.
     private static func makeLensSession(connection: GlassesConnection, packs: PackLibrary) -> GlassesLensSession {
-        GlassesLensSession(connection: connection, profile: { packs.profile(for: $0) }, image: { packs.image(for: $0) })
+        GlassesLensSession(connection: connection, profile: { packs.profile(for: $0) }, image: { packs.image(for: $0) }, dictationLimits: .forApp)
     }
 
     /// The whole loop on the glasses (issue #9), writing sightings to the album through the run ledger the phone's
@@ -241,7 +241,14 @@ struct BirdJournalApp: App {
             location: location,
             profile: { packs.profile(for: $0) },
             image: { packs.image(for: $0) },
-            suppression: suppression
+            suppression: suppression,
+            // What a name said on the lens is matched against (issue #194): the field guides on the phone as the first
+            // photo of the run finds them, and every bird BirdNET knows; read off the main actor.
+            names: {
+                let fieldGuide = await packs.fieldGuideBirds
+                return (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+            },
+            dictationLimits: .forApp
         )
     }
 

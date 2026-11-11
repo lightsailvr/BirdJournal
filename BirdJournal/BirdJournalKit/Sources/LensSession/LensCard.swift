@@ -106,6 +106,24 @@ public struct LensSoundRow: Sendable, Equatable {
     public var words: Int { label.words }
 }
 
+/// One row of the page that names a photo by voice (issue #194): a bird the words may name, or one of the two ways on.
+/// As on the species list, the app moves the highlight and a tap chooses; rows are not tappable on the display.
+public struct LensChoiceRow: Sendable, Equatable {
+    /// A bird's common name, "Say it again" or "Name it later".
+    public var label: String
+    /// "New patch" for a bird whose patch the naming would sew.
+    public var detail: String?
+    public var isSelected: Bool
+
+    public init(label: String, detail: String?, isSelected: Bool) {
+        self.label = label
+        self.detail = detail
+        self.isSelected = isSelected
+    }
+
+    public var words: Int { label.words + (detail?.words ?? 0) }
+}
+
 /// One element of a card, in Display DSL terms.
 public enum LensElement: Sendable, Equatable {
     /// The one-line strip of a species card: species count and position on the photo page, and who is calling now.
@@ -132,6 +150,10 @@ public enum LensElement: Sendable, Equatable {
     case sounds([LensSoundRow])
     /// The live camera picture on the viewfinder page; the adapter fills it with the stream's latest frame.
     case viewfinder
+    /// The photo just taken, small, on "Say the bird's name" (issue #194); the adapter fills it, or leaves it out.
+    case capturedPhoto
+    /// The rows a photo is named from: the birds the words heard may be, then "Say it again" and "Name it later".
+    case choices([LensChoiceRow])
 }
 
 /// A card, described without the toolkit: one column of elements, sent whole as the single root `FlexBox` of a
@@ -170,7 +192,8 @@ extension LensElement {
         case .button(let button): button.label.words
         case .list(let rows): rows.reduce(0) { $0 + $1.words }
         case .sounds(let rows): rows.reduce(0) { $0 + $1.words }
-        case .photo, .viewfinder: 0
+        case .choices(let rows): rows.reduce(0) { $0 + $1.words }
+        case .photo, .viewfinder, .capturedPhoto: 0
         }
     }
 }
