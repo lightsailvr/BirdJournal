@@ -470,6 +470,21 @@ final class ListeningCoordinator {
         }
     }
 
+    /// A sighting's bird was changed on its page (issue #190). The run's list names it as the new bird; and whatever was
+    /// about the bird it was goes: the add's acknowledgment, its page if it is still up, and a ceremony the lens left
+    /// waiting, since a patch sewn by a change has no stitch-in. The sighting itself stays the run's, and can still be
+    /// removed from its page.
+    func birdChanged(of sighting: Sighting) {
+        let identifier = sighting.identifier
+        sightings.birdChanged(of: sighting)
+        pendingCeremonies.removeAll { $0 == identifier }
+        if reveal?.addition.identifier == identifier { reveal = nil }
+        if acknowledgment?.undo?.identifier == identifier {
+            acknowledgmentTask?.cancel()
+            acknowledgment = nil
+        }
+    }
+
     /// The last run left something for its page: birds heard, birds seen, or photos still to name.
     var lastRunHasSomething: Bool {
         !(candidates.isEmpty && sightings.seen.isEmpty && sightings.unnamed.isEmpty)

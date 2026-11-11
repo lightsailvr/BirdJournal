@@ -165,4 +165,190 @@ struct ChangeBirdTests {
         #expect(named.caption != nil, "the same bird keeps its caption")
         #expect(fixture.prior.asked.count == asked, "and its rarity is not read again")
     }
+
+    private func waitUntil(_ what: String, timeout: Duration = .seconds(30), _ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now + timeout
+        while !condition() {
+            guard ContinuousClock.now < deadline else {
+                Issue.record("timed out waiting until \(what)")
+                return
+            }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+    }
+
+    // MARK: - The find
+
+    /// An outbox over `fixture`'s album for a signed-in, sharing birder, as the app wires it to the run and the journal's edits.
+    static func publishing(_ fixture: Fixture, to client: FindRecorder) -> FindOutbox {
+        let library = PackLibrary(bundled: nil, storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "change-bird-packs-\(UUID().uuidString)")), bundledCovers: .none)
+        let places = PlaceNames()
+        let outbox = FindOutbox(
+            account: FakeAccount.session(signedIn: true), client: client, fileURL: nil, sharing: { .automatic },
+            payload: { [album = fixture.album] identifier, isNewPatch in
+                await FindOutbox.find(of: identifier, isNewPatch: isNewPatch, album: album, packs: library, places: places)
+            }
+        )
+        fixture.ledger.findOutbox = outbox
+        fixture.edits.findOutbox = outbox
+        return outbox
+    }
+
+    @Test("a published find is put again as the new bird, with its rarity, and says a new patch only when the change sewed one")
+    func theFindFollows() async throws {
+        let fixture = try Self.makeFixture()
+        let client = FindRecorder()
+        let outbox = Self.publishing(fixture, to: client)
+        let heard = try fixture.ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: Self.taken.addingTimeInterval(-60), location: Self.losFeliz, frame: nil, source: .phone)
+        let sighting = try fixture.named(Self.allens)
+        let identifier = sighting.identifier
+        await outbox.flush()
+        let first = try #require(client.puts[identifier])
+        #expect(first.commonName == "Allen's Hummingbird" && first.newPatch && first.rarity == .common)
+
+        #expect(fixture.edits.changeBird(of: sighting, to: Self.finch))
+        await outbox.flush()
+
+        let find = try #require(client.puts[identifier])
+        #expect(find.speciesID == "Haemorhous mexicanus_House Finch")
+        #expect(find.scientificName == "Haemorhous mexicanus")
+        #expect(find.commonName == "House Finch")
+        #expect(find.method == .seen, "still a bird the birder saw")
+        #expect(find.rarity == .rare, "the new bird's")
+        #expect(find.foundAt == first.foundAt, "the same sighting, when it was")
+        #expect(!find.newPatch, "the House Finch already had its patch here: the old bird's new patch is not claimed for it")
+        #expect(client.calls == ["put \(heard.identifier)", "put \(identifier)", "put \(identifier)"], "the same find put again, none deleted")
+
+        #expect(fixture.edits.changeBird(of: sighting, to: Self.hermit))
+        await outbox.flush()
+        #expect(client.puts[identifier]?.commonName == "Long-tailed Hermit")
+        #expect(client.puts[identifier]?.newPatch == true, "this change sewed the hermit's patch")
+        #expect(client.puts[identifier]?.rarity == nil)
+        #expect(outbox.publishedNewPatch(identifier) == true, "what a card shared by hand would say too")
+    }
+
+    @Test("a sighting that was never published stays unpublished when its bird changes")
+    func anUnpublishedSightingStaysPrivate() async throws {
+        let fixture = try Self.makeFixture()
+        let sighting = try fixture.named(Self.allens)
+        let client = FindRecorder()
+        let outbox = Self.publishing(fixture, to: client)
+
+        #expect(fixture.edits.changeBird(of: sighting, to: Self.finch))
+        await outbox.flush()
+
+        #expect(client.calls.isEmpty)
+        #expect(!outbox.isPublished(sighting.identifier))
+    }
+
+    // MARK: - The caption
+
+    /// A writer whose lines name the bird they were written for, each held back until the test lets it go.
+    final class HeldWriter: CaptionWriter, @unchecked Sendable {
+        let version = "held@1"
+        let isAvailable = true
+        private(set) var requests: [CaptionRequest] = []
+        private var held: [String: CheckedContinuation<Void, Never>] = [:]
+
+        func caption(for request: CaptionRequest) async throws -> String {
+            requests.append(request)
+            await withCheckedContinuation { held[request.commonName] = $0 }
+            return "A line about the \(request.commonName)."
+        }
+
+        /// Lets the line being written for `commonName` finish.
+        func release(_ commonName: String) {
+            held.removeValue(forKey: commonName)?.resume()
+        }
+    }
+
+    static func captioner(_ writer: HeldWriter) -> Captioner {
+        let names = ["Selasphorus sasin": "Allen's Hummingbird", "Haemorhous mexicanus": "House Finch"]
+        return Captioner(
+            writer: writer,
+            species: { names[$0].map { Captioner.Species(commonName: $0, facts: ["It feeds at flowers and feeders."], isThreatened: nil) } },
+            placeLabel: { _ in nil }
+        )
+    }
+
+    @Test("the new bird gets a caption of its own, and one still being written for the old bird when the bird is changed never lands")
+    func aCaptionOfItsOwn() async throws {
+        let fixture = try Self.makeFixture()
+        let writer = HeldWriter()
+        let captioner = Self.captioner(writer)
+        fixture.ledger.captioner = captioner
+        fixture.edits.captioner = captioner
+        let sighting = try fixture.named(Self.allens)
+        try await waitUntil("the add's caption is being written") { writer.requests.count == 1 }
+
+        #expect(fixture.edits.changeBird(of: sighting, to: Self.finch))
+        try await waitUntil("the new bird's caption is being written") { writer.requests.count == 2 }
+        #expect(writer.requests.map(\.commonName) == ["Allen's Hummingbird", "House Finch"])
+
+        // The old bird's line arrives first, after the change.
+        writer.release("Allen's Hummingbird")
+        for _ in 0..<20 { await Task.yield() }
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(sighting.caption == nil, "a line about the bird it no longer is: \(String(describing: sighting.caption))")
+
+        writer.release("House Finch")
+        try await waitUntil("the new bird's caption is written") { sighting.caption != nil }
+        #expect(sighting.caption == CardCaption(text: "A line about the House Finch.", generatorVersion: "held@1"))
+        #expect(try ModelContext(fixture.album).fetch(Sighting.newestFirst()).first?.caption?.text == "A line about the House Finch.")
+    }
+
+    // MARK: - On a run
+
+    @Test("on a run the row under Seen this run becomes the new bird's, the old bird's acknowledgment goes, and no stitch-in plays for the patch the change sewed")
+    func theRunFollowsAndNothingIsCelebrated() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        let edits = JournalEdits(container: harness.album, frames: FrameStore(directory: harness.frames), recorder: run.sightings.recorder)
+        // As the app wires it.
+        edits.birdChanged = { [weak run] in run?.birdChanged(of: $0) }
+        await run.start()
+        try await waitUntil("the run has its place") { run.coordinate != nil }
+
+        let addition = try #require(run.addSeen(Self.allens, photo: CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now)))
+        #expect(run.reveal?.title == "Your first Allen's Hummingbird", "the add's own stitch-in")
+        run.finishCeremony()
+        run.dismissReveal()
+        #expect(run.acknowledgment?.text == "Your first Allen's Hummingbird")
+        let sighting = try #require(harness.stored.first)
+
+        #expect(edits.changeBird(of: sighting, to: Self.finch))
+
+        #expect(CardCollection(sightings: harness.stored).sewedItsPatch(addition.identifier), "the change sewed the House Finch's patch")
+        #expect(run.reveal == nil, "and nothing plays for it")
+        #expect(!run.hasCeremonyWaiting && run.waitingCeremonies == 0)
+        #expect(run.sightings.seen.map(\.commonName) == ["House Finch"])
+        #expect(run.sightings.seen.map(\.scientificName) == ["Haemorhous mexicanus"])
+        #expect(run.sightings.seen.map(\.speciesID) == ["Haemorhous mexicanus_House Finch"])
+        #expect(run.sightings.seen.map(\.identifier) == [addition.identifier], "the same sighting, in its place on the run")
+        #expect(run.sightings.identifiers == [addition.identifier])
+        #expect(run.acknowledgment == nil, "the toast named the bird it no longer is")
+
+        await run.stop()
+        #expect(run.reveal == nil, "nor once the run is over")
+        #expect(!run.hasCeremonyWaiting)
+    }
+
+    @Test("a patch the lens sewed, renamed on the phone before its ceremony played, has no ceremony left to play")
+    func aWaitingCeremonyIsDropped() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        let edits = JournalEdits(container: harness.album, frames: FrameStore(directory: harness.frames), recorder: run.sightings.recorder)
+        edits.birdChanged = { [weak run] in run?.birdChanged(of: $0) }
+        // A bird named on the lens: sewn there, its ceremony held for the phone.
+        let named = try run.sightings.addSeen(Self.allens, photo: DebugSeeds.frameJPEG(), takenAt: .now, location: nil, source: .glasses)
+        run.glasses.onPatchSewn?(named.identifier)
+        #expect(run.waitingCeremonies == 1)
+        let sighting = try #require(harness.stored.first)
+
+        #expect(edits.changeBird(of: sighting, to: Self.finch))
+
+        #expect(run.waitingCeremonies == 0)
+        run.showNextCeremony()
+        #expect(run.reveal == nil, "the House Finch's patch was sewn by a change, not an add")
+    }
 }
