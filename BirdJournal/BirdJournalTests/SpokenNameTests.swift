@@ -164,6 +164,46 @@ struct SpokenNameTests {
         #expect(Self.world.spoken(said, in: .init(heard: [heard])).first?.commonName == bird)
     }
 
+    // Review of #185, Q1: on the mock lens "annas humming", heard and then made final by the pause, found no bird.
+    @Test("a name cut off part way through a word finds its bird: what was said is how the name begins", arguments: [
+        ("annas humming", "Anna's Hummingbird"),
+        ("Anna's humming", "Anna's Hummingbird"),
+        ("anas humming", "Anna's Hummingbird"),
+        ("allens hummingb", "Allen's Hummingbird"),
+        ("california tow", "California Towhee"),
+        ("red tailed ha", "Red-tailed Hawk"),
+        ("black feeb", "Black Phoebe"),
+    ])
+    func cutOff(_ said: String, _ bird: String) {
+        #expect(Self.said(said).first == bird)
+    }
+
+    @Test("a cut-off name comes after every bird that was named in full or by a word of its name, and before a name that is only near; among cut-off names, the naming sheet's order")
+    func cutOffInItsPlace() {
+        let birds = NameableBirds(
+            fieldGuide: [.init(scientificName: "Agelaius phoeniceus", commonName: "Red-winged Blackbird")],
+            labels: [
+                Self.label(0, "Agelaius phoeniceus", "Red-winged Blackbird"),
+                Self.label(1, "Turdus iliacus", "Redwing"),
+                Self.label(2, "Aprosmictus erythropterus", "Red-winged Parrot"),
+                Self.label(3, "Onychognathus morio", "Red-winged Starling"),
+                Self.label(4, "Vanellus indicus", "Red-wattled Lapwing"),
+            ]
+        )
+        // "red wing" is the Redwing's whole name; it is how three others begin; and it is no part of the lapwing's.
+        #expect(birds.spoken("red wing", limit: 9).map(\.commonName) == ["Redwing", "Red-winged Blackbird", "Red-winged Parrot", "Red-winged Starling"])
+        // Heard this run, the starling comes first among those cut off, and still after the bird named in full.
+        let heard = NameableBirds.Context(heard: ["Onychognathus morio"])
+        #expect(birds.spoken("red wing", in: heard, limit: 9).map(\.commonName) == ["Redwing", "Red-winged Starling", "Red-winged Blackbird", "Red-winged Parrot"])
+        // Cut off, it comes before a bird whose name is only near what was said.
+        #expect(Self.world.spoken("annas humming").map(\.commonName).first == "Anna's Hummingbird")
+    }
+
+    @Test("a few letters are not the start of a name: too little was said to tell", arguments: ["ann", "cal", "cali", "hou", "mour"])
+    func tooShortToBeCutOff(_ said: String) {
+        #expect(Self.said(said).isEmpty, "\(Self.said(said))")
+    }
+
     @Test("nothing said, only filler, or no bird by that name finds nothing; a frog cannot be named", arguments: ["", "   ", "the", "um", "flibbertigibbet", "pacific chorus frog", "xy"])
     func nothing(_ said: String) {
         #expect(Self.said(said).isEmpty)
@@ -199,6 +239,8 @@ struct SpokenNameTests {
         #expect(found.first?.scientificName == "Calypte anna")
         #expect(birds.spoken("black feeby").first?.scientificName == "Sayornis nigricans")
         #expect(birds.spoken("morning dove").first?.scientificName == "Zenaida macroura")
+        // Cut off after "humming" (the review's Q1), among ten thousand names.
+        #expect(birds.spoken("annas humming").first?.scientificName == "Calypte anna")
         // A debug build on a loaded Mac; a phone does it in a fraction of this.
         #expect(took < .seconds(5), "\(took)")
     }

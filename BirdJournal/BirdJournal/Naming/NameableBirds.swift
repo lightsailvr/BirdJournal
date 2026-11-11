@@ -195,7 +195,9 @@ nonisolated struct NameableBirds: Sendable {
     /// sounds off. The words people say around a name ("it's a") are dropped.
     ///
     /// **What sounds the same comes first**: the whole name as written, the whole name by ear, a run of its words as
-    /// written, then by ear. Birds as close as each other are in the order "Name this bird" lists a search in: one heard
+    /// written, then by ear, then a name that begins with what was said and was cut off part way through a word ("annas
+    /// humming": words followed by a pause are taken as all there is). Birds as close as each other are in the order
+    /// "Name this bird" lists a search in: one heard
     /// this run first, then one likely here, the likeliest first (`Context.Standing`), then the field guides' birds before
     /// the others, and by name. So "hummingbird" is the hummingbirds heard and likely here, and the bird that was named
     /// comes before a bird heard this run that is only near.

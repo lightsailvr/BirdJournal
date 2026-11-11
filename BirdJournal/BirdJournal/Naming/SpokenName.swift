@@ -28,6 +28,9 @@ nonisolated enum SpokenName {
             case name
             /// A run of the name's words: "hummingbird", "night heron".
             case part
+            /// How the name begins, cut off part way through a word: "annas humming". The glasses take words followed
+            /// by a pause as all there is, so a name can arrive without its end.
+            case start
         }
 
         let reach: Reach
@@ -36,11 +39,12 @@ nonisolated enum SpokenName {
         /// The sounds that differ: none as written or by ear.
         let distance: Int
 
-        /// What was said is the name, or the run of its words, as written or by ear; otherwise it is only near it.
+        /// What was said is the name, a run of its words, or its beginning, as written or by ear; otherwise it is only
+        /// near it.
         var soundsTheSame: Bool { distance == 0 }
 
         /// The order among matches that sound the same, the smaller the closer: the whole name as written, the whole name
-        /// by ear, a part as written, a part by ear.
+        /// by ear, a part as written, a part by ear, then the name's beginning as written and by ear.
         var rank: Int { reach.rawValue * 2 + (isAsWritten ? 0 : 1) }
     }
 
@@ -83,6 +87,13 @@ nonisolated enum SpokenName {
             if parts.contains(where: { $0.plain == said.plain }) { return Closeness(reach: .part, isAsWritten: true, distance: 0) }
             let nearPart = Self.nearest(said, among: parts)
             if nearPart == 0 { return Closeness(reach: .part, isAsWritten: false, distance: 0) }
+            // Every sound said is the name's, in order, and the name goes on: it was cut off, not misheard.
+            if said.plain.count >= SpokenName.fewestLettersOfAStart, whole.contains(where: { $0.plain.hasPrefix(said.plain) }) {
+                return Closeness(reach: .start, isAsWritten: true, distance: 0)
+            }
+            if said.plain.count >= SpokenName.fewestLettersOfAStart, said.sound.count >= SpokenName.fewestSoundsOfAStart, whole.contains(where: { $0.sound.starts(with: said.sound) }) {
+                return Closeness(reach: .start, isAsWritten: false, distance: 0)
+            }
             if let nearName { return Closeness(reach: .name, isAsWritten: false, distance: nearName) }
             if let nearPart { return Closeness(reach: .part, isAsWritten: false, distance: nearPart) }
             return nil
@@ -126,6 +137,11 @@ nonisolated enum SpokenName {
         if !word.isEmpty { words.append(word) }
         return words
     }
+
+    /// The least that counts as the beginning of a name: fewer letters, or by ear fewer sounds, begin too many names to
+    /// tell which was meant ("bla", "redt").
+    static let fewestLettersOfAStart = 5
+    static let fewestSoundsOfAStart = 4
 
     /// How many sounds may differ between two forms, the longer of them `length` sounds long: none in a short word (a wren
     /// is no rail), one from four sounds, two from eight, three from twelve.
