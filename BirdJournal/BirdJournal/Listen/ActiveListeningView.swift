@@ -79,8 +79,8 @@ struct ActiveListeningView: View {
                         .padding(.top, 18)
                 }
 
-                if !run.sightings.seen.isEmpty {
-                    SeenThisRun(seen: run.sightings.seen)
+                if !run.sightings.seen.isEmpty || !run.sightings.unnamed.isEmpty {
+                    SeenThisRun(seen: run.sightings.seen, unnamed: run.sightings.unnamed)
                 }
 
                 if run.candidates.isEmpty {

@@ -3,46 +3,51 @@ import ImageIO
 import Pack
 import SwiftUI
 
-/// "Name this bird" (issue #186, of #185): the photo just taken with its time and place, and a search field over bird
-/// names. The birds of the field-guide downloads on the phone come first, each with the set its patch would go in and "New
-/// to you here" or "Seen 2 times here"; below them, every other bird BirdNET knows by name. Choosing one and pressing the
-/// pinned "Add and sew patch" (or "Add sighting") writes the sighting, Seen, with the photo as its original photo, and
-/// closes; the run then shows what any add does.
+/// "Name this bird" (issues #186 and #188, of #185): an unnamed sighting's photo with its time and place, and a search field
+/// over bird names. The birds of the field-guide downloads on the phone come first, each with the set its patch would go in
+/// and "New to you here" or "Seen 2 times here"; below them, every other bird BirdNET knows by name. Choosing one and
+/// pressing the pinned "Add and sew patch" (or "Add sighting") writes the sighting, Seen, with the photo as its original
+/// photo and the photo's own time and place, and closes; the phone then shows what any add does.
 ///
 /// Before anything is typed the page suggests (issue #189): "Heard this run", the run's birds with those calling first,
-/// then "Likely here now", the field guides' birds the geomodel finds most likely at the run's place in the week of the
-/// photo. Typing replaces both with the search, and clearing the field brings them back. `NameableBirds.search(_:in:)`
-/// decides all of it; this view draws what it returns.
+/// when the photo is one of the run under way or under review; then "Likely here now", the field guides' birds the geomodel
+/// finds most likely where the photo was taken, in the week it was taken. Typing replaces both with the search, and clearing
+/// the field brings them back. `NameableBirds.search(_:in:)` decides all of it; this view draws what it returns.
 ///
-/// In this ticket Cancel discards the photo. #188 keeps it as an unnamed sighting instead and adds "Name it later"; #190
-/// opens this sheet again to change a sighting's bird.
+/// The photo was saved at the shutter, so nothing here can lose it: "Name it later", a swipe down or the app being killed
+/// all leave it an unnamed sighting, to be named from the run, its review or the Collection. Only "Delete photo", once
+/// confirmed, removes it. The same sheet names a photo just taken and one that has waited for weeks, which is why where and
+/// when come from the unnamed sighting and not from a run. #190 opens this sheet again to change a sighting's bird.
 struct NameBirdView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(PlaceNames.self) private var places
     @Environment(\.occurrenceModel) private var occurrenceModel
-    let photo: CapturedPhoto
-    /// Closes the sheet: after the add, or on Cancel.
+    /// The photo being named, with when and where it was taken.
+    let unnamed: UnnamedSighting
+    /// Closes the sheet: after the add, on "Name it later", or after a delete.
     let close: () -> Void
     @State private var query = ""
     /// Nil while the label list is read.
     @State private var names: NameableBirds?
-    /// What the run had heard when the sheet opened, and what the geomodel expects at its place in the photo's week.
+    /// What the photo's run had heard when the sheet opened, and what the geomodel expects at the photo's place in its week.
     @State private var context = NameableBirds.Context.none
     @State private var chosen: NameableBird?
     @State private var isAdding = false
     @State private var failed = false
+    @State private var confirmingDelete = false
+    @State private var deleteFailed = false
     @FocusState private var isSearching: Bool
 
     /// The sightings of `bird` in the patch an add here would join; 0 when the add would sew a new patch.
     private func seenHere(_ bird: NameableBird) -> Int {
-        collectionStore.collection.count(ofSpeciesID: bird.speciesID, at: run.coordinate)
+        collectionStore.collection.count(ofSpeciesID: bird.speciesID, at: unnamed.location)
     }
 
     private func status(of bird: NameableBird) -> [String] {
         NameBirdText.status(
-            placement: CardSet.placement(speciesID: bird.speciesID, at: run.coordinate, in: collectionStore.collection.sets),
+            placement: CardSet.placement(speciesID: bird.speciesID, at: unnamed.location, in: collectionStore.collection.sets),
             seenHere: seenHere(bird), isInFieldGuide: bird.isInFieldGuide
         )
     }
@@ -52,7 +57,7 @@ struct NameBirdView: View {
         NavigationStack {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
-                    CapturedPhotoHeader(photo: photo, place: NameBirdText.place(location: run.coordinate, name: run.coordinate.flatMap(places.name(for:))))
+                    CapturedPhotoHeader(unnamed: unnamed, place: NameBirdText.place(location: unnamed.location, name: unnamed.location.flatMap(places.name(for:))))
                         .padding(.top, 8)
                     searchField
                         .padding(.top, 16)
@@ -89,30 +94,43 @@ struct NameBirdView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: close)
-                        .accessibilityHint("Discards the photo")
+                    Button(UnnamedSightingText.later, action: close)
+                        .accessibilityHint("Keeps the photo as an unnamed sighting")
+                        .accessibilityIdentifier("name-bird-later")
                 }
+                ToolbarItem(placement: .destructiveAction) {
+                    Button(role: .destructive) {
+                        confirmingDelete = true
+                    } label: {
+                        Label(UnnamedSightingText.deleteAction, systemImage: "trash")
+                    }
+                    .accessibilityIdentifier("name-bird-delete")
+                }
+            }
+            // The one way a photo is lost, so it is asked twice; an alert, so keeping it is a button and not a tap elsewhere.
+            .alert(UnnamedSightingText.deleteTitle, isPresented: $confirmingDelete) {
+                Button(UnnamedSightingText.deleteAction, role: .destructive) { delete() }
+                Button(UnnamedSightingText.keep, role: .cancel) {}
+            } message: {
+                Text(UnnamedSightingText.deleteMessage)
             }
             .scrollEdgeEffectStyle(.hard, for: .bottom)
             .safeAreaBar(edge: .bottom) { addBar }
         }
         // The names and the suggestions arrive together, so the page opens on its suggestions and not on a list they replace.
-        // A place that arrives later reads the geomodel again.
-        .task(id: run.coordinate) {
+        .task {
+            guard names == nil else { return }
             // What the run has heard is read once, as the sheet opens: the list holds still while a bird is chosen from it.
-            let heard = names == nil ? run.heardScientificNames : context.heard
-            let known = names, fieldGuide = library.fieldGuideBirds, place = run.coordinate, takenAt = photo.takenAt, model = occurrenceModel
-            let loaded = await Task.detached(priority: .userInitiated) {
+            let heard = run.heardScientificNames(for: unnamed)
+            let fieldGuide = library.fieldGuideBirds, place = unnamed.location, takenAt = unnamed.takenAt, model = occurrenceModel
+            (names, context) = await Task.detached(priority: .userInitiated) {
                 // Without the label list the field guides' birds can still be named.
-                let names = known ?? (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
                 return (names, NameableBirds.Context(heard: heard, place: place, takenAt: takenAt, occurrenceModel: model))
             }.value
-            guard !Task.isCancelled else { return }
-            (names, context) = loaded
-            dropAChoiceOutOfSight()
         }
-        .task(id: run.coordinate) {
-            if let coordinate = run.coordinate { await places.resolve(coordinate) }
+        .task {
+            if let location = unnamed.location { await places.resolve(location) }
         }
         #if DEBUG
         .task {
@@ -192,7 +210,9 @@ struct NameBirdView: View {
         let seen = chosen.map(seenHere)
         return VStack(spacing: 8) {
             if failed {
-                InlineError("The sighting couldn't be saved. Try again.", afterAction: true)
+                InlineError("The sighting couldn't be saved. Your photo is kept. Try again.", afterAction: true)
+            } else if deleteFailed {
+                InlineError("The photo couldn't be deleted. Try again.", afterAction: true)
             }
             Button {
                 add()
@@ -217,13 +237,23 @@ struct NameBirdView: View {
     private func add() {
         guard let chosen, !isAdding else { return }
         isAdding = true
-        if run.addSeen(chosen, photo: photo) != nil {
+        deleteFailed = false
+        if run.name(unnamed, as: chosen) != nil {
             close()
         } else {
-            // The photo is still here: nothing closes on a failure.
+            // The photo is still an unnamed sighting: nothing closes on a failure.
             failed = true
         }
         isAdding = false
+    }
+
+    private func delete() {
+        failed = false
+        if run.delete(unnamed) {
+            close()
+        } else {
+            deleteFailed = true
+        }
     }
 }
 
@@ -231,14 +261,15 @@ struct NameBirdView: View {
 private struct CapturedPhotoHeader: View {
     private static let maxPixels = 900
 
-    let photo: CapturedPhoto
+    @Environment(\.frameStore) private var frameStore
+    let unnamed: UnnamedSighting
     let place: String
     @State private var image: UIImage?
     @ScaledMetric(relativeTo: .body) private var side: CGFloat = 96
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        let taken = NameBirdText.taken(photo.takenAt)
+        let taken = NameBirdText.taken(unnamed.takenAt)
         // At the largest sizes the words go under the picture: beside it they'd have a column a word wide.
         AdaptiveRow(stacked: typeSize.stacksRows) {
             Color.raised
@@ -270,21 +301,13 @@ private struct CapturedPhotoHeader: View {
         .accessibilityLabel("Your photo, \(taken), \(place)")
         .accessibilityAddTraits(.isImage)
         .accessibilityIdentifier("name-bird-photo")
-        .task(id: photo.id) {
-            let data = photo.data
-            image = await Task.detached(priority: .userInitiated) { Self.fitted(data) }.value
+        // Read from the album's own file, turned upright and no larger than the header needs: a camera's picture is far
+        // larger than the slot.
+        .task(id: unnamed.photoPath) {
+            guard let url = frameStore?.url(for: unnamed.photoPath) else { return }
+            let side = Self.maxPixels
+            image = await Task.detached(priority: .userInitiated) { BirderPhoto.fitted(at: url, maxPixels: side) }.value
         }
-    }
-
-    /// The photo turned upright and no larger than the header needs: a camera's picture is far larger than the slot.
-    nonisolated private static func fitted(_ data: Data) -> UIImage? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixels,
-        ]
-        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary).map(UIImage.init(cgImage:))
     }
 }
 

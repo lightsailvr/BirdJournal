@@ -99,6 +99,11 @@ struct RunReviewSheet: View {
                         .padding(.top, 6)
                         .accessibilityIdentifier("recap-place-explanation")
 
+                    // The photos taken on the run (issue #188): named ones as sightings, and the rest to name here or later.
+                    if !run.sightings.seen.isEmpty || !run.sightings.unnamed.isEmpty {
+                        SeenThisRun(seen: run.sightings.seen, unnamed: run.sightings.unnamed, footnote: UnnamedSightingText.reviewNote)
+                    }
+
                     SectionTitle("What you heard")
                     HuntSummary(hunt: run.hunt(in: collection), isCentred: false)
                         .padding(.top, 6)

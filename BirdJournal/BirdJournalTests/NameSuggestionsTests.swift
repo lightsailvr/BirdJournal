@@ -213,7 +213,7 @@ extension CaptureAccessibilityTests {
     @Test("Name this bird on a run: Heard this run with the bird calling first, then Likely here now, the likeliest first, and no list by name", arguments: Screens.sizes)
     func suggestions(typeSize: DynamicTypeSize) async throws {
         let harness = try await Self.runThatHeardTwo()
-        let screen = NameBirdView(photo: Self.photo()) {}.environment(\.occurrenceModel, Self.geomodel)
+        let screen = NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.occurrenceModel, Self.geomodel)
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("Likely here now") && labels.contains { $0.hasPrefix(typeSize == .large ? "Allen's Hummingbird, " : "Anna's Hummingbird, ") }
         }
@@ -247,7 +247,7 @@ extension CaptureAccessibilityTests {
         harness.run.fakeStack = CandidateStack(candidates: [Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1_000_000, admittedAt: 0)])
         await harness.run.start()
         #expect(harness.run.coordinate == nil)
-        let screen = NameBirdView(photo: Self.photo()) {}.environment(\.occurrenceModel, Self.geomodel)
+        let screen = NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.occurrenceModel, Self.geomodel)
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("In your field guides") && labels.contains { $0.hasPrefix("Allen's Hummingbird, ") }
         }
@@ -263,6 +263,40 @@ extension CaptureAccessibilityTests {
         #expect(!labels.contains("Likely here now"), "no place, so the section is left out: \(labels)")
     }
 
+    static let balboaPark = Coordinate(latitude: 32.7341, longitude: -117.1446, accuracy: 10)
+
+    /// An unnamed sighting no run holds: taken in Balboa Park forty days ago, as the Collection's "To name" keeps it.
+    static func photoFromBefore() -> UnnamedSighting {
+        UnnamedSighting(id: UUID(), takenAt: Date.now.addingTimeInterval(-40 * 86_400), location: balboaPark, photoPath: "from-before.jpeg", source: .phone)
+    }
+
+    @Test("A photo from an earlier day, named while another run listens: no Heard this run, and Likely here now from the photo's own place and week", arguments: Screens.sizes)
+    func aPhotoFromBefore(typeSize: DynamicTypeSize) async throws {
+        let harness = try await Self.runThatHeardTwo()
+        let earlier = Self.photoFromBefore()
+        // The spy expects the House Finch wherever it is asked, and remembers where and when that was.
+        let model = SpyOccurrence()
+        let screen = NameBirdView(unnamed: earlier) {}.environment(\.occurrenceModel, model)
+        let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
+            labels.contains("Likely here now") && labels.contains { $0.hasPrefix("House Finch, ") }
+        }
+        await harness.run.stop()
+
+        Screens.expectClean(labels, screen: "Name this bird, a photo from before")
+        #expect(!labels.contains("Heard this run"), "the run under way didn't hear this photo's bird: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+        let likely = try #require(labels.firstIndex(of: "Likely here now"), "\(labels)")
+        let finch = try #require(labels.firstIndex { $0.hasPrefix("House Finch, ") }, "\(labels)")
+        #expect(likely < finch, "\(labels)")
+        #expect(!labels.contains("In your field guides"), "\(labels)")
+        #expect(!labels.contains { $0.hasPrefix("Your photo, Today, ") }, "its own day: \(labels)")
+
+        let asked = model.asked.withLock { $0 }
+        #expect(asked.map(\.latitude) == [32.7341] && asked.map(\.longitude) == [-117.1446], "where the photo was taken, not where the run is: \(asked)")
+        #expect(asked.map(\.week) == [GeoContext.week(of: earlier.takenAt)], "\(asked)")
+        #expect(asked.first?.week != GeoContext.week(of: .now), "the week it was taken in, not this one")
+    }
+
     @Test("the run's birds are offered only while there is a run: calling now first while it listens, none once it is dismissed")
     func heardOnlyWithARun() async throws {
         let idle = try Screens.Harness()
@@ -271,7 +305,12 @@ extension CaptureAccessibilityTests {
 
         let harness = try await Self.runThatHeardTwo()
         #expect(harness.run.heardScientificNames == ["Sayornis nigricans", "Haemorhous mexicanus"], "the phoebe is calling; the finch was admitted first")
+        // They are offered for a photo of this run, and not for one from before it: what this run hears says nothing of that bird.
+        let ofThisRun = try #require(harness.run.capture(Self.photo()))
+        #expect(harness.run.heardScientificNames(for: ofThisRun) == ["Sayornis nigricans", "Haemorhous mexicanus"])
+        #expect(harness.run.heardScientificNames(for: Self.photoFromBefore()).isEmpty)
         await harness.run.stop()
+        #expect(Set(harness.run.heardScientificNames(for: ofThisRun)) == ["Sayornis nigricans", "Haemorhous mexicanus"], "still its run, under review")
         #expect(Set(harness.run.heardScientificNames) == ["Sayornis nigricans", "Haemorhous mexicanus"], "an ended run, as its review has it, still has its birds")
         harness.run.dismissEnded()
         #expect(harness.run.heardScientificNames.isEmpty)
@@ -282,7 +321,7 @@ extension CaptureAccessibilityTests {
         let harness = try await Self.runThatHeardTwo()
         defer { UserDefaults.standard.removeObject(forKey: "autoQuery") }
         UserDefaults.standard.set("hummingbird", forKey: "autoQuery")
-        let screen = NameBirdView(photo: Self.photo()) {}.environment(\.occurrenceModel, Self.geomodel)
+        let screen = NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.occurrenceModel, Self.geomodel)
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("All birds")
         }

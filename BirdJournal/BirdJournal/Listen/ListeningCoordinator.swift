@@ -407,20 +407,72 @@ final class ListeningCoordinator {
         }
     }
 
-    /// Writes a bird the birder named from `photo` to the journal (issue #186, of #185): Seen, with the photo as its original
-    /// photo, at the photo's own time and the place the run has. From there it is an add like any other: the first in a
-    /// placement sews the patch and opens its ceremony, a repeat ticks the count, and the acknowledgment carries Undo. The
-    /// phone took the photo, whichever microphones the run is listening with.
+    // Photo first, name second (issues #186 and #188, of #185).
+
+    /// The shutter: writes `photo` to the album as an unnamed sighting, before any name, at the place the run has. Nothing is
+    /// announced, since nothing has been added: it sews no patch and tells nobody until it is named. Nil when it could not
+    /// be written, which is the only way a photo is lost.
+    /// - Parameter source: the device that took the photo: the phone, whichever microphones the run is listening with.
     @discardableResult
-    func addSeen(_ bird: NameableBird, photo: CapturedPhoto) -> RunSightings.Addition? {
+    func capture(_ photo: CapturedPhoto, source: SightingSource = .phone) -> UnnamedSighting? {
+        capture(photo, at: coordinate, source: source)
+    }
+
+    /// The shutter, for a photo whose place the caller knows better than the run does.
+    @discardableResult
+    func capture(_ photo: CapturedPhoto, at location: Coordinate?, source: SightingSource) -> UnnamedSighting? {
         do {
-            let addition = try sightings.addSeen(bird, photo: photo.data, takenAt: photo.takenAt, location: coordinate, source: .phone)
+            let unnamed = try sightings.capture(photo: photo.data, takenAt: photo.takenAt, location: location, source: source)
+            keepEndedRun()
+            return unnamed
+        } catch {
+            Self.logger.error("capture failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
+            return nil
+        }
+    }
+
+    /// Names an unnamed sighting: the sighting of `bird` is written, Seen, with the photo as its original photo, at the
+    /// photo's own time and place, whenever and wherever it is named: on its run, in the run's review, or from the Collection
+    /// days later with no run at all. From there it is an add made on the phone like any other: the first in a placement sews
+    /// the patch and opens its ceremony there and then, a repeat ticks the count, and the acknowledgment carries Undo, which
+    /// takes the name back and leaves the photo waiting.
+    @discardableResult
+    func name(_ unnamed: UnnamedSighting, as bird: NameableBird) -> RunSightings.Addition? {
+        do {
+            let addition = try sightings.name(unnamed, as: bird)
             announce(addition, commonName: bird.commonName)
             return addition
         } catch {
             addFailed(error)
             return nil
         }
+    }
+
+    /// A photo taken and named in one step. If the naming fails the photo is kept, unnamed.
+    @discardableResult
+    func addSeen(_ bird: NameableBird, photo: CapturedPhoto) -> RunSightings.Addition? {
+        guard let unnamed = capture(photo) else { return nil }
+        return name(unnamed, as: bird)
+    }
+
+    /// Deletes an unnamed sighting and its photo: what the birder confirmed. False when it could not be removed.
+    @discardableResult
+    func delete(_ unnamed: UnnamedSighting) -> Bool {
+        do {
+            try sightings.delete(unnamed)
+            keepEndedRun()
+            return true
+        } catch {
+            Self.logger.error("deleting an unnamed sighting failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
+            return false
+        }
+    }
+
+    /// The last run left something for its page: birds heard, birds seen, or photos still to name.
+    var lastRunHasSomething: Bool {
+        !(candidates.isEmpty && sightings.seen.isEmpty && sightings.unnamed.isEmpty)
     }
 
     /// What follows every add, once its sighting is saved: the ceremony of a new patch, or the count of one seen again, and
@@ -474,7 +526,8 @@ final class ListeningCoordinator {
         if reveal.isFromGlasses {
             // Only now: killed part way through the stitch-in, it hasn't played.
             pendingCeremonies.removeAll { $0 == reveal.addition.identifier }
-        } else if sightings.identifiers.contains(reveal.addition.identifier) {
+        } else if sightings.canUndo(reveal.addition) {
+            // Not only this run's: a photo from an earlier run named now has its Undo too.
             acknowledge(reveal.title, undo: reveal.addition)
         }
     }
@@ -494,7 +547,7 @@ final class ListeningCoordinator {
         let run = EndedRun(
             source: runSource.rawValue, startedAt: startedAt, endedAt: endedAt, listened: clock.listened(from: startedAt, to: endedAt),
             coordinate: coordinate, birds: candidates.map(EndedRun.Bird.init), added: sightings.entries.map { .init(identifier: $0.identifier, bird: .init($0.candidate)) },
-            seen: sightings.seen.map(\.identifier)
+            seen: sightings.seen.map(\.identifier), captures: sightings.unnamed.map(\.id)
         )
         archive.set(try? JSONEncoder().encode(run), forKey: Self.endedRunKey)
     }
@@ -515,6 +568,7 @@ final class ListeningCoordinator {
         clock = ListeningClock(alreadyPaused: run.endedAt.timeIntervalSince(run.startedAt) - run.listened)
         sightings.restore(run.added.map { ($0.identifier, $0.bird.candidate) })
         sightings.restoreSeen(run.seen ?? [])
+        sightings.restoreUnnamed(run.captures ?? [])
         listOrder = currentOrder()
         isReviewing = true
     }
@@ -687,6 +741,8 @@ nonisolated struct EndedRun: Codable, Equatable, Sendable {
     let added: [Added]
     /// The sightings of birds seen and named on the run (issue #186); nil in a run written down before there were any.
     var seen: [UUID]? = nil
+    /// The photos the run took that were still unnamed (issue #188); nil in a run written down before there were any.
+    var captures: [UUID]? = nil
 
     var candidates: [Candidate] { birds.map(\.candidate) }
 }

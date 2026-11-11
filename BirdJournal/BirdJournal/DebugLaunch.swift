@@ -89,10 +89,13 @@ import UIKit
 ///   goes to the background (issue #135). `-albumFile <name>` keeps the album in a file of its own, for relaunching over it.
 /// - `-fakeCamera ready|denied|unavailable` puts a stand-in behind "Capture a sighting" (issue #186: the simulator has no
 ///   camera, and a UI test can't answer the permission prompt): ready with a drawn viewfinder and a generated photo, or
-///   refused, or with no camera to give. `-autoScreen capture` starts a phone run as `listening` does and opens the camera
+///   refused, or with no camera to give (`-fakeCameraZoom 2.6` and `-fakeCameraFocus 0.3,0.4` open it zoomed and with focus
+///   held there, issue #187). `-autoScreen capture` starts a phone run as `listening` does and opens the camera
 ///   over it; `-autoScreen name-bird` goes on to "Name this bird" with a stand-in photo, and `-autoQuery <text>` searches
 ///   there once. `-autoSeen "Calypte anna,Selasphorus sasin"` names a stand-in photo as each of those birds once the run is
-///   on, past its reveal: rows under "Seen this run".
+///   on, past its reveal: rows under "Seen this run". `-autoUnnamed <n>` takes that many stand-in photos on the run and leaves
+///   them unnamed (issue #188), before `-autoRunStops` ends it; `-seedUnnamed <n>` puts that many in the album at launch, taken
+///   in Griffith Park on earlier days, as earlier runs would have left them: the Collection's "To name".
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -138,6 +141,9 @@ struct DebugLaunch: ViewModifier {
             if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
             let large = defaults.integer(forKey: "seedLarge")
             if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
+            for index in 0..<defaults.integer(forKey: "seedUnnamed") {
+                _ = try? run.sightings.recorder.recordCapture(photo: DebugSeeds.frameJPEG(), takenAt: Date.now.addingTimeInterval(-86_400 * Double(index + 1)), location: DebugPlace.griffith.coordinate, source: .phone)
+            }
             if defaults.bool(forKey: "speedTour") {
                 let tour = SpeedTour(
                     context: context, run: run, library: library, circles: circles,
@@ -177,6 +183,9 @@ struct DebugLaunch: ViewModifier {
                     await run.addFromRow(bird, isDescribed: true)
                     run.finishCeremony()
                     run.dismissReveal()
+                }
+                for _ in 0..<defaults.integer(forKey: "autoUnnamed") {
+                    run.capture(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
                 }
                 if defaults.bool(forKey: "autoRunStops") {
                     await run.stop()

@@ -16,4 +16,10 @@ extension ListeningCoordinator {
     var heardScientificNames: [String] {
         state == .idle ? [] : orderedCandidates.map(\.species.scientificName)
     }
+
+    /// The birds heard on the run `unnamed` was taken on, while that run is under way or under review; none for a photo
+    /// from an earlier run or from no run, named later from the Collection: what this run hears says nothing about it.
+    func heardScientificNames(for unnamed: UnnamedSighting) -> [String] {
+        sightings.unnamed.contains { $0.id == unnamed.id } ? heardScientificNames : []
+    }
 }

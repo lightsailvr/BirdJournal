@@ -218,6 +218,112 @@ struct AlbumMigrationTests {
         #expect(!robin.namedByBirder)
     }
 
+    // Issue #188: schema 5 adds the capture, a photo of a bird not yet named, beside the sightings. The album a build with #186
+    // wrote is schema 4.
+
+    @Test("a store written by schema 4 opens under schema 5 with every sighting as it was and no captures; a capture written afterwards is there at the next opening, and no sighting")
+    @MainActor
+    func schema4ToCaptures() throws {
+        let url = try Self.storeURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let place = Coordinate(latitude: 34.05, longitude: -118.25, accuracy: 12)
+        let allensID = UUID()
+        let captureID = UUID()
+
+        do {
+            let v4 = try ModelContainer(for: Schema(versionedSchema: AlbumSchemaV4.self), configurations: [ModelConfiguration(url: url)])
+            let allens = AlbumSchemaV4.Sighting(identifier: allensID, speciesID: "Selasphorus sasin_Allen's Hummingbird", confirmedAt: Date(timeIntervalSince1970: 1_800_000_300), location: place, soundConfidence: 0, source: .phone, note: "At the feeder.", method: .seen, namedByBirder: true)
+            allens.attachedPhotoPaths = ["feeder.heic"]
+            allens.rarity = RaritySnapshot(occurrence: 0.42, label: .uncommon, calibrationVersion: 1, week: 41)
+            allens.caption = CardCaption(text: "A hummingbird held the feeder.", generatorVersion: "fm-1")
+            v4.mainContext.insert(allens)
+            v4.mainContext.insert(AlbumSchemaV4.Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: Date(timeIntervalSince1970: 1_800_000_000), soundConfidence: 0.91, frameImagePath: "frame.jpg", source: .glasses))
+            try v4.mainContext.save()
+        }
+
+        do {
+            let v5 = try AlbumSchema.makeContainer(at: url)
+            let sightings = try v5.mainContext.fetch(Sighting.newestFirst())
+            #expect(sightings.map(\.commonName) == ["Allen's Hummingbird", "Black Phoebe"])
+            let allens = try #require(sightings.first)
+            #expect(allens.identifier == allensID, "identifiers are kept")
+            #expect(allens.namedByBirder && allens.method == .seen)
+            #expect(allens.attachedPhotoPaths == ["feeder.heic"])
+            #expect(allens.location == place)
+            #expect(allens.note == "At the feeder.")
+            #expect(allens.rarity == RaritySnapshot(occurrence: 0.42, label: .uncommon, calibrationVersion: 1, week: 41))
+            #expect(allens.caption?.text == "A hummingbird held the feeder.")
+            let phoebe = try #require(sightings.last)
+            #expect(phoebe.frameImagePath == "frame.jpg")
+            #expect(phoebe.soundConfidence == 0.91)
+            #expect(phoebe.source == .glasses)
+            #expect(!phoebe.namedByBirder && phoebe.method == .heard)
+            #expect(try v5.mainContext.fetch(Capture.newestFirst()).isEmpty, "the album a build before #188 wrote has no captures")
+
+            v5.mainContext.insert(Capture(identifier: captureID, takenAt: Date(timeIntervalSince1970: 1_800_000_600), location: place, photoPath: "unnamed.jpeg", source: .phone))
+            try v5.mainContext.save()
+        }
+
+        // One container per file at a time: the store is opened again after the first has gone.
+        let reopened = try AlbumSchema.makeContainer(at: url)
+        let capture = try #require(try reopened.mainContext.fetch(Capture.newestFirst()).first)
+        #expect(capture.identifier == captureID)
+        #expect(capture.takenAt == Date(timeIntervalSince1970: 1_800_000_600))
+        #expect(capture.location == place)
+        #expect(capture.photoPath == "unnamed.jpeg")
+        #expect(capture.source == .phone)
+        #expect(try reopened.mainContext.fetch(Sighting.newestFirst()).count == 2, "a capture is not a sighting")
+    }
+
+    @Test("a store written by an unversioned schema of schema 4's shape opens under schema 5 the same way")
+    @MainActor
+    func unversionedSchema4Migrates() throws {
+        let url = try Self.storeURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let identifier = UUID()
+
+        do {
+            let written = try ModelContainer(for: Schema([AlbumSchemaV4.Sighting.self]), configurations: [ModelConfiguration(url: url)])
+            let robin = AlbumSchemaV4.Sighting(identifier: identifier, speciesID: "Turdus migratorius_American Robin", confirmedAt: .now, soundConfidence: 0, source: .phone, method: .seen, namedByBirder: true)
+            robin.attachedPhotoPaths = ["robin-mine.jpg"]
+            written.mainContext.insert(robin)
+            try written.mainContext.save()
+        }
+
+        let current = try AlbumSchema.makeContainer(at: url)
+        let robin = try #require(try current.mainContext.fetch(Sighting.newestFirst()).first)
+        #expect(robin.identifier == identifier)
+        #expect(robin.attachedPhotoPaths == ["robin-mine.jpg"])
+        #expect(robin.namedByBirder)
+        #expect(try current.mainContext.fetch(Capture.newestFirst()).isEmpty)
+    }
+
+    @Test("a store written by schema 1 opens under schema 5 through every stage, and takes a capture")
+    @MainActor
+    func schema1ToCaptures() throws {
+        let url = try Self.storeURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+
+        do {
+            let v1 = try ModelContainer(for: Schema(versionedSchema: AlbumSchemaV1.self), configurations: [ModelConfiguration(url: url)])
+            v1.mainContext.insert(AlbumSchemaV1.Sighting(speciesID: "Turdus migratorius_American Robin", confirmedAt: Date(timeIntervalSince1970: 1_800_000_000), soundConfidence: 0.7, frameImagePath: "robin.jpg", source: .glasses))
+            try v1.mainContext.save()
+        }
+
+        do {
+            let current = try AlbumSchema.makeContainer(at: url)
+            #expect(try current.mainContext.fetch(Sighting.newestFirst()).map(\.frameImagePath) == ["robin.jpg"])
+            #expect(try current.mainContext.fetch(Capture.newestFirst()).isEmpty)
+            current.mainContext.insert(Capture(takenAt: Date(timeIntervalSince1970: 1_800_000_100), photoPath: "later.jpeg", source: .glasses))
+            try current.mainContext.save()
+        }
+
+        let reopened = try AlbumSchema.makeContainer(at: url)
+        #expect(try reopened.mainContext.fetch(Capture.newestFirst()).map(\.photoPath) == ["later.jpeg"])
+        #expect(try reopened.mainContext.fetch(Capture.newestFirst()).first?.location == nil, "a capture without a place keeps none")
+        #expect(try reopened.mainContext.fetch(Sighting.newestFirst()).count == 1)
+    }
+
     @Test("the card fields round-trip: rarity, caption, art and attached photos")
     @MainActor
     func cardFieldsRoundTrip() throws {

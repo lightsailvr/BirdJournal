@@ -69,6 +69,9 @@ final class RunSightings {
     private(set) var seen: [Seen] = []
     /// Every sighting this run has written and not undone, heard or seen, in add order: what a recap counts its patches from.
     private(set) var identifiers: [UUID] = []
+    /// The photos taken this run and not yet named (issue #188), in the order taken. They are in the album from the shutter
+    /// on, and are no sightings: none is among `identifiers`.
+    private(set) var unnamed: [UnnamedSighting] = []
     @ObservationIgnored private var records: [PersistentIdentifier: Sighting] = [:]
     @ObservationIgnored let recorder: SightingRecorder
     /// Writes each add's caption after the sighting is written, never blocking it (issue #56); nil writes none.
@@ -86,6 +89,7 @@ final class RunSightings {
         entries = []
         seen = []
         identifiers = []
+        unnamed = []
         records = [:]
     }
 
@@ -137,22 +141,63 @@ final class RunSightings {
         return added(recorded, species: candidate.species)
     }
 
-    /// Writes a new sighting of a bird the birder named from `photo` (issue #186): an add like any other from here on, with
-    /// its caption, its find and its Undo.
+    /// Writes `photo` to the album as an unnamed sighting of this run (issue #188): at the shutter, before any name. It earns
+    /// nothing and is told to nobody until it is named.
+    /// - Parameters:
+    ///   - location: where the birder was when the photo was taken.
+    ///   - source: the device that took the photo.
+    @discardableResult
+    func capture(photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> UnnamedSighting {
+        let captured = UnnamedSighting(try recorder.recordCapture(photo: photo, takenAt: takenAt, location: location, source: source))
+        unnamed.append(captured)
+        return captured
+    }
+
+    /// Names an unnamed sighting (issues #186 and #188): writes the sighting of `bird` it becomes, at the photo's own time and
+    /// place, and from here on an add like any other, with its caption, its find and its Undo. One this run took moves to
+    /// the birds seen on it; one from an earlier run is named all the same, and is no part of this run.
+    @discardableResult
+    func name(_ unnamed: UnnamedSighting, as bird: NameableBird) throws -> Addition {
+        guard let capture = recorder.capture(unnamed.id) else { throw UnnamedSightingFailure.gone }
+        let recorded = try recorder.name(capture, as: bird)
+        let sighting = recorded.sighting
+        records[sighting.persistentModelID] = sighting
+        let isOfThisRun = self.unnamed.contains { $0.id == unnamed.id }
+        if isOfThisRun {
+            self.unnamed.removeAll { $0.id == unnamed.id }
+            seen.append(Seen(sighting))
+        }
+        // No row of the model's output stands behind it: only the names matter to what reads an addition.
+        return added(recorded, species: Species(index: 0, scientificName: bird.scientificName, commonName: bird.commonName, taxonomicClass: Species.birds), isOfThisRun: isOfThisRun)
+    }
+
+    /// A photo taken and named in one step: `capture`, then `name`. If the naming fails the photo is kept, unnamed.
     /// - Parameter source: the device that took the photo.
     @discardableResult
     func addSeen(_ bird: NameableBird, photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> Addition {
-        let recorded = try recorder.recordSeen(bird, photo: photo, takenAt: takenAt, location: location, source: source)
-        records[recorded.sighting.persistentModelID] = recorded.sighting
-        seen.append(Seen(recorded.sighting))
-        // No row of the model's output stands behind it: only the names matter to what reads an addition.
-        return added(recorded, species: Species(index: 0, scientificName: bird.scientificName, commonName: bird.commonName, taxonomicClass: Species.birds))
+        try name(capture(photo: photo, takenAt: takenAt, location: location, source: source), as: bird)
+    }
+
+    /// Removes an unnamed sighting and its photo, from the album and from the run. Nothing happens if it is already gone.
+    func delete(_ unnamed: UnnamedSighting) throws {
+        if let capture = recorder.capture(unnamed.id) { try recorder.delete(capture) }
+        self.unnamed.removeAll { $0.id == unnamed.id }
+    }
+
+    /// Reads back the photos a run took and hadn't named, as `restore` does its adds. One named or deleted meanwhile is left out.
+    func restoreUnnamed(_ identifiers: [UUID]) {
+        unnamed += identifiers.compactMap { recorder.capture($0).map(UnnamedSighting.init) }
+    }
+
+    /// Whether `addition` can still be taken back: its sighting was written through this ledger and hasn't been undone.
+    func canUndo(_ addition: Addition) -> Bool {
+        records[addition.sightingID] != nil
     }
 
     /// What every add does once its sighting is written: the caption, the find, and what it earned.
-    private func added(_ recorded: SightingRecorder.Recorded, species: Species) -> Addition {
+    private func added(_ recorded: SightingRecorder.Recorded, species: Species, isOfThisRun: Bool = true) -> Addition {
         let sighting = recorded.sighting
-        identifiers.append(sighting.identifier)
+        if isOfThisRun { identifiers.append(sighting.identifier) }
         if let captioner { Task { await captioner.caption(sighting) } }
         findOutbox?.added(sighting.identifier, isNewPatch: recorded.sewsPatch)
         return Addition(species: species, sightingID: sighting.persistentModelID, identifier: sighting.identifier, sewsPatch: recorded.sewsPatch, patchCount: recorded.patchCount, placement: recorded.placement)
@@ -170,14 +215,36 @@ final class RunSightings {
         return Addition(species: species, sightingID: sighting.persistentModelID, identifier: identifier, sewsPatch: true, patchCount: patch.count, placement: patch.placement)
     }
 
-    /// Takes an addition back: its sighting is deleted with its frame and its photos. Nothing happens if it is already gone.
+    /// Takes an addition back. The sighting of a bird heard is deleted with its frame and its photos. The naming of a photo
+    /// is taken back and the photo kept (issue #188): the sighting goes, and the unnamed sighting waits again, on this run's
+    /// list if this run took it. Nothing happens if the sighting is already gone.
     func undo(_ addition: Addition) throws {
         guard let sighting = records[addition.sightingID] else { return }
-        try recorder.delete(sighting)
+        let wasSeenThisRun = seen.contains { $0.id == addition.sightingID }
+        if let capture = try recorder.takeBackName(of: sighting) {
+            if wasSeenThisRun {
+                unnamed.append(UnnamedSighting(capture))
+                unnamed.sort { $0.takenAt < $1.takenAt }
+            }
+        } else {
+            try recorder.delete(sighting)
+        }
         findOutbox?.removed(addition.identifier)
         records[addition.sightingID] = nil
         entries.removeAll { $0.id == addition.sightingID }
         seen.removeAll { $0.id == addition.sightingID }
         identifiers.removeAll { $0 == addition.identifier }
+    }
+}
+
+/// Why an unnamed sighting could not be named.
+enum UnnamedSightingFailure: Error, Equatable, LocalizedError {
+    /// It has been named or deleted since the screen showing it was drawn.
+    case gone
+
+    var errorDescription: String? {
+        switch self {
+        case .gone: "This photo has already been named or deleted."
+        }
     }
 }

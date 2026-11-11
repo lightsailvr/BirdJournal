@@ -1,20 +1,24 @@
 import SwiftUI
 
-/// "Capture a sighting" (issue #186, of #185), over the run: the camera, then, once the shutter has given a photo, "Name this
-/// bird". The run goes on listening underneath the whole time, and the camera says so. Closing the camera takes nothing;
-/// in this ticket cancelling the naming discards the photo (#188 keeps it as an unnamed sighting).
+/// "Capture a sighting" (issues #186 and #188, of #185), over the run: the camera, then, once the shutter has given a photo,
+/// "Name this bird". The run goes on listening underneath the whole time, and the camera says so. Closing the camera takes
+/// nothing. The photo is written to the album at the shutter, as an unnamed sighting, before the naming opens: "Name it
+/// later", or anything else that closes this, leaves it waiting on the run's page.
 struct CaptureSightingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.makeCaptureCamera) private var makeCamera
+    @Environment(ListeningCoordinator.self) private var run
     @State private var camera: (any CaptureCamera)?
-    @State private var photo: CapturedPhoto?
+    /// The photo just taken, saved and waiting for its name.
+    @State private var unnamed: UnnamedSighting?
+    @State private var couldNotSave = false
 
     var body: some View {
         Group {
-            if let photo {
-                NameBirdView(photo: photo) { dismiss() }
+            if let unnamed {
+                NameBirdView(unnamed: unnamed) { dismiss() }
             } else if let camera {
-                CaptureCameraView(camera: camera, taken: { photo = $0 }, close: { dismiss() })
+                CaptureCameraView(camera: camera, taken: save, close: { dismiss() })
             } else {
                 Color.black.ignoresSafeArea()
             }
@@ -25,19 +29,35 @@ struct CaptureSightingView: View {
             // `-autoScreen name-bird`: straight to the naming of a stand-in photo, for the screenshots.
             if UserDefaults.standard.bool(forKey: "autoNameBird") {
                 UserDefaults.standard.removeObject(forKey: "autoNameBird")
-                photo = CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now)
+                save(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
             }
             #endif
         }
         // The camera is for the shot: it isn't left open behind the naming, or after the cover has gone.
-        .onChange(of: photo) { camera?.stop() }
+        .onChange(of: unnamed) { camera?.stop() }
         .onDisappear { camera?.stop() }
+        // The camera stays open behind this, for another try.
+        .alert("The photo couldn't be saved", isPresented: $couldNotSave) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Nothing was kept. Take it again.")
+        }
+    }
+
+    /// The shutter's photo goes to the album before anything else happens to it.
+    private func save(_ photo: CapturedPhoto) {
+        if let saved = run.capture(photo) {
+            unnamed = saved
+        } else {
+            couldNotSave = true
+        }
     }
 }
 
 /// The camera inside the app: a way to close, a pill saying the run is still listening with its clock, the viewfinder, and
 /// the shutter. Before the camera is open it says why not: the first use asks for it, a denial is explained with the way to
-/// Settings, and a phone with no camera to give says that. #187 adds the lens buttons, zoom and focus; #192 the library.
+/// Settings, and a phone with no camera to give says that. The lens buttons, the zoom and the focus are the viewfinder's
+/// (`CaptureViewfinder`, #187); #192 adds the library.
 struct CaptureCameraView: View {
     @Environment(\.openURL) private var openURL
     let camera: any CaptureCamera
@@ -63,8 +83,21 @@ struct CaptureCameraView: View {
                     Spacer(minLength: 0)
                     ListeningPill()
                     Spacer(minLength: 0)
-                    // Balances Close, so the pill sits in the middle.
-                    Color.clear.frame(width: 44, height: 44).accessibilityHidden(true)
+                    // Opposite Close, so the pill sits in the middle: the flash, which is off and stays off (#187). It is
+                    // said, not offered: there is nothing to press.
+                    if camera.state == .ready {
+                        Image(systemName: "bolt.slash.fill")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            // A mark in the bar: it stops growing where the pill beside it does.
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                            .accessibilityElement()
+                            .accessibilityLabel("Flash off")
+                            .accessibilityIdentifier("capture-flash-off")
+                    } else {
+                        Color.clear.frame(width: 44, height: 44).accessibilityHidden(true)
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -72,12 +105,7 @@ struct CaptureCameraView: View {
                 Group {
                     switch camera.state {
                     case .ready:
-                        camera.viewfinder
-                            .aspectRatio(3 / 4, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                            .accessibilityElement()
-                            .accessibilityLabel("Viewfinder")
-                            .accessibilityAddTraits(.isImage)
+                        CaptureViewfinder(camera: camera)
                     case .starting:
                         ProgressView("Opening the camera")
                             .tint(.white)
