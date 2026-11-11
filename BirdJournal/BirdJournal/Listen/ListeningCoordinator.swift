@@ -411,11 +411,12 @@ final class ListeningCoordinator {
 
     /// The shutter: writes `photo` to the album as an unnamed sighting, before any name, at the place the run has. Nothing is
     /// announced, since nothing has been added: it sews no patch and tells nobody until it is named. Nil when it could not
-    /// be written, which is the only way a photo is lost.
+    /// be written, which is the only way a photo is lost. A photo chosen from the library goes the same way (issue #192),
+    /// at the place the picture itself carries when it carries one.
     /// - Parameter source: the device that took the photo: the phone, whichever microphones the run is listening with.
     @discardableResult
     func capture(_ photo: CapturedPhoto, source: SightingSource = .phone) -> UnnamedSighting? {
-        capture(photo, at: coordinate, source: source)
+        capture(photo, at: photo.place ?? coordinate, source: source)
     }
 
     /// The shutter, for a photo whose place the caller knows better than the run does.
