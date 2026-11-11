@@ -141,7 +141,7 @@ final class CaptureUITests: XCTestCase {
     }
 
     @MainActor
-    func testNameItLaterKeepsThePhotoOnTheRunAndABirdNoFieldGuideDescribesLandsInUncharted() throws {
+    func testNameItLaterKeepsThePhotoOnTheRun() throws {
         let app = try launchRun()
         capture(app)
 
@@ -166,14 +166,28 @@ final class CaptureUITests: XCTestCase {
         XCTAssertLessThan(unnamed.frame.minY, app.buttons["Sew it, House Finch"].frame.minY, "above the birds heard")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "no patch for a photo with no name")
         XCTAssertFalse(app.buttons["Undo"].exists, "nothing was added")
+    }
 
-        // Name it from its row: the same sheet, the same photo. A bird of the world, in no field guide on this iPhone: below
-        // them, Uncharted.
+    /// An unnamed sighting is named from its row: the same sheet, the same photo. A bird of the world, in no field guide on
+    /// this iPhone, is found below them and lands in Uncharted; the same bird again adds to its count with no page.
+    ///
+    /// Nothing is typed here: the sheet opens already searching (`-autoQuery`). This was the second half of the test
+    /// above, which typed in three sheets of one launch, and three times in two days a tap on the search field of the
+    /// second or third sheet left XCUITest waiting for the app to go idle until the test's allowance ran out ("App
+    /// animations complete notification not received"), each time with the Mac's load average over 200. The app's main
+    /// thread was idle when sampled; the test passes alone, and passed four times out of four in its class on a quieter
+    /// Mac (load average 3 to 70) during the review of #185, so the hang was not reproduced and no cause was found in
+    /// the app. What the three have in common is the keyboard coming up a second time in one launch. So a launch
+    /// types at most once (as `ChangeBirdUITests` already does).
+    @MainActor
+    func testAnUnnamedSightingIsNamedFromItsRowAndABirdNoFieldGuideDescribesLandsInUncharted() throws {
+        let app = try launchRun(["-autoUnnamed", "1", "-autoQuery", "amazilia humm"])
+        let unnamed = app.buttons["unnamed-row"]
+        XCTAssertTrue(unnamed.waitForExistence(timeout: 90), "no unnamed sighting on the run; screen: \(app.debugDescription.prefix(4000))")
         unnamed.tap()
         XCTAssertTrue(app.navigationBars["Name this bird"].waitForExistence(timeout: 15), "no naming from the row; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(element(app, "name-bird-photo").label.hasPrefix("Your photo, Today, "), element(app, "name-bird-photo").label)
-        search(app, for: "amazilia humm")
-        XCTAssertTrue(app.staticTexts["All birds"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["All birds"].waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.staticTexts["In your field guides"].exists, "no field guide has it")
         let amazilia = app.buttons.matching(NSPredicate(format: "label == %@", "Amazilia Hummingbird, Uncharted")).firstMatch
         XCTAssertTrue(amazilia.exists, "screen: \(app.debugDescription.prefix(3000))")
@@ -188,9 +202,8 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(unnamed.exists, "named, it is a sighting and no longer waits")
 
-        // The same bird again: its count, with no page.
+        // The same bird again, from the camera this time: its count, with no page.
         capture(app)
-        search(app, for: "amazilia humm")
         let again = app.buttons.matching(NSPredicate(format: "label == %@", "Amazilia Hummingbird, Uncharted, Seen once here")).firstMatch
         XCTAssertTrue(again.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         again.tap()
