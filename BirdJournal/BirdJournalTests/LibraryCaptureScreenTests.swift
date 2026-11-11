@@ -1,5 +1,6 @@
 import Album
 import Foundation
+import Identification
 import ImageIO
 import SwiftData
 import SwiftUI
@@ -29,8 +30,11 @@ struct LibraryCaptureScreenTests {
 
     /// `screen` in a phone-sized window with app accessibility on, the harness's shared objects, a stand-in Photos library and
     /// a stand-in for the library's picker, for as long as `body` runs. `elements` walks what VoiceOver reaches then.
+    /// - Parameter geomodel: what "Name this bird" reads its likely birds from (#189): nothing is likely anywhere, unless
+    ///   a test says what is.
     static func onScreen(
         _ screen: some View, harness: Screens.Harness, photos: StandInPhotosLibrary, libraryPhoto: Data?, typeSize: DynamicTypeSize = .large,
+        geomodel: ScriptedOccurrence = ScriptedOccurrence([:]),
         _ body: (_ elements: () -> [NSObject]) async throws -> Void
     ) async throws {
         await harness.place.prepareForLaunch()
@@ -39,6 +43,7 @@ struct LibraryCaptureScreenTests {
             .environment(\.photosCopies, PhotosCopies(library: photos))
             .environment(\.standInLibraryPhoto, libraryPhoto)
             .environment(\.makeCaptureCamera) { StandInCaptureCamera(.ready) }
+            .environment(\.occurrenceModel, geomodel)
         let host = UIHostingController(rootView: hosted)
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
@@ -138,8 +143,11 @@ struct LibraryCaptureScreenTests {
         let harness = try Screens.Harness(seeded: false)
         let photos = StandInPhotosLibrary(access: .notAsked, answer: .allowed)
         let picture = Self.griffithPicture()
+        // Where and when the photo was taken, an Allen's Hummingbird is likely.
+        let geomodel = ScriptedOccurrence(["Selasphorus sasin": 0.75])
+        let taken = try Date("2026-04-18T13:42:10Z", strategy: .iso8601)
 
-        try await Self.onScreen(CaptureSightingView(), harness: harness, photos: photos, libraryPhoto: picture) { elements in
+        try await Self.onScreen(CaptureSightingView(), harness: harness, photos: photos, libraryPhoto: picture, geomodel: geomodel) { elements in
             let found = try await Controls.settled(elements) { Controls.element("Choose from library", in: $0) != nil }
             let library = try #require(Controls.element("Choose from library", in: found), "\(Controls.labels(found))")
             #expect(library.accessibilityActivate())
@@ -154,10 +162,15 @@ struct LibraryCaptureScreenTests {
             #expect(header.hasPrefix("Your photo, Apr 18, 2026"), "the photo's date, not today's: \(header)")
             #expect(header.contains(", Near "), "the photo's place: \(header)")
             #expect(labels.contains("Allen's Hummingbird, Los Angeles, New to you here"), "placed where the photo was taken: \(labels)")
+            // What is suggested is what is likely where and when the photo was taken, not here and now (#189).
+            #expect(labels.contains("Likely here now"), "\(labels)")
+            let asked = try #require(geomodel.asked.first, "the geomodel was not read")
+            #expect((asked.latitude * 10_000).rounded() == 341_365 && (asked.longitude * 10_000).rounded() == -1_182_942, "\(asked)")
+            #expect(asked.week == GeoContext.week(of: taken), "\(asked)")
 
             let capture = try #require(Self.captures(harness).first)
             #expect(Self.captures(harness).count == 1)
-            #expect(capture.takenAt == (try Date("2026-04-18T13:42:10Z", strategy: .iso8601)))
+            #expect(capture.takenAt == taken)
             #expect(capture.location.map { ($0.latitude * 10_000).rounded() } == 341_365)
             #expect(capture.location.map { ($0.longitude * 10_000).rounded() } == -1_182_942)
             #expect(try Data(contentsOf: harness.frames.url(for: capture.photoPath)) == picture, "not a byte changed")
