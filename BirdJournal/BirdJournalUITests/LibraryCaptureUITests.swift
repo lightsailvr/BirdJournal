@@ -40,6 +40,8 @@ final class LibraryCaptureUITests: XCTestCase {
 
     /// A picture from the library, standing in for the picker's (`-fakeLibraryPhoto`): taken on 18 April 2026 in San Diego.
     /// It is named like a capture, and the sheet shows the photo's own date and place, not the run's Griffith Park and today.
+    /// Taken last spring, it is no part of this run (the review of #185, c5): its sighting is in the Collection and not
+    /// under "Seen this run".
     @MainActor
     func testAPhotoChosenFromTheLibraryIsNamedWithItsOwnDateAndPlace() throws {
         let app = try launchCamera(["-fakeLibraryPhoto", "YES"])
@@ -74,14 +76,18 @@ final class LibraryCaptureUITests: XCTestCase {
         XCTAssertEqual(add.label, "Add and sew patch")
         add.tap()
 
-        // An add like any other: the new patch's page, then the run with the bird under Seen this run.
+        // An add like any other: the new patch's page, then the run, which lists nothing of it: the bird was seen in April.
         let keep = app.buttons["Keep listening"]
         XCTAssertTrue(keep.waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts["New patch, Citrus edition"].exists, "Los Angeles's edition, for a photo from San Diego")
         keep.tap()
-        let row = app.buttons["seen-row-Calypte anna"]
-        XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(row.label, "Anna's Hummingbird, Seen, your photo, New patch")
+        XCTAssertTrue(app.buttons["capture-sighting"].waitForExistence(timeout: 10), "not back on the run; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.buttons["seen-row-Calypte anna"].exists, "a photo from last spring listed as seen this run")
+        XCTAssertFalse(app.staticTexts["Seen this run"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        // The sighting is in the Collection all the same.
+        app.tabBars.buttons["Collection"].tap()
+        let sighting = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Anna's Hummingbird")).firstMatch
+        XCTAssertTrue(sighting.waitForExistence(timeout: 30), "the sighting isn't in the Collection; screen: \(app.debugDescription.prefix(4000))")
     }
 
     /// The real library: the system's picker opens over the camera with no question about the library asked first, and
@@ -97,8 +103,8 @@ final class LibraryCaptureUITests: XCTestCase {
     }
 
     /// A photo picked in the system's picker, from the pictures a simulator's library comes with: it goes to its naming
-    /// with the date the picture itself carries, years back, and not today's; and "Name it later" keeps it on the run like any
-    /// capture. Skipped on a simulator whose library is empty.
+    /// with the date the picture itself carries, years back, and not today's; and "Name it later" keeps it, to name from the
+    /// Collection: a picture from years back is not one of this run's photos. Skipped on a simulator whose library is empty.
     @MainActor
     func testAPhotoPickedInTheSystemPickerIsNamedWithItsOwnDate() throws {
         let app = try launchCamera()
@@ -124,8 +130,12 @@ final class LibraryCaptureUITests: XCTestCase {
         )
 
         app.buttons["name-bird-later"].tap()
+        XCTAssertTrue(app.buttons["capture-sighting"].waitForExistence(timeout: 10), "not back on the run; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.buttons["unnamed-row"].exists, "a picture from years back listed as seen this run; screen: \(app.debugDescription.prefix(4000))")
+        app.tabBars.buttons["Collection"].tap()
+        XCTAssertTrue(app.staticTexts["To name"].waitForExistence(timeout: 30), "the chosen photo was not kept; screen: \(app.debugDescription.prefix(4000))")
         let unnamed = app.buttons["unnamed-row"]
-        XCTAssertTrue(unnamed.waitForExistence(timeout: 10), "the chosen photo was not kept; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(unnamed.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(unnamed.label.hasPrefix("Unnamed sighting, Your photo, "), unnamed.label)
     }
 

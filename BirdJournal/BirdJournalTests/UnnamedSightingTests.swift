@@ -415,8 +415,10 @@ struct UnnamedSightingTests {
         #expect(captures.map(\.photoPath) == [second.photoPath], "back in the album, waiting")
     }
 
-    @Test("a run that heard nothing and took a photo still has its page when it ends, until the photo is named or deleted")
-    func aRunOfOnlyAPhotoKeepsItsPage() async throws {
+    // Review of #185, a1: the feature's own example, a silent bird's photo and nothing heard, had no review and lost its
+    // page when the app was killed.
+    @Test("a run that heard nothing and took a photo has its review like any other; it is written down, comes back after the app is killed with the photo to name, and again with the bird once it is named")
+    func aRunOfOnlyAPhotoHasItsReview() async throws {
         let harness = try ListeningCoordinatorTests.makeHarness()
         let run = harness.run
         await run.start()
@@ -424,10 +426,64 @@ struct UnnamedSightingTests {
         let unnamed = try #require(run.capture(CapturedPhoto(data: Data([1]), takenAt: .now)))
         await run.stop()
 
-        #expect(!run.isReviewing, "no birds heard, so no review")
+        #expect(run.candidates.isEmpty, "nothing was heard")
         #expect(run.lastRunHasSomething, "the photo still to name")
-        #expect(run.delete(unnamed))
-        #expect(!run.lastRunHasSomething)
+        #expect(run.isReviewing, "so the run has its review")
+        func kept() -> EndedRun? { harness.defaults.data(forKey: ListeningCoordinator.endedRunKey).flatMap { try? JSONDecoder().decode(EndedRun.self, from: $0) } }
+        #expect(kept()?.birds.isEmpty == true)
+        #expect(kept()?.captures == [unnamed.id], "written down for a relaunch")
+
+        let relaunched = harness.relaunched()
+        #expect(relaunched.isReviewing && relaunched.showsRun, "the review a killed app was waiting to show")
+        #expect(relaunched.candidates.isEmpty)
+        #expect(relaunched.sightings.unnamed == [unnamed])
+        let addition = try #require(relaunched.name(unnamed, as: SeenSightingTests.allens))
+        relaunched.finishCeremony()
+        relaunched.dismissReveal()
+
+        let again = harness.relaunched()
+        #expect(again.isReviewing, "a run of one bird seen and nothing heard")
+        #expect(again.sightings.seen.map(\.identifier) == [addition.identifier])
+        #expect(again.sightings.identifiers == [addition.identifier], "its patch is on the recap")
+        again.dismissEnded()
+        #expect(!harness.relaunched().isReviewing, "seen and closed, it is gone")
+    }
+
+    @Test("a review kept for a photo alone is not brought back once that photo has been deleted")
+    func aReviewOfADeletedPhotoIsNotRestored() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        let unnamed = try #require(run.capture(CapturedPhoto(data: Data([1]), takenAt: .now)))
+        await run.stop()
+        #expect(run.isReviewing)
+
+        // Deleted behind the review's back, as a launch that showed the Collection first could: the album has lost it,
+        // and the run written down still names it.
+        try run.sightings.recorder.delete(try #require(run.sightings.recorder.capture(unnamed.id)))
+        let relaunched = harness.relaunched()
+        #expect(!relaunched.isReviewing && !relaunched.showsRun, "nothing is left to review")
+        #expect(relaunched.state == .idle)
+        #expect(harness.defaults.data(forKey: ListeningCoordinator.endedRunKey) == nil, "and it is not kept for the next launch")
+    }
+
+    @Test("a run that ended with nothing, whose one photo was still on its way, gets its review when the photo arrives")
+    func aLatePhotoBringsTheReview() async throws {
+        let harness = try ListeningCoordinatorTests.makeHarness()
+        let run = harness.run
+        await run.start()
+        try await waitUntil("the run has its place") { run.coordinate != nil }
+        run.isCapturing = true
+        let pressed = run.shutter
+        await run.stop()
+        #expect(!run.isReviewing && !run.showsRun, "nothing heard and nothing taken yet")
+
+        let unnamed = try #require(run.capture(CapturedPhoto(data: Data([1]), takenAt: .now), pressed: pressed))
+        run.isCapturing = false
+
+        #expect(run.sightings.unnamed == [unnamed], "the run's photo, pressed while it listened")
+        #expect(run.isReviewing && run.showsRun, "and with it the run has its review")
+        #expect(harness.defaults.data(forKey: ListeningCoordinator.endedRunKey) != nil, "written down, too")
     }
 
     // MARK: - Words

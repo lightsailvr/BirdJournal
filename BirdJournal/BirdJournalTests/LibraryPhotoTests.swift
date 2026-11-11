@@ -2,6 +2,7 @@ import Album
 import Foundation
 import Identification
 import ImageIO
+import SwiftData
 import Testing
 import UIKit
 import UniformTypeIdentifiers
@@ -182,9 +183,12 @@ struct LibraryPhotoTests {
         #expect(unnamed.location == portal, "Arizona, not the run's New York: \(String(describing: unnamed.location))")
         #expect(unnamed.source == .phone)
         #expect(try Data(contentsOf: harness.frames.appending(path: unnamed.photoPath)) == data, "copied into the app unchanged")
-        #expect(run.sightings.unnamed.map(\.id) == [unnamed.id], "waiting on the run's page like any capture")
+        // Review of #185, c5: taken last April, it is not this run's photo.
+        #expect(run.sightings.unnamed.isEmpty, "not under Seen this run: it was taken on another day")
+        #expect(run.heardScientificNames(for: unnamed).isEmpty, "and offered nothing this run heard")
 
         try #require(run.name(unnamed, as: SeenSightingTests.finch))
+        #expect(run.sightings.seen.isEmpty && run.sightings.identifiers.isEmpty, "named, it is on no run's list and in no recap")
         let sighting = try #require(harness.stored.first)
         #expect(sighting.confirmedAt == taken)
         #expect(sighting.location == portal)
@@ -199,6 +203,16 @@ struct LibraryPhotoTests {
         let here = try #require(run.capture(bare))
         #expect(here.takenAt == chosenAt)
         #expect(here.location == run.coordinate)
+        #expect(run.sightings.unnamed.map(\.id) == [here.id], "with no date of its own it is the run's, as the shutter's is")
+
+        // One that carries a date within the run: a picture from this walk, taken with another camera.
+        let during = try #require(run.startedAt).addingTimeInterval(0.001)
+        let fromThisWalk = try #require(run.capture(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: during, origin: .library(carriesDate: true))))
+        #expect(run.sightings.unnamed.map(\.id) == [here.id, fromThisWalk.id], "the run's own")
+        // And one from a minute before the run started.
+        let before = try #require(run.capture(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: during.addingTimeInterval(-61), origin: .library(carriesDate: true))))
+        #expect(!run.sightings.unnamed.contains(before), "not this run's")
+        #expect((try? harness.album.mainContext.fetchCount(FetchDescriptor<Capture>())) == 3, "each is in the album to name")
 
         await run.stop()
     }

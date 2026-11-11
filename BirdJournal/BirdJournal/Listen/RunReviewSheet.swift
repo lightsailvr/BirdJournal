@@ -105,21 +105,30 @@ struct RunReviewSheet: View {
                     }
 
                     SectionTitle("What you heard")
-                    HuntSummary(hunt: run.hunt(in: collection), isCentred: false)
-                        .padding(.top, 6)
-                    VStack(spacing: 0) {
-                        ForEach(run.orderedCandidates) { candidate in
-                            CandidateRow(candidate: candidate) {
-                                reviewing = candidate
+                    if run.candidates.isEmpty {
+                        // A run of photos and nothing heard (a silent bird at the feeder): there is nothing to add or forget.
+                        Text(RunRecap.nothingHeard)
+                            .font(JournalFont.body)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 6)
+                            .accessibilityIdentifier("recap-nothing-heard")
+                    } else {
+                        HuntSummary(hunt: run.hunt(in: collection), isCentred: false)
+                            .padding(.top, 6)
+                        VStack(spacing: 0) {
+                            ForEach(run.orderedCandidates) { candidate in
+                                CandidateRow(candidate: candidate) {
+                                    reviewing = candidate
+                                }
+                                RowRule()
                             }
-                            RowRule()
                         }
+                        .padding(.top, 8)
+                        Text("Only the birds you add are kept. The rest are forgotten when you close this.")
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 12)
                     }
-                    .padding(.top, 8)
-                    Text("Only the birds you add are kept. The rest are forgotten when you close this.")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 12)
                 }
             }
             .holdsPatchLight()

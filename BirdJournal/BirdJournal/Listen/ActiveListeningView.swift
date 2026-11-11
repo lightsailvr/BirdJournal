@@ -79,7 +79,7 @@ struct ActiveListeningView: View {
                         .padding(.top, 18)
                 }
 
-                if run.glasses.dictationNeedsPermission {
+                if run.offersDictation {
                     DictationOffer(glasses: run.glasses)
                         .padding(.top, 18)
                 }
@@ -240,7 +240,7 @@ extension ActiveListeningView {
         case .listening: "Listening for birds…"
         case .interrupted, .paused, .resuming: "Waiting for the glasses…"
         case .stopping: "Stopping…"
-        case .idle, .ended: "No birds were heard."
+        case .idle, .ended: RunRecap.nothingHeard
         }
     }
 }
