@@ -119,9 +119,14 @@ final class GlassesListeningSession {
     /// The run's sightings, shared with the phone's "Add to collection" (issue #28) so both add each species once.
     let sightings: RunSightings
     @ObservationIgnored private let policy: ReconnectPolicy
-    /// The names a photo can be given, read once and off the main actor; nil on a run whose lens never asks for a name.
+    /// The names a photo can be given, read once a run and off the main actor; nil on a run whose lens never asks for a name.
     @ObservationIgnored private let loadNames: (@Sendable () async -> NameableBirds?)?
+    /// The read for this run, from its first photo on. Each run reads again: a field guide downloaded since the last one
+    /// is among the names, and a read that failed is not kept.
     @ObservationIgnored private var namesTask: Task<NameableBirds?, Never>?
+    /// Which run this is, counted from the first: a photo still on its way when its run ends knows by it whether the run
+    /// it comes back to is the one that took it.
+    @ObservationIgnored private var runNumber = 0
     /// Where the birds likely at a photo's place and week are read from.
     @ObservationIgnored private let occurrenceModel: any SpeciesOccurrenceModel
     /// Whether the camera stream stays on while the glasses listen for a name, read as each dictation starts.
@@ -234,8 +239,10 @@ final class GlassesListeningSession {
         phase = .starting
         errorMessage = nil
         sightings.reset()
+        runNumber += 1
         captured = [:]
         offered = [:]
+        namesTask = nil
         dictationNeedsPermission = false
         stopTask = nil
         lastSessionError = nil
@@ -483,10 +490,15 @@ final class GlassesListeningSession {
     /// The tap on the capture viewfinder (issue #193): the photo is taken now and written as an unnamed sighting, with
     /// this moment and the run's place, for the phone to name. As for an add, the frame from the tap stands in if no
     /// photo comes; with neither there is nothing to keep, and the lens says so. The lens is told how capture `id` went.
+    ///
+    /// The photo can arrive after the run has stopped, and is the stopped run's all the same. If the next run has started
+    /// by then it is not that one's: it is kept in the album to be named from the Collection, on no run's list, and the
+    /// new run's lens hears nothing of it.
     private func capture(_ id: Int) {
         let frame = source?.latestFrame
         let takenAt = Date.now
         let location = listening.coordinate
+        let run = runNumber
         Task {
             var jpeg = await source?.capturePhoto()
             if jpeg == nil {
@@ -494,22 +506,27 @@ final class GlassesListeningSession {
             }
             guard let jpeg else {
                 Self.logger.info("capture \(id): no photo and no frame")
-                lens.captureFailed(id)
+                if run == runNumber { lens.captureFailed(id) }
                 return
             }
             do {
-                let unnamed = try sightings.capture(photo: jpeg, takenAt: takenAt, location: location, source: .glasses)
+                let unnamed = try sightings.capture(photo: jpeg, takenAt: takenAt, location: location, source: .glasses, onThisRun: run == runNumber)
+                guard run == runNumber else {
+                    Self.logger.info("capture \(id): the photo arrived after the next run started, kept to name")
+                    return
+                }
                 onCaptured?(unnamed)
                 // The photo is safe from here on: whatever goes wrong after this, the phone has it. The lens asks for
                 // the bird's name if the glasses can hear one (issue #194), else says the photo waits on the phone.
                 captured[id] = unnamed
                 let askName = await canAskName()
                 let picture = askName ? await Task.detached(priority: .userInitiated) { DisplayCardBuilder.capturedPhotoImage(jpeg) }.value : nil
+                guard run == runNumber else { return }
                 lens.captureSaved(id, askName: askName, photo: picture)
             } catch {
                 errorMessage = "Could not save the photo: \(error.localizedDescription)"
                 Self.logger.error("capture failed: \(error.localizedDescription, privacy: .public)")
-                lens.captureFailed(id)
+                if run == runNumber { lens.captureFailed(id) }
             }
         }
     }
@@ -553,7 +570,7 @@ final class GlassesListeningSession {
         }
     }
 
-    /// The names, read the first time a photo needs them.
+    /// The names, read the first time a photo of this run needs them.
     private func names() async -> NameableBirds? {
         guard let loadNames else { return nil }
         if namesTask == nil { namesTask = Task.detached(priority: .userInitiated) { await loadNames() } }

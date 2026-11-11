@@ -6,6 +6,7 @@ import MWDATCore
 import MWDATInputs
 import MWDATMockDevice
 import SwiftData
+import Synchronization
 import Testing
 import UIKit
 @testable import BirdJournal
@@ -80,6 +81,7 @@ extension MockDeviceKitTests {
         static func withRun(
             limits: GlassesDictation.Limits = GlassesDictation.Limits(),
             keepsStream: Bool = true,
+            names: @escaping @Sendable () async -> NameableBirds? = { LensDictation.names },
             _ body: (Stage) async throws -> Void
         ) async throws {
             try await withMockDisplay { glasses in
@@ -99,7 +101,7 @@ extension MockDeviceKitTests {
                     location: ScriptedLocationProvider([ListeningSessionTests.newYork]),
                     profile: FakeLensStack.profile(for:),
                     image: FakeLensStack.image(for:),
-                    names: { Self.names },
+                    names: names,
                     occurrenceModel: SpyOccurrence(),
                     dictationLimits: limits,
                     dictationKeepsStream: { keepsStream }
@@ -127,6 +129,79 @@ extension MockDeviceKitTests {
             }
             let data = image.jpegData(compressionQuality: 0.9)
             return CameraFrame { data }
+        }
+
+        // Review of #185, B3 (spec c4): the names were read once per launch.
+        @Test("each run reads the names again, so a field guide downloaded between two runs is known to the second")
+        func namesAreReadForEachRun() async throws {
+            let reads = ReadCount()
+            try await Self.withRun(names: {
+                reads.add()
+                return Self.names
+            }) { stage in
+                let (lens, run, speech) = (stage.lens, stage.run, stage.speech)
+                try await stage.askForAName()
+                speech.simulateTranscription(text: "Jay.", isFinal: true, confidence: -1)
+                try await waitUntil(timeout: .seconds(5)) { lens.page == .captureMatches }
+                #expect(reads.count == 1)
+
+                // A second photo of the same run reads nothing again.
+                for _ in 0..<4 { stage.input.navDown() }
+                try await waitUntil(timeout: .seconds(2)) { stage.choices.last?.isSelected == true }
+                stage.input.select()
+                try await waitUntil(timeout: .seconds(5)) { lens.page == .captureSaved }
+                stage.input.select()
+                try await waitUntil(timeout: .seconds(2)) { lens.page == .list }
+                try await stage.askForAName()
+                speech.simulateTranscription(text: "Jay.", isFinal: true, confidence: -1)
+                try await waitUntil(timeout: .seconds(5)) { lens.page == .captureMatches }
+                #expect(reads.count == 1, "once a run")
+
+                // The next run.
+                await run.stop()
+                await run.start()
+                try #require(run.state == .listening, "\(run.errorMessage ?? "no error")")
+                try await waitUntil { lens.inputsState == .active }
+                try await stage.askForAName()
+                speech.simulateTranscription(text: "Jay.", isFinal: true, confidence: -1)
+                try await waitUntil(timeout: .seconds(5)) { lens.page == .captureMatches }
+                #expect(reads.count == 2, "read again for the new run")
+            }
+        }
+
+        // Review of #185, B4.
+        @Test("a photo still on its way when its run stops, and arriving once the next run is listening, is kept to name and is not the new run's: not under Seen this run, and the new run's lens is not asked for its name")
+        func aLatePhotoIsNotTheNextRuns() async throws {
+            try await Self.withRun { stage in
+                let (lens, run, input) = (stage.lens, stage.run, stage.input)
+                stage.source.holdsPhoto = true
+                do {
+                    input.navUp()
+                    try await waitUntil(timeout: .seconds(2)) { lens.machine.isCaptureRowHighlighted }
+                    input.select()
+                    try await waitUntil(timeout: .seconds(2)) { lens.page == .captureViewfinder }
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(2)) { lens.page == .captureSaving }
+                    await run.stop()
+                    await run.start()
+                    try #require(run.state == .listening, "\(run.errorMessage ?? "no error")")
+                    try await waitUntil { lens.inputsState == .active }
+                    #expect(lens.page == .list)
+                } catch {
+                    stage.source.deliverPhoto()
+                    throw error
+                }
+
+                stage.source.deliverPhoto()
+                try await waitUntil(timeout: .seconds(5)) { (try? stage.album.mainContext.fetchCount(FetchDescriptor<Capture>())) == 1 }
+                // Long enough for the lens to have been told, had it been.
+                try await Task.sleep(for: .milliseconds(500))
+                #expect(run.sightings.unnamed.isEmpty, "the new run did not take it")
+                #expect(lens.page == .list, "and its lens says nothing of it")
+                #expect(!stage.speech.isListening)
+                #expect(try stage.album.mainContext.fetch(FetchDescriptor<Capture>()).first?.source == .glasses, "kept, to name from the Collection")
+            }
         }
 
         @Test("after the photo the lens asks for the bird's name and the glasses listen; the words show as they are heard; the final ones bring the birds they may be, heard this run first; a tap names the photo, Seen, and the lens says what it earned; the stitch-in waits for the run's end")
@@ -384,5 +459,18 @@ extension MockDeviceKitTests {
                 try await stage.askForAName()
             }
         }
+    }
+}
+
+/// How many times something was read, counted from wherever it was read.
+private nonisolated final class ReadCount: Sendable {
+    private let reads = Mutex(0)
+
+    func add() {
+        reads.withLock { $0 += 1 }
+    }
+
+    var count: Int {
+        reads.withLock { $0 }
     }
 }
