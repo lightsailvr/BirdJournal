@@ -9,6 +9,8 @@ struct SettingsView: View {
     @Environment(GlassesConnection.self) private var connection
     @Environment(PackLibrary.self) private var library
     @Environment(ListeningCoordinator.self) private var run
+    /// Optional: a page hosted by itself, as the tests do, has none.
+    @Environment(WhatsNewCenter.self) private var whatsNew: WhatsNewCenter?
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     /// "Share my finds automatically" (issue #62): on by default; off is private.
     @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
@@ -95,6 +97,11 @@ struct SettingsView: View {
                     LabeledContent("Terms of use") { Image(systemName: "arrow.up.right.square") }
                 }
                 .accessibilityIdentifier("termsLink")
+                // The release's card again, for whoever closed it too soon.
+                if let whatsNew, whatsNew.latest != nil {
+                    Button("What’s new") { whatsNew.open() }
+                        .accessibilityIdentifier("whatsNewRow")
+                }
                 LabeledContent("Version", value: Self.versionText)
                 Text("Powered by BirdNET. Birds are identified on this iPhone; no audio is saved or sent anywhere.")
                     .font(JournalFont.supporting)

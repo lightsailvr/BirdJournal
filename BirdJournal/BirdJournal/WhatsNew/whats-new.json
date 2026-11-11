@@ -1,0 +1,30 @@
+{
+  "releases": [
+    {
+      "version": "0.1.0",
+      "date": "2026-11-07",
+      "headline": "Guilds open their doors",
+      "items": [
+        {
+          "title": "Guilds are open",
+          "detail": "Sign in to start a Guild with friends and see each other’s finds as they happen.",
+          "try": "Start a Guild, send its invite to another tester, then each add a bird."
+        },
+        {
+          "title": "Sew a patch from the run",
+          "detail": "Every bird heard on a run has its own Sew it or Add button, and the list holds still under your finger.",
+          "try": "Start a run near some birdsong and sew a patch straight from its row."
+        },
+        {
+          "title": "Listen follows where you are",
+          "detail": "The painting on Listen and the app’s accent colour match the region you’re birding in."
+        },
+        {
+          "title": "A quicker, clearer start",
+          "detail": "The app opens faster, and a slow start says your journal is on its way."
+        }
+      ],
+      "note": "Seen something odd? Take a screenshot in the app and choose Share Beta Feedback."
+    }
+  ]
+}
