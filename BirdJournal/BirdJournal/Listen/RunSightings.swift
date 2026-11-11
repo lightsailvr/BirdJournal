@@ -191,6 +191,13 @@ final class RunSightings {
         unnamed += identifiers.compactMap { recorder.capture($0).map(UnnamedSighting.init) }
     }
 
+    /// A sighting's bird was changed on its page (issue #190): if it is one of the birds seen this run, its row is the
+    /// new bird's, in the same place on the list.
+    func birdChanged(of sighting: Sighting) {
+        guard let index = seen.firstIndex(where: { $0.identifier == sighting.identifier }) else { return }
+        seen[index] = Seen(sighting)
+    }
+
     /// Whether `addition` can still be taken back: its sighting was written through this ledger and hasn't been undone.
     func canUndo(_ addition: Addition) -> Bool {
         records[addition.sightingID] != nil

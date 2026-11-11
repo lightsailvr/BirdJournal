@@ -10,6 +10,7 @@ import SwiftUI
 /// (issue #44), your note and your photos (issue #137) stay in view. The rest is a bird's page and a tap away: a reference photo
 /// kept apart and labelled, and the rarity and the explained match in disclosures. Sharing is in the toolbar, and a removal is
 /// confirmed and recoverable. Since #134 the paper card holds the species and the patch's history, and each of its sightings opens here.
+/// A sighting the birder named offers "Change bird" (issue #190), which opens the naming sheet again; one BirdNET heard does not.
 struct SightingDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -23,6 +24,8 @@ struct SightingDetailView: View {
     @State private var showingMap = false
     @State private var confirmingRemoval = false
     @State private var showingOriginal = false
+    /// The sighting as "Change bird" opened on it; nil while the sheet is closed.
+    @State private var changingBird: NamedSighting?
     @FocusState private var editingNote: Bool
 
     /// Fetched, not `model(for:)`: a deleted id would come back as a placeholder that faults on first access.
@@ -65,6 +68,15 @@ struct SightingDetailView: View {
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 12)
                             .accessibilityIdentifier("sighting-named-by-you")
+                            .id("sighting-named-by-you")
+                        // The name is the birder's own, so it is theirs to correct (issue #190).
+                        Button(ChangeBirdText.title, systemImage: "pencil") {
+                            changingBird = NamedSighting(sighting, commonName: commonName)
+                        }
+                        .buttonStyle(.journalOutlined)
+                        .padding(.top, 10)
+                        .accessibilityHint(ChangeBirdText.hint)
+                        .accessibilityIdentifier("sighting-change-bird")
                     } else {
                         Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
                             ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
@@ -192,6 +204,7 @@ struct SightingDetailView: View {
             }
             #if DEBUG
             .debugScroll(proxy, to: "sighting-disclosures")
+            .debugScroll(proxy, to: "sighting-named-by-you")
             #endif
             }
             // A sighting's page is in its patch's edition, like the patch's own.
@@ -218,6 +231,16 @@ struct SightingDetailView: View {
                     OriginalPhotoView(path: path)
                 }
             }
+            .sheet(item: $changingBird) { named in
+                // The page under the sheet is this sighting's, so it is the new bird's as the sheet closes: nothing is
+                // revealed and nothing plays.
+                NameBirdView(changing: named) { bird in
+                    guard let sighting = self.sighting else { return false }
+                    return edits.changeBird(of: sighting, to: bird)
+                } close: {
+                    changingBird = nil
+                }
+            }
             .confirmationDialog("Remove this sighting?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button("Remove", role: .destructive) {
                     edits.remove(sighting, commonName: commonName)
@@ -239,6 +262,15 @@ struct SightingDetailView: View {
                     UserDefaults.standard.removeObject(forKey: "autoMap")
                     try? await Task.sleep(for: .milliseconds(600))
                     showingMap = true
+                }
+                // `-autoChangeBird YES`, for the screenshots of "Change bird".
+                if UserDefaults.standard.bool(forKey: "autoChangeBird") {
+                    UserDefaults.standard.removeObject(forKey: "autoChangeBird")
+                    try? await Task.sleep(for: .milliseconds(600))
+                    // Fetched again: the sighting may have gone during the waits above.
+                    if let current = self.sighting, current.namedByBirder {
+                        changingBird = NamedSighting(current, commonName: library.commonName(for: current))
+                    }
                 }
                 #endif
             }
