@@ -48,13 +48,19 @@ nonisolated struct NameableBirds: Sendable {
         /// Where a bird stands before its name is looked at: heard this run, in the run's order; else likely here, the
         /// likeliest first; else neither. The smaller, the sooner it is offered.
         struct Standing: Comparable, Sendable {
-            /// 0 heard, 1 likely, 2 neither.
-            fileprivate let tier: Int
+            /// What is known of the bird, the best first.
+            fileprivate enum Tier: Int, Comparable, Sendable {
+                case heard, likely, neither
+
+                static func < (lhs: Tier, rhs: Tier) -> Bool { lhs.rawValue < rhs.rawValue }
+            }
+
+            fileprivate let tier: Tier
             /// Within the tier: the position in the run's order, or the occurrence, negated.
             fileprivate let order: Float
 
             /// Heard this run or likely here.
-            var isSuggested: Bool { tier < 2 }
+            var isSuggested: Bool { tier != .neither }
 
             static func < (lhs: Standing, rhs: Standing) -> Bool {
                 lhs.tier != rhs.tier ? lhs.tier < rhs.tier : lhs.order < rhs.order
@@ -64,9 +70,9 @@ nonisolated struct NameableBirds: Sendable {
         /// The standing of the bird with this scientific name. Birds that stand the same are told apart by whoever asks:
         /// the search, by name.
         func standing(ofScientificName name: String) -> Standing {
-            if let position = heard.firstIndex(of: name) { return Standing(tier: 0, order: Float(position)) }
-            if let occurrence = occurrence?[name], occurrence >= NameableBirds.likelyFloor { return Standing(tier: 1, order: -occurrence) }
-            return Standing(tier: 2, order: 0)
+            if let position = heard.firstIndex(of: name) { return Standing(tier: .heard, order: Float(position)) }
+            if let occurrence = occurrence?[name], occurrence >= NameableBirds.likelyFloor { return Standing(tier: .likely, order: -occurrence) }
+            return Standing(tier: .neither, order: 0)
         }
 
         /// Nothing heard and no place: every bird stands the same.
@@ -209,14 +215,21 @@ nonisolated struct NameableBirds: Sendable {
     /// nearest first.
     func spoken(_ words: String, in context: Context = .none, limit: Int = 3) -> [NameableBird] {
         guard let said = SpokenName.said(words) else { return [] }
-        /// A match, and where its bird stands: heard this run or likely here (0), in a field guide (1), neither (2).
-        typealias Match = (closeness: SpokenName.Closeness, standing: Context.Standing, familiarity: Int, position: Int, bird: NameableBird)
+        /// How well the birder is likely to know a bird whose name is only near what was said, the likeliest first.
+        enum Familiarity: Int {
+            /// Heard this run or likely here.
+            case suggested
+            case inAFieldGuide
+            case neither
+        }
+        typealias Match = (closeness: SpokenName.Closeness, standing: Context.Standing, familiarity: Familiarity, position: Int, bird: NameableBird)
         var found: [Match] = []
         // Each list is by name and the field guides' is first: the position across both is the last of the tie-breakers.
         for (position, entry) in (fieldGuide + others).enumerated() {
             guard let closeness = entry.spoken.closeness(to: said) else { continue }
             let standing = context.standing(ofScientificName: entry.bird.scientificName)
-            found.append((closeness, standing, standing.isSuggested ? 0 : entry.bird.isInFieldGuide ? 1 : 2, position, entry.bird))
+            let familiarity: Familiarity = standing.isSuggested ? .suggested : entry.bird.isInFieldGuide ? .inAFieldGuide : .neither
+            found.append((closeness, standing, familiarity, position, entry.bird))
         }
         found.sort { lhs, rhs in
             let (one, other) = (lhs.closeness, rhs.closeness)
@@ -225,7 +238,7 @@ nonisolated struct NameableBirds: Sendable {
                 if one.rank != other.rank { return one.rank < other.rank }
             } else {
                 if one.reach != other.reach { return one.reach == .name }
-                if lhs.familiarity != rhs.familiarity { return lhs.familiarity < rhs.familiarity }
+                if lhs.familiarity != rhs.familiarity { return lhs.familiarity.rawValue < rhs.familiarity.rawValue }
                 if one.distance != other.distance { return one.distance < other.distance }
             }
             if lhs.standing != rhs.standing { return lhs.standing < rhs.standing }
