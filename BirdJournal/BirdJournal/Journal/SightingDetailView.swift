@@ -68,6 +68,7 @@ struct SightingDetailView: View {
                             .foregroundStyle(Color.inkSecondary)
                             .padding(.top, 12)
                             .accessibilityIdentifier("sighting-named-by-you")
+                            .id("sighting-named-by-you")
                         // The name is the birder's own, so it is theirs to correct (issue #190).
                         Button(ChangeBirdText.title, systemImage: "pencil") {
                             changingBird = NamedSighting(sighting, commonName: commonName)
@@ -203,6 +204,7 @@ struct SightingDetailView: View {
             }
             #if DEBUG
             .debugScroll(proxy, to: "sighting-disclosures")
+            .debugScroll(proxy, to: "sighting-named-by-you")
             #endif
             }
             // A sighting's page is in its patch's edition, like the patch's own.
