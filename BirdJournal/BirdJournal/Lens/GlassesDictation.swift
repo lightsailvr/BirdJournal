@@ -4,15 +4,25 @@ import MWDATSpeech
 import OSLog
 
 /// The switch the field check flips (issue #194, DAT-SETUP-CHECKLIST.md step 16): whether the camera stream, which
-/// carries the run's listening audio, stays on while the glasses listen for a bird's name. On unless the defaults say
-/// otherwise (`-dictationKeepsStream NO`, or the Developer screen's toggle). Nobody knows yet whether the toolkit's Speech
-/// runs beside a stream that has the microphones; if it does not, off takes the stream off for the seconds of a
-/// dictation, as a reference clip does.
+/// carries the run's listening audio, stays on while the glasses listen for a bird's name. On, unless a debug build's
+/// defaults say otherwise (`-dictationKeepsStream NO`, or the Developer screen's toggle). Nobody knows yet whether the
+/// toolkit's Speech runs beside a stream that has the microphones; if it does not, off takes the stream off for the
+/// seconds of a dictation, as a reference clip does.
+///
+/// A Release build never reads the switch: the Developer screen's toggle is written to the app's defaults, which a
+/// Release build installed over a debug one inherits, and it has no screen to turn the stream back on with. Once the
+/// field check has settled the answer, the default here is what ships.
 enum DictationSettings {
     static let keepsStreamKey = "dictationKeepsStream"
+    /// What every build does unless a debug build's switch says otherwise.
+    static let keepsStreamByDefault = true
 
     static func keepsStream(_ defaults: UserDefaults = .standard) -> Bool {
-        defaults.object(forKey: keepsStreamKey) == nil ? true : defaults.bool(forKey: keepsStreamKey)
+        #if DEBUG
+        defaults.object(forKey: keepsStreamKey) == nil ? keepsStreamByDefault : defaults.bool(forKey: keepsStreamKey)
+        #else
+        keepsStreamByDefault
+        #endif
     }
 }
 

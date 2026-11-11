@@ -178,7 +178,7 @@ private struct AutoMockLens: ViewModifier {
 /// The field check's switch for saying a bird's name on the lens (issue #194, DAT-SETUP-CHECKLIST.md step 16): whether
 /// the camera stream stays on while the glasses listen. Read as each dictation starts, so it can be flipped mid-run.
 private struct DictationSection: View {
-    @AppStorage(DictationSettings.keepsStreamKey) private var keepsStream = true
+    @AppStorage(DictationSettings.keepsStreamKey) private var keepsStream = DictationSettings.keepsStreamByDefault
 
     var body: some View {
         Section {
