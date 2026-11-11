@@ -36,7 +36,7 @@ One word for each thing, in every string, VoiceOver label and error (#150). The 
 | **Plate** | A set's painted cover printed on card stock in the Atlas, with its margin, keyline and credit | cover, on a page of the Atlas |
 | **Unnamed sighting** | A photo of a bird you took and haven't named yet (the domain's capture, #188): it waits under "Seen this run", in the run's review and in the Collection's "To name", with "Name it"; "Name it later" leaves it there, and "Delete photo" is the only thing that removes it | capture, draft, pending |
 
-Kept word for word: "Wonder is nearby.", "Your first patch is a bird away.", "Fourteen birds, together.", "First for the Guild", "Jealous!", "Possible matches. Add the birds you recognize.", and since #185 "Capture a sighting", "Name this bird" and "Seen this run".
+Kept word for word: "Wonder is nearby.", "Your first patch is a bird away.", "Fourteen birds, together.", "First for the Guild", "Jealous!", "Possible matches. Add the birds you recognize.", and since #185 "Capture a sighting", "Name this bird", "Seen this run" and "Change bird".
 
 ## Listening
 
@@ -61,7 +61,7 @@ How the birder met the bird on a sighting: Heard or Seen. An add of a candidate 
 _Avoid_: evidence, detection type
 
 **Named by the birder**:
-What a sighting is when the birder named its bird themselves, from their photo of it, and BirdNET heard nothing to match (#186). It is always Seen and has no match score, and nothing shows one for it: not the run, its page, its paper card or a share. In every other way it is a sighting like any other: it sews its patch or adds to its count, counts toward its set, and is published as a find that says "saw". The sighting carries the mark (`namedByBirder`).
+What a sighting is when the birder named its bird themselves, from their photo of it, and BirdNET heard nothing to match (#186). It is always Seen and has no match score, and nothing shows one for it: not the run, its page, its paper card or a share. In every other way it is a sighting like any other: it sews its patch or adds to its count, counts toward its set, and is published as a find that says "saw". The sighting carries the mark (`namedByBirder`). Since the name is the birder's own it is theirs to correct: "Change bird" on its page gives the sighting another bird (#190), and its patch, rarity, caption and find follow. A sighting BirdNET heard keeps its bird, even marked Seen.
 _Avoid_: manual sighting, unverified sighting, self-reported
 
 **Capture**:
@@ -109,7 +109,7 @@ A patch before it is stitched: bare twill, out to the edge since the cord comes 
 _Avoid_: locked patch, silhouette, ghost
 
 **Stitch-in**:
-The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It plays once, on the phone: at the add, or for an add on the lens, when the run is over and the app is next in front; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its count ticks in the acknowledgment, with nothing to tap.
+The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It plays once, on the phone: at the add, or for an add on the lens, when the run is over and the app is next in front; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its count ticks in the acknowledgment, with nothing to tap. Nor has a patch sewn by changing a sighting's bird (#190): the ceremony belongs to the add.
 _Avoid_: animation, unlock
 
 **Board**:
@@ -143,7 +143,7 @@ Was the status of a birder's earliest surviving card of a species, with a gold f
 _Avoid_: in copy
 
 **Rarity**:
-How unusual a species is at a sighting's place and week, saved at the add as a label: Common, Uncommon, Rare or Exceptional.
+How unusual a species is at a sighting's place and week, saved at the add as a label: Common, Uncommon, Rare or Exceptional. Read again only when the birder changes the sighting's bird (#190), for the new bird at the same place and week.
 _Avoid_: score, frequency, abundance
 
 **Set**:
@@ -167,7 +167,7 @@ Two to five words heading a species' lore on the paper card, an epithet from wha
 _Avoid_: name, heading, tagline
 
 **Caption**:
-One line written for a sighting on the phone, from the fact sheet and the moment, shown on the sighting's page.
+One line written for a sighting on the phone, from the fact sheet and the moment, shown on the sighting's page. It is about the sighting's bird, so a change of bird (#190) drops it and one is written for the new bird.
 _Avoid_: flavor text, tagline (the lore's one-line fallback)
 
 ## Art

@@ -166,6 +166,30 @@ struct ChangeBirdTests {
         #expect(fixture.prior.asked.count == asked, "and its rarity is not read again")
     }
 
+    // MARK: - The words
+
+    @Test("what Change bird says: the button, the bird it already is, and what the change does to both patches before it happens")
+    func words() {
+        let losAngeles = CardPlacement.numbered(setID: "us-ca-la", setName: "Los Angeles", edition: "Citrus edition", number: 2, total: 2)
+
+        #expect(ChangeBirdText.title == "Change bird")
+        #expect(ChangeBirdText.confirmTitle(seenHere: nil) == "Change bird", "nothing chosen yet")
+        #expect(ChangeBirdText.confirmTitle(seenHere: 0) == "Change and sew patch")
+        #expect(ChangeBirdText.confirmTitle(seenHere: 3) == "Change bird")
+        #expect(ChangeBirdText.currentStatus(placement: losAngeles) == ["Los Angeles", "This sighting's bird"])
+        #expect(ChangeBirdText.currentStatus(placement: .uncharted) == ["Uncharted", "This sighting's bird"])
+
+        func note(chosen: String?, isCurrent: Bool = false, seenHere: Int = 0, unpicks: CardPlacement? = nil) -> String {
+            ChangeBirdText.note(current: "Allen's Hummingbird", chosen: chosen, isCurrent: isCurrent, seenHere: seenHere, unpicks: unpicks)
+        }
+        #expect(note(chosen: nil, unpicks: losAngeles) == "Choose the bird you saw.")
+        #expect(note(chosen: "Allen's Hummingbird", isCurrent: true, seenHere: 1, unpicks: losAngeles) == "This sighting is already named Allen's Hummingbird.")
+        #expect(note(chosen: "House Finch") == "House Finch, new to you here.", "the old bird keeps its patch: nothing more to say")
+        #expect(note(chosen: "House Finch", seenHere: 1) == "House Finch, seen once here.")
+        #expect(note(chosen: "House Finch", seenHere: 2, unpicks: losAngeles) == "House Finch, seen 2 times here. Your Allen's Hummingbird patch in Los Angeles will be unpicked.")
+        #expect(note(chosen: "House Finch", unpicks: .uncharted) == "House Finch, new to you here. Your Allen's Hummingbird patch outside every set will be unpicked.")
+    }
+
     private func waitUntil(_ what: String, timeout: Duration = .seconds(30), _ condition: () -> Bool) async throws {
         let deadline = ContinuousClock.now + timeout
         while !condition() {

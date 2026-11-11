@@ -17,16 +17,23 @@ import SwiftUI
 /// The photo was saved at the shutter, so nothing here can lose it: "Name it later", a swipe down or the app being killed
 /// all leave it an unnamed sighting, to be named from the run, its review or the Collection. Only "Delete photo", once
 /// confirmed, removes it. The same sheet names a photo just taken and one that has waited for weeks, which is why where and
-/// when come from the unnamed sighting and not from a run. #190 opens this sheet again to change a sighting's bird.
+/// when come from the unnamed sighting and not from a run.
+///
+/// The same sheet is "Change bird" (issue #190), opened from the page of a sighting the birder named: the sighting's photo
+/// and its bird now, the same suggestions and search read at the sighting's own place and week, the bird it is marked
+/// among them, and a pinned "Change bird" (or "Change and sew patch") that can be pressed once another bird is chosen.
+/// There is nothing to name later and no photo to delete, only Cancel; the change itself is the caller's.
 struct NameBirdView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(PlaceNames.self) private var places
     @Environment(\.occurrenceModel) private var occurrenceModel
-    /// The photo being named, with when and where it was taken.
-    let unnamed: UnnamedSighting
-    /// Closes the sheet: after the add, on "Name it later", or after a delete.
+    /// The photo being named, or the sighting whose bird is being changed, with when and where it was taken.
+    let subject: NamingSubject
+    /// Writes a change of bird, and says whether it was written; nil while a photo is being named.
+    private let change: ((NameableBird) -> Bool)?
+    /// Closes the sheet: after the add or the change, on "Name it later" or Cancel, or after a delete.
     let close: () -> Void
     @State private var query = ""
     /// Nil while the label list is read.
@@ -40,16 +47,41 @@ struct NameBirdView: View {
     @State private var deleteFailed = false
     @FocusState private var isSearching: Bool
 
+    /// "Name this bird", for a photo waiting for its name.
+    init(unnamed: UnnamedSighting, close: @escaping () -> Void) {
+        subject = .unnamed(unnamed)
+        change = nil
+        self.close = close
+    }
+
+    /// "Change bird", for a sighting the birder named (issue #190).
+    /// - Parameter change: writes the change to the bird chosen; false when it couldn't be written, and the sheet stays.
+    init(changing sighting: NamedSighting, change: @escaping (NameableBird) -> Bool, close: @escaping () -> Void) {
+        subject = .named(sighting)
+        self.change = change
+        self.close = close
+    }
+
     /// The sightings of `bird` in the patch an add here would join; 0 when the add would sew a new patch.
     private func seenHere(_ bird: NameableBird) -> Int {
-        collectionStore.collection.count(ofSpeciesID: bird.speciesID, at: unnamed.location)
+        collectionStore.collection.count(ofSpeciesID: bird.speciesID, at: subject.location)
+    }
+
+    /// The bird is the one the sighting being changed already is.
+    private func isCurrent(_ bird: NameableBird) -> Bool {
+        bird.scientificName == subject.changing?.scientificName
     }
 
     private func status(of bird: NameableBird) -> [String] {
-        NameBirdText.status(
-            placement: CardSet.placement(speciesID: bird.speciesID, at: unnamed.location, in: collectionStore.collection.sets),
-            seenHere: seenHere(bird), isInFieldGuide: bird.isInFieldGuide
-        )
+        let placement = CardSet.placement(speciesID: bird.speciesID, at: subject.location, in: collectionStore.collection.sets)
+        if isCurrent(bird) { return ChangeBirdText.currentStatus(placement: placement) }
+        return NameBirdText.status(placement: placement, seenHere: seenHere(bird), isInFieldGuide: bird.isInFieldGuide)
+    }
+
+    /// Where the current bird's patch is, when the sighting being changed is its last: the change unpicks it.
+    private func unpickedByChange(of sighting: NamedSighting) -> CardPlacement? {
+        let collection = collectionStore.collection
+        return collection.isLastSighting(of: sighting.id) ? collection.patch(of: sighting.id)?.placement : nil
     }
 
     var body: some View {
@@ -57,8 +89,11 @@ struct NameBirdView: View {
         NavigationStack {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
-                    CapturedPhotoHeader(unnamed: unnamed, place: NameBirdText.place(location: unnamed.location, name: unnamed.location.flatMap(places.name(for:))))
-                        .padding(.top, 8)
+                    CapturedPhotoHeader(
+                        bird: subject.changing?.commonName, photoPath: subject.photoPath, takenAt: subject.takenAt,
+                        place: NameBirdText.place(location: subject.location, name: subject.location.flatMap(places.name(for:)))
+                    )
+                    .padding(.top, 8)
                     searchField
                         .padding(.top, 16)
                     if query.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -90,21 +125,29 @@ struct NameBirdView: View {
                     }
                 }
             }
-            .navigationTitle("Name this bird")
+            .navigationTitle(subject.changing == nil ? "Name this bird" : ChangeBirdText.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(UnnamedSightingText.later, action: close)
-                        .accessibilityHint("Keeps the photo as an unnamed sighting")
-                        .accessibilityIdentifier("name-bird-later")
-                }
-                ToolbarItem(placement: .destructiveAction) {
-                    Button(role: .destructive) {
-                        confirmingDelete = true
-                    } label: {
-                        Label(UnnamedSightingText.deleteAction, systemImage: "trash")
+                if subject.changing == nil {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(UnnamedSightingText.later, action: close)
+                            .accessibilityHint("Keeps the photo as an unnamed sighting")
+                            .accessibilityIdentifier("name-bird-later")
                     }
-                    .accessibilityIdentifier("name-bird-delete")
+                    ToolbarItem(placement: .destructiveAction) {
+                        Button(role: .destructive) {
+                            confirmingDelete = true
+                        } label: {
+                            Label(UnnamedSightingText.deleteAction, systemImage: "trash")
+                        }
+                        .accessibilityIdentifier("name-bird-delete")
+                    }
+                } else {
+                    // A sighting is not a photo waiting: there is nothing to name later and nothing here deletes it.
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", action: close)
+                            .accessibilityIdentifier("change-bird-cancel")
+                    }
                 }
             }
             // The one way a photo is lost, so it is asked twice; an alert, so keeping it is a button and not a tap elsewhere.
@@ -121,8 +164,11 @@ struct NameBirdView: View {
         .task {
             guard names == nil else { return }
             // What the run has heard is read once, as the sheet opens: the list holds still while a bird is chosen from it.
-            let heard = run.heardScientificNames(for: unnamed)
-            let fieldGuide = library.fieldGuideBirds, place = unnamed.location, takenAt = unnamed.takenAt, model = occurrenceModel
+            let heard = switch subject {
+            case .unnamed(let unnamed): run.heardScientificNames(for: unnamed)
+            case .named(let sighting): run.heardScientificNames(for: sighting)
+            }
+            let fieldGuide = library.fieldGuideBirds, place = subject.location, takenAt = subject.takenAt, model = occurrenceModel
             (names, context) = await Task.detached(priority: .userInitiated) {
                 // Without the label list the field guides' birds can still be named.
                 let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
@@ -130,7 +176,7 @@ struct NameBirdView: View {
             }.value
         }
         .task {
-            if let location = unnamed.location { await places.resolve(location) }
+            if let location = subject.location { await places.resolve(location) }
         }
         #if DEBUG
         .task {
@@ -194,7 +240,7 @@ struct NameBirdView: View {
             SectionTitle(title, top: 22)
             LazyVStack(spacing: 0) {
                 ForEach(birds) { bird in
-                    NameBirdRow(bird: bird, status: status(of: bird), isChosen: chosen == bird) {
+                    NameBirdRow(bird: bird, status: status(of: bird), isChosen: chosen == bird, isForASighting: subject.changing != nil) {
                         chosen = chosen == bird ? nil : bird
                         failed = false
                     }
@@ -205,24 +251,32 @@ struct NameBirdView: View {
         }
     }
 
-    /// The add, pinned above the keyboard and the home indicator.
+    /// The add or the change, pinned above the keyboard and the home indicator.
     private var addBar: some View {
         let seen = chosen.map(seenHere)
+        let changing = subject.changing
+        // The bird the sighting already is can be looked at, not chosen as the change.
+        let isUnchanged = chosen.map(isCurrent) ?? false
         return VStack(spacing: 8) {
             if failed {
-                InlineError("The sighting couldn't be saved. Your photo is kept. Try again.", afterAction: true)
+                InlineError(changing == nil ? "The sighting couldn't be saved. Your photo is kept. Try again." : ChangeBirdText.failed, afterAction: true)
             } else if deleteFailed {
                 InlineError("The photo couldn't be deleted. Try again.", afterAction: true)
             }
             Button {
                 add()
             } label: {
-                Label(isAdding ? "Adding…" : NameBirdText.addTitle(seenHere: seen), systemImage: "plus")
+                if changing == nil {
+                    Label(isAdding ? "Adding…" : NameBirdText.addTitle(seenHere: seen), systemImage: "plus")
+                } else {
+                    Label(ChangeBirdText.confirmTitle(seenHere: isUnchanged ? nil : seen), systemImage: "checkmark")
+                }
             }
             .buttonStyle(.journalPrimary)
-            .disabled(chosen == nil || isAdding)
-            .accessibilityIdentifier("name-bird-add")
-            Text(NameBirdText.addNote(name: chosen?.commonName, seenHere: seen ?? 0))
+            .disabled(chosen == nil || isAdding || isUnchanged)
+            .accessibilityIdentifier(changing == nil ? "name-bird-add" : "change-bird-confirm")
+            Text(changing.map { ChangeBirdText.note(current: $0.commonName, chosen: chosen?.commonName, isCurrent: isUnchanged, seenHere: seen ?? 0, unpicks: unpickedByChange(of: $0)) }
+                ?? NameBirdText.addNote(name: chosen?.commonName, seenHere: seen ?? 0))
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
@@ -238,16 +292,22 @@ struct NameBirdView: View {
         guard let chosen, !isAdding else { return }
         isAdding = true
         deleteFailed = false
-        if run.name(unnamed, as: chosen) != nil {
+        let done = switch subject {
+        case .unnamed(let unnamed): run.name(unnamed, as: chosen) != nil
+        // No ceremony follows: the page under the sheet is the new bird's when the sheet closes.
+        case .named: change?(chosen) ?? false
+        }
+        if done {
             close()
         } else {
-            // The photo is still an unnamed sighting: nothing closes on a failure.
+            // The photo is still an unnamed sighting, or the sighting the bird it was: nothing closes on a failure.
             failed = true
         }
         isAdding = false
     }
 
     private func delete() {
+        guard case .unnamed(let unnamed) = subject else { return }
         failed = false
         if run.delete(unnamed) {
             close()
@@ -257,38 +317,45 @@ struct NameBirdView: View {
     }
 }
 
-/// The photo being named, small, with when it was taken and where the sighting will be recorded.
+/// The photo being named, small, with when it was taken and where the sighting will be recorded. For a sighting whose bird
+/// is being changed it leads with the bird the sighting is now, and has no picture once the birder has removed the photo.
 private struct CapturedPhotoHeader: View {
     private static let maxPixels = 900
 
     @Environment(\.frameStore) private var frameStore
-    let unnamed: UnnamedSighting
+    /// The sighting's bird now; nil for a photo not yet named.
+    let bird: String?
+    let photoPath: String?
+    let takenAt: Date
     let place: String
     @State private var image: UIImage?
     @ScaledMetric(relativeTo: .body) private var side: CGFloat = 96
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        let taken = NameBirdText.taken(unnamed.takenAt)
+        let taken = NameBirdText.taken(takenAt)
         // At the largest sizes the words go under the picture: beside it they'd have a column a word wide.
         AdaptiveRow(stacked: typeSize.stacksRows) {
-            Color.raised
-                .overlay {
-                    if let image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFill()
-                            .allowsHitTesting(false)  // DECISIONS.md "Clipped images take no touches"
+            if photoPath != nil {
+                Color.raised
+                    .overlay {
+                        if let image {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .allowsHitTesting(false)  // DECISIONS.md "Clipped images take no touches"
+                        }
                     }
-                }
-                .clipped()
-                .frame(width: min(side, 140), height: min(side, 140))
-                .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                .accessibilityHidden(true)
+                    .clipped()
+                    .frame(width: min(side, 140), height: min(side, 140))
+                    .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                    .accessibilityHidden(true)
+            }
             VStack(alignment: .leading, spacing: 3) {
-                Text("Your photo")
+                Text(bird ?? "Your photo")
                     .font(JournalFont.rowTitle)
                     .foregroundStyle(Color.ink)
+                if bird != nil, photoPath != nil { Text("Your photo") }
                 Text(taken)
                 Text(place)
             }
@@ -298,13 +365,13 @@ private struct CapturedPhotoHeader: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Your photo, \(taken), \(place)")
-        .accessibilityAddTraits(.isImage)
+        .accessibilityLabel(NameBirdText.sentence([bird, photoPath == nil ? nil : (bird == nil ? "Your photo" : "your photo"), taken, place].compactMap { $0 }))
+        .accessibilityAddTraits(photoPath == nil ? [] : .isImage)
         .accessibilityIdentifier("name-bird-photo")
         // Read from the album's own file, turned upright and no larger than the header needs: a camera's picture is far
         // larger than the slot.
-        .task(id: unnamed.photoPath) {
-            guard let url = frameStore?.url(for: unnamed.photoPath) else { return }
+        .task(id: photoPath) {
+            guard let photoPath, let url = frameStore?.url(for: photoPath) else { return }
             let side = Self.maxPixels
             image = await Task.detached(priority: .userInitiated) { BirderPhoto.fitted(at: url, maxPixels: side) }.value
         }
@@ -319,6 +386,8 @@ private struct NameBirdRow: View {
     let bird: NameableBird
     let status: [String]
     let isChosen: Bool
+    /// The choice is for a sighting whose bird is being changed, not for a photo being named.
+    var isForASighting = false
     let choose: () -> Void
 
     var body: some View {
@@ -357,7 +426,7 @@ private struct NameBirdRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isChosen ? .isSelected : [])
-        .accessibilityHint(isChosen ? "Chosen for your photo" : "Chooses this bird for your photo")
+        .accessibilityHint(isForASighting ? (isChosen ? "Chosen for this sighting" : "Chooses this bird for this sighting") : (isChosen ? "Chosen for your photo" : "Chooses this bird for your photo"))
         .accessibilityIdentifier("name-bird-\(bird.scientificName)")
     }
 }

@@ -251,7 +251,8 @@ public enum AlbumSchemaV5: VersionedSchema {
         public var note: String?
         public var method: SightingMethod = SightingMethod.heard
         /// How unusual the bird was at the add's place and week, saved once and never recomputed; nil without a
-        /// location.
+        /// location. Read again only when the birder gives the sighting another bird (issue #190), for that bird at
+        /// the same place and week.
         public var rarity: RaritySnapshot?
         public var caption: CardCaption?
         /// Scene and photo art as JSON (issues #68 to #70, retired by #137). Nothing writes it for a new sighting, but
