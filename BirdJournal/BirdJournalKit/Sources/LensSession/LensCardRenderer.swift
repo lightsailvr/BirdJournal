@@ -43,6 +43,19 @@ public enum LensCardRenderer {
     static let saveButton = LensCardButton(label: "Add to my list", action: .save)
     static let addAnotherButton = LensCardButton(label: "Add another", action: .save)
 
+    /// The card for the page `machine` is on. Everything a page shows besides the packs' profiles is the machine's own
+    /// state, so the adapter hands over the machine and not a dozen of its properties.
+    public static func render(_ machine: LensStateMachine, profile: (Species) -> SpeciesProfile?) -> LensCard {
+        render(
+            machine.page, stack: machine.stack, order: machine.order, selection: machine.selection,
+            captureSelected: machine.isCaptureRowHighlighted, saved: machine.savedIndices,
+            playing: machine.playing, nextSounds: machine.nextSounds, earned: machine.earnedPatches,
+            naming: machine.naming, named: machine.named, profile: profile
+        )
+    }
+
+    /// The card for `page` from its parts: what `render(_:profile:)` reads off the machine, spelt out for a test that
+    /// stages one page.
     public static func render(
         _ page: LensPage, stack: CandidateStack, order: SpeciesListOrder, selection: Int, captureSelected: Bool = false, saved: Set<Int>,
         playing: LensPlayback? = nil, nextSounds: [Int: Int] = [:], earned: [Int: LensEarnedPatch] = [:],

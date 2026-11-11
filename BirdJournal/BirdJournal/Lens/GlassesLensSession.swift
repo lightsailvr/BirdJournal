@@ -210,7 +210,7 @@ final class GlassesLensSession {
         self.viewfinderInterval = viewfinderInterval
         self.dictationLimits = dictationLimits
         self.onEffect = onEffect
-        card = LensCardRenderer.render(.list, stack: CandidateStack(), order: SpeciesListOrder(), selection: 0, captureSelected: true, saved: [], profile: profile)
+        card = LensCardRenderer.render(LensStateMachine(), profile: profile)
     }
 
     var page: LensPage { machine.page }
@@ -790,12 +790,7 @@ final class GlassesLensSession {
     /// Re-renders the current page and sends it if it changed. Every page shows the stack (count, position, score),
     /// so a stack update on any page can change the card without changing the page.
     private func refreshCard() {
-        let next = LensCardRenderer.render(
-            machine.page, stack: machine.stack, order: machine.order, selection: machine.selection,
-            captureSelected: machine.isCaptureRowHighlighted, saved: machine.savedIndices,
-            playing: machine.playing, nextSounds: machine.nextSounds, earned: machine.earnedPatches,
-            naming: machine.naming, named: machine.named, profile: cardProfile(for:)
-        )
+        let next = LensCardRenderer.render(machine, profile: cardProfile(for:))
         guard next != card else { return }
         card = next
         resendCard()

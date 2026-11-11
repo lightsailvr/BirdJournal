@@ -272,6 +272,29 @@ struct LensCardRendererTests {
         ])
     }
 
+    // Review of #185, J5.
+    @Test("the card of a machine is the card of its page and its state: the list with the capture row highlighted, a saved bird's details, the birds a name may be, and \"Added\"")
+    func cardOfAMachine() {
+        var machine = LensStateMachine()
+        #expect(LensCardRenderer.render(machine, profile: Self.profile).elements == [.heading("No species yet"), .meta("Birds appear as they call."), Self.captureRow(selected: true)])
+
+        machine.update(with: Fakes.stack(3), at: Fakes.quiet)
+        _ = machine.apply(.swipeUp)
+        #expect(LensCardRenderer.render(machine, profile: Self.profile).elements.contains(Self.captureRow(selected: true)))
+
+        _ = machine.apply(.tap)
+        _ = machine.apply(.tap)
+        _ = machine.captureSaved(1, dictation: true)
+        machine.matched("black phoebe", Fakes.matches, dictation: 1)
+        _ = machine.apply(.swipeDown)
+        #expect(LensCardRenderer.render(machine, profile: Self.profile) == Self.render(.captureMatches, naming: machine.naming))
+        #expect(machine.naming?.highlight == 1)
+
+        _ = machine.apply(.tap)
+        machine.captureNamed(1, as: Fakes.namedPhoebe)
+        #expect(LensCardRenderer.render(machine, profile: Self.profile) == Self.render(.captureAdded, named: Fakes.namedPhoebe))
+    }
+
     @Test("a photo the phone named or deleted before the lens could is a problem page that says so, and not that the photo waits on the phone")
     func photoGone() {
         #expect(Self.render(.problem(.photoGone)).elements == [
