@@ -79,7 +79,7 @@ private struct SeenRow: View {
         let parts = NameBirdText.seenRow(sewedPatch: collection.sewedItsPatch(entry.identifier), count: collection.patch(of: entry.identifier)?.count ?? 1)
         NavigationLink(value: Route.sighting(entry.id)) {
             AdaptiveRow(stacked: typeSize.stacksRows) {
-                BirderPhoto(path: entry.photoPath)
+                BirderPhoto(path: entry.photoPath, isGlassesFrame: entry.photoIsGlassesFrame)
                     .rowPicture()
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {

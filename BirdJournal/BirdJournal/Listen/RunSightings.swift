@@ -36,6 +36,8 @@ final class RunSightings {
         let seenAt: Date
         /// The photo, relative to the `FrameStore`.
         let photoPath: String?
+        /// The photo is the glasses' own, shown at the journal's crop: one taken from the lens.
+        let photoIsGlassesFrame: Bool
 
         init(_ sighting: Sighting) {
             id = sighting.persistentModelID
@@ -44,7 +46,8 @@ final class RunSightings {
             scientificName = sighting.scientificName
             commonName = sighting.commonName
             seenAt = sighting.confirmedAt
-            photoPath = sighting.attachedPhotoPaths.first
+            photoPath = CardText.originalPhotoPath(sighting)
+            photoIsGlassesFrame = CardText.originalPhotoIsGlassesFrame(sighting)
         }
     }
 

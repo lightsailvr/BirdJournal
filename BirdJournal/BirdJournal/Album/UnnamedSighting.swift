@@ -15,6 +15,11 @@ nonisolated struct UnnamedSighting: Identifiable, Hashable, Sendable {
     let photoPath: String
     /// The device that took the photo.
     let source: SightingSource
+
+    /// Whether the photo is the glasses' own, which the phone shows at the journal's crop (`FrameCrop.albumZoom`): the
+    /// crop the lens's viewfinder marked. A capture has one photo, from the device that took it; the phone's camera's and
+    /// a library photo are shown whole.
+    var isGlassesFrame: Bool { source == .glasses }
 }
 
 extension UnnamedSighting {

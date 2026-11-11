@@ -51,6 +51,23 @@ enum CardText {
         sighting.attachedPhotoPaths.first ?? sighting.frameImagePath
     }
 
+    /// Whether the original photo is the glasses' own (from an add on the lens, or the photo a seen bird was named from
+    /// when it was taken from the lens), which the journal shows cropped to its middle (`FrameCrop.albumZoom`), and not
+    /// one of the birder's own from the phone's camera or the library, shown whole.
+    static func originalPhotoIsGlassesFrame(_ sighting: Sighting) -> Bool {
+        guard let path = originalPhotoPath(sighting) else { return false }
+        return path == sighting.frameImagePath
+    }
+
+    /// Under a glasses snapshot on a sighting's page: what the picture is. For an add of a bird that was heard it is the
+    /// frame from that moment, wherever the glasses pointed; for a bird seen it is the photo the wearer framed and took
+    /// from the lens, at the crop its viewfinder marked.
+    static func glassesSnapshotNote(_ sighting: Sighting) -> String {
+        sighting.namedByBirder
+            ? "Your glasses snapshot: the centre of the photo you took from the lens, as its viewfinder marked it. View original photo shows the whole frame."
+            : "Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird."
+    }
+
     /// The back's evidence line: "Photo attached" only when an original exists.
     static func evidence(_ sighting: Sighting) -> String {
         originalPhotoPath(sighting) == nil ? "No photo attached" : "Photo attached"

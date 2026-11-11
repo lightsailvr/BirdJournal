@@ -20,8 +20,11 @@ nonisolated struct NamedSighting: Identifiable, Hashable, Sendable {
     let seenAt: Date
     /// Where the birder was; nil when no place was known.
     let location: Coordinate?
-    /// The photo it was named from, relative to the `FrameStore`; nil once the birder has removed it.
+    /// Its original photo, relative to the `FrameStore`: the photo it was named from, or one the birder has attached
+    /// since; nil when it has none.
     let photoPath: String?
+    /// The photo is the glasses' own, shown at the journal's crop: one taken from the lens.
+    var photoIsGlassesFrame = false
 
     /// The scientific name of its bird now.
     var scientificName: String { Sighting.scientificName(ofLabel: speciesID) }
@@ -30,7 +33,7 @@ nonisolated struct NamedSighting: Identifiable, Hashable, Sendable {
 extension NamedSighting {
     /// - Parameter commonName: the bird's name as the phone shows it: a field guide's where one describes the bird.
     init(_ sighting: Sighting, commonName: String) {
-        self.init(id: sighting.identifier, speciesID: sighting.speciesID, commonName: commonName, seenAt: sighting.confirmedAt, location: sighting.location, photoPath: sighting.attachedPhotoPaths.first)
+        self.init(id: sighting.identifier, speciesID: sighting.speciesID, commonName: commonName, seenAt: sighting.confirmedAt, location: sighting.location, photoPath: CardText.originalPhotoPath(sighting), photoIsGlassesFrame: CardText.originalPhotoIsGlassesFrame(sighting))
     }
 }
 
@@ -60,6 +63,14 @@ nonisolated enum NamingSubject: Hashable, Sendable {
         switch self {
         case .unnamed(let unnamed): unnamed.photoPath
         case .named(let sighting): sighting.photoPath
+        }
+    }
+
+    /// Whether the photo is the glasses' own, which the sheet shows at the journal's crop.
+    var photoIsGlassesFrame: Bool {
+        switch self {
+        case .unnamed(let unnamed): unnamed.isGlassesFrame
+        case .named(let sighting): sighting.photoIsGlassesFrame
         }
     }
 
@@ -115,7 +126,6 @@ extension ListeningCoordinator {
     func heardScientificNames(for sighting: NamedSighting) -> [String] {
         sightings.seen.contains { $0.identifier == sighting.id } ? heardScientificNames : []
     }
-}
 
     /// The birds heard on the run the naming sheet's subject belongs to: a photo waiting for its name, or a sighting
     /// whose bird is being changed.
@@ -125,3 +135,4 @@ extension ListeningCoordinator {
         case .named(let sighting): heardScientificNames(for: sighting)
         }
     }
+}

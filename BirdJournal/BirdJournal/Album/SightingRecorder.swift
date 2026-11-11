@@ -97,13 +97,23 @@ final class SightingRecorder {
 
     /// Names a capture (issues #186 and #188, of #185): writes the sighting of `bird` it becomes, and the capture goes, in one
     /// save. The sighting is Seen and marked as named by the birder, with no match score, at the capture's own time and place
-    /// and from its device, whenever it is named; the photo, the same file, is its original photo, one of the birder's own.
+    /// and from its device, whenever it is named; the photo, the same file, is its original photo.
+    ///
+    /// Which of the sighting's photos it is follows the device that took it. One from the phone's camera or the library is
+    /// one of the birder's own (`attachedPhotoPaths`), shown whole. One taken from the lens is the sighting's glasses photo
+    /// (`frameImagePath`), as the photo of an add on the lens is, and so is shown everywhere at the journal's crop
+    /// (`FrameCrop.albumZoom`): the crop the lens's viewfinder marked when the wearer framed the bird.
+    ///
     /// From there it is a sighting like any other: its rarity is read for that place and week, it is placed in its set, and
     /// it sews its bird's patch there or adds to it.
     @discardableResult
     func name(_ capture: Capture, as bird: NameableBird) throws -> Recorded {
-        let sighting = Sighting(speciesID: bird.speciesID, confirmedAt: capture.takenAt, location: capture.location, soundConfidence: 0, source: capture.source, method: .seen, namedByBirder: true)
-        sighting.attachedPhotoPaths = [capture.photoPath]
+        let isGlassesPhoto = capture.source == .glasses
+        let sighting = Sighting(
+            speciesID: bird.speciesID, confirmedAt: capture.takenAt, location: capture.location, soundConfidence: 0,
+            frameImagePath: isGlassesPhoto ? capture.photoPath : nil, source: capture.source, method: .seen, namedByBirder: true
+        )
+        if !isGlassesPhoto { sighting.attachedPhotoPaths = [capture.photoPath] }
         let context = container.mainContext
         context.delete(capture)
         do {
@@ -134,7 +144,7 @@ final class SightingRecorder {
     /// removes the photo that was named: only a delete does. A capture holds that one photo, so anything else attached to
     /// the sighting since the naming (in the seconds its Undo is offered) goes with the sighting, as when one is removed.
     func takeBackName(of sighting: Sighting) throws -> Capture? {
-        guard sighting.namedByBirder, let photo = sighting.attachedPhotoPaths.first else { return nil }
+        guard sighting.namedByBirder, let photo = Self.namedPhotoPath(of: sighting) else { return nil }
         let others = sighting.filePaths.filter { $0 != photo }
         let capture = Capture(takenAt: sighting.confirmedAt, location: sighting.location, photoPath: photo, source: sighting.source)
         let context = container.mainContext
@@ -148,6 +158,13 @@ final class SightingRecorder {
         }
         for path in others { try? FileManager.default.removeItem(at: frames.url(for: path)) }
         return capture
+    }
+
+    /// The photo a sighting the birder named was named from: for one taken from the lens the sighting's glasses photo,
+    /// else the first of the birder's own. Nil for a sighting BirdNET heard, and once the birder has removed the photo.
+    static func namedPhotoPath(of sighting: Sighting) -> String? {
+        guard sighting.namedByBirder else { return nil }
+        return sighting.source == .glasses ? sighting.frameImagePath ?? sighting.attachedPhotoPaths.first : sighting.attachedPhotoPaths.first
     }
 
     /// Changes the bird of a sighting (issue #190, of #185): the same sighting, with its identifier, photo, time, place,

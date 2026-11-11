@@ -1,5 +1,4 @@
 import Album
-import ImageIO
 import Pack
 import SwiftUI
 
@@ -34,9 +33,9 @@ struct NameBirdView: View {
     /// For a photo just chosen from the library (issue #192): whether the date and place above are the photo's own.
     let note: String?
     /// Writes a change of bird, and says whether it was written; nil while a photo is being named.
+    private let change: ((NameableBird) -> Bool)?
     /// Hears the add this sheet made by naming its photo, before it closes; nil when nobody needs to know.
     private let added: ((RunSightings.Addition) -> Void)?
-    private let change: ((NameableBird) -> Bool)?
     /// Closes the sheet: after the add or the change, on "Name it later" or Cancel, or after a delete.
     let close: () -> Void
     @State private var query = ""
@@ -57,8 +56,8 @@ struct NameBirdView: View {
     init(unnamed: UnnamedSighting, note: String? = nil, added: ((RunSightings.Addition) -> Void)? = nil, close: @escaping () -> Void) {
         subject = .unnamed(unnamed)
         self.note = note
-        self.added = added
         change = nil
+        self.added = added
         self.close = close
     }
 
@@ -67,8 +66,8 @@ struct NameBirdView: View {
     init(changing sighting: NamedSighting, change: @escaping (NameableBird) -> Bool, close: @escaping () -> Void) {
         subject = .named(sighting)
         note = nil
-        added = nil
         self.change = change
+        added = nil
         self.close = close
     }
 
@@ -100,7 +99,7 @@ struct NameBirdView: View {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
                     CapturedPhotoHeader(
-                        bird: subject.changing?.commonName, photoPath: subject.photoPath, takenAt: subject.takenAt,
+                        bird: subject.changing?.commonName, photoPath: subject.photoPath, isGlassesFrame: subject.photoIsGlassesFrame, takenAt: subject.takenAt,
                         place: NameBirdText.place(location: subject.location, name: subject.location.flatMap(places.name(for:)))
                     )
                     .padding(.top, 8)
@@ -305,8 +304,8 @@ struct NameBirdView: View {
         .padding(.horizontal, JournalLayout.margin)
         .padding(.vertical, 12)
     }
-    /// The add or the change is one write on the main actor, done before this returns: there is no moment in between to show.
 
+    /// The add or the change is one write on the main actor, done before this returns: there is no moment in between to show.
     private func add() {
         guard let chosen else { return }
         deleteFailed = false
@@ -342,15 +341,13 @@ struct NameBirdView: View {
 /// The photo being named, small, with when it was taken and where the sighting will be recorded. For a sighting whose bird
 /// is being changed it leads with the bird the sighting is now, and has no picture once the birder has removed the photo.
 private struct CapturedPhotoHeader: View {
-    private static let maxPixels = 900
-
-    @Environment(\.frameStore) private var frameStore
     /// The sighting's bird now; nil for a photo not yet named.
     let bird: String?
     let photoPath: String?
+    /// The photo is the glasses' own: shown at the journal's crop, as its row is.
+    let isGlassesFrame: Bool
     let takenAt: Date
     let place: String
-    @State private var image: UIImage?
     @ScaledMetric(relativeTo: .body) private var side: CGFloat = 96
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -359,19 +356,10 @@ private struct CapturedPhotoHeader: View {
         // At the largest sizes the words go under the picture: beside it they'd have a column a word wide.
         AdaptiveRow(stacked: typeSize.stacksRows) {
             if photoPath != nil {
-                Color.raised
-                    .overlay {
-                        if let image {
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFill()
-                                .allowsHitTesting(false)  // DECISIONS.md "Clipped images take no touches"
-                        }
-                    }
-                    .clipped()
+                // Larger than a row's slot, so read larger; nothing stands in for it while it is read.
+                BirderPhoto(path: photoPath, isGlassesFrame: isGlassesFrame, maxPixels: 900, placeholder: nil)
                     .frame(width: min(side, 140), height: min(side, 140))
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
-                    .accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(bird ?? "Your photo")
@@ -390,13 +378,6 @@ private struct CapturedPhotoHeader: View {
         .accessibilityLabel(NameBirdText.sentence([bird, photoPath == nil ? nil : (bird == nil ? "Your photo" : "your photo"), taken, place].compactMap { $0 }))
         .accessibilityAddTraits(photoPath == nil ? [] : .isImage)
         .accessibilityIdentifier("name-bird-photo")
-        // Read from the album's own file, turned upright and no larger than the header needs: a camera's picture is far
-        // larger than the slot.
-        .task(id: photoPath) {
-            guard let photoPath, let url = frameStore?.url(for: photoPath) else { return }
-            let side = Self.maxPixels
-            image = await Task.detached(priority: .userInitiated) { BirderPhoto.fitted(at: url, maxPixels: side) }.value
-        }
     }
 }
 

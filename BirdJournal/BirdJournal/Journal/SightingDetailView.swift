@@ -337,7 +337,7 @@ private struct GlassesSnapshot: View {
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                 .accessibilityLabel("Your glasses snapshot from this sighting")
                 .accessibilityIdentifier("sighting-photo")
-            Text("Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
+            Text(CardText.glassesSnapshotNote(sighting))
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
         }

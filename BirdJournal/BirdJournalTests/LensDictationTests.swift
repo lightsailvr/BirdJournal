@@ -267,7 +267,7 @@ extension MockDeviceKitTests {
                 #expect(sighting.method == .seen)
                 #expect(sighting.namedByBirder)
                 #expect(sighting.source == .glasses)
-                #expect(sighting.attachedPhotoPaths.count == 1)
+                #expect(sighting.frameImagePath != nil && sighting.attachedPhotoPaths.isEmpty, "the glasses' photo, shown at the crop the viewfinder marked")
                 #expect(try stage.album.mainContext.fetchCount(FetchDescriptor<Capture>()) == 0)
                 #expect(run.sightings.unnamed.isEmpty)
                 #expect(run.sightings.seen.map(\.scientificName) == ["Cyanocitta cristata"])

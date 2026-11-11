@@ -1,5 +1,4 @@
 import Album
-import ImageIO
 import SwiftUI
 
 /// An unnamed sighting's row (issue #188, of #185), wherever one waits: under "Seen this run", in the run's review, and in the
@@ -14,7 +13,7 @@ struct UnnamedSightingRow: View {
         // Its age moves on by the minute while it waits on a run's page.
         TimelineView(.periodic(from: .now, by: 60)) { context in
             AdaptiveRow(stacked: typeSize.stacksRows) {
-                BirderPhoto(path: unnamed.photoPath)
+                BirderPhoto(path: unnamed.photoPath, isGlassesFrame: unnamed.isGlassesFrame)
                     .rowPicture()
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
@@ -55,49 +54,5 @@ extension View {
         sheet(item: naming) { unnamed in
             NameBirdView(unnamed: unnamed, added: added) { naming.wrappedValue = nil }
         }
-    }
-}
-
-/// The birder's photo in a row's slot, filled from the middle. It takes no touches (DECISIONS.md "Clipped images take no
-/// touches"), and is read at the slot's size: a camera's picture is twelve megapixels or more.
-struct BirderPhoto: View {
-    private static let maxPixels = 360
-
-    @Environment(\.frameStore) private var frameStore
-    let path: String?
-    @State private var image: UIImage?
-
-    var body: some View {
-        Color.raised
-            .overlay {
-                if let image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .allowsHitTesting(false)
-                } else {
-                    Image(systemName: "camera")
-                        .foregroundStyle(Color.inkSecondary)
-                }
-            }
-            .clipped()
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-            .task(id: path) {
-                guard let path, let url = frameStore?.url(for: path) else { return }
-                let side = Self.maxPixels
-                image = await Task.detached(priority: .userInitiated) { Self.fitted(at: url, maxPixels: side) }.value
-            }
-    }
-
-    /// The photo at `url` turned upright and no larger than `maxPixels` on its longer side.
-    nonisolated static func fitted(at url: URL, maxPixels: Int) -> UIImage? {
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixels,
-        ]
-        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary).map(UIImage.init(cgImage:))
     }
 }
