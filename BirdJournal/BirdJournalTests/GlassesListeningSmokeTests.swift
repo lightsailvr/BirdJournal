@@ -281,6 +281,156 @@ extension MockDeviceKitTests {
             }
         }
 
+        @Test("Capture a sighting on the lens: a swipe up from the first bird reaches the row, a tap opens the viewfinder, a swipe off it saves nothing, and a tap there puts the photo on the phone as an unnamed sighting of the run, from the glasses, with its time and the run's place, through the run and into its review (issue #193)")
+        func captureFromTheLens() async throws {
+            try await withMockDisplay { glasses in
+                let connection = GlassesConnection()
+                try await waitUntil { connection.connectedDevice != nil }
+                let source = ManualAudioSource()
+                let album = try AlbumSchema.makeContainer(inMemory: true)
+                let frames = FrameStore(directory: Self.temporaryFrames())
+                let recorder = SightingRecorder(container: album, frames: frames)
+                let sightings = RunSightings(recorder: recorder)
+                let glassesRun = GlassesListeningSession(
+                    recorder: recorder,
+                    sightings: sightings,
+                    loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) },
+                    makeSource: { _ in source },
+                    location: ScriptedLocationProvider([ListeningSessionTests.newYork]),
+                    profile: FakeLensStack.profile(for:),
+                    image: FakeLensStack.image(for:)
+                )
+                let defaults = try #require(UserDefaults(suiteName: "lens-capture-\(UUID().uuidString)"))
+                let run = ListeningCoordinator(phone: ListeningSession(), glasses: glassesRun, sightings: sightings, levels: LevelSink(), defaultSource: .glasses, defaults: defaults)
+                let lens = glassesRun.lens
+                let captureRow = { lens.card.elements.count > 2 ? lens.card.elements[2] : nil }
+
+                await run.start()
+                do {
+                    try #require(run.state == .listening, "\(run.errorMessage ?? "no error")")
+                    try await waitUntil { lens.inputsState == .active }
+                    // No bird yet: the row is the one highlighted.
+                    #expect(captureRow() == .capture(label: "Capture a sighting", isSelected: true))
+                    source.feed(seconds: 4.5)
+                    try await waitUntil { lens.stack.count == 2 }
+                    // The first bird takes the highlight, as before; one swipe up reaches the row.
+                    #expect(captureRow() == .capture(label: "Capture a sighting", isSelected: false))
+                    let input = glasses.services.input
+                    input.navUp()
+                    try await waitUntil(timeout: .seconds(1)) { captureRow() == .capture(label: "Capture a sighting", isSelected: true) }
+
+                    // A tap opens the viewfinder, which makes sure the stream is up as the add's does (#46); a swipe
+                    // right is back to the list with nothing saved.
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
+                    #expect(lens.card.elements.first == .viewfinder)
+                    try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder"] }
+                    input.navRight()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+                    try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder", "species list"] }
+                    #expect(run.sightings.unnamed.isEmpty)
+                    #expect(try album.mainContext.fetchCount(FetchDescriptor<Capture>()) == 0)
+
+                    // Again. A tap right behind the one that opened the viewfinder is that press delivered twice, and
+                    // takes no photo; a deliberate one later does.
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
+                    source.latestFrame = Self.frame(.red)
+                    source.photo = Self.frame(.green).jpegData()
+                    let received = lens.inputRecords.count
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == received + 1 }
+                    try await Task.sleep(for: .milliseconds(300))
+                    #expect(lens.page == .captureViewfinder)
+                    #expect(run.sightings.unnamed.isEmpty)
+                    try await Task.sleep(for: .milliseconds(1100))
+                    let before = Date.now
+                    input.select()
+                    try await waitUntil(timeout: .seconds(5)) { lens.page == .captureSaved }
+                    #expect(lens.card.elements == [.heading("Photo saved"), .body("Name it on your phone."), .meta("Tap or swipe right: all species")])
+
+                    // On the phone: an unnamed sighting of this run, which is what "Seen this run" lists, and no sighting.
+                    #expect(run.sightings.unnamed.count == 1)
+                    let unnamed = try #require(run.sightings.unnamed.first)
+                    #expect(unnamed.source == .glasses)
+                    #expect(unnamed.location == Coordinate(latitude: 40.7, longitude: -74, accuracy: 30))
+                    #expect(unnamed.takenAt >= before && unnamed.takenAt <= .now)
+                    let captures = try album.mainContext.fetch(FetchDescriptor<Capture>())
+                    #expect(captures.map(\.identifier) == [unnamed.id])
+                    #expect(captures.first?.source == .glasses)
+                    let stored = try #require(UIImage(contentsOfFile: frames.url(for: unnamed.photoPath).path()), "the stored photo decodes as an image")
+                    #expect(Self.dominantChannel(of: stored) == "green", "the photo, not the stream's frame")
+                    #expect(try album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 0, "nothing is added until it is named")
+                    #expect(run.sightings.entries.isEmpty)
+                    #expect(lens.savedSightings.isEmpty)
+                    #expect(run.reveal == nil)
+                    #expect(!run.hasCeremonyWaiting)
+
+                    // A tap returns to the list with the highlight still on the row. With no photo from the camera, the
+                    // frame from the moment of the tap stands in.
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+                    #expect(captureRow() == .capture(label: "Capture a sighting", isSelected: true))
+                    source.photo = nil
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page != .captureViewfinder }
+                    source.latestFrame = Self.frame(.blue) // The stream moves on while the frame is encoded and written.
+                    try await waitUntil(timeout: .seconds(5)) { lens.page == .captureSaved }
+                    #expect(run.sightings.unnamed.count == 2)
+                    let second = try #require(run.sightings.unnamed.last)
+                    let frame = try #require(UIImage(contentsOfFile: frames.url(for: second.photoPath).path()))
+                    #expect(Self.dominantChannel(of: frame) == "red")
+
+                    // With neither a photo nor a frame nothing is saved, and the lens says so.
+                    input.navRight()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+                    source.latestFrame = nil
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(5)) { lens.page == .problem(.photoNotTaken) }
+                    #expect(lens.card.elements.first == .heading("No photo taken"))
+                    #expect(run.sightings.unnamed.count == 2)
+                    input.navRight()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+
+                    // One more, whose photo is still on its way when the run is stopped.
+                    source.latestFrame = Self.frame(.red)
+                    source.photo = Self.frame(.green).jpegData()
+                    source.holdsPhoto = true
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureSaving }
+                    #expect(lens.card.elements == [.heading("Saving the photo…"), .meta("Swipe right: all species")])
+                } catch {
+                    source.deliverPhoto()
+                    await run.stop()
+                    throw error
+                }
+
+                // The run ends: its review has the two photos still to name, and is written down with them for a relaunch.
+                await run.stop()
+                #expect(run.isReviewing)
+                #expect(run.sightings.unnamed.count == 2)
+                #expect(run.lastRunHasSomething)
+                let key = ListeningCoordinator.endedRunKey
+                let keptCaptures = { defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(EndedRun.self, from: $0) }?.captures }
+                #expect(keptCaptures() == run.sightings.unnamed.map(\.id))
+                // The photo that was on its way arrives: it is kept all the same, in the review and in what is written down.
+                source.deliverPhoto()
+                try await waitUntil(timeout: .seconds(5)) { run.sightings.unnamed.count == 3 }
+                #expect(keptCaptures() == run.sightings.unnamed.map(\.id))
+                #expect(try album.mainContext.fetchCount(FetchDescriptor<Capture>()) == 3)
+                #expect(run.errorMessage == nil)
+            }
+        }
+
         /// A solid 64×64 frame, encoded like the stream's frames are.
         private static func frame(_ color: UIColor) -> CameraFrame {
             let image = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64)).image { context in

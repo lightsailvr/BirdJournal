@@ -21,8 +21,15 @@ struct JournalView: View {
 
     @Environment(CollectionStore.self) private var collectionStore
     @Query(Sighting.newestFirst()) private var sightings: [Sighting]
+    /// The photos waiting for a name (issue #188): "To name", at the top of the Sightings. They are no sightings.
+    @Query(Capture.newestFirst()) private var captures: [Capture]
+    @State private var naming: UnnamedSighting?
+    /// The add last made from "To name", as the naming sheet reported it: its acknowledgment shows here, where it was made.
+    /// No other add's does.
+    @State private var namedHere: RunSightings.Addition?
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
+    @Environment(ListeningCoordinator.self) private var run
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     private var reduceMotion: Bool { PatchMotion.reduces(system: systemReduceMotion) }
     @Bindable var state: CollectionState
@@ -49,7 +56,7 @@ struct JournalView: View {
     var body: some View {
         Group {
             if sightings.isEmpty {
-                EmptyJournal()
+                EmptyJournal(unnamed: captures.map(UnnamedSighting.init)) { naming = $0 }
             } else {
                 let collection = collectionStore.collection
                 ScrollView {
@@ -173,6 +180,7 @@ struct JournalView: View {
         }
         .navigationTitle("Collection")
         .toolbarTitleDisplayMode(.inlineLarge)
+        .namesUnnamedSighting($naming) { namedHere = $0 }
         .task(id: sightings.isEmpty) {
             // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()
@@ -186,9 +194,18 @@ struct JournalView: View {
                 Toast(text: "Removed \(removed.commonName)", undo: { edits.undoRemoval() })
                     .padding(.bottom, 8)
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+            } else if !isCovered, !run.isReviewing, let acknowledgment = run.acknowledgment, let addition = acknowledgment.undo, addition == namedHere {
+                // A photo named from "To name" (issue #188) is an add made here, so its acknowledgment and its Undo show here
+                // too; an add made on the Listen tab keeps to that tab. Only the words: the count's tick and its haptic are
+                // the Listen tab's toast's, which is still there.
+                Toast(text: acknowledgment.text, undo: { run.undo(addition) })
+                    .id(acknowledgment.id)
+                    .padding(.bottom, 8)
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: edits.pendingRemoval)
+        .animation(reduceMotion ? .easeInOut(duration: 0.15) : .default, value: run.acknowledgment)
     }
 
     @ViewBuilder
@@ -209,6 +226,10 @@ struct JournalView: View {
                 .foregroundStyle(Color.inkSecondary)
                 .padding(.top, 6)
             if state.mode == .sightings {
+                // A search is over birds' names, and these have none yet.
+                if state.query.isEmpty, !captures.isEmpty {
+                    ToNameGroup(unnamed: captures.map(UnnamedSighting.init)) { naming = $0 }
+                }
                 SightingsByDay(sightings: shown)
             } else {
                 if state.query.isEmpty, !collection.progress.isEmpty || collection.unchartedSpeciesCount > 0 {
@@ -500,9 +521,21 @@ private struct ModeSurface: View {
 private struct EmptyJournal: View {
     @Environment(\.openListen) private var openListen
     @Environment(\.openAtlas) private var openAtlas
+    /// Photos waiting for a name (issue #188): with no sighting yet, naming one is the nearest way to the first patch.
+    var unnamed: [UnnamedSighting] = []
+    var name: (UnnamedSighting) -> Void = { _ in }
 
     var body: some View {
         ScrollView {
+            if !unnamed.isEmpty {
+                // On paper, as the Sightings list has them: the rows aren't drawn for the felt.
+                ToNameGroup(unnamed: unnamed, top: 14, name: name)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+                    .background(Color.paper, in: RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
+                    .padding(.horizontal, JournalLayout.margin)
+                    .padding(.top, 12)
+            }
             StateNotice(
                 "Your first patch is a bird away.",
                 message: "Start listening, review the birds you hear and add the ones you recognize. The first time you add a bird in a place, you sew its patch; every sighting after adds to its count.",

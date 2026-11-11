@@ -36,7 +36,7 @@ struct LensSessionView: View {
                     Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                 }
             } footer: {
-                Text("On the list, swipe down and up to choose a species and tap to open it. On its photo, tap to hear its song, then its call; swipe down for more information and tap \"Add to my list\" there; swipe up for the photo, left for the next species, right for the list. The middle-finger tap ends the session on real glasses.")
+                Text("On the list, swipe down and up to choose a species and tap to open it; up from the first is \"Capture a sighting\". On a photo, swipe up for its sounds, down for more information and \"Add to my list\", left for the next species, right for the list. The middle-finger tap ends the session on real glasses.")
             }
 
             #if DEBUG
@@ -105,8 +105,16 @@ extension LensPage {
         case .details(let index): "Species \(index + 1) · details"
         case .sounds(let index): "Species \(index + 1) · sounds"
         case .viewfinder(let index): "Species \(index + 1) · viewfinder"
+        case .captureViewfinder: "Capture a sighting · viewfinder"
+        case .captureSaving: "Capture a sighting · saving the photo"
+        case .captureSaved: "Capture a sighting · photo saved"
+        case .captureNaming: "Capture a sighting · say the bird's name"
+        case .captureMatches: "Capture a sighting · the birds it may be"
+        case .captureAdded: "Capture a sighting · added"
         case .problem(.noLocation): "Problem · no location"
         case .problem(.connectionLost): "Problem · connection lost"
+        case .problem(.photoNotTaken): "Problem · no photo taken"
+        case .problem(.photoGone): "Problem · photo already named or deleted"
         case .friend: "Friend's find"
         }
     }
@@ -160,6 +168,12 @@ private struct LensElementView: View {
                     .background(.tint.opacity(0.3), in: Capsule())
             case .saved(let text):
                 Label(text, systemImage: "checkmark.circle.fill").font(.caption.bold())
+            case .capture(let label, let isSelected):
+                HStack {
+                    Image(systemName: isSelected ? "chevron.right" : "circle").font(.caption2).foregroundStyle(isSelected ? .primary : .tertiary)
+                    Image(systemName: "camera.viewfinder").font(.caption)
+                    Text(label)
+                }
             case .list(let rows):
                 ForEach(rows, id: \.index) { row in
                     HStack {
@@ -181,6 +195,16 @@ private struct LensElementView: View {
                 }
             case .viewfinder:
                 Label("Camera view", systemImage: "camera.viewfinder").font(.caption).foregroundStyle(.secondary)
+            case .capturedPhoto:
+                Label("The photo", systemImage: "photo").font(.caption).foregroundStyle(.secondary)
+            case .choices(let rows):
+                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                    HStack {
+                        Image(systemName: row.isSelected ? "chevron.right" : "circle").font(.caption2).foregroundStyle(row.isSelected ? .primary : .tertiary)
+                        Text(row.label)
+                        if let detail = row.detail { Text(detail).font(.caption).foregroundStyle(.secondary) }
+                    }
+                }
             }
         }
     }

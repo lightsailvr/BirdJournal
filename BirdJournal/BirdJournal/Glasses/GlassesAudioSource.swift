@@ -35,7 +35,7 @@ import UIKit
 /// Explicitly main-actor: conforming to the `Sendable` `AudioSource` protocol would otherwise make the class
 /// nonisolated under the target's default main-actor isolation. Single use: create one per listening run.
 @MainActor
-final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
+final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold, DictationStreamHold {
     /// Session and stream lifecycle, for the spike log.
     enum Event: Sendable {
         case sessionState(DeviceSessionState)
@@ -82,7 +82,7 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     /// a stream that went quiet.
     private nonisolated let lastAudio = Mutex<ContinuousClock.Instant?>(nil)
     /// What has the camera off the session: a clip playing, or a full-resolution photo being taken.
-    private enum Hold { case playback, photo }
+    private enum Hold { case playback, photo, dictation }
     private var holds: Set<Hold> = []
     /// Puts the camera back once the last clip has been over for `restartDelay`.
     private var restartTask: Task<Void, Never>?
@@ -405,6 +405,22 @@ final class GlassesAudioSource: FrameKeepingAudioSource, PlaybackStreamHold {
     func releaseAfterPlayback() {
         guard holds.remove(.playback) != nil else { return }
         scheduleRestart(after: Self.restartDelay)
+    }
+
+    /// Takes the camera off the session while the glasses listen for a bird's name (issue #194), when the switch says
+    /// Speech does not run beside the stream: as for a clip, the session, the lens and the chunk stream stay.
+    func holdForDictation() async {
+        restartTask?.cancel()
+        restartTask = nil
+        guard holds.insert(.dictation).inserted else { return }
+        GlassesLog.shared.note("holding the stream for a dictation")
+        await takeCameraOff()
+    }
+
+    /// The dictation is over: the camera goes back on the session at once, unless a clip holds it.
+    func releaseAfterDictation() {
+        guard holds.remove(.dictation) != nil else { return }
+        scheduleRestart(after: .zero)
     }
 
     /// Takes the camera off the session, which keeps the lens on it, and the chunk stream open; the silence until the

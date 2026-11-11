@@ -131,7 +131,7 @@ struct LocalSetSection: View {
                 .id(local.set.id)
             let latest = latestPatches
             if latest.isEmpty {
-                Text("Birds you add while listening are sewn as patches here, one for every bird in every place.")
+                Text("Birds you add are sewn as patches here, one for every bird in every place.")
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 14)

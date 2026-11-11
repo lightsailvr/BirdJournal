@@ -42,6 +42,14 @@ struct ActiveListeningView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 10)
 
+                // A bird that's seen and not heard (issue #186): a photo, then its name. On either audio source, while the
+                // run is on; the idle tab's is #191.
+                if run.state.isActive {
+                    CaptureSightingButton(hint: "Opens the camera. The run keeps listening.")
+                        .disabled(run.state == .starting || run.state == .stopping)
+                        .padding(.top, 16)
+                }
+
                 if case .paused(let reason) = run.state {
                     ErrorNotice(reason.phoneTitle, message: reason.phoneText, symbol: "eyeglasses")
                         .padding(.top, 18)
@@ -61,6 +69,15 @@ struct ActiveListeningView: View {
                 } else if case .settled(.unavailable) = run.locationState {
                     LocationNotice(text: "No location fix yet, so the list is not narrowed to birds that live here.")
                         .padding(.top, 18)
+                }
+
+                if run.offersDictation {
+                    DictationOffer(glasses: run.glasses)
+                        .padding(.top, 18)
+                }
+
+                if !run.sightings.seen.isEmpty || !run.sightings.unnamed.isEmpty {
+                    SeenThisRun(seen: run.sightings.seen, unnamed: run.sightings.unnamed)
                 }
 
                 if run.candidates.isEmpty {
@@ -145,7 +162,7 @@ struct ActiveListeningView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { held.letGoOfEverything(at: .now) }
         }
-        .onChange(of: run.reviewing != nil || run.isReviewing || run.reveal != nil) { _, isCovered in
+        .onChange(of: run.reviewing != nil || run.isReviewing || run.reveal != nil || run.isCapturing) { _, isCovered in
             if isCovered { held.letGoOfEverything(at: .now) }
         }
         #if DEBUG
@@ -215,7 +232,7 @@ extension ActiveListeningView {
         case .listening: "Listening for birds…"
         case .interrupted, .paused, .resuming: "Waiting for the glasses…"
         case .stopping: "Stopping…"
-        case .idle, .ended: "No birds were heard."
+        case .idle, .ended: RunRecap.nothingHeard
         }
     }
 }

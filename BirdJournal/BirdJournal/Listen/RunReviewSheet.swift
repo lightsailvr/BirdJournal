@@ -30,8 +30,8 @@ struct RunReviewSheet: View {
     /// then holds it.
     private var sewn: [CardCollection.Patch] {
         var seen = Set<CardCollection.Patch.Key>()
-        return run.sightings.entries.compactMap { entry in
-            guard collection.sewedItsPatch(entry.identifier), let patch = collection.patch(of: entry.identifier), seen.insert(patch.id).inserted else { return nil }
+        return run.sightings.identifiers.compactMap { identifier in
+            guard collection.sewedItsPatch(identifier), let patch = collection.patch(of: identifier), seen.insert(patch.id).inserted else { return nil }
             return patch
         }
     }
@@ -99,22 +99,36 @@ struct RunReviewSheet: View {
                         .padding(.top, 6)
                         .accessibilityIdentifier("recap-place-explanation")
 
-                    SectionTitle("What you heard")
-                    HuntSummary(hunt: run.hunt(in: collection), isCentred: false)
-                        .padding(.top, 6)
-                    VStack(spacing: 0) {
-                        ForEach(run.orderedCandidates) { candidate in
-                            CandidateRow(candidate: candidate) {
-                                reviewing = candidate
-                            }
-                            RowRule()
-                        }
+                    // The photos taken on the run (issue #188): named ones as sightings, and the rest to name here or later.
+                    if !run.sightings.seen.isEmpty || !run.sightings.unnamed.isEmpty {
+                        SeenThisRun(seen: run.sightings.seen, unnamed: run.sightings.unnamed, footnote: UnnamedSightingText.reviewNote)
                     }
-                    .padding(.top, 8)
-                    Text("Only the birds you add are kept. The rest are forgotten when you close this.")
-                        .font(JournalFont.supporting)
-                        .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 12)
+
+                    SectionTitle("What you heard")
+                    if run.candidates.isEmpty {
+                        // A run of photos and nothing heard (a silent bird at the feeder): there is nothing to add or forget.
+                        Text(RunRecap.nothingHeard)
+                            .font(JournalFont.body)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 6)
+                            .accessibilityIdentifier("recap-nothing-heard")
+                    } else {
+                        HuntSummary(hunt: run.hunt(in: collection), isCentred: false)
+                            .padding(.top, 6)
+                        VStack(spacing: 0) {
+                            ForEach(run.orderedCandidates) { candidate in
+                                CandidateRow(candidate: candidate) {
+                                    reviewing = candidate
+                                }
+                                RowRule()
+                            }
+                        }
+                        .padding(.top, 8)
+                        Text("Only the birds you add are kept. The rest are forgotten when you close this.")
+                            .font(JournalFont.supporting)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 12)
+                    }
                 }
             }
             .holdsPatchLight()
