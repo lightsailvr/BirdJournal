@@ -1,9 +1,11 @@
+import PhotosUI
 import SwiftUI
 
 /// "Capture a sighting" (issues #186 and #188, of #185), over the run: the camera, then, once the shutter has given a photo,
 /// "Name this bird". The run goes on listening underneath the whole time, and the camera says so. Closing the camera takes
 /// nothing. The photo is written to the album at the shutter, as an unnamed sighting, before the naming opens: "Name it
-/// later", or anything else that closes this, leaves it waiting on the run's page.
+/// later", or anything else that closes this, leaves it waiting on the run's page. A photo chosen from the library (#192)
+/// goes the same way, with the date and place it carries, and the naming says which were its own.
 struct CaptureSightingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.makeCaptureCamera) private var makeCamera
@@ -11,12 +13,14 @@ struct CaptureSightingView: View {
     @State private var camera: (any CaptureCamera)?
     /// The photo just taken, saved and waiting for its name.
     @State private var unnamed: UnnamedSighting?
+    /// For a photo from the library: whether its date and place are its own.
+    @State private var note: String?
     @State private var couldNotSave = false
 
     var body: some View {
         Group {
             if let unnamed {
-                NameBirdView(unnamed: unnamed) { dismiss() }
+                NameBirdView(unnamed: unnamed, note: note) { dismiss() }
             } else if let camera {
                 CaptureCameraView(camera: camera, taken: save, close: { dismiss() })
             } else {
@@ -40,13 +44,14 @@ struct CaptureSightingView: View {
         .alert("The photo couldn't be saved", isPresented: $couldNotSave) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Nothing was kept. Take it again.")
+            Text("Nothing was kept. Try again.")
         }
     }
 
-    /// The shutter's photo goes to the album before anything else happens to it.
+    /// The shutter's photo, or the one chosen from the library, goes to the album before anything else happens to it.
     private func save(_ photo: CapturedPhoto) {
         if let saved = run.capture(photo) {
+            note = LibraryPhotoText.note(for: photo, currentPlace: run.coordinate)
             unnamed = saved
         } else {
             couldNotSave = true
@@ -57,14 +62,26 @@ struct CaptureSightingView: View {
 /// The camera inside the app: a way to close, a pill saying the run is still listening with its clock, the viewfinder, and
 /// the shutter. Before the camera is open it says why not: the first use asks for it, a denial is explained with the way to
 /// Settings, and a phone with no camera to give says that. The lens buttons, the zoom and the focus are the viewfinder's
-/// (`CaptureViewfinder`, #187); #192 adds the library.
+/// (`CaptureViewfinder`, #187).
+///
+/// Beside the shutter is the library (issue #192): the system's photo picker, for a picture taken earlier or with a real
+/// camera. It works whatever the camera's state, a refused camera included. Every photo the shutter takes is also copied to
+/// the birder's Photos library (`PhotosCopies`), behind the naming; one chosen from the library is not.
 struct CaptureCameraView: View {
     @Environment(\.openURL) private var openURL
+    @Environment(\.photosCopies) private var copies
+    #if DEBUG
+    @Environment(\.standInLibraryPhoto) private var standInLibraryPhoto
+    #endif
     let camera: any CaptureCamera
     let taken: (CapturedPhoto) -> Void
     let close: () -> Void
     @State private var isTaking = false
-    @State private var failed = false
+    /// What went wrong with the last photo, taken or chosen.
+    @State private var failure: String?
+    @State private var pickerItem: PhotosPickerItem?
+    /// A chosen photo is on its way from the library: one kept in iCloud takes a moment.
+    @State private var isReading = false
 
     var body: some View {
         ZStack {
@@ -137,33 +154,112 @@ struct CaptureCameraView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 12)
 
-                if failed {
-                    Text("That photo didn't take. Try again.")
+                if let failure {
+                    Text(failure)
                         .font(JournalFont.supporting)
                         .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 20)
                         .padding(.bottom, 8)
                         .accessibilityIdentifier("capture-failed")
+                } else if isReading {
+                    ProgressView("Getting your photo")
+                        .font(JournalFont.supporting)
+                        .tint(.white)
+                        .foregroundStyle(.white)
+                        .padding(.bottom, 8)
                 }
-                Button(action: shoot) {
-                    ZStack {
-                        Circle().strokeBorder(.white, lineWidth: 4).frame(width: 76, height: 76)
-                        Circle().fill(.white).frame(width: 62, height: 62)
-                        if isTaking { ProgressView().tint(.black) }
+                // The shutter in the middle, the library to its left, and as much room again to its right.
+                HStack(spacing: 0) {
+                    libraryButton
+                        .frame(maxWidth: .infinity)
+                    Button(action: shoot) {
+                        ZStack {
+                            Circle().strokeBorder(.white, lineWidth: 4).frame(width: 76, height: 76)
+                            Circle().fill(.white).frame(width: 62, height: 62)
+                            if isTaking { ProgressView().tint(.black) }
+                        }
+                        .contentShape(Circle())
                     }
-                    .contentShape(Circle())
+                    .buttonStyle(.journalPress)
+                    .disabled(camera.state != .ready || isTaking || isReading)
+                    .opacity(camera.state == .ready ? 1 : 0.35)
+                    .accessibilityLabel("Take photo")
+                    .accessibilityHint("Then you name the bird")
+                    .accessibilityIdentifier("capture-shutter")
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: 1)
+                        .accessibilityHidden(true)
                 }
-                .buttonStyle(.journalPress)
-                .disabled(camera.state != .ready || isTaking)
-                .opacity(camera.state == .ready ? 1 : 0.35)
-                .accessibilityLabel("Take photo")
-                .accessibilityHint("Then you name the bird")
-                .accessibilityIdentifier("capture-shutter")
                 .padding(.bottom, 20)
             }
         }
         // The camera is dark whatever the app's appearance.
         .environment(\.colorScheme, .dark)
         .task { await camera.start() }
+        .task(id: pickerItem) {
+            guard let pickerItem else { return }
+            await choose { try? await pickerItem.loadTransferable(type: Data.self) }
+            self.pickerItem = nil
+        }
+    }
+
+    /// The library, whatever the camera's state: the system's picker, which runs outside the app, so the app needs no
+    /// permission to read the library and sees only the picture chosen.
+    private var libraryButton: some View {
+        Group {
+            #if DEBUG
+            if let standInLibraryPhoto {
+                Button {
+                    Task { await choose { standInLibraryPhoto } }
+                } label: {
+                    libraryMark
+                }
+            } else {
+                picker
+            }
+            #else
+            picker
+            #endif
+        }
+        .buttonStyle(.journalPress)
+        .disabled(isTaking || isReading)
+        .accessibilityLabel("Choose from library")
+        .accessibilityHint("Then you name the bird")
+        .accessibilityIdentifier("capture-library")
+    }
+
+    /// `.current`: the file as the library has it, a HEIC or a camera's RAW included, and not a JPEG made from it.
+    private var picker: some View {
+        PhotosPicker(selection: $pickerItem, matching: .images, preferredItemEncoding: .current) { libraryMark }
+    }
+
+    private var libraryMark: some View {
+        Image(systemName: "photo.on.rectangle")
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(width: 52, height: 52)
+            .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            // A mark beside the shutter: it stops growing where the bar's marks do.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+            .contentShape(Rectangle())
+    }
+
+    /// A photo from the library: its file, what the picture says of itself, then on to its naming as the shutter's goes.
+    /// Nothing is copied to Photos: it is there already.
+    private func choose(_ file: () async -> Data?) async {
+        failure = nil
+        isReading = true
+        defer { isReading = false }
+        let data = await file()
+        guard !Task.isCancelled else { return }
+        let photo = await Task.detached(priority: .userInitiated) { data.flatMap { CapturedPhoto.chosenFromLibrary($0) } }.value
+        if let photo {
+            taken(photo)
+        } else {
+            failure = "That photo couldn't be read. Try another."
+        }
     }
 
     /// In the middle of the camera's room where it fits, and scrolling where the text is too large to.
@@ -199,12 +295,15 @@ struct CaptureCameraView: View {
     private func shoot() {
         guard !isTaking else { return }
         isTaking = true
-        failed = false
+        failure = nil
         Task {
             do {
-                taken(try await camera.takePhoto())
+                let photo = try await camera.takePhoto()
+                taken(photo)
+                // The birder's own copy, behind the naming: the first asks to add to Photos, and nothing waits for the answer.
+                Task { await copies.keep(photo) }
             } catch {
-                failed = true
+                failure = "That photo didn't take. Try again."
             }
             isTaking = false
         }
