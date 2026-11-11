@@ -132,11 +132,14 @@ struct NameBirdView: View {
             // What the run has heard is read once, as the sheet opens: the list holds still while a bird is chosen from it.
             let heard = known == nil ? run.heardScientificNames(for: unnamed) : context.heard
             let fieldGuide = library.fieldGuideBirds, place = unnamed.location, takenAt = unnamed.takenAt, model = occurrenceModel
-            (names, context) = await Task.detached(priority: .userInitiated) {
+            let read = await Task.detached(priority: .userInitiated) {
                 // Without the label list the field guides' birds can still be named.
                 let names = known ?? (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
                 return (names, NameableBirds.Context(heard: heard, place: place, takenAt: takenAt, occurrenceModel: model))
             }.value
+            // The place changed while this was read: the read for the new place is on its way, and must not be overwritten.
+            guard !Task.isCancelled else { return }
+            (names, context) = read
             dropAChoiceOutOfSight()
         }
         .task(id: unnamed.location) {
