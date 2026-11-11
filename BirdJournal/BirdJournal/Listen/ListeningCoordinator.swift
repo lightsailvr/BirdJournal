@@ -439,6 +439,19 @@ final class ListeningCoordinator {
 
     // Photo first, name second (issues #186 and #188, of #185).
 
+    /// Whose a photo is and where it is recorded when it carries no place of its own, as the shutter is pressed or a
+    /// picture is chosen. Read then and handed to `capture`, not read when the photo arrives: the camera can close in
+    /// between, and by then the coordinator describes whatever is on the Listen tab, not this photo.
+    struct Shutter: Equatable {
+        /// False for a photo taken with no run to take it (issue #191): it is on no run's list.
+        let onThisRun: Bool
+        /// The run's place, or with no run the place read for the open camera, if there was one yet.
+        let place: Coordinate?
+    }
+
+    /// What a shutter pressed now would record.
+    var shutter: Shutter { Shutter(onThisRun: !isCapturingOutsideRun, place: capturePlace) }
+
     /// The shutter: writes `photo` to the album as an unnamed sighting, before any name, at the place the run has. Nothing is
     /// announced, since nothing has been added: it sews no patch and tells nobody until it is named. Nil when it could not
     /// be written, which is the only way a photo is lost. A photo chosen from the library goes the same way (issue #192),
@@ -448,28 +461,30 @@ final class ListeningCoordinator {
     /// and is no run's: it waits in the Collection's "To name", and a run started afterwards knows nothing of it. A shutter
     /// quicker than the first fix is not kept waiting: the photo is written at once, and given its place when the fix is in
     /// (`placed`).
-    /// - Parameter source: the device that took the photo: the phone, whichever microphones the run is listening with.
+    ///
+    /// The photo is the phone's, whichever microphones the run is listening with; the lens writes its own through the
+    /// run's ledger.
+    /// - Parameter pressed: what the shutter recorded when it was pressed, for a photo that arrives later (the camera's
+    ///   photo, a picture read from the library); nil for one written at the press.
     @discardableResult
-    func capture(_ photo: CapturedPhoto, source: SightingSource = .phone) -> UnnamedSighting? {
-        let unnamed = capture(photo, at: photo.place ?? capturePlace, source: source)
-        if let unnamed, isCapturingOutsideRun, unnamed.location == nil, placeOutsideRun.state == .requesting {
-            let answer = placeOutsideRun.firstAnswer()
-            latePlaces[unnamed.id] = Task { [weak self] in
-                for await coordinate in answer {
-                    if let coordinate { return self?.place(unnamed, at: coordinate) }
-                }
-                return nil
-            }
-        }
-        return unnamed
-    }
-
-    /// The shutter, for a photo whose place the caller knows better than the run does.
-    @discardableResult
-    func capture(_ photo: CapturedPhoto, at location: Coordinate?, source: SightingSource) -> UnnamedSighting? {
+    func capture(_ photo: CapturedPhoto, pressed: Shutter? = nil) -> UnnamedSighting? {
+        let now = shutter
+        let pressed = pressed ?? now
+        // The camera is still open as it was at the press: a fix that came in since is the photo's. Closed since, or
+        // opened again over something else, only what the press read is known of it.
+        let place = photo.place ?? pressed.place ?? (now.onThisRun == pressed.onThisRun ? now.place : nil)
         do {
-            let unnamed = try sightings.capture(photo: photo.data, takenAt: photo.takenAt, location: location, source: source, onThisRun: !isCapturingOutsideRun)
+            let unnamed = try sightings.capture(photo: photo.data, takenAt: photo.takenAt, location: place, source: .phone, onThisRun: pressed.onThisRun)
             keepEndedRun()
+            if !pressed.onThisRun, isCapturingOutsideRun, unnamed.location == nil, placeOutsideRun.state == .requesting {
+                let answer = placeOutsideRun.firstAnswer()
+                latePlaces[unnamed.id] = Task { [weak self] in
+                    for await coordinate in answer {
+                        if let coordinate { return self?.place(unnamed, at: coordinate) }
+                    }
+                    return nil
+                }
+            }
             return unnamed
         } catch {
             Self.logger.error("capture failed: \(error.localizedDescription, privacy: .public)")
@@ -511,13 +526,6 @@ final class ListeningCoordinator {
             addFailed(error)
             return nil
         }
-    }
-
-    /// A photo taken and named in one step. If the naming fails the photo is kept, unnamed.
-    @discardableResult
-    func addSeen(_ bird: NameableBird, photo: CapturedPhoto) -> RunSightings.Addition? {
-        guard let unnamed = capture(photo) else { return nil }
-        return name(unnamed, as: bird)
     }
 
     /// Deletes an unnamed sighting and its photo: what the birder confirmed. False when it could not be removed.

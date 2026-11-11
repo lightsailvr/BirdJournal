@@ -1,3 +1,4 @@
+import Album
 import PhotosUI
 import SwiftUI
 
@@ -18,8 +19,8 @@ struct CaptureSightingView: View {
     @State private var unnamed: UnnamedSighting?
     /// For a photo from the library: whether its date and place are its own.
     @State private var note: String?
-    /// What the photo just taken says of itself, without its picture: its note is written again if its place arrives late.
-    @State private var facts: CapturedPhoto?
+    /// How the photo just taken came and the place it carries: its note is written again if its place arrives late.
+    @State private var provenance: (origin: CapturedPhoto.Origin, place: Coordinate?)?
     @State private var couldNotSave = false
 
     var body: some View {
@@ -38,7 +39,7 @@ struct CaptureSightingView: View {
             // `-autoScreen name-bird`: straight to the naming of a stand-in photo, for the screenshots.
             if UserDefaults.standard.bool(forKey: "autoNameBird") {
                 UserDefaults.standard.removeObject(forKey: "autoNameBird")
-                save(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
+                save(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now), pressed: run.shutter)
             }
             #endif
         }
@@ -46,7 +47,7 @@ struct CaptureSightingView: View {
         .task(id: unnamed?.id) {
             guard let taken = unnamed, let placed = await run.placed(taken), unnamed?.id == placed.id else { return }
             unnamed = placed
-            if let facts { note = LibraryPhotoText.note(for: facts, currentPlace: placed.location) }
+            if let provenance { note = LibraryPhotoText.note(origin: provenance.origin, place: provenance.place, currentPlace: placed.location) }
         }
         // The camera is for the shot: it isn't left open behind the naming, or after the cover has gone.
         .onChange(of: unnamed) { camera?.stop() }
@@ -59,11 +60,12 @@ struct CaptureSightingView: View {
         }
     }
 
-    /// The shutter's photo, or the one chosen from the library, goes to the album before anything else happens to it.
-    private func save(_ photo: CapturedPhoto) {
-        if let saved = run.capture(photo) {
-            note = LibraryPhotoText.note(for: photo, currentPlace: run.capturePlace)
-            facts = CapturedPhoto(data: Data(), takenAt: photo.takenAt, place: photo.place, origin: photo.origin)
+    /// The shutter's photo, or the one chosen from the library, goes to the album before anything else happens to it: as
+    /// whose it was, and where, when the shutter was pressed.
+    private func save(_ photo: CapturedPhoto, pressed: ListeningCoordinator.Shutter) {
+        if let saved = run.capture(photo, pressed: pressed) {
+            note = LibraryPhotoText.note(for: photo, currentPlace: saved.location)
+            provenance = (photo.origin, photo.place)
             unnamed = saved
         } else {
             couldNotSave = true
@@ -87,7 +89,9 @@ struct CaptureCameraView: View {
     @Environment(\.standInLibraryPhoto) private var standInLibraryPhoto
     #endif
     let camera: any CaptureCamera
-    let taken: (CapturedPhoto) -> Void
+    /// The photo the shutter took or the library gave, with what the coordinator's shutter read when it was pressed: the
+    /// photo arrives a moment later, and the camera may have been closed by then.
+    let taken: (CapturedPhoto, ListeningCoordinator.Shutter) -> Void
     let close: () -> Void
     @State private var isTaking = false
     /// What went wrong with the last photo, taken or chosen.
@@ -265,11 +269,12 @@ struct CaptureCameraView: View {
         failure = nil
         isReading = true
         defer { isReading = false }
+        let pressed = run.shutter
         let data = await file()
         guard !Task.isCancelled else { return }
         let photo = await Task.detached(priority: .userInitiated) { data.flatMap { CapturedPhoto.chosenFromLibrary($0) } }.value
         if let photo {
-            taken(photo)
+            taken(photo, pressed)
         } else {
             failure = "That photo couldn't be read. Try another."
         }
@@ -309,10 +314,12 @@ struct CaptureCameraView: View {
         guard !isTaking else { return }
         isTaking = true
         failure = nil
+        // Whose photo this is, and where: read now, since it comes back after the camera may have closed.
+        let pressed = run.shutter
         Task {
             do {
                 let photo = try await camera.takePhoto()
-                taken(photo)
+                taken(photo, pressed)
                 // The birder's own copy, behind the naming: the first asks to add to Photos, and nothing waits for the answer.
                 Task { await copies.keep(photo) }
             } catch {

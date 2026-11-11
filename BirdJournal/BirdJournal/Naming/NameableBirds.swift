@@ -259,6 +259,17 @@ nonisolated extension NameableBirds {
     static func load(fieldGuide: [FieldGuideBird]) throws -> NameableBirds {
         NameableBirds(fieldGuide: fieldGuide, labels: try ONNXBirdModel.bundledLabels())
     }
+
+    /// The same, for the app: if the bundled label list cannot be read, the field guides' birds alone. They are the
+    /// birds a birder here most likely means and can still be named; the rest of the world's wait for a list that reads.
+    static func loadOrFieldGuideOnly(fieldGuide: [FieldGuideBird]) -> NameableBirds {
+        do {
+            return try load(fieldGuide: fieldGuide)
+        } catch {
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "naming").error("the label list did not load, naming from the field guides alone: \(error.localizedDescription, privacy: .public)")
+            return NameableBirds(fieldGuide: fieldGuide, labels: [])
+        }
+    }
 }
 
 extension PackLibrary {

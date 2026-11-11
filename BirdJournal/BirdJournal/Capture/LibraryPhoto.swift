@@ -83,8 +83,13 @@ enum LibraryPhotoText {
     /// Nil for the capture camera's photo, which was taken here and now.
     /// - Parameter currentPlace: the place a photo with none of its own is recorded at; nil when there is none.
     nonisolated static func note(for photo: CapturedPhoto, currentPlace: Coordinate?) -> String? {
-        guard case .library(let carriesDate) = photo.origin else { return nil }
-        switch (carriesDate, photo.place != nil, currentPlace != nil) {
+        note(origin: photo.origin, place: photo.place, currentPlace: currentPlace)
+    }
+
+    /// The same, from what a photo says of itself without its picture.
+    nonisolated static func note(origin: CapturedPhoto.Origin, place: Coordinate?, currentPlace: Coordinate?) -> String? {
+        guard case .library(let carriesDate) = origin else { return nil }
+        switch (carriesDate, place != nil, currentPlace != nil) {
         case (true, true, _): return "The sighting takes this photo's own date and place."
         case (true, false, true): return "This photo carries no place, so the sighting takes its date and the place you're at now."
         case (true, false, false): return "This photo carries no place, so the sighting takes its date and records no place."

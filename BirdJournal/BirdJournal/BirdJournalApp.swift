@@ -246,10 +246,10 @@ struct BirdJournalApp: App {
             image: { packs.image(for: $0) },
             suppression: suppression,
             // What a name said on the lens is matched against (issue #194): the field guides on the phone as the first
-            // photo of the run finds them, and every bird BirdNET knows; read off the main actor.
+            // photo of each run finds them, and every bird BirdNET knows; read off the main actor.
             names: {
                 let fieldGuide = await packs.fieldGuideBirds
-                return (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                return NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
             },
             dictationLimits: .forApp
         )

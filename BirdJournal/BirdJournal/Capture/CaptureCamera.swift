@@ -128,6 +128,9 @@ final class StandInCaptureCamera: CaptureCamera {
     /// The zoom it has been set to: what a test asserts a lens button or a pinch did.
     private(set) var zoom = CaptureZoom.fixed
     private(set) var focusPoint: UnitPoint?
+    /// A test holds each photo back until `deliverPhoto()`, as a real camera takes a moment over one.
+    @ObservationIgnored var holdsPhoto = false
+    @ObservationIgnored private var held: [CheckedContinuation<Void, Never>] = []
     @ObservationIgnored private let mode: Mode
     @ObservationIgnored private let lenses: RearCameraFacts
     @ObservationIgnored private let now: () -> Date
@@ -168,7 +171,16 @@ final class StandInCaptureCamera: CaptureCamera {
         guard state == .ready else { throw CaptureFailure.notReady }
         photosTaken += 1
         focusPoint = nil
-        return CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: now())
+        let takenAt = now()
+        if holdsPhoto { await withCheckedContinuation { held.append($0) } }
+        return CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: takenAt)
+    }
+
+    /// Hands over the photos held back.
+    func deliverPhoto() {
+        let waiting = held
+        held = []
+        for continuation in waiting { continuation.resume() }
     }
 
     func setZoom(_ factor: Double, smoothly: Bool) {

@@ -173,13 +173,6 @@ final class RunSightings {
         return added(recorded, species: Species(index: 0, scientificName: bird.scientificName, commonName: bird.commonName, taxonomicClass: Species.birds), isOfThisRun: isOfThisRun)
     }
 
-    /// A photo taken and named in one step: `capture`, then `name`. If the naming fails the photo is kept, unnamed.
-    /// - Parameter source: the device that took the photo.
-    @discardableResult
-    func addSeen(_ bird: NameableBird, photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> Addition {
-        try name(capture(photo: photo, takenAt: takenAt, location: location, source: source), as: bird)
-    }
-
     /// Removes an unnamed sighting and its photo, from the album and from the run. Nothing happens if it is already gone.
     func delete(_ unnamed: UnnamedSighting) throws {
         if let capture = recorder.capture(unnamed.id) { try recorder.delete(capture) }

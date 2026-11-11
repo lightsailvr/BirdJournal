@@ -56,7 +56,7 @@ struct CaptureAccessibilityTests {
         let harness = try Screens.Harness()
         await harness.run.start()
         let camera = StandInCaptureCamera(.ready)
-        let labels = try await Screens.walk(CaptureCameraView(camera: camera, taken: { _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let labels = try await Screens.walk(CaptureCameraView(camera: camera, taken: { _, _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("Viewfinder") && labels.contains { $0.hasPrefix("Still listening") }
         }
         await harness.run.stop()
@@ -72,7 +72,7 @@ struct CaptureAccessibilityTests {
     @Test("A refused camera says what it is for and how to allow it, and Take photo is still found, dimmed", arguments: Screens.sizes)
     func cameraDenied(typeSize: DynamicTypeSize) async throws {
         let harness = try Screens.Harness()
-        let labels = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.denied), taken: { _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let labels = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.denied), taken: { _, _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("Open Settings")
         }
         Screens.expectClean(labels, screen: "Camera refused")
@@ -83,7 +83,7 @@ struct CaptureAccessibilityTests {
         #expect(!labels.contains("Viewfinder"), "\(labels)")
         #expect(!labels.contains { $0.hasPrefix("Still listening") }, "no run, no pill: \(labels)")
 
-        let none = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.unavailable), taken: { _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let none = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.unavailable), taken: { _, _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("No camera to use")
         }
         Screens.expectClean(none, screen: "No camera")

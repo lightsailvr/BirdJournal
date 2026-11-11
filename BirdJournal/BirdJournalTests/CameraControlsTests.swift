@@ -83,7 +83,7 @@ struct CameraControlsTests {
     ) async throws {
         await harness.place.prepareForLaunch()
         CardFlipAccessibilityTests.enableAccessibility()
-        let host = UIHostingController(rootView: harness.shared(CaptureCameraView(camera: camera, taken: { _ in }, close: {}), typeSize: typeSize))
+        let host = UIHostingController(rootView: harness.shared(CaptureCameraView(camera: camera, taken: { _, _ in }, close: {}), typeSize: typeSize))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
         window.frame = CGRect(origin: .zero, size: screen)

@@ -164,7 +164,7 @@ struct DebugLaunch: ViewModifier {
             if let seen = defaults.string(forKey: "seedSeen") {
                 // Written by the recorder alone, as a naming on an earlier day left them: no run, no reveal.
                 let fieldGuide = library.fieldGuideBirds
-                let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                let names = NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
                 let recorder = run.sightings.recorder
                 for (index, bird) in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }).enumerated() {
                     if let capture = try? recorder.recordCapture(photo: DebugSeeds.frameJPEG(), takenAt: Date.now.addingTimeInterval(-3_600 * Double(index + 1)), location: DebugPlace.griffith.coordinate, source: .phone) {
@@ -199,7 +199,7 @@ struct DebugLaunch: ViewModifier {
                 tab = .listen
                 if let seen = defaults.string(forKey: "autoIdleSeen") {
                     let fieldGuide = library.fieldGuideBirds
-                    let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                    let names = NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
                     let place = defaults.string(forKey: "autoLocation").flatMap(DebugPlace.init(rawValue:))?.coordinate
                     for bird in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }) {
                         guard let unnamed = try? run.sightings.capture(photo: DebugSeeds.frameJPEG(), takenAt: .now, location: place, source: .phone, onThisRun: false) else { continue }
@@ -235,7 +235,7 @@ struct DebugLaunch: ViewModifier {
                 }
                 if let seen = defaults.string(forKey: "autoSeen") {
                     let fieldGuide = library.fieldGuideBirds
-                    let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                    let names = NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
                     for bird in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }) {
                         run.addSeen(bird, photo: CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now))
                         run.finishCeremony()
@@ -669,7 +669,7 @@ final class MockLensNaming {
             matches: { [self] words, capture in
                 if names == nil {
                     let fieldGuide = fieldGuide
-                    names = await Task.detached { (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: []) }.value
+                    names = await Task.detached { NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide) }.value
                 }
                 guard let names, let unnamed = captured[capture] else { return [] }
                 let birds = names.spoken(words, in: NameableBirds.Context(heard: heard()))
@@ -684,6 +684,24 @@ final class MockLensNaming {
                 return LensNamedCapture(commonName: bird.commonName, place: addition.placement.setName, earned: addition.sewsPatch ? .newPatch : .seenAgain(count: addition.patchCount))
             }
         )
+    }
+}
+
+// A photo taken and named in one step, for the launch flags and the tests: the app itself always writes the photo at the
+// shutter (`capture`) and names it afterwards (`name`). If the naming fails the photo is kept, unnamed.
+extension RunSightings {
+    /// - Parameter source: the device that took the photo.
+    @discardableResult
+    func addSeen(_ bird: NameableBird, photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> Addition {
+        try name(capture(photo: photo, takenAt: takenAt, location: location, source: source), as: bird)
+    }
+}
+
+extension ListeningCoordinator {
+    @discardableResult
+    func addSeen(_ bird: NameableBird, photo: CapturedPhoto) -> RunSightings.Addition? {
+        guard let unnamed = capture(photo) else { return nil }
+        return name(unnamed, as: bird)
     }
 }
 

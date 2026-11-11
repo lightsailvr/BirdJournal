@@ -64,7 +64,7 @@ struct LibraryCaptureScreenTests {
         let harness = try Screens.Harness()
         let photos = StandInPhotosLibrary(access: .allowed)
 
-        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { _ in }, close: {}), harness: harness, photos: photos, libraryPhoto: Self.griffithPicture(), typeSize: typeSize) { elements in
+        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { _, _ in }, close: {}), harness: harness, photos: photos, libraryPhoto: Self.griffithPicture(), typeSize: typeSize) { elements in
             let found = try await Controls.settled(elements) { Controls.element("Choose from library", in: $0) != nil && Controls.element("Viewfinder", in: $0) != nil }
             let labels = Controls.labels(found)
             Screens.expectClean(labels, screen: "Camera with the library")
@@ -84,7 +84,7 @@ struct LibraryCaptureScreenTests {
         }
 
         // No camera is no reason not to name a photo there already is.
-        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.denied), taken: { _ in }, close: {}), harness: harness, photos: photos, libraryPhoto: Self.griffithPicture(), typeSize: typeSize) { elements in
+        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.denied), taken: { _, _ in }, close: {}), harness: harness, photos: photos, libraryPhoto: Self.griffithPicture(), typeSize: typeSize) { elements in
             let found = try await Controls.settled(elements) { Controls.element("Choose from library", in: $0) != nil && Controls.element("Open Settings", in: $0) != nil }
             let library = try #require(Controls.element("Choose from library", in: found), "\(Controls.labels(found))")
             #expect(!library.accessibilityTraits.contains(.notEnabled))
@@ -118,7 +118,7 @@ struct LibraryCaptureScreenTests {
         let photos = StandInPhotosLibrary(access: .notAsked, answer: .refused)
         var taken: [CapturedPhoto] = []
 
-        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { taken.append($0) }, close: {}), harness: harness, photos: photos, libraryPhoto: nil) { elements in
+        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { photo, _ in taken.append(photo) }, close: {}), harness: harness, photos: photos, libraryPhoto: nil) { elements in
             let found = try await Controls.settled(elements) { Controls.element("Take photo", in: $0)?.accessibilityTraits.contains(.notEnabled) == false }
             let shutter = try #require(Controls.element("Take photo", in: found), "\(Controls.labels(found))")
             #expect(shutter.accessibilityActivate())
@@ -186,7 +186,7 @@ struct LibraryCaptureScreenTests {
         let harness = try Screens.Harness(seeded: false)
         var taken: [CapturedPhoto] = []
 
-        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { taken.append($0) }, close: {}), harness: harness, photos: StandInPhotosLibrary(access: .allowed), libraryPhoto: Data([1, 2, 3])) { elements in
+        try await Self.onScreen(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { photo, _ in taken.append(photo) }, close: {}), harness: harness, photos: StandInPhotosLibrary(access: .allowed), libraryPhoto: Data([1, 2, 3])) { elements in
             let found = try await Controls.settled(elements) { Controls.element("Choose from library", in: $0) != nil }
             #expect(try #require(Controls.element("Choose from library", in: found)).accessibilityActivate())
             let after = try await Controls.settled(elements) { Controls.element("That photo couldn't be read. Try another.", in: $0) != nil }

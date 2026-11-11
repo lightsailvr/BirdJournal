@@ -131,10 +131,11 @@ private struct AutoMockLens: ViewModifier {
                 let naming = MockLensNaming(run: run, fieldGuide: library.fieldGuideBirds)
                 lens.names = asksName ? naming.source(heard: { [lens] in lens.stack.candidates.map(\.species.scientificName) }) : nil
                 lens.onCapture = { [lens, run] id in
-                    let photo = CapturedPhoto(data: jpeg, takenAt: .now)
+                    let takenAt = Date.now
                     Task {
                         try? await Task.sleep(for: .seconds(hold))
-                        guard let unnamed = run.capture(photo, at: nil, source: .glasses) else {
+                        // As a run's lens writes its photo: through the ledger, from the glasses, here with no place.
+                        guard let unnamed = try? run.sightings.capture(photo: jpeg, takenAt: takenAt, location: nil, source: .glasses) else {
                             lens.captureFailed(id)
                             return
                         }

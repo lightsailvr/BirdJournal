@@ -55,6 +55,35 @@ struct CaptureWhenIdleScreenTests {
         }
     }
 
+    // Review of #185, B2.
+    @Test("The shutter says whose photo it is as it is pressed: a photo that comes back after the idle camera has closed is handed over as no run's")
+    func theShutterIsReadAtThePress() async throws {
+        let harness = try Screens.Harness(location: [Self.griffith])
+        let camera = StandInCaptureCamera(.ready)
+        camera.holdsPhoto = true
+        var taken: [ListeningCoordinator.Shutter] = []
+        harness.run.isCapturing = true
+        try await waitUntil("the fix is in") { harness.run.capturePlace != nil }
+
+        try await Hosted.onScreen(CaptureCameraView(camera: camera, taken: { _, pressed in taken.append(pressed) }, close: {}), harness: harness, photos: StandInPhotosLibrary(access: .allowed), libraryPhoto: nil) { elements in
+            let found = try await Controls.settled(elements) { Controls.element("Take photo", in: $0)?.accessibilityTraits.contains(.notEnabled) == false }
+            #expect(try #require(Controls.element("Take photo", in: found)).accessibilityActivate())
+            try await waitUntil("the shutter is pressed") { camera.photosTaken == 1 }
+            #expect(taken.isEmpty, "the photo is still on its way")
+
+            harness.run.isCapturing = false
+            #expect(harness.run.shutter.onThisRun, "by now the coordinator would call a photo the run's")
+            camera.deliverPhoto()
+            try await waitUntil("the photo is handed over") { taken.count == 1 }
+            #expect(taken == [ListeningCoordinator.Shutter(onThisRun: false, place: Self.griffithPlace)])
+        }
+    }
+
+    private func waitUntil(_ what: String, _ condition: () -> Bool) async throws {
+        for _ in 0..<500 where !condition() { try await Task.sleep(for: .milliseconds(10)) }
+        try #require(condition(), "timed out waiting until \(what)")
+    }
+
     @Test("With no run the camera says nothing of listening; its photo is named with the phone's place under it and what is likely there, with no Heard this run; and the add shows its new patch")
     func cameraAndNaming() async throws {
         let harness = try Screens.Harness(location: [Self.griffith])
@@ -158,7 +187,7 @@ struct CaptureWhenIdleScreenTests {
         let harness = try Screens.Harness()
         defer { harness.run.isCapturing = false }
         harness.run.isCapturing = true
-        let none = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.unavailable), taken: { _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let none = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.unavailable), taken: { _, _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("No camera to use")
         }
         Screens.expectClean(none, screen: "No camera, no run")
@@ -172,7 +201,7 @@ struct CaptureWhenIdleScreenTests {
         await harness.run.stop()
         #expect(harness.run.state == .ended(.stopped) && !harness.run.showsRun)
         harness.run.isCapturing = true
-        let after = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let after = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.ready), taken: { _, _ in }, close: {}), harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("Take photo") && labels.contains("Viewfinder")
         }
         #expect(!after.contains { $0.localizedCaseInsensitiveContains("listening") }, "\(after)")
@@ -183,7 +212,7 @@ struct CaptureWhenIdleScreenTests {
         let harness = try Screens.Harness()
         await harness.run.start()
         harness.run.isCapturing = true
-        let labels = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.unavailable), taken: { _ in }, close: {}), harness: harness, inStack: false) { labels in
+        let labels = try await Screens.walk(CaptureCameraView(camera: StandInCaptureCamera(.unavailable), taken: { _, _ in }, close: {}), harness: harness, inStack: false) { labels in
             labels.contains("No camera to use")
         }
         harness.run.isCapturing = false

@@ -187,7 +187,7 @@ struct NameBirdView: View {
             let fieldGuide = library.fieldGuideBirds, place = subject.location, takenAt = subject.takenAt, model = occurrenceModel
             let read = await Task.detached(priority: .userInitiated) {
                 // Without the label list the field guides' birds can still be named.
-                let names = known ?? (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                let names = known ?? NameableBirds.loadOrFieldGuideOnly(fieldGuide: fieldGuide)
                 return (names, NameableBirds.Context(heard: heard, place: place, takenAt: takenAt, occurrenceModel: model))
             }.value
             // The place changed while this was read: the read for the new place is on its way, and must not be overwritten.

@@ -85,6 +85,62 @@ struct CaptureWhenIdleTests {
         #expect(harness.runLocation.streamsOpened == 0, "no run was started for it")
     }
 
+    // Review of #185, B2: the photo comes back a moment after the shutter, and the camera can be closed in between.
+    @Test("a photo whose shutter was pressed with no run, and which arrives after the camera has closed, is still no run's and is recorded where the phone was")
+    func aPhotoThatArrivesAfterTheCameraClosed() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        run.isCapturing = true
+        harness.location.send(Self.griffith)
+        try await waitUntil("the fix is in") { run.capturePlace != nil }
+        let pressed = run.shutter
+        #expect(pressed == ListeningCoordinator.Shutter(onThisRun: false, place: Self.griffithPlace))
+
+        run.isCapturing = false
+        let unnamed = try #require(run.capture(Self.photo(), pressed: pressed))
+
+        #expect(unnamed.location == Self.griffithPlace, "where the phone was at the shutter")
+        #expect(run.sightings.unnamed.isEmpty, "no run took it")
+        #expect(!run.showsRun && run.state == .idle, "the Listen tab stays the idle tab")
+        #expect(harness.captures.map(\.identifier) == [unnamed.id], "and the photo is kept")
+    }
+
+    @Test("a photo pressed with no run that arrives once a run has started is not that run's, and does not take its place")
+    func aPhotoThatArrivesOnceARunHasStarted() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        run.isCapturing = true
+        let pressed = run.shutter
+        #expect(pressed == ListeningCoordinator.Shutter(onThisRun: false, place: nil), "no fix yet")
+        run.isCapturing = false
+        await run.start()
+        try await waitUntil("the run has its place") { run.coordinate != nil }
+
+        let unnamed = try #require(run.capture(Self.photo(), pressed: pressed))
+
+        #expect(unnamed.location == nil, "the run's place is not where it was taken")
+        #expect(run.sightings.unnamed.isEmpty, "not under Seen this run")
+        await run.stop()
+    }
+
+    @Test("a photo pressed on a run and arriving after the run's camera has closed is still the run's, at its place")
+    func aRunsPhotoStaysTheRuns() async throws {
+        let harness = try Self.makeHarness()
+        let run = harness.run
+        await run.start()
+        try await waitUntil("the run has its place") { run.coordinate != nil }
+        run.isCapturing = true
+        let pressed = run.shutter
+        #expect(pressed.onThisRun && pressed.place != nil)
+        run.isCapturing = false
+
+        let unnamed = try #require(run.capture(Self.photo(), pressed: pressed))
+
+        #expect(unnamed.location == pressed.place)
+        #expect(run.sightings.unnamed.map(\.id) == [unnamed.id], "under Seen this run")
+        await run.stop()
+    }
+
     @Test("with location refused the photo has no place, the sheet says so, and naming it lands as a sighting without a place does: Uncharted")
     func withLocationRefusedThePlaceIsNotRecorded() async throws {
         let harness = try Self.makeHarness()
