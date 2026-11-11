@@ -19,7 +19,7 @@ struct ListenView: View {
     var body: some View {
         @Bindable var run = run
         Group {
-            if run.state.isActive || (run.state != .idle && run.lastRunHasSomething) {
+            if run.showsRun {
                 ActiveListeningView()
             } else {
                 ReadyToListenView(isCovered: isCovered)
@@ -129,6 +129,20 @@ private struct ReadyToListenView: View {
                         .disabled(run.state == .starting)
                         .padding(.top, 20)
                         .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
+
+                        // A bird that's seen and not heard needs no run (issue #191): the run's own button, camera and
+                        // naming. Outlined and under Start, which stays the one filled action on the page.
+                        Button {
+                            run.isCapturing = true
+                        } label: {
+                            Label("Capture a sighting", systemImage: "camera")
+                        }
+                        .buttonStyle(.journalOutlined)
+                        .disabled(run.state == .starting)
+                        .accessibilityHint("Opens the camera. You don't need to be listening.")
+                        .accessibilityIdentifier("capture-sighting")
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 12)
 
                         if let local {
                             LocalSetSection(local: local, collection: collection)

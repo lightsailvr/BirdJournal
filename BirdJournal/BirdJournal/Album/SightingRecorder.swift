@@ -82,6 +82,19 @@ final class SightingRecorder {
         }
     }
 
+    /// Gives a capture written before its place was known that place (issue #191): with no run, a shutter can be quicker
+    /// than the phone's first fix.
+    func place(_ capture: Capture, at location: Coordinate) throws {
+        let context = container.mainContext
+        capture.location = location
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+
     /// Names a capture (issues #186 and #188, of #185): writes the sighting of `bird` it becomes, and the capture goes, in one
     /// save. The sighting is Seen and marked as named by the birder, with no match score, at the capture's own time and place
     /// and from its device, whenever it is named; the photo, the same file, is its original photo, one of the birder's own.

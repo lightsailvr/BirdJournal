@@ -68,7 +68,7 @@ struct BirdJournalApp: App {
         let listening = ListeningCoordinator(
             phone: phone, glasses: glasses, sightings: sightings, levels: levels,
             defaultSource: connection.devices.isEmpty ? .phone : .glasses,
-            archive: Self.endedRunArchive()
+            archive: Self.endedRunArchive(), captureLocation: Self.makeCaptureLocation()
         )
         self.album = album
         self.frames = frames
@@ -267,6 +267,15 @@ struct BirdJournalApp: App {
         #else
         return CoreLocationProvider()
         #endif
+    }
+
+    /// Where the phone is for a photo taken with no run (issue #191): Core Location's fixes while the camera is open, in front
+    /// only. `-autoLocation` stands in for it in debug builds.
+    private static func makeCaptureLocation() -> any LocationProvider {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "autoLocation") != nil { return debugLocationProvider() }
+        #endif
+        return CoreLocationProvider(heldThroughBackground: false)
     }
 
     #if DEBUG

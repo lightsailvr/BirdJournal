@@ -146,10 +146,12 @@ final class RunSightings {
     /// - Parameters:
     ///   - location: where the birder was when the photo was taken.
     ///   - source: the device that took the photo.
+    ///   - onThisRun: false for a photo taken with no run under way (issue #191): it is written to the album the same way
+    ///     and is on no run's list, like one an earlier run left unnamed.
     @discardableResult
-    func capture(photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> UnnamedSighting {
+    func capture(photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource, onThisRun: Bool = true) throws -> UnnamedSighting {
         let captured = UnnamedSighting(try recorder.recordCapture(photo: photo, takenAt: takenAt, location: location, source: source))
-        unnamed.append(captured)
+        if onThisRun { unnamed.append(captured) }
         return captured
     }
 

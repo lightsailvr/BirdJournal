@@ -40,7 +40,8 @@ struct ScreenAccessibilityTests {
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
         ///   - session: what its downloads go through.
-        ///   - location: what a phone run is told of where it is; by default that it may not know.
+        ///   - location: what a phone run is told of where it is, and the camera opened with no run (issue #191); by default
+        ///     that it may not know.
         init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true, location: [LocationFix] = [.denied]) throws {
             album = try AlbumSchema.makeContainer(inMemory: true)
             frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibility-\(UUID().uuidString)", directoryHint: .isDirectory))
@@ -62,7 +63,10 @@ struct ScreenAccessibilityTests {
                 location: ScriptedLocationProvider(location)
             )
             let glasses = GlassesListeningSession(recorder: recorder, sightings: sightings, loadEngine: { IdentificationEngine(model: ScriptedBirdModel(), occurrenceModel: SpyOccurrence()) }, location: ScriptedLocationProvider([.denied]))
-            run = ListeningCoordinator(phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: UserDefaults(suiteName: "screen-ax-\(UUID().uuidString)")!)
+            run = ListeningCoordinator(
+                phone: phone, glasses: glasses, sightings: sightings, levels: LevelSink(), defaultSource: .phone, defaults: UserDefaults(suiteName: "screen-ax-\(UUID().uuidString)")!,
+                captureLocation: ScriptedLocationProvider(location)
+            )
             sounds = ReferenceSounds(player: MockSoundPlayer(), session: SpyPlaybackSession(), suppression: AudioSuppression(), phoneRunHoldsSession: { false })
             outbox = FindOutbox(account: account, client: client, fileURL: nil, sharing: { .automatic }, payload: { _, _ in nil })
             pushes = PushCenter(account: account, client: client, authorizer: FakeNotificationAuthorizer(permission: .authorized), defaults: UserDefaults(suiteName: "screen-ax-push-\(UUID().uuidString)")!, registerForRemoteNotifications: {})

@@ -125,18 +125,21 @@ struct NameBirdView: View {
             .safeAreaBar(edge: .bottom) { addBar }
         }
         // The names and the suggestions arrive together, so the page opens on its suggestions and not on a list they replace.
-        .task {
-            guard names == nil else { return }
+        // Read again only if the photo's place changes under the sheet: with no run, a shutter quicker than the phone's
+        // first fix gets its place a moment later (issue #191).
+        .task(id: unnamed.location) {
+            let known = names
             // What the run has heard is read once, as the sheet opens: the list holds still while a bird is chosen from it.
-            let heard = run.heardScientificNames(for: unnamed)
+            let heard = known == nil ? run.heardScientificNames(for: unnamed) : context.heard
             let fieldGuide = library.fieldGuideBirds, place = unnamed.location, takenAt = unnamed.takenAt, model = occurrenceModel
             (names, context) = await Task.detached(priority: .userInitiated) {
                 // Without the label list the field guides' birds can still be named.
-                let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                let names = known ?? (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
                 return (names, NameableBirds.Context(heard: heard, place: place, takenAt: takenAt, occurrenceModel: model))
             }.value
+            dropAChoiceOutOfSight()
         }
-        .task {
+        .task(id: unnamed.location) {
             if let location = unnamed.location { await places.resolve(location) }
         }
         #if DEBUG

@@ -6,6 +6,9 @@ import SwiftUI
 /// nothing. The photo is written to the album at the shutter, as an unnamed sighting, before the naming opens: "Name it
 /// later", or anything else that closes this, leaves it waiting on the run's page. A photo chosen from the library (#192)
 /// goes the same way, with the date and place it carries, and the naming says which were its own.
+///
+/// From the idle Listen tab (#191) it is the same camera and naming with no run under them: the camera says nothing of
+/// listening, the photo is recorded where the phone is now, and one left unnamed waits in the Collection's "To name".
 struct CaptureSightingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.makeCaptureCamera) private var makeCamera
@@ -15,6 +18,8 @@ struct CaptureSightingView: View {
     @State private var unnamed: UnnamedSighting?
     /// For a photo from the library: whether its date and place are its own.
     @State private var note: String?
+    /// What the photo just taken says of itself, without its picture: its note is written again if its place arrives late.
+    @State private var facts: CapturedPhoto?
     @State private var couldNotSave = false
 
     var body: some View {
@@ -37,6 +42,12 @@ struct CaptureSightingView: View {
             }
             #endif
         }
+        // With no run, a shutter quicker than the phone's first fix: the place arrives a moment into the naming (issue #191).
+        .task(id: unnamed?.id) {
+            guard let taken = unnamed, let placed = await run.placed(taken), unnamed?.id == placed.id else { return }
+            unnamed = placed
+            if let facts { note = LibraryPhotoText.note(for: facts, currentPlace: placed.location) }
+        }
         // The camera is for the shot: it isn't left open behind the naming, or after the cover has gone.
         .onChange(of: unnamed) { camera?.stop() }
         .onDisappear { camera?.stop() }
@@ -51,7 +62,8 @@ struct CaptureSightingView: View {
     /// The shutter's photo, or the one chosen from the library, goes to the album before anything else happens to it.
     private func save(_ photo: CapturedPhoto) {
         if let saved = run.capture(photo) {
-            note = LibraryPhotoText.note(for: photo, currentPlace: run.coordinate)
+            note = LibraryPhotoText.note(for: photo, currentPlace: run.capturePlace)
+            facts = CapturedPhoto(data: Data(), takenAt: photo.takenAt, place: photo.place, origin: photo.origin)
             unnamed = saved
         } else {
             couldNotSave = true
@@ -70,6 +82,7 @@ struct CaptureSightingView: View {
 struct CaptureCameraView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.photosCopies) private var copies
+    @Environment(ListeningCoordinator.self) private var run
     #if DEBUG
     @Environment(\.standInLibraryPhoto) private var standInLibraryPhoto
     #endif
@@ -147,7 +160,7 @@ struct CaptureCameraView: View {
                             .accessibilityIdentifier("capture-open-settings")
                         }
                     case .unavailable:
-                        notice("No camera to use", message: "This iPhone's camera can't be opened right now. A run keeps listening without it.") { EmptyView() }
+                        notice("No camera to use", message: CaptureCameraText.unavailable(onRun: !run.isCapturingOutsideRun)) { EmptyView() }
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -311,12 +324,13 @@ struct CaptureCameraView: View {
 }
 
 /// "Still listening · 12:51" over the camera: the run under it hasn't stopped, and this is its clock. It says so too when the
-/// run is waiting for the glasses, or has ended while the camera was open; with no run it isn't there.
+/// run is waiting for the glasses, or has ended while the camera was open; with no run it isn't there, nor over a camera
+/// opened from the idle tab after a run that left nothing (issue #191).
 private struct ListeningPill: View {
     @Environment(ListeningCoordinator.self) private var run
 
     var body: some View {
-        if let words = CaptureCameraText.listening(for: run.state) {
+        if !run.isCapturingOutsideRun, let words = CaptureCameraText.listening(for: run.state) {
             TimelineView(.periodic(from: .now, by: run.clockStoppedAt == nil ? 1 : 3_600)) { context in
                 let now = run.clockStoppedAt ?? context.date
                 HStack(spacing: 7) {
@@ -353,6 +367,14 @@ enum CaptureCameraText {
         case .stopping, .ended: ("Listening stopped", false)
         case .idle: nil
         }
+    }
+
+    /// What the camera says when the phone has none to give. On a run, that the run goes on; with no run (issue #191), the
+    /// way on that is left, which is the library button beside the shutter.
+    static func unavailable(onRun: Bool) -> String {
+        onRun
+            ? "This iPhone's camera can't be opened right now. A run keeps listening without it."
+            : "This iPhone's camera can't be opened right now. You can still choose a photo from your library."
     }
 
     /// "12 minutes 51 seconds", for VoiceOver.
