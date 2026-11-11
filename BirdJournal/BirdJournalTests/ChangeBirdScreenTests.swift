@@ -93,6 +93,47 @@ extension CaptureAccessibilityTests {
         #expect(!labels.contains("Add sighting") && !labels.contains("Add and sew patch") && !labels.contains("Choose the bird in your photo."), "\(labels)")
     }
 
+    @Test("After a change the new bird's paper card lists the sighting in its history, Seen, and the old bird has no patch to turn over", arguments: Screens.sizes)
+    func paperCardAfterAChange(typeSize: DynamicTypeSize) async throws {
+        let (harness, sighting) = try await Self.runThatNamedAnAllens()
+        let before = try #require(harness.collectionStore.collection.patch(of: sighting.identifier))
+        #expect(before.scientificName == "Selasphorus sasin")
+
+        #expect(harness.edits.changeBird(of: sighting, to: Self.annas))
+
+        let collection = harness.collectionStore.collection
+        #expect(collection.patch(key: before.id) == nil, "the Allen's Hummingbird's patch is unpicked")
+        let patch = try #require(collection.patch(of: sighting.identifier))
+        #expect(patch.scientificName == "Calypte anna" && patch.placement.setName == "Los Angeles")
+        let labels = try await Screens.walk(PatchDetailView(key: patch.id, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
+            labels.contains("Turn back") && labels.contains { $0.hasPrefix("1 sighting") }
+        }
+        await harness.run.stop()
+        Screens.expectClean(labels, screen: "Paper card after a change")
+        Self.expectNoScore(labels, screen: "Paper card after a change")
+        #expect(labels.contains { $0.contains("Anna's Hummingbird") }, "\(labels)")
+        #expect(!labels.contains { $0.contains("Allen's Hummingbird") }, "\(labels)")
+        #expect(labels.contains { $0.contains(", Seen, ") }, "its line in the history: \(labels)")
+    }
+
+    @Test("Change bird on a sighting whose photo you have since removed: the bird, when and where, and no picture spoken of")
+    func changeBirdSheetWithoutItsPhoto() async throws {
+        let (harness, sighting) = try await Self.runThatNamedAnAllens()
+        harness.edits.removeAttachedPhoto(try #require(sighting.attachedPhotoPaths.first), from: sighting)
+        let screen = NameBirdView(changing: NamedSighting(sighting, commonName: "Allen's Hummingbird")) { _ in true } close: {}
+            .environment(\.occurrenceModel, Self.geomodel)
+
+        let labels = try await Screens.walk(screen, harness: harness, inStack: false) { labels in
+            labels.contains("Likely here now") && labels.contains { $0.hasPrefix("Anna's Hummingbird, ") }
+        }
+        await harness.run.stop()
+
+        Screens.expectClean(labels, screen: "Change bird, no photo")
+        #expect(labels.contains { $0.hasPrefix("Allen's Hummingbird, Today, ") && $0.contains(", Near ") }, "\(labels)")
+        #expect(!labels.contains { $0.localizedCaseInsensitiveContains("your photo") }, "there is none to speak of: \(labels)")
+        #expect(labels.contains("Choose the bird you saw."), "\(labels)")
+    }
+
     @Test("Choosing another bird and pressing the button changes the sighting and closes the sheet; before that the note says what the change does to both patches, and nothing is celebrated after")
     func changeBirdWithTheSheet() async throws {
         let (harness, sighting) = try await Self.runThatNamedAnAllens()
