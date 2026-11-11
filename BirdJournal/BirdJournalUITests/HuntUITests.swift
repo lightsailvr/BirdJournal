@@ -131,6 +131,20 @@ final class HuntUITests: XCTestCase {
         XCTAssertFalse(app.buttons["stitch-in"].exists, "nothing added")
     }
 
+    /// Where a row rests. The list re-sorts once a second and a row takes 0.4 s to reach its new place; read on the way there, its
+    /// frame is part way down from the row above, and a press aimed at it lands on that row instead (seen 3 times in 12).
+    @MainActor
+    private func restingFrame(of row: XCUIElement) -> CGRect {
+        var last = row.frame
+        for _ in 0..<30 {
+            Thread.sleep(forTimeInterval: 0.1)
+            let now = row.frame
+            if abs(now.minY - last.minY) < 0.5 { return now }
+            last = now
+        }
+        return last
+    }
+
     /// The bird a row shows. Its label's other words can change while the list holds: a row's own contents aren't held.
     private func bird(_ row: XCUIElement) -> String {
         String(row.label.prefix { $0 != "," })
@@ -161,7 +175,7 @@ final class HuntUITests: XCTestCase {
         wait(for: [expectation(for: NSPredicate { _, _ in self.bird(row) != first }, evaluatedWith: NSObject())], timeout: 15)
 
         // The row's own button is the row's width less the pill, which sits to its right.
-        let frame = row.frame
+        let frame = restingFrame(of: row)
         let spot = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.maxX + 30, dy: frame.midY))
         let touched = Date.now
         spot.press(forDuration: 2.5)

@@ -146,19 +146,22 @@ struct PatchLightTests {
     }
 }
 
-// Issue #134 (guide page 10): the flip takes about 600 ms; Reduce Motion cross-fades.
+// Issue #134 (guide page 10): the flip takes about 600 ms. Issue #176: under Reduce Motion the outgoing face fades right out
+// over the first half before the incoming one comes up over the second, so the two never show at once.
 @Suite("Patch flip timing")
 struct PatchFlipTimingTests {
-    @Test("about 600 ms; Reduce Motion cross-fades without turning, the two faces' opacities adding to one")
-    func crossFade() {
+    @Test("about 600 ms; Reduce Motion fades one face out, then the other in, without turning")
+    func fadesInTurn() {
         #expect(CardFlip.duration == 0.6)
         #expect(CardFlip.animation(reduceMotion: false) != nil)
         #expect(CardFlip.animation(reduceMotion: true) != nil, "a fade, not a jump")
         for angle in stride(from: 0.0, through: 180, by: 15) {
             let front = CardFlip.face(isBack: false, angle: angle, rotates: false)
             let back = CardFlip.face(isBack: true, angle: angle, rotates: false)
+            let progress = angle / 180
             #expect(front.degrees == 0 && back.degrees == 0)
-            #expect(abs(front.opacity + back.opacity - 1) < 0.0001, "angle \(angle)")
+            #expect(abs(front.opacity - max(0, 1 - 2 * progress)) < 0.0001, "angle \(angle)")
+            #expect(abs(back.opacity - max(0, 2 * progress - 1)) < 0.0001, "angle \(angle)")
         }
         #expect(CardFlip.face(isBack: false, angle: 0, rotates: false).opacity == 1)
         #expect(CardFlip.face(isBack: true, angle: 180, rotates: false).opacity == 1)

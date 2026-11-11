@@ -59,17 +59,21 @@ struct JournalView: View {
                 EmptyJournal(unnamed: captures.map(UnnamedSighting.init)) { naming = $0 }
             } else {
                 let collection = collectionStore.collection
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        content(collection)
+                // The stack is what keeps its identity. An id on the scroll view alone is the identity of everything hung on it
+                // below as well, so each mode change made a new picker, surface and toolbar, and the surface cut instead of fading.
+                ZStack {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            content(collection)
+                        }
+                        .padding(.horizontal, JournalLayout.margin)
+                        .padding(.bottom, JournalLayout.sectionGap)
                     }
-                    .padding(.horizontal, JournalLayout.margin)
-                    .padding(.bottom, JournalLayout.sectionGap)
+                    // A new native scroll view starts at the top before its lazy stack lays out (issue #180). Only the
+                    // scrolling content changes identity: the pinned picker, search field and navigation bar stay put.
+                    .id(state.mode)
+                    .transition(modeContentTransition)
                 }
-                // A new native scroll view starts at the top before its lazy stack lays out (issue #180). Only the
-                // scrolling content changes identity: the pinned picker, search field and navigation bar stay put.
-                .id(state.mode)
-                .transition(.identity)
                 // Outside the scrolling content, under a title that doesn't collapse: the picker has nothing to ride on, so whatever a
                 // mode change does to the content or the offset, it stays exactly where it is.
                 .safeAreaBar(edge: .top) {
@@ -391,13 +395,19 @@ struct JournalView: View {
     /// A different mode starts at its top; only returning from a page or search keeps the current mode's place.
     private func switchMode(to mode: Mode) {
         guard mode != state.mode else { return }
-        stopRestoring()
-        position = ScrollPosition(edge: .top)
-        offset = 0
-        state.offsets[mode] = 0
-        // Clearing a search after switching modes must not resurrect that mode's old position either.
-        if state.offsetsBeforeSearch != nil { state.offsetsBeforeSearch?[mode] = 0 }
-        withAnimation(modeFade) { state.mode = mode }
+        // One transaction, with the mode written first. Written after the rest and alone in the animation, the mode's change found
+        // the others waiting under a different transaction: SwiftUI drew those at once, from inside the mode's `willSet`, and at
+        // times drew the mode's own change there too, while it still read the old mode. Nothing asked for it again, so the old
+        // mode stayed on screen until something else redrew the page (seen after a patch's page closed, two times in three).
+        withAnimation(modeFade) {
+            state.mode = mode
+            stopRestoring()
+            position = ScrollPosition(edge: .top)
+            offset = 0
+            state.offsets[mode] = 0
+            // Clearing a search after switching modes must not resurrect that mode's old position either.
+            if state.offsetsBeforeSearch != nil { state.offsetsBeforeSearch?[mode] = 0 }
+        }
     }
 
     /// The surface cross-fades from one mode to the next (issue #150, audit F10); under Reduce Motion, quickly.
@@ -407,6 +417,15 @@ struct JournalView: View {
         if seconds > 0 { return .linear(duration: seconds) }
         #endif
         return .easeInOut(duration: reduceMotion ? 0.12 : 0.25)
+    }
+
+    /// What's on the surface doesn't wait for the surface's fade, and the two modes are never both there: the old one has gone
+    /// first, and the new one comes up after it.
+    private var modeContentTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity.animation(.easeOut(duration: reduceMotion ? 0.08 : 0.17).delay(0.08)),
+            removal: .opacity.animation(.easeOut(duration: 0.05))
+        )
     }
 
     /// Restores the current mode after a search, once its content has laid out. A single native scroll is
