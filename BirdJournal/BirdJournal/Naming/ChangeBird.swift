@@ -116,3 +116,12 @@ extension ListeningCoordinator {
         sightings.seen.contains { $0.identifier == sighting.id } ? heardScientificNames : []
     }
 }
+
+    /// The birds heard on the run the naming sheet's subject belongs to: a photo waiting for its name, or a sighting
+    /// whose bird is being changed.
+    func heardScientificNames(for subject: NamingSubject) -> [String] {
+        switch subject {
+        case .unnamed(let unnamed): heardScientificNames(for: unnamed)
+        case .named(let sighting): heardScientificNames(for: sighting)
+        }
+    }

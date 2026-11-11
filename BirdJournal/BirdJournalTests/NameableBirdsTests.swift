@@ -141,6 +141,13 @@ struct NameBirdTextTests {
         #expect(NameBirdText.more(212) == "And 212 more. Keep typing to narrow them down.")
     }
 
+    // Review of #185, S2: CONTEXT.md's Add entry avoids "save" for an add.
+    @Test("an add that fails says the sighting couldn't be added, and that the photo is kept: an add is never saved")
+    func addFailedSaysAdded() {
+        #expect(NameBirdText.addFailed == "The sighting couldn't be added. Your photo is kept. Try again.")
+        #expect(!NameBirdText.addFailed.localizedCaseInsensitiveContains("save"))
+    }
+
     @Test("a seen bird's row says Seen, your photo, and New patch or its patch's count")
     func seenRow() {
         #expect(NameBirdText.line(NameBirdText.seenRow(sewedPatch: true, count: 1)) == "Seen · your photo · New patch")

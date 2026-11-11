@@ -34,16 +34,6 @@ protocol PlaybackStreamHold: AnyObject {
     func releaseAfterPlayback()
 }
 
-/// The glasses run's camera stream, which a dictation of a bird's name holds while the glasses listen, when the field
-/// check's switch says the toolkit's Speech does not run beside it (issue #194, `DictationSettings`).
-@MainActor
-protocol DictationStreamHold: AnyObject {
-    /// Stops the stream for a dictation; returns once it is off.
-    func holdForDictation() async
-    /// The dictation is over; the stream may restart.
-    func releaseAfterDictation()
-}
-
 /// A clip the lens started (issue #41, phase 4): the token to stop it by, and whether it plays on the glasses.
 struct LensSoundStart: Equatable {
     let clip: Int

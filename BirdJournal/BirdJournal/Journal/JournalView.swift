@@ -24,10 +24,9 @@ struct JournalView: View {
     /// The photos waiting for a name (issue #188): "To name", at the top of the Sightings. They are no sightings.
     @Query(Capture.newestFirst()) private var captures: [Capture]
     @State private var naming: UnnamedSighting?
-    /// The add last made from "To name": its acknowledgment shows here, where it was made. No other add's does.
+    /// The add last made from "To name", as the naming sheet reported it: its acknowledgment shows here, where it was made.
+    /// No other add's does.
     @State private var namedHere: RunSightings.Addition?
-    /// The acknowledgment that was up when "Name this bird" opened, to tell a new one from it when the sheet closes.
-    @State private var acknowledgedBefore: UUID?
     @Environment(PackLibrary.self) private var library
     @Environment(JournalEdits.self) private var edits
     @Environment(ListeningCoordinator.self) private var run
@@ -181,15 +180,7 @@ struct JournalView: View {
         }
         .navigationTitle("Collection")
         .toolbarTitleDisplayMode(.inlineLarge)
-        .namesUnnamedSighting($naming)
-        .onChange(of: naming) { _, naming in
-            if naming != nil {
-                acknowledgedBefore = run.acknowledgment?.id
-            } else if let acknowledgment = run.acknowledgment, acknowledgment.id != acknowledgedBefore {
-                // The sheet closed on an add.
-                namedHere = acknowledgment.undo
-            }
-        }
+        .namesUnnamedSighting($naming) { namedHere = $0 }
         .task(id: sightings.isEmpty) {
             // The sightings the birder had before the collection existed become their patches in one moment.
             let intro = CollectionIntro()

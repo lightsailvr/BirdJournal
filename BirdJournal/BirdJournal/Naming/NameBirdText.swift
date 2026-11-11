@@ -29,6 +29,10 @@ enum NameBirdText {
         return seenHere == 0 ? "\(name), new to you here." : "\(name), seen \(CardCollection.Patch.times(seenHere)) here."
     }
 
+    /// Under the button when the add could not be written. An add is added, never saved (CONTEXT.md, "Add"); the photo
+    /// was saved at the shutter and is still there.
+    static let addFailed = "The sighting couldn't be added. Your photo is kept. Try again."
+
     /// Above the run's birds, before anything is typed (issue #189).
     static let heardTitle = "Heard this run"
     /// Above the field guides' birds the geomodel finds most likely at the photo's place and week.

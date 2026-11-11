@@ -26,6 +26,17 @@ enum DictationSettings {
     }
 }
 
+/// The glasses run's camera stream, which a dictation of a bird's name holds while the glasses listen, when the field
+/// check's switch says the toolkit's Speech does not run beside it (issue #194, `DictationSettings`). A hold of its own,
+/// beside a reference clip's (`PlaybackStreamHold`) and a photo's.
+@MainActor
+protocol DictationStreamHold: AnyObject {
+    /// Stops the stream for a dictation; returns once it is off.
+    func holdForDictation() async
+    /// The dictation is over; the stream may restart.
+    func releaseAfterDictation()
+}
+
 /// What a dictation has heard so far, and what follows from each thing the toolkit's Speech reports (issue #194): every
 /// decision of `GlassesDictation`, as a value, so it is tested without the glasses.
 ///

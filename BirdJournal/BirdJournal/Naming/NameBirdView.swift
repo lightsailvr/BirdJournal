@@ -34,6 +34,8 @@ struct NameBirdView: View {
     /// For a photo just chosen from the library (issue #192): whether the date and place above are the photo's own.
     let note: String?
     /// Writes a change of bird, and says whether it was written; nil while a photo is being named.
+    /// Hears the add this sheet made by naming its photo, before it closes; nil when nobody needs to know.
+    private let added: ((RunSightings.Addition) -> Void)?
     private let change: ((NameableBird) -> Bool)?
     /// Closes the sheet: after the add or the change, on "Name it later" or Cancel, or after a delete.
     let close: () -> Void
@@ -43,17 +45,19 @@ struct NameBirdView: View {
     /// What the photo's run had heard when the sheet opened, and what the geomodel expects at the photo's place in its week.
     @State private var context = NameableBirds.Context.none
     @State private var chosen: NameableBird?
-    @State private var isAdding = false
     @State private var failed = false
     @State private var confirmingDelete = false
     @State private var deleteFailed = false
     @FocusState private var isSearching: Bool
 
     /// "Name this bird", for a photo waiting for its name.
-    /// - Parameter note: one line under the photo, for one just chosen from the library (issue #192).
-    init(unnamed: UnnamedSighting, note: String? = nil, close: @escaping () -> Void) {
+    /// - Parameters:
+    ///   - note: one line under the photo, for one just chosen from the library (issue #192).
+    ///   - added: told the add the naming made, for a screen that shows its acknowledgment itself.
+    init(unnamed: UnnamedSighting, note: String? = nil, added: ((RunSightings.Addition) -> Void)? = nil, close: @escaping () -> Void) {
         subject = .unnamed(unnamed)
         self.note = note
+        self.added = added
         change = nil
         self.close = close
     }
@@ -63,6 +67,7 @@ struct NameBirdView: View {
     init(changing sighting: NamedSighting, change: @escaping (NameableBird) -> Bool, close: @escaping () -> Void) {
         subject = .named(sighting)
         note = nil
+        added = nil
         self.change = change
         self.close = close
     }
@@ -176,14 +181,7 @@ struct NameBirdView: View {
         .task(id: subject.location) {
             let known = names
             // What the run has heard is read once, as the sheet opens: the list holds still while a bird is chosen from it.
-            let heard: [String] = if known != nil {
-                context.heard
-            } else {
-                switch subject {
-                case .unnamed(let unnamed): run.heardScientificNames(for: unnamed)
-                case .named(let sighting): run.heardScientificNames(for: sighting)
-                }
-            }
+            let heard = known != nil ? context.heard : run.heardScientificNames(for: subject)
             let fieldGuide = library.fieldGuideBirds, place = subject.location, takenAt = subject.takenAt, model = occurrenceModel
             let read = await Task.detached(priority: .userInitiated) {
                 // Without the label list the field guides' birds can still be named.
@@ -279,7 +277,7 @@ struct NameBirdView: View {
         let isUnchanged = chosen.map(isCurrent) ?? false
         return VStack(spacing: 8) {
             if failed {
-                InlineError(changing == nil ? "The sighting couldn't be saved. Your photo is kept. Try again." : ChangeBirdText.failed, afterAction: true)
+                InlineError(changing == nil ? NameBirdText.addFailed : ChangeBirdText.failed, afterAction: true)
             } else if deleteFailed {
                 InlineError("The photo couldn't be deleted. Try again.", afterAction: true)
             }
@@ -287,13 +285,13 @@ struct NameBirdView: View {
                 add()
             } label: {
                 if changing == nil {
-                    Label(isAdding ? "Adding…" : NameBirdText.addTitle(seenHere: seen), systemImage: "plus")
+                    Label(NameBirdText.addTitle(seenHere: seen), systemImage: "plus")
                 } else {
                     Label(ChangeBirdText.confirmTitle(seenHere: isUnchanged ? nil : seen), systemImage: "checkmark")
                 }
             }
             .buttonStyle(.journalPrimary)
-            .disabled(chosen == nil || isAdding || isUnchanged)
+            .disabled(chosen == nil || isUnchanged)
             .accessibilityIdentifier(changing == nil ? "name-bird-add" : "change-bird-confirm")
             Text(changing.map { ChangeBirdText.note(current: $0.commonName, chosen: chosen?.commonName, isCurrent: isUnchanged, seenHere: seen ?? 0, unpicks: unpickedByChange(of: $0)) }
                 ?? NameBirdText.addNote(name: chosen?.commonName, seenHere: seen ?? 0))
@@ -307,15 +305,20 @@ struct NameBirdView: View {
         .padding(.horizontal, JournalLayout.margin)
         .padding(.vertical, 12)
     }
+    /// The add or the change is one write on the main actor, done before this returns: there is no moment in between to show.
 
     private func add() {
-        guard let chosen, !isAdding else { return }
-        isAdding = true
+        guard let chosen else { return }
         deleteFailed = false
-        let done = switch subject {
-        case .unnamed(let unnamed): run.name(unnamed, as: chosen) != nil
+        let done: Bool
+        switch subject {
+        case .unnamed(let unnamed):
+            let addition = run.name(unnamed, as: chosen)
+            if let addition { added?(addition) }
+            done = addition != nil
         // No ceremony follows: the page under the sheet is the new bird's when the sheet closes.
-        case .named: change?(chosen) ?? false
+        case .named:
+            done = change?(chosen) ?? false
         }
         if done {
             close()
@@ -323,7 +326,6 @@ struct NameBirdView: View {
             // The photo is still an unnamed sighting, or the sighting the bird it was: nothing closes on a failure.
             failed = true
         }
-        isAdding = false
     }
 
     private func delete() {

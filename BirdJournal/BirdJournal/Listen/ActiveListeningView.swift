@@ -45,17 +45,9 @@ struct ActiveListeningView: View {
                 // A bird that's seen and not heard (issue #186): a photo, then its name. On either audio source, while the
                 // run is on; the idle tab's is #191.
                 if run.state.isActive {
-                    Button {
-                        run.isCapturing = true
-                    } label: {
-                        Label("Capture a sighting", systemImage: "camera")
-                    }
-                    .buttonStyle(.journalOutlined)
-                    .disabled(run.state == .starting || run.state == .stopping)
-                    .accessibilityHint("Opens the camera. The run keeps listening.")
-                    .accessibilityIdentifier("capture-sighting")
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 16)
+                    CaptureSightingButton(hint: "Opens the camera. The run keeps listening.")
+                        .disabled(run.state == .starting || run.state == .stopping)
+                        .padding(.top, 16)
                 }
 
                 if case .paused(let reason) = run.state {

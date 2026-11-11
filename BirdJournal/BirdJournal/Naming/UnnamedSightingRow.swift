@@ -50,9 +50,10 @@ struct UnnamedSightingRow: View {
 
 extension View {
     /// "Name this bird" for the unnamed sighting a row hands over, as a sheet over whatever shows the row.
-    func namesUnnamedSighting(_ naming: Binding<UnnamedSighting?>) -> some View {
+    /// - Parameter added: told the add a naming there made, for a screen that shows its acknowledgment itself.
+    func namesUnnamedSighting(_ naming: Binding<UnnamedSighting?>, added: ((RunSightings.Addition) -> Void)? = nil) -> some View {
         sheet(item: naming) { unnamed in
-            NameBirdView(unnamed: unnamed) { naming.wrappedValue = nil }
+            NameBirdView(unnamed: unnamed, added: added) { naming.wrappedValue = nil }
         }
     }
 }

@@ -73,6 +73,26 @@ struct CaptureSightingView: View {
     }
 }
 
+/// "Capture a sighting" on the Listen tab: the one button, on the run's page while a run is on and under Start listening
+/// when none is (issue #191). Outlined, at its natural width and centred; what VoiceOver adds says what becomes of
+/// listening, which is the only thing that differs between the two.
+struct CaptureSightingButton: View {
+    @Environment(ListeningCoordinator.self) private var run
+    let hint: String
+
+    var body: some View {
+        Button {
+            run.isCapturing = true
+        } label: {
+            Label("Capture a sighting", systemImage: "camera")
+        }
+        .buttonStyle(.journalOutlined)
+        .accessibilityHint(hint)
+        .accessibilityIdentifier("capture-sighting")
+        .frame(maxWidth: .infinity)
+    }
+}
+
 /// The camera inside the app: a way to close, a pill saying the run is still listening with its clock, the viewfinder, and
 /// the shutter. Before the camera is open it says why not: the first use asks for it, a denial is explained with the way to
 /// Settings, and a phone with no camera to give says that. The lens buttons, the zoom and the focus are the viewfinder's
@@ -111,6 +131,9 @@ struct CaptureCameraView: View {
                             .foregroundStyle(.white)
                             .frame(width: 44, height: 44)
                             .background(.white.opacity(0.18), in: Circle())
+                            // A mark in the bar, in a circle of a fixed size: it stops growing where the flash's does,
+                            // before it would outgrow the circle.
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     }
                     .accessibilityLabel("Close camera")
                     .accessibilityIdentifier("capture-close")
