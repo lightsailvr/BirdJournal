@@ -20,6 +20,9 @@ final class PhoneCaptureCamera: CaptureCamera {
     private(set) var focusPoint: UnitPoint?
     @ObservationIgnored private let camera = RearCamera()
     @ObservationIgnored private let points = ViewfinderPoints()
+    /// Between `start()` and `stop()`: a start whose permission question or opening is answered after the screen has
+    /// gone must not leave the camera running behind nothing.
+    @ObservationIgnored private var isWanted = false
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "capture")
 
     init() {
@@ -30,6 +33,7 @@ final class PhoneCaptureCamera: CaptureCamera {
     }
 
     func start() async {
+        isWanted = true
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             break
@@ -39,6 +43,8 @@ final class PhoneCaptureCamera: CaptureCamera {
                 state = .denied
                 return
             }
+            // Stopped while the question was up: the camera is not opened for a screen that has gone.
+            guard isWanted else { return }
         case .denied:
             state = .denied
             return
@@ -54,6 +60,11 @@ final class PhoneCaptureCamera: CaptureCamera {
             Self.logger.error("the rear camera did not open")
             return
         }
+        // Stopped while it opened: `stop()`'s close ran before the session started, so it is closed again here.
+        guard isWanted else {
+            camera.close()
+            return
+        }
         // Reopened behind the same screen, the zoom stays where the birder left it.
         if zoom == .fixed {
             zoom = CaptureZoom(facts)
@@ -66,15 +77,18 @@ final class PhoneCaptureCamera: CaptureCamera {
     }
 
     func stop() {
+        isWanted = false
         camera.close()
         if state == .ready { state = .starting }
     }
 
     func takePhoto() async throws -> CapturedPhoto {
         guard state == .ready else { throw CaptureFailure.notReady }
+        // When the shutter was pressed, not when the picture had been processed.
+        let takenAt = Date.now
         let data = try await camera.capture(Self.settingsForAPhoto())
         focusContinuously()
-        return CapturedPhoto(data: data, takenAt: .now)
+        return CapturedPhoto(data: data, takenAt: takenAt)
     }
 
     /// What every photo is asked for with. The flash is never part of it: it startles the bird and reaches nothing at that
