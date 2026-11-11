@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import OSLog
 import Pack
 
 /// A bird a seen sighting can be named (issue #186): one a field-guide download on the phone describes, or any other bird
@@ -23,8 +24,9 @@ nonisolated struct NameableBird: Identifiable, Hashable, Sendable {
 /// (`NameSearch`). A pure value, built once from the packs on the phone and the label list; the names are split once, since
 /// there are some ten thousand and the search runs on every keystroke.
 ///
-/// The seam for what orders the results: #189's suggestions and ranking, and the lens's dictation (#194), replace `search`'s
-/// alphabetical order here, not in the sheet.
+/// What orders the results is here and not in the sheet (issue #189): `search(_:in:)` takes what the run has heard and what
+/// the geomodel expects at the place, suggests from them before anything is typed, and ranks a typed search by them. The
+/// lens's dictation (#194) ranks its matches by the same `Context.Standing`.
 nonisolated struct NameableBirds: Sendable {
     /// A bird a field-guide download describes, as its pack names it.
     struct FieldGuideBird: Hashable, Sendable {
@@ -32,21 +34,74 @@ nonisolated struct NameableBirds: Sendable {
         let commonName: String
     }
 
+    /// What is known about the bird in a photo besides its name (issue #189): what the run has heard, and what the geomodel
+    /// expects where and when the photo was taken.
+    struct Context: Equatable, Sendable {
+        /// The scientific names of the birds heard this run, in the run's order: calling now first.
+        var heard: [String] = []
+        /// The geomodel's occurrence at the photo's place and week, by scientific name; nil without a place.
+        var occurrence: [String: Float]? = nil
+
+        /// No run and no place: the names alone.
+        static let none = Context()
+
+        /// Where a bird stands before its name is looked at: heard this run, in the run's order; else likely here, the
+        /// likeliest first; else neither. The smaller, the sooner it is offered.
+        struct Standing: Comparable, Sendable {
+            /// 0 heard, 1 likely, 2 neither.
+            fileprivate let tier: Int
+            /// Within the tier: the position in the run's order, or the occurrence, negated.
+            fileprivate let order: Float
+
+            /// Heard this run or likely here.
+            var isSuggested: Bool { tier < 2 }
+
+            static func < (lhs: Standing, rhs: Standing) -> Bool {
+                lhs.tier != rhs.tier ? lhs.tier < rhs.tier : lhs.order < rhs.order
+            }
+        }
+
+        /// The standing of the bird with this scientific name. Birds that stand the same are told apart by whoever asks:
+        /// the search, by name.
+        func standing(ofScientificName name: String) -> Standing {
+            if let position = heard.firstIndex(of: name) { return Standing(tier: 0, order: Float(position)) }
+            if let occurrence = occurrence?[name], occurrence >= NameableBirds.likelyFloor { return Standing(tier: 1, order: -occurrence) }
+            return Standing(tier: 2, order: 0)
+        }
+
+        /// Nothing heard and no place: every bird stands the same.
+        var isEmpty: Bool { heard.isEmpty && occurrence == nil }
+    }
+
     /// What a search found.
     struct Results: Equatable, Sendable {
-        /// "In your field guides": by common name.
+        /// "Heard this run", before anything is typed: the run's birds, in the run's order.
+        var heard: [NameableBird] = []
+        /// "Likely here now", before anything is typed: the field guides' birds the geomodel finds most likely at the
+        /// photo's place and week, the likeliest first, without those heard.
+        var likely: [NameableBird] = []
+        /// "In your field guides": the matches among them, those heard this run or likely here first and the rest by common
+        /// name; with nothing typed and no likely birds to suggest, all of them by name.
         var fieldGuide: [NameableBird] = []
-        /// "All birds": by common name, the first of them when there are many.
+        /// "All birds": the other matches in the same order, the first of them when there are many.
         var others: [NameableBird] = []
         /// How many more other birds matched than `others` lists.
         var moreOthers = 0
 
-        /// Nothing matched.
-        var isEmpty: Bool { fieldGuide.isEmpty && others.isEmpty }
+        /// Every bird listed, in the order the lists show them: for a caller with no sections to draw, as the lens (#194).
+        var birds: [NameableBird] { heard + likely + fieldGuide + others }
+
+        /// Nothing to list.
+        var isEmpty: Bool { heard.isEmpty && likely.isEmpty && fieldGuide.isEmpty && others.isEmpty }
     }
 
     /// How many other birds a search lists before it counts the rest: a broad search matches hundreds.
     static let otherLimit = 40
+    /// The occurrence from which a bird is likely at a place and week: the floor under which identification doesn't admit a
+    /// bird it hears there (`IdentificationConfiguration.occurrenceThreshold`, DECISIONS.md "Audio and identification").
+    static let likelyFloor = IdentificationConfiguration().occurrenceThreshold
+    /// How many likely birds are suggested before anything is typed.
+    static let likelyLimit = 12
 
     private struct Entry: Sendable {
         let bird: NameableBird
@@ -89,22 +144,63 @@ nonisolated struct NameableBirds: Sendable {
         lhs.bird.commonName.localizedCaseInsensitiveCompare(rhs.bird.commonName) == .orderedAscending
     }
 
-    /// The birds whose names `query` matches. With nothing typed, the field guides' birds and no others: the rest are found
-    /// by typing.
-    func search(_ query: String, otherLimit: Int = NameableBirds.otherLimit) -> Results {
+    /// What "Name this bird" lists for what was typed, given what the run and the place know (issue #189). The one ranking:
+    /// the sheet draws it, and the lens's dictation (#194) orders its matches by the same `Context.Standing`.
+    ///
+    /// With nothing typed, suggestions: the birds heard this run, in the run's order, then the field guides' birds most
+    /// likely at the place and week. Where no bird is likely (no place, or a place none of the field guides' birds are
+    /// expected at) the field guides' birds are listed by name instead. Other birds are found by typing.
+    ///
+    /// With something typed, the birds whose names match, the field guides' first. The word-start rule has no better and
+    /// worse matches, so within each list a bird heard this run comes first, then one likely here, then the rest by name.
+    func search(_ query: String, in context: Context = .none, otherLimit: Int = NameableBirds.otherLimit, likelyLimit: Int = NameableBirds.likelyLimit) -> Results {
         let query = NameSearch.Query(query)
-        guard !query.isEmpty else { return Results(fieldGuide: fieldGuide.map(\.bird)) }
-        let matching = others.filter { query.matches($0.words) }
+        guard !query.isEmpty else {
+            var listed = Set<String>()
+            let heard = context.heard.compactMap { byScientificName[$0] }.filter { listed.insert($0.scientificName).inserted }
+            let likely = Self.ordered(fieldGuide.filter { !listed.contains($0.bird.scientificName) }, in: context) { $0.isSuggested }.prefix(likelyLimit)
+            let byName = likely.isEmpty ? fieldGuide.map(\.bird).filter { !listed.contains($0.scientificName) } : []
+            return Results(heard: heard, likely: Array(likely), fieldGuide: byName)
+        }
+        let matching = Self.ordered(others.filter { query.matches($0.words) }, in: context)
         return Results(
-            fieldGuide: fieldGuide.filter { query.matches($0.words) }.map(\.bird),
-            others: matching.prefix(otherLimit).map(\.bird),
+            fieldGuide: Self.ordered(fieldGuide.filter { query.matches($0.words) }, in: context),
+            others: Array(matching.prefix(otherLimit)),
             moreOthers: max(matching.count - otherLimit, 0)
         )
+    }
+
+    /// `entries`, which are by name, by their standing in `context` and then by name; only those whose standing `keep` passes.
+    private static func ordered(_ entries: [Entry], in context: Context, keep: (Context.Standing) -> Bool = { _ in true }) -> [NameableBird] {
+        // Nothing heard and no place: every bird stands the same, and the order by name is the answer.
+        guard !context.isEmpty else { return keep(context.standing(ofScientificName: "")) ? entries.map(\.bird) : [] }
+        return entries.enumerated()
+            .compactMap { position, entry -> (standing: Context.Standing, position: Int, bird: NameableBird)? in
+                let standing = context.standing(ofScientificName: entry.bird.scientificName)
+                return keep(standing) ? (standing, position, entry.bird) : nil
+            }
+            .sorted { $0.standing != $1.standing ? $0.standing < $1.standing : $0.position < $1.position }
+            .map(\.bird)
     }
 
     /// The bird with this scientific name, if it can be named.
     func bird(scientificName: String) -> NameableBird? {
         byScientificName[scientificName]
+    }
+}
+
+nonisolated extension NameableBirds.Context {
+    /// What the run heard, and what the geomodel expects at the photo's place in the week it was taken. With no place the
+    /// geomodel isn't asked and no bird is likely; a geomodel that can't be read leaves the same. Reading it is an inference,
+    /// so this is called off the main actor.
+    init(heard: [String], place: Coordinate?, takenAt: Date, occurrenceModel: any SpeciesOccurrenceModel, calendar: Calendar = .current) {
+        self.init(heard: heard)
+        guard let place else { return }
+        do {
+            occurrence = try occurrenceModel.occurrence(in: GeoContext(latitude: place.latitude, longitude: place.longitude, date: takenAt, calendar: calendar))
+        } catch {
+            Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "naming").error("no likely birds: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 

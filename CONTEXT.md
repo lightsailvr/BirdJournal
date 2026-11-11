@@ -68,6 +68,10 @@ _Avoid_: manual sighting, unverified sighting, self-reported
 A photo of a bird with its time, place and source (the device that took it), saved the moment it is taken and not yet a sighting (#188). A photo chosen from the library is one too, from the moment it is chosen, with the date and place the picture itself carries and the current ones for what it lacks (#192). Photo first, name second: it waits, without ever expiring, until the birder names the bird, which is an add and writes a sighting with the capture's own time and place and its photo as the original photo, or until the birder deletes it. Until it is named it is no part of the collection: it sews no patch, counts toward no set and is published as no find. Stored apart from the sightings (`Capture`). In copy, an unnamed sighting.
 _Avoid_: draft, pending sighting, unverified sighting; "capture" in anything a birder reads, except the button "Capture a sighting"
 
+**Likely here**:
+What a bird is at a place and week when the geomodel's occurrence for it there is at or above the floor identification admits a bird at. "Name this bird" lists the likeliest of the field guides' birds under "Likely here now", after "Heard this run" (the run's candidates), and orders a search by the same two (#189). Not rarity, which is a label saved on a sighting.
+_Avoid_: probable, expected, common here (Common is a rarity label), suggestion (in copy)
+
 **Original photo**:
 The unaltered picture kept with a sighting: the glasses' photo from the add, or one of the birder's own, which is the photo a seen bird was named from (taken with the capture camera on the phone, #186, or chosen from the library there, #192) or one attached from the library. A photo the capture camera takes is also copied to the birder's Photos library; that copy is theirs and no part of the album. Evidence, never art.
 _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fallback for it)

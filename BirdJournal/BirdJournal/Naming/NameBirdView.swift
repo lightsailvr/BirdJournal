@@ -9,16 +9,21 @@ import SwiftUI
 /// pressing the pinned "Add and sew patch" (or "Add sighting") writes the sighting, Seen, with the photo as its original
 /// photo and the photo's own time and place, and closes; the phone then shows what any add does.
 ///
+/// Before anything is typed the page suggests (issue #189): "Heard this run", the run's birds with those calling first,
+/// when the photo is one of the run under way or under review; then "Likely here now", the field guides' birds the geomodel
+/// finds most likely where the photo was taken, in the week it was taken. Typing replaces both with the search, and clearing
+/// the field brings them back. `NameableBirds.search(_:in:)` decides all of it; this view draws what it returns.
+///
 /// The photo was saved at the shutter, so nothing here can lose it: "Name it later", a swipe down or the app being killed
 /// all leave it an unnamed sighting, to be named from the run, its review or the Collection. Only "Delete photo", once
 /// confirmed, removes it. The same sheet names a photo just taken and one that has waited for weeks, which is why where and
-/// when come from the unnamed sighting and not from a run. #189 fills the page before anything is typed; #190 opens this
-/// sheet again to change a sighting's bird.
+/// when come from the unnamed sighting and not from a run. #190 opens this sheet again to change a sighting's bird.
 struct NameBirdView: View {
     @Environment(ListeningCoordinator.self) private var run
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(PlaceNames.self) private var places
+    @Environment(\.occurrenceModel) private var occurrenceModel
     /// The photo being named, with when and where it was taken.
     let unnamed: UnnamedSighting
     /// For a photo just chosen from the library (issue #192): whether the date and place above are the photo's own.
@@ -28,6 +33,8 @@ struct NameBirdView: View {
     @State private var query = ""
     /// Nil while the label list is read.
     @State private var names: NameableBirds?
+    /// What the photo's run had heard when the sheet opened, and what the geomodel expects at the photo's place in its week.
+    @State private var context = NameableBirds.Context.none
     @State private var chosen: NameableBird?
     @State private var isAdding = false
     @State private var failed = false
@@ -48,7 +55,7 @@ struct NameBirdView: View {
     }
 
     var body: some View {
-        let results = names?.search(query)
+        let results = names?.search(query, in: context)
         NavigationStack {
             PaperPage {
                 VStack(alignment: .leading, spacing: 0) {
@@ -62,7 +69,7 @@ struct NameBirdView: View {
                     searchField
                         .padding(.top, 16)
                     if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                        // Before anything is typed only the field guides' birds are listed: the rest are found by name.
+                        // Before anything is typed the page suggests, from the run and the field guides: the rest are found by name.
                         hint(NameBirdText.searchHint)
                             .padding(.top, 8)
                     }
@@ -73,6 +80,8 @@ struct NameBirdView: View {
                                     .padding(.top, 12)
                             }
                         } else {
+                            section(NameBirdText.heardTitle, birds: results.heard)
+                            section(NameBirdText.likelyTitle, birds: results.likely)
                             section("In your field guides", birds: results.fieldGuide)
                             section("All birds", birds: results.others)
                             if let more = NameBirdText.more(results.moreOthers) {
@@ -115,12 +124,16 @@ struct NameBirdView: View {
             .scrollEdgeEffectStyle(.hard, for: .bottom)
             .safeAreaBar(edge: .bottom) { addBar }
         }
+        // The names and the suggestions arrive together, so the page opens on its suggestions and not on a list they replace.
         .task {
             guard names == nil else { return }
-            let fieldGuide = library.fieldGuideBirds
-            // Without the label list the field guides' birds can still be named.
-            names = await Task.detached(priority: .userInitiated) {
-                (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+            // What the run has heard is read once, as the sheet opens: the list holds still while a bird is chosen from it.
+            let heard = run.heardScientificNames(for: unnamed)
+            let fieldGuide = library.fieldGuideBirds, place = unnamed.location, takenAt = unnamed.takenAt, model = occurrenceModel
+            (names, context) = await Task.detached(priority: .userInitiated) {
+                // Without the label list the field guides' birds can still be named.
+                let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                return (names, NameableBirds.Context(heard: heard, place: place, takenAt: takenAt, occurrenceModel: model))
             }.value
         }
         .task {
@@ -132,10 +145,12 @@ struct NameBirdView: View {
             if let text = UserDefaults.standard.string(forKey: "autoQuery") { query = text }
         }
         #endif
-        // A choice the search no longer shows would be added unseen.
-        .onChange(of: query) {
-            if let chosen, let results = names?.search(query), !(results.fieldGuide + results.others).contains(chosen) { self.chosen = nil }
-        }
+        // A choice the page no longer shows would be added unseen.
+        .onChange(of: query) { dropAChoiceOutOfSight() }
+    }
+
+    private func dropAChoiceOutOfSight() {
+        if let chosen, let results = names?.search(query, in: context), !results.birds.contains(chosen) { self.chosen = nil }
     }
 
     /// The search, under the photo and on the page: the bar keeps the sheet's title and its Cancel while a name is typed,
