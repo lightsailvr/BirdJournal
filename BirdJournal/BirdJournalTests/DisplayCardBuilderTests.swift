@@ -19,15 +19,34 @@ struct DisplayCardBuilderTests {
         return order
     }()
 
-    nonisolated static let pages: [LensPage] = [.list, .species(index: 0), .species(index: 4), .details(index: 0), .details(index: 4)]
+    nonisolated static let pages: [LensPage] = [
+        .list, .species(index: 0), .species(index: 4), .details(index: 0), .details(index: 4),
+        .captureViewfinder, .captureSaving, .captureSaved, .problem(.photoNotTaken),
+    ]
 
     @Test("every page builds one root FlexBox, saved or not, with the card each add earned", arguments: pages, [Set<Int>(), [0, 4]])
     func oneRoot(page: LensPage, saved: Set<Int>) {
         let earned: [Int: LensEarnedPatch] = saved.isEmpty ? [:] : [0: .newPatch, 4: .seenAgain(count: 3)]
         let card = LensCardRenderer.render(page, stack: Self.stack, order: Self.order, selection: 4, saved: saved, earned: earned, profile: FakeLensStack.profile(for:))
-        if case .list(let rows) = card.elements[2] { #expect(rows.map(\.isCalling) == [true, true, false, false, false]) }
+        if page == .list {
+            #expect(card.elements[2] == .capture(label: "Capture a sighting", isSelected: false))
+            guard case .list(let rows) = card.elements[3] else { Issue.record("no rows on the list"); return }
+            #expect(rows.map(\.isCalling) == [true, true, false, false, false])
+        }
         let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: FakeLensStack.image(for:)) { _ in }
         _ = root
+    }
+
+    @Test("the list builds with the highlight on the capture row, with birds and without (issue #193)")
+    func captureRowHighlighted() {
+        for stack in [Self.stack, CandidateStack()] {
+            var order = SpeciesListOrder()
+            order.update(with: stack, at: FakeLensStack.quiet)
+            let card = LensCardRenderer.render(.list, stack: stack, order: order, selection: 0, captureSelected: true, saved: [], profile: FakeLensStack.profile(for:))
+            #expect(card.elements[2] == .capture(label: "Capture a sighting", isSelected: true))
+            let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: FakeLensStack.image(for:)) { _ in }
+            _ = root
+        }
     }
 
     @Test("a photo the app cannot load still builds a card")

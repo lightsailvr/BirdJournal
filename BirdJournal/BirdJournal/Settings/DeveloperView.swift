@@ -93,29 +93,51 @@ struct DeveloperView: View {
 /// stack is fed again once the sequence is done, so the two newest species are calling now for the next few
 /// seconds (issue #42) and a screenshot taken then shows the marked rows. `-autoMockLensFriend YES` then hands the
 /// push center a friend's notable find, which the lens shows as a friend banner (issue #67).
+///
+/// `-autoMockLensCamera YES` gives this lens, which has no run and so no camera, a stand-in for one (issue #193): its
+/// viewfinders show a drawn frame, and a tap on the capture viewfinder writes that frame as an unnamed sighting from the
+/// glasses, so the lens goes on to "Photo saved" and the Collection lists it under "To name". `wait` in the inputs is a
+/// second with no input, to step past the viewfinder's echo window ("navUp select wait select"),
+/// `-autoMockLensSpecies <n>` hears that many fake species instead of three (0: the empty list; 6: all of them, a second page), and
+/// `-autoMockLensPhotoSeconds <s>` holds the stand-in's photo that long, with the lens on "Saving the photo…".
 private struct AutoMockLens: ViewModifier {
     @Environment(GlassesConnection.self) private var connection
     @Environment(GlassesLensSession.self) private var lens
     @Environment(PushCenter.self) private var pushes
+    @Environment(ListeningCoordinator.self) private var run
     @Binding var path: [DeveloperView.Screen]
 
     func body(content: Content) -> some View {
         content.task {
-            guard UserDefaults.standard.bool(forKey: "autoMockLens") else { return }
+            let defaults = UserDefaults.standard
+            guard defaults.bool(forKey: "autoMockLens") else { return }
             connection.pairMockGlasses()
             path = [.lens]
-            await lens.start()
-            lens.update(with: FakeLensStack.stack(count: 3), at: FakeLensStack.time(count: 3))
-            let sequence = UserDefaults.standard.string(forKey: "autoMockLensInputs") ?? "navLeft navLeft"
-            let inputs = sequence.split(whereSeparator: \.isWhitespace).compactMap { name in
-                GlassesConnection.MockInput.allCases.first { String(describing: $0) == name }
+            if defaults.bool(forKey: "autoMockLensCamera") {
+                let jpeg = DebugSeeds.frameJPEG()
+                lens.viewfinderFrame = { CameraFrame(jpegData: { jpeg }) }
+                let hold = defaults.double(forKey: "autoMockLensPhotoSeconds")
+                lens.onCapture = { [lens, run] id in
+                    let photo = CapturedPhoto(data: jpeg, takenAt: .now)
+                    Task {
+                        try? await Task.sleep(for: .seconds(hold))
+                        if run.capture(photo, at: nil, source: .glasses) != nil { lens.captureSaved(id) } else { lens.captureFailed(id) }
+                    }
+                }
             }
-            for input in inputs {
+            await lens.start()
+            let species = defaults.object(forKey: "autoMockLensSpecies") == nil ? 3 : min(defaults.integer(forKey: "autoMockLensSpecies"), FakeLensStack.species.count)
+            lens.update(with: FakeLensStack.stack(count: species), at: FakeLensStack.time(count: species))
+            let sequence = defaults.string(forKey: "autoMockLensInputs") ?? "navLeft navLeft"
+            for name in sequence.split(whereSeparator: \.isWhitespace) {
                 try? await Task.sleep(for: .seconds(1))
-                connection.injectMockInput(input)
+                // "wait" is a second with no input; a name that is no input is skipped, with its second.
+                if let input = GlassesConnection.MockInput.allCases.first(where: { String(describing: $0) == name }) {
+                    connection.injectMockInput(input)
+                }
             }
             try? await Task.sleep(for: .seconds(1))
-            lens.update(with: FakeLensStack.stack(count: 3), at: FakeLensStack.time(count: 3))
+            lens.update(with: FakeLensStack.stack(count: species), at: FakeLensStack.time(count: species))
             // `-autoMockLensFriend YES`: a friend's notable find arrives as a push would (issue #67).
             if UserDefaults.standard.bool(forKey: "autoMockLensFriend") {
                 await pushes.received(FriendBanners.samplePush())

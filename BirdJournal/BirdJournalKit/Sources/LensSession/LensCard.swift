@@ -123,7 +123,10 @@ public enum LensElement: Sendable, Equatable {
     case button(LensCardButton)
     /// The saved line above "Add another" once the species is added, with a check.
     case saved(String)
-    /// The rows of the species list's current page, one selected.
+    /// The "Capture a sighting" row above the birds on every page of the species list (issue #193), highlighted like a
+    /// bird's row when the highlight is on it.
+    case capture(label: String, isSelected: Bool)
+    /// The rows of the species list's current page, one selected unless the capture row is.
     case list([LensListRow])
     /// A species' reference clips on its sounds page, the next one marked.
     case sounds([LensSoundRow])
@@ -163,6 +166,7 @@ extension LensElement {
         switch self {
         case .status(let text), .heading(let text), .body(let text), .passage(let text), .meta(let text), .saved(let text): text.words
         case .title(let name, let detail): name.words + detail.words
+        case .capture(let label, _): label.words
         case .button(let button): button.label.words
         case .list(let rows): rows.reduce(0) { $0 + $1.words }
         case .sounds(let rows): rows.reduce(0) { $0 + $1.words }

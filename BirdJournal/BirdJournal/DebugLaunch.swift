@@ -102,6 +102,9 @@ import UIKit
 ///   goes on to "Name this bird" with a stand-in photo taken there; `-autoLocation` says where the phone is. With
 ///   `-autoScreen listen`, `-autoIdleSeen "Calypte anna"` names a stand-in photo taken with no run as that bird, past its
 ///   reveal: the acknowledgment on the idle tab.
+/// - `-autoLensCapture <n>` on a `glasses-run` takes that many photos from the lens's "Capture a sighting" (issue #193), by Mock
+///   Device Kit's inputs, before `-autoLensAdd` adds its birds; `-autoGlassesCamera YES` gives that run's stand-in stream a
+///   drawn camera frame, without which the lens has no picture to take.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -258,6 +261,9 @@ struct DebugLaunch: ViewModifier {
                 // This launch's choice, not one for the simulator's next UI test to find remembered.
                 defaults.removeObject(forKey: ListeningCoordinator.sourceKey)
                 let lens = MockLensAdds(lens: run.glasses.lens, connection: connection, sightings: run.sightings)
+                for _ in 0..<defaults.integer(forKey: "autoLensCapture") {
+                    await lens.capture()
+                }
                 for name in (defaults.string(forKey: "autoLensAdd") ?? "").split(separator: ",") {
                     await lens.add(String(name))
                 }
@@ -514,15 +520,20 @@ final class PacedAudioSource: AudioSource {
     }
 }
 
-/// A glasses run's stream for the simulator, where the mock injects no audio: a file at a microphone's pace, and no camera.
+/// A glasses run's stream for the simulator, where the mock injects no audio: a file at a microphone's pace, and no camera,
+/// or with `hasCamera` (`-autoGlassesCamera YES`, issue #193) a drawn frame standing in for the stream's, so the lens's
+/// viewfinders show a picture and a photo taken there is that frame.
 final class PacedGlassesAudioSource: FrameKeepingAudioSource {
     private let base: PacedAudioSource
+    private let frame: CameraFrame?
 
-    init(url: URL) {
+    init(url: URL, hasCamera: Bool = false) {
         base = PacedAudioSource(WAVFileAudioSource(url: url))
+        let jpeg = hasCamera ? DebugSeeds.frameJPEG() : nil
+        frame = jpeg.map { jpeg in CameraFrame(jpegData: { jpeg }) }
     }
 
-    var latestFrame: CameraFrame? { nil }
+    var latestFrame: CameraFrame? { frame }
     func start() async throws -> AsyncStream<AudioChunk> { try await base.start() }
     func stop() async { await base.stop() }
     func capturePhoto() async -> Data? { nil }
@@ -567,6 +578,28 @@ struct MockLensAdds {
         _ = await wait(seconds: 2) { lens.page == .details(index: index) }
         connection.injectMockInput(.back)
         _ = await wait(seconds: 2) { lens.page == .list }
+    }
+
+    /// Takes a photo from the lens as a wearer would (issue #193): up to "Capture a sighting", a tap, a moment for the
+    /// viewfinder's echo window, and a tap on the viewfinder; then back to the list, with the highlight on the first bird again.
+    func capture() async {
+        guard await wait(seconds: 120, until: { lens.inputsState == .active }) else { return }
+        for _ in 0...lens.stack.count where !lens.machine.isCaptureRowHighlighted {
+            let before = lens.inputRecords.count
+            connection.injectMockInput(.navUp)
+            _ = await wait(seconds: 1) { lens.inputRecords.count > before }
+        }
+        let taken = sightings.unnamed.count
+        connection.injectMockInput(.select)
+        guard await wait(seconds: 2, until: { lens.page == .captureViewfinder }) else { return }
+        try? await Task.sleep(for: .milliseconds(1200))
+        connection.injectMockInput(.select)
+        _ = await wait(seconds: 10) { sightings.unnamed.count > taken }
+        _ = await wait(seconds: 2) { lens.page == .captureSaved }
+        connection.injectMockInput(.select)
+        _ = await wait(seconds: 2) { lens.page == .list }
+        connection.injectMockInput(.navDown)
+        _ = await wait(seconds: 1) { !lens.machine.isCaptureRowHighlighted }
     }
 
     private func wait(seconds: Double, until condition: () -> Bool) async -> Bool {

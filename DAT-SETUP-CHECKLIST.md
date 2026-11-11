@@ -240,6 +240,28 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
      list Bird Journal; note what it says), and if it does, whether it covers or interrupts the app's lens pages. If the
      glasses mirror it, a friend's push may show twice on the lens (the system's copy and the banner): record it, and
      DECISIONS.md decides whether the banner stays.
+15. [ ] Capture a sighting from the lens (issue #193; the hardware walk is #195), from "Listen with the glasses":
+   - **The row.** Before any bird is heard the species list reads "No species yet", "Birds appear as they call." and a
+     highlighted "Capture a sighting" row. With birds on it the row is above the first bird and the highlight is on the
+     first bird; one swipe up moves it to the row, a swipe down or right moves it back. Record whether the row's
+     icon (the viewfinder's four corners) reads as one, and whether a full page (the row and five birds, with
+     "Page 1 of 2." on the hint line; six species heard) fits the lens without anything cut at the bottom. On the mock
+     it takes about 500 of the 600 pixels.
+   - **The viewfinder.** A tap on the highlighted row opens it on the listening stream's frames with the journal's crop
+     frame, "Capture a sighting" and "Tap: take the photo · swipe right: back". One tap on the row opens it and it
+     stays: nothing is taken by the same tap (the echo window, as for "Add to my list"). A swipe returns to the list and
+     nothing appears on the phone.
+   - **The photo.** A tap on the viewfinder shows "Saving the photo…", then "Photo saved" / "Name it on your phone.".
+     Note the time between the two (the in-stream photo crosses Bluetooth; `photo taken in N s` in the camera log). On
+     the phone the photo is under "Seen this run" as "Unnamed sighting · Your photo" while the run is on, in the run's
+     review after Stop, and under "To name" in the Collection. Name it there: its page says "Seen, photographed with
+     Ray-Ban Display", with the place of the walk and the time of the tap.
+   - **No photo.** If a tap lands while the camera is off (right after a clip, or with the stream down), the lens shows
+     "No photo taken" and nothing is on the phone. Record whether it happens when the viewfinder was showing a picture.
+   - **Interruptions.** Take the glasses off with the capture viewfinder open and put them back on: the viewfinder is
+     back and still waits for a tap. With the phone's Developer tools, send a friend's find while on the viewfinder: it
+     shows only once back on the list.
+   - Record the answers in DECISIONS.md, "Seen birds: capture a sighting from the lens".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.

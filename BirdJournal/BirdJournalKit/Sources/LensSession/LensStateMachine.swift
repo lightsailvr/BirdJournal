@@ -16,6 +16,15 @@ public enum LensPage: Sendable, Hashable {
     /// The camera's view after "Add to my list", to frame the bird: a tap takes the photo and adds it, any swipe
     /// adds it without one.
     case viewfinder(index: Int)
+    /// The camera's view after "Capture a sighting" on the list (issue #193), to frame a bird that was seen and not
+    /// heard: a tap takes the photo, any swipe (or Back) returns to the list with nothing saved.
+    case captureViewfinder
+    /// After the tap on the capture viewfinder, until the run says the photo is written: "Saving the photo…". Swipe right
+    /// (or Back) returns to the list, and the photo is saved all the same.
+    case captureSaving
+    /// The photo is on the phone as an unnamed sighting: "Photo saved. Name it on your phone." A tap or swipe right (or
+    /// Back) returns to the list.
+    case captureSaved
     /// A problem the run wants the wearer to know about, over whichever page they were on (issue #10). Swipe right,
     /// Back or a tap is the way back to that page.
     case problem(LensProblem)
@@ -26,8 +35,17 @@ public enum LensPage: Sendable, Hashable {
     /// The stack index the page is about, nil on the root, a problem page and a friend banner.
     public var index: Int? {
         switch self {
-        case .list, .problem, .friend: nil
+        case .list, .captureViewfinder, .captureSaving, .captureSaved, .problem, .friend: nil
         case .species(let index), .details(let index), .sounds(let index), .viewfinder(let index): index
+        }
+    }
+
+    /// Whether the page shows the camera's view, the add's or the capture's: the adapter keeps it fed with frames, and a
+    /// tap right behind the press that opened it is that press again.
+    public var isViewfinder: Bool {
+        switch self {
+        case .viewfinder, .captureViewfinder: true
+        case .list, .species, .details, .sounds, .captureSaving, .captureSaved, .problem, .friend: false
         }
     }
 }
@@ -38,6 +56,9 @@ public enum LensProblem: Sendable, Hashable {
     case noLocation
     /// The link to the glasses dropped and came back; the run kept listening meanwhile.
     case connectionLost
+    /// The tap on the capture viewfinder took no photo (issue #193): none came from the camera and it had shown no
+    /// picture to stand in, or the photo could not be written. Nothing is on the phone.
+    case photoNotTaken
 }
 
 /// A friend's notable find as the lens shows it (issue #67): "Maya heard a Black Phoebe · Pasadena".
@@ -131,6 +152,11 @@ public enum LensEarnedPatch: Sendable, Hashable {
 public enum LensEffect: Sendable, Equatable {
     /// "Add to my list" opened the viewfinder: show the camera's view until the wearer taps or swipes.
     case openViewfinder(Candidate)
+    /// "Capture a sighting" opened its viewfinder (issue #193): show the camera's view until the wearer taps or swipes.
+    case openCaptureViewfinder
+    /// A tap on the capture viewfinder: take a photo now and write it as an unnamed sighting, then tell the machine how
+    /// it went with `captureSaved(_:)` or `captureFailed(_:)`. The number tells one capture from the next.
+    case capturePhoto(Int)
     /// A tap on the viewfinder: take a photo now and write the Sighting with it.
     case takePhoto(Candidate)
     /// A swipe off the viewfinder: write the Sighting without a photo.
@@ -160,8 +186,17 @@ public enum LensEffect: Sendable, Equatable {
 /// reorders and new species append at the end, so an update never moves the page the wearer is on. A reported problem covers the current page until swipe right, Back or a
 /// tap returns there (issue #10).
 ///
+/// "Capture a sighting" (issue #193) is the row above the first bird on every page of the list, for a bird that was
+/// seen and not heard. The highlight reaches it by one swipe up from the first bird, and leaves it by a swipe down or
+/// right, back onto the first bird; on an empty list it is the highlighted row. A tap or swipe left on it opens the
+/// capture viewfinder: a tap there takes the photo (`LensEffect.capturePhoto`), and any swipe (or Back) returns to the
+/// list with nothing saved. After the tap the lens waits on the saving page until the adapter says the photo is
+/// written (`captureSaved(_:)`: the saved page, "Photo saved. Name it on your phone.") or that there is none
+/// (`captureFailed(_:)`: a problem page). On the saved page a tap, swipe right or Back returns to the list, the
+/// highlight still on the row; the wait can be left by swipe right or Back, and the photo is saved all the same.
+///
 /// A friend's notable find (issue #67) is a banner page like the problem page, shown only over the species list or a
-/// photo page. Anywhere else (the viewfinder, a details page, a sounds page, a problem page) it is held and shown
+/// photo page. Anywhere else (a viewfinder, a details page, a sounds page, a capture's pages, a problem page) it is held and shown
 /// when the wearer lands back on the list or a photo page. One at a time: a newer find replaces the banner showing
 /// or the one held, and a banner held for more than `bannerHoldLimit` seconds after it arrived is dropped
 /// (`expireBanner(at:)`). A tap or swipe right (or Back) dismisses it; the other swipes do nothing there.
@@ -181,6 +216,12 @@ public struct LensStateMachine: Sendable, Equatable {
     public private(set) var order = SpeciesListOrder()
     /// The species the highlight is pinned to by a swipe, nil while it follows row one.
     public private(set) var pinnedSpecies: Species?
+    /// Whether a swipe up from the first bird put the highlight on the "Capture a sighting" row.
+    private var captureRowSelected = false
+    /// Photos taken from the capture viewfinder so far, for their numbers.
+    private var captures = 0
+    /// The capture whose photo the "Saving the photo…" page is waiting for, nil when none is.
+    private var awaitedCapture: Int?
     /// Stack indices with a sighting saved this session; their pages show the saved mark. A later tap on a saved
     /// details page ("Add another") saves another sighting; one press that hardware delivers twice, as a click and a
     /// select, is deduplicated by the adapter, which has a clock.
@@ -219,6 +260,12 @@ public struct LensStateMachine: Sendable, Equatable {
         return order.indices.first ?? 0
     }
 
+    /// Whether the highlight is on the "Capture a sighting" row above the birds (issue #193) rather than on `selection`:
+    /// after a swipe up from the first bird, and on an empty list, where it is the only row.
+    public var isCaptureRowHighlighted: Bool {
+        captureRowSelected || stack.isEmpty
+    }
+
     // MARK: - Stack
 
     /// Takes the latest stack at session time `time` (seconds since the run started, the clock `Candidate` times
@@ -237,6 +284,8 @@ public struct LensStateMachine: Sendable, Equatable {
             page = .list
             coveredPage = .list
             pinnedSpecies = nil
+            captureRowSelected = false
+            awaitedCapture = nil
             savedIndices = []
             earnedPatches = [:]
             playing = nil
@@ -289,13 +338,23 @@ public struct LensStateMachine: Sendable, Equatable {
     private mutating func navigate(_ gesture: LensGesture) -> LensEffect? {
         switch (page, gesture) {
         case (.list, .swipeDown):
-            pin(rowOffset: 1)
+            if captureRowSelected {
+                // Back onto the first bird, as before any swipe: the highlight follows row one.
+                captureRowSelected = false
+            } else {
+                pin(rowOffset: 1)
+            }
         case (.list, .swipeUp):
-            pin(rowOffset: -1)
+            if !captureRowSelected { pin(rowOffset: -1) }
         case (.list, .tap), (.list, .swipeLeft):
-            if !stack.isEmpty { page = .species(index: selection) }
+            if isCaptureRowHighlighted {
+                page = .captureViewfinder
+                return .openCaptureViewfinder
+            }
+            page = .species(index: selection)
         case (.list, .swipeRight):
             pinnedSpecies = nil
+            captureRowSelected = false
         case (.list, .back):
             return .endSession
 
@@ -322,6 +381,20 @@ public struct LensStateMachine: Sendable, Equatable {
         case let (.viewfinder(index), _):
             return save(index, photo: false)
 
+        case (.captureViewfinder, .tap):
+            captures += 1
+            awaitedCapture = captures
+            page = .captureSaving
+            return .capturePhoto(captures)
+        case (.captureViewfinder, _):
+            page = .list
+        case (.captureSaving, .swipeRight), (.captureSaving, .back),
+             (.captureSaved, .swipeRight), (.captureSaved, .back), (.captureSaved, .tap):
+            page = .list
+        case (.captureSaving, .tap), (.captureSaving, .swipeLeft), (.captureSaving, .swipeUp), (.captureSaving, .swipeDown),
+             (.captureSaved, .swipeLeft), (.captureSaved, .swipeUp), (.captureSaved, .swipeDown):
+            break
+
         case (.problem, .swipeRight), (.problem, .back), (.problem, .tap):
             page = coveredPage
         case (.problem, .swipeLeft), (.problem, .swipeUp), (.problem, .swipeDown):
@@ -341,7 +414,9 @@ public struct LensStateMachine: Sendable, Equatable {
         switch (page, action) {
         case let (.details(index), .save):
             return openViewfinder(index)
-        case (.list, .save), (.species, .save), (.sounds, .save), (.viewfinder, .save), (.problem, .save), (.friend, .save):
+        case (.list, .save), (.species, .save), (.sounds, .save), (.viewfinder, .save), (.captureViewfinder, .save),
+             (.captureSaving, .save), (.captureSaved, .save),
+             (.problem, .save), (.friend, .save):
             return nil
         }
     }
@@ -398,7 +473,7 @@ public struct LensStateMachine: Sendable, Equatable {
             coveredPage = page
             page = .friend(banner)
             heldBanner = nil
-        case .details, .sounds, .viewfinder, .problem, .friend:
+        case .details, .sounds, .viewfinder, .captureViewfinder, .captureSaving, .captureSaved, .problem, .friend:
             break
         }
     }
@@ -412,6 +487,43 @@ public struct LensStateMachine: Sendable, Equatable {
         guard let index = stack.candidates.firstIndex(where: { $0.species == species }) else { return false }
         earnedPatches[index] = patch
         return true
+    }
+
+    // MARK: - Captures
+
+    /// The photo of capture `id` is written, as an unnamed sighting on the phone. The page waiting for it says so. Returns
+    /// whether a page changed: nothing does if the wearer has left the wait, or took another photo since.
+    ///
+    /// This is the moment the photo is safe, and where dictation of the bird's name starts (issue #194): in place of the
+    /// saved page, or after it.
+    @discardableResult
+    public mutating func captureSaved(_ id: Int) -> Bool {
+        guard awaitedCapture == id else { return false }
+        awaitedCapture = nil
+        return endWait(on: .captureSaved)
+    }
+
+    /// Capture `id` took no photo, or it could not be written: a problem page says so, over the list if the wearer was
+    /// waiting for it, else over the page they have moved on to.
+    @discardableResult
+    public mutating func captureFailed(_ id: Int) -> LensEffect? {
+        if awaitedCapture == id {
+            awaitedCapture = nil
+            endWait(on: .list)
+        }
+        return report(.photoNotTaken)
+    }
+
+    /// Replaces the "Saving the photo…" page, showing or under a problem page, with `next`. Returns whether the page the
+    /// wearer sees changed.
+    @discardableResult
+    private mutating func endWait(on next: LensPage) -> Bool {
+        if page == .captureSaving {
+            page = next
+            return true
+        }
+        if case .problem = page, coveredPage == .captureSaving { coveredPage = next }
+        return false
     }
 
     // MARK: - Reference clips
@@ -454,6 +566,12 @@ public struct LensStateMachine: Sendable, Equatable {
     private mutating func pin(rowOffset: Int) {
         guard let position = order.position(of: selection) else { return }
         let target = position + rowOffset
+        if target == -1 {
+            // Above the first bird is the capture row; the highlight there is on no bird.
+            captureRowSelected = true
+            pinnedSpecies = nil
+            return
+        }
         guard order.indices.indices.contains(target) else { return }
         pinnedSpecies = stack.candidates[order.indices[target]].species
     }
