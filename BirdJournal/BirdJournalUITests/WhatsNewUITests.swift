@@ -57,6 +57,30 @@ final class WhatsNewUITests: XCTestCase {
         XCTAssertTrue(waitToGo(title), "a pull down left it up")
     }
 
+    /// A release with five changes scrolls on a phone; here large text makes whichever release is newest scroll. The changes'
+    /// own scrolling used to keep every drag that began on them, so a pull down did nothing.
+    @MainActor
+    func testAPullDownPutsAScrollingCardAwayFromItsTopOnly() {
+        let app = launch(["-whatsNew", "show", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"])
+        let title = app.staticTexts["whats-new-title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 20), "no card; screen: \(app.debugDescription.prefix(3000))")
+        let changes = app.scrollViews["whats-new-scroll"]
+        XCTAssertTrue(changes.exists, "the changes fit at this text size, so nothing here is checked")
+        let middle = changes.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+
+        // Scrolled down, a pull down scrolls the changes back up and the card stays.
+        changes.swipeUp()
+        middle.press(forDuration: 0.05, thenDragTo: middle.withOffset(CGVector(dx: 0, dy: 150)))
+        XCTAssertFalse(waitToGo(title, timeout: 2), "a pull down on scrolled changes put the card away")
+
+        // Each pull brings them nearer their top, and the one that starts there puts the card away.
+        for _ in 0..<5 where title.exists {
+            middle.press(forDuration: 0.05, thenDragTo: middle.withOffset(CGVector(dx: 0, dy: 320)))
+            if waitToGo(title, timeout: 2) { break }
+        }
+        XCTAssertFalse(title.exists, "a pull down from the top of scrolling changes left the card up")
+    }
+
     @MainActor
     func testNothingComesUpUnasked() {
         let app = launch([])
