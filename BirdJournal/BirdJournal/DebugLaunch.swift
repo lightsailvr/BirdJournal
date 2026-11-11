@@ -98,6 +98,10 @@ import UIKit
 ///   on, past its reveal: rows under "Seen this run". `-autoUnnamed <n>` takes that many stand-in photos on the run and leaves
 ///   them unnamed (issue #188), before `-autoRunStops` ends it; `-seedUnnamed <n>` puts that many in the album at launch, taken
 ///   in Griffith Park on earlier days, as earlier runs would have left them: the Collection's "To name".
+/// - `-autoScreen idle-capture` opens the camera from the idle Listen tab, with no run (issue #191), and `idle-name-bird`
+///   goes on to "Name this bird" with a stand-in photo taken there; `-autoLocation` says where the phone is. With
+///   `-autoScreen listen`, `-autoIdleSeen "Calypte anna"` names a stand-in photo taken with no run as that bird, past its
+///   reveal: the acknowledgment on the idle tab.
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {
@@ -171,6 +175,21 @@ struct DebugLaunch: ViewModifier {
             switch screen {
             case "listen":
                 tab = .listen
+                if let seen = defaults.string(forKey: "autoIdleSeen") {
+                    let fieldGuide = library.fieldGuideBirds
+                    let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                    let place = defaults.string(forKey: "autoLocation").flatMap(DebugPlace.init(rawValue:))?.coordinate
+                    for bird in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }) {
+                        guard let unnamed = try? run.sightings.capture(photo: DebugSeeds.frameJPEG(), takenAt: .now, location: place, source: .phone, onThisRun: false) else { continue }
+                        run.name(unnamed, as: bird)
+                        run.finishCeremony()
+                        run.dismissReveal()
+                    }
+                }
+            case "idle-capture", "idle-name-bird":
+                tab = .listen
+                if screen == "idle-name-bird" { defaults.set(true, forKey: "autoNameBird") }
+                run.isCapturing = true
             case "listening", "review", "capture", "name-bird":
                 tab = .listen
                 run.source = .phone

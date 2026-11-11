@@ -129,6 +129,7 @@ private struct ReadyToListenView: View {
                         .disabled(run.state == .starting)
                         .padding(.top, 20)
                         .accessibilityHint(run.source == .glasses ? "Starts listening with the glasses microphones" : "Starts listening with the iPhone microphone")
+                        .id("start-listening")
 
                         // A bird that's seen and not heard needs no run (issue #191): the run's own button, camera and
                         // naming. Outlined and under Start, which stays the one filled action on the page.
@@ -161,6 +162,7 @@ private struct ReadyToListenView: View {
             .background(Color.paper)
             #if DEBUG
             .debugScroll(scroll, to: "local-set")
+            .debugScroll(scroll, to: "start-listening")
             #endif
             }
         }
