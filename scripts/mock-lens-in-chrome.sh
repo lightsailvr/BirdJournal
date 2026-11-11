@@ -8,6 +8,11 @@
 #   BIRDJOURNAL_SIMULATOR=BJ-82 scripts/mock-lens-in-chrome.sh                  # walk "navLeft navDown"
 #   BIRDJOURNAL_SIMULATOR=BJ-82 scripts/mock-lens-in-chrome.sh "navLeft select"  # another walk
 #   --friend     then a friend's notable find arrives as a push would: the lens's friend banner (issue #67)
+#   --camera     a drawn frame stands in for the camera, so the viewfinders show a picture and "Capture a sighting"
+#                saves its photo (issue #193). `wait` in the inputs is a second with no input, to pass the viewfinder's
+#                echo window: --camera "navUp select" is the capture viewfinder, "navUp select wait select" the
+#                "Photo saved" page.
+#   --species N  hear N fake species instead of three (0 to 6; 0 is the empty list, 6 has a second page)
 #   --port 9001  another port (default 9000, the port the maintainer's tab has open)
 #   --no-build   reuse the last build in build/DerivedData
 #   --stop       quit the app on that simulator, which frees the port
@@ -24,6 +29,8 @@ port=9000
 build=1
 stop=0
 friend=NO
+camera=NO
+species=3
 inputs="navLeft navDown"
 while (($#)); do
     case "$1" in
@@ -31,7 +38,9 @@ while (($#)); do
         --no-build) build=0 ;;
         --stop) stop=1 ;;
         --friend) friend=YES ;;
-        -*) echo "error: unknown option $1 (--port N, --no-build, --stop, --friend)" >&2; exit 2 ;;
+        --camera) camera=YES ;;
+        --species) species="${2:?--species needs a number}"; shift ;;
+        -*) echo "error: unknown option $1 (--port N, --no-build, --stop, --friend, --camera, --species N)" >&2; exit 2 ;;
         *) inputs="$1" ;;
     esac
     shift
@@ -79,7 +88,8 @@ fi
 echo "==> Installing and launching in mock-lens mode (inputs: $inputs, port $port)"
 xcrun simctl install "$udid" "$app_path"
 xcrun simctl launch --terminate-running-process "$udid" "$app_bundle_id" \
-    -autoMockLens YES -autoMockLensInputs "$inputs" -autoMockLensFriend "$friend" -mockPreviewPort "$port" >/dev/null
+    -autoMockLens YES -autoMockLensInputs "$inputs" -autoMockLensFriend "$friend" -autoMockLensCamera "$camera" \
+    -autoMockLensSpecies "$species" -mockPreviewPort "$port" >/dev/null
 
 for _ in $(seq 1 60); do
     if curl -fs -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then

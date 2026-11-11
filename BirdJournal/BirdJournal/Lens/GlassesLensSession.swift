@@ -39,6 +39,12 @@ import UIKit
 /// twice, as a click and a select (DECISIONS.md, "Lens UI"), so a tap landing on the viewfinder within `echoWindow`
 /// of its opening is that echo and is ignored rather than taking a photo of nothing in particular.
 ///
+/// "Capture a sighting", the row above the birds on the species list (issue #193), opens a viewfinder of its own for a
+/// bird that was seen and not heard: the same frames, the same echo window, and a tap there asks `onCapture` for the
+/// photo, which the run writes as an unnamed sighting for the phone to name. The lens waits on "Saving the photo…" until
+/// the run answers with `captureSaved(_:)` ("Photo saved. Name it on your phone.") or `captureFailed(_:)` (a problem
+/// page: nothing was saved). A swipe off that viewfinder saves nothing.
+///
 /// Opening the viewfinder and landing back on the species list tell `onStreamNeeded`, so the run can put a camera
 /// stream back that stopped or stalled (#46): the wearer is about to frame a bird, or is back to listening.
 ///
@@ -121,6 +127,10 @@ final class GlassesLensSession {
     /// Told when the viewfinder opens ("viewfinder") and when the wearer lands on the species list ("species list"),
     /// so the run can make sure the camera is streaming.
     @ObservationIgnored var onStreamNeeded: ((String) -> Void)?
+    /// Told to take the capture viewfinder's photo and write it as an unnamed sighting (issue #193), and then to say how
+    /// it went with `captureSaved(_:)` or `captureFailed(_:)` and the number it was given. Nil on a lens without a run,
+    /// which has no camera: its captures fail at once.
+    @ObservationIgnored var onCapture: ((Int) -> Void)?
     /// The page the last change landed on, so arriving on the list is told once.
     @ObservationIgnored private var landedPage: LensPage = .list
     /// The least time between two viewfinder sends.
@@ -175,7 +185,7 @@ final class GlassesLensSession {
         self.echoWindow = echoWindow
         self.viewfinderInterval = viewfinderInterval
         self.onEffect = onEffect
-        card = LensCardRenderer.render(.list, stack: CandidateStack(), order: SpeciesListOrder(), selection: 0, saved: [], profile: profile)
+        card = LensCardRenderer.render(.list, stack: CandidateStack(), order: SpeciesListOrder(), selection: 0, captureSelected: true, saved: [], profile: profile)
     }
 
     var page: LensPage { machine.page }
@@ -464,7 +474,7 @@ final class GlassesLensSession {
         if inputRecords.count > Self.maxRecords { inputRecords.removeLast(inputRecords.count - Self.maxRecords) }
         // Events that land while the run is ending (after Back on the root, say) must not move the pages.
         guard let gesture = record.gesture, phase == .running else { return }
-        if gesture == .tap, case .viewfinder = machine.page, let viewfinderOpenedAt, ContinuousClock.now - viewfinderOpenedAt < echoWindow {
+        if gesture == .tap, machine.page.isViewfinder, let viewfinderOpenedAt, ContinuousClock.now - viewfinderOpenedAt < echoWindow {
             return
         }
         // A held banner past its limit must not show on the page this gesture lands on, even if the timer is late.
@@ -488,6 +498,16 @@ final class GlassesLensSession {
         case .openViewfinder(let candidate):
             viewfinderOpenedAt = .now
             onEffect(.openViewfinder(candidate))
+        case .openCaptureViewfinder:
+            viewfinderOpenedAt = .now
+            onEffect(.openCaptureViewfinder)
+        case .capturePhoto(let id):
+            if let onCapture {
+                onCapture(id)
+            } else {
+                // No run behind the lens, so no camera: nothing was taken.
+                _ = machine.captureFailed(id)
+            }
         case .takePhoto(let candidate):
             savedSightings.append(candidate)
             onEffect(.takePhoto(candidate))
@@ -510,6 +530,19 @@ final class GlassesLensSession {
         if machine.pageUnderBanner == .list, landedPage != .list { onStreamNeeded?("species list") }
         landedPage = machine.pageUnderBanner
         scheduleBannerExpiry()
+    }
+
+    // MARK: - Captures
+
+    /// The photo of capture `id` is written, as an unnamed sighting on the phone (issue #193): the lens says so, if the
+    /// wearer is still waiting for it. Dictation of the bird's name (issue #194) starts from here.
+    func captureSaved(_ id: Int) {
+        if machine.captureSaved(id) { refreshCard() }
+    }
+
+    /// Capture `id` took no photo, or it could not be written: a problem page says nothing was saved.
+    func captureFailed(_ id: Int) {
+        perform(machine.captureFailed(id))
     }
 
     // MARK: - Friend banners
@@ -604,7 +637,7 @@ final class GlassesLensSession {
 
     /// Starts the frame pump when the viewfinder is the page on a running lens, and stops it otherwise.
     private func syncViewfinder() {
-        guard case .viewfinder = machine.page, phase == .running, display != nil else {
+        guard machine.page.isViewfinder, phase == .running, display != nil else {
             stopViewfinder()
             return
         }
@@ -649,7 +682,8 @@ final class GlassesLensSession {
     /// so a stack update on any page can change the card without changing the page.
     private func refreshCard() {
         let next = LensCardRenderer.render(
-            machine.page, stack: machine.stack, order: machine.order, selection: machine.selection, saved: machine.savedIndices,
+            machine.page, stack: machine.stack, order: machine.order, selection: machine.selection,
+            captureSelected: machine.isCaptureRowHighlighted, saved: machine.savedIndices,
             playing: machine.playing, nextSounds: machine.nextSounds, earned: machine.earnedPatches, profile: cardProfile(for:)
         )
         guard next != card else { return }

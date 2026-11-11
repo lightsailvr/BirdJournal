@@ -186,6 +186,8 @@ final class ListeningCoordinator {
         pendingCeremonies = defaults.stringArray(forKey: Self.pendingCeremoniesKey)?.compactMap(UUID.init(uuidString:)) ?? []
         self.archive = archive ?? defaults
         glasses.onPatchSewn = { [weak self] identifier in self?.pendingCeremonies.append(identifier) }
+        // A photo taken on the lens as the run ended is written a moment after: the review waiting to be seen lists it too.
+        glasses.onCaptured = { [weak self] _ in self?.keepEndedRun() }
         restoreEndedRun()
         followState()
     }
