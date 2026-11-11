@@ -12,6 +12,7 @@
 #                saves its photo (issue #193). `wait` in the inputs is a second with no input, to pass the viewfinder's
 #                echo window: --camera "navUp select" is the capture viewfinder, "navUp select wait select" the
 #                "Photo saved" page.
+#   --photo-seconds N  with --camera, hold the photo N seconds, so the lens stays on "Saving the photo…" that long
 #   --species N  hear N fake species instead of three (0 to 6; 0 is the empty list, 6 has a second page)
 #   --port 9001  another port (default 9000, the port the maintainer's tab has open)
 #   --no-build   reuse the last build in build/DerivedData
@@ -30,6 +31,7 @@ build=1
 stop=0
 friend=NO
 camera=NO
+photo_seconds=0
 species=3
 inputs="navLeft navDown"
 while (($#)); do
@@ -39,8 +41,9 @@ while (($#)); do
         --stop) stop=1 ;;
         --friend) friend=YES ;;
         --camera) camera=YES ;;
+        --photo-seconds) photo_seconds="${2:?--photo-seconds needs a number}"; shift ;;
         --species) species="${2:?--species needs a number}"; shift ;;
-        -*) echo "error: unknown option $1 (--port N, --no-build, --stop, --friend, --camera, --species N)" >&2; exit 2 ;;
+        -*) echo "error: unknown option $1 (--port N, --no-build, --stop, --friend, --camera, --photo-seconds N, --species N)" >&2; exit 2 ;;
         *) inputs="$1" ;;
     esac
     shift
@@ -89,7 +92,7 @@ echo "==> Installing and launching in mock-lens mode (inputs: $inputs, port $por
 xcrun simctl install "$udid" "$app_path"
 xcrun simctl launch --terminate-running-process "$udid" "$app_bundle_id" \
     -autoMockLens YES -autoMockLensInputs "$inputs" -autoMockLensFriend "$friend" -autoMockLensCamera "$camera" \
-    -autoMockLensSpecies "$species" -mockPreviewPort "$port" >/dev/null
+    -autoMockLensPhotoSeconds "$photo_seconds" -autoMockLensSpecies "$species" -mockPreviewPort "$port" >/dev/null
 
 for _ in $(seq 1 60); do
     if curl -fs -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then
