@@ -1,3 +1,4 @@
+import Album
 import Identification
 import LensSession
 import MWDATDisplay
@@ -21,7 +22,7 @@ struct DisplayCardBuilderTests {
 
     nonisolated static let pages: [LensPage] = [
         .list, .species(index: 0), .species(index: 4), .details(index: 0), .details(index: 4),
-        .captureViewfinder, .captureSaving, .captureSaved, .problem(.photoNotTaken),
+        .captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem(.photoNotTaken),
     ]
 
     @Test("every page builds one root FlexBox, saved or not, with the card each add earned", arguments: pages, [Set<Int>(), [0, 4]])
@@ -47,6 +48,46 @@ struct DisplayCardBuilderTests {
             let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: FakeLensStack.image(for:)) { _ in }
             _ = root
         }
+    }
+
+    @Test("the pages a photo is named on build one root each: listening with the photo and without, the birds, no bird, and added (issue #194)")
+    func namingPages() throws {
+        var listening = LensNaming(capture: 1, dictation: 1)
+        listening.heard = "black pho"
+        var listed = listening
+        listed.matches = [LensNameMatch(id: "Sayornis nigricans", commonName: "Black Phoebe", isNewPatch: true), LensNameMatch(id: "Sayornis saya", commonName: "Say's Phoebe", isNewPatch: false)]
+        listed.highlight = 1
+        var none = listening
+        none.heard = "flibber"
+        let named = LensNamedCapture(commonName: "Black Phoebe", place: "Los Angeles", earned: .newPatch)
+        let photo = try #require(DisplayCardBuilder.capturedPhotoImage(DebugSeeds.frameJPEG()))
+        for (page, naming) in [(LensPage.captureNaming, listening), (.captureMatches, listed), (.captureMatches, none), (.captureAdded, listening)] {
+            let card = LensCardRenderer.render(page, stack: Self.stack, order: Self.order, selection: 0, saved: [], naming: naming, named: named, profile: FakeLensStack.profile(for:))
+            #expect(card.screenfuls.count == 1)
+            for capturedPhoto in [photo, nil] {
+                let root: FlexBox = DisplayCardBuilder.flexBox(for: card, image: FakeLensStack.image(for:), capturedPhoto: capturedPhoto) { _ in }
+                _ = root
+            }
+        }
+    }
+
+    @Test("the photo on \"Say the bird's name\" is the journal's crop of the picture, no larger than its box, whatever the picture's shape; data that is no picture gives none")
+    func capturedPhoto() throws {
+        for size in [CGSize(width: 1080, height: 1440), CGSize(width: 360, height: 640), CGSize(width: 4032, height: 3024), CGSize(width: 64, height: 64)] {
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1
+            let jpeg = try #require(UIGraphicsImageRenderer(size: size, format: format).image { context in
+                UIColor.blue.setFill()
+                context.fill(CGRect(origin: .zero, size: size))
+            }.jpegData(compressionQuality: 0.9))
+            let image = try #require(DisplayCardBuilder.capturedPhotoImage(jpeg))
+            #expect(image.scale == 1)
+            #expect(image.size.width <= DisplayCardBuilder.capturedPhotoSize.width && image.size.height <= DisplayCardBuilder.capturedPhotoSize.height, "\(size) became \(image.size)")
+            #expect(image.size.width > 0 && image.size.height > 0)
+            let crop = FrameCrop.centerRect(in: size)
+            #expect(abs(image.size.width / image.size.height - crop.width / crop.height) < 0.05, "the crop's shape: \(image.size) for \(crop.size)")
+        }
+        #expect(DisplayCardBuilder.capturedPhotoImage(Data("not a picture".utf8)) == nil)
     }
 
     @Test("a photo the app cannot load still builds a card")

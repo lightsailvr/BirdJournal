@@ -141,12 +141,15 @@ final class GlassesDictation {
         }
 
         /// The app's limits. In a debug build `-dictationSilenceSeconds <s>` sets how long the glasses listen for a first
-        /// word, to hold "Say the bird's name" for a screenshot or cut a test's wait.
+        /// word and `-dictationPauseSeconds <s>` how long words wait for more, to hold "Say the bird's name" for a
+        /// screenshot or cut a test's wait.
         static var forApp: Limits {
             var limits = Limits()
             #if DEBUG
-            let seconds = UserDefaults.standard.double(forKey: "dictationSilenceSeconds")
-            if seconds > 0 { limits.silence = .seconds(seconds) }
+            let silence = UserDefaults.standard.double(forKey: "dictationSilenceSeconds")
+            if silence > 0 { limits.silence = .seconds(silence) }
+            let pause = UserDefaults.standard.double(forKey: "dictationPauseSeconds")
+            if pause > 0 { limits.pause = .seconds(pause) }
             #endif
             return limits
         }

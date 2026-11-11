@@ -115,6 +115,55 @@ struct SpokenNameTests {
         #expect(Self.said("eastern phoebe", in: .init(heard: ["Sayornis nigricans"])) == ["Eastern Phoebe"], "the other phoebes are not what was said")
     }
 
+    /// The field guide's two hummingbirds and a hawk among birds of the wider world whose names lie near them: what the
+    /// ten thousand names did to the first cut of this, seen on the mock lens.
+    static let world = NameableBirds(
+        fieldGuide: [
+            .init(scientificName: "Calypte anna", commonName: "Anna's Hummingbird"),
+            .init(scientificName: "Selasphorus sasin", commonName: "Allen's Hummingbird"),
+            .init(scientificName: "Accipiter cooperii", commonName: "Cooper's Hawk"),
+        ],
+        labels: [
+            label(0, "Calypte anna", "Anna's Hummingbird"),
+            label(1, "Selasphorus sasin", "Allen's Hummingbird"),
+            label(2, "Accipiter cooperii", "Cooper's Hawk"),
+            label(3, "Mellisuga helenae", "Bee Hummingbird"),
+            label(4, "Myrmelastes humaythae", "Humaita Antbird"),
+            label(5, "Rhodopis vesper", "Oasis Hummingbird"),
+            label(6, "Amazilis amazilia", "Amazilia Hummingbird"),
+        ]
+    )
+
+    @Test("a word of a name finds the birds that have that word before any bird whose whole name is only near it")
+    func aWordBeforeANearName() {
+        // "Bee Hummingbird" is two sounds from "hummingbird" and "Humaita Antbird" three: neither is nearer than the
+        // hummingbirds themselves, and the antbird is no hummingbird at all.
+        let found = Self.world.spoken("hummingbird", limit: 9).map(\.commonName)
+        #expect(found.prefix(5) == ["Allen's Hummingbird", "Anna's Hummingbird", "Amazilia Hummingbird", "Bee Hummingbird", "Oasis Hummingbird"])
+        #expect(found.count == 5 || found.last == "Humaita Antbird")
+    }
+
+    @Test("among names that are only near what was said, a bird heard this run, likely here or in the field guides comes before a bird of the wider world that is a sound nearer")
+    func nearNamesByWhereTheBirdStands() {
+        // "anas" is one sound from "oasis" and two from "allens".
+        #expect(Self.world.spoken("annas humming bird").map(\.commonName) == ["Anna's Hummingbird", "Allen's Hummingbird", "Oasis Hummingbird"])
+        #expect(Self.world.spoken("oasas hummingbird").map(\.commonName).first == "Oasis Hummingbird", "it sounds the same, which nothing near beats")
+        // Said badly, a sound from each of two birds: the field guide's.
+        #expect(Self.world.spoken("atas hummingbird").map(\.commonName).first == "Anna's Hummingbird")
+        let heard = NameableBirds.Context(heard: ["Rhodopis vesper"])
+        #expect(Self.world.spoken("atas hummingbird", in: heard).map(\.commonName).first == "Oasis Hummingbird", "heard this run")
+    }
+
+    @Test("a possessive without its s is the name as written: the bird that was named, before a bird heard this run that is only near", arguments: [
+        ("allen hummingbird", "Allen's Hummingbird", "Calypte anna"),
+        ("anna hummingbird", "Anna's Hummingbird", "Selasphorus sasin"),
+        ("cooper hawk", "Cooper's Hawk", "Calypte anna"),
+        ("coopers hawk", "Cooper's Hawk", "Calypte anna"),
+    ])
+    func possessives(_ said: String, _ bird: String, _ heard: String) {
+        #expect(Self.world.spoken(said, in: .init(heard: [heard])).first?.commonName == bird)
+    }
+
     @Test("nothing said, only filler, or no bird by that name finds nothing; a frog cannot be named", arguments: ["", "   ", "the", "um", "flibbertigibbet", "pacific chorus frog", "xy"])
     func nothing(_ said: String) {
         #expect(Self.said(said).isEmpty)

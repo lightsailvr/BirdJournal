@@ -194,19 +194,38 @@ nonisolated struct NameableBirds: Sendable {
     /// common name as it is said (`SpokenName`): the whole name or a run of its words, letter for letter, by ear, or a few
     /// sounds off. The words people say around a name ("it's a") are dropped.
     ///
-    /// The closest come first: the whole name before a part of one, and as written before by ear. Birds as close as each
-    /// other are in the order "Name this bird" lists a search in: one heard this run first, then one likely here, the
-    /// likeliest first (`Context.Standing`), then the field guides' birds before the others, and by name.
+    /// **What sounds the same comes first**: the whole name as written, the whole name by ear, a run of its words as
+    /// written, then by ear. Birds as close as each other are in the order "Name this bird" lists a search in: one heard
+    /// this run first, then one likely here, the likeliest first (`Context.Standing`), then the field guides' birds before
+    /// the others, and by name. So "hummingbird" is the hummingbirds heard and likely here, and the bird that was named
+    /// comes before a bird heard this run that is only near.
+    ///
+    /// **Then what is only near**, a few sounds off, the whole name before a part. Here where the bird stands counts
+    /// before how near it is: among ten thousand names some bird of the wider world is always a sound nearer a slip of
+    /// the tongue or the recogniser than the bird in front of the wearer ("annas" is nearer "Oasis" than "Allen's"). So a
+    /// bird heard this run or likely here comes first, then the field guides' birds, then the rest, and within each the
+    /// nearest first.
     func spoken(_ words: String, in context: Context = .none, limit: Int = 3) -> [NameableBird] {
         guard let said = SpokenName.said(words) else { return [] }
-        var found: [(closeness: SpokenName.Closeness, standing: Context.Standing, position: Int, bird: NameableBird)] = []
+        /// A match, and where its bird stands: heard this run or likely here (0), in a field guide (1), neither (2).
+        typealias Match = (closeness: SpokenName.Closeness, standing: Context.Standing, familiarity: Int, position: Int, bird: NameableBird)
+        var found: [Match] = []
         // Each list is by name and the field guides' is first: the position across both is the last of the tie-breakers.
         for (position, entry) in (fieldGuide + others).enumerated() {
             guard let closeness = entry.spoken.closeness(to: said) else { continue }
-            found.append((closeness, context.standing(ofScientificName: entry.bird.scientificName), position, entry.bird))
+            let standing = context.standing(ofScientificName: entry.bird.scientificName)
+            found.append((closeness, standing, standing.isSuggested ? 0 : entry.bird.isInFieldGuide ? 1 : 2, position, entry.bird))
         }
         found.sort { lhs, rhs in
-            if lhs.closeness != rhs.closeness { return lhs.closeness < rhs.closeness }
+            let (one, other) = (lhs.closeness, rhs.closeness)
+            if one.soundsTheSame != other.soundsTheSame { return one.soundsTheSame }
+            if one.soundsTheSame {
+                if one.rank != other.rank { return one.rank < other.rank }
+            } else {
+                if one.reach != other.reach { return one.reach == .name }
+                if lhs.familiarity != rhs.familiarity { return lhs.familiarity < rhs.familiarity }
+                if one.distance != other.distance { return one.distance < other.distance }
+            }
             if lhs.standing != rhs.standing { return lhs.standing < rhs.standing }
             return lhs.position < rhs.position
         }

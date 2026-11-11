@@ -104,8 +104,9 @@ import UIKit
 ///   (issue #194): `-autoLensSay "annas humming bird"` has the mock's glasses hear that, and the first bird offered is
 ///   chosen; without it the photo is named later. `-autoGlassesMicrophone denied` takes the glasses' microphone
 ///   permission away once the run is on, so the lens never asks and the run's page offers to turn dictation on.
-///   `-dictationSilenceSeconds <s>` is how long any lens listens for a first word (default 8), and
-///   `-dictationKeepsStream NO` takes the camera stream off while it does (`DictationSettings`).
+///   `-dictationSilenceSeconds <s>` is how long any lens listens for a first word (default 8),
+///   `-dictationPauseSeconds <s>` how long words wait for more before they are matched (default 3), and
+///   `-dictationKeepsStream NO` takes the camera stream off while it listens (`DictationSettings`).
 /// - `-developer YES`, `-autoMockLens YES` and `-autoPhoneListening` alone open the developer hub, whose own flags
 ///   drive the lens and the raw listening screens.
 struct DebugLaunch: ViewModifier {

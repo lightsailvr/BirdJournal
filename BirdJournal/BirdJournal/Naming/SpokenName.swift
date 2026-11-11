@@ -20,27 +20,28 @@ nonisolated enum SpokenName {
         }
     }
 
-    /// How close what was said is to a bird's name. The smaller, the closer.
-    struct Closeness: Comparable, Sendable {
-        /// What was matched, and how.
-        enum Kind: Int, Sendable {
-            /// The whole name, letter for letter.
+    /// How close what was said is to a bird's name.
+    struct Closeness: Equatable, Sendable {
+        /// What of the name was matched.
+        enum Reach: Int, Sendable {
+            /// The whole name.
             case name
-            /// The whole name by ear, or a few sounds off.
-            case nearName
-            /// A run of the name's words ("hummingbird", "night heron"), letter for letter.
+            /// A run of the name's words: "hummingbird", "night heron".
             case part
-            /// A run of the name's words by ear, or a few sounds off.
-            case nearPart
         }
 
-        let kind: Kind
-        /// The sounds that differ.
+        let reach: Reach
+        /// Letter for letter, rather than by ear.
+        let isAsWritten: Bool
+        /// The sounds that differ: none as written or by ear.
         let distance: Int
 
-        static func < (lhs: Closeness, rhs: Closeness) -> Bool {
-            lhs.kind != rhs.kind ? lhs.kind.rawValue < rhs.kind.rawValue : lhs.distance < rhs.distance
-        }
+        /// What was said is the name, or the run of its words, as written or by ear; otherwise it is only near it.
+        var soundsTheSame: Bool { distance == 0 }
+
+        /// The order among matches that sound the same, the smaller the closer: the whole name as written, the whole name
+        /// by ear, a part as written, a part by ear.
+        var rank: Int { reach.rawValue * 2 + (isAsWritten ? 0 : 1) }
     }
 
     /// The ways of saying one bird: each of its names whole, and every run of a name's words short of the whole.
@@ -48,12 +49,16 @@ nonisolated enum SpokenName {
         let whole: [Form]
         let parts: [Form]
 
-        /// - Parameter names: the bird's common names, as the pack and as BirdNET spell it.
+        /// - Parameter names: the bird's common names, as the pack and as BirdNET spell it. A possessive is also taken
+        ///   without its s, which is how it is often heard: "Anna's Hummingbird" is "anna hummingbird" as well.
         init(_ names: [String]) {
             var whole: [Form] = []
             var parts: [Form] = []
             var seen = Set<String>()
-            for name in names {
+            let spellings = names.flatMap { name in
+                [name, name.replacing("'s ", with: " ").replacing("’s ", with: " ")]
+            }
+            for name in spellings {
                 let words = SpokenName.words(of: name)
                 guard !words.isEmpty else { continue }
                 let form = Form(words: words)
@@ -69,12 +74,17 @@ nonisolated enum SpokenName {
             self.parts = parts
         }
 
-        /// How close `said` is to this bird, nil when it is not close.
+        /// How close `said` is to this bird at its closest, nil when it is not close: what sounds the same before what is
+        /// only near, and the whole name before a part of it.
         func closeness(to said: Form) -> Closeness? {
-            if whole.contains(where: { $0.plain == said.plain }) { return Closeness(kind: .name, distance: 0) }
-            if let distance = Self.nearest(said, among: whole) { return Closeness(kind: .nearName, distance: distance) }
-            if parts.contains(where: { $0.plain == said.plain }) { return Closeness(kind: .part, distance: 0) }
-            if let distance = Self.nearest(said, among: parts) { return Closeness(kind: .nearPart, distance: distance) }
+            if whole.contains(where: { $0.plain == said.plain }) { return Closeness(reach: .name, isAsWritten: true, distance: 0) }
+            let nearName = Self.nearest(said, among: whole)
+            if nearName == 0 { return Closeness(reach: .name, isAsWritten: false, distance: 0) }
+            if parts.contains(where: { $0.plain == said.plain }) { return Closeness(reach: .part, isAsWritten: true, distance: 0) }
+            let nearPart = Self.nearest(said, among: parts)
+            if nearPart == 0 { return Closeness(reach: .part, isAsWritten: false, distance: 0) }
+            if let nearName { return Closeness(reach: .name, isAsWritten: false, distance: nearName) }
+            if let nearPart { return Closeness(reach: .part, isAsWritten: false, distance: nearPart) }
             return nil
         }
 
