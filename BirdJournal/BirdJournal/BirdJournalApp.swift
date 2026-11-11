@@ -231,7 +231,8 @@ struct BirdJournalApp: App {
         // `-autoGlassesListening <wav>` with `-autoScreen glasses-run`: the mock injects no audio, so the file stands in for
         // the stream. Everything else is the real run on Mock Device Kit.
         if let path = UserDefaults.standard.string(forKey: "autoGlassesListening"), path.hasSuffix(".wav") {
-            makeSource = { _ in PacedGlassesAudioSource(url: URL(fileURLWithPath: path)) }
+            let hasCamera = UserDefaults.standard.bool(forKey: "autoGlassesCamera")
+            makeSource = { _ in PacedGlassesAudioSource(url: URL(fileURLWithPath: path), hasCamera: hasCamera) }
             location = debugLocationProvider()
         }
         #endif

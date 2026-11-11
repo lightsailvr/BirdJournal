@@ -18,6 +18,10 @@ import Identification
 /// while one plays, what and where ("Playing song… tap to stop", "Song on the phone…" when the glasses' speakers
 /// are not the route). The viewfinder page after "Add to my list" is the camera's view, the name, and what a tap and
 /// a swipe do.
+///
+/// The list's first row on every page, and on the empty list, is "Capture a sighting" (issue #193), highlighted in
+/// place of a bird's row when the machine says so. Its viewfinder is the camera's view, the row's words and what a tap
+/// and a swipe do; then "Saving the photo…" until the photo is written, and "Photo saved" / "Name it on your phone.".
 public enum LensCardRenderer {
     public static let wordBudget = 40
     /// The details page's budget: forty words of field marks in the small style (the pack builder's
@@ -27,18 +31,19 @@ public enum LensCardRenderer {
     /// The most words a card spends on its size-and-habitat line and on its credit line.
     static let metaLineBudget = 8
     /// Rows on one page of the list. The app re-sends the list on every selection move and a send starts at the top,
-    /// so the rows are paged rather than scrolled, and few enough to fit the canvas with the heading.
+    /// so the rows are paged rather than scrolled, and few enough to fit the canvas with the heading. With the capture
+    /// row above them (issue #193) a full page is about 500 of the canvas's 600 pixels (checked on the mock lens).
     public static let listRowsPerPage = 5
     static let saveButton = LensCardButton(label: "Add to my list", action: .save)
     static let addAnotherButton = LensCardButton(label: "Add another", action: .save)
 
     public static func render(
-        _ page: LensPage, stack: CandidateStack, order: SpeciesListOrder, selection: Int, saved: Set<Int>,
+        _ page: LensPage, stack: CandidateStack, order: SpeciesListOrder, selection: Int, captureSelected: Bool = false, saved: Set<Int>,
         playing: LensPlayback? = nil, nextSounds: [Int: Int] = [:], earned: [Int: LensEarnedPatch] = [:], profile: (Species) -> SpeciesProfile?
     ) -> LensCard {
         switch page {
         case .list:
-            return list(stack, order: order, selection: selection, saved: saved, profile: profile)
+            return list(stack, order: order, selection: selection, captureSelected: captureSelected, saved: saved, profile: profile)
         case .species(let index):
             let candidate = stack.candidates[index]
             let profile = profile(candidate.species)
@@ -49,6 +54,12 @@ public enum LensCardRenderer {
             return sounds(candidate, clips: profile(candidate.species)?.sounds ?? [], next: nextSounds[index] ?? 0, playing: playing?.index == index ? playing : nil)
         case .viewfinder(let index):
             return viewfinder(stack.candidates[index])
+        case .captureViewfinder:
+            return captureViewfinder()
+        case .captureSaving:
+            return LensCard(screenfuls: [[.heading("Saving the photo…"), .meta("Swipe right: all species")]])
+        case .captureSaved:
+            return LensCard(screenfuls: [[.heading("Photo saved"), .body("Name it on your phone."), .meta("Tap or swipe right: all species")]])
         case .details(let index):
             let candidate = stack.candidates[index]
             return details(candidate, isSaved: saved.contains(index), earned: earned[index], calling: callingText(for: index, stack: stack, order: order), profile: profile(candidate.species))
@@ -76,14 +87,18 @@ public enum LensCardRenderer {
         "\(Int((candidate.score * 100).rounded()))%"
     }
 
-    static func list(_ stack: CandidateStack, order: SpeciesListOrder, selection: Int, saved: Set<Int>, profile: (Species) -> SpeciesProfile?) -> LensCard {
+    /// The list's first row on every page (issue #193): the way to a photo of a bird that was seen and not heard.
+    public static let captureRowLabel = "Capture a sighting"
+
+    static func list(_ stack: CandidateStack, order: SpeciesListOrder, selection: Int, captureSelected: Bool, saved: Set<Int>, profile: (Species) -> SpeciesProfile?) -> LensCard {
         let heading = switch stack.count {
         case 0: "No species yet"
         case 1: "1 species heard"
         default: "\(stack.count) species heard"
         }
+        let capture = LensElement.capture(label: captureRowLabel, isSelected: captureSelected)
         guard !stack.isEmpty else {
-            return LensCard(screenfuls: [[.heading(heading), .meta("Birds appear as they call.")]])
+            return LensCard(screenfuls: [[.heading(heading), .meta("Birds appear as they call."), capture]])
         }
         let indices = order.indices.count == stack.count ? order.indices : Array(stack.candidates.indices)
         let pages = (indices.count + listRowsPerPage - 1) / listRowsPerPage
@@ -97,13 +112,13 @@ public enum LensCardRenderer {
                 confidence: percent(candidate),
                 hasPhoto: profile(candidate.species)?.photo != nil,
                 isSaved: saved.contains(index),
-                isSelected: index == selection,
+                isSelected: index == selection && !captureSelected,
                 isCalling: order.isCalling(index: index)
             )
         }
         var hint = "Swipe down to choose, tap to open."
         if pages > 1 { hint += " Page \(page + 1) of \(pages)." }
-        return LensCard(screenfuls: [[.heading(heading), .meta(hint), .list(rows)]])
+        return LensCard(screenfuls: [[.heading(heading), .meta(hint), capture, .list(rows)]])
     }
 
     /// The photo page's hint line: the swipes, with the sounds page above when the species has clips. Kept to the
@@ -152,6 +167,15 @@ public enum LensCardRenderer {
         ]])
     }
 
+    /// The capture viewfinder (issue #193): the camera's view, and what a tap and a swipe do.
+    static func captureViewfinder() -> LensCard {
+        LensCard(screenfuls: [[
+            .viewfinder,
+            .heading(captureRowLabel),
+            .meta("Tap: take the photo · swipe right: back"),
+        ]])
+    }
+
     static func species(_ candidate: Candidate, position: Int, of count: Int, isSaved: Bool, calling: String?, hint: String, profile: SpeciesProfile?) -> LensCard {
         // The photo first, so nothing above it can push it below the fold on the glasses.
         var elements: [LensElement] = []
@@ -177,6 +201,8 @@ public enum LensCardRenderer {
             ("No location", "Species are not filtered by place. Allow location for Featherguild in Settings on the phone.")
         case .connectionLost:
             ("Connection lost", "The glasses were out of range. Featherguild kept listening and is back on the lens.")
+        case .photoNotTaken:
+            ("No photo taken", "The camera was not ready, so nothing was saved. Open Capture a sighting again.")
         }
         return LensCard(screenfuls: [[.heading(heading), .body(body), .meta("Swipe right to continue")]])
     }

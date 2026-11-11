@@ -90,7 +90,7 @@ extension MockDeviceKitTests {
                 input.navRight()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
                 #expect(lens.card.elements[0] == .heading("3 species heard"))
-                guard case .list(let rows) = lens.card.elements[2] else { Issue.record("no rows on the list"); return }
+                guard case .list(let rows) = lens.card.elements[3] else { Issue.record("no rows on the list"); return }
                 #expect(rows.map(\.index) == [2, 1, 0])
                 #expect(rows.map(\.isCalling) == [true, true, false])
                 #expect(rows.map(\.isSelected) == [true, false, false])
@@ -114,15 +114,36 @@ extension MockDeviceKitTests {
             }
         }
 
+        @Test("Capture a sighting on a lens with no run behind it: the row is highlighted on the empty list, a tap opens the viewfinder, which waits for a camera, and a tap there says no photo was taken (issue #193)")
+        func captureWithoutARun() async throws {
+            try await withRunningLens { lens, glasses in
+                #expect(lens.card.elements == [
+                    .heading("No species yet"), .meta("Birds appear as they call."), .capture(label: "Capture a sighting", isSelected: true),
+                ])
+                let input = glasses.services.input
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
+                #expect(lens.card.elements == [.viewfinder, .heading("Capture a sighting"), .meta("Tap: take the photo · swipe right: back")])
+                try await Task.sleep(for: .milliseconds(1100))
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .problem(.photoNotTaken) }
+                #expect(lens.card.elements.first == .heading("No photo taken"))
+                input.navRight()
+                try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+                #expect(lens.savedSightings.isEmpty)
+                #expect(lens.errorMessage == nil)
+            }
+        }
+
         @Test("a calling marker that lapses with the stack unchanged is cleared by a one-shot re-send (issue #42)")
         func callingMarkerLapses() async throws {
             try await withRunningLens { lens, _ in
                 // The phoebe was heard at 3 s; at 8.5 s it has half a second of its window left.
                 lens.update(with: FakeLensStack.stack(count: 1), at: 8.5)
-                guard case .list(let rows) = lens.card.elements[2] else { Issue.record("no rows on the list"); return }
+                guard case .list(let rows) = lens.card.elements[3] else { Issue.record("no rows on the list"); return }
                 #expect(rows.map(\.isCalling) == [true])
                 try await waitUntil(timeout: .seconds(3)) {
-                    if case .list(let rows) = lens.card.elements[2] { return rows.map(\.isCalling) == [false] }
+                    if case .list(let rows) = lens.card.elements[3] { return rows.map(\.isCalling) == [false] }
                     return false
                 }
                 #expect(lens.page == .list)

@@ -75,6 +75,8 @@ enum DisplayCardBuilder {
                 Icon(name: .checkmarkCircle, style: .filled)
                 Text(text, style: .body)
             }
+        case .capture(let label, let isSelected):
+            return captureRow(label, isSelected: isSelected)
         case .list(let rows):
             return FlexBox(direction: .column, spacing: 8, crossAlignment: .stretch) {
                 for row in rows {
@@ -135,6 +137,20 @@ enum DisplayCardBuilder {
         }
         .padding(EdgeInsets(top: 8, bottom: 8, leading: 12, trailing: 12))
         .background(row.isNext || row.isPlaying ? .card : .none)
+    }
+
+    /// The "Capture a sighting" row above the birds (issue #193), marked like a bird's row when the highlight is on it:
+    /// a caret and a card background; a viewfinder's corners before the words tell it from a bird.
+    private static func captureRow(_ label: String, isSelected: Bool) -> FlexBox {
+        FlexBox(direction: .row, spacing: 12, crossAlignment: .center) {
+            if isSelected {
+                Icon(name: .caretRight, style: .filled)
+            }
+            Icon(name: .fourCornerFrame, style: .outline)
+            Text(label, style: .body, color: isSelected ? .primary : .secondary)
+        }
+        .padding(EdgeInsets(top: 8, bottom: 8, leading: 12, trailing: 12))
+        .background(isSelected ? .card : .none)
     }
 
     /// One row of the species list: a caret and a card background mark the selected row; a speaker before the name

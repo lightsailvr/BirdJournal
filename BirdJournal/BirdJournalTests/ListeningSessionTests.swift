@@ -272,8 +272,21 @@ final class ManualAudioSource: FrameKeepingAudioSource {
 
     /// What the next photo delivers; nil stands for a capture that failed or timed out.
     var photo: Data?
+    /// While true a photo is on its way and does not arrive: it does at `deliverPhoto()`.
+    var holdsPhoto = false
+    private var photoWaiters: [CheckedContinuation<Void, Never>] = []
 
-    func capturePhoto() async -> Data? { photo }
+    func capturePhoto() async -> Data? {
+        if holdsPhoto { await withCheckedContinuation { photoWaiters.append($0) } }
+        return photo
+    }
+
+    /// Lets the photos held back arrive.
+    func deliverPhoto() {
+        holdsPhoto = false
+        photoWaiters.forEach { $0.resume() }
+        photoWaiters = []
+    }
     /// Every moment the run asked for the stream, oldest first.
     var streamChecks: [String] = []
     func ensureStreaming(_ reason: String) async { streamChecks.append(reason) }

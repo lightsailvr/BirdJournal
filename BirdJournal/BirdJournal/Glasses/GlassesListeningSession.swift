@@ -12,7 +12,9 @@ import UIKit
 /// The whole loop on the glasses (issue #9): one device session shared by the camera stream, Display and Inputs;
 /// glasses audio through the engine into the lens pages; "Add to my list" on a species' details page opens the
 /// viewfinder on the camera's frames, and a tap there writes the sighting with a photo taken then (the latest frame if
-/// the photo does not come), a swipe without one. Landing on the species list and opening the viewfinder check that
+/// the photo does not come), a swipe without one. "Capture a sighting" on the species list (issue #193) opens a
+/// viewfinder for a bird that was seen and not heard: a tap there writes the photo as an unnamed sighting, which the phone
+/// lists under "Seen this run" and names. Landing on the species list and opening the viewfinder check that
 /// the stream is up and put it back if not (#46). Start from the phone, then pocket it: nothing here needs the screen.
 ///
 /// Order: the device session (which waits for connected display glasses), camera and microphone permission, the
@@ -90,6 +92,9 @@ final class GlassesListeningSession {
     var saved: [SavedSighting] { sightings.entries }
     /// Hears the identifier of each sighting that sewed a patch from the lens: its ceremony is for the phone, once the run is over.
     @ObservationIgnored var onPatchSewn: ((UUID) -> Void)?
+    /// Hears each photo captured from the lens once it is written as an unnamed sighting (issue #193): the run's ledger
+    /// already lists it; the phone writes down a review that is waiting.
+    @ObservationIgnored var onCaptured: ((UnnamedSighting) -> Void)?
 
     /// Engine, location and the live list.
     let listening: ListeningSession
@@ -154,6 +159,7 @@ final class GlassesListeningSession {
         lens.onStreamNeeded = { reason in
             Task { await box.run?.source?.ensureStreaming(reason) }
         }
+        lens.onCapture = { id in box.run?.capture(id) }
         box.run = self
     }
 
@@ -420,9 +426,43 @@ final class GlassesListeningSession {
             Task { await save(candidate, confirmedAt: confirmedAt, frame: nil) }
         case .endSession:
             beginStop(reason: .back)
-        case .openViewfinder, .playSound, .stopSound:
-            // The lens shows the viewfinder and plays its clips itself.
+        case .openViewfinder, .openCaptureViewfinder, .playSound, .stopSound:
+            // The lens shows its viewfinders and plays its clips itself.
             break
+        case .capturePhoto:
+            // The lens asks for a capture's photo through `onCapture`, with a number to answer by.
+            break
+        }
+    }
+
+    /// The tap on the capture viewfinder (issue #193): the photo is taken now and written as an unnamed sighting, with
+    /// this moment and the run's place, for the phone to name. As for an add, the frame from the tap stands in if no
+    /// photo comes; with neither there is nothing to keep, and the lens says so. The lens is told how capture `id` went.
+    private func capture(_ id: Int) {
+        let frame = source?.latestFrame
+        let takenAt = Date.now
+        let location = listening.coordinate
+        Task {
+            var jpeg = await source?.capturePhoto()
+            if jpeg == nil {
+                jpeg = await Task.detached(priority: .userInitiated) { frame?.jpegData() }.value
+            }
+            guard let jpeg else {
+                Self.logger.info("capture \(id): no photo and no frame")
+                lens.captureFailed(id)
+                return
+            }
+            do {
+                let unnamed = try sightings.capture(photo: jpeg, takenAt: takenAt, location: location, source: .glasses)
+                onCaptured?(unnamed)
+                // The photo is safe from here on. Dictation of the bird's name starts here (issue #194), with `unnamed`
+                // to name; whatever goes wrong after this, the phone has the photo.
+                lens.captureSaved(id)
+            } catch {
+                errorMessage = "Could not save the photo: \(error.localizedDescription)"
+                Self.logger.error("capture failed: \(error.localizedDescription, privacy: .public)")
+                lens.captureFailed(id)
+            }
         }
     }
 
