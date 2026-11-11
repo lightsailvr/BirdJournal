@@ -36,7 +36,7 @@ struct LensSessionView: View {
                     Button("Update the glasses app") { Task { await connection.openGlassesAppUpdate() } }
                 }
             } footer: {
-                Text("On the list, swipe down and up to choose a species and tap to open it; swipe up from the first species for \"Capture a sighting\", and tap it for its viewfinder. On a species' photo, tap to hear its song, then its call; swipe down for more information and tap \"Add to my list\" there; swipe up for the photo, left for the next species, right for the list. The middle-finger tap ends the session on real glasses.")
+                Text("On the list, swipe down and up to choose a species and tap to open it; up from the first is \"Capture a sighting\". On a photo, swipe up for its sounds, down for more information and \"Add to my list\", left for the next species, right for the list. The middle-finger tap ends the session on real glasses.")
             }
 
             #if DEBUG

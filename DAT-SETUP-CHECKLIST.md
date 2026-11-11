@@ -244,8 +244,9 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - **The row.** Before any bird is heard the species list reads "No species yet", "Birds appear as they call." and a
      highlighted "Capture a sighting" row. With birds on it the row is above the first bird and the highlight is on the
      first bird; one swipe up moves it to the row, a swipe down or right moves it back. Record whether the row's
-     icon (the viewfinder's four corners) reads as one, and whether the list with the row and four birds, and with
-     "Page 1 of 2." on the hint line, fits the lens without anything cut at the bottom.
+     icon (the viewfinder's four corners) reads as one, and whether a full page (the row and five birds, with
+     "Page 1 of 2." on the hint line; six species heard) fits the lens without anything cut at the bottom. On the mock
+     it takes about 500 of the 600 pixels.
    - **The viewfinder.** A tap on the highlighted row opens it on the listening stream's frames with the journal's crop
      frame, "Capture a sighting" and "Tap: take the photo · swipe right: back". One tap on the row opens it and it
      stays: nothing is taken by the same tap (the echo window, as for "Add to my list"). A swipe returns to the list and

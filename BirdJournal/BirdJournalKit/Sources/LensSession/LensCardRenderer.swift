@@ -31,7 +31,8 @@ public enum LensCardRenderer {
     /// The most words a card spends on its size-and-habitat line and on its credit line.
     static let metaLineBudget = 8
     /// Rows on one page of the list. The app re-sends the list on every selection move and a send starts at the top,
-    /// so the rows are paged rather than scrolled, and few enough to fit the canvas with the heading.
+    /// so the rows are paged rather than scrolled, and few enough to fit the canvas with the heading. With the capture
+    /// row above them (issue #193) a full page is about 500 of the canvas's 600 pixels (checked on the mock lens).
     public static let listRowsPerPage = 5
     static let saveButton = LensCardButton(label: "Add to my list", action: .save)
     static let addAnotherButton = LensCardButton(label: "Add another", action: .save)
