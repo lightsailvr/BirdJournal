@@ -40,6 +40,29 @@ struct UnnamedSightingAccessibilityTests {
         #expect(!labels.contains { $0.contains("Unnamed") && $0.contains("New patch") }, "it has earned nothing: \(labels)")
     }
 
+    // The review of #185, a1: a run that heard nothing and took a photo has its review.
+    @Test("The review of a run that heard nothing and took a photo: the photo to name under Seen this run, that it is kept, and No birds were heard where the birds would be listed", arguments: Screens.sizes)
+    func reviewOfARunOfPhotosAlone(typeSize: DynamicTypeSize) async throws {
+        let harness = try Screens.Harness(seeded: false)
+        await harness.run.start()
+        try #require(harness.run.capture(CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now)))
+        await harness.run.stop()
+        try #require(harness.run.candidates.isEmpty && harness.run.isReviewing)
+
+        let labels = try await Screens.walk(RunReviewSheet(), harness: harness, typeSize: typeSize, inStack: false) { labels in
+            labels.contains(Self.row) && labels.contains(RunRecap.nothingHeard)
+        }
+
+        Screens.expectClean(labels, screen: "Review of a run of photos alone")
+        let section = try #require(labels.firstIndex(of: "Seen this run"), "\(labels)")
+        let row = try #require(labels.firstIndex(of: Self.row), "\(labels)")
+        let heard = try #require(labels.firstIndex(of: "What you heard"), "\(labels)")
+        let nothing = try #require(labels.firstIndex(of: "No birds were heard."), "\(labels)")
+        #expect(section < row && row < heard && heard < nothing, "the photo, then what was heard: \(labels)")
+        #expect(labels.contains(UnnamedSightingText.reviewNote), "the photo is kept: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("Only the birds you add are kept") }, "there is nothing to forget: \(labels)")
+    }
+
     @Test("Collection, Sightings: To name leads the list with each photo waiting, and the totals above count none of them", arguments: Screens.sizes)
     func toName(typeSize: DynamicTypeSize) async throws {
         let harness = try Screens.Harness()

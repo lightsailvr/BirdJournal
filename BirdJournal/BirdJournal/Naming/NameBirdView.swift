@@ -28,6 +28,9 @@ struct NameBirdView: View {
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(PlaceNames.self) private var places
     @Environment(\.occurrenceModel) private var occurrenceModel
+    #if DEBUG
+    @Environment(\.autoNameQuery) private var autoQuery
+    #endif
     /// The photo being named, or the sighting whose bird is being changed, with when and where it was taken.
     let subject: NamingSubject
     /// For a photo just chosen from the library (issue #192): whether the date and place above are the photo's own.
@@ -198,7 +201,7 @@ struct NameBirdView: View {
         #if DEBUG
         .task {
             // `-autoQuery <text>` searches once, for the screenshots of the results and the no-match state.
-            if let text = UserDefaults.standard.string(forKey: "autoQuery") { query = text }
+            if let autoQuery { query = autoQuery }
         }
         #endif
         // A choice the page no longer shows would be added unseen.
@@ -433,3 +436,12 @@ private struct NameBirdRow: View {
         .accessibilityIdentifier("name-bird-\(bird.scientificName)")
     }
 }
+
+#if DEBUG
+extension EnvironmentValues {
+    /// What "Name this bird" searches for as it opens: the launch flag `-autoQuery <text>`, unless a test hands the sheet
+    /// its own. A test must not set the flag's default: the defaults are the whole process's, and the Collection and the
+    /// Atlas read the same flag, in suites that run beside the naming's.
+    @Entry var autoNameQuery: String? = UserDefaults.standard.string(forKey: "autoQuery")
+}
+#endif

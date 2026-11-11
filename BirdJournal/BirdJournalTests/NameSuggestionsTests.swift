@@ -187,7 +187,7 @@ struct NameSuggestionsTests {
 }
 
 // Issue #189: the suggestions on "Name this bird" as VoiceOver reaches them, in the serialized suite that walks the capture's
-// other screens (they share a window and `-autoQuery`).
+// other screens (they share a window).
 extension CaptureAccessibilityTests {
     /// A geomodel with one answer wherever it is asked.
     struct FixedOccurrence: SpeciesOccurrenceModel {
@@ -319,9 +319,7 @@ extension CaptureAccessibilityTests {
     @Test("Typing replaces the suggestions with the search, a likely bird before the others it matches", arguments: Screens.sizes)
     func suggestionsGiveWayToASearch(typeSize: DynamicTypeSize) async throws {
         let harness = try await Self.runThatHeardTwo()
-        defer { UserDefaults.standard.removeObject(forKey: "autoQuery") }
-        UserDefaults.standard.set("hummingbird", forKey: "autoQuery")
-        let screen = NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.occurrenceModel, Self.geomodel)
+        let screen = NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.occurrenceModel, Self.geomodel).environment(\.autoNameQuery, "hummingbird")
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("All birds")
         }

@@ -117,10 +117,10 @@ struct CaptureAccessibilityTests {
     @Test("A search lists the field guides' birds, then all other birds as Uncharted; one nothing matches says so and offers to clear", arguments: Screens.sizes)
     func nameThisBirdSearch(typeSize: DynamicTypeSize) async throws {
         let harness = try Screens.Harness()
-        defer { UserDefaults.standard.removeObject(forKey: "autoQuery") }
 
-        UserDefaults.standard.set("hummingbird", forKey: "autoQuery")
-        let found = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
+        // The sheet is handed its search: the `-autoQuery` default is the whole process's, and the Collection and the Atlas,
+        // walked by other suites at the same time, read it too.
+        let found = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.autoNameQuery, "hummingbird"), harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("All birds")
         }
         Screens.expectClean(found, screen: "Name this bird, searched")
@@ -134,8 +134,7 @@ struct CaptureAccessibilityTests {
         #expect(found.contains { $0.hasPrefix("And ") && $0.hasSuffix(" more. Keep typing to narrow them down.") }, "\(found)")
         #expect(!found.contains(NameBirdText.searchHint), "the hint goes once something is typed: \(found)")
 
-        UserDefaults.standard.set("zzzz", forKey: "autoQuery")
-        let none = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
+        let none = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.autoNameQuery, "zzzz"), harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("Clear search")
         }
         Screens.expectClean(none, screen: "Name this bird, no match")

@@ -8,7 +8,7 @@ import UIKit
 @testable import BirdJournal
 
 // Issue #190 (of #185): "Change bird" as VoiceOver reaches it, in the serialized suite that walks the capture's other
-// screens (they share a window and `-autoQuery`): the button on the page of a sighting the birder named, and not on one
+// screens (they share a window): the button on the page of a sighting the birder named, and not on one
 // BirdNET heard; the naming sheet opened on a sighting; and the change made with the sheet's own controls.
 extension CaptureAccessibilityTests {
     /// A run in Griffith Park on which the birder saw and named an Allen's Hummingbird, new to them in Los Angeles. The
@@ -69,10 +69,9 @@ extension CaptureAccessibilityTests {
     @Test("Change bird: the sighting's bird and photo, Cancel where a photo has Name it later and Delete photo, the bird it is marked, and nothing to press until another is chosen", arguments: Screens.sizes)
     func changeBirdSheet(typeSize: DynamicTypeSize) async throws {
         let (harness, sighting) = try await Self.runThatNamedAnAllens()
-        defer { UserDefaults.standard.removeObject(forKey: "autoQuery") }
-        UserDefaults.standard.set("hummingbird", forKey: "autoQuery")
         let screen = NameBirdView(changing: NamedSighting(sighting, commonName: "Allen's Hummingbird")) { _ in true } close: {}
             .environment(\.occurrenceModel, Self.geomodel)
+            .environment(\.autoNameQuery, "hummingbird")
 
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
             labels.contains("In your field guides") && labels.contains { $0.hasPrefix("Anna's Hummingbird, ") }
@@ -138,8 +137,6 @@ extension CaptureAccessibilityTests {
     func changeBirdWithTheSheet() async throws {
         let (harness, sighting) = try await Self.runThatNamedAnAllens()
         let identifier = sighting.identifier
-        defer { UserDefaults.standard.removeObject(forKey: "autoQuery") }
-        UserDefaults.standard.set("hummingbird", forKey: "autoQuery")
         final class Closed { var count = 0 }
         let closed = Closed()
         let screen = NameBirdView(changing: NamedSighting(sighting, commonName: "Allen's Hummingbird")) { bird in
@@ -148,6 +145,7 @@ extension CaptureAccessibilityTests {
             closed.count += 1
         }
         .environment(\.occurrenceModel, Self.geomodel)
+        .environment(\.autoNameQuery, "hummingbird")
 
         try await Self.onScreen(screen, harness: harness) { elements in
             let listed = try await CameraControlsTests.settled(elements) { found in
