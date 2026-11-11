@@ -114,6 +114,7 @@ extension LensPage {
         case .problem(.noLocation): "Problem · no location"
         case .problem(.connectionLost): "Problem · connection lost"
         case .problem(.photoNotTaken): "Problem · no photo taken"
+        case .problem(.photoGone): "Problem · photo already named or deleted"
         case .friend: "Friend's find"
         }
     }

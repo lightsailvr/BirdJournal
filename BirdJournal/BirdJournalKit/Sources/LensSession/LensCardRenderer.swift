@@ -113,7 +113,7 @@ public enum LensCardRenderer {
         guard !stack.isEmpty else {
             return LensCard(screenfuls: [[.heading(heading), .meta("Birds appear as they call."), capture]])
         }
-        let indices = order.indices.count == stack.count ? order.indices : Array(stack.candidates.indices)
+        let indices = order.listed(stack)
         let pages = (indices.count + listRowsPerPage - 1) / listRowsPerPage
         let page = (indices.firstIndex(of: selection) ?? 0) / listRowsPerPage
         let start = page * listRowsPerPage
@@ -266,6 +266,8 @@ public enum LensCardRenderer {
             ("Connection lost", "The glasses were out of range. Featherguild kept listening and is back on the lens.")
         case .photoNotTaken:
             ("No photo taken", "The camera was not ready, so nothing was saved. Open Capture a sighting again.")
+        case .photoGone:
+            ("Nothing to name", "That photo was named or deleted on your phone.")
         }
         return LensCard(screenfuls: [[.heading(heading), .body(body), .meta("Swipe right to continue")]])
     }

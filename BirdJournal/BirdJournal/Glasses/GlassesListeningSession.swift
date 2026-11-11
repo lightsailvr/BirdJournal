@@ -7,7 +7,6 @@ import MWDATCore
 import Observation
 import OSLog
 import SwiftData
-import Synchronization
 import UIKit
 
 /// The whole loop on the glasses (issue #9): one device session shared by the camera stream, Display and Inputs;
@@ -196,7 +195,7 @@ final class GlassesListeningSession {
         if names != nil {
             lens.names = LensNameSource(
                 matches: { words, capture in await box.run?.birds(named: words, forCapture: capture) ?? [] },
-                name: { capture, match in box.run?.name(capture, as: match) },
+                name: { capture, match in box.run?.name(capture, as: match) ?? .notWritten },
                 willListen: { await box.run?.dictationWillListen() },
                 didListen: { box.run?.dictationDidListen() }
             )
@@ -548,12 +547,7 @@ final class GlassesListeningSession {
     /// must not keep it there.
     private func microphonePermission(within limit: Duration = .seconds(3)) async -> PermissionStatus? {
         let wearables = wearables
-        let answer = PermissionAnswer()
-        let answered = await completes(within: limit) {
-            answer.set(try? await wearables.checkPermissionStatus(.microphone))
-            return true
-        }
-        return answered ? answer.status : nil
+        return await value(within: limit) { try? await wearables.checkPermissionStatus(.microphone) } ?? nil
     }
 
     /// Asks for the glasses' microphone permission, which opens Meta AI: what the phone's offer does, after it has said
@@ -582,9 +576,7 @@ final class GlassesListeningSession {
     /// lens's list order, then those likely where and when the photo was taken.
     private func birds(named words: String, forCapture capture: Int) async -> [LensNameMatch] {
         guard let unnamed = captured[capture], let names = await names() else { return [] }
-        let machine = lens.machine
-        let order = machine.order.indices.count == machine.stack.count ? machine.order.indices : Array(machine.stack.candidates.indices)
-        let heard = order.map { machine.stack.candidates[$0].species.scientificName }
+        let heard = lens.machine.listedSpecies.map(\.scientificName)
         let model = occurrenceModel, place = unnamed.location, takenAt = unnamed.takenAt
         // The geomodel is read for the photo's place and week, and ten thousand names are compared: off the main actor.
         let birds = await Task.detached(priority: .userInitiated) {
@@ -598,19 +590,25 @@ final class GlassesListeningSession {
 
     /// Names the photo of capture `capture` as the bird the wearer tapped: the unnamed sighting becomes a sighting, Seen,
     /// through the run's ledger, exactly as naming it on the phone would, except that nothing is celebrated on a phone
-    /// in a pocket: a patch it sews waits for its stitch-in as a lens add's does (`onPatchSewn`). Nil when it could not
-    /// be written (the phone named or deleted the photo meanwhile, or the save failed): the photo is where it was.
-    private func name(_ capture: Int, as match: LensNameMatch) -> LensNamedCapture? {
-        guard let unnamed = captured[capture], let bird = offered[capture]?[match.id] else { return nil }
+    /// in a pocket: a patch it sews waits for its stitch-in as a lens add's does (`onPatchSewn`). When the phone named or
+    /// deleted the photo while the lens showed the birds, there is nothing left to name and the lens is told so; when
+    /// the save failed, the photo is where it was, unnamed.
+    private func name(_ capture: Int, as match: LensNameMatch) -> LensNamingOutcome {
+        guard let unnamed = captured[capture], let bird = offered[capture]?[match.id] else { return .notWritten }
         do {
             let addition = try sightings.name(unnamed, as: bird)
             captured[capture] = nil
             offered[capture] = nil
             if addition.sewsPatch { onPatchSewn?(addition.identifier) }
-            return LensNamedCapture(commonName: bird.commonName, place: addition.placement.setName, earned: addition.sewsPatch ? .newPatch : .seenAgain(count: addition.patchCount))
+            return .named(LensNamedCapture(addition, commonName: bird.commonName))
+        } catch UnnamedSightingFailure.gone {
+            captured[capture] = nil
+            offered[capture] = nil
+            Self.logger.info("naming from the lens: the photo was named or deleted on the phone first")
+            return .gone
         } catch {
             Self.logger.error("naming from the lens failed: \(error.localizedDescription, privacy: .public)")
-            return nil
+            return .notWritten
         }
     }
 
@@ -641,6 +639,19 @@ final class GlassesListeningSession {
     }
 }
 
+extension LensNamedCapture {
+    /// What "Added" says of an add made by naming a photo: the bird, the set its patch is in, and what it earned. A
+    /// sighting outside every set has no such line: "Uncharted" is where its patch is filed, not a place (issue #185,
+    /// lens screen 5: "the bird, Seen, the place").
+    init(_ addition: RunSightings.Addition, commonName: String) {
+        self.init(
+            commonName: commonName,
+            place: addition.placement.setID == nil ? nil : addition.placement.setName,
+            earned: addition.sewsPatch ? .newPatch : .seenAgain(count: addition.patchCount)
+        )
+    }
+}
+
 extension GlassesListeningSession.PauseReason {
     /// Why glasses in `state` would have ended a session, or nil when they are worn and connected (a quit).
     nonisolated static func whyEnded(_ state: DeviceState) -> Self? {
@@ -657,19 +668,6 @@ extension GlassesListeningSession.PauseReason {
 extension DeviceState {
     /// Connected and not known to be off the wearer's face: a session can be started.
     nonisolated var isWornAndConnected: Bool { linkState == .connected && donState != .doffed }
-}
-
-/// A permission's answer, written wherever the toolkit gives it and read once the wait for it is over.
-private nonisolated final class PermissionAnswer: Sendable {
-    private let value = Mutex<PermissionStatus?>(nil)
-
-    func set(_ status: PermissionStatus?) {
-        value.withLock { $0 = status }
-    }
-
-    var status: PermissionStatus? {
-        value.withLock { $0 }
-    }
 }
 
 /// Lets the run's children call back into it without a retain cycle through their closures.

@@ -679,9 +679,13 @@ final class MockLensNaming {
                 }
             },
             name: { [self] capture, match in
-                guard let unnamed = captured[capture], let bird = offered[match.id], let addition = run.name(unnamed, as: bird) else { return nil }
+                guard let unnamed = captured[capture], let bird = offered[match.id] else { return .notWritten }
+                guard let addition = run.name(unnamed, as: bird) else {
+                    // Named or deleted on the phone meanwhile, or the save failed and the photo still waits.
+                    return run.sightings.recorder.capture(unnamed.id) == nil ? .gone : .notWritten
+                }
                 captured[capture] = nil
-                return LensNamedCapture(commonName: bird.commonName, place: addition.placement.setName, earned: addition.sewsPatch ? .newPatch : .seenAgain(count: addition.patchCount))
+                return .named(LensNamedCapture(addition, commonName: bird.commonName))
             }
         )
     }

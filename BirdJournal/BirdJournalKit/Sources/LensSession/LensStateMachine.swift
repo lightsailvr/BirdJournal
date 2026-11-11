@@ -58,6 +58,18 @@ public enum LensPage: Sendable, Hashable {
         case .list, .species, .details, .sounds, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem, .friend: false
         }
     }
+
+    /// Whether a tap on the page would undo or skip what the press that opened it was for. The hardware can deliver one
+    /// press twice (a click and a select), so the adapter, which has a clock, drops a tap that lands on such a page right
+    /// behind the press that opened it. The viewfinders, where the echo would take the photo; "Say the bird's name",
+    /// which "Say it again" opens and where a tap is "Name it later"; and "Photo saved" and "Added", which a tap opens
+    /// and a tap closes before they are read.
+    public var guardsItsTap: Bool {
+        switch self {
+        case .viewfinder, .captureViewfinder, .captureNaming, .captureSaved, .captureAdded: true
+        case .list, .species, .details, .sounds, .captureSaving, .captureMatches, .problem, .friend: false
+        }
+    }
 }
 
 /// A bird the words said to the glasses may name (issue #194), as the lens lists it.
@@ -121,7 +133,8 @@ public struct LensNaming: Sendable, Hashable {
 /// A photo named from the lens (issue #194), as the "Added" page says it.
 public struct LensNamedCapture: Sendable, Hashable {
     public var commonName: String
-    /// The set its patch is in, e.g. "Los Angeles"; nil when it is not known.
+    /// The set its patch is in, e.g. "Los Angeles"; nil when it is in none (Uncharted is no place to name) or it is not
+    /// known, and the page then has no such line.
     public var place: String?
     public var earned: LensEarnedPatch
 
@@ -130,6 +143,16 @@ public struct LensNamedCapture: Sendable, Hashable {
         self.place = place
         self.earned = earned
     }
+}
+
+/// How naming a capture's photo from the lens went (issue #194), as whoever writes the sighting tells the adapter.
+public enum LensNamingOutcome: Sendable, Hashable {
+    /// The sighting is written: what the "Added" page says.
+    case named(LensNamedCapture)
+    /// It could not be written. The photo is still on the phone, unnamed.
+    case notWritten
+    /// There was no photo left to name: the phone named or deleted it while the lens showed the birds.
+    case gone
 }
 
 /// What can go wrong with a run while the lens is still reachable (issue #10).
@@ -141,6 +164,9 @@ public enum LensProblem: Sendable, Hashable {
     /// The tap on the capture viewfinder took no photo (issue #193): none came from the camera and it had shown no
     /// picture to stand in, or the photo could not be written. Nothing is on the phone.
     case photoNotTaken
+    /// The wearer chose a bird for a photo the phone had named or deleted meanwhile (issue #194): there is nothing left
+    /// to name, so the lens does not say the photo waits on the phone.
+    case photoGone
 }
 
 /// A friend's notable find as the lens shows it (issue #67): "Maya heard a Black Phoebe · Pasadena".
@@ -362,6 +388,12 @@ public struct LensStateMachine: Sendable, Equatable {
             return index
         }
         return order.indices.first ?? 0
+    }
+
+    /// The species heard, in the order the list shows them: what "heard this run" means to whoever ranks a name said
+    /// to the glasses (issue #194).
+    public var listedSpecies: [Species] {
+        order.listed(stack).map { stack.candidates[$0].species }
     }
 
     /// Whether the highlight is on the "Capture a sighting" row above the birds (issue #193) rather than on `selection`:
@@ -741,6 +773,16 @@ public struct LensStateMachine: Sendable, Equatable {
     @discardableResult
     public mutating func captureNotNamed(_ id: Int) -> Bool {
         endNaming(of: id, on: .captureSaved) && page == .captureSaved
+    }
+
+    /// The photo of capture `id` was no longer there to name when its bird was chosen: the phone had named or deleted it.
+    /// The lens says so over the list, and never that the photo waits on the phone. Returns whether the page the wearer
+    /// sees changed.
+    @discardableResult
+    public mutating func captureGone(_ id: Int) -> Bool {
+        guard endNaming(of: id, on: .list) else { return false }
+        report(.photoGone)
+        return true
     }
 
     /// Replaces the birds' page of capture `id`, showing or under a problem page, with `next`, if a bird of it was

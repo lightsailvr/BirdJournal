@@ -1,6 +1,7 @@
 import Album
 import Foundation
 import Identification
+import LensSession
 import Pack
 import SwiftData
 import Testing
@@ -283,6 +284,20 @@ struct UnnamedSightingTests {
         fixture.ledger.reset()
         try fixture.ledger.delete(second)
         #expect(fixture.captures.isEmpty && fixture.files.isEmpty)
+    }
+
+    // Review of #185, c6: "Uncharted" is where a patch is filed, not a place for the lens to name.
+    @Test("what the lens says of a photo it named: the set its patch is in, and no place at all for a sighting outside every set")
+    func whatTheLensSaysOfANaming() throws {
+        let fixture = try Self.makeFixture()
+        let inTheSet = try fixture.ledger.addSeen(Self.allens, photo: Data([1]), takenAt: Self.taken, location: Self.losFeliz, source: .glasses)
+        let outside = try fixture.ledger.addSeen(Self.allens, photo: Data([2]), takenAt: Self.taken.addingTimeInterval(60), location: nil, source: .glasses)
+        let again = try fixture.ledger.addSeen(Self.allens, photo: Data([3]), takenAt: Self.taken.addingTimeInterval(120), location: Self.losFeliz, source: .glasses)
+
+        #expect(LensNamedCapture(inTheSet, commonName: "Allen's Hummingbird") == LensNamedCapture(commonName: "Allen's Hummingbird", place: "Los Angeles", earned: .newPatch))
+        #expect(outside.placement.setName == "Uncharted")
+        #expect(LensNamedCapture(outside, commonName: "Allen's Hummingbird") == LensNamedCapture(commonName: "Allen's Hummingbird", place: nil, earned: .newPatch))
+        #expect(LensNamedCapture(again, commonName: "Allen's Hummingbird") == LensNamedCapture(commonName: "Allen's Hummingbird", place: "Los Angeles", earned: .seenAgain(count: 2)))
     }
 
     // MARK: - On a run, and after it

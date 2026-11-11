@@ -631,6 +631,58 @@ struct LensStateMachineTests {
         #expect(machine.page == .captureSaved)
     }
 
+    // Review of #185, Q6: the phone named or deleted the photo while the lens showed the birds, and the tap on a bird ended
+    // on "Photo saved. Name it on your phone.", which was no longer true.
+    @Test("a bird tapped for a photo the phone has named or deleted meanwhile: the lens says there is nothing to name, over the list, and the way back is the list")
+    func thePhotoIsGone() {
+        var machine = Self.machine(on: .captureMatches)
+        _ = machine.apply(.tap)
+        #expect(machine.captureGone(2) == false, "some other capture")
+        #expect(machine.page == .captureMatches)
+        #expect(machine.captureGone(1) == true)
+        #expect(machine.page == .problem(.photoGone))
+        #expect(machine.naming == nil)
+        #expect(machine.captureNamed(1, as: Fakes.namedPhoebe) == false, "nothing more is taken for that capture")
+        #expect(machine.apply(.swipeRight) == nil)
+        #expect(machine.page == .list, "not the saved page: there is no photo left to name on the phone")
+        #expect(machine.isCaptureRowHighlighted)
+
+        // With a problem page over the birds: this one takes its place, and the way back is the list all the same.
+        var covered = Self.machine(on: .captureMatches)
+        _ = covered.apply(.tap)
+        covered.report(.connectionLost)
+        #expect(covered.captureGone(1) == true)
+        #expect(covered.page == .problem(.photoGone))
+        _ = covered.apply(.tap)
+        #expect(covered.page == .list)
+
+        // No bird was chosen: nothing is gone that the lens was writing.
+        var choosing = Self.machine(on: .captureMatches)
+        #expect(choosing.captureGone(1) == false)
+        #expect(choosing.page == .captureMatches)
+    }
+
+    // Review of #185, J19: one press can arrive twice (a click and a select), and the echo must not be the next page's tap.
+    @Test("the pages whose own tap would undo the press that opened them say so: both viewfinders, \"Say the bird's name\", \"Photo saved\" and \"Added\"")
+    func pagesThatGuardTheirTap() {
+        let guarded: [LensPage] = [.viewfinder(index: 1), .captureViewfinder, .captureNaming, .captureSaved, .captureAdded]
+        let open: [LensPage] = [.list, .species(index: 1), .details(index: 1), .sounds(index: 1), .captureSaving, .captureMatches, .problem(.noLocation), .friend(Fakes.mayasPhoebe)]
+        #expect(guarded.filter(\.guardsItsTap) == guarded)
+        #expect(open.filter(\.guardsItsTap) == [])
+    }
+
+    // Review of #185, J6: the run read the lens's list order by copying the renderer's rule.
+    @Test("the species in the order the list shows them: calling first, then the most recently heard; the stack's own order until the order has caught up")
+    func listedSpecies() {
+        var machine = LensStateMachine()
+        #expect(machine.listedSpecies.isEmpty)
+        machine.update(with: Self.chorus(at: 100), at: 100)
+        #expect(machine.listedSpecies == [Fakes.towhee, Fakes.finch, Fakes.phoebe])
+        #expect(machine.listedSpecies == machine.order.listed(machine.stack).map { machine.stack.candidates[$0].species })
+        // An order that has not seen the stack: the stack's own.
+        #expect(SpeciesListOrder().listed(machine.stack) == [0, 1, 2])
+    }
+
     @Test("\"Say it again\" listens again, with the words gone, and the first dictation's late words are not taken for the second's")
     func saysItAgain() {
         var machine = Self.machine(on: .captureMatches)

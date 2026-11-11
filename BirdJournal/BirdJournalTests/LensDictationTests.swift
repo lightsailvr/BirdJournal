@@ -150,7 +150,7 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(2)) { stage.choices.last?.isSelected == true }
                 stage.input.select()
                 try await waitUntil(timeout: .seconds(5)) { lens.page == .captureSaved }
-                stage.input.select()
+                stage.input.navRight()
                 try await waitUntil(timeout: .seconds(2)) { lens.page == .list }
                 try await stage.askForAName()
                 speech.simulateTranscription(text: "Jay.", isFinal: true, confidence: -1)
@@ -246,13 +246,17 @@ extension MockDeviceKitTests {
                 #expect(try stage.album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 0, "nothing is added until a bird is chosen")
                 input.select()
                 try await waitUntil(timeout: .seconds(5)) { lens.page == .captureAdded }
+                // New York is in no set: the page has no line for a place rather than "Uncharted" (the review of #185, c6).
                 #expect(lens.card.elements == [
                     .title("Blue Jay", detail: "Seen"),
-                    .meta("Uncharted"),
                     .saved("Added"),
                     .body("New patch, sewn on your phone."),
                     .meta("Tap or swipe right: all species"),
                 ])
+                // The press that chose the bird, delivered a second time, does not close "Added" unread (J19).
+                input.select()
+                try await Task.sleep(for: .milliseconds(400))
+                #expect(lens.page == .captureAdded, "the echo of the choosing tap closed the page")
 
                 // On the phone: the unnamed sighting is the Blue Jay's sighting, Seen, named by the birder, from the glasses,
                 // with the photo; the run lists it under "Seen this run".
@@ -271,6 +275,8 @@ extension MockDeviceKitTests {
                 #expect(run.reveal == nil)
                 #expect(!run.hasCeremonyWaiting)
 
+                // Past the echo window a tap is the wearer's own.
+                try await Task.sleep(for: .milliseconds(1100))
                 input.select()
                 try await waitUntil(timeout: .seconds(2)) { lens.page == .list }
                 #expect(lens.machine.isCaptureRowHighlighted)
@@ -310,10 +316,13 @@ extension MockDeviceKitTests {
                 ])
                 try await waitUntil(timeout: .seconds(5)) { !speech.isListening }
 
-                // Again: Speech goes back on the session, with nothing heard yet.
+                // Again: Speech goes back on the session, with nothing heard yet. The same press delivered twice is not
+                // "Name it later" on the page it opened (the review of #185, J19).
                 input.select()
                 try await waitUntil(timeout: .seconds(5)) { lens.page == .captureNaming }
+                input.select()
                 try await waitUntil(timeout: .seconds(5)) { speech.isListening }
+                #expect(lens.page == .captureNaming, "the echo of \"Say it again\" named it later")
                 #expect(lens.card.elements.contains(.meta("Listening…")))
                 speech.simulateTranscription(text: "black feeby", isFinal: true, confidence: 0.6)
                 try await waitUntil(timeout: .seconds(5)) { lens.page == .captureMatches }
@@ -402,6 +411,7 @@ extension MockDeviceKitTests {
                 #expect(lens.page == .captureSaved, "not by way of \"Say the bird's name\"")
                 #expect(!speech.isListening)
                 #expect(stage.glassesRun.dictationNeedsPermission)
+                #expect(stage.run.offersDictation, "on the glasses run's page")
                 #expect(stage.run.sightings.unnamed.count == 1)
 
                 // The phone's offer, refused in Meta AI, still stands; allowed, it goes.
@@ -431,6 +441,61 @@ extension MockDeviceKitTests {
                 try await waitUntil(timeout: .seconds(5)) { stage.source.dictationReleases == 1 }
                 #expect(!speech.isListening)
                 #expect(stage.source.dictationHolds == 1)
+            }
+        }
+
+        // Review of #185, Q6.
+        @Test("the phone names the photo while the lens shows the birds: a tap on a bird there says there is nothing to name, adds nothing, and goes back to the list, never to \"Photo saved. Name it on your phone.\"")
+        func thePhoneNamedItFirst() async throws {
+            try await Self.withRun { stage in
+                let (lens, run, input) = (stage.lens, stage.run, stage.input)
+                try await stage.askForAName()
+                stage.speech.simulateTranscription(text: "Jay.", isFinal: true, confidence: -1)
+                try await waitUntil(timeout: .seconds(5)) { lens.page == .captureMatches }
+
+                // On the phone, meanwhile: the photo under "Seen this run" is named a Black Phoebe.
+                let unnamed = try #require(run.sightings.unnamed.first)
+                let phoebe = try #require(Self.names.bird(scientificName: "Sayornis nigricans"))
+                try #require(run.name(unnamed, as: phoebe))
+                run.finishCeremony()
+                run.dismissReveal()
+
+                input.select()
+                try await waitUntil(timeout: .seconds(5)) { lens.page != .captureMatches }
+                #expect(lens.page == .problem(.photoGone))
+                #expect(lens.card.elements == [.heading("Nothing to name"), .body("That photo was named or deleted on your phone."), .meta("Swipe right to continue")])
+                let sightings = try stage.album.mainContext.fetch(FetchDescriptor<Sighting>())
+                #expect(sightings.map(\.scientificName) == ["Sayornis nigricans"], "the phone's naming stands, and the lens added nothing")
+                input.navRight()
+                try await waitUntil(timeout: .seconds(2)) { lens.page == .list }
+
+                // Deleted on the phone instead: the same.
+                try await stage.askForAName()
+                stage.speech.simulateTranscription(text: "Jay.", isFinal: true, confidence: -1)
+                try await waitUntil(timeout: .seconds(5)) { lens.page == .captureMatches }
+                #expect(run.delete(try #require(run.sightings.unnamed.first)))
+                input.select()
+                try await waitUntil(timeout: .seconds(5)) { lens.page != .captureMatches }
+                #expect(lens.page == .problem(.photoGone))
+                #expect(try stage.album.mainContext.fetchCount(FetchDescriptor<Sighting>()) == 1)
+            }
+        }
+
+        // Review of #185, c3: the session keeps the fact until its next start, and the offer was drawn for any run.
+        @Test("the phone offers dictation only on the glasses run that needed it: with that run's page gone, what the session still remembers offers nothing")
+        func theOfferIsTheGlassesRuns() async throws {
+            try await Self.withRun { stage in
+                let permissions = MockDeviceKit.shared.permissions
+                permissions.set(.microphone, .denied)
+                defer { permissions.set(.microphone, .granted) }
+                try await stage.takePhoto()
+                try await waitUntil(timeout: .seconds(5)) { stage.lens.page == .captureSaved }
+                #expect(stage.run.offersDictation)
+
+                await stage.run.stop()
+                stage.run.dismissEnded()
+                #expect(stage.glassesRun.dictationNeedsPermission, "the session remembers until its next start")
+                #expect(!stage.run.offersDictation, "no glasses run is on the page: a phone-microphone run would not be offered it")
             }
         }
 

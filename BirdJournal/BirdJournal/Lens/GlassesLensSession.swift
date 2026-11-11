@@ -37,7 +37,9 @@ import UIKit
 /// re-sent as fast as the Display takes it (at most every `viewfinderInterval`). A tap there takes the photo and a
 /// swipe adds the bird without one; both go to `onEffect` for the run to write. Hardware may deliver the Add press
 /// twice, as a click and a select (DECISIONS.md, "Lens UI"), so a tap landing on the viewfinder within `echoWindow`
-/// of its opening is that echo and is ignored rather than taking a photo of nothing in particular.
+/// of its opening is that echo and is ignored rather than taking a photo of nothing in particular. The same holds for
+/// every page a press opens whose own tap would undo that press (`LensPage.guardsItsTap`): "Say the bird's name" after
+/// "Say it again", where the echo would be "Name it later", and "Photo saved" and "Added", which it would close unread.
 ///
 /// "Capture a sighting", the row above the birds on the species list (issue #193), opens a viewfinder of its own for a
 /// bird that was seen and not heard: the same frames, the same echo window, and a tap there asks `onCapture` for the
@@ -127,9 +129,11 @@ final class GlassesLensSession {
     @ObservationIgnored private let image: (LensImage) -> UIImage?
     /// Told about the viewfinder and saves; ending the session on Back is handled here.
     @ObservationIgnored private let onEffect: (LensEffect) -> Void
-    /// How soon after the viewfinder opens a tap counts as the Add press delivered twice.
+    /// How soon after an input opens a page that guards its tap (a viewfinder, "Say the bird's name" after "Say it
+    /// again", "Photo saved", "Added") a tap there counts as that same press delivered twice.
     @ObservationIgnored private let echoWindow: Duration
-    @ObservationIgnored private var viewfinderOpenedAt: ContinuousClock.Instant?
+    /// When an input last opened such a page.
+    @ObservationIgnored private var pressOpenedPageAt: ContinuousClock.Instant?
     /// The camera's latest frame for the viewfinder; nil without a camera (a lens-only session), which the page says.
     @ObservationIgnored var viewfinderFrame: (() -> CameraFrame?)?
     /// Told when the viewfinder opens ("viewfinder") and when the wearer lands on the species list ("species list"),
@@ -233,7 +237,7 @@ final class GlassesLensSession {
         bannerExpiryTask?.cancel()
         bannerExpiryTask = nil
         savedSightings = []
-        viewfinderOpenedAt = nil
+        pressOpenedPageAt = nil
         capturedPhoto = nil
         inputRecords = []
         teardownTask = nil
@@ -502,18 +506,29 @@ final class GlassesLensSession {
         if inputRecords.count > Self.maxRecords { inputRecords.removeLast(inputRecords.count - Self.maxRecords) }
         // Events that land while the run is ending (after Back on the root, say) must not move the pages.
         guard let gesture = record.gesture, phase == .running else { return }
-        if gesture == .tap, machine.page.isViewfinder, let viewfinderOpenedAt, ContinuousClock.now - viewfinderOpenedAt < echoWindow {
+        if gesture == .tap, machine.page.guardsItsTap, let pressOpenedPageAt, ContinuousClock.now - pressOpenedPageAt < echoWindow {
             return
         }
         // A held banner past its limit must not show on the page this gesture lands on, even if the timer is late.
         machine.expireBanner(at: bannerTime)
+        let before = machine.page
         perform(machine.apply(gesture) { [self] in cardProfile(for: $0)?.sounds ?? [] })
+        notePress(from: before)
     }
 
     /// A tap on a card element (the Save button), delivered by Display rather than Inputs.
     private func tapped(_ action: LensAction) {
         guard phase == .running else { return }
+        let before = machine.page
         perform(machine.press(action))
+        notePress(from: before)
+    }
+
+    /// An input has been dealt with. If it opened a page whose own tap would undo it, the echo window starts: the same
+    /// press arriving again within it, as a tap, is dropped (`LensPage.guardsItsTap`). A page the run opens by itself
+    /// ("Say the bird's name" once the photo is saved) starts no window: no press is behind it.
+    private func notePress(from before: LensPage) {
+        if machine.page != before, machine.page.guardsItsTap { pressOpenedPageAt = .now }
     }
 
     /// The sighting an add of `species` wrote earned `patch` (issue #132): the details page's saved line names it.
@@ -524,10 +539,8 @@ final class GlassesLensSession {
     private func perform(_ effect: LensEffect?) {
         switch effect {
         case .openViewfinder(let candidate):
-            viewfinderOpenedAt = .now
             onEffect(.openViewfinder(candidate))
         case .openCaptureViewfinder:
-            viewfinderOpenedAt = .now
             onEffect(.openCaptureViewfinder)
         case .capturePhoto(let id):
             if let onCapture {
@@ -540,11 +553,12 @@ final class GlassesLensSession {
             // "Say the bird's name" is the page: `syncDictation()` below starts listening.
             break
         case .nameCapture(let capture, let match):
-            // The write is the run's, and at once: the lens says what it earned, or that the photo waits on the phone.
-            if let named = names?.name(capture, match) {
-                machine.captureNamed(capture, as: named)
-            } else {
-                machine.captureNotNamed(capture)
+            // The write is the run's, and at once: the lens says what it earned, that the photo waits on the phone, or
+            // that the phone got to it first.
+            switch names?.name(capture, match) {
+            case .named(let named): machine.captureNamed(capture, as: named)
+            case .gone: machine.captureGone(capture)
+            case .notWritten, nil: machine.captureNotNamed(capture)
             }
         case .takePhoto(let candidate):
             savedSightings.append(candidate)
@@ -817,9 +831,10 @@ final class GlassesLensSession {
 struct LensNameSource {
     /// The birds `words` may name for the photo of capture `capture`, the closest first.
     var matches: (_ words: String, _ capture: Int) async -> [LensNameMatch]
-    /// Names the photo of capture `capture` as `match`, which writes its sighting: what it earned, or nil when it could
-    /// not be written, the photo then still unnamed on the phone.
-    var name: (_ capture: Int, _ match: LensNameMatch) -> LensNamedCapture?
+    /// Names the photo of capture `capture` as `match`, which writes its sighting, and says how that went: what it
+    /// earned; that it could not be written, the photo then still unnamed on the phone; or that the phone had named or
+    /// deleted the photo first.
+    var name: (_ capture: Int, _ match: LensNameMatch) -> LensNamingOutcome
     /// The glasses are about to listen for a name: the moment to take the camera stream off, if the run does.
     var willListen: () async -> Void = {}
     /// They no longer are; called once for each `willListen`.

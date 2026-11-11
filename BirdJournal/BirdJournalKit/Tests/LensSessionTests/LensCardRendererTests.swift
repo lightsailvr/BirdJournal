@@ -49,7 +49,7 @@ struct LensCardRendererTests {
     static let pages: [LensPage] = [
         .list, .species(index: 0), .species(index: 1), .details(index: 0), .details(index: 1),
         .problem(.noLocation), .problem(.connectionLost), .friend(Fakes.mayasPhoebe),
-        .captureViewfinder, .captureSaving, .captureSaved, .problem(.photoNotTaken),
+        .captureViewfinder, .captureSaving, .captureSaved, .problem(.photoNotTaken), .problem(.photoGone),
     ]
 
     @Test("every page is one screenful inside the word budget; the details page has the larger one of its small-style text", arguments: pages)
@@ -268,6 +268,15 @@ struct LensCardRendererTests {
         #expect(Self.render(.problem(.photoNotTaken)).elements == [
             .heading("No photo taken"),
             .body("The camera was not ready, so nothing was saved. Open Capture a sighting again."),
+            .meta("Swipe right to continue"),
+        ])
+    }
+
+    @Test("a photo the phone named or deleted before the lens could is a problem page that says so, and not that the photo waits on the phone")
+    func photoGone() {
+        #expect(Self.render(.problem(.photoGone)).elements == [
+            .heading("Nothing to name"),
+            .body("That photo was named or deleted on your phone."),
             .meta("Swipe right to continue"),
         ])
     }
