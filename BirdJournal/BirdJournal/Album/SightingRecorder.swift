@@ -122,6 +122,32 @@ final class SightingRecorder {
         return capture
     }
 
+    /// Changes the bird of a sighting (issue #190, of #185): the same sighting, with its identifier, photo, time, place,
+    /// source and note, now of `bird`. Only its bird is written; patches are derived from sightings, so the old bird's patch
+    /// loses this one, and is unpicked if it had no other there, and the new bird's gains it or is sewn, which is what the
+    /// answer says. What was read or written for the old bird does not stay: the rarity is read again for the new bird at
+    /// the sighting's own place and week, and the caption goes. One save, or nothing changes.
+    @discardableResult
+    func changeBird(of sighting: Sighting, to bird: NameableBird) throws -> Recorded {
+        let speciesID = bird.speciesID
+        let location = sighting.location
+        let identifier = sighting.identifier
+        let context = container.mainContext
+        let others = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID && $0.identifier != identifier }))
+        let sets = sets()
+        let existing = CardCollection(sightings: others, sets: sets).count(ofSpeciesID: speciesID, at: location)
+        sighting.speciesID = speciesID
+        sighting.rarity = raritySnapshot(scientificName: bird.scientificName, location: location, at: sighting.confirmedAt)
+        sighting.caption = nil
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+        return Recorded(sighting: sighting, sewsPatch: existing == 0, patchCount: existing + 1, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets))
+    }
+
     /// Removes a capture and its photo from the album: the one thing that loses a photo.
     func delete(_ capture: Capture) throws {
         let path = capture.photoPath
