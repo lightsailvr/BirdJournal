@@ -86,16 +86,40 @@ public enum Journal {
     }
 }
 
-/// The search rule the journal, the guide and the packs share: every word of the query starts a word of one of the
-/// names, ignoring case and accents. An empty query matches everything.
+/// The search rule the journal, the guide, the packs and the naming of a seen bird share: every word of the query starts a
+/// word of one of the names, ignoring case and accents. An empty query matches everything.
 public enum NameSearch {
+    /// The words of something's names, split and folded once, for a list searched again on every keystroke (issue #186:
+    /// every bird BirdNET knows).
+    public struct Words: Sendable, Hashable {
+        let words: [String]
+
+        public init(_ names: [String]) {
+            words = names.joined(separator: " ")
+                .split { !$0.isLetter && !$0.isNumber && $0 != "'" }
+                .map { NameSearch.normalize(String($0)) }
+        }
+    }
+
+    /// What was typed, split and folded once.
+    public struct Query: Sendable, Hashable {
+        let terms: [String]
+
+        public init(_ text: String) {
+            terms = text.split(whereSeparator: \.isWhitespace).map(NameSearch.normalize)
+        }
+
+        /// Nothing but spaces was typed: it matches everything.
+        public var isEmpty: Bool { terms.isEmpty }
+
+        public func matches(_ words: Words) -> Bool {
+            terms.allSatisfy { term in words.words.contains { $0.hasPrefix(term) } }
+        }
+    }
+
     public static func matches(query: String, in names: [String]) -> Bool {
-        let terms = query.split(whereSeparator: \.isWhitespace).map(normalize)
-        guard !terms.isEmpty else { return true }
-        let words = names.joined(separator: " ")
-            .split { !$0.isLetter && !$0.isNumber && $0 != "'" }
-            .map { normalize(String($0)) }
-        return terms.allSatisfy { term in words.contains { $0.hasPrefix(term) } }
+        let query = Query(query)
+        return query.isEmpty || query.matches(Words(names))
     }
 
     private static func normalize<S: StringProtocol>(_ text: S) -> String {

@@ -85,6 +85,9 @@ struct RunRecap: Equatable {
         return lines.joined(separator: "\n")
     }
 
+    /// What an ended run's page and its review say where the birds heard would be listed.
+    static let nothingHeard = "No birds were heard."
+
     /// "AI illustration, Featherguild", the wordmark small: a blank isn't an illustration.
     static func imprint(hasPainting: Bool) -> String {
         hasPainting ? "AI illustration, Featherguild" : "Featherguild"

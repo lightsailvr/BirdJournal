@@ -35,6 +35,8 @@ enum SharePolicy {
         var pictureCaption: String
         /// The credit the export must carry, nil for the birder's own snapshot or no picture.
         var attribution: String?
+        /// The app's line under it all: `appCredit`, or `seenCredit` for a bird the birder named.
+        var credit = SharePolicy.appCredit
     }
 
     /// Licenses under which a pack photo may be redistributed on a personal, non-commercial share card with credit.
@@ -76,12 +78,15 @@ enum SharePolicy {
             note: choices.includeNote && !(note ?? "").isEmpty ? note : nil,
             picture: picture,
             pictureCaption: caption,
-            attribution: attribution
+            attribution: attribution,
+            credit: sighting.namedByBirder ? seenCredit : appCredit
         )
     }
 
     /// The app's credit, in what goes with any image.
     static let appCredit = "Heard with Featherguild. Powered by BirdNET."
+    /// The credit with a bird the birder named from a photo (issue #186): nothing heard it and BirdNET matched nothing.
+    static let seenCredit = "Seen with Featherguild."
 
     /// The place on a run recap's image (issue #150): the same rule as a find's, for a run. The city, never a coordinate; none
     /// when the city is off or the run had no fix; and "a secret spot" as soon as a threatened or unrated bird is pictured on
@@ -101,7 +106,7 @@ enum SharePolicy {
         let whenAndWhere = [content.dateText, content.areaText].compactMap { $0 }
         if !whenAndWhere.isEmpty { lines.append(whenAndWhere.joined(separator: ", ")) }
         if let note = content.note { lines.append("“\(note)”") }
-        lines.append(appCredit)
+        lines.append(content.credit)
         if let attribution = content.attribution { lines.append(attribution) }
         return lines.joined(separator: "\n")
     }

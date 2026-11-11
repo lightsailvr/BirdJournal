@@ -1,0 +1,62 @@
+{
+  "releases": [
+    {
+      "version": "0.2.0",
+      "headline": "Add the birds you see",
+      "items": [
+        {
+          "title": "Capture a sighting",
+          "detail": "Photograph a bird you saw but didn’t hear, or pick a photo from your library, and it counts as a sighting. It works during a run or with no run at all.",
+          "try": "On Listen, tap Capture a sighting, photograph a bird, then choose its name."
+        },
+        {
+          "title": "Name it now or later",
+          "detail": "Name this bird offers the birds heard on your run and likely nearby first. In a hurry? Name it later keeps the photo under To name in your Collection.",
+          "try": "Take a photo, tap Name it later, then name it from To name in Collection’s Sightings."
+        },
+        {
+          "title": "From your glasses too",
+          "detail": "The lens has its own Capture a sighting row: take the photo, say the bird’s name, and it’s added without reaching for your phone.",
+          "try": "On a glasses run, choose Capture a sighting on the lens and say the bird’s name."
+        },
+        {
+          "title": "Change a sighting’s bird",
+          "detail": "Named the wrong bird? A sighting you named has Change bird on its page, and its patch follows to the right species.",
+          "try": "Open a sighting you named, tap Change bird and choose another."
+        },
+        {
+          "title": "Smoother all round",
+          "detail": "Switching between Patches, Sightings and Species in your Collection lands every time, and this card will tell you what’s new after each update."
+        }
+      ],
+      "note": "Seen something odd? Take a screenshot in the app and choose Share Beta Feedback.",
+      "date": "2026-11-11"
+    },
+    {
+      "version": "0.1.0",
+      "date": "2026-11-07",
+      "headline": "Guilds open their doors",
+      "items": [
+        {
+          "title": "Guilds are open",
+          "detail": "Sign in to start a Guild with friends and see each other’s finds as they happen.",
+          "try": "Start a Guild, send its invite to another tester, then each add a bird."
+        },
+        {
+          "title": "Sew a patch from the run",
+          "detail": "Every bird heard on a run has its own Sew it or Add button, and the list holds still under your finger.",
+          "try": "Start a run near some birdsong and sew a patch straight from its row."
+        },
+        {
+          "title": "Listen follows where you are",
+          "detail": "The painting on Listen and the app’s accent colour match the region you’re birding in."
+        },
+        {
+          "title": "A quicker, clearer start",
+          "detail": "The app opens faster, and a slow start says your journal is on its way."
+        }
+      ],
+      "note": "Seen something odd? Take a screenshot in the app and choose Share Beta Feedback."
+    }
+  ]
+}

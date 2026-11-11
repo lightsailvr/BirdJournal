@@ -34,6 +34,18 @@ enum Fakes {
 }
 
 extension Fakes {
+    /// What "black phoebe" may be (issue #194): the phoebe, which would sew a patch, and two birds less like it.
+    static let matches = [
+        LensNameMatch(id: "Sayornis nigricans", commonName: "Black Phoebe", isNewPatch: true),
+        LensNameMatch(id: "Sayornis saya", commonName: "Say's Phoebe", isNewPatch: false),
+        LensNameMatch(id: "Sayornis phoebe", commonName: "Eastern Phoebe", isNewPatch: true),
+    ]
+
+    /// The photo named a Black Phoebe, its first in Los Angeles.
+    static let namedPhoebe = LensNamedCapture(commonName: "Black Phoebe", place: "Los Angeles", earned: .newPatch)
+}
+
+extension Fakes {
     static let phoebeSong = LensSound(id: "xc-1", kind: .song)
     static let phoebeCall = LensSound(id: "xc-2", kind: .call)
 

@@ -34,8 +34,9 @@ One word for each thing, in every string, VoiceOver label and error (#150). The 
 | **Sewn** | What a bird in a set is once you have its patch: "3 of 160 sewn" | species collected |
 | **Still out there** | A bird in a set you haven't found: "157 still out there", once on a page | not yet found here |
 | **Plate** | A set's painted cover printed on card stock in the Atlas, with its margin, keyline and credit | cover, on a page of the Atlas |
+| **Unnamed sighting** | A photo of a bird you took and haven't named yet (the domain's capture, #188): it waits under "Seen this run", in the run's review and in the Collection's "To name", with "Name it"; "Name it later" leaves it there, and "Delete photo" is the only thing that removes it | capture, draft, pending |
 
-Kept word for word: "Wonder is nearby.", "Your first patch is a bird away.", "Fourteen birds, together.", "First for the Guild", "Jealous!", "Possible matches. Add the birds you recognize."
+Kept word for word: "Wonder is nearby.", "Your first patch is a bird away.", "Fourteen birds, together.", "First for the Guild", "Jealous!", "Possible matches. Add the birds you recognize.", and since #185 "Capture a sighting", "Name this bird", "Seen this run", "Change bird" and, on the lens, "Say the bird's name", "Say it again" and "Name it later".
 
 ## Listening
 
@@ -48,7 +49,7 @@ A species BirdNET has heard convincingly during a run and that the birder can re
 _Avoid_: detection, match, suggestion
 
 **Add**:
-The birder's explicit confirmation of a candidate, from the lens or the phone. Every add writes a new sighting.
+The birder's explicit confirmation of a bird: of a candidate, from the lens or the phone, or of a bird they saw, by naming their photo of it, a capture (#185). Every add writes a new sighting.
 _Avoid_: save, log, confirm
 
 **Sighting**:
@@ -56,11 +57,27 @@ One add of one species at a time and place, owned by the birder who added it. Th
 _Avoid_: encounter (UI copy only), observation, entry, record
 
 **Method**:
-How the birder met the bird on a sighting: Heard or Seen. Heard unless the birder says otherwise.
+How the birder met the bird on a sighting: Heard or Seen. An add of a candidate is Heard unless the birder says otherwise; a sighting named by the birder is Seen.
 _Avoid_: evidence, detection type
 
+**Named by the birder**:
+What a sighting is when the birder named its bird themselves, from their photo of it, and BirdNET heard nothing to match (#186). It is always Seen and has no match score, and nothing shows one for it: not the run, its page, its paper card or a share. In every other way it is a sighting like any other: it sews its patch or adds to its count, counts toward its set, and is published as a find that says "saw". The sighting carries the mark (`namedByBirder`). Since the name is the birder's own it is theirs to correct: "Change bird" on its page gives the sighting another bird (#190), and its patch, rarity, caption and find follow. A sighting BirdNET heard keeps its bird, even marked Seen.
+_Avoid_: manual sighting, unverified sighting, self-reported
+
+**Capture**:
+A photo of a bird with its time, place and source (the device that took it), saved the moment it is taken and not yet a sighting (#188). A photo chosen from the library is one too, from the moment it is chosen, with the date and place the picture itself carries and the current ones for what it lacks (#192). One taken on a run is that run's, listed under "Seen this run" and recorded at the run's place; one taken with no run under way (#191) is no run's, and is recorded where the phone is at the shutter. A library photo that carries a date from before the run or after it is no run's either, whenever it is chosen. Whose it is, and where, is settled as the shutter is pressed, not when the photo arrives. Photo first, name second: it waits, without ever expiring, until the birder names the bird, which is an add and writes a sighting with the capture's own time and place and its photo as the original photo, or until the birder deletes it. Until it is named it is no part of the collection: it sews no patch, counts toward no set and is published as no find. Stored apart from the sightings (`Capture`). In copy, an unnamed sighting.
+_Avoid_: draft, pending sighting, unverified sighting; "capture" in anything a birder reads, except the button "Capture a sighting"
+
+**Dictation**:
+Saying a bird's name to the glasses to name a capture taken from the lens (#194): the lens asks "Say the bird's name" once the photo is saved, the glasses' own speech recognition hears it, and the lens offers the closest birds, ordered as "Name this bird" orders a search. A tap on one names the capture, which is an add. The phone is always the fallback: "Name it later", silence or anything going wrong leaves the unnamed sighting for the phone.
+_Avoid_: voice command, voice search, transcription (in copy)
+
+**Likely here**:
+What a bird is at a place and week when the geomodel's occurrence for it there is at or above the floor identification admits a bird at. "Name this bird" lists the likeliest of the field guides' birds under "Likely here now", after "Heard this run" (the run's candidates), and orders a search by the same two (#189). Not rarity, which is a label saved on a sighting.
+_Avoid_: probable, expected, common here (Common is a rarity label), suggestion (in copy)
+
 **Original photo**:
-The unaltered picture kept with a sighting: the glasses' photo from the add, or one the birder attached. Evidence, never art.
+The unaltered picture kept with a sighting: the glasses' photo, which is the one from the add of a bird heard or the photo a seen bird was named from when it was taken from the lens (#193); or one of the birder's own, which is the photo a seen bird was named from (taken with the capture camera on the phone, #186, or chosen from the library there, #192) or one attached from the library. The phone shows a glasses photo at the journal's crop, the middle of the frame, which is what the lens's viewfinders mark; one of the birder's own is shown whole. "View original photo" opens either one whole. A photo the capture camera takes is also copied to the birder's Photos library; that copy is theirs and no part of the album. Evidence, never art.
 _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fallback for it)
 
 ## Packs
@@ -96,7 +113,7 @@ A patch before it is stitched: bare twill, out to the edge since the cord comes 
 _Avoid_: locked patch, silhouette, ghost
 
 **Stitch-in**:
-The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It plays once, on the phone: at the add, or for an add on the lens, when the run is over and the app is next in front; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its count ticks in the acknowledgment, with nothing to tap.
+The ceremony of an add that sews a patch: about 4.2 s from its pattern, one thread colour at a time along the pack's stitch order, the cord last. The sighting is saved before it starts. It plays once, on the phone: at the add, or for an add on the lens, when the run is over and the app is next in front; reopening a patch never shows it. Reduce Motion and VoiceOver go straight to the finished patch. A repeat sighting has none: its count ticks in the acknowledgment, with nothing to tap. Nor has a patch sewn by changing a sighting's bird (#190): the ceremony belongs to the add.
 _Avoid_: animation, unlock
 
 **Board**:
@@ -130,7 +147,7 @@ Was the status of a birder's earliest surviving card of a species, with a gold f
 _Avoid_: in copy
 
 **Rarity**:
-How unusual a species is at a sighting's place and week, saved at the add as a label: Common, Uncommon, Rare or Exceptional.
+How unusual a species is at a sighting's place and week, saved at the add as a label: Common, Uncommon, Rare or Exceptional. Read again only when the birder changes the sighting's bird (#190), for the new bird at the same place and week.
 _Avoid_: score, frequency, abundance
 
 **Set**:
@@ -154,12 +171,12 @@ Two to five words heading a species' lore on the paper card, an epithet from wha
 _Avoid_: name, heading, tagline
 
 **Caption**:
-One line written for a sighting on the phone, from the fact sheet and the moment, shown on the sighting's page.
+One line written for a sighting on the phone, from the fact sheet and the moment, shown on the sighting's page. It is about the sighting's bird, so a change of bird (#190) drops it and one is written for the new bird.
 _Avoid_: flavor text, tagline (the lore's one-line fallback)
 
 ## Art
 
-The patch is the only painting (decided 2026-11-03, built in #137). Original photos stay as evidence: the glasses photo from the add, or one the birder attaches from the library.
+The patch is the only painting (decided 2026-11-03, built in #137). Original photos stay as evidence: the glasses photo from the add, the photo a seen bird was named from (#186), or one the birder attaches from the library.
 
 **Pack art**:
 Was a watercolour of a species shipped with its pack and shown on its card. The app no longer shows it; a pack not yet rebuilt with patches (#58) still carries it, unused, and shows the edition's blank patch.

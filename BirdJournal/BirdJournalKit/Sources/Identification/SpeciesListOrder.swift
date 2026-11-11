@@ -36,6 +36,12 @@ public struct SpeciesListOrder: Sendable, Equatable {
         calling.contains(index)
     }
 
+    /// The indices of `stack` in the order a list shows them: this order's once it has seen the whole stack, and until
+    /// then the stack's own.
+    public func listed(_ stack: CandidateStack) -> [Int] {
+        indices.count == stack.count ? indices : Array(stack.candidates.indices)
+    }
+
     /// The row position of a stack index, nil when the index is not in the order.
     public func position(of index: Int) -> Int? {
         indices.firstIndex(of: index)

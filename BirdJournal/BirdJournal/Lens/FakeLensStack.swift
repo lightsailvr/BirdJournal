@@ -5,8 +5,8 @@ import UIKit
 
 /// A hard-coded stack for driving the lens without the engine (issue #7: "demonstrated on the mock display with a
 /// hard-coded fake stack"), plus fake profiles with SF Symbol photos for the app-hosted tests that must not depend
-/// on the bundled pack. The app itself draws profiles from its `PackLibrary`. The last species has no profile, to show
-/// the name-only card.
+/// on the bundled pack. The app itself draws profiles from its `PackLibrary`. The last two species have no profile, to
+/// show the name-only card; the sixth is there so the list has a second page.
 enum FakeLensStack {
     static let species: [Species] = [
         Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"),
@@ -14,9 +14,10 @@ enum FakeLensStack {
         Species(index: 2, scientificName: "Melozone crissalis", commonName: "California Towhee", taxonomicClass: "Aves"),
         Species(index: 3, scientificName: "Calypte anna", commonName: "Anna's Hummingbird", taxonomicClass: "Aves"),
         Species(index: 4, scientificName: "Psaltriparus minimus", commonName: "Bushtit", taxonomicClass: "Aves"),
+        Species(index: 5, scientificName: "Zenaida macroura", commonName: "Mourning Dove", taxonomicClass: "Aves"),
     ]
 
-    static let scores: [Float] = [0.82, 0.61, 0.74, 0.93, 0.55]
+    static let scores: [Float] = [0.82, 0.61, 0.74, 0.93, 0.55, 0.67]
 
     static let profiles: [String: SpeciesProfile] = [
         "Sayornis nigricans": SpeciesProfile(

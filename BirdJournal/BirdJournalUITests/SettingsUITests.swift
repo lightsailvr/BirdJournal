@@ -153,7 +153,8 @@ final class AccountSwitchUITests: XCTestCase {
     @MainActor
     func testAccountRowFollowsTheBuildSwitch() {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        // A Release build shows the "What's new" card unasked after an update; here it would come up over Settings.
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-whatsNew", "hide"]
         app.launch()
         app.buttons["Settings"].tap()
 
@@ -172,7 +173,7 @@ final class AccountSwitchUITests: XCTestCase {
     @MainActor
     func testCirclesTabFollowsTheBuildSwitch() {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES"]
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-whatsNew", "hide"]
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 10), "no tab bar; screen: \(app.debugDescription.prefix(3000))")
         #if DEBUG
