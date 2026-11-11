@@ -26,6 +26,7 @@ struct BirdJournalApp: App {
     @State private var circles: CircleStore
     @State private var findOutbox: FindOutbox
     @State private var pushes: PushCenter
+    @State private var whatsNew: WhatsNewCenter
     /// A patch the widget opened, until the root has shown it.
     @State private var pendingPatch: CardCollection.Patch.Key?
     private let album: ModelContainer
@@ -38,6 +39,8 @@ struct BirdJournalApp: App {
         let launchSignposter = OSSignposter(subsystem: "com.matthewcelia.mybirdjournal", category: "launch")
         let initialization = launchSignposter.beginInterval("App init")
         defer { launchSignposter.endInterval("App init", initialization) }
+        // First, before the album is opened: whether this is a fresh install is whether there's a journal on disk yet.
+        _whatsNew = State(initialValue: WhatsNewCenter.forApp())
         let configure = launchSignposter.beginInterval("Configure wearables")
         do {
             try Wearables.configure()
@@ -332,6 +335,7 @@ struct BirdJournalApp: App {
             .environment(circles)
             .environment(findOutbox)
             .environment(pushes)
+            .environment(whatsNew)
             .environment(places)
             .environment(packs)
             .environment(collectionStore)
