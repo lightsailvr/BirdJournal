@@ -25,6 +25,8 @@ final class JournalEdits {
         let source: SightingSource
         let note: String?
         let method: SightingMethod
+        /// The birder named the bird from their photo (issue #186): it comes back as that, with no match score.
+        let namedByBirder: Bool
         let rarity: RaritySnapshot?
         let caption: CardCaption?
         let art: CardArt
@@ -95,7 +97,7 @@ final class JournalEdits {
         let removed = Removed(
             identifier: sighting.identifier, speciesID: sighting.speciesID, confirmedAt: sighting.confirmedAt, location: sighting.location,
             soundConfidence: sighting.soundConfidence, frameImagePath: sighting.frameImagePath, source: sighting.source,
-            note: sighting.note, method: sighting.method, rarity: sighting.rarity, caption: sighting.caption, art: sighting.art,
+            note: sighting.note, method: sighting.method, namedByBirder: sighting.namedByBirder, rarity: sighting.rarity, caption: sighting.caption, art: sighting.art,
             attachedPhotoPaths: sighting.attachedPhotoPaths, filePaths: sighting.filePaths, commonName: commonName
         )
         container.mainContext.delete(sighting)
@@ -119,7 +121,7 @@ final class JournalEdits {
         let sighting = Sighting(
             identifier: removed.identifier, speciesID: removed.speciesID, confirmedAt: removed.confirmedAt, location: removed.location,
             soundConfidence: removed.soundConfidence, frameImagePath: removed.frameImagePath, source: removed.source,
-            note: removed.note, method: removed.method
+            note: removed.note, method: removed.method, namedByBirder: removed.namedByBirder
         )
         sighting.rarity = removed.rarity
         sighting.caption = removed.caption
