@@ -68,7 +68,7 @@ struct BirdJournalApp: App {
         let listening = ListeningCoordinator(
             phone: phone, glasses: glasses, sightings: sightings, levels: levels,
             defaultSource: connection.devices.isEmpty ? .phone : .glasses,
-            archive: Self.endedRunArchive()
+            archive: Self.endedRunArchive(), captureLocation: Self.makeCaptureLocation()
         )
         self.album = album
         self.frames = frames
@@ -120,8 +120,11 @@ struct BirdJournalApp: App {
         // A friend's notable find, foreground or background, becomes a banner on the lens of a run (issue #67).
         _ = FriendBanners.forward(pushes.friendFinds()) { [glasses, lens] in [glasses.lens, lens] }
         _sounds = State(initialValue: sounds)
-        let journalEdits = JournalEdits(container: album, frames: frames)
+        let journalEdits = JournalEdits(container: album, frames: frames, recorder: recorder)
         journalEdits.findOutbox = findOutbox
+        // A change of bird (issue #190) is captioned as an add is, and the run under way hears of it.
+        journalEdits.captioner = sightings.captioner
+        journalEdits.birdChanged = { [weak listening] in listening?.birdChanged(of: $0) }
         _journalEdits = State(initialValue: journalEdits)
     }
 
@@ -275,6 +278,15 @@ struct BirdJournalApp: App {
         #else
         return CoreLocationProvider()
         #endif
+    }
+
+    /// Where the phone is for a photo taken with no run (issue #191): Core Location's fixes while the camera is open, in front
+    /// only. `-autoLocation` stands in for it in debug builds.
+    private static func makeCaptureLocation() -> any LocationProvider {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "autoLocation") != nil { return debugLocationProvider() }
+        #endif
+        return CoreLocationProvider(heldThroughBackground: false)
     }
 
     #if DEBUG

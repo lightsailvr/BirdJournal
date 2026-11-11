@@ -45,6 +45,14 @@ extension LocationProvider {
 /// pauses while the permission prompt is up). A denial ends the stream. A later Core Location failure ends it
 /// silently; the session keeps the last fix it had.
 final class CoreLocationProvider: LocationProvider {
+    /// Whether a `CLBackgroundActivitySession` is held while the stream is read. A run's is; the place read while the
+    /// camera is open with no run (issue #191) is for something on screen, and stops with the app in the background.
+    private let heldThroughBackground: Bool
+
+    init(heldThroughBackground: Bool = true) {
+        self.heldThroughBackground = heldThroughBackground
+    }
+
     /// How long to wait for the first fix once permission is settled. Listening does not start until the first
     /// element arrives, so this caps how long Start can take when no fix is coming.
     nonisolated static let fixTimeout: Duration = .seconds(10)
@@ -86,13 +94,13 @@ final class CoreLocationProvider: LocationProvider {
     }
 
     func fixes() -> AsyncStream<LocationFix> {
-        AsyncStream { continuation in
-            let task = Task.detached { await Self.deliver(to: continuation) }
+        AsyncStream { [heldThroughBackground] continuation in
+            let task = Task.detached { await Self.deliver(to: continuation, heldThroughBackground: heldThroughBackground) }
             continuation.onTermination = { _ in task.cancel() }
         }
     }
 
-    private nonisolated static func deliver(to continuation: AsyncStream<LocationFix>.Continuation) async {
+    private nonisolated static func deliver(to continuation: AsyncStream<LocationFix>.Continuation, heldThroughBackground: Bool) async {
         let progress = Progress()
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
@@ -105,14 +113,14 @@ final class CoreLocationProvider: LocationProvider {
                 if !Task.isCancelled, progress.settle() { continuation.yield(.unavailable) }
             }
             group.addTask {
-                await forward(updates: CLLocationUpdate.liveUpdates(.default), to: continuation, progress: progress)
+                await forward(updates: CLLocationUpdate.liveUpdates(.default), to: continuation, progress: progress, heldThroughBackground: heldThroughBackground)
                 continuation.finish()
             }
             await group.waitForAll()
         }
     }
 
-    private nonisolated static func forward(updates: CLLocationUpdate.Updates, to continuation: AsyncStream<LocationFix>.Continuation, progress: Progress) async {
+    private nonisolated static func forward(updates: CLLocationUpdate.Updates, to continuation: AsyncStream<LocationFix>.Continuation, progress: Progress, heldThroughBackground: Bool) async {
         var activity: CLBackgroundActivitySession?
         defer { activity?.invalidate() }
         do {
@@ -123,7 +131,7 @@ final class CoreLocationProvider: LocationProvider {
                     continuation.yield(.denied)
                     return
                 }
-                if activity == nil, !update.authorizationRequestInProgress {
+                if heldThroughBackground, activity == nil, !update.authorizationRequestInProgress {
                     activity = CLBackgroundActivitySession()
                 }
                 if let location = update.location {

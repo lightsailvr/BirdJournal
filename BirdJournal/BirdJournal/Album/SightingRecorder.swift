@@ -82,6 +82,19 @@ final class SightingRecorder {
         }
     }
 
+    /// Gives a capture written before its place was known that place (issue #191): with no run, a shutter can be quicker
+    /// than the phone's first fix.
+    func place(_ capture: Capture, at location: Coordinate) throws {
+        let context = container.mainContext
+        capture.location = location
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+
     /// Names a capture (issues #186 and #188, of #185): writes the sighting of `bird` it becomes, and the capture goes, in one
     /// save. The sighting is Seen and marked as named by the birder, with no match score, at the capture's own time and place
     /// and from its device, whenever it is named; the photo, the same file, is its original photo, one of the birder's own.
@@ -127,6 +140,32 @@ final class SightingRecorder {
         }
         for path in others { try? FileManager.default.removeItem(at: frames.url(for: path)) }
         return capture
+    }
+
+    /// Changes the bird of a sighting (issue #190, of #185): the same sighting, with its identifier, photo, time, place,
+    /// source and note, now of `bird`. Only its bird is written; patches are derived from sightings, so the old bird's patch
+    /// loses this one, and is unpicked if it had no other there, and the new bird's gains it or is sewn, which is what the
+    /// answer says. What was read or written for the old bird does not stay: the rarity is read again for the new bird at
+    /// the sighting's own place and week, and the caption goes. One save, or nothing changes.
+    @discardableResult
+    func changeBird(of sighting: Sighting, to bird: NameableBird) throws -> Recorded {
+        let speciesID = bird.speciesID
+        let location = sighting.location
+        let identifier = sighting.identifier
+        let context = container.mainContext
+        let others = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID && $0.identifier != identifier }))
+        let sets = sets()
+        let existing = CardCollection(sightings: others, sets: sets).count(ofSpeciesID: speciesID, at: location)
+        sighting.speciesID = speciesID
+        sighting.rarity = raritySnapshot(scientificName: bird.scientificName, location: location, at: sighting.confirmedAt)
+        sighting.caption = nil
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+        return Recorded(sighting: sighting, sewsPatch: existing == 0, patchCount: existing + 1, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets))
     }
 
     /// Removes a capture and its photo from the album: the one thing that loses a photo.

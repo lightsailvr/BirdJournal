@@ -89,6 +89,24 @@ struct JournalEditsTests {
         #expect(!FileManager.default.fileExists(atPath: frames.url(for: attached).path(percentEncoded: false)), "and the attached photo with it")
     }
 
+    @Test("a removed sighting the birder named comes back named by the birder: no match score, no Heard to choose (issue #186)")
+    func undoKeepsNamedByBirder() throws {
+        let album = try AlbumSchema.makeContainer(inMemory: true)
+        let edits = JournalEdits(container: album, frames: FrameStore(directory: URL.temporaryDirectory))
+        let sighting = Sighting(speciesID: "Selasphorus sasin_Allen's Hummingbird", confirmedAt: .now, soundConfidence: 0, source: .phone, method: .seen, namedByBirder: true)
+        sighting.attachedPhotoPaths = ["capture.jpeg"]
+        album.mainContext.insert(sighting)
+        try album.mainContext.save()
+
+        edits.remove(sighting, commonName: "Allen's Hummingbird")
+        edits.undoRemoval()
+
+        let restored = try #require(try album.mainContext.fetch(Sighting.newestFirst()).first)
+        #expect(restored.namedByBirder, "still a bird the birder named")
+        #expect(CardText.matchScore(restored) == nil, "so it shows no match score")
+        #expect(CardText.how(restored) == "Seen, photographed with iPhone")
+    }
+
     private func harness() throws -> (edits: JournalEdits, frames: FrameStore, sighting: Sighting, album: ModelContainer) {
         let album = try AlbumSchema.makeContainer(inMemory: true)
         let frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "frames-\(UUID().uuidString)", directoryHint: .isDirectory))

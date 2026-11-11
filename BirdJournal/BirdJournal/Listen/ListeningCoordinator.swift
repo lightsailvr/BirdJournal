@@ -154,11 +154,27 @@ final class ListeningCoordinator {
     /// The candidate the birder is reviewing, nil when none.
     var reviewing: Candidate?
     /// "Capture a sighting" is open (issue #186): the camera, then the naming of the photo it took.
-    var isCapturing = false
+    var isCapturing = false {
+        didSet {
+            guard isCapturing != oldValue else { return }
+            // Opened with no run to take its photos (issue #191): they belong to none, and the phone's place is read for them.
+            isCapturingOutsideRun = isCapturing && !showsRun
+            if isCapturingOutsideRun {
+                latePlaces = [:]
+                placeOutsideRun.open()
+            } else {
+                placeOutsideRun.close()
+            }
+        }
+    }
+    /// The camera was opened from the idle Listen tab: what it takes is no run's, and is recorded where the phone is now.
+    private(set) var isCapturingOutsideRun = false
 
     let phone: ListeningSession
     let glasses: GlassesListeningSession
     let sightings: RunSightings
+    /// Where the phone is while the camera is open with no run (issue #191).
+    let placeOutsideRun: CapturePlace
 
     @ObservationIgnored private let levels: LevelSink
     @ObservationIgnored private let defaults: UserDefaults
@@ -166,6 +182,8 @@ final class ListeningCoordinator {
     @ObservationIgnored private var hasRun = false
     @ObservationIgnored private var waveformTask: Task<Void, Never>?
     @ObservationIgnored private var acknowledgmentTask: Task<Void, Never>?
+    /// Photos taken with no run before the place was read, each until the read's first answer has placed it.
+    @ObservationIgnored private var latePlaces: [UUID: Task<UnnamedSighting?, Never>] = [:]
     /// From Stop until the run's end has been dealt with, so a ceremony starts over the review rather than just before it.
     private var isEnding = false
     @ObservationIgnored private let archive: UserDefaults?
@@ -176,10 +194,15 @@ final class ListeningCoordinator {
     /// - Parameters:
     ///   - defaultSource: the source for a phone that has not chosen one: the glasses when a pair is linked.
     ///   - archive: where a review waiting to be seen outlives the app; by default `defaults`, and with nil it doesn't.
-    init(phone: ListeningSession, glasses: GlassesListeningSession, sightings: RunSightings, levels: LevelSink, defaultSource: Source, defaults: UserDefaults = .standard, archive: UserDefaults?? = .none) {
+    ///   - captureLocation: where the phone is for a photo taken with no run (issue #191), read only while the camera is open.
+    init(
+        phone: ListeningSession, glasses: GlassesListeningSession, sightings: RunSightings, levels: LevelSink, defaultSource: Source, defaults: UserDefaults = .standard,
+        archive: UserDefaults?? = .none, captureLocation: any LocationProvider = CoreLocationProvider(heldThroughBackground: false)
+    ) {
         self.phone = phone
         self.glasses = glasses
         self.sightings = sightings
+        placeOutsideRun = CapturePlace(location: captureLocation)
         self.levels = levels
         self.defaults = defaults
         source = defaults.string(forKey: Self.sourceKey).flatMap(Source.init(rawValue:)) ?? defaultSource
@@ -283,6 +306,11 @@ final class ListeningCoordinator {
     var locationState: ListeningSession.LocationState { listening.locationState }
     /// The location the next add records.
     var coordinate: Coordinate? { restored?.coordinate ?? listening.coordinate }
+    /// Where a photo taken now is recorded when it carries no place of its own: the run's place, or with no run the place
+    /// read while the camera is open (issue #191); nil when there is none.
+    var capturePlace: Coordinate? { isCapturingOutsideRun ? placeOutsideRun.coordinate : coordinate }
+    /// The Listen tab shows a run, under way or ended with something on its page, and not the idle tab.
+    var showsRun: Bool { state.isActive || (state != .idle && lastRunHasSomething) }
     /// When that location was fixed.
     var locationFixedAt: Date? { listening.locationFixedAt }
     /// Whether a phone-microphone run holds the audio session, which a reference clip then plays in (issue #41).
@@ -415,22 +443,55 @@ final class ListeningCoordinator {
     /// announced, since nothing has been added: it sews no patch and tells nobody until it is named. Nil when it could not
     /// be written, which is the only way a photo is lost. A photo chosen from the library goes the same way (issue #192),
     /// at the place the picture itself carries when it carries one.
+    ///
+    /// With no run (issue #191: the camera opened from the idle Listen tab) the photo is recorded where the phone is now,
+    /// and is no run's: it waits in the Collection's "To name", and a run started afterwards knows nothing of it. A shutter
+    /// quicker than the first fix is not kept waiting: the photo is written at once, and given its place when the fix is in
+    /// (`placed`).
     /// - Parameter source: the device that took the photo: the phone, whichever microphones the run is listening with.
     @discardableResult
     func capture(_ photo: CapturedPhoto, source: SightingSource = .phone) -> UnnamedSighting? {
-        capture(photo, at: photo.place ?? coordinate, source: source)
+        let unnamed = capture(photo, at: photo.place ?? capturePlace, source: source)
+        if let unnamed, isCapturingOutsideRun, unnamed.location == nil, placeOutsideRun.state == .requesting {
+            let answer = placeOutsideRun.firstAnswer()
+            latePlaces[unnamed.id] = Task { [weak self] in
+                for await coordinate in answer {
+                    if let coordinate { return self?.place(unnamed, at: coordinate) }
+                }
+                return nil
+            }
+        }
+        return unnamed
     }
 
     /// The shutter, for a photo whose place the caller knows better than the run does.
     @discardableResult
     func capture(_ photo: CapturedPhoto, at location: Coordinate?, source: SightingSource) -> UnnamedSighting? {
         do {
-            let unnamed = try sightings.capture(photo: photo.data, takenAt: photo.takenAt, location: location, source: source)
+            let unnamed = try sightings.capture(photo: photo.data, takenAt: photo.takenAt, location: location, source: source, onThisRun: !isCapturingOutsideRun)
             keepEndedRun()
             return unnamed
         } catch {
             Self.logger.error("capture failed: \(error.localizedDescription, privacy: .public)")
             failedActions += 1
+            return nil
+        }
+    }
+
+    /// `unnamed` as it is once the place it was taken at is known: a photo taken with no run, before the first fix was in,
+    /// gets its place when the fix arrives, wherever the camera is by then. Nil when nothing changed: it had its place at
+    /// the shutter, no fix came, or it was named or deleted first.
+    func placed(_ unnamed: UnnamedSighting) async -> UnnamedSighting? {
+        await latePlaces[unnamed.id]?.value
+    }
+
+    private func place(_ unnamed: UnnamedSighting, at coordinate: Coordinate) -> UnnamedSighting? {
+        guard let capture = sightings.recorder.capture(unnamed.id), capture.location == nil else { return nil }
+        do {
+            try sightings.recorder.place(capture, at: coordinate)
+            return UnnamedSighting(capture)
+        } catch {
+            Self.logger.error("placing a capture failed: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
@@ -470,6 +531,21 @@ final class ListeningCoordinator {
             Self.logger.error("deleting an unnamed sighting failed: \(error.localizedDescription, privacy: .public)")
             failedActions += 1
             return false
+        }
+    }
+
+    /// A sighting's bird was changed on its page (issue #190). The run's list names it as the new bird; and whatever was
+    /// about the bird it was goes: the add's acknowledgment, its page if it is still up, and a ceremony the lens left
+    /// waiting, since a patch sewn by a change has no stitch-in. The sighting itself stays the run's, and can still be
+    /// removed from its page.
+    func birdChanged(of sighting: Sighting) {
+        let identifier = sighting.identifier
+        sightings.birdChanged(of: sighting)
+        pendingCeremonies.removeAll { $0 == identifier }
+        if reveal?.addition.identifier == identifier { reveal = nil }
+        if acknowledgment?.undo?.identifier == identifier {
+            acknowledgmentTask?.cancel()
+            acknowledgment = nil
         }
     }
 

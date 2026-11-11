@@ -146,10 +146,12 @@ final class RunSightings {
     /// - Parameters:
     ///   - location: where the birder was when the photo was taken.
     ///   - source: the device that took the photo.
+    ///   - onThisRun: false for a photo taken with no run under way (issue #191): it is written to the album the same way
+    ///     and is on no run's list, like one an earlier run left unnamed.
     @discardableResult
-    func capture(photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> UnnamedSighting {
+    func capture(photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource, onThisRun: Bool = true) throws -> UnnamedSighting {
         let captured = UnnamedSighting(try recorder.recordCapture(photo: photo, takenAt: takenAt, location: location, source: source))
-        unnamed.append(captured)
+        if onThisRun { unnamed.append(captured) }
         return captured
     }
 
@@ -187,6 +189,13 @@ final class RunSightings {
     /// Reads back the photos a run took and hadn't named, as `restore` does its adds. One named or deleted meanwhile is left out.
     func restoreUnnamed(_ identifiers: [UUID]) {
         unnamed += identifiers.compactMap { recorder.capture($0).map(UnnamedSighting.init) }
+    }
+
+    /// A sighting's bird was changed on its page (issue #190): if it is one of the birds seen this run, its row is the
+    /// new bird's, in the same place on the list.
+    func birdChanged(of sighting: Sighting) {
+        guard let index = seen.firstIndex(where: { $0.identifier == sighting.identifier }) else { return }
+        seen[index] = Seen(sighting)
     }
 
     /// Whether `addition` can still be taken back: its sighting was written through this ledger and hasn't been undone.

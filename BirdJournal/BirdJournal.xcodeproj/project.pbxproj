@@ -623,7 +623,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Featherguild connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild uses the camera to photograph a bird you have seen, so you can name it and add the sighting to your collection.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Featherguild finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard or seen.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Featherguild listens for birdsong with the phone microphone when your glasses are not connected.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Featherguild saves a copy of each photo you take with its camera to your Photos library. It can add photos and can't see the ones already there.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild hears the name of a bird you say to your glasses after taking its photo, to name the sighting. The glasses recognize the words themselves; the iPhone is asked only if it has to help.";
@@ -673,7 +673,7 @@
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Featherguild connects to your Meta glasses over Bluetooth to hear birds around you.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild uses the camera to photograph a bird you have seen, so you can name it and add the sighting to your collection.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Featherguild finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard or seen.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Featherguild listens for birdsong with the phone microphone when your glasses are not connected.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Featherguild saves a copy of each photo you take with its camera to your Photos library. It can add photos and can't see the ones already there.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild hears the name of a bird you say to your glasses after taking its photo, to name the sighting. The glasses recognize the words themselves; the iPhone is asked only if it has to help.";

@@ -96,8 +96,14 @@ import UIKit
 ///   over it; `-autoScreen name-bird` goes on to "Name this bird" with a stand-in photo, and `-autoQuery <text>` searches
 ///   there once. `-autoSeen "Calypte anna,Selasphorus sasin"` names a stand-in photo as each of those birds once the run is
 ///   on, past its reveal: rows under "Seen this run". `-autoUnnamed <n>` takes that many stand-in photos on the run and leaves
-///   them unnamed (issue #188), before `-autoRunStops` ends it; `-seedUnnamed <n>` puts that many in the album at launch, taken
+///   them unnamed (issue #188), before `-autoRunStops` ends it; `-seedSeen "Selasphorus sasin"` puts a sighting the birder
+///   named of each of those birds in the album at launch, seen in Griffith Park in the last hours, and `-autoChangeBird YES`
+///   opens "Change bird" on a sighting's page (issue #190); `-seedUnnamed <n>` puts that many in the album at launch, taken
 ///   in Griffith Park on earlier days, as earlier runs would have left them: the Collection's "To name".
+/// - `-autoScreen idle-capture` opens the camera from the idle Listen tab, with no run (issue #191), and `idle-name-bird`
+///   goes on to "Name this bird" with a stand-in photo taken there; `-autoLocation` says where the phone is. With
+///   `-autoScreen listen`, `-autoIdleSeen "Calypte anna"` names a stand-in photo taken with no run as that bird, past its
+///   reveal: the acknowledgment on the idle tab.
 /// - `-autoLensCapture <n>` on a `glasses-run` takes that many photos from the lens's "Capture a sighting" (issue #193), by Mock
 ///   Device Kit's inputs, before `-autoLensAdd` adds its birds; `-autoGlassesCamera YES` gives that run's stand-in stream a
 ///   drawn camera frame, without which the lens has no picture to take. After each photo the lens asks for the bird's name
@@ -155,6 +161,17 @@ struct DebugLaunch: ViewModifier {
             for index in 0..<defaults.integer(forKey: "seedUnnamed") {
                 _ = try? run.sightings.recorder.recordCapture(photo: DebugSeeds.frameJPEG(), takenAt: Date.now.addingTimeInterval(-86_400 * Double(index + 1)), location: DebugPlace.griffith.coordinate, source: .phone)
             }
+            if let seen = defaults.string(forKey: "seedSeen") {
+                // Written by the recorder alone, as a naming on an earlier day left them: no run, no reveal.
+                let fieldGuide = library.fieldGuideBirds
+                let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                let recorder = run.sightings.recorder
+                for (index, bird) in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }).enumerated() {
+                    if let capture = try? recorder.recordCapture(photo: DebugSeeds.frameJPEG(), takenAt: Date.now.addingTimeInterval(-3_600 * Double(index + 1)), location: DebugPlace.griffith.coordinate, source: .phone) {
+                        _ = try? recorder.name(capture, as: bird)
+                    }
+                }
+            }
             if defaults.bool(forKey: "speedTour") {
                 let tour = SpeedTour(
                     context: context, run: run, library: library, circles: circles,
@@ -180,6 +197,21 @@ struct DebugLaunch: ViewModifier {
             switch screen {
             case "listen":
                 tab = .listen
+                if let seen = defaults.string(forKey: "autoIdleSeen") {
+                    let fieldGuide = library.fieldGuideBirds
+                    let names = (try? NameableBirds.load(fieldGuide: fieldGuide)) ?? NameableBirds(fieldGuide: fieldGuide, labels: [])
+                    let place = defaults.string(forKey: "autoLocation").flatMap(DebugPlace.init(rawValue:))?.coordinate
+                    for bird in seen.split(separator: ",").compactMap({ names.bird(scientificName: String($0)) }) {
+                        guard let unnamed = try? run.sightings.capture(photo: DebugSeeds.frameJPEG(), takenAt: .now, location: place, source: .phone, onThisRun: false) else { continue }
+                        run.name(unnamed, as: bird)
+                        run.finishCeremony()
+                        run.dismissReveal()
+                    }
+                }
+            case "idle-capture", "idle-name-bird":
+                tab = .listen
+                if screen == "idle-name-bird" { defaults.set(true, forKey: "autoNameBird") }
+                run.isCapturing = true
             case "listening", "review", "capture", "name-bird":
                 tab = .listen
                 run.source = .phone

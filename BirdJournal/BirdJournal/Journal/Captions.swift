@@ -147,7 +147,8 @@ struct FoundationModelsCaptionWriter: CaptionWriter {
 
 /// Writes a card's caption once, after its add (issue #56), and stores it on the sighting with its writer's version.
 /// A sighting that has one is never captioned again, so reopening a card changes nothing; when the writer is unavailable
-/// or fails, the sighting keeps none and the card shows the lore's tagline.
+/// or fails, the sighting keeps none and the card shows the lore's tagline. A caption is for the bird the sighting was
+/// when it was asked for: if the birder has changed the bird meanwhile (issue #190), the line is dropped.
 @MainActor
 final class Captioner {
     private static let logger = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "caption")
@@ -166,7 +167,13 @@ final class Captioner {
     var calendar = Calendar.current
     /// How many drafts may be thrown away for running long before the card keeps the tagline.
     var attempts = 2
-    private var inFlight: Set<UUID> = []
+    /// The sightings being captioned, each with the bird the line is for.
+    private var inFlight: Set<InFlight> = []
+
+    private struct InFlight: Hashable {
+        let identifier: UUID
+        let speciesID: String
+    }
 
     init(writer: any CaptionWriter, species: @escaping (String) -> Species?, placeLabel: @escaping (Coordinate) async -> String?) {
         self.writer = writer
@@ -187,15 +194,15 @@ final class Captioner {
 
     /// Captions `sighting` unless it has a caption, is being captioned, or the writer can't write now.
     func caption(_ sighting: Sighting) async {
-        let identifier = sighting.identifier
-        guard sighting.caption == nil, writer.isAvailable, !inFlight.contains(identifier) else { return }
-        inFlight.insert(identifier)
-        defer { inFlight.remove(identifier) }
+        let writing = InFlight(identifier: sighting.identifier, speciesID: sighting.speciesID)
+        guard sighting.caption == nil, writer.isAvailable, !inFlight.contains(writing) else { return }
+        inFlight.insert(writing)
+        defer { inFlight.remove(writing) }
         guard let request = await request(for: sighting) else { return }
         for _ in 0..<attempts {
             do {
                 guard let text = CaptionText.checked(try await writer.caption(for: request)) else { continue }
-                guard !sighting.isDeleted, sighting.caption == nil else { return }
+                guard !sighting.isDeleted, sighting.caption == nil, sighting.speciesID == writing.speciesID else { return }
                 sighting.caption = CardCaption(text: text, generatorVersion: writer.version)
                 try sighting.modelContext?.save()
                 return
