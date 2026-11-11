@@ -7,6 +7,7 @@ import MWDATCore
 import Observation
 import OSLog
 import SwiftData
+import Synchronization
 import UIKit
 
 /// The whole loop on the glasses (issue #9): one device session shared by the camera stream, Display and Inputs;
@@ -520,9 +521,22 @@ final class GlassesListeningSession {
     /// (`allowDictation()`), not for a wearer with the phone in a pocket.
     private func canAskName() async -> Bool {
         guard loadNames != nil, phase == .listening else { return false }
-        guard let status = try? await wearables.checkPermissionStatus(.microphone) else { return false }
+        guard let status = await microphonePermission() else { return false }
         dictationNeedsPermission = status != .granted
         return status == .granted
+    }
+
+    /// The glasses' microphone permission as it stands; nil when it cannot be read, or when the answer takes longer than
+    /// `limit`: the lens is on "Saving the photo…" meanwhile, and a check that never answers (seen on a wedged link)
+    /// must not keep it there.
+    private func microphonePermission(within limit: Duration = .seconds(3)) async -> PermissionStatus? {
+        let wearables = wearables
+        let answer = PermissionAnswer()
+        let answered = await completes(within: limit) {
+            answer.set(try? await wearables.checkPermissionStatus(.microphone))
+            return true
+        }
+        return answered ? answer.status : nil
     }
 
     /// Asks for the glasses' microphone permission, which opens Meta AI: what the phone's offer does, after it has said
@@ -626,6 +640,19 @@ extension GlassesListeningSession.PauseReason {
 extension DeviceState {
     /// Connected and not known to be off the wearer's face: a session can be started.
     nonisolated var isWornAndConnected: Bool { linkState == .connected && donState != .doffed }
+}
+
+/// A permission's answer, written wherever the toolkit gives it and read once the wait for it is over.
+private nonisolated final class PermissionAnswer: Sendable {
+    private let value = Mutex<PermissionStatus?>(nil)
+
+    func set(_ status: PermissionStatus?) {
+        value.withLock { $0 = status }
+    }
+
+    var status: PermissionStatus? {
+        value.withLock { $0 }
+    }
 }
 
 /// Lets the run's children call back into it without a retain cycle through their closures.
