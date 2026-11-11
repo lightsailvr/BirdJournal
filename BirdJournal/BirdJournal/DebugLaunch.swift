@@ -19,7 +19,9 @@ import UIKit
 /// - `-patchLight "x,y"` puts the patches' light somewhere, as a tilt would (issue #134's screenshots; the simulator has
 ///   no motion; "l0.5,u0.6" for left and up, since a launch argument can't start with a minus); `-patchLightSweep YES` circles it and logs frame times under the `patch-light` category.
 /// - `-fakeLibraryPhoto YES`: "Attach a photo" on a sighting hands over a generated picture instead of opening the system
-///   picker, which XCUITest can't drive.
+///   picker, which XCUITest can't drive. The capture camera's library button does the same (issue #192), with a picture that
+///   carries a date and a place of its own, 18 April 2026 in San Diego (`DebugSeeds.libraryPhotoJPEG`): a UI test can pick
+///   in the real picker there (`LibraryCaptureUITests`), but doesn't know what a simulator's pictures carry.
 /// - `-seedBoard YES` adds one sighting each of the bundled pack's first 30 birds in Griffith Park: a board that scrolls.
 /// - `-seedLarge <n>` fills the album to n sightings over three years, for profiling (issue #150). With `-albumFile <name>` it
 ///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and

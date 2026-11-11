@@ -1,14 +1,30 @@
+import Album
 import Foundation
 import Observation
 import SwiftUI
 
-/// A photo as the capture camera took it (issue #186, of #185): the picture as the camera wrote it, and when. Naming it
-/// makes it a sighting's original photo.
+/// A photo to name (issue #186, of #185): the picture as the capture camera wrote it, and when; or, since #192, one the birder
+/// chose from their library, as its file is. Naming it makes it a sighting's original photo.
 nonisolated struct CapturedPhoto: Identifiable, Equatable, Sendable {
     let id = UUID()
-    /// The file's bytes as the camera gave them: a JPEG or a HEIC, never re-encoded.
+    /// The file's bytes as the camera or the library gave them: a JPEG or a HEIC, never re-encoded.
     let data: Data
+    /// The time its sighting takes: when the shutter was pressed.
     let takenAt: Date
+    /// Where the picture itself says it was taken, which only a photo chosen from the library can (issue #192): its sighting
+    /// is recorded there. Nil for the camera's own photos and for a library photo that carries no place: the sighting then
+    /// takes the place the birder is at.
+    var place: Coordinate? = nil
+    var origin = Origin.camera
+
+    /// How the photo came to the app.
+    enum Origin: Equatable, Sendable {
+        /// Taken with the capture camera, just now.
+        case camera
+        /// Chosen from the birder's library (issue #192). `takenAt` is the picture's own date when it carries one, else the
+        /// time it was chosen.
+        case library(carriesDate: Bool)
+    }
 }
 
 /// Where the capture camera stands.

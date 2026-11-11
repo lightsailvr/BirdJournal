@@ -31,6 +31,8 @@ struct NameBirdView: View {
     @Environment(\.occurrenceModel) private var occurrenceModel
     /// The photo being named, or the sighting whose bird is being changed, with when and where it was taken.
     let subject: NamingSubject
+    /// For a photo just chosen from the library (issue #192): whether the date and place above are the photo's own.
+    let note: String?
     /// Writes a change of bird, and says whether it was written; nil while a photo is being named.
     private let change: ((NameableBird) -> Bool)?
     /// Closes the sheet: after the add or the change, on "Name it later" or Cancel, or after a delete.
@@ -48,8 +50,10 @@ struct NameBirdView: View {
     @FocusState private var isSearching: Bool
 
     /// "Name this bird", for a photo waiting for its name.
-    init(unnamed: UnnamedSighting, close: @escaping () -> Void) {
+    /// - Parameter note: one line under the photo, for one just chosen from the library (issue #192).
+    init(unnamed: UnnamedSighting, note: String? = nil, close: @escaping () -> Void) {
         subject = .unnamed(unnamed)
+        self.note = note
         change = nil
         self.close = close
     }
@@ -58,6 +62,7 @@ struct NameBirdView: View {
     /// - Parameter change: writes the change to the bird chosen; false when it couldn't be written, and the sheet stays.
     init(changing sighting: NamedSighting, change: @escaping (NameableBird) -> Bool, close: @escaping () -> Void) {
         subject = .named(sighting)
+        note = nil
         self.change = change
         self.close = close
     }
@@ -94,6 +99,11 @@ struct NameBirdView: View {
                         place: NameBirdText.place(location: subject.location, name: subject.location.flatMap(places.name(for:)))
                     )
                     .padding(.top, 8)
+                    if let note {
+                        hint(note)
+                            .padding(.top, 10)
+                            .accessibilityIdentifier("name-bird-photo-note")
+                    }
                     searchField
                         .padding(.top, 16)
                     if query.trimmingCharacters(in: .whitespaces).isEmpty {
