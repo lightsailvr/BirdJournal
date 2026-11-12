@@ -64,7 +64,7 @@ final class SettingsUITests: XCTestCase {
         app.buttons["Settings"].tap()
 
         // The row reads "App icon, <current icon>".
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
+        let row = appIconRow(in: app)
         XCTAssertTrue(row.waitForExistence(timeout: 10), "no App icon row; screen: \(app.debugDescription.prefix(3000))")
         row.tap()
 
@@ -86,16 +86,28 @@ final class SettingsUITests: XCTestCase {
     }
 }
 
+/// The "App icon" row of Settings, scrolled to. The Glasses section above it holds the photo-size choice since
+/// 2026-11-12, which puts the row below the fold on a phone, and a row a lazy list has not reached does not exist.
+@MainActor
+private func appIconRow(in app: XCUIApplication) -> XCUIElement {
+    let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
+    for _ in 0..<4 where !row.waitForExistence(timeout: 2) {
+        app.swipeUp()
+    }
+    return row
+}
+
 /// The birds in glasses on the home screen (issue #150, slice 11). `TEST_RUNNER_BIRDJOURNAL_ICON_SHOTS=<folder>` also saves what each
 /// looks like there, which is the evidence for how an icon reads at that size.
 final class AppIconHomeScreenUITests: XCTestCase {
     private let birds = ["Red-tailed Hawk", "Blue Bird", "Great Egret", "House Finch", "Prothonotary Warbler", "Steller's Jay"]
 
+    @MainActor
     private func openIcons(_ app: XCUIApplication) {
         app.launchArguments = ["-inMemoryAlbum", "YES"]
         app.launch()
         app.buttons["Settings"].tap()
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
+        let row = appIconRow(in: app)
         XCTAssertTrue(row.waitForExistence(timeout: 10), "no App icon row; screen: \(app.debugDescription.prefix(3000))")
         row.tap()
     }
