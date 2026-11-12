@@ -116,9 +116,9 @@ struct PackCoverTests {
         #expect(library.cover(setID: "us-ca-sd") == nil)
     }
 
-    @Test("the five approved covers ship with the app at full size, each with its credit")
+    @Test("the eight approved covers ship with the app at full size, each with its credit")
     func shippedCovers() throws {
-        for id in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"] {
+        for id in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"] {
             guard case let .bundled(cover, url) = BundledCovers.shipped.cover(setID: id) else {
                 Issue.record("\(id) has no bundled cover")
                 continue

@@ -161,7 +161,7 @@ struct PatchBlank: View {
                 .shadow(color: .black.opacity(Double(PatchMaterial.softShadow(colorScheme))), radius: 5, x: 3, y: 5)
                 .overlay {
                     if let words {
-                        TiedTag(text: words, size: proxy.size)
+                        TiedTag(text: words, size: proxy.size, drop: edition.shape.tagDrop)
                     }
                 }
         }
@@ -202,6 +202,8 @@ private struct PatchCloth: View {
 private struct TiedTag: View {
     let text: String
     let size: CGSize
+    /// The slot's distance from the top, as a part of the height.
+    let drop: CGFloat
 
     private var isSmall: Bool { size.width < 200 }
 
@@ -225,7 +227,7 @@ private struct TiedTag: View {
                 .background(Color.cardStock, in: RoundedRectangle(cornerRadius: 3))
                 .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 2)
         }
-        .padding(.top, size.height * 0.1)
+        .padding(.top, size.height * drop)
         .padding(.horizontal, size.width * 0.1)
         .frame(width: size.width, height: size.height, alignment: .top)
     }
