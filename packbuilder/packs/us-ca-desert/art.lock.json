@@ -1,0 +1,3260 @@
+{
+  "comment": "Pack art (issue #57), written by `packbuilder build` and `packbuilder art-review`; review on the contact sheets in build/pack-art/<pack id>/. Per species: the source photo ids, the workflow, isolation and prompts versions and the set's edition theme it was painted with, the seeds, the painting's SHA-256 (the art cache's file name), its fidelity, and the review: pending, approved (in the pack), rejected (repainted with new seeds by the next build) or gap (no art; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "photos": [
+        647590336
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.945,
+          "dE_mean": 2.3,
+          "dE_p95": 5.3,
+          "dL": -0.3,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "aechmophorus-occidentalis": {
+      "common_name": "Western Grebe",
+      "photos": [
+        641722648
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.953,
+          "dE_mean": 3.5,
+          "dE_p95": 8.1,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "aeronautes-saxatalis": {
+      "common_name": "White-throated Swift",
+      "photos": [
+        115074091
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.979,
+          "dE_mean": 2.7,
+          "dE_p95": 6.1,
+          "dL": -0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "photos": [
+        386047840
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.816,
+          "dE_mean": 3.4,
+          "dE_p95": 11.7,
+          "dL": 0.3,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "amphispiza-bilineata": {
+      "common_name": "Black-throated Sparrow",
+      "photos": [
+        621978329
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.967,
+          "dE_mean": 1.9,
+          "dE_p95": 4.5,
+          "dL": -0.2,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "anas-acuta": {
+      "common_name": "Northern Pintail",
+      "photos": [
+        61419084
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 3.3,
+          "dE_p95": 7.2,
+          "dL": -0.1,
+          "dC": -0.5,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "photos": [
+        263434570
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.972,
+          "dE_mean": 3.1,
+          "dE_p95": 8.8,
+          "dL": 0.0,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "photos": [
+        372522714
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 3.3,
+          "dE_p95": 8.5,
+          "dL": -0.6,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "anser-caerulescens": {
+      "common_name": "Snow Goose",
+      "photos": [
+        622159415
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.966,
+          "dE_mean": 1.7,
+          "dE_p95": 4.3,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "anser-rossii": {
+      "common_name": "Ross's Goose",
+      "photos": [
+        335680768
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.938,
+          "dE_mean": 2.1,
+          "dE_p95": 7.4,
+          "dL": 0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "anthus-rubescens": {
+      "common_name": "American Pipit",
+      "photos": [
+        249847112
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.97,
+          "dE_mean": 3.7,
+          "dE_p95": 9.0,
+          "dL": 0.5,
+          "dC": -0.5,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "antigone-canadensis": {
+      "common_name": "Sandhill Crane",
+      "photos": [
+        244324138
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.972,
+          "dE_mean": 2.5,
+          "dE_p95": 5.4,
+          "dL": -0.1,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "photos": [
+        230709118
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 2.9,
+          "dE_p95": 6.5,
+          "dL": -0.3,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "photos": [
+        345767166
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.9,
+          "dE_mean": 4.1,
+          "dE_p95": 10.5,
+          "dL": 0.2,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "photos": [
+        119715830
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 2.3,
+          "dE_p95": 5.5,
+          "dL": -0.3,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "ardea-ibis": {
+      "common_name": "Western Cattle Egret",
+      "photos": [
+        61008242
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.956,
+          "dE_mean": 2.6,
+          "dE_p95": 7.6,
+          "dL": 0.2,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "asio-otus": {
+      "common_name": "Long-eared Owl",
+      "photos": [
+        108869943
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.707,
+          "dE_mean": 17.8,
+          "dE_p95": 44.3,
+          "dL": 1.8,
+          "dC": -0.0,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "photos": [
+        586804008
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.895,
+          "dE_mean": 3.4,
+          "dE_p95": 8.1,
+          "dL": -0.6,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "athene-cunicularia": {
+      "common_name": "Burrowing Owl",
+      "photos": [
+        463563495
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.869,
+          "dE_mean": 4.9,
+          "dE_p95": 11.8,
+          "dL": -0.6,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "auriparus-flaviceps": {
+      "common_name": "Verdin",
+      "photos": [
+        637407608
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.972,
+          "dE_mean": 3.4,
+          "dE_p95": 8.4,
+          "dL": 0.0,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "photos": [
+        248146564
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.87,
+          "dE_mean": 6.7,
+          "dE_p95": 20.2,
+          "dL": -1.4,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "baeolophus-inornatus": {
+      "common_name": "Oak Titmouse",
+      "photos": [
+        115074227
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 2.0,
+          "dE_p95": 4.7,
+          "dL": 0.1,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "photos": [
+        17267647
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 2.2,
+          "dE_p95": 4.9,
+          "dL": -0.5,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "photos": [
+        605811155
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.791,
+          "dE_mean": 7.3,
+          "dE_p95": 17.9,
+          "dL": 0.6,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "photos": [
+        473657550
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.776,
+          "dE_mean": 6.2,
+          "dE_p95": 16.1,
+          "dL": 0.3,
+          "dC": -0.7,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "photos": [
+        354825404
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.84,
+          "dE_mean": 3.9,
+          "dE_p95": 9.1,
+          "dL": -0.3,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "buteo-swainsoni": {
+      "common_name": "Swainson's Hawk",
+      "photos": [
+        113745791
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 3.1,
+          "dE_p95": 7.4,
+          "dL": -0.2,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "photos": [
+        249743456
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.929,
+          "dE_mean": 3.8,
+          "dE_p95": 10.2,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "calidris-mauri": {
+      "common_name": "Western Sandpiper",
+      "photos": [
+        186874359
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 3.7,
+          "dE_p95": 8.7,
+          "dL": -0.3,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "photos": [
+        244336729
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.869,
+          "dE_mean": 4.5,
+          "dE_p95": 9.8,
+          "dL": -0.2,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "callipepla-californica": {
+      "common_name": "California Quail",
+      "photos": [
+        477374185
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 2.8,
+          "dE_p95": 6.7,
+          "dL": 0.4,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "callipepla-gambelii": {
+      "common_name": "Gambel's Quail",
+      "photos": [
+        363532575
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.88,
+          "dE_mean": 2.7,
+          "dE_p95": 7.2,
+          "dL": 0.2,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "photos": [
+        607234498
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.972,
+          "dE_mean": 4.1,
+          "dE_p95": 9.9,
+          "dL": 0.2,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "calypte-costae": {
+      "common_name": "Costa's Hummingbird",
+      "photos": [
+        611069283
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.456,
+          "dE_mean": 10.7,
+          "dE_p95": 23.4,
+          "dL": -0.8,
+          "dC": 2.0,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "campylorhynchus-brunneicapillus": {
+      "common_name": "Cactus Wren",
+      "photos": [
+        461310492
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.963,
+          "dE_mean": 3.3,
+          "dE_p95": 8.0,
+          "dL": 0.0,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "cardellina-pusilla": {
+      "common_name": "Wilson's Warbler",
+      "photos": [
+        646680799
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.927,
+          "dE_mean": 3.3,
+          "dE_p95": 7.3,
+          "dL": -0.7,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "photos": [
+        694546094
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.966,
+          "dE_mean": 2.1,
+          "dE_p95": 5.6,
+          "dL": -0.2,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "catherpes-mexicanus": {
+      "common_name": "Canyon Wren",
+      "photos": [
+        2993364
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.978,
+          "dE_mean": 2.4,
+          "dE_p95": 5.1,
+          "dL": -0.2,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "photos": [
+        59764930
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.944,
+          "dE_mean": 3.0,
+          "dE_p95": 7.6,
+          "dL": 0.3,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "chlidonias-niger": {
+      "common_name": "Black Tern",
+      "photos": [
+        2728591
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.989,
+          "dE_mean": 1.8,
+          "dE_p95": 5.1,
+          "dL": -0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "chondestes-grammacus": {
+      "common_name": "Lark Sparrow",
+      "photos": [
+        63243622
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 2.9,
+          "dE_p95": 6.1,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "chordeiles-acutipennis": {
+      "common_name": "Lesser Nighthawk",
+      "photos": [
+        486569455
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.896,
+          "dE_mean": 4.5,
+          "dE_p95": 12.3,
+          "dL": 0.4,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "photos": [
+        335827416
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.917,
+          "dE_mean": 2.9,
+          "dE_p95": 6.9,
+          "dL": -0.2,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "photos": [
+        258351774
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.934,
+          "dE_mean": 3.5,
+          "dE_p95": 10.1,
+          "dL": 0.3,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "photos": [
+        61838985
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.966,
+          "dE_mean": 2.5,
+          "dE_p95": 5.9,
+          "dL": 0.3,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "columbina-inca": {
+      "common_name": "Inca Dove",
+      "photos": [
+        158290396
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.971,
+          "dE_mean": 2.7,
+          "dE_p95": 6.9,
+          "dL": 0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "columbina-passerina": {
+      "common_name": "Common Ground Dove",
+      "photos": [
+        208986590
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.964,
+          "dE_mean": 2.5,
+          "dE_p95": 5.6,
+          "dL": -0.3,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "contopus-sordidulus": {
+      "common_name": "Western Wood Pewee",
+      "photos": [
+        274319698
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.96,
+          "dE_mean": 3.7,
+          "dE_p95": 9.1,
+          "dL": 0.7,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "photos": [
+        595294877
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 3.3,
+          "dE_p95": 8.5,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "photos": [
+        258351767
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.967,
+          "dE_mean": 1.7,
+          "dE_p95": 5.5,
+          "dL": 0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "photos": [
+        618988894
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 1.8,
+          "dE_p95": 5.8,
+          "dL": 0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "dryobates-scalaris": {
+      "common_name": "Ladder-backed Woodpecker",
+      "photos": [
+        458468743
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 50,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.922,
+          "dE_mean": 6.2,
+          "dE_p95": 16.6,
+          "dL": -0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "photos": [
+        601591390
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.944,
+          "dE_mean": 2.1,
+          "dE_p95": 6.9,
+          "dL": -0.1,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "empidonax-difficilis": {
+      "common_name": "Western Flycatcher",
+      "photos": [
+        276123074
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.916,
+          "dE_mean": 3.5,
+          "dE_p95": 7.8,
+          "dL": 1.7,
+          "dC": 0.8,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "eremophila-alpestris": {
+      "common_name": "Horned Lark",
+      "photos": [
+        115074103
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.821,
+          "dE_mean": 3.0,
+          "dE_p95": 6.9,
+          "dL": 1.6,
+          "dC": 0.5,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "euphagus-cyanocephalus": {
+      "common_name": "Brewer's Blackbird",
+      "photos": [
+        65427759
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 2.1,
+          "dE_p95": 6.9,
+          "dL": 0.2,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "falco-columbarius": {
+      "common_name": "Merlin",
+      "photos": [
+        335239672
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.953,
+          "dE_mean": 2.8,
+          "dE_p95": 6.7,
+          "dL": -0.9,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "falco-mexicanus": {
+      "common_name": "Prairie Falcon",
+      "photos": [
+        35082227
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.981,
+          "dE_mean": 2.4,
+          "dE_p95": 5.0,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "photos": [
+        355162138
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.709,
+          "dE_mean": 13.1,
+          "dE_p95": 35.2,
+          "dL": -1.8,
+          "dC": -1.8,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "photos": [
+        689937856
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.963,
+          "dE_mean": 3.4,
+          "dE_p95": 7.7,
+          "dL": -0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "photos": [
+        92001051
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.819,
+          "dE_mean": 5.0,
+          "dE_p95": 13.8,
+          "dL": 0.4,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "gallinula-galeata": {
+      "common_name": "Common Gallinule",
+      "photos": [
+        119897434
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.713,
+          "dE_mean": 4.4,
+          "dE_p95": 17.6,
+          "dL": 1.5,
+          "dC": 0.8,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "gelochelidon-nilotica": {
+      "common_name": "Gull-billed Tern",
+      "photos": [
+        119934029
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.833,
+          "dE_mean": 4.0,
+          "dE_p95": 14.1,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "geococcyx-californianus": {
+      "common_name": "Greater Roadrunner",
+      "photos": [
+        588873226
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.967,
+          "dE_mean": 2.7,
+          "dE_p95": 6.1,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "gymnorhinus-cyanocephalus": {
+      "common_name": "Pinyon Jay",
+      "photos": [
+        331327094
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.954,
+          "dE_mean": 3.0,
+          "dE_p95": 8.2,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "photos": [
+        611271711
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.496,
+          "dE_mean": 22.8,
+          "dE_p95": 46.4,
+          "dL": 0.0,
+          "dC": -5.3,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "photos": [
+        92022415
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 3.3,
+          "dE_p95": 7.9,
+          "dL": 0.4,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "photos": [
+        5504275
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.973,
+          "dE_mean": 2.1,
+          "dE_p95": 5.5,
+          "dL": 0.3,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "icterus-bullockii": {
+      "common_name": "Bullock's Oriole",
+      "photos": [
+        119897525
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.882,
+          "dE_mean": 5.4,
+          "dE_p95": 14.4,
+          "dL": 0.0,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "icterus-cucullatus": {
+      "common_name": "Hooded Oriole",
+      "photos": [
+        494646449
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.971,
+          "dE_mean": 3.3,
+          "dE_p95": 8.2,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "icterus-parisorum": {
+      "common_name": "Scott's Oriole",
+      "photos": [
+        653715329
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.874,
+          "dE_mean": 4.0,
+          "dE_p95": 11.4,
+          "dL": 0.2,
+          "dC": 0.7,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "photos": [
+        478515915
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.939,
+          "dE_mean": 2.8,
+          "dE_p95": 7.8,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "lanius-ludovicianus": {
+      "common_name": "Loggerhead Shrike",
+      "photos": [
+        457114302
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.968,
+          "dE_mean": 3.3,
+          "dE_p95": 8.2,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "larus-californicus": {
+      "common_name": "California Gull",
+      "photos": [
+        92004079
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 50,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.575,
+          "dE_mean": 6.4,
+          "dE_p95": 11.2,
+          "dL": -5.6,
+          "dC": -0.6,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "photos": [
+        251735932
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 2.6,
+          "dE_p95": 6.6,
+          "dL": -0.2,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "larus-livens": {
+      "common_name": "Yellow-footed Gull",
+      "photos": [
+        2735398
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.969,
+          "dE_mean": 3.1,
+          "dE_p95": 8.1,
+          "dL": -0.1,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "larus-smithsonianus": {
+      "common_name": "American Herring Gull",
+      "photos": [
+        5922370
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.978,
+          "dE_mean": 2.7,
+          "dE_p95": 8.4,
+          "dL": 0.0,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "photos": [
+        477376315
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.768,
+          "dE_mean": 6.7,
+          "dE_p95": 20.2,
+          "dL": 0.9,
+          "dC": -1.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "leiothlypis-ruficapilla": {
+      "common_name": "Nashville Warbler",
+      "photos": [
+        265190175
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.937,
+          "dE_mean": 3.8,
+          "dE_p95": 10.4,
+          "dL": -0.2,
+          "dC": -1.8,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "limnodromus-scolopaceus": {
+      "common_name": "Long-billed Dowitcher",
+      "photos": [
+        2715035
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.981,
+          "dE_mean": 2.1,
+          "dE_p95": 4.1,
+          "dL": 0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "limosa-fedoa": {
+      "common_name": "Marbled Godwit",
+      "photos": [
+        724720601
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.974,
+          "dE_mean": 2.4,
+          "dE_p95": 5.5,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "photos": [
+        595553611
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.96,
+          "dE_mean": 3.2,
+          "dE_p95": 7.3,
+          "dL": 0.1,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "photos": [
+        614895245
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 2.9,
+          "dE_p95": 7.7,
+          "dL": -0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "melanerpes-uropygialis": {
+      "common_name": "Gila Woodpecker",
+      "photos": [
+        92004899
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.946,
+          "dE_mean": 3.2,
+          "dE_p95": 7.8,
+          "dL": -0.1,
+          "dC": -0.5,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "melospiza-lincolnii": {
+      "common_name": "Lincoln's Sparrow",
+      "photos": [
+        260142249
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.943,
+          "dE_mean": 3.5,
+          "dE_p95": 8.1,
+          "dL": 0.6,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "photos": [
+        4637903
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.981,
+          "dE_mean": 2.3,
+          "dE_p95": 6.1,
+          "dL": 0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "melozone-aberti": {
+      "common_name": "Abert's Towhee",
+      "photos": [
+        358954100
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.893,
+          "dE_mean": 3.2,
+          "dE_p95": 8.5,
+          "dL": 0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "melozone-crissalis": {
+      "common_name": "California Towhee",
+      "photos": [
+        297610261
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.939,
+          "dE_mean": 2.8,
+          "dE_p95": 7.8,
+          "dL": 0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "photos": [
+        603830740
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.964,
+          "dE_mean": 2.9,
+          "dE_p95": 6.7,
+          "dL": -0.0,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "photos": [
+        647580776
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 1.9,
+          "dE_p95": 5.1,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "myiarchus-cinerascens": {
+      "common_name": "Ash-throated Flycatcher",
+      "photos": [
+        621302842
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.979,
+          "dE_mean": 2.8,
+          "dE_p95": 6.3,
+          "dL": -0.0,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "photos": [
+        338606505
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.971,
+          "dE_mean": 3.1,
+          "dE_p95": 8.1,
+          "dL": 0.0,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "nannopterum-brasilianum": {
+      "common_name": "Neotropic Cormorant",
+      "photos": [
+        369851131
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.869,
+          "dE_mean": 2.2,
+          "dE_p95": 6.6,
+          "dL": 1.7,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "numenius-americanus": {
+      "common_name": "Long-billed Curlew",
+      "photos": [
+        92003922
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.928,
+          "dE_mean": 3.8,
+          "dE_p95": 9.8,
+          "dL": -0.3,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "photos": [
+        641728962
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 2.9,
+          "dE_p95": 7.0,
+          "dL": -0.2,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "oreoscoptes-montanus": {
+      "common_name": "Sage Thrasher",
+      "photos": [
+        259105527
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.9,
+          "dE_mean": 2.8,
+          "dE_p95": 6.4,
+          "dL": -0.6,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "photos": [
+        92001807
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.955,
+          "dE_mean": 3.8,
+          "dE_p95": 9.6,
+          "dL": -0.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "photos": [
+        577296858
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.932,
+          "dE_mean": 3.0,
+          "dE_p95": 6.3,
+          "dL": -0.8,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "photos": [
+        121613835
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.611,
+          "dE_mean": 17.2,
+          "dE_p95": 50.8,
+          "dL": 2.4,
+          "dC": 0.7,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "photos": [
+        263770044
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 2.7,
+          "dE_p95": 6.4,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "photos": [
+        603212991
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.987,
+          "dE_mean": 2.6,
+          "dE_p95": 7.2,
+          "dL": 0.1,
+          "dC": -0.5,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "photos": [
+        647595485
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.951,
+          "dE_mean": 4.4,
+          "dE_p95": 13.2,
+          "dL": -0.5,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "petrochelidon-pyrrhonota": {
+      "common_name": "American Cliff Swallow",
+      "photos": [
+        706232785
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.977,
+          "dE_mean": 2.5,
+          "dE_p95": 6.6,
+          "dL": 0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "phainopepla-nitens": {
+      "common_name": "Phainopepla",
+      "photos": [
+        653712969
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 2.9,
+          "dE_p95": 8.8,
+          "dL": 0.1,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "phalaenoptilus-nuttallii": {
+      "common_name": "Common Poorwill",
+      "photos": [
+        270418156
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.945,
+          "dE_mean": 9.1,
+          "dE_p95": 24.3,
+          "dL": 0.4,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "pheucticus-melanocephalus": {
+      "common_name": "Black-headed Grosbeak",
+      "photos": [
+        649948895
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.97,
+          "dE_mean": 4.3,
+          "dE_p95": 9.8,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "pipilo-maculatus": {
+      "common_name": "Spotted Towhee",
+      "photos": [
+        2342130
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.95,
+          "dE_mean": 3.1,
+          "dE_p95": 7.1,
+          "dL": 0.1,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "piranga-ludoviciana": {
+      "common_name": "Western Tanager",
+      "photos": [
+        646984573
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.925,
+          "dE_mean": 3.7,
+          "dE_p95": 8.5,
+          "dL": -0.8,
+          "dC": -1.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "plegadis-chihi": {
+      "common_name": "White-faced Ibis",
+      "photos": [
+        92003785
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.982,
+          "dE_mean": 2.5,
+          "dE_p95": 5.8,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "podiceps-nigricollis": {
+      "common_name": "Black-necked Grebe",
+      "photos": [
+        2732065
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.921,
+          "dE_mean": 3.3,
+          "dE_p95": 8.0,
+          "dL": -0.5,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "photos": [
+        347508702
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.954,
+          "dE_mean": 2.7,
+          "dE_p95": 5.4,
+          "dL": 0.5,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "poecile-gambeli": {
+      "common_name": "Mountain Chickadee",
+      "photos": [
+        718774856
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.883,
+          "dE_mean": 2.8,
+          "dE_p95": 7.5,
+          "dL": 0.5,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "polioptila-caerulea": {
+      "common_name": "Blue-grey Gnatcatcher",
+      "photos": [
+        335067807
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.648,
+          "dE_mean": 6.2,
+          "dE_p95": 14.2,
+          "dL": 4.3,
+          "dC": -0.1,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "polioptila-melanura": {
+      "common_name": "Black-tailed Gnatcatcher",
+      "photos": [
+        607241678
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.968,
+          "dE_mean": 2.5,
+          "dE_p95": 6.7,
+          "dL": 0.0,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "photos": [
+        362723149
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.683,
+          "dE_mean": 5.1,
+          "dE_p95": 16.1,
+          "dL": 1.0,
+          "dC": 0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "pyrocephalus-rubinus": {
+      "common_name": "Scarlet Flycatcher",
+      "photos": [
+        586803985
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.918,
+          "dE_mean": 4.2,
+          "dE_p95": 11.6,
+          "dL": -0.3,
+          "dC": -0.7,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "quiscalus-mexicanus": {
+      "common_name": "Great-tailed Grackle",
+      "photos": [
+        547761132
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.928,
+          "dE_mean": 2.5,
+          "dE_p95": 9.2,
+          "dL": 0.5,
+          "dC": 0.7,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "rallus-limicola": {
+      "common_name": "Virginia Rail",
+      "photos": [
+        385020264
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.946,
+          "dE_mean": 2.9,
+          "dE_p95": 6.2,
+          "dL": -0.5,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "rallus-obsoletus": {
+      "common_name": "Ridgway's Rail",
+      "photos": [
+        355602649
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.933,
+          "dE_mean": 2.1,
+          "dE_p95": 5.0,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "recurvirostra-americana": {
+      "common_name": "American Avocet",
+      "photos": [
+        261332227
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 2.7,
+          "dE_p95": 7.2,
+          "dL": -0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "salpinctes-obsoletus": {
+      "common_name": "Rock Wren",
+      "photos": [
+        461168653
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.902,
+          "dE_mean": 3.4,
+          "dE_p95": 8.4,
+          "dL": 0.2,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "photos": [
+        637329547
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.982,
+          "dE_mean": 1.7,
+          "dE_p95": 4.1,
+          "dL": 0.1,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sayornis-saya": {
+      "common_name": "Say's Phoebe",
+      "photos": [
+        610892783
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 2.8,
+          "dE_p95": 6.4,
+          "dL": 1.2,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "photos": [
+        647572179
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.881,
+          "dE_mean": 4.3,
+          "dE_p95": 10.7,
+          "dL": -0.5,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "photos": [
+        601660331
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.911,
+          "dE_mean": 3.1,
+          "dE_p95": 7.4,
+          "dL": 0.0,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "setophaga-nigrescens": {
+      "common_name": "Black-throated Grey Warbler",
+      "photos": [
+        188669375
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.974,
+          "dE_mean": 2.8,
+          "dE_p95": 7.3,
+          "dL": 0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "setophaga-townsendi": {
+      "common_name": "Townsend's Warbler",
+      "photos": [
+        491385309
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.95,
+          "dE_mean": 3.3,
+          "dE_p95": 7.3,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sialia-currucoides": {
+      "common_name": "Mountain Bluebird",
+      "photos": [
+        257076389
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.968,
+          "dE_mean": 2.6,
+          "dE_p95": 5.4,
+          "dL": -0.0,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sialia-mexicana": {
+      "common_name": "Western Bluebird",
+      "photos": [
+        336238201
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.818,
+          "dE_mean": 5.5,
+          "dE_p95": 10.1,
+          "dL": 1.4,
+          "dC": 0.7,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "photos": [
+        741875687
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.94,
+          "dE_mean": 2.5,
+          "dE_p95": 5.9,
+          "dL": -0.0,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "photos": [
+        348539299
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.984,
+          "dE_mean": 3.1,
+          "dE_p95": 6.7,
+          "dL": 0.3,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "spatula-cyanoptera": {
+      "common_name": "Cinnamon Teal",
+      "photos": [
+        535612047
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.981,
+          "dE_mean": 3.1,
+          "dE_p95": 7.3,
+          "dL": -0.0,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "spinus-lawrencei": {
+      "common_name": "Lawrence's Goldfinch",
+      "photos": [
+        115074290
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 2.4,
+          "dE_p95": 5.4,
+          "dL": -0.0,
+          "dC": -0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "photos": [
+        475665411
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 50,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.69,
+          "dE_mean": 19.8,
+          "dE_p95": 56.8,
+          "dL": 4.4,
+          "dC": 2.7,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "spizella-breweri": {
+      "common_name": "Brewer's Sparrow",
+      "photos": [
+        335039338
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 51,
+      "faithful": false,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.507,
+          "dE_mean": 6.4,
+          "dE_p95": 17.5,
+          "dL": 2.0,
+          "dC": 0.3,
+          "faithful": false
+        }
+      },
+      "review": "reference"
+    },
+    "spizella-passerina": {
+      "common_name": "Chipping Sparrow",
+      "photos": [
+        490663025
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.893,
+          "dE_mean": 3.0,
+          "dE_p95": 8.7,
+          "dL": 0.2,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "stelgidopteryx-serripennis": {
+      "common_name": "Northern Rough-winged Swallow",
+      "photos": [
+        683068349
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.956,
+          "dE_mean": 3.2,
+          "dE_p95": 8.5,
+          "dL": 0.2,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "photos": [
+        652069202
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.958,
+          "dE_mean": 2.7,
+          "dE_p95": 7.1,
+          "dL": 0.0,
+          "dC": -0.7,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "photos": [
+        364234000
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.965,
+          "dE_mean": 3.2,
+          "dE_p95": 9.6,
+          "dL": 0.2,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "photos": [
+        59765954
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.976,
+          "dE_mean": 3.8,
+          "dE_p95": 7.8,
+          "dL": -0.0,
+          "dC": 0.3,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "photos": [
+        67983238
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.82,
+          "dE_mean": 6.1,
+          "dE_p95": 13.9,
+          "dL": 0.8,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "thryomanes-bewickii": {
+      "common_name": "Bewick's Wren",
+      "photos": [
+        653719136
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.949,
+          "dE_mean": 2.0,
+          "dE_p95": 5.2,
+          "dL": 0.3,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "toxostoma-crissale": {
+      "common_name": "Crissal Thrasher",
+      "photos": [
+        119987772
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.96,
+          "dE_mean": 2.7,
+          "dE_p95": 7.6,
+          "dL": -0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "toxostoma-lecontei": {
+      "common_name": "LeConte's Thrasher",
+      "photos": [
+        263642635
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.886,
+          "dE_mean": 4.6,
+          "dE_p95": 11.8,
+          "dL": 0.8,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "toxostoma-redivivum": {
+      "common_name": "California Thrasher",
+      "photos": [
+        110840875
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 2.8,
+          "dE_p95": 7.0,
+          "dL": -0.0,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "photos": [
+        92001914
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 2.8,
+          "dE_p95": 7.2,
+          "dL": 0.0,
+          "dC": -0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "photos": [
+        92023084
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.897,
+          "dE_mean": 2.6,
+          "dE_p95": 5.8,
+          "dL": 0.6,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "photos": [
+        620298651
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.963,
+          "dE_mean": 2.4,
+          "dE_p95": 5.0,
+          "dL": -0.1,
+          "dC": -0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "tyrannus-verticalis": {
+      "common_name": "Western Kingbird",
+      "photos": [
+        119895616
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.928,
+          "dE_mean": 4.4,
+          "dE_p95": 10.8,
+          "dL": 0.6,
+          "dC": 0.2,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "tyto-furcata": {
+      "common_name": "American Barn Owl",
+      "photos": [
+        163185333
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.987,
+          "dE_mean": 2.7,
+          "dE_p95": 7.2,
+          "dL": -0.1,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "vireo-gilvus": {
+      "common_name": "Warbling Vireo",
+      "photos": [
+        652447297
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.957,
+          "dE_mean": 2.8,
+          "dE_p95": 6.4,
+          "dL": 0.2,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "xanthocephalus-xanthocephalus": {
+      "common_name": "Yellow-headed Blackbird",
+      "photos": [
+        65701717
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.798,
+          "dE_mean": 2.4,
+          "dE_p95": 8.9,
+          "dL": 0.8,
+          "dC": 1.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "zenaida-asiatica": {
+      "common_name": "White-winged Dove",
+      "photos": [
+        354656637
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.973,
+          "dE_mean": 2.4,
+          "dE_p95": 5.6,
+          "dL": -0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "photos": [
+        671977204
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.964,
+          "dE_mean": 2.2,
+          "dE_p95": 5.4,
+          "dL": -0.2,
+          "dC": -0.4,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "zonotrichia-leucophrys": {
+      "common_name": "White-crowned Sparrow",
+      "photos": [
+        618204478
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.934,
+          "dE_mean": 3.4,
+          "dE_p95": 9.8,
+          "dL": 0.3,
+          "dC": -0.6,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    }
+  }
+}

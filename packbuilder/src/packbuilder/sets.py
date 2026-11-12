@@ -35,6 +35,7 @@ IOC_SHA256 = "d0de18f12cfff1b4eb1a4ab7a8d1154d442ecbaa821f04260759e47e7a2a3fd2"
 
 TAXONOMY_FIXES = {
     # BirdNET+ (eBird/Clements) name: IOC name, for the species of the packs whose names differ.
+    "Coccothraustes vespertinus": "Hesperiphona vespertina",
     "Dryobates borealis": "Leuconotopicus borealis",
     "Dryobates villosus": "Leuconotopicus villosus",
 }

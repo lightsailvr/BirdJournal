@@ -89,3 +89,37 @@ def test_the_query_asks_only_for_the_license_set_and_its_cache_is_keyed_by_it(tm
     assert len(fake.params) == 2, "another set is another cache file"
     assert fake.params[-1]["photo_license"] == "cc0,cc-by,cc-by-nc"
     assert len(list((tmp_path / "api").glob("taxon-17013-*.json"))) == 2
+
+
+def test_a_species_with_wider_places_takes_the_regions_candidates_first_then_the_wider_ones(tmp_path, monkeypatch):
+    """#58: a species the region has no usable photo of borrows from wider places (`wider_places` in overrides.json)."""
+    from packbuilder import metadata_api
+    from packbuilder.definition import SpeciesEntry, wider_places
+
+    class ByPlace(FakeSession):
+        def get(self, url, params, headers, timeout):
+            self.params.append(params)
+            ids = [100] if params["place_id"] == "962" else [200, 100]
+
+            class Response:
+                def raise_for_status(self):
+                    pass
+
+                def json(self):
+                    photos = [{**OBSERVATION["photos"][0], "id": photo_id} for photo_id in ids]
+                    return {"results": [{**OBSERVATION, "photos": photos}], "total_results": 1, "page": params["page"]}
+
+            return Response()
+
+    fake = ByPlace()
+    monkeypatch.setattr(metadata_api, "session", lambda: fake)
+    owl = SpeciesEntry(scientific_name="Megascops kennicottii", common_name="Western Screech Owl", birdnet_label="Megascops kennicottii_Western Screech-Owl", inat_taxon_id=20016)
+    wren = SpeciesEntry(scientific_name="Troglodytes aedon", common_name="House Wren", birdnet_label="Troglodytes aedon_House Wren", inat_taxon_id=7562)
+    wider = wider_places([owl, wren], {"Megascops kennicottii": {"wider_places": [46, 10]}, "Troglodytes aedon": {"include": [1]}})
+    assert wider == {20016: (46, 10)}
+
+    source = metadata_api.APIMetadata((962,), tmp_path, created_before="2026-09-26", pause_seconds=0, wider=wider)
+    assert [c.photo_id for c in source.candidates_for(20016)] == [100, 200], "the region's first, then the wider places' new photos"
+    assert [p["place_id"] for p in fake.params] == ["962", "46,10"]
+    assert [c.photo_id for c in source.candidates_for(7562)] == [100], "a species without the override asks the region alone"
+    assert len(fake.params) == 3

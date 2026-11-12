@@ -20,6 +20,11 @@ from the locked seeds, which give the same picture. The review happens on the co
 
 `--approve-all` approves only faithful paintings from a photo: a painting from text, or one the gate flagged, needs an
 `--approve` of its own.
+
+Since the patch is the only painting (#131, #137), a pack whose edition has a patch paints no pack art.
+`isolate_references` does the half of this step its patches and silhouettes still need (#58): it picks each species' reference the same
+way, isolates the bird on white into the same cache and pins it in the same lock, as a `reference` entry with no
+painting.
 """
 
 from __future__ import annotations
@@ -33,12 +38,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
+import requests
 from PIL import Image
 
 from packbuilder.art import ArtPrompts, ArtSetting, Species, Workflow, length_cm, reference_crop
 from packbuilder.comfy import ComfyClient, PaintingFailed
 from packbuilder.contact_sheets import grid
 from packbuilder.crops import upright
+from packbuilder.download import fetch
 from packbuilder.fidelity import lab
 from packbuilder.geometry import Box
 from packbuilder.painting import ATTEMPTS, ISOLATE_SEED, Painter, png
@@ -50,8 +57,12 @@ LOCK_FILE = "art.lock.json"
 PENDING, APPROVED, REJECTED, GAP = "pending", "approved", "rejected", "gap"
 UNPAINTED = "unpainted"
 """Not in the lock: the painting failed (ComfyUI unreachable, no bird to measure). Never in the pack."""
+REFERENCE = "reference"
+"""A reference bird alone: picked and isolated for the species' patch and silhouette, with no painting (`isolate_references`)."""
 ISOLATE_ROUND = 10
 """A rejected painting's next isolation starts this many seeds on, past the previous round's retries."""
+CROPS = "reference-crops"
+"""The cache folder of exported reference crops, `<photo id>.png` (`export_references`)."""
 
 
 @dataclass(frozen=True)
@@ -181,6 +192,129 @@ class PackArtist:
                  *(sum(a.review == state for a in art.values()) for state in (APPROVED, PENDING, GAP)))
         return art
 
+    def isolate_references(self, results: list[SpeciesResult]) -> dict[str, int]:
+        """Each species' reference photo by species id, isolating the bird of every species whose lock entry names no
+        photo of the pack or whose isolated bird left the cache, and painting nothing (#58). The lock is written after
+        each, so an interrupted run resumes. A species with no photo gets no reference, and so no patch."""
+        chosen: dict[str, int] = {}
+        isolated = 0
+        for result in results:
+            try:
+                reference, seed = self._pick(result)
+                if reference is not None and seed is not None:
+                    self._isolate(result.entry.id, result.entry.common_name, reference.candidate.photo_id, _reference_crop(reference), seed)
+                    isolated += 1
+            except (PaintingFailed, ValueError, OSError, KeyError) as error:  # one species' failure never stops the run
+                log.error("  reference bird for %s failed: %s", result.entry.common_name, error)
+                continue
+            if reference is not None:
+                chosen[result.entry.id] = reference.candidate.photo_id
+        log.info("reference birds: %d isolated, %d in all, %d species without one", isolated, len(chosen), len(results) - len(chosen))
+        return chosen
+
+    def export_references(self, results: list[SpeciesResult]) -> list[dict]:
+        """The reference birds still to isolate, each with its photo's Open Data address and the bird's box in it: all
+        that `isolate_exported` needs, so the isolations can run where ComfyUI is, on a machine with neither the pack's
+        photos nor the detector. The tailnet relays at 60 to 400 KB/s and an isolation sends and fetches several
+        pictures, so the box fetches the photo itself and cuts the same crop. The crop is also saved in the cache's
+        `reference-crops/`, which `isolate_exported` takes first when it is run on this machine."""
+        todo = []
+        for result in results:
+            reference, seed = self._pick(result)
+            if reference is None or seed is None:
+                continue
+            candidate, box = reference.candidate, reference.scored.box
+            target = self.cache_dir / CROPS / f"{candidate.photo_id}.png"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            _reference_crop(reference).save(target)
+            todo.append({"species": result.entry.id, "common_name": result.entry.common_name, "photo": candidate.photo_id, "seed": seed,
+                         "url": candidate.photo_url("original"), "extension": candidate.extension, "box": [box.x0, box.y0, box.x1, box.y1]})
+        log.info("reference birds: %d to isolate, their crops in %s", len(todo), self.cache_dir / CROPS)
+        return todo
+
+    def isolate_exported(self, todo: list[dict]) -> int:
+        """Isolates the birds `export_references` listed, from their crops in the cache, and pins them in the lock;
+        how many it isolated. One that is already there (a run resumed) is left alone."""
+        isolated = 0
+        for item in todo:
+            entry = self.lock.species.get(item["species"])
+            if entry and entry.get("photos") == [item["photo"]] and self._has_isolation(item["photo"], entry.get("isolate_seed") or ISOLATE_SEED):
+                continue
+            try:
+                self._isolate(item["species"], item["common_name"], item["photo"], self._exported_crop(item), item["seed"])
+                isolated += 1
+            except (PaintingFailed, ValueError, OSError, KeyError, requests.RequestException) as error:
+                log.error("  reference bird for %s failed: %s", item["common_name"], error)
+        log.info("reference birds: %d isolated of %d listed", isolated, len(todo))
+        return isolated
+
+    def _exported_crop(self, item: dict) -> Image.Image:
+        """An exported reference's crop: the one in the cache, else cut from the photo's original, fetched from the Open
+        Data bucket into the cache's `photos/original/` beside the art cache, by the box the export recorded."""
+        saved = self.cache_dir / CROPS / f"{item['photo']}.png"
+        if saved.exists():
+            with Image.open(saved) as opened:
+                return opened.convert("RGB")
+        original = fetch(item["url"], self.cache_dir.parent / "photos" / "original" / f"{item['photo']}.{item['extension']}")
+        with Image.open(original) as opened:
+            return reference_crop(upright(opened), Box(*item["box"]))
+
+    def _pick(self, result: SpeciesResult) -> tuple[ChosenPhoto | None, int | None]:
+        """The species' reference photo, and the seed its isolation starts from when its bird is still to isolate (None
+        when the lock names it and the cache has it). The locked photo is kept while the pack has it, as a painting's
+        is, unless `art.reference` pins another of the pack's photos."""
+        name, entry = result.entry.common_name, self.lock.species.get(result.entry.id)
+        pinned = self.references.get(result.entry.id)
+        if pinned is not None and all(chosen.candidate.photo_id != pinned for chosen in result.photos):
+            log.warning("  %s: art.reference %d is not one of the pack's photos; taking the best-lit one", name, pinned)
+        locked = entry["photos"][0] if entry and entry.get("photos") else None
+        reference = pick_reference(result.photos, pinned if pinned is not None else locked)
+        if reference is None:
+            log.warning("  %s: no photo, so no reference bird and no patch", name)
+            return None, None
+        photo_id = reference.candidate.photo_id
+        if photo_id == locked and self._has_isolation(photo_id, entry.get("isolate_seed") or ISOLATE_SEED):
+            return reference, None
+        if locked is not None and photo_id != locked:
+            log.info("  %s: its reference was photo %d; now photo %d, so its patch is painted again", name, locked, photo_id)
+        return reference, self._first_seed(entry) if photo_id == locked else ISOLATE_SEED
+
+    def _isolate(self, species_id: str, name: str, photo_id: int, crop: Image.Image, seed: int) -> None:
+        """Isolates one reference bird from its crop and pins it in the lock as a `reference` entry."""
+        isolation = self._isolated(photo_id, crop, self.painter.mask(crop), seed, ATTEMPTS)
+        flag = "" if isolation.fitted["faithful"] else "  REVIEW: not faithful"
+        log.info("  %s: photo %d isolated, seed %d, dE %.1f, iou %.2f%s", name, photo_id, isolation.seed, isolation.fitted["dE_mean"], isolation.fitted["iou"], flag)
+        self.lock.species[species_id] = {
+            "common_name": name, "photos": [photo_id], "isolate": self.painter.isolate_workflow.tag, "first_isolate_seed": seed, "isolate_seed": isolation.seed,
+            "faithful": isolation.fitted["faithful"], "fidelity": {"isolated": isolation.fitted}, "review": REFERENCE,
+        }
+        self.lock.write()
+
+    @staticmethod
+    def _first_seed(entry: dict | None) -> int:
+        """The seed an entry's isolation started from, which names its file in the cache: a reference entry records it;
+        a painting's is the default for its round (its `isolate_seed` is the attempt that was kept)."""
+        if entry is None:
+            return ISOLATE_SEED
+        if "first_isolate_seed" in entry:
+            return entry["first_isolate_seed"]
+        return ISOLATE_SEED + ISOLATE_ROUND * len(entry.get("rejected_seeds", []))
+
+    def _has_isolation(self, photo_id: int, kept_seed: int) -> bool:
+        """Whether the cache holds the photo's bird as isolated with `kept_seed`, the seed the lock records and the
+        patch step looks it up by (`patch_art.cached_isolations`): the file is named by the first seed tried, and its
+        info records the one that was kept."""
+        for image in (self.cache_dir / "isolated").glob(f"{self._isolation_key(photo_id, 0).replace('-s0-', '-s*-')}.png"):
+            info = image.with_suffix(".json")
+            seed = json.loads(info.read_text())["seed"] if info.exists() else int(image.name.split("-s", 1)[1].split("-", 1)[0])
+            if seed == kept_seed:
+                return True
+        return False
+
+    def _isolation_key(self, photo_id: int, seed: int) -> str:
+        prompt = hashlib.sha256(self.prompts.isolate.encode()).hexdigest()[:10]
+        return f"{photo_id}-s{seed}-{self.painter.isolate_workflow.tag}-i{prompt}"
+
     def _species(self, result: SpeciesResult) -> Artwork:
         entry_id = result.entry.id
         entry = self.lock.species.get(entry_id)
@@ -261,8 +395,7 @@ class PackArtist:
     def _isolated(self, photo_id: int, crop: Image.Image, crop_mask: np.ndarray, seed: int, attempts: int) -> "_Isolated":
         """The reference bird on white, cached by photo, seed, workflow and isolation prompt (not the prompts version,
         which a pack-art template bumps), so a repainted species reuses it."""
-        prompt = hashlib.sha256(self.prompts.isolate.encode()).hexdigest()[:10]
-        key = f"{photo_id}-s{seed}-{self.painter.isolate_workflow.tag}-i{prompt}"
+        key = self._isolation_key(photo_id, seed)
         image_path, info_path = self.cache_dir / "isolated" / f"{key}.png", self.cache_dir / "isolated" / f"{key}.json"
         if image_path.exists() and info_path.exists():
             info = json.loads(info_path.read_text())

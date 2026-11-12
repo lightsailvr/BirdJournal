@@ -64,7 +64,7 @@ def test_each_species_is_painted_from_its_best_lit_photo_in_the_editions_theme_a
 
     isolations = [job for job in comfy.paintings if job.filename_prefix == "birdjournal/bird-isolate"]
     paintings = [job for job in comfy.paintings if job.filename_prefix == "birdjournal/pack-art"]
-    assert [job.names for job in isolations] == [["birdjournal/isolate-12.png"], ["birdjournal/isolate-21.png"]], "the brighter finch photo, not the pack's first"
+    assert [job.names[0].rsplit("-", 1)[0] for job in isolations] == ["birdjournal/isolate-12", "birdjournal/isolate-21"], "the brighter finch photo, not the pack's first"
     assert len(paintings) == 2
     for job in paintings:
         assert THEME in job.prompt
@@ -203,7 +203,7 @@ def test_a_reference_override_wins_over_the_lighting(tmp_path, comfy):
 
     artist(tmp_path, comfy, references={"haemorhous-mexicanus": 13}).paint(results)
 
-    assert comfy.paintings[0].names == ["birdjournal/isolate-13.png"]
+    assert comfy.paintings[0].names[0].startswith("birdjournal/isolate-13-")
 
 
 def test_a_reference_override_the_pack_lacks_is_reported_and_the_best_lit_photo_painted(tmp_path, comfy, caplog):
@@ -306,3 +306,128 @@ def test_rejecting_twice_before_a_repaint_skips_no_round_and_the_reason_survives
 
     entry = json.loads((tmp_path / "art.lock.json").read_text())["species"]["haemorhous-mexicanus"]
     assert len(entry["rejected_seeds"]) == 1 and entry["why"] == "a crest it doesn't have"
+
+
+def test_references_isolates_each_species_best_lit_bird_and_paints_nothing(tmp_path, comfy):
+    from packbuilder.patch_art import cached_isolations
+
+    dim, bright = photo(tmp_path, 11, light=0.35, rank=0), photo(tmp_path, 12, light=1.0, rank=1)
+
+    chosen = artist(tmp_path, comfy).isolate_references([result(FINCH, [dim, bright]), result(PHOEBE, [photo(tmp_path, 21)]), result(BUSHTIT, [])])
+
+    assert chosen == {"haemorhous-mexicanus": 12, "sayornis-nigricans": 21}, "a species with no photo has no reference"
+    assert [job.filename_prefix for job in comfy.paintings] == ["birdjournal/bird-isolate"] * 2, "no pack art is painted (#137)"
+    lock = json.loads((tmp_path / "art.lock.json").read_text())["species"]
+    finch = lock["haemorhous-mexicanus"]
+    assert (finch["photos"], finch["isolate"], finch["review"], finch["faithful"]) == ([12], "bird-isolate@1", "reference", True)
+    assert set(lock) == {"haemorhous-mexicanus", "sayornis-nigricans"}
+    # The patch step finds the bird by the seed the lock records.
+    assert finch["isolate_seed"] in cached_isolations(tmp_path / "cache", 12)
+
+
+def test_references_keeps_a_warm_lock_and_a_painted_species_as_they_are(tmp_path, comfy):
+    artist(tmp_path, comfy).paint([result(FINCH, [photo(tmp_path, 12, light=0.6)])])
+    artist(tmp_path, comfy).isolate_references([result(PHOEBE, [photo(tmp_path, 21)])])
+    before, jobs = (tmp_path / "art.lock.json").read_text(), len(comfy.jobs)
+
+    # A brighter finch photo joins the pack: its reviewed reference stays, and nothing is isolated again.
+    chosen = artist(tmp_path, comfy).isolate_references([result(FINCH, [photo(tmp_path, 13), photo(tmp_path, 12, light=0.6, rank=1)]), result(PHOEBE, [photo(tmp_path, 21)])])
+
+    assert chosen == {"haemorhous-mexicanus": 12, "sayornis-nigricans": 21}
+    assert len(comfy.jobs) == jobs and (tmp_path / "art.lock.json").read_text() == before
+
+
+def test_references_takes_a_pin_or_another_photo_when_the_locked_one_left_the_pack(tmp_path, comfy):
+    artist(tmp_path, comfy).isolate_references([result(FINCH, [photo(tmp_path, 12)]), result(PHOEBE, [photo(tmp_path, 21)])])
+
+    chosen = artist(tmp_path, comfy, references={"haemorhous-mexicanus": 13}).isolate_references(
+        [result(FINCH, [photo(tmp_path, 12), photo(tmp_path, 13, light=0.6, rank=1)]), result(PHOEBE, [photo(tmp_path, 22)])])
+
+    assert chosen == {"haemorhous-mexicanus": 13, "sayornis-nigricans": 22}
+    lock = json.loads((tmp_path / "art.lock.json").read_text())["species"]
+    assert lock["haemorhous-mexicanus"]["photos"] == [13] and lock["sayornis-nigricans"]["photos"] == [22]
+
+
+def test_the_build_isolates_its_reference_birds_then_patches_and_silhouettes_come_from_them(tmp_path, comfy):
+    from packbuilder import pipeline
+    from packbuilder.definition import BoundingBox, PackDefinition
+    from packbuilder.detector import Detection
+    from packbuilder.patch_art import PatchArtist, PatchLock
+    from packbuilder.silhouettes import SilhouetteLock, SilhouetteMaker, sources
+    from tests.test_pipeline import FakeMetadata
+
+    class Detector:
+        def detect(self, image):
+            return [Detection(box=BIRD, score=0.9)]
+
+    def fetch(candidate, cache_dir, size):
+        return photo(tmp_path, candidate.photo_id).original
+
+    definition = PackDefinition(id="us-ca-la", name="Los Angeles", region="LA", version=1, place_ids=(1,), bounding_box=BoundingBox(0, 0, 1, 1), species=[FINCH])
+    metadata = FakeMetadata([make_candidate(photo_id=photo_id, observation_id=photo_id, taxon_id=FINCH.inat_taxon_id, width=1200, height=1600) for photo_id in (12, 13)])
+    options = pipeline.BuildOptions(cache_dir=tmp_path / "cache", out_dir=tmp_path / "pack", fetch=fetch, min_photos=1)
+    (tmp_path / "overrides.json").write_text(json.dumps({FINCH.scientific_name: {"include": [12, 13]}}))
+    picker = artist(tmp_path, comfy)
+    patches = PatchArtist(picker.client, pack_id="us-ca-la", lock=PatchLock.load(tmp_path / "patch.lock.json"), art_lock=picker.lock, cache_dir=tmp_path / "cache")
+    silhouettes = SilhouetteMaker(pack_id="us-ca-la", lock=SilhouetteLock.load(tmp_path / "silhouette.lock.json"), cache_dir=tmp_path / "cache",
+                                  sources=lambda: sources(PatchLock.load(tmp_path / "patch.lock.json"), ArtLock.load(tmp_path / "art.lock.json"), {}))
+
+    pipeline.build_pack(definition, tmp_path / "overrides.json", metadata, Detector(), options, reference_picker=picker, patch_artist=patches,
+                        silhouette_maker=silhouettes, art_sheets=tmp_path / "sheets")
+
+    prefixes = [job.filename_prefix for job in comfy.paintings]
+    assert prefixes[0] == "birdjournal/bird-isolate" and "birdjournal/patch-art" in prefixes and "birdjournal/pack-art" not in prefixes
+    reference = json.loads((tmp_path / "art.lock.json").read_text())["species"]["haemorhous-mexicanus"]
+    patch = json.loads((tmp_path / "patch.lock.json").read_text())["species"]["haemorhous-mexicanus"]
+    silhouette = json.loads((tmp_path / "silhouette.lock.json").read_text())["species"]["haemorhous-mexicanus"]
+    assert patch["photos"] == reference["photos"] and patch["isolate_seed"] == reference["isolate_seed"]
+    assert silhouette["photos"] == reference["photos"], "derived in the same build, from the bird it has just isolated"
+    assert (tmp_path / "sheets" / "patches" / "sheet-01.jpg").exists() and (tmp_path / "sheets" / "silhouettes").is_dir()
+
+
+def test_exported_references_are_isolated_from_their_crops_alone_as_the_build_would(tmp_path, comfy):
+    """The Mac exports the crops; the box, which has no photos, isolates them into the same lock and cache."""
+    results = [result(FINCH, [photo(tmp_path, 11, light=0.35), photo(tmp_path, 12, rank=1)]), result(PHOEBE, [photo(tmp_path, 21)]), result(BUSHTIT, [])]
+
+    todo = artist(tmp_path, comfy).export_references(results)
+
+    assert [(item["species"], item["common_name"], item["photo"], item["seed"]) for item in todo] == [
+        ("haemorhous-mexicanus", "House Finch", 12, 49), ("sayornis-nigricans", "Black Phoebe", 21, 49)]
+    assert todo[0]["url"].endswith("/12/original.jpg") and todo[0]["box"] == [BIRD.x0, BIRD.y0, BIRD.x1, BIRD.y1]
+    assert not comfy.jobs and not (tmp_path / "art.lock.json").exists(), "exporting asks ComfyUI for nothing"
+    assert (tmp_path / "cache" / "reference-crops" / "12.png").exists()
+
+    assert artist(tmp_path, comfy).isolate_exported(todo) == 2
+    jobs = len(comfy.jobs)
+    assert artist(tmp_path, comfy).isolate_exported(todo) == 0 and len(comfy.jobs) == jobs, "a resumed run isolates nothing twice"
+
+    # Back on the Mac the build finds every bird, and has nothing left to export.
+    assert artist(tmp_path, comfy).export_references(results) == []
+    assert artist(tmp_path, comfy).isolate_references(results) == {"haemorhous-mexicanus": 12, "sayornis-nigricans": 21}
+    assert len(comfy.jobs) == jobs
+
+
+def test_the_box_cuts_an_exported_crop_from_the_photo_it_fetches_itself(tmp_path, comfy, monkeypatch):
+    """Nothing but the list crosses the tailnet: the box fetches the original and cuts the crop the Mac would have."""
+    import shutil
+
+    import packbuilder.pack_art as pack_art
+
+    chosen = photo(tmp_path, 12)
+    todo = artist(tmp_path, comfy).export_references([result(FINCH, [chosen])])
+    mac_crop = Image.open(tmp_path / "cache" / "reference-crops" / "12.png").convert("RGB")
+    shutil.rmtree(tmp_path / "cache")  # the box has none of the Mac's cache
+    fetched = []
+
+    def fetch(url, target):
+        fetched.append(url)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(chosen.original, target)
+        return target
+
+    monkeypatch.setattr(pack_art, "fetch", fetch)
+    box = artist(tmp_path, comfy)
+
+    assert box._exported_crop(todo[0]).tobytes() == mac_crop.tobytes()
+    assert box.isolate_exported(todo) == 1 and fetched[0].endswith("/12/original.jpg")
+    assert json.loads((tmp_path / "art.lock.json").read_text())["species"]["haemorhous-mexicanus"]["photos"] == [12]

@@ -196,6 +196,14 @@ def test_the_overrides_file_keeps_its_committed_format(tmp_path):
     assert source.read_text() == '{\n "_comment": "x",\n "Bird": {\n  "exclude": [\n   1,\n   2\n  ]\n }\n}\n'
 
 
+def test_the_overrides_file_keeps_the_indent_it_has(tmp_path):
+    """#58: the older packs' files are indented by two; a review must not rewrite every line of them."""
+    source = (tmp_path / "o.json")
+    source.write_text('{\n  "_comment": "x"\n}\n')
+    write_overrides(source, {"_comment": "x", "Bird": {"exclude": [1]}})
+    assert source.read_text() == '{\n  "_comment": "x",\n  "Bird": {\n    "exclude": [\n      1\n    ]\n  }\n}\n'
+
+
 def test_a_proposal_changes_no_build_and_an_accepted_one_comes_first(tmp_path):
     """Through the pipeline: the build's choice is the same with a proposal in the overrides, and first once it's pinned."""
     from packbuilder.pipeline import BuildOptions, build_species

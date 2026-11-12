@@ -1,0 +1,5538 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "seed": 1007097911,
+      "dark": false,
+      "measure": {
+        "iou": 0.511,
+        "dE_mean": 51.0,
+        "dE_p95": 78.6,
+        "dL": -50.2,
+        "dC": 7.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "fd37f6b3c844a88d27dcbdf928801a865eebd6b66c55b4f219cf2b03b0bfca4d",
+      "photos": [
+        630486390
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "f73e82ada1c8ac6e04124cb6d1945bbb3e9e9ef9a5e9285f69bca4ec475d4b27",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "seed": 1889273979,
+      "dark": false,
+      "measure": {
+        "iou": 0.792,
+        "dE_mean": 11.0,
+        "dE_p95": 28.9,
+        "dL": -7.4,
+        "dC": -3.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ea58894217fae67f1db17d23c605d3f82399ad5da2d07d1c339cd3ea0c048521",
+      "photos": [
+        477421456
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from bill to tail, in matte black thread, with no white, cream or grey anywhere on its head, breast, belly or wings; the only colour is one scarlet red patch on the shoulder of the folded wing, with a narrow yellow lower edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        127613165
+      ],
+      "why": "a white throat, breast and wing streak on a black bird",
+      "reshaped_from": "c67b5cc9098d25e268fc12f95754a12390d17dfe83bb4e39690003b6429aac72",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "aix-sponsa": {
+      "common_name": "Wood Duck",
+      "seed": 414464864,
+      "dark": false,
+      "measure": {
+        "iou": 0.695,
+        "dE_mean": 36.8,
+        "dE_p95": 71.3,
+        "dL": 24.1,
+        "dC": 2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7862ca5c24f457012794f75d3d772841a5bdcb0ae7306bc8d6a0aeffb49ffddf",
+      "photos": [
+        625875126
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright red, stitched in red thread with a small black centre, in a red eye-ring. The bird swims, and no legs or feet show. The head is glossy green with a drooping crest and two thin white lines; the breast is chestnut, the flanks buff, the back dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        2176674523,
+        4139407948,
+        1874004982
+      ],
+      "why": "a muddled body and legs; it should swim",
+      "reshaped_from": "161d210777f348d03e04eedce226fb83435d191987e50f8e09463e1592c7a60f",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "alopochen-aegyptiaca": {
+      "common_name": "Egyptian Goose",
+      "seed": 1734703041,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 7.7,
+        "dE_p95": 16.3,
+        "dL": -3.7,
+        "dC": -1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f83c66714b8c6b56341dcbf340e1cdd80bebebbd6e355bd1e090177f16419135",
+      "photos": [
+        463449151
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "65d7b9bb1a5071b70ee21c82debfbb4cd14632b884acdf28cd39ebbc62baebe1",
+      "reshaped_fit": 0.985,
+      "reshape_version": 2
+    },
+    "anas-acuta": {
+      "common_name": "Northern Pintail",
+      "seed": 2140817298,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "7700e605b2a57b542e8b9788998aa4a571666c593347299c76283aa9c8fa97be",
+      "photos": [
+        465432789
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "f7df7b394f65de444fb56be7faf30f5a1861df97f808daf0139fcc9548ae3017",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "anas-fulvigula": {
+      "common_name": "Mottled Duck",
+      "seed": 4107555745,
+      "dark": false,
+      "measure": {
+        "iou": 0.947,
+        "dE_mean": 4.7,
+        "dE_p95": 9.0,
+        "dL": -1.0,
+        "dC": 1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "12f6bc5e741f46b514e2348257a75ec72bfeb0ad9c969d2ee09a054c5118bde3",
+      "photos": [
+        143242993
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "f95c452600a71c356242e9b7f46e0aa05dadfb34bc01d47f572563460e2a088e",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 12401675,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 10.1,
+        "dE_p95": 20.5,
+        "dL": -2.3,
+        "dC": 2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5d5bacf7960e4532b80bf21a918e8a0431e2a2714c05812f5a7658c4f6e33a26",
+      "photos": [
+        534699899
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are glossy bottle green with a narrow white collar; the bill is yellow; the breast is chestnut brown; the sides and back are pale grey; the black tail feathers curl up at the end.",
+      "review": "approved",
+      "rejected_seeds": [
+        4004732201,
+        2578738609
+      ],
+      "why": "a tan bird with a teal cheek standing on land; the reference is a drake on the water",
+      "reshaped_from": "101e5ec3b9bb512a884be9cda5b5a5ef83e843a056c13602636effad7c31d039",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "anhinga-anhinga": {
+      "common_name": "Anhinga",
+      "seed": 1505137878,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 5.5,
+        "dE_p95": 12.9,
+        "dL": -3.8,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0067,
+      "attempts": 2,
+      "sha256": "8cf9f2ce64b7d772e74a91d4ba7f8a29551e3c4828b419ad89069a001f352451",
+      "photos": [
+        730314122
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "d2c7efb62aba8e70aff051e6b73b3b9150675def58e095988f7c1e2af0cff0ba",
+      "reshaped_fit": 0.987,
+      "reshape_version": 2
+    },
+    "antigone-canadensis": {
+      "common_name": "Sandhill Crane",
+      "seed": 4003489036,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "79fe64d21e59ed112a49c402e2bff209612382848d019410d3a85d80d076b07d",
+      "photos": [
+        626812910
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "69018bed43a654df607828fab416ebe2ea2cb94f19b92c07d00a8deb6d7215d2",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "aphelocoma-coerulescens": {
+      "common_name": "Florida Scrub Jay",
+      "seed": 3837228983,
+      "dark": false,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 8.2,
+        "dE_p95": 15.8,
+        "dL": -4.6,
+        "dC": -3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f699439359bc7db7a044fb0f708a68d733ba10cf124ae88c3a364098353911f4",
+      "photos": [
+        603102217
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "Its legs and feet are plain black, with no band or ring on them.",
+      "review": "approved",
+      "rejected_seeds": [
+        2477803297
+      ],
+      "why": "a pink band is stitched on its leg",
+      "reshaped_from": "4725f1ee8ef47ade5c365ab3da3e84f6f0124584d5fb1ec3730092776b9b4df4",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "aramus-guarauna": {
+      "common_name": "Limpkin",
+      "seed": 559612209,
+      "dark": false,
+      "measure": {
+        "iou": 0.909,
+        "dE_mean": 17.4,
+        "dE_p95": 23.5,
+        "dL": -15.2,
+        "dC": 5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "521bc5ea8a41c1c9dd1bc92cf04a4ef5da0b49a61b2804bb96905b4de8735f02",
+      "photos": [
+        608216353
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "d4c346924352f1fdc3325a221824ed180e1ce2fa1265cb8452f4258c00817fa5",
+      "reshaped_fit": 0.985,
+      "reshape_version": 2
+    },
+    "archilochus-colubris": {
+      "common_name": "Ruby-throated Hummingbird",
+      "seed": 30012967,
+      "dark": false,
+      "measure": {
+        "iou": 0.637,
+        "dE_mean": 20.0,
+        "dE_p95": 43.4,
+        "dL": -4.6,
+        "dC": 0.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0046,
+      "attempts": 1,
+      "sha256": "5853af8ba1adb6e9082703455cfac23c94828ff60739942f36e7bded185e4abf",
+      "photos": [
+        726378983
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The throat is glittering ruby red; the crown and back are metallic green; the underparts are whitish. The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "reshaped_from": "59787cea41330434f1e29a1f2228dc4720320a0856539637ba74830fd5fffd34",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "seed": 3817563873,
+      "dark": false,
+      "measure": {
+        "iou": 0.53,
+        "dE_mean": 10.4,
+        "dE_p95": 20.1,
+        "dL": -6.8,
+        "dC": 4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "7c3cf373e14ed1405ee6cba1904b0aa0c0a145756c55f31dc083972bf7c3ef8e",
+      "photos": [
+        698018663
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige, grey or blue anywhere; the bill is yellow and the legs and feet black.",
+      "review": "approved",
+      "reshaped_from": "e289f9272b694d41f1d3e7ac5016aaa591c6edb35ef8478584f321fb1fabfe33",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "seed": 2516140967,
+      "dark": false,
+      "measure": {
+        "iou": 0.965,
+        "dE_mean": 10.4,
+        "dE_p95": 17.2,
+        "dL": -9.4,
+        "dC": 1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0033,
+      "attempts": 2,
+      "sha256": "c027b98bc71a471c1a11e46acaa50ed33e3311efffe5c6a7b19e501237612d2d",
+      "photos": [
+        613804860
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "52e3de95bec5b38b8c45ece7ec28baac0a38b99a4eddc8102a59d102d8159bd3",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "ardea-ibis": {
+      "common_name": "Western Cattle Egret",
+      "seed": 2442131760,
+      "dark": false,
+      "measure": {
+        "iou": 0.715,
+        "dE_mean": 10.6,
+        "dE_p95": 15.9,
+        "dL": -7.2,
+        "dC": -5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "13e9ebc5d49748e762386a7c9b83a9c0420dda017dc57922a1f01c60a94780ab",
+      "photos": [
+        476585299
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure white thread, with no cream, beige or buff anywhere; the short bill is yellow and the legs are dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        3867724198
+      ],
+      "why": "the whole bird came out cream-buff; it is white",
+      "reshaped_from": "06256e09f9db1e6acc6711d0c0f725c16a5299c49f5009cd9be17abb3af06dcb",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "arenaria-interpres": {
+      "common_name": "Ruddy Turnstone",
+      "seed": 267152644,
+      "dark": false,
+      "measure": {
+        "iou": 0.962,
+        "dE_mean": 9.7,
+        "dE_p95": 17.5,
+        "dL": -8.1,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "383214b08129fdadfd4a0b8f30cdee11e376bb50a36a5759f5ae6f5997c9bce6",
+      "photos": [
+        328207370
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "61c05504773b5754a8be6146ac810f9af82beb38e8f456554950e3b9178c9aa2",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "seed": 346489446,
+      "dark": false,
+      "measure": {
+        "iou": 0.391,
+        "dE_mean": 62.6,
+        "dE_p95": 77.1,
+        "dL": -62.1,
+        "dC": 7.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0033,
+      "attempts": 2,
+      "sha256": "4bcc2853ff12714ba82dc14ccf3d130165a2a937893eb5b5ab25eaea63ccca68",
+      "photos": [
+        180712171
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "47d9f56b52ba4d2eb69c2306a5898677b46b1cb9e5d4b2f836b4a1b24402be90",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "aythya-affinis": {
+      "common_name": "Lesser Scaup",
+      "seed": 2835946560,
+      "dark": true,
+      "measure": {
+        "iou": 0.941,
+        "dE_mean": 6.4,
+        "dE_p95": 16.6,
+        "dL": -4.1,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "166abe20cf14a95e1c47ca316a7c4fd8485c04ba7ef7cd54b2061e46a19dc7b3",
+      "photos": [
+        261138738
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "f5605e1ca7d534afe605b1fc942b3f95ebcdca939330d2ee062323d340018d15",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "seed": 1083602318,
+      "dark": true,
+      "measure": {
+        "iou": 0.895,
+        "dE_mean": 8.1,
+        "dE_p95": 15.9,
+        "dL": 4.6,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "85810ab43318c1f88ed4aa70b31ee6776a6d94543947464cbc5db98cbfdc395c",
+      "photos": [
+        604695304
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "f374b56a6f4f0e8c297c76d4a550eca25ad28056396f0235ec7290d056832948",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "baeolophus-bicolor": {
+      "common_name": "Tufted Titmouse",
+      "seed": 93730734,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "e770086cf4d867e0151a42959fa8da61ca5d3e4403184bf026600a184c7391b2",
+      "photos": [
+        592719176
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "15870940cc686ef2dbe9bb41928dafd102ebaeb36a9d4046e62598d6ba8d3b22",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "seed": 1227630085,
+      "dark": false,
+      "measure": {
+        "iou": 0.51,
+        "dE_mean": 22.8,
+        "dE_p95": 41.1,
+        "dL": 11.2,
+        "dC": -1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "58caaae3e2fd2b99e07097a924805b3448fb0de0265e288b87f1626b35dbea7c",
+      "photos": [
+        476823322
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "reshaped_from": "b8c3ee9afefaac2de1b9cc673c90f95a2e45200eb726b5a18c243c549ac0eb3b",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "botaurus-exilis": {
+      "common_name": "Least Bittern",
+      "seed": 2686003988,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 8.0,
+        "dE_p95": 15.0,
+        "dL": -3.5,
+        "dC": -4.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "32589634876f991aa00552fb5a92a1acff53b371e3bc5abfd20f6da480bff0f9",
+      "photos": [
+        657247165
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "0baac0d0f6697b1762ce123136cfafd930f071c415cb33714b88a5e4b1d2d0a3",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "botaurus-lentiginosus": {
+      "common_name": "American Bittern",
+      "seed": 1607754647,
+      "dark": false,
+      "measure": {
+        "iou": 0.98,
+        "dE_mean": 12.9,
+        "dE_p95": 25.5,
+        "dL": -5.3,
+        "dC": -10.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "c810e9bca2d89f98ac7f59437ee5148fc0ddf2723a46991b6ae9a4187fcb4e97",
+      "photos": [
+        608729509
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "2c0da9c12e48441d74eb68f87db747f56a670efcdc774766a837ccfb2b01f15f",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "seed": 3180676623,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 10.2,
+        "dE_p95": 17.8,
+        "dL": 5.5,
+        "dC": 4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1fe9a3d314e9f4e2aca56eea92ea5c46c20c019230e304866c04eeb2a7a66886",
+      "photos": [
+        560415841
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "No dark line or outline runs around the edge of the bird; its eyes are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3398596249
+      ],
+      "why": "a dark navy outline traces the whole bird like a sticker",
+      "reshaped_from": "070cbf78ecc73f83e417f49453632fb34b99897e827335da839269dc0ece3805",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "buteo-brachyurus": {
+      "common_name": "Short-tailed Hawk",
+      "seed": 1255590490,
+      "dark": false,
+      "measure": {
+        "iou": 0.764,
+        "dE_mean": 38.2,
+        "dE_p95": 71.2,
+        "dL": 33.3,
+        "dC": -5.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dbbdc3aca475b2236c03e1089341d1fc352e3fa6ee3c8c0a2b956792a45bc8b0",
+      "photos": [
+        669036741
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The head is dark brown, a hood reaching below the eye; the throat, body and the underwing linings are white; the flight feathers are pale grey with thin dark bars and dark tips. There is no blue or teal thread on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        1037171404
+      ],
+      "why": "the wings are barred in teal",
+      "reshaped_from": "d97b2febc55e5dab502c659419651ab9925a99deefa1713d263a3264c48bfb6c",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 133350641,
+      "dark": false,
+      "measure": {
+        "iou": 0.895,
+        "dE_mean": 8.4,
+        "dE_p95": 15.3,
+        "dL": -2.9,
+        "dC": 3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f61d2aa8da1fccbb7bb2a0d64f962346c2119fbe00b59262c05bfd868c688331",
+      "photos": [
+        490754573
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "563b74f7cbb787ffe10e576ed102a2b55fdbd0587585ee5c7d3d135cf7874136",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "seed": 2035934090,
+      "dark": false,
+      "measure": {
+        "iou": 0.959,
+        "dE_mean": 6.7,
+        "dE_p95": 12.1,
+        "dL": 4.1,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "50fb138cf9e115da77ce0dd67325e06e2cc54e12ae040edbe8888bec82e25bd4",
+      "photos": [
+        674569593
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        241095452
+      ],
+      "why": "maintainer: connect the hawk's feet to the branch",
+      "reshaped_from": "09afdeb1de46ed0222a53cd04fa18314400d74ad249c1a1a181686a566595eae",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "seed": 3897140084,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 11.1,
+        "dE_p95": 17.0,
+        "dL": -10.4,
+        "dC": 1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0047,
+      "attempts": 1,
+      "sha256": "4e4f1f3c48b7a573fc9d2c758febcff93a11152998117fcb5e27513edba6b531",
+      "photos": [
+        604640467
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "6efaa35654c89c8bda68b2d973b482b50f3316ccea6c4ed3c261a2e0e71ca725",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "cairina-moschata": {
+      "common_name": "Muscovy Duck",
+      "seed": 2555275885,
+      "dark": true,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 7.2,
+        "dE_p95": 16.3,
+        "dL": -5.3,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0056,
+      "attempts": 2,
+      "sha256": "b6ec9a5653a39b8822c43f392644f3a36164b5851acc197d5f959af6098cfbf8",
+      "photos": [
+        492473942
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "47ed0d4bf13985046146904b75774a96a9eb8f800d77ec98c74dc7e2aa36e135",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "calidris-alba": {
+      "common_name": "Sanderling",
+      "seed": 1269869625,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 6.7,
+        "dE_p95": 14.1,
+        "dL": -2.8,
+        "dC": 1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0106,
+      "attempts": 2,
+      "sha256": "855c46440fb72efb3e1bcbbafc1ca6d0149d661f9a3337608932e58755e0549b",
+      "photos": [
+        459506952
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The back and wings are pale grey, the face and underparts pure white; no line, band or collar crosses the breast; the bill and legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1018666158
+      ],
+      "why": "a dark line crosses the white breast",
+      "reshaped_from": "04322f8bbb45730b597bb156148fca760e0d93efa4c19fcccbbc80eaf7aa7912",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "seed": 1467107593,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0031,
+      "attempts": 2,
+      "sha256": "bbca8d3ed9b914f5cabef38366275b00104c5761765b231eab7e4997d8309f7e",
+      "photos": [
+        179161891
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "115e367bee417f99067641259839a2e2d688deb1bee658bfe20dfb4fb73f1006",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "caracara-plancus": {
+      "common_name": "Crested Caracara",
+      "seed": 223191968,
+      "dark": false,
+      "measure": {
+        "iou": 0.874,
+        "dE_mean": 7.8,
+        "dE_p95": 15.7,
+        "dL": 3.5,
+        "dC": -2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0051,
+      "attempts": 3,
+      "sha256": "f44c4f6aa8c05b1e25348bd56bec40c383b4128bfd23d0c2c92391f0edf255d2",
+      "photos": [
+        626814377
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "79b23325d5a8db5b2233d6c8331e269e6a6829d8b2f6cdbaa92fa1e3b157211b",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "cardinalis-cardinalis": {
+      "common_name": "Northern Cardinal",
+      "seed": 3359956412,
+      "dark": false,
+      "measure": {
+        "iou": 0.611,
+        "dE_mean": 48.8,
+        "dE_p95": 78.5,
+        "dL": 24.1,
+        "dC": -23.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "bf4d6f928d55e88cf511742b4cbb4e3c7eab3ccaecc4c1b0f9b9530b19529c09",
+      "photos": [
+        604626162
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright red, deeper red on the wings and tail, with a tall pointed red crest; a black mask surrounds the thick red-orange bill. There is no brown, orange or black on the wings or body.",
+      "review": "approved",
+      "rejected_seeds": [
+        3208899885
+      ],
+      "why": "an orange-brown bird with no crest and black wing patches; the male is red",
+      "reshaped_from": "b0c03baa425b5ae8b4194268277460e928a43c63c76c07c78629990658a54ac4",
+      "reshaped_fit": 0.987,
+      "reshape_version": 2
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "seed": 440011292,
+      "dark": false,
+      "measure": {
+        "iou": 0.852,
+        "dE_mean": 8.2,
+        "dE_p95": 21.7,
+        "dL": -3.9,
+        "dC": 2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0036,
+      "attempts": 1,
+      "sha256": "b5d7a1d7b6e79cc01e79bbe97c27d228774e439674550f409936a78c1485a8b8",
+      "photos": [
+        606196610
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "8a121f5d450736c859e70931f369406c68a59cc2d789428c0848540d91c1b2e7",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "catharus-minimus": {
+      "common_name": "Grey-cheeked Thrush",
+      "seed": 3386718783,
+      "dark": false,
+      "measure": {
+        "iou": 0.854,
+        "dE_mean": 7.3,
+        "dE_p95": 12.2,
+        "dL": -2.4,
+        "dC": 2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0111,
+      "attempts": 2,
+      "sha256": "7e93a08c80e2ba1269a9d995a79a1f1de9b23c1a4d5ffaf32296765b7f2315ad",
+      "photos": [
+        341648928
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "1447dfc01fad34a550c491a2047bded246d421732470abc8f79cfff48dee5702",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "catharus-ustulatus": {
+      "common_name": "Swainson's Thrush",
+      "seed": 4084485205,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 10.1,
+        "dE_p95": 17.3,
+        "dL": 4.8,
+        "dC": 3.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "ed9bbaa000ba1ceb4fc8638ed1e29e2293c1411da1c83f2df0742636acd28873",
+      "photos": [
+        441875311
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        2222161091
+      ],
+      "why": "its reference bird was isolated with a colour cast (builds sharing the box, #58); re-isolated, painted again",
+      "reshaped_from": "f4f40e0443a7a7a7d3b0c375e1abca8b2f1ca6be4ef58d27d59dab70afc0b529",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "seed": 3740332238,
+      "dark": false,
+      "measure": {
+        "iou": 0.854,
+        "dE_mean": 11.5,
+        "dE_p95": 21.5,
+        "dL": -1.4,
+        "dC": 4.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0115,
+      "attempts": 2,
+      "sha256": "7e5cbfc50841bd767bb2ac95dd577af907c0d4618e4258b428820de6a90bf1c7",
+      "photos": [
+        185125909
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "Two black bands cross the white breast, one above the other; the back is brown and the eye has a red ring.",
+      "review": "approved",
+      "rejected_seeds": [
+        2851586139
+      ],
+      "why": "only one breast band; it has two",
+      "reshaped_from": "9e096735deeff4f5b7ebcaed0a2639580c6f28479c55f89a303d6a990a67a421",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "chroicocephalus-philadelphia": {
+      "common_name": "Bonaparte's Gull",
+      "seed": 2691506521,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3825cad4a8f8c8285421748ce394e1989835dbf1defe87d6bef433cb54ddaf2b",
+      "photos": [
+        180303889
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "30789be99105420322e2e9c09efd77a5ede8d7257a4c3300710780bb280b58e7",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "seed": 891831864,
+      "dark": false,
+      "measure": {
+        "iou": 0.736,
+        "dE_mean": 35.7,
+        "dE_p95": 68.4,
+        "dL": 31.3,
+        "dC": 4.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "0ba28b6c75d8802327d90b4829120faf2ef2dca43a1cc02c99efcfb1c9c4d7b5",
+      "photos": [
+        28322758
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved",
+      "reshaped_from": "16c4ce9b4e4217ec8c89349cac0e9e63a74b1ec35edfc1d2daa46a982e458cdf",
+      "reshaped_fit": 0.987,
+      "reshape_version": 2
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "seed": 1784100121,
+      "dark": false,
+      "measure": {
+        "iou": 0.953,
+        "dE_mean": 10.3,
+        "dE_p95": 18.1,
+        "dL": -0.7,
+        "dC": 3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fea78caa92840dd6ecd889798c850ef1eb0fd19cc72f98e57dc06952887a9d91",
+      "photos": [
+        606282732
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "30122119835c4c7c7395f4607e5cd531da9b6bd878a9d413f657ced18148b6f0",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "colinus-virginianus": {
+      "common_name": "Northern Bobwhite",
+      "seed": 2794694464,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 6.5,
+        "dE_p95": 13.9,
+        "dL": -3.3,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "a13a0092b170d891b312979473266c4c3221a00294a45b8e83ab7216d96c49fa",
+      "photos": [
+        78084775
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "784f9c63736ac5fe11e539a12669fe9050b6554253bd15486fbe7981d04cb11b",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "seed": 158918644,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 13.6,
+        "dE_p95": 31.4,
+        "dL": 10.0,
+        "dC": -0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0046,
+      "attempts": 1,
+      "sha256": "261dcb325127ed4910c9e929e4cd2ffec835bd58afda039d91f739744621a04a",
+      "photos": [
+        554009115
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "b55747f20c11eeb4aceb9649dea36f235f90d8577e139460d856c8f083aeae24",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "columbina-passerina": {
+      "common_name": "Common Ground Dove",
+      "seed": 2494950999,
+      "dark": false,
+      "measure": {
+        "iou": 0.806,
+        "dE_mean": 11.7,
+        "dE_p95": 24.8,
+        "dL": -0.4,
+        "dC": 2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "04e63c05d6f510387c359b583c3ce0e9a65e059beb8e885d3f0b24aabbcdd081",
+      "photos": [
+        365391757
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The wing spots are dark chestnut and black, not blue; the bill is pinkish red with a dark tip; the breast is pinkish grey with a scaly pattern.",
+      "review": "approved",
+      "rejected_seeds": [
+        3820150465
+      ],
+      "why": "the wing spots came out bright blue and the bill yellow",
+      "reshaped_from": "35af938a3dff4a0f31c1ded7ca04d77aed67f18dd79c3070b2fc338dc6a30964",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "contopus-virens": {
+      "common_name": "Eastern Wood Pewee",
+      "seed": 2218492511,
+      "dark": false,
+      "measure": {
+        "iou": 0.743,
+        "dE_mean": 21.8,
+        "dE_p95": 72.4,
+        "dL": -6.7,
+        "dC": 5.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c00e9d73067c3cdbda0eb11e46bcdac84eb9407303ef0ebed4f51d5491d23ff9",
+      "photos": [
+        156803592
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "f977e11a1a06bd1a2fdc865eea54def4bdf0ecd434aec1ddbc94e91be36f1931",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "coragyps-atratus": {
+      "common_name": "Black Vulture",
+      "seed": 1916523815,
+      "dark": false,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 12.9,
+        "dE_p95": 27.7,
+        "dL": -12.3,
+        "dC": 0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6696b55f8d0f335b10058ec6f573532f6266678d7c81e04dab7e59f7efe20f4d",
+      "photos": [
+        599181057
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole body, wings and tail are black thread with only a soft sheen, with no white or brown on them; the bare wrinkled head and neck are dark grey.",
+      "review": "approved",
+      "reshaped_from": "a1bdab47e929fbb8b95e8934e2c14a94da61ee034a8b04b311aedd7f6c856fdb",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "seed": 217370786,
+      "dark": false,
+      "measure": {
+        "iou": 0.838,
+        "dE_mean": 6.8,
+        "dE_p95": 12.0,
+        "dL": 2.4,
+        "dC": 2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "028626483ad0332130bcd9c1b03211dae29d974cebd7bba9809026510231a0e9",
+      "photos": [
+        608926561
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        2079580214
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "8b7b25e7f8a2e6a86b0638eb84491342cbca9b1394f660400738545266bece7a",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 3037509366,
+      "dark": false,
+      "measure": {
+        "iou": 0.844,
+        "dE_mean": 13.2,
+        "dE_p95": 26.7,
+        "dL": -11.3,
+        "dC": -5.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0076,
+      "attempts": 2,
+      "sha256": "688a63df6d53e534ad1e177ce01bd36823c8c2843b05ca420ac55cb0315f5c6c",
+      "photos": [
+        294478750
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white, grey or blue anywhere. The bird stands on a thick, sturdy branch, as thick as the bird's leg is long, that passes directly under its body; both black feet are closed around the top of that branch, side by side, with no foot raised or hanging in the air.",
+      "review": "approved",
+      "rejected_seeds": [
+        3255535205
+      ],
+      "why": "maintainer: the branch needs to be thicker for the bird; the bird's foot is not on the branch",
+      "reshaped_from": "0d03fb637ea010b282dda630fbcb459dac88675869abdf1d691172e6b99c9962",
+      "reshape_version": 2,
+      "reshaped_fit": 0.994
+    },
+    "corvus-ossifragus": {
+      "common_name": "Fish Crow",
+      "seed": 2678572575,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 17.9,
+        "dE_p95": 36.5,
+        "dL": -17.2,
+        "dC": -2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.009,
+      "attempts": 1,
+      "sha256": "93016d28c74a7ebaa89a1de544c06e30953d0286106b9c80afa6425aea21e5f6",
+      "photos": [
+        481261346
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white, grey or blue anywhere.",
+      "review": "approved",
+      "reshaped_from": "0d920c12924a8661d2f005675ca6c5889032f5adc003db2158c84a97087f7419",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "cyanocitta-cristata": {
+      "common_name": "Blue Jay",
+      "seed": 788930094,
+      "dark": false,
+      "measure": {
+        "iou": 0.857,
+        "dE_mean": 23.7,
+        "dE_p95": 37.6,
+        "dL": 11.4,
+        "dC": 2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ba55ece087c649d6a706cb7a20fa631857c0ff0d0e52b9096310bf79653c11f3",
+      "photos": [
+        479686839
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crest, back, wings and tail are bright blue, a true blue and not teal, turquoise or green, with black bars and white spots on the wing and tail. The face and underparts are white to pale grey, with a black necklace around the throat.",
+      "review": "approved",
+      "rejected_seeds": [
+        3238559492,
+        3054456724
+      ],
+      "why": "the blue came out teal",
+      "reshaped_from": "37be39b72424da03509bc482b29602f224e0d9fb881d7659c724575ae3cb1e2a",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "dendrocygna-autumnalis": {
+      "common_name": "Black-bellied Whistling Duck",
+      "seed": 3981988761,
+      "dark": false,
+      "measure": {
+        "iou": 0.936,
+        "dE_mean": 6.1,
+        "dE_p95": 12.3,
+        "dL": -1.9,
+        "dC": 3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ca155904eafae78de347373066e00a6c9a3b2f4d3bdff50d939c3b3520c62ccf",
+      "photos": [
+        593810853
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "9e5b095e9693fb896a8dd9b24cb6b05082890e31d8117b7fd8e292c49c3e3825",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "dendrocygna-bicolor": {
+      "common_name": "Fulvous Whistling Duck",
+      "seed": 1214010880,
+      "dark": false,
+      "measure": {
+        "iou": 0.369,
+        "dE_mean": 57.3,
+        "dE_p95": 79.4,
+        "dL": -47.1,
+        "dC": 28.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "8faf66e6b7c2cbf0b2b7fc920426d292c957ddb8f377345f03e28a125efb6ff9",
+      "photos": [
+        462211824
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "e1ffdb5304379809611928f8cadeb3d753498ff7f7152655a52821b56304a2e5",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "dryobates-borealis": {
+      "common_name": "Red-cockaded Woodpecker",
+      "seed": 107104975,
+      "dark": true,
+      "measure": {
+        "iou": 0.891,
+        "dE_mean": 15.6,
+        "dE_p95": 43.1,
+        "dL": 12.5,
+        "dC": 1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "6633511b0470e61a405974de045220cef12c28ec737cafee79489b9c263c2d61",
+      "photos": [
+        181309510
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        1902475864
+      ],
+      "why": "maintainer: bird is backwards; tree and legs should be on the other side",
+      "reshaped_from": "f8ddb71e81cbfb3afc9f2e2f4f2f50afc61c9fa1f89e553a3da80f5eb8876415",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "seed": 323764206,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 12.6,
+        "dE_p95": 21.8,
+        "dL": -6.9,
+        "dC": 4.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "31934b5433a58b9ca75a2329a88adf3b1e868b2ce7096447fa73b772bc52da64",
+      "photos": [
+        625477115
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "It clings to the bark with both feet, each foot whole and gripping the trunk; nothing sticks out from its body.",
+      "review": "approved",
+      "rejected_seeds": [
+        1682640760
+      ],
+      "why": "a foot sticks out to the right of the trunk, gripping nothing",
+      "reshaped_from": "dea7291cd951212057da05d35fe0a28784f7807e0c02886e7cc39e0af10751e3",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "dryocopus-pileatus": {
+      "common_name": "Pileated Woodpecker",
+      "seed": 2301455865,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 23.3,
+        "dE_p95": 40.5,
+        "dL": -21.6,
+        "dC": -3.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "eb37dea173f42d1e2edc62e8a772e0e0208f2df59e19018471619b315db275f5",
+      "photos": [
+        240697316
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The body, back, folded wing and tail are solid black, not grey; the crest is red, the moustache red, and a white stripe runs from the bill down the side of the neck.",
+      "review": "approved",
+      "rejected_seeds": [
+        4264189295
+      ],
+      "why": "the body came out grey; it is black",
+      "reshaped_from": "6b951a44c267fb01893910cbf659385a2cd3e601c4b429c42883e8fef94262ef",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "dumetella-carolinensis": {
+      "common_name": "Grey Catbird",
+      "seed": 1915278184,
+      "dark": false,
+      "measure": {
+        "iou": 0.783,
+        "dE_mean": 13.4,
+        "dE_p95": 23.3,
+        "dL": 1.2,
+        "dC": -3.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0044,
+      "attempts": 1,
+      "sha256": "666026e7161494c0dd2e8786737548e9b5892e05037d17a27f8a8c6b07d929c6",
+      "photos": [
+        353883997
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is plain slate grey, with a small black cap on the crown and a black tail; there is no white or blue on it.",
+      "review": "approved",
+      "reshaped_from": "0e22f2d98de70f8f2a1959f07b1d5a288e1d504a207195157178fd1100f11407",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "egretta-caerulea": {
+      "common_name": "Little Blue Heron",
+      "seed": 3333155812,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 10.4,
+        "dE_p95": 15.0,
+        "dL": -6.2,
+        "dC": -0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "54183bb5559b0ac70a7bef0e24634ede410271782107b60e4f27c9d9438b04ee",
+      "photos": [
+        614057116
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "328f7ff8abccc314f7abb171457f2fa1d4c4e49da238caaa9255c14785641419",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "egretta-rufescens": {
+      "common_name": "Reddish Egret",
+      "seed": 488960900,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 7.7,
+        "dE_p95": 14.2,
+        "dL": -5.1,
+        "dC": 0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "052c883664d495a34f6b9e4f4fb040ebd60f3f5171208fcd462a7a58c14b1cf1",
+      "photos": [
+        389097916
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "ca5212fb02143ad89d68202ccce41572ac8b8b3f0cf9b4fd18abbb0729901823",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "seed": 2860951344,
+      "dark": false,
+      "measure": {
+        "iou": 0.736,
+        "dE_mean": 14.2,
+        "dE_p95": 29.5,
+        "dL": -8.4,
+        "dC": -1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "03d9f2a2383c7707a14481ccccaf2126cbae9ab3d77ce462394db4fb5719cd77",
+      "photos": [
+        522196836
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "47cf4efd3e09c4534c4f81d0dbca3fd8f1d06e5724e6ffb44e1b39a6b57e6be2",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "egretta-tricolor": {
+      "common_name": "Tricolored Heron",
+      "seed": 1163580527,
+      "dark": false,
+      "measure": {
+        "iou": 0.757,
+        "dE_mean": 7.4,
+        "dE_p95": 17.6,
+        "dL": -5.1,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "112928290ed1042dd6eed39302fa2d255acb9e5eedc7916adb24d34d0ff32dda",
+      "photos": [
+        614073878
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The head, neck, back and wings are slate blue-grey, with a white stripe down the front of the neck; the belly and the underside of the body are clean white.",
+      "review": "approved",
+      "rejected_seeds": [
+        845014265
+      ],
+      "why": "the belly came out grey; it is white",
+      "reshaped_from": "5a21f2dcd93dd2dc55b9bfc63bd17fbef63761e1e5e88e76c54dc637ab9211a9",
+      "reshaped_fit": 0.987,
+      "reshape_version": 2
+    },
+    "elanoides-forficatus": {
+      "common_name": "Swallow-tailed Kite",
+      "seed": 3691768149,
+      "dark": false,
+      "measure": {
+        "iou": 0.765,
+        "dE_mean": 36.1,
+        "dE_p95": 63.9,
+        "dL": 19.3,
+        "dC": 0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "233c1c05fec24d7c81f83b1dbb1313d2fa886201b9ec2bddc7a93cde9b01b88d",
+      "photos": [
+        627763304
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The head, body and the inner half of each wing are pure white thread, with no tan, cream or beige; the flight feathers, back and long deeply forked tail are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2869746115
+      ],
+      "why": "the inner wings came out tan",
+      "reshaped_from": "7f8d575f53e7469fa3fec4867143fff97ee6f59af4e171708607def699089eb4",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "eudocimus-albus": {
+      "common_name": "American White Ibis",
+      "seed": 1207615645,
+      "dark": false,
+      "measure": {
+        "iou": 0.725,
+        "dE_mean": 11.7,
+        "dE_p95": 26.0,
+        "dL": -5.3,
+        "dC": 4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "100ac66aec09c999b1d9afd24042c735a387bbaa67ebc268d610c89d491ef3bd",
+      "photos": [
+        699382909
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "940ecfc9e2e8a213dbc3126dd563a109da371b02b407126f75f693b6b4dfbaf7",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "seed": 3840099788,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1c78e18e3443c1a55b7bf461c115d7f7c484d9e8e38e913803b4fbe9d5b59abe",
+      "photos": [
+        266415104
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "02a2e81609d9b1b3ddb632f9233a8a39744b4529a3c8055c922554609cf39dce",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "seed": 2877755021,
+      "dark": false,
+      "measure": {
+        "iou": 0.818,
+        "dE_mean": 16.3,
+        "dE_p95": 32.8,
+        "dL": 10.7,
+        "dC": 4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "9254cd6a2f1c101dda04f699f8ae55613ae5d5e908be779240ed15927bd29720",
+      "photos": [
+        473718243
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3699392030
+      ],
+      "why": "its reference bird was isolated with a colour cast (builds sharing the box, #58); re-isolated, painted again",
+      "reshaped_from": "9674c1623606135c47825688cd056633832656b2edcff3ab2770914c7585ec6c",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "seed": 4079276947,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 13.8,
+        "dE_p95": 25.6,
+        "dL": -12.6,
+        "dC": -2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0038,
+      "attempts": 2,
+      "sha256": "3e1d7833fb59abc6285ab9fd8b0f55f2cdd57392d32c3e3efbf19ecc2d458865",
+      "photos": [
+        479463940
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches.",
+      "review": "approved",
+      "reshaped_from": "2b04f91c6d1fc8b851bb1ee94a4175f6be000daf849176ff6ce3b185e2316fe2",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "gallinago-delicata": {
+      "common_name": "Wilson's Snipe",
+      "seed": 4015973199,
+      "dark": false,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 7.6,
+        "dE_p95": 13.9,
+        "dL": -2.2,
+        "dC": 3.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "4efa2159f5da75c24fbad2d6100b9648b2393a3049ae49f6d1da58a02763ca7f",
+      "photos": [
+        113415575
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "5e10563dfdcff035a3641d3e02ff53c6a1effc506edd4eac22feabd276cb69de",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "gallinula-galeata": {
+      "common_name": "Common Gallinule",
+      "seed": 1971395776,
+      "dark": false,
+      "measure": {
+        "iou": 0.54,
+        "dE_mean": 14.9,
+        "dE_p95": 34.0,
+        "dL": -12.9,
+        "dC": -2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0042,
+      "attempts": 1,
+      "sha256": "f404aa9e3414089b403f8fb2cbf0897a2064daff4a0db3b014df1eb9b62b20ef",
+      "photos": [
+        604349898
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head, neck and underparts are slate black-grey and the back and folded wing dark olive-brown, not orange; a broken white stripe runs along the flank; the frontal shield and bill are red, the bill tip yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        42347608
+      ],
+      "why": "the back came out bright orange-rufous, and a second cord outline shows above the top edge",
+      "reshaped_from": "68a9ee66ac602cb6124abc57dce81b9b5f199659f4c64901898ee3e2c296a43e",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "seed": 3953639740,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 12.1,
+        "dE_p95": 20.7,
+        "dL": -8.6,
+        "dC": 4.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0435,
+      "attempts": 1,
+      "sha256": "59f4835e93303832650cb83e0c54b8cdf35df955ef8c9c00127e4d8fbddff3f6",
+      "photos": [
+        614593341
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "68ce7a7e335739d7a3bc69a81b6d56476ae845994bcfbd2988c61b649bdcd83a",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "seed": 396812733,
+      "dark": false,
+      "measure": {
+        "iou": 0.787,
+        "dE_mean": 17.8,
+        "dE_p95": 35.3,
+        "dL": 9.7,
+        "dC": 5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0034,
+      "attempts": 1,
+      "sha256": "607bd5839b35f1b396aa3131a73a8f344b03cb0b99c2d5669373951a6beee483",
+      "photos": [
+        561662148
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bill is short, conical and pale grey, holding nothing. The forehead, eyebrow, throat and breast are red; the back and wings are streaked brown, and the belly is whitish with brown streaks.",
+      "review": "approved",
+      "rejected_seeds": [
+        1621217580
+      ],
+      "why": "the bill is a lumpy mass, copying the food in the reference bird's bill",
+      "reshaped_from": "97fc362b607f6a4d8cd497d37bae95d89c1a6c76306dcf66cf23d0b14df7acef",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "haliaeetus-leucocephalus": {
+      "common_name": "Bald Eagle",
+      "seed": 1022056558,
+      "dark": false,
+      "measure": {
+        "iou": 0.966,
+        "dE_mean": 9.8,
+        "dE_p95": 16.8,
+        "dL": -6.7,
+        "dC": -0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "908ca9478966fbd70553bc35e53f41e64fe9e08094b062fb396bc3a4adba2ec5",
+      "photos": [
+        604377997
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "7b60a34e4ea6e2280db34daa876d6c876f692474e6ec69701405c6beb5a5c35e",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "seed": 154778973,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "d928e5d4ba47f253c9b6d9dbd147572db5a4aafacce9e995f28f7a518ae9683f",
+      "photos": [
+        122655922
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "b6c8e430e1fe79ee74f69ae715802704924db182fdf545ac21e560bbaae5161b",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "hirundo-rustica": {
+      "common_name": "Barn Swallow",
+      "seed": 1269641188,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0119,
+      "attempts": 1,
+      "sha256": "d8d37f14f4a926af12b6ad9bd9cbe1ff3e0760b741d4f01148eca6d078fea723",
+      "photos": [
+        622622723
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "259c1daad09af51409ecbfcbfb45ee8f14bd699a573257649b87dcb26aa85634",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "seed": 3660024395,
+      "dark": false,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 10.7,
+        "dE_p95": 22.2,
+        "dL": -4.8,
+        "dC": -0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0052,
+      "attempts": 3,
+      "sha256": "1785e6eaaf90d608491088f1416d94f79702aeab38597c18cc576eadd763cbd3",
+      "photos": [
+        622620600
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The bill is thick and deep red with a dark tip, not orange; the cap is black; the back and folded wings are pale grey; the neck, breast and belly are plain white.",
+      "review": "approved",
+      "rejected_seeds": [
+        2904603361
+      ],
+      "why": "the bill came out orange; it is thick and red",
+      "reshaped_from": "0739aa7f38eaf90e75ee00c085bfc82c45c5925a953d63b7fa31ccd449a9957c",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "lanius-ludovicianus": {
+      "common_name": "Loggerhead Shrike",
+      "seed": 4221097757,
+      "dark": false,
+      "measure": {
+        "iou": 0.756,
+        "dE_mean": 8.5,
+        "dE_p95": 19.4,
+        "dL": -3.8,
+        "dC": 3.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d5bee9452f0bea8781c0fb1f6e44d6264b56b327b09ca38782f544389f392168",
+      "photos": [
+        359891151
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        2359289740
+      ],
+      "why": "maintainer: bird not on branch",
+      "reshaped_from": "84ee229cd04bbe9f7b54d996cfd805379b60d05950721ec87406df43261ae726",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "seed": 2051183148,
+      "dark": false,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 10.1,
+        "dE_p95": 19.0,
+        "dL": -8.8,
+        "dC": 1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "aff8d0856abbb77de7837c0f60446066fea2488a454f3fc4338d8bb35f1587ce",
+      "photos": [
+        635002096
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The back and folded wings are pale silver grey, the head and body white, the wingtips black with small white spots; the bill is yellow with a black ring near its tip, the eye pale yellow and the legs yellow. There is no brown on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        222667452
+      ],
+      "why": "the wingtips and tail came out brown, like a young bird",
+      "reshaped_from": "d351f42f879158c95300ca32db7a6c8530673de40abd7e8f039731a635d51b3a",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "larus-fuscus": {
+      "common_name": "Lesser Black-backed Gull",
+      "seed": 2771951242,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 11.5,
+        "dE_p95": 20.1,
+        "dL": -11.0,
+        "dC": 1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.003,
+      "attempts": 3,
+      "sha256": "67aedc61e62e0392128de72abe813ae93c2fa5c868dc694e274ff5e46f63b901",
+      "photos": [
+        466042919
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The back and folded wings are dark slate grey, the head and body white, the wingtips black with small white spots; the bill is yellow with a red spot near the tip and the legs are yellow. There is no blue or brown on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        3527388703
+      ],
+      "why": "a blue mark on the wing and a brownish back",
+      "reshaped_from": "df35f46cbdb1567d39b0987e27e9401913dda04ff688af4b2abf23f38d5b37d2",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "leucophaeus-atricilla": {
+      "common_name": "Laughing Gull",
+      "seed": 3182630608,
+      "dark": false,
+      "measure": {
+        "iou": 0.812,
+        "dE_mean": 10.4,
+        "dE_p95": 16.9,
+        "dL": -5.7,
+        "dC": -3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0052,
+      "attempts": 2,
+      "sha256": "8d1a67e61aff77c0d3ace1807b91746a8e4012ff393de9043126d4ee42f12fa5",
+      "photos": [
+        465797800
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "3311fc6fe56d42b9e444963870937b172290f6bc0e4b3fb374e1872b179b6846",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "lophodytes-cucullatus": {
+      "common_name": "Hooded Merganser",
+      "seed": 3925007382,
+      "dark": false,
+      "measure": {
+        "iou": 0.968,
+        "dE_mean": 5.8,
+        "dE_p95": 12.0,
+        "dL": -0.4,
+        "dC": 0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "35f4bb91066b8238379d9a89be5b146ccea791b29d62b42d249e93ab1e8b7b9c",
+      "photos": [
+        603130057
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "9bf78e7c07a6c731c6a887bb2779877b810273a99a0b89494bdee926fc4bf76c",
+      "reshaped_fit": 0.99
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "seed": 981331801,
+      "dark": false,
+      "measure": {
+        "iou": 0.634,
+        "dE_mean": 27.5,
+        "dE_p95": 52.9,
+        "dL": 6.8,
+        "dC": -2.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.008,
+      "attempts": 2,
+      "sha256": "1fa2e799ae9fe5e108dbec4117283f06093e9dd699f815c02c1e66862db6644c",
+      "photos": [
+        257193957
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The crown and forehead are white, a broad glossy green band sweeps back from the eye, and the rest of the head is pale speckled grey; the breast and sides are pinkish brown; the bill is pale blue-grey with a black tip.",
+      "review": "approved",
+      "rejected_seeds": [
+        3564342900,
+        2742337250
+      ],
+      "why": "the crown came out brown; the drake's is white",
+      "reshaped_from": "766296623a8cd95ae251b968b14a9f98e81203bcb16cdbcaeba89fc09903e55a",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "seed": 3252857620,
+      "dark": false,
+      "measure": {
+        "iou": 0.933,
+        "dE_mean": 12.6,
+        "dE_p95": 18.4,
+        "dL": -7.2,
+        "dC": -6.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c9c8340136d9463517f894a10bb32724f8a71183d2d53e3b3018c624a8022d84",
+      "photos": [
+        606196615
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "79984edfb607144b718b0324f542c1b596317166455a9eb11135e8784ec93074",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "megascops-asio": {
+      "common_name": "Eastern Screech Owl",
+      "seed": 2226316734,
+      "dark": false,
+      "measure": {
+        "iou": 0.875,
+        "dE_mean": 21.4,
+        "dE_p95": 34.3,
+        "dL": 17.9,
+        "dC": 7.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "31feff5e96bc724887ac4ffd9f18ae294e2c444e0fde4fd1ac07871a7dfd128d",
+      "photos": [
+        350607540
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eyes are bright yellow, stitched in yellow thread with a black centre; the bill is pale greenish.",
+      "review": "approved",
+      "rejected_seeds": [
+        1790739602,
+        498840582
+      ],
+      "why": "the eyes came out pale beige; they are yellow",
+      "reshaped_from": "464c3ee839fd2506217f546b802bdaf62bb959fe7d8e89553a06f701bc5b81ff",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "melanerpes-carolinus": {
+      "common_name": "Red-bellied Woodpecker",
+      "seed": 2820010408,
+      "dark": true,
+      "measure": {
+        "iou": 0.842,
+        "dE_mean": 30.6,
+        "dE_p95": 50.1,
+        "dL": 27.7,
+        "dC": 3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0069,
+      "attempts": 1,
+      "sha256": "738ffcdf8b042ace95231ea7650e878ae5168b32967503b42ed2ac0108a10a83",
+      "photos": [
+        633679804
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The crown and nape are red from the base of the bill to the back of the neck; the face and underparts are plain pale grey-buff; the back and wings are barred black and white; the bill is dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        3742548287
+      ],
+      "why": "the head came out white with red only on the nape; the male's crown is red from bill to nape",
+      "reshaped_from": "9686b4e51968f5c3b8630079cb9c5be9e17beee08edfb65a5ef1b0f9e61e591f",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "melanerpes-erythrocephalus": {
+      "common_name": "Red-headed Woodpecker",
+      "seed": 1041067579,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 8.9,
+        "dE_p95": 18.0,
+        "dL": -0.9,
+        "dC": 1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0fd004922c3d37cc2ed117d0ff0e66b42d7cd570d4a3784ae8c830d9bb201c45",
+      "photos": [
+        351154492
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved",
+      "reshaped_from": "7b67cc27b480aa6cd080b384e77d514cd55dc91b20509eeffcb22f4d097f9fd8",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "meleagris-gallopavo": {
+      "common_name": "Wild Turkey",
+      "seed": 2323035851,
+      "dark": false,
+      "measure": {
+        "iou": 0.845,
+        "dE_mean": 10.8,
+        "dE_p95": 17.2,
+        "dL": 3.8,
+        "dC": 5.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4ecf48afde78dfd5272014741e75439ffb899daa6b8aa954792e8c1908b747c2",
+      "photos": [
+        711667628
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The body is dark bronze-brown with a coppery sheen, each feather edged black; only the flight feathers of the wing are barred black and white; the bare head and neck are blue and red. There is no white on the breast or back.",
+      "review": "approved",
+      "rejected_seeds": [
+        1685641191,
+        327149425
+      ],
+      "why": "a black-and-white barred bird; the turkey is dark bronze",
+      "reshaped_from": "31bfac805454b4732e2d4556c1c4f8bb45d68eba7d4af33a635bb54fa363be6a",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "melospiza-georgiana": {
+      "common_name": "Swamp Sparrow",
+      "seed": 3109391315,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 8.7,
+        "dE_p95": 13.4,
+        "dL": -5.8,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7c28e4fb72c10235964118b68536981bb5761b575a113f5d8544bb17548d3269",
+      "photos": [
+        265998669
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "b059abb5eeef009d4c53ab1d8242324549c56c9dda9f65a7d1ed0b2dc93e0b0b",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "seed": 2528730873,
+      "dark": false,
+      "measure": {
+        "iou": 0.798,
+        "dE_mean": 20.7,
+        "dE_p95": 34.0,
+        "dL": -13.6,
+        "dC": -10.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e78ac9d6c082ddd76eacee4d6f5ee6ad2c1db9392c5702662852d9df219bb9dc",
+      "photos": [
+        729350794
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The upperparts are plain mid grey and the underparts pale grey-white; the wings and tail are dark grey with a white patch on the wing and white outer tail feathers. There is no brown, mauve, purple or blue thread on it. The eye is pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        2025275350,
+        263196485
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "8c92da424810195397a80e07b38c985d2636ccb6a8283b68136c314fb76b1308",
+      "reshaped_fit": 1.0,
+      "reshape_version": 2
+    },
+    "mniotilta-varia": {
+      "common_name": "Black-and-white Warbler",
+      "seed": 4062108000,
+      "dark": false,
+      "measure": {
+        "iou": 0.942,
+        "dE_mean": 10.1,
+        "dE_p95": 15.9,
+        "dL": 3.0,
+        "dC": -6.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "7228391ba77d3a01420713fc053187a4e1f76b5693c93fcae15dff19327cffbd",
+      "photos": [
+        178158522
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "51a38c306fede4c3f79a08fd45dcd70c90c217ee96eb1ff4600c556f54efd07f",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "seed": 3611387988,
+      "dark": false,
+      "measure": {
+        "iou": 0.867,
+        "dE_mean": 34.6,
+        "dE_p95": 55.7,
+        "dL": -32.2,
+        "dC": 0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "09c69dca06f7496fd7fe6a4876960bc107f375a9eaefb2487df882a492c527b7",
+      "photos": [
+        362075572
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head and neck are chocolate brown. The rest of the bird, its back, shoulder, folded wing, belly and tail, is black, in matte black thread with no white, grey, lilac or pale thread anywhere on it: no pale patch, bar, streak or feather edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        2688964804
+      ],
+      "why": "lilac and pale edges on the black wings and body",
+      "reshaped_from": "c34f0d91800fd1e9274231b7be946274d9773a4cc878a6b0fc8057aa90a7a96f",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "morus-bassanus": {
+      "common_name": "Northern Gannet",
+      "seed": 3016361460,
+      "dark": false,
+      "measure": {
+        "iou": 0.762,
+        "dE_mean": 33.5,
+        "dE_p95": 65.9,
+        "dL": 19.3,
+        "dC": 2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6dba888e5dd52bfe45f21353a30854b229661785154daaaf33e9e6afa83f01db",
+      "photos": [
+        175767700
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The whole bird is pure white except for black wingtips; the head is washed pale buttery yellow; the bill is pale blue-grey. There is no brown on the wings or back.",
+      "review": "approved",
+      "rejected_seeds": [
+        3301782882
+      ],
+      "why": "a brown-winged bird; the adult is white with black wingtips",
+      "reshaped_from": "06b5c75857ba54b6d9a6802381d47013fc5e04d9504a8f954b99447983ace94e",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "mycteria-americana": {
+      "common_name": "Wood Stork",
+      "seed": 2167796210,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 11.8,
+        "dE_p95": 20.4,
+        "dL": -6.7,
+        "dC": -1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0041,
+      "attempts": 1,
+      "sha256": "d94baf00c512ba274e876f0e5e1822800605c9c987c05492cf9277f7f442a8f9",
+      "photos": [
+        594389337
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "430c54261f6db69f93c4b9e7e822e888928e04db547ed6a5754366dbcd9e450a",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "myiarchus-crinitus": {
+      "common_name": "Great Crested Flycatcher",
+      "seed": 2001379182,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0035,
+      "attempts": 1,
+      "sha256": "f2a5e15f093d2f8bb0d1f01facc70235c23c8b96d3d9293bcab77ddc7d753564",
+      "photos": [
+        120292938
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "35ed02adbfb0ee501c244b6784c113fcd125ed494c5756878fc189b527192b1d",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "seed": 1101399410,
+      "dark": false,
+      "measure": {
+        "iou": 0.86,
+        "dE_mean": 9.6,
+        "dE_p95": 23.6,
+        "dL": -7.4,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b5762821d6fe6338bbbe311ce166843901a1ada97fc86cdcdf16844d74815886",
+      "photos": [
+        599053459
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is black, with only a faint bronze sheen on the back and wings, in matte black thread with no white, silver, grey or pale thread anywhere on it: no pale patch, bar, streak or feather edge. Only the bare skin of the throat and face is orange-yellow.",
+      "review": "approved",
+      "reshaped_from": "0e2cf82f47e7b90a353a15ffdbc6370bbcec476db343776e3b651d71bee4c896",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "seed": 4008496190,
+      "dark": false,
+      "measure": {
+        "iou": 0.728,
+        "dE_mean": 17.3,
+        "dE_p95": 38.1,
+        "dL": 1.1,
+        "dC": 3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "06e0a61975dd1fd72272b5428175d6b1cf18ebcb92192d712e5eda8b64dd5235",
+      "photos": [
+        252191809
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is bright red, stitched in red thread with a small black centre: a red eye, not a black one. The dark lines that cross the shoulder and wing in <ref_image_0> are shadows of twigs, not feathers: leave them out. The shoulder and the folded wing are one even colour, the same blue-grey as the rest of the wing, with no dark band, stripe or line across them.",
+      "review": "approved",
+      "rejected_seeds": [
+        126839048,
+        1887984030,
+        3917547557,
+        2659596466,
+        14855441,
+        2011536776
+      ],
+      "why": "the eye is black; it is red",
+      "reshaped_from": "073308eef0b0936dedc439ed3961f1f39a33164ce141e8066b0e54764f2717da",
+      "reshape_version": 2,
+      "reshaped_fit": 0.99
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "seed": 406536100,
+      "dark": true,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 12.5,
+        "dE_p95": 28.0,
+        "dL": 8.4,
+        "dC": -0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0044,
+      "attempts": 2,
+      "sha256": "8ec531416edb7c802ea4e0a2be0832db0a470454d4cb5be4d9749a9f6d4210d6",
+      "photos": [
+        645547392
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "74f88a71053ed3062558d045b1c9d354b479c464b042e28fededcece218ee577",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "parkesia-noveboracensis": {
+      "common_name": "Northern Waterthrush",
+      "seed": 1519500481,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 7.4,
+        "dE_p95": 15.5,
+        "dL": -6.3,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2210e909c993c06e8caa03694001c8fe57d0e0062043b89517a6e894b4f20245",
+      "photos": [
+        621230237
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "e8fb6efe48a30fd7646a657e7c8ecdf32218a96639fb79dcdf355c100f096272",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "seed": 3210918672,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 8.0,
+        "dE_p95": 14.3,
+        "dL": -1.3,
+        "dC": 4.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "8963bd9021eb50cdbf25ba0d1e8308a90a1e130196fa14a8a327a0f079bab959",
+      "photos": [
+        611044072
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "40a94758dc1df92d79a2658cd41973add196e6b1c0ef81220b95acdbb78142d6",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "seed": 3509740581,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "e20546fce9978b4d9207e0baad9d28ae5d54bdbb9a806d730ab177c8a3977773",
+      "photos": [
+        481529292
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "4aab5857a0bcc5ec30df56620aeb667e2f7ea93e5fe631d0f09eb82d974f424d",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "passerina-ciris": {
+      "common_name": "Painted Bunting",
+      "seed": 1985488219,
+      "dark": false,
+      "measure": {
+        "iou": 0.936,
+        "dE_mean": 34.9,
+        "dE_p95": 52.6,
+        "dL": -29.0,
+        "dC": 6.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "83d4bb2efb144ecdc17f737f7d52b866a63523036a75ec844f895056fa52bb63",
+      "photos": [
+        251921499
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The throat, breast, belly and rump are bright scarlet red, not orange; the head is violet blue with a red ring around the eye; the back is lime green.",
+      "review": "approved",
+      "rejected_seeds": [
+        23008721
+      ],
+      "why": "the underparts came out orange and the left edge of the patch is uneven",
+      "reshaped_from": "81f5596c47c5c0a3fe83bd1cd7e159f19821f1666d9851919e138f56cf6dcb35",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "passerina-cyanea": {
+      "common_name": "Indigo Bunting",
+      "seed": 3511673699,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "979526ca47eebe2793b98dc62fd302629f0681a068a4b5547afde19cbfe205b3",
+      "photos": [
+        112297058
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "fa6c6f89ac7c5253acf4f5bd4f145343df46e89b76cf71dbb6f8a8880834ea17",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "pavo-cristatus": {
+      "common_name": "Indian Peafowl",
+      "seed": 1359575256,
+      "dark": false,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 5.9,
+        "dE_p95": 10.7,
+        "dL": 1.2,
+        "dC": -0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0031,
+      "attempts": 2,
+      "sha256": "ff2f67a474608289971eaf7dec0f125801bc896d001518a61fd4dd32cd2c016b",
+      "photos": [
+        593447260
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "2ec9662c846ca25106f53af46c2942cbc065231f1667b87963ba975e8ee34219",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "seed": 90885188,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 14.2,
+        "dE_p95": 29.0,
+        "dL": 6.1,
+        "dC": 0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4e5e99eb336261cd69820cc333e005f5aa07a7df4a3392862d74f8713d58dd32",
+      "photos": [
+        340220423
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange.",
+      "review": "approved",
+      "reshaped_from": "cdeeea7d3227073e64654ec8342818058e12c126a00a8703864094707ef677b8",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "seed": 1555367456,
+      "dark": false,
+      "measure": {
+        "iou": 0.854,
+        "dE_mean": 8.4,
+        "dE_p95": 18.8,
+        "dL": 6.2,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "4b7ff5925bf7a83c018528d0704e1f36cdac3392fb30ac1c43907dce259315e1",
+      "photos": [
+        558217766
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved",
+      "reshaped_from": "a4ef9b22143e33a7229bf165c17b78560643f7b2b68aa0349cae38d53c48e033",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "peucaea-aestivalis": {
+      "common_name": "Bachman's Sparrow",
+      "seed": 1037483229,
+      "dark": false,
+      "measure": {
+        "iou": 0.894,
+        "dE_mean": 7.7,
+        "dE_p95": 17.7,
+        "dL": -6.6,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "4e8c5a11a7984a92dec99f2c83d870938ada8d123a6e1e428a9d4ddf4d5ea7de",
+      "photos": [
+        131605655
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1255246926
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "1cc5cf2166fb5a137139805a6a6fee4003e90c147de2055764b94412dcb82bef",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "pipilo-erythrophthalmus": {
+      "common_name": "Eastern Towhee",
+      "seed": 3480011103,
+      "dark": false,
+      "measure": {
+        "iou": 0.85,
+        "dE_mean": 25.6,
+        "dE_p95": 46.3,
+        "dL": -23.7,
+        "dC": -0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "ea0fcc574cd35244e7a5f80f0f844f52f551a1d80cda7c0a8672acda67a53254",
+      "photos": [
+        181066820
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, throat, breast, back and tail are black; the sides are rufous orange and the belly white; there is a white patch on the folded wing. The eye is pale straw yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        560111730,
+        1449496805
+      ],
+      "why": "the head and back came out grey; the male's are black",
+      "reshaped_from": "ad28e5349b79769e8b235583b81013ba1ad288d37f15f61c6ce394937a818fd7",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "piranga-rubra": {
+      "common_name": "Summer Tanager",
+      "seed": 2207647752,
+      "dark": false,
+      "measure": {
+        "iou": 0.843,
+        "dE_mean": 24.6,
+        "dE_p95": 39.9,
+        "dL": -16.6,
+        "dC": -15.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "16a11eb8749e88f0e6af6fd46ab8ccc0f3e7b1011f8b175ce7defcfcc3f2e8f1",
+      "photos": [
+        465074168
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1838704933,
+        446650802
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "3aca2b23dd2c17dfceea4b479444c9daa0f1b045b3ef4c6171d9bd5c6a7ee064",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "platalea-ajaja": {
+      "common_name": "Roseate Spoonbill",
+      "seed": 3595327008,
+      "dark": false,
+      "measure": {
+        "iou": 0.909,
+        "dE_mean": 21.2,
+        "dE_p95": 33.1,
+        "dL": -7.8,
+        "dC": 1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ea288f0ec5d5d19bddd84147c50b56875133af93c1723385ac081408caadd859",
+      "photos": [
+        641870822
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The long grey bill is flat and widens at its tip into a broad rounded spoon; the bare head is pale greenish buff; the body and wings are pink with a deep carmine red patch on the shoulder; the legs are red.",
+      "review": "approved",
+      "reshaped_from": "f23eea4f24428630929b445def0569d7a65aab3b52617c49b37c13399beb46ea",
+      "reshaped_fit": 0.981,
+      "reshape_version": 2
+    },
+    "plegadis-falcinellus": {
+      "common_name": "Glossy Ibis",
+      "seed": 809414824,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 5.7,
+        "dE_p95": 10.9,
+        "dL": 2.5,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "e0e566d2859f6fe0bcca147f5ef3ff04b02908a8357f78259de7f4f400c51cbc",
+      "photos": [
+        604641217
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "0a287856551ce73ffdbf4fb98852ff4249c8a54ceefc15a418fc1f3a78b22a1c",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "pluvialis-squatarola": {
+      "common_name": "Grey Plover",
+      "seed": 3523986417,
+      "dark": false,
+      "measure": {
+        "iou": 0.805,
+        "dE_mean": 10.0,
+        "dE_p95": 20.1,
+        "dL": 6.3,
+        "dC": 4.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0038,
+      "attempts": 2,
+      "sha256": "034122f25362e1207beac1f1b525f814ddb88993f68b73c0882ccb20a6852a34",
+      "photos": [
+        101581039
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The bird stands still on two straight, thin black legs, side by side and not crossed, each ending in a small black foot with three short toes flat on the sand; the legs are short, about half as long as the body is deep.",
+      "review": "approved",
+      "rejected_seeds": [
+        1258459722,
+        1007002332,
+        2769089382
+      ],
+      "why": "maintainer: legs and feet are wrong",
+      "reshaped_from": "b2e18a48cd52116038b5e728de38f0d75c4c967c90189b54916c61d19a3f8f6d",
+      "reshape_version": 2,
+      "reshaped_fit": 0.986
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "seed": 1703874569,
+      "dark": false,
+      "measure": {
+        "iou": 0.967,
+        "dE_mean": 10.3,
+        "dE_p95": 16.1,
+        "dL": -9.0,
+        "dC": 3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0039,
+      "attempts": 1,
+      "sha256": "f6764825797f3e82e9e5977128823fdcfb8a0bf3df216b7dc5ad0a55a5d3b0f1",
+      "photos": [
+        613803298
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "5530be435adeb10ed5cd9930177bbf71a16af4852130666e803d210a358741bb",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "poecile-carolinensis": {
+      "common_name": "Carolina Chickadee",
+      "seed": 4032463210,
+      "dark": false,
+      "measure": {
+        "iou": 0.896,
+        "dE_mean": 12.6,
+        "dE_p95": 24.8,
+        "dL": -3.6,
+        "dC": -1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0125,
+      "attempts": 2,
+      "sha256": "99b58ebfd1cf914071eb35c73282f049aab898299ca0e5a186acc4e5500aadb8",
+      "photos": [
+        561662640
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bill is a tiny stubby black cone, much shorter than the head, and holds nothing; the cap and bib are black, the cheeks white and the back grey; it perches on both feet.",
+      "review": "approved",
+      "rejected_seeds": [
+        508878917,
+        1767100628
+      ],
+      "why": "the bill is far too long",
+      "reshaped_from": "f951ff59ba436f33b653b61aa84593e5ac7782bfdb31704c4a76674625f99d8a",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "polioptila-caerulea": {
+      "common_name": "Blue-grey Gnatcatcher",
+      "seed": 2558170257,
+      "dark": false,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 16.3,
+        "dE_p95": 32.7,
+        "dL": 10.6,
+        "dC": -6.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0066,
+      "attempts": 1,
+      "sha256": "21ff68c816b74e811a497dbedd2e642825e108ea84f2de90ead4643b1ea414a3",
+      "photos": [
+        604351326
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "It perches on the twig, both feet gripping it.",
+      "review": "approved",
+      "rejected_seeds": [
+        4017988617
+      ],
+      "why": "its reference bird was isolated with a colour cast (builds sharing the box, #58); re-isolated, painted again",
+      "reshaped_from": "04647bf665b9c91eb955e4b23299ee1ac5d74f955502e8c3e9407a560dedcffc",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "porphyrio-martinica": {
+      "common_name": "Purple Gallinule",
+      "seed": 4270966565,
+      "dark": true,
+      "measure": {
+        "iou": 0.889,
+        "dE_mean": 12.2,
+        "dE_p95": 20.0,
+        "dL": 2.3,
+        "dC": 2.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a67b554bf9a80e5e78b7bbffabdaacb5d3a2ade98179e5aaa765e3fe0db2cd5f",
+      "photos": [
+        518831208
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The head, neck, breast and belly are deep purple-blue. The back and folded wings are dark green. There is no white, cream or grey thread on the body or the wing; the only white is a small patch under the tail. The bill is red with a yellow tip, under a pale blue forehead shield. The legs and long toes are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        2308372403
+      ],
+      "why": "a large white wing and belly; the bird is purple-blue with a green back",
+      "reshaped_from": "a48ac96beec555b961706a6d4b54fc839c359cd4b21f9561da123d8919ff088c",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "porphyrio-poliocephalus": {
+      "common_name": "Grey-headed Swamphen",
+      "seed": 271899477,
+      "dark": false,
+      "measure": {
+        "iou": 0.892,
+        "dE_mean": 13.2,
+        "dE_p95": 21.0,
+        "dL": -7.2,
+        "dC": -8.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "69a011e3fee81cff3374e4df6dcc52490631cab0c769f6a8c96feb18ca39cde4",
+      "photos": [
+        604696816
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "rejected_seeds": [
+        1731455938
+      ],
+      "why": "its reference bird was isolated with a colour cast (builds sharing the box, #58); re-isolated, painted again",
+      "reshaped_from": "cb06471b0fa2bbdd24dfbac60e10786660de8ec3ee9b7b1c7aa4cd09f8944c46",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "porzana-carolina": {
+      "common_name": "Sora",
+      "seed": 1422714453,
+      "dark": false,
+      "measure": {
+        "iou": 0.854,
+        "dE_mean": 10.8,
+        "dE_p95": 16.3,
+        "dL": -8.2,
+        "dC": 4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7d752f0d31410f40a1d3969909188da3994febfc7e51b33044b67107443fd513",
+      "photos": [
+        479463815
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "e7c82b9ac4d9a12c825f28d8c790d370fca1c59644711bee03026ed743ed297e",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "progne-subis": {
+      "common_name": "Purple Martin",
+      "seed": 3064955740,
+      "dark": false,
+      "measure": {
+        "iou": 0.709,
+        "dE_mean": 11.4,
+        "dE_p95": 20.5,
+        "dL": 8.9,
+        "dC": 5.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0102,
+      "attempts": 2,
+      "sha256": "6b47e44a8df1a9b0ac2eae0b5f12a08f1077fa6143340e3d01c60015134a2ab1",
+      "photos": [
+        370372192
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is glossy dark blue-black, in very dark navy and black thread, with no white, grey or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The tail is forked.",
+      "review": "approved",
+      "rejected_seeds": [
+        3249058766
+      ],
+      "why": "a piebald black-and-white bird; the male is glossy blue-black all over",
+      "reshaped_from": "3a5e4253b79eb4a70e90bedcef44c4964f3858184c858a4ebe81a1952b9b2bed",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "pyrocephalus-rubinus": {
+      "common_name": "Scarlet Flycatcher",
+      "seed": 1820822721,
+      "dark": false,
+      "measure": {
+        "iou": 0.676,
+        "dE_mean": 51.0,
+        "dE_p95": 77.2,
+        "dL": 17.8,
+        "dC": -12.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0064,
+      "attempts": 1,
+      "sha256": "fbba1708ed299d012ef0f402726c02c86af923b446f5c0508ee48fe3262c363f",
+      "photos": [
+        109249645
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown, throat and underparts are bright scarlet red, not orange or yellow; a dark brown band runs through the eye; the back, wings and tail are dark brown, not pink or beige. The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        2190077422,
+        4119780733
+      ],
+      "why": "maintainer: bird not on branch",
+      "reshaped_from": "ca7647e5fb2785ec3396ad894dee50c0900ca324ddd578f842fc89babebfc29a",
+      "reshape_version": 2,
+      "reshaped_fit": 0.991
+    },
+    "quiscalus-major": {
+      "common_name": "Boat-tailed Grackle",
+      "seed": 1020103003,
+      "dark": false,
+      "measure": {
+        "iou": 0.833,
+        "dE_mean": 16.3,
+        "dE_p95": 25.9,
+        "dL": -15.6,
+        "dC": -2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "441c4d216bad0d45bc776e90559868884d732e1e3e90c97e4acac63161a669fd",
+      "photos": [
+        641158918
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black with a faint purple-blue gloss, in matte black thread with no white, grey, teal or pale thread anywhere on it: no pale patch, bar, streak, coloured line or feather edge. The bill and legs are black and the eye is dark brown.",
+      "review": "approved",
+      "rejected_seeds": [
+        3536054390,
+        2781141217
+      ],
+      "why": "the patch has no border cord and is not the edition's shape",
+      "reshaped_from": "8c154f2ef2f5bf37a869b7066911f750c4d6b7c29f35918de4cae433948d2dc9",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "quiscalus-quiscula": {
+      "common_name": "Common Grackle",
+      "seed": 881628144,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 23.4,
+        "dE_p95": 43.7,
+        "dL": -17.3,
+        "dC": -10.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "967cb9dd3500c7b6c191817e3e3e61528f55a43a8e598522471c2d2dd0876f6e",
+      "photos": [
+        471942079
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black, with a purple-blue gloss on the head and a bronze sheen on the body, in black and very dark thread. Any sheen on its feathers is stitched in dark thread, never in white, grey, lilac or pale thread; there are no pale patches, bars or feather edges on the wing, body or tail. The eye is pale yellow.",
+      "review": "approved",
+      "reshaped_from": "91a48c5448947dcc125ca3c2c97dfae9dac2e49484c8acb81849506f73a3a3c9",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "rallus-crepitans": {
+      "common_name": "Clapper Rail",
+      "seed": 1775681549,
+      "dark": false,
+      "measure": {
+        "iou": 0.887,
+        "dE_mean": 6.8,
+        "dE_p95": 13.2,
+        "dL": -5.9,
+        "dC": 1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0109,
+      "attempts": 1,
+      "sha256": "2f10d6a3a83ed20604466ca8ff690cc53c95a6fe38a8dfd5d44fcd6c5cfcf682",
+      "photos": [
+        30737712
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The legs are plain dull orange-grey, with no band or ring on them.",
+      "review": "approved",
+      "rejected_seeds": [
+        517075101
+      ],
+      "why": "a black band is stitched on its leg",
+      "reshaped_from": "53fd0bbdb9640b2297f78e6ead359dab711cbe849d7945724cf031c61c8d05fc",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "rallus-elegans": {
+      "common_name": "King Rail",
+      "seed": 3679999737,
+      "dark": false,
+      "measure": {
+        "iou": 0.967,
+        "dE_mean": 11.6,
+        "dE_p95": 16.7,
+        "dL": -8.4,
+        "dC": 3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dab4dd0f27e340d0685ad9eb98bc293fb4f631ed284f3b2043f13e6a02df3277",
+      "photos": [
+        348296133
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "reshaped_from": "f93c748592e089238388e3befd8df268e408c38e3386bb43327bfcc00d3fb6aa",
+      "reshaped_fit": 0.987,
+      "reshape_version": 2
+    },
+    "rallus-limicola": {
+      "common_name": "Virginia Rail",
+      "seed": 718891580,
+      "dark": false,
+      "measure": {
+        "iou": 0.942,
+        "dE_mean": 21.6,
+        "dE_p95": 34.0,
+        "dL": 9.3,
+        "dC": 9.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.041,
+      "attempts": 2,
+      "sha256": "a3bf68a8d14905d012c5bf661fbbbe4258779de4d98f2cc3ff3c92e0a0066df2",
+      "photos": [
+        606285835
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The breast, neck and flanks are warm rufous-cinnamon; the cheek is blue-grey; the back is brown streaked with black; the lower flanks are barred black and white; the long, slightly down-curved bill is reddish-orange and the legs are dull red. The bird is not black and white.",
+      "review": "approved",
+      "rejected_seeds": [
+        1574853295
+      ],
+      "why": "stitched black and white; the bird is rufous with a grey cheek",
+      "reshaped_from": "928cee20bd7e4134b8fd90aea3feed53288cdd1975f46874ed0c01d649029e8f",
+      "reshape_version": 2,
+      "reshaped_fit": 0.989
+    },
+    "recurvirostra-americana": {
+      "common_name": "American Avocet",
+      "seed": 1683734935,
+      "dark": false,
+      "measure": {
+        "iou": 0.734,
+        "dE_mean": 18.7,
+        "dE_p95": 35.4,
+        "dL": 10.1,
+        "dC": -1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0039,
+      "attempts": 2,
+      "sha256": "0ca0018f0898c22d053a417a5da2b3f7054302b92248adef15f819da74c30f98",
+      "photos": [
+        262889565
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The long thin black bill curves upward toward its tip; the legs are long and blue-grey.",
+      "review": "approved",
+      "rejected_seeds": [
+        324858112
+      ],
+      "why": "the bill came out straight; it curves upward",
+      "reshaped_from": "a89cd20ac5d2d3591864de538fd88a19e7441ced39be0d5b49830f3880430e47",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "rostrhamus-sociabilis": {
+      "common_name": "Snail Kite",
+      "seed": 718918605,
+      "dark": false,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 5.5,
+        "dE_p95": 15.2,
+        "dL": -1.5,
+        "dC": -0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6a799d9649e3f46b62d1f1dd594783bc19a377b771942d3a6f345a747a33d68a",
+      "photos": [
+        578654953
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is red, stitched in red thread with a small black centre; the bare skin at the base of the hooked bill and the legs are orange-red; the plumage is dark slate grey.",
+      "review": "approved",
+      "rejected_seeds": [
+        1574888283
+      ],
+      "why": "the eye came out dark; the male's eye is red",
+      "reshaped_from": "0360f7cbbcfaa8378be1b419c922d2374fbc2178dfd0e32d76fbba26eb372746",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "rynchops-niger": {
+      "common_name": "Black Skimmer",
+      "seed": 3135200811,
+      "dark": true,
+      "measure": {
+        "iou": 0.871,
+        "dE_mean": 9.2,
+        "dE_p95": 28.7,
+        "dL": 4.1,
+        "dC": 2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0033,
+      "attempts": 2,
+      "sha256": "e47dcc31a748543fae82e8127485eb68f6b739b4ab22cd96ddf9e04ef46a8639",
+      "photos": [
+        345051028
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "38ea27f0266262421585d3d29793346aab6e9c5c69af22a0ebb9b3fd5c79d622",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "sayornis-phoebe": {
+      "common_name": "Eastern Phoebe",
+      "seed": 3781676448,
+      "dark": false,
+      "measure": {
+        "iou": 0.588,
+        "dE_mean": 28.6,
+        "dE_p95": 67.2,
+        "dL": 15.8,
+        "dC": -1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.009,
+      "attempts": 1,
+      "sha256": "05b7f18752719e9edda05d7f5a5ef6191bf5b37f0c21d79d8cd57199d7b6b4a9",
+      "photos": [
+        476588242
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head is dark sooty grey-brown, darker than the back; the back, wings and tail are dull grey-brown with no blue or teal; the throat and underparts are off-white; the bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        258583693,
+        2020514844
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "0061335d2f4fba64873187d702d39b9ca4848f70ddf677fc11cffa36cd213760",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "seiurus-aurocapilla": {
+      "common_name": "Ovenbird",
+      "seed": 973523268,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 10.7,
+        "dE_p95": 19.4,
+        "dL": -8.5,
+        "dC": 1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0037,
+      "attempts": 1,
+      "sha256": "8969429a0981bb06ad4123d78688401ef778ea988e939b85df713c0fe82c6fd6",
+      "photos": [
+        115230229
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        1291975122
+      ],
+      "why": "its reference bird was isolated with a colour cast (builds sharing the box, #58); re-isolated, painted again",
+      "reshaped_from": "b7d26390ee5d73e9da49ea1f2d2a4fe94437810252a5b8d0fcdd915871a9f86f",
+      "reshaped_fit": 0.994,
+      "reshape_version": 2
+    },
+    "setophaga-americana": {
+      "common_name": "Northern Parula",
+      "seed": 2828370171,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 13.3,
+        "dE_p95": 23.4,
+        "dL": -11.1,
+        "dC": -2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4830d0c44af582453c1b226c3971121d527b18ed832a34a05193abe27489c02e",
+      "photos": [
+        672498709
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The throat and breast are bright yellow, crossed by a narrow dark band; the back is blue-grey with a green patch, the wing has two white bars, and white arcs sit above and below the eye.",
+      "review": "approved",
+      "reshaped_from": "0c75f910ad56e472bea9c4612846e79d7a92ff298a4a0347cf37d89553e40cdb",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "setophaga-caerulescens": {
+      "common_name": "Black-throated Blue Warbler",
+      "seed": 2753094335,
+      "dark": false,
+      "measure": {
+        "iou": 0.791,
+        "dE_mean": 25.0,
+        "dE_p95": 53.7,
+        "dL": -1.3,
+        "dC": 8.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0116,
+      "attempts": 1,
+      "sha256": "960b6058ec64239190f09bcd569e944a04994997cf3b0ff84bee1fd22e505041",
+      "photos": [
+        575267416
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown, back, wings and tail are deep dark blue; the face, throat and sides are black; the belly is white; a small white square shows on the folded wing. The bill is short, thin, pointed and black, a warbler's bill: not a thick, long or pale bill.",
+      "review": "approved",
+      "rejected_seeds": [
+        1242989460,
+        1024570117
+      ],
+      "why": "a thick pale finch's bill",
+      "reshaped_from": "1e20e997d13b83f5800883df085d3d14021a740e4829a9b998f1ef5386bf8a36",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "seed": 563471128,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 11.3,
+        "dE_p95": 17.5,
+        "dL": -5.3,
+        "dC": -2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "50236b6abd75d874043ee1473f7b25c74372faeef7397da47ae674f63cc5481a",
+      "photos": [
+        480968894
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "50e00a69458eb484219146ced3c0c766ebd9a314370539733f8c45ec697905ed",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "setophaga-discolor": {
+      "common_name": "Prairie Warbler",
+      "seed": 1432796721,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0037,
+      "attempts": 3,
+      "sha256": "14f5a18331675edffc70e5b199f354ee3c4835cf88010523e4ddfb5a59650cd6",
+      "photos": [
+        578655047
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "addf82b4dbad52a1156a75a855707677945abe27df62476c59b7105be54ad1db",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "setophaga-dominica": {
+      "common_name": "Yellow-throated Warbler",
+      "seed": 80240705,
+      "dark": false,
+      "measure": {
+        "iou": 0.802,
+        "dE_mean": 9.2,
+        "dE_p95": 20.3,
+        "dL": 2.1,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "00f81a5f4fc52d05a34367bb47b9623ff5f9cb3bab266fd1cc523eecb3a4a22e",
+      "photos": [
+        450205932
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1942966489
+      ],
+      "why": "its reference bird was isolated with a colour cast (builds sharing the box, #58); re-isolated, painted again",
+      "reshaped_from": "c91996d6a5e4c532125a3f447b28816b97e33b102154677ea19f8a5d917b8a3f",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "setophaga-palmarum": {
+      "common_name": "Palm Warbler",
+      "seed": 3312781241,
+      "dark": false,
+      "measure": {
+        "iou": 0.968,
+        "dE_mean": 7.4,
+        "dE_p95": 12.3,
+        "dL": -5.7,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6619bd5658f8472895f3f0e4d6c113e5100f2dc192d3789e13d0d00037fda469",
+      "photos": [
+        605395943
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "942c2362c34869f573f57bcafcf48315149371498bcc2398b06503eb2a839b1a",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "setophaga-pinus": {
+      "common_name": "Pine Warbler",
+      "seed": 210582481,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 9.1,
+        "dE_p95": 21.3,
+        "dL": 1.1,
+        "dC": 0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "950015237476435ad0a1c6ae81685e0be7da0d914a6806e5db577d813cfc5562",
+      "photos": [
+        261313311
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, back and wings are olive green and the throat and breast yellow; the grey wings have two white bars; there is no black on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        3800259326,
+        2508483180
+      ],
+      "why": "the right edge peels and the tail runs over the cord; the wings came out black and white",
+      "reshaped_from": "e2db9749670e67fa43d80aea0a416628d5adc7d959931a7749eba781da5fb4c8",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "setophaga-ruticilla": {
+      "common_name": "American Redstart",
+      "seed": 1583225349,
+      "dark": false,
+      "measure": {
+        "iou": 0.837,
+        "dE_mean": 14.8,
+        "dE_p95": 31.0,
+        "dL": -9.7,
+        "dC": -2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "20a69504a54ab8571bde537cf81157b369e8b638c0c5bd2f15eae92840da4364",
+      "photos": [
+        345901104
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "It perches on the branch on both feet, each foot whole with slim toes gripping the branch.",
+      "review": "approved",
+      "rejected_seeds": [
+        693709459
+      ],
+      "why": "the toes are tangled loops and the tail runs over the cord",
+      "reshaped_from": "da3d9e8edff7b1539ade54471134849ac3778106f6b1596c3a3bcc03cbf125ec",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "setophaga-tigrina": {
+      "common_name": "Cape May Warbler",
+      "seed": 1593026161,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 12.7,
+        "dE_p95": 23.2,
+        "dL": -10.4,
+        "dC": -1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0034,
+      "attempts": 1,
+      "sha256": "316a40d1528c4fcb6f7213a50849c9f28f7ebeb15d0d48a741c98b23a4bebc48",
+      "photos": [
+        47957755
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        703895272
+      ],
+      "why": "card peels out past the cord along the top-left edge",
+      "reshaped_from": "2b7672a744022c8432095ca637e914317147bc11114c2a979174b74b5d5b340d",
+      "reshaped_fit": 0.985,
+      "reshape_version": 2
+    },
+    "sialia-sialis": {
+      "common_name": "Eastern Bluebird",
+      "seed": 2420218862,
+      "dark": false,
+      "measure": {
+        "iou": 0.646,
+        "dE_mean": 42.4,
+        "dE_p95": 73.9,
+        "dL": -28.0,
+        "dC": 9.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bc6ec3a7865dcbb8b78a0f62e5040051fdc0bdb28c9cba49d5b2abae1fa1541e",
+      "photos": [
+        631885614
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "fa439faa431df67415a46fc21f53baa4a24194ae7b91a24971442a4a16ce91f4",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "sitta-pusilla": {
+      "common_name": "Brown-headed Nuthatch",
+      "seed": 3089101088,
+      "dark": false,
+      "measure": {
+        "iou": 0.948,
+        "dE_mean": 5.1,
+        "dE_p95": 10.5,
+        "dL": -1.1,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "18cc2fee91eddde310861dcaa95c29c3cd2e35be7a89797f1bf8f4ac3a8d920b",
+      "photos": [
+        93379295
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "1bb5ce2a0f50cc7669efa719e760e5b8d28997ec910e0898215b7a3b71c4b1b2",
+      "reshaped_fit": 0.988,
+      "reshape_version": 2
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "seed": 1095224422,
+      "dark": false,
+      "measure": {
+        "iou": 0.903,
+        "dE_mean": 12.0,
+        "dE_p95": 25.1,
+        "dL": -8.2,
+        "dC": 1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "414df594cf8af0ae935e72a69fb96a0f48005dec4324dc5ecb57436d6dcd313f",
+      "photos": [
+        613804512
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "da3813846620d1d5202fc29d123db7a4106853644880d7cc76149490b83ab554",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "spatula-discors": {
+      "common_name": "Blue-winged Teal",
+      "seed": 668091601,
+      "dark": false,
+      "measure": {
+        "iou": 0.874,
+        "dE_mean": 13.6,
+        "dE_p95": 25.8,
+        "dL": -10.0,
+        "dC": 1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0148,
+      "attempts": 3,
+      "sha256": "512dc7fc73ae9b389fd98c15a1bb7c8d0fff1deb0c4b5fb61b4a3ad8db92ed71",
+      "photos": [
+        604641274
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "reshaped_from": "39e5c1c139d2e9ab0e37d637e671b0e254abdb1e721bf19b8d3e2478b63adc44",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "sphyrapicus-varius": {
+      "common_name": "Yellow-bellied Sapsucker",
+      "seed": 2538208931,
+      "dark": false,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 9.8,
+        "dE_p95": 15.8,
+        "dL": 6.9,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "40d9e3b4296a0bc3fb8eb8e5a1f40efa33056d5e6aa857dd2b6661e70e782874",
+      "photos": [
+        115636594
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The crown is red, the face boldly striped black and white, and a black band crosses the upper breast below the throat; the belly is pale yellow; the back is barred black and white, and the folded wing has a long white stripe along its edge. The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        239120152,
+        2034737038,
+        3763260982
+      ],
+      "why": "maintainer: bird is backwards; tree and legs should be on the other side",
+      "reshaped_from": "f46aa71bb0d082e8ba533ff19452acf61956fef936f541fac284c503a135fb4d",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "spinus-tristis": {
+      "common_name": "American Goldfinch",
+      "seed": 4116921223,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 8.3,
+        "dE_p95": 18.0,
+        "dL": -3.3,
+        "dC": 2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "75f0eb3284356eb7fff29aad71a14f8df8b9c45f90725b68d542403c6ebd85b2",
+      "photos": [
+        591151232
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        2187594512
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "b8be27fbb8f4d8d5803d0ec2aaa1599068569fb300485c4d07ec2b145b0480ed",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "seed": 2353550116,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4c6c5bbfd9466e0c916b8081c6b577a742067ddfdf3d2fc070bdca041117c457",
+      "photos": [
+        113055339
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "29efea52eb6ceb5e90e2e0dec70a16c07200542e4b5198564eb1f25ea191a935",
+      "reshaped_fit": 0.981,
+      "reshape_version": 2
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "seed": 2101804893,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 14.4,
+        "dE_p95": 22.3,
+        "dL": 10.8,
+        "dC": -3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0dda69f80cf155c653ce449c51248e6afcba9f06475c65c3788c84dc9a182f93",
+      "photos": [
+        255337316
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "a782aca27e94d0635e8fef64749992fc7a7ba3960e361247e6ef0bec861453e3",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "strix-varia": {
+      "common_name": "Barred Owl",
+      "seed": 3556426941,
+      "dark": false,
+      "measure": {
+        "iou": 0.985,
+        "dE_mean": 9.7,
+        "dE_p95": 13.5,
+        "dL": -1.4,
+        "dC": 2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dca1a70c23c81214ed1fb3b70395608ebf50aa42d0252daf6df7ae6ba9a59a44",
+      "photos": [
+        363895707
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "c10fc13150b5f05b57d126dbc148ac6b1b347734bf69233991bcf6c8344e160d",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "sturnella-magna": {
+      "common_name": "Eastern Meadowlark",
+      "seed": 1093823191,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 6.0,
+        "dE_p95": 14.3,
+        "dL": -2.8,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "4d1e913424fb71f9730b0b264af932567b5e01afb727c9b25e1a1199ffdb00fa",
+      "photos": [
+        351161554
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        909466180
+      ],
+      "why": "its reference bird was isolated with a colour cast (builds sharing the box, #58); re-isolated, painted again",
+      "reshaped_from": "73f9b7ffe52a73817181702e2c9da65d8b36c5c17341625d2a6a2b5821b1e15a",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "seed": 1553376198,
+      "dark": true,
+      "measure": null,
+      "card_at_edge": 0.0083,
+      "attempts": 3,
+      "sha256": "c704c3fda0a7286ec6604338a574b1ceab3476c578382cca2598bfd018c10890",
+      "photos": [
+        616239041
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "4af0c58730171f293f1785b4f6547abcbff569b35bec26ffe786e874c0fca38e",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "tachycineta-bicolor": {
+      "common_name": "Tree Swallow",
+      "seed": 128294029,
+      "dark": false,
+      "measure": {
+        "iou": 0.716,
+        "dE_mean": 34.9,
+        "dE_p95": 69.4,
+        "dL": 28.1,
+        "dC": 8.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0072,
+      "attempts": 3,
+      "sha256": "83a9c42b94584cb20bb78800c83437990ea45d4eb4cf303cc56e6e45af19d543",
+      "photos": [
+        345422709
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The crown, face, back and the upper side of the wings and tail are glossy dark blue-green; the throat, breast and belly are clean white. There is no brown on the bird and no white cap.",
+      "review": "approved",
+      "rejected_seeds": [
+        3920362920,
+        2662124850
+      ],
+      "why": "brown wings and back and a white cap; the bird is blue-green above",
+      "reshaped_from": "7c49c8b7299e21d17a25f65ab0cafd6ab3bde4c167f176014c6415607e61d6c8",
+      "reshaped_fit": 0.992,
+      "reshape_version": 2
+    },
+    "thalasseus-maximus": {
+      "common_name": "Royal Tern",
+      "seed": 625344234,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 10.2,
+        "dE_p95": 24.2,
+        "dL": -6.1,
+        "dC": -0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e90dd6cdc95c3f44d3e727871586b8e7afeac3e233ddbf8f328c3faf3915c1e9",
+      "photos": [
+        458284375
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "5ad08e3749c4cb64c902a0dd9c7523b0961fc3d3a53b284b2a75433713c5a654",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "thalasseus-sandvicensis": {
+      "common_name": "Sandwich Tern",
+      "seed": 3542188810,
+      "dark": false,
+      "measure": {
+        "iou": 0.679,
+        "dE_mean": 23.0,
+        "dE_p95": 65.1,
+        "dL": -18.3,
+        "dC": 3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "0ebfa1dc9b0bf52bd54463cf36efab50172a33392e46f5b28ade45b4ab208b30",
+      "photos": [
+        358461239
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "reshaped_from": "9d4b6f71fefe0543941c4da4c95df387f9ecaec334788e682bb4d3e256a28947",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "thryothorus-ludovicianus": {
+      "common_name": "Carolina Wren",
+      "seed": 1495706839,
+      "dark": false,
+      "measure": {
+        "iou": 0.966,
+        "dE_mean": 11.4,
+        "dE_p95": 18.9,
+        "dL": -11.2,
+        "dC": 1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0136,
+      "attempts": 1,
+      "sha256": "fa1863e9b964562224b8ee70dd21b9f1df923d9eacbb1a0bc9c535efb12d06c1",
+      "photos": [
+        450206050
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "It stands on the branch on both legs, each foot whole.",
+      "review": "approved",
+      "rejected_seeds": [
+        773954627
+      ],
+      "why": "it stands on one leg",
+      "reshaped_from": "7fd3b414a22a064ec7225a77268ab088899788dfce163600220956f48a496331",
+      "reshaped_fit": 0.99,
+      "reshape_version": 2
+    },
+    "toxostoma-rufum": {
+      "common_name": "Brown Thrasher",
+      "seed": 2063590140,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 7.7,
+        "dE_p95": 15.1,
+        "dL": -1.5,
+        "dC": 3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f4b5bff9dd1aa4d96ffc459bdb313810ee7991abf3b1e791d7bbf2671a0aea04",
+      "photos": [
+        485299249
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre. The back and tail are rich rufous brown and the white breast has bold dark streaks.",
+      "review": "approved",
+      "rejected_seeds": [
+        234410602
+      ],
+      "why": "the eye came out dark; it is yellow",
+      "reshaped_from": "d64085d77872c0232de00d12acacb04b3535454f383d0389a49ac35942b9774b",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "tringa-flavipes": {
+      "common_name": "Lesser Yellowlegs",
+      "seed": 405452267,
+      "dark": false,
+      "measure": {
+        "iou": 0.767,
+        "dE_mean": 9.2,
+        "dE_p95": 13.5,
+        "dL": -2.3,
+        "dC": 7.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "29999759d1f0be5a41edfa1138392191e2c4dc957ba15829ccca5f4e9d8e2004",
+      "photos": [
+        646838191
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The long legs are bright yellow; it stands on both.",
+      "review": "approved",
+      "rejected_seeds": [
+        1865254269
+      ],
+      "why": "the legs came out brown; they are bright yellow",
+      "reshaped_from": "f66e8508e3d0da845378875f414d59a0e314d862db41ada5cb22671a7a475fc2",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "seed": 1349982877,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 8.5,
+        "dE_p95": 11.9,
+        "dL": -1.6,
+        "dC": 1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "c091b62d97f85e10c3045f67566973ae30fa138689fc458664e4cae048ca2209",
+      "photos": [
+        362062565
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The legs are very long, thin and bright yellow, far longer than the body is deep, so the body is carried high above the sand; the bird stands on one long straight leg with the other tucked up under its belly.",
+      "review": "approved",
+      "rejected_seeds": [
+        661662218
+      ],
+      "why": "maintainer: legs are not accurate; they need to be much longer, and standing on one, like the reference",
+      "reshaped_from": "78f0b46f84073c0d4ed9add4f166ff59295711389fc6395ecd07441decd2ff74",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "seed": 119432640,
+      "dark": false,
+      "measure": {
+        "iou": 0.85,
+        "dE_mean": 16.8,
+        "dE_p95": 33.0,
+        "dL": 2.8,
+        "dC": 3.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b1e60c0b167e4951d48f1adfd4d596f22b961d0dcd3c43684c5d3a520632a52f",
+      "photos": [
+        256696040
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The bird is plain grey-brown above and white below, in grey, brown and white thread only: no blue, teal or green thread anywhere on it, legs included. The bill is straight and dark; the legs are plain mid grey.",
+      "review": "approved",
+      "rejected_seeds": [
+        3910141164,
+        2652320890
+      ],
+      "why": "the legs are stitched bright blue",
+      "reshaped_from": "cc9b3770e21a730e9fe913c0724249559f3ab752d81a271a39a9342789d3ce89",
+      "reshaped_fit": 0.989,
+      "reshape_version": 2
+    },
+    "tringa-solitaria": {
+      "common_name": "Solitary Sandpiper",
+      "seed": 4267264923,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 11.5,
+        "dE_p95": 15.1,
+        "dL": -4.0,
+        "dC": -1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.008,
+      "attempts": 2,
+      "sha256": "f307498d326bebec1dcb1d0fc768208436ca7f5a520c8119ff99b2e86d111da2",
+      "photos": [
+        602399576
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "rejected_seeds": [
+        2304670477
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "0eccbb4f345024f6b080682d351e07f46b8e99589ebc5d9b8d63b7765a96143f",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "troglodytes-aedon": {
+      "common_name": "Northern House Wren",
+      "seed": 3779050704,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 7.9,
+        "dE_p95": 14.5,
+        "dL": -4.5,
+        "dC": 4.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.003,
+      "attempts": 1,
+      "sha256": "5de1dadf4cfc975d1ed1feeca63e88b894e8b11522748300aa38e8f71066409d",
+      "photos": [
+        604351369
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird is warm brown above with fine dark bars on the wings and the cocked tail, and pale buff-grey below. There is no black or dark grey plumage. The tail stays inside the border.",
+      "review": "approved",
+      "rejected_seeds": [
+        2520288327
+      ],
+      "why": "a corner of the patch peels up from the card",
+      "reshaped_from": "2a82f91618c6a9e06e377075ac6dee7dc5d51945391013e63f4532ef87f67381",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 3468247753,
+      "dark": false,
+      "measure": {
+        "iou": 0.871,
+        "dE_mean": 8.2,
+        "dE_p95": 18.3,
+        "dL": 3.7,
+        "dC": -1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0066,
+      "attempts": 1,
+      "sha256": "ce889618a68034f73cfc80948d3df01e8c76d50de8cf7eec25c3c66b55fe054d",
+      "photos": [
+        18776341
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "reshaped_from": "ad2b95ab08dd315aa27f103a278dd37d5749c50b6b9c769f55a622603422732e",
+      "reshaped_fit": 0.986,
+      "reshape_version": 2
+    },
+    "vireo-griseus": {
+      "common_name": "White-eyed Vireo",
+      "seed": 2206582015,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 8.7,
+        "dE_p95": 13.4,
+        "dL": -5.4,
+        "dC": 1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d14fd9db4eb92596fe2f3057fc2dfa7b3e4a2da7b305eb429b072dc93c371b81",
+      "photos": [
+        179838868
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "reshaped_from": "d5bd13fc8c754053a6b4cbabfcc5ea1453f3b2b8e5453f9818466eea64ca08fc",
+      "reshaped_fit": 0.991,
+      "reshape_version": 2
+    },
+    "vireo-solitarius": {
+      "common_name": "Blue-headed Vireo",
+      "seed": 2817374471,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 7.3,
+        "dE_p95": 13.2,
+        "dL": -3.7,
+        "dC": 3.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0045,
+      "attempts": 1,
+      "sha256": "6a66dca9d1286afc5b909bc2edbb66bdbd5436192f9e4986e93a9ea4887336d9",
+      "photos": [
+        628083882
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3505031570
+      ],
+      "why": "the bottom-right corner peels and the tail runs over the cord",
+      "reshaped_from": "9ad14c35a56a63e4c08aa3de06e71e0ea96c13466f2e132f8456e57a30796d88",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "seed": 542629393,
+      "dark": false,
+      "measure": {
+        "iou": 0.796,
+        "dE_mean": 27.0,
+        "dE_p95": 51.2,
+        "dL": 20.4,
+        "dC": 7.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6b5c54fbf309db1c35debc5be23975ae6e63356b550d783abe5da204ca89ef83",
+      "photos": [
+        699589754
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a shield, rounded at the top and coming to a soft point at the bottom",
+        "cord": "deep teal",
+        "twill": "pearl-white cotton twill",
+        "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        1464921735
+      ],
+      "why": "the top edge dips inward with card showing at the top-left corner: not the edition's shield",
+      "reshaped_from": "406a0854123b3bb3fc6f53d8230c23cc790fb6a2d1714ab455f0d813da6f9e57",
+      "reshaped_fit": 0.993,
+      "reshape_version": 2
+    }
+  }
+}

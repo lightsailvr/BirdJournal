@@ -93,6 +93,30 @@ def test_white_plumage_blown_to_paper_is_filled_in():
     assert made.holes_filled == 1
 
 
+def test_a_bird_pinned_to_fill_its_holes_closes_a_white_mark_on_dark_plumage_and_is_reviewed_again(tmp_path):
+    """A Gadwall's white speculum: as white as the page with dark feathers around it, so the recipe takes it for air."""
+    image, draw = on_white()
+    draw.ellipse((150, 150, 430, 500), fill=(60, 55, 50))
+    draw.ellipse((250, 260, 330, 380), fill=(255, 255, 255))
+    assert alpha(derive(image))[derive(image).image.height // 2, derive(image).image.width // 2] == 0
+    filled = derive(image, fill_holes=True)
+    assert alpha(filled)[filled.image.height // 2, filled.image.width // 2] == 255 and filled.holes_filled == 1
+
+    cached_bird(tmp_path / "cache", 7, image)
+    def a_maker(fill):
+        return SilhouetteMaker(pack_id="test-pack", lock=SilhouetteLock.load(tmp_path / "silhouette.lock.json"),
+                               sources={PHOEBE: (7, 49, "Black Phoebe")}, cache_dir=tmp_path / "cache", fill_holes=frozenset(fill))
+    first = a_maker([])
+    first.make([PHOEBE])
+    first.lock.species[PHOEBE] |= {"review": REJECTED, "why": "a hole in it"}
+    first.lock.write()
+    again = a_maker([PHOEBE])
+    made = again.make([PHOEBE])
+    assert again.derived == 1 and made[PHOEBE].review == PENDING
+    assert again.lock.species[PHOEBE]["fill_holes"] is True and "why" not in again.lock.species[PHOEBE]
+    assert a_maker([PHOEBE]).make([PHOEBE])[PHOEBE].review == PENDING
+
+
 def test_a_small_pinhole_in_dark_plumage_is_filled_in():
     made = derive(wading_bird(hole_in_body=(280, 260, 288, 268)))
     height, width = alpha(made).shape

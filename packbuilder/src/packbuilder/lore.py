@@ -34,6 +34,7 @@ never logged or written anywhere. A key the API refuses stops the run at once, b
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import math
@@ -51,6 +52,8 @@ log = logging.getLogger("packbuilder.lore")
 
 LOCK_FILE = "lore.lock.json"
 PENDING, APPROVED, REJECTED = "pending", "approved", "rejected"
+SHARED_FROM = "shared_from"
+"""On a lock entry: the id of the pack whose lore for this species it is (lore is written once per species, #58)."""
 API_KEY_VARIABLE = "BIRDJOURNAL_ANTHROPIC_API_KEY"
 KEYCHAIN_SERVICE = "birdjournal-anthropic-api-key"
 MODEL = "claude-opus-5-5"
@@ -491,6 +494,25 @@ def lore_from_entry(species_id: str, entry: dict) -> Lore:
     )
 
 
+def _article(facts) -> list[tuple[str, str]]:
+    """A sheet's Wikipedia facts as (text, revision link), from `Fact`s or a lock entry's dicts."""
+    pairs = [(f["text"], f["source"]) if isinstance(f, dict) else (f.text, f.source) for f in facts]
+    return [pair for pair in pairs if pair[1].startswith("http")]
+
+
+def shared_lore(definitions: Path, pack_id: str) -> dict[str, tuple[str, dict]]:
+    """The lore the other packs under `definitions` hold as their own, by species id: (pack id, lock entry). Lore is
+    written once per species (#58), so a pack takes these instead of asking for its own; the first pack by id wins."""
+    found: dict[str, tuple[str, dict]] = {}
+    for path in sorted(Path(definitions).glob(f"*/{LOCK_FILE}")):
+        if path.parent.name == pack_id:
+            continue
+        for species_id, entry in LoreLock.load(path).species.items():
+            if not entry.get(SHARED_FROM):
+                found.setdefault(species_id, (path.parent.name, entry))
+    return found
+
+
 @dataclass
 class LoreWriter:
     """Writes what the lock lacks for one pack and keeps the lock. `client` is made on the first request, so a warm
@@ -503,6 +525,9 @@ class LoreWriter:
     regenerate: frozenset[str] = frozenset()
     regenerate_titles: frozenset[str] = frozenset()
     titles: bool = True
+    shared: dict[str, tuple[str, dict]] = field(default_factory=dict)
+    """Other packs' own lore by species id, as (pack id, lock entry): see `shared_lore`. A species this lock lacks takes
+    it, marked `shared_from`, and follows it from then on; such an entry is never written or reviewed here."""
     interval: float = DEFAULT_INTERVAL
     budget: float | None = None
     """Dollars this run may spend (by `PRICES`); no request starts once it is spent, so a run ends at most one
@@ -521,12 +546,13 @@ class LoreWriter:
         """Each species' lore, by id, for (id, common name, scientific name) in pack order; a species whose lore could
         not be written is left out (and logged). The lock is written after each species, so an interrupted run resumes."""
         written: dict[str, Lore] = {}
+        mirrors = self._take_shared(species, sheets)
         changed = {
             species_id: gone for species_id, _, _ in species
             if (entry := self.lock.species.get(species_id)) is not None and entry["review"] != REJECTED and sheets.get(species_id)
-            and (gone := stale(entry, sheets[species_id]))
+            and species_id not in mirrors and (gone := stale(entry, sheets[species_id]))
         }
-        regenerating = {species_id for species_id, _, _ in species if ALL in self.regenerate or species_id in self.regenerate} | set(changed)
+        regenerating = ({species_id for species_id, _, _ in species if ALL in self.regenerate or species_id in self.regenerate} - mirrors) | set(changed)
         kept = [entry for species_id, entry in self.lock.species.items() if species_id not in regenerating]
         self._openings = Counter(opening(entry) for entry in kept)
         self._ask_why = sum(bool(ASK_WHY.search(_lore_text(entry))) for entry in kept)
@@ -534,7 +560,8 @@ class LoreWriter:
         in_run = {species_id for species_id, _, _ in species}
         retitling = regenerating | {
             species_id for species_id, entry in self.lock.species.items()
-            if species_id in in_run and (self._needs_title(species_id, entry) or stale_title(entry, sheets.get(species_id) or []))
+            if species_id in in_run and species_id not in mirrors
+            and (self._needs_title(species_id, entry) or stale_title(entry, sheets.get(species_id) or []))
         }
         kept_titles = [entry["title"] for species_id, entry in self.lock.species.items() if species_id not in retitling and entry.get("title")]
         self._title_openings = Counter(title_opening(title) for title in kept_titles)
@@ -543,6 +570,17 @@ class LoreWriter:
             facts = sheets.get(species_id) or []
             entry = self.lock.species.get(species_id)
             wanted = ALL in self.regenerate or species_id in self.regenerate
+            if species_id in mirrors:
+                # Another pack's lore: its checks, its facts and its review, as that pack's lock holds them.
+                locked = [Fact.from_dict(f) for f in entry["facts"]]
+                if problems := validate(entry, locked):
+                    raise InvalidLore(f"{self.lock.path}: {common_name}'s lore, shared from {entry[SHARED_FROM]}, fails its checks: {'; '.join(problems)}")
+                if species_id in self.regenerate or species_id in self.regenerate_titles:
+                    log.warning("  %s: its lore is shared from %s; write it again there", common_name, entry[SHARED_FROM])
+                if facts and _article(facts) != _article(entry["facts"]):
+                    log.warning("  %s: this pack's article facts differ from the ones its shared lore (%s) was written from; the shared facts and lore stay", common_name, entry[SHARED_FROM])
+                written[species_id] = lore_from_entry(species_id, entry)
+                continue
             if species_id in changed:
                 log.warning(
                     "  %s: a fact its lore cites changed (%s); writing it again", common_name,
@@ -600,10 +638,43 @@ class LoreWriter:
         )
         return written
 
+    def _take_shared(self, species: list[tuple[str, str, str]], sheets: dict[str, list[Fact]]) -> set[str]:
+        """Brings this lock's shared entries up to date with the packs they come from and takes the shared lore of
+        species the lock lacks; the ids of the run's species whose lore is another pack's. A species is first taken
+        only when this pack's article facts are the ones that lore was written from, so the pack's text credits
+        (its own article revisions) cover it; this pack's own lore is never replaced."""
+        mirrors: set[str] = set()
+        dirty = False
+        for species_id, common_name, _ in species:
+            entry = self.lock.species.get(species_id)
+            source = self.shared.get(species_id)
+            if entry is not None and not entry.get(SHARED_FROM):
+                continue
+            if source is None:
+                if entry is not None:
+                    log.warning("  %s: %s no longer holds its lore; it is this pack's own from now on", common_name, entry[SHARED_FROM])
+                    del entry[SHARED_FROM]
+                    dirty = True
+                continue
+            pack_id, original = source
+            if entry is None and _article(sheets.get(species_id) or []) != _article(original["facts"]):
+                log.info("  %s: %s has lore for it, written from other article facts; writing this pack's own", common_name, pack_id)
+                continue
+            taken = {**copy.deepcopy(original), "common_name": common_name, SHARED_FROM: pack_id}
+            if taken != entry:
+                self.lock.species[species_id] = taken
+                dirty = True
+            mirrors.add(species_id)
+        if dirty:
+            self.lock.write()
+        if mirrors:
+            log.info("lore: %d species share another pack's lore", len(mirrors))
+        return mirrors
+
     def _needs_title(self, species_id: str, entry: dict) -> bool:
         """Whether a kept entry's title is to be written alone: missing, rejected, or asked for again."""
         title = entry.get("title")
-        return self.titles and entry["review"] != REJECTED and (
+        return self.titles and not entry.get(SHARED_FROM) and entry["review"] != REJECTED and (
             not title or title.get("review") == REJECTED or ALL in self.regenerate_titles or species_id in self.regenerate_titles
         )
 
@@ -736,6 +807,13 @@ def review(
     """Records the maintainer's review: species named by id or common name. The lore's review and its title's are
     separate: approving or rejecting a title leaves the lore, its tagline and their review as they are, and the lore's
     leaves the title's."""
+    for name in (*reject_titles, *approve_titles, *reject, *approve):
+        entry = lock.species[_species_id(lock, name)]
+        if pack_id := entry.get(SHARED_FROM):
+            raise KeyError(
+                f"{entry['common_name']}'s lore is shared from {pack_id}: review it there (`packbuilder lore-review packs/{pack_id}`), "
+                "then run `packbuilder lore` on this pack to take the verdict"
+            )
     for name in reject_titles:
         title = _title(lock, name)
         title["review"] = REJECTED
@@ -747,7 +825,7 @@ def review(
         title.pop("why", None)
     if approve_all_titles:
         for entry in lock.species.values():
-            if entry.get("title") and entry["title"]["review"] == PENDING:
+            if entry.get("title") and entry["title"]["review"] == PENDING and not entry.get(SHARED_FROM):
                 entry["title"]["review"] = APPROVED
     for name in reject:
         entry = lock.species[_species_id(lock, name)]
@@ -760,7 +838,7 @@ def review(
         entry.pop("why", None)
     if approve_all:
         for entry in lock.species.values():
-            if entry["review"] == PENDING:
+            if entry["review"] == PENDING and not entry.get(SHARED_FROM):
                 entry["review"] = APPROVED
     lock.write()
 
@@ -799,10 +877,18 @@ def review_sheet(lock: LoreLock, path: Path, pack_name: str, order: list[str] | 
         f"{sum(not t for t in titles.values())} not written. Approve or reject them alone with `packbuilder lore-review "
         "--approve-title`, `--approve-all-titles` or `--reject-title`; the lore's review stays as it is.",
     ]
-    if pending := [lock.species[i]["common_name"] for i in ids if lock.species[i]["review"] == PENDING]:
+    shared = {i: lock.species[i][SHARED_FROM] for i in ids if lock.species[i].get(SHARED_FROM)}
+    if shared:
+        lines += [
+            "", f"{len(shared)} of them share another pack's lore ({', '.join(f'{count} from {pack}' for pack, count in sorted(Counter(shared.values()).items()))}): "
+            "it is reviewed in that pack, and `packbuilder lore` on this one takes the verdict.",
+        ]
+    if pending := [lock.species[i]["common_name"] for i in ids if lock.species[i]["review"] == PENDING and i not in shared]:
         lines += ["", f"Pending: {', '.join(pending)}."]
-    if pending_titles := [lock.species[i]["common_name"] for i in ids if titles[i] and titles[i]["review"] == PENDING]:
+    if pending_titles := [lock.species[i]["common_name"] for i in ids if titles[i] and titles[i]["review"] == PENDING and i not in shared]:
         lines += ["", f"Titles pending: {', '.join(pending_titles)}."]
+    if elsewhere := [f"{lock.species[i]['common_name']} ({shared[i]})" for i in shared if lock.species[i]["review"] == PENDING or (titles[i] and titles[i]["review"] == PENDING)]:
+        lines += ["", f"Pending in the pack they are shared from: {', '.join(elsewhere)}."]
     if any(titles.values()):
         lines += ["", "## Titles", ""] + [
             f"- {lock.species[i]['common_name']}: {titles[i]['text']} ({titles[i]['review']})" if titles[i] else f"- {lock.species[i]['common_name']}: no title"
@@ -811,7 +897,7 @@ def review_sheet(lock: LoreLock, path: Path, pack_name: str, order: list[str] | 
     for species_id in ids:
         entry = lock.species[species_id]
         facts = {fact["id"]: fact for fact in entry["facts"]}
-        lines += ["", f"## {entry['common_name']} ({entry['review']})", ""]
+        lines += ["", f"## {entry['common_name']} ({entry['review']}{', shared from ' + entry[SHARED_FROM] if entry.get(SHARED_FROM) else ''})", ""]
         if title := entry.get("title"):
             lines.append(f"Title ({title['review']}): *{title['text']}* ({', '.join(title['facts'])})")
             for fact_id in title["facts"]:

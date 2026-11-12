@@ -1,0 +1,5161 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "seed": 2695635966,
+      "dark": false,
+      "measure": {
+        "iou": 0.846,
+        "dE_mean": 7.3,
+        "dE_p95": 13.0,
+        "dL": -0.6,
+        "dC": 4.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a2b0f4beffcdc6f59495c02d5cb65328aa32a4ad9c4c2a68c5875eac47f23c10",
+      "photos": [
+        730520623
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "seed": 196184302,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 3.8,
+        "dE_p95": 12.2,
+        "dL": 0.1,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0041,
+      "attempts": 1,
+      "sha256": "47458053e3c735993a8276d03d343508637ff7c3bcf6fe0f14fd5c93c1e25fda",
+      "photos": [
+        687301421
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from bill to tail, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge; the only colour is one scarlet red patch on the shoulder of the folded wing, with a narrow yellow lower edge.",
+      "review": "approved"
+    },
+    "aix-sponsa": {
+      "common_name": "Wood Duck",
+      "seed": 2600621928,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 7.3,
+        "dE_p95": 15.1,
+        "dL": -5.3,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4d880ec8702f2a15a8ffb2ad5397ce4783f43d33e2862ae143b8f52c603b7996",
+      "photos": [
+        486168604
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is bright red, stitched in red thread with a small black centre, in a red eye-ring. The head is glossy green with a drooping crest and two thin white lines; the breast is chestnut, the flanks buff, the back dark.",
+      "review": "approved"
+    },
+    "ammospiza-maritima": {
+      "common_name": "Seaside Sparrow",
+      "seed": 4250970395,
+      "dark": false,
+      "measure": {
+        "iou": 0.909,
+        "dE_mean": 6.6,
+        "dE_p95": 13.8,
+        "dL": -3.3,
+        "dC": 2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "861dcc2dd310fafd67884bcd2e67cd391d7f35698e0180c3e6e4c38081af6b57",
+      "photos": [
+        594402017
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "anarhynchus-wilsonia": {
+      "common_name": "Wilson's Plover",
+      "seed": 1402782417,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 10.0,
+        "dE_p95": 20.0,
+        "dL": -0.1,
+        "dC": 3.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "215a53612b92710819e26ecde7d456779ed6775185f1f4ab8f8d850371e29f58",
+      "photos": [
+        635138910
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "anas-fulvigula": {
+      "common_name": "Mottled Duck",
+      "seed": 4045662334,
+      "dark": true,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 9.1,
+        "dE_p95": 17.1,
+        "dL": 3.5,
+        "dC": -6.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ca389e65bcdee9c27ab82c4e33cab02b8bc787e983084fcc09b3616be966b878",
+      "photos": [
+        464826607
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 85939834,
+      "dark": false,
+      "measure": {
+        "iou": 0.921,
+        "dE_mean": 13.4,
+        "dE_p95": 29.3,
+        "dL": -9.3,
+        "dC": 2.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "42e5d69e71ee36fbc9be867dad84315460449997b5b79883282415ea9f256c0b",
+      "photos": [
+        612215625
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are glossy green, with a thin white ring around the neck; the breast is chestnut; the flanks and belly are pale silver-grey, finely vermiculated, not brown or buff; the back is grey-brown; the rear above and below the tail is black, with curled black feathers; the bill is yellow and the feet orange.",
+      "review": "approved",
+      "rejected_seeds": [
+        1914201836
+      ],
+      "why": "drake's flanks brown-buff and mottled (the reference is in moult); the flanks are pale silver-grey"
+    },
+    "anhinga-anhinga": {
+      "common_name": "Anhinga",
+      "seed": 2714881287,
+      "dark": true,
+      "measure": {
+        "iou": 0.831,
+        "dE_mean": 12.6,
+        "dE_p95": 29.1,
+        "dL": -5.1,
+        "dC": -1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e3211322218f47a1da2c0f0329d1270cbc18c0e7701abd59e8352572fb862d9a",
+      "photos": [
+        710904204
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body, neck and tail are black; the back and folded wings carry silver-white streaks and spots; the eye is red, stitched in red thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        1340058668,
+        953719998
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "anser-caerulescens": {
+      "common_name": "Snow Goose",
+      "seed": 3504184765,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 8.6,
+        "dE_p95": 14.9,
+        "dL": 1.1,
+        "dC": -5.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f340579648298e20809518b2c2a81ad98160290aff5c6f8522ee70d63ea39c18",
+      "photos": [
+        613337035
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige or grey anywhere; only the wingtips are black; the bill is pink with a black line along its edge, and the legs pink. The bird stands on two pink legs, both showing side by side, each with a webbed pink foot on the ground.",
+      "review": "approved",
+      "rejected_seeds": [
+        2816126251
+      ],
+      "why": "the goose stands on one leg"
+    },
+    "antrostomus-carolinensis": {
+      "common_name": "Chuck-will's-widow",
+      "seed": 3877183427,
+      "dark": true,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 7.3,
+        "dE_p95": 14.8,
+        "dL": 5.2,
+        "dC": 1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.013,
+      "attempts": 1,
+      "sha256": "a29049115de87219c40a24e820684264203194ade1c3d6fed17f1dba31032aef",
+      "photos": [
+        458864103
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is warm rufous-brown and buff, finely mottled and barred with black, with no grey or white patches on the back or wings; it lies lengthwise along the branch with its belly on the bark and its tiny feet hidden; the head is broad and flat with a tiny bill and a dark eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        2417897302
+      ],
+      "why": "grey-white mottling on the wing and back where the bird is warm brown; it stands upright on legs instead of lying along the branch"
+    },
+    "aramus-guarauna": {
+      "common_name": "Limpkin",
+      "seed": 1077217625,
+      "dark": false,
+      "measure": {
+        "iou": 0.659,
+        "dE_mean": 24.2,
+        "dE_p95": 47.7,
+        "dL": 19.7,
+        "dC": 5.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9c9259706fc967a999e168fdb1137b84822b733419a9ca81245511564b68b72d",
+      "photos": [
+        627146684
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is small and dark brown, a small dot on the side of the head, not a large black eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        926038479
+      ],
+      "why": "maintainer: eye is too big"
+    },
+    "archilochus-colubris": {
+      "common_name": "Ruby-throated Hummingbird",
+      "seed": 2563542317,
+      "dark": false,
+      "measure": {
+        "iou": 0.756,
+        "dE_mean": 6.4,
+        "dE_p95": 15.9,
+        "dL": -2.2,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ea5835c0a921c5aa5e15b9297d201a8b41fa529b9d8dda51a1a58c0b699bd563",
+      "photos": [
+        719368495
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "seed": 4180958034,
+      "dark": false,
+      "measure": {
+        "iou": 0.754,
+        "dE_mean": 6.9,
+        "dE_p95": 12.8,
+        "dL": -3.2,
+        "dC": -2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "69401bba36aca4c55cc7c4bf4820ca17325e63f41b81e83505777a969d2c93a6",
+      "photos": [
+        655038829
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige, grey or blue anywhere; the bill is yellow and the legs and feet black.",
+      "review": "approved"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "seed": 3876178159,
+      "dark": false,
+      "measure": {
+        "iou": 0.58,
+        "dE_mean": 31.5,
+        "dE_p95": 58.0,
+        "dL": -20.1,
+        "dC": 11.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0111,
+      "attempts": 1,
+      "sha256": "ed3ff5a3253a0aec260c8f48731d2b58b6a882db10eeaffdf6992b62199e011b",
+      "photos": [
+        616191590
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "A broad black stripe runs from above the eye to the back of the head and ends in thin black plumes; the forehead and face are white; the neck is pale grey with a streaked front; the back and wings are blue-grey; the thighs are chestnut; the bill is yellow. The crown stripe and plumes are black thread, not teal or bright blue.",
+      "review": "approved",
+      "rejected_seeds": [
+        2416900217
+      ],
+      "why": "crown stripe and plumes stitched teal-blue; they are black"
+    },
+    "ardea-ibis": {
+      "common_name": "Western Cattle Egret",
+      "seed": 305763641,
+      "dark": false,
+      "measure": {
+        "iou": 0.733,
+        "dE_mean": 27.5,
+        "dE_p95": 35.7,
+        "dL": 18.2,
+        "dC": 2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "556a0b348331d6b1c863eb55798abb07e46ad70d1d49796af898f494cd0c714d",
+      "photos": [
+        641605078
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The body, wings and neck are pure bright white thread, not grey or blue-grey; the crown, the back of the neck, the breast and the plumes on the back are warm orange-buff; the bill is orange-yellow and the legs dark. The badge's purple border is its outer edge: no cream cloth and no second pale border shows outside the purple cord.",
+      "review": "approved",
+      "rejected_seeds": [
+        4231525396,
+        2335229058
+      ],
+      "why": "maintainer: a white border stitch outside the cord; the border should be purple only"
+    },
+    "arenaria-interpres": {
+      "common_name": "Ruddy Turnstone",
+      "seed": 2470926024,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 14.8,
+        "dE_p95": 26.3,
+        "dL": 8.7,
+        "dC": -0.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4a560ff92753e6ef7cabff2ea006790730d98806d3906e2a6fd1a212b8bc9b91",
+      "photos": [
+        641511374
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "seed": 290503100,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 6.0,
+        "dE_p95": 12.5,
+        "dL": -4.2,
+        "dC": 1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "8a165779b439550b3724eff8945d58334c6be60c6dea6138d66d7f6b32f88eef",
+      "photos": [
+        588544362
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is orange-red, stitched in that colour with a small black centre, and not oversized. The cap is blackish, the back and wings slate blue-grey; the breast is barred rufous-orange and white.",
+      "review": "approved"
+    },
+    "aythya-affinis": {
+      "common_name": "Lesser Scaup",
+      "seed": 2902370273,
+      "dark": true,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 7.8,
+        "dE_p95": 19.0,
+        "dL": 4.0,
+        "dC": -2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "97a6a73906109f4230f929606bbeac3ab9d5596395c7c2ac6409b63e2db0a4da",
+      "photos": [
+        630230815
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "seed": 1459572080,
+      "dark": true,
+      "measure": {
+        "iou": 0.609,
+        "dE_mean": 25.9,
+        "dE_p95": 70.8,
+        "dL": 6.1,
+        "dC": 2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "864888fc5ab752000cce26ce009a8bc714e3351d4850752035bd5eb50f0a7c9b",
+      "photos": [
+        612480070
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head, neck, breast and back are glossy black, not brown; the sides are pale grey with a white wedge at the front; the bill is grey with a white ring and a black tip; the eye is yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved"
+    },
+    "baeolophus-bicolor": {
+      "common_name": "Tufted Titmouse",
+      "seed": 2570914920,
+      "dark": false,
+      "measure": {
+        "iou": 0.888,
+        "dE_mean": 15.5,
+        "dE_p95": 22.1,
+        "dL": -14.4,
+        "dC": 1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0173,
+      "attempts": 2,
+      "sha256": "c6bee56d8a743bc06585d45a4c6996e9630e0e48f1c743863d3ef63d946c67bf",
+      "photos": [
+        610554059
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "seed": 838968979,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 8.2,
+        "dE_p95": 15.8,
+        "dL": -0.6,
+        "dC": -0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "d6827cffe97bcab74b655c51f267658709ac298600156c0494b604a9e0bc9614",
+      "photos": [
+        461755692
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        1158059527
+      ],
+      "why": "maintainer: feet not touching branch"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "seed": 1964979902,
+      "dark": false,
+      "measure": {
+        "iou": 0.897,
+        "dE_mean": 11.1,
+        "dE_p95": 18.5,
+        "dL": -10.3,
+        "dC": -0.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "302ab5f3f0f0109313319e2f3a0b8dcb06c80266b2f478975c966f45fcd5b01f",
+      "photos": [
+        470380456
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "seed": 2424422586,
+      "dark": false,
+      "measure": {
+        "iou": 0.968,
+        "dE_mean": 6.6,
+        "dE_p95": 10.4,
+        "dL": -4.7,
+        "dC": 3.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c16411dc63ae1e2c5aee7b57197cd4cb6d3cf21d29a7547a07150a5319ac6438",
+      "photos": [
+        357036441
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eyes are yellow, stitched in yellow thread with a black centre; there is no dark line or outline around the edge of the bird.",
+      "review": "approved"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 2781849141,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 6.5,
+        "dE_p95": 17.3,
+        "dL": -3.0,
+        "dC": 0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.008,
+      "attempts": 1,
+      "sha256": "d6235a9b16f41f9a3363b565c2b56c3e6c40f468d2d4e0480f1a31a12d435fbf",
+      "photos": [
+        609960373
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "seed": 3852929519,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 13.4,
+        "dE_p95": 21.2,
+        "dL": -9.5,
+        "dC": 7.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "04299eda8fd5af56c89f96bbccbdba324e418b3511f247cbd5cc4d8fd47812d9",
+      "photos": [
+        619527804
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The breast and belly are rufous orange, barred with fine white bars; the shoulder of the folded wing is rufous; the wings and tail are black with bold white bars and checks; the head is brown-grey; the legs yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        195651779,
+        2091800661
+      ],
+      "why": "the wingtip crosses the border cord"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "seed": 3831698295,
+      "dark": false,
+      "measure": {
+        "iou": 0.799,
+        "dE_mean": 8.0,
+        "dE_p95": 16.4,
+        "dL": -0.9,
+        "dC": -2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b10a1fef63eb1f97b1efa3abe626ab447a58f2953f462eb14959ad086f0d1caf",
+      "photos": [
+        702322786
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "cairina-moschata": {
+      "common_name": "Muscovy Duck",
+      "seed": 3260931151,
+      "dark": true,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 6.8,
+        "dE_p95": 13.9,
+        "dL": 2.8,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "df25dd6d494791308749b538f17950daa4aad0fb52c3ba3606b8d3c13e8bc767",
+      "photos": [
+        489122120
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "calidris-alba": {
+      "common_name": "Sanderling",
+      "seed": 3411759209,
+      "dark": false,
+      "measure": {
+        "iou": 0.936,
+        "dE_mean": 12.2,
+        "dE_p95": 20.3,
+        "dL": 10.9,
+        "dC": 2.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "63b7a7a8e43549f8aba007449c69f6791e0eda9d6798c0ae7fe3f431cfc1373a",
+      "photos": [
+        656382740
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-alpina": {
+      "common_name": "Dunlin",
+      "seed": 608722262,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 15.7,
+        "dE_p95": 20.5,
+        "dL": -15.2,
+        "dC": 2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f7b56c21e23aff6c0600e6f7c98d39d121d2a59232d03cf1a7c423ed2e39aff9",
+      "photos": [
+        455593369
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "seed": 3420025539,
+      "dark": false,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 4.5,
+        "dE_p95": 8.8,
+        "dL": 1.4,
+        "dC": 2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b44fcc64f4ba72cf451407b4ef9d7933e957baea8accc5e7c375c18cb634d4e2",
+      "photos": [
+        656540009
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "caracara-plancus": {
+      "common_name": "Crested Caracara",
+      "seed": 542713131,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 11.9,
+        "dE_p95": 23.9,
+        "dL": -7.4,
+        "dC": -3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a02d8e82aa2f3f17a45ae371fdfd08509ab43bd11933d20900cf63f6dfb9c122",
+      "photos": [
+        646866803
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The throat, neck and upper breast are cream-white, the lower breast and upper back barred black and white; there is no blue or blue-grey thread on the neck, throat or breast; the cap is black; the bare face is orange-red; the body and wings are dark brown-black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1465783741
+      ],
+      "why": "an invented blue stripe down the neck and breast; the crest touches the cord"
+    },
+    "cardinalis-cardinalis": {
+      "common_name": "Northern Cardinal",
+      "seed": 3322302708,
+      "dark": false,
+      "measure": {
+        "iou": 0.698,
+        "dE_mean": 16.5,
+        "dE_p95": 33.5,
+        "dL": -7.6,
+        "dC": 9.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "97231faf7b9364935a3aa1d00551201ce8addd2a89de570c669f5a5d1c80e654",
+      "photos": [
+        619117852
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright scarlet red, crest, head, breast, belly, back, wings and tail, in true red thread, not orange, brown or rust; the wings and tail are only a slightly deeper red. A black mask surrounds the thick red-orange bill and covers the chin.",
+      "review": "approved",
+      "rejected_seeds": [
+        1594818889,
+        671625694,
+        2969657446
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "seed": 533574085,
+      "dark": true,
+      "measure": {
+        "iou": 0.921,
+        "dE_mean": 7.9,
+        "dE_p95": 18.1,
+        "dL": 2.5,
+        "dC": 1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "701cb330a508fc79bc9a2e3ab3140054ec57437f4a1fb2369044f63f7791262c",
+      "photos": [
+        605378822
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body and folded wings are dark blackish brown thread, with no white, cream or grey patches on the back or wings; the small bare head is red and the bill pale.",
+      "review": "approved"
+    },
+    "catharus-guttatus": {
+      "common_name": "Hermit Thrush",
+      "seed": 3168789225,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 13.9,
+        "dE_p95": 20.3,
+        "dL": -13.0,
+        "dC": 3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c06531f2b823387c81feda4bf7a90f0a43eafbcb31114cdd37c6886a31dcf9b2",
+      "photos": [
+        465410253
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        3419984511
+      ],
+      "why": "maintainer: feet are not on branch"
+    },
+    "charadrius-semipalmatus": {
+      "common_name": "Semipalmated Plover",
+      "seed": 1638091330,
+      "dark": false,
+      "measure": {
+        "iou": 0.902,
+        "dE_mean": 12.7,
+        "dE_p95": 19.7,
+        "dL": 4.7,
+        "dC": 1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2ba4a9355633b578f2d7b47006adb609392585bcb0f15410e0be70883f0fd74c",
+      "photos": [
+        618072151
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "seed": 821214033,
+      "dark": false,
+      "measure": {
+        "iou": 0.889,
+        "dE_mean": 9.2,
+        "dE_p95": 17.2,
+        "dL": 6.0,
+        "dC": 4.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bf97dc001a2f22625379ad32dc64d2e0fb55f42b8f9969418ec4775a1985ca70",
+      "photos": [
+        624320643
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The back and wings are earth brown, not purple or plum; the underparts are white, crossed by two black breast bands; the legs are pale.",
+      "review": "approved"
+    },
+    "chordeiles-minor": {
+      "common_name": "Common Nighthawk",
+      "seed": 3075947942,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 5.7,
+        "dE_p95": 13.5,
+        "dL": -2.6,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "eb2d30c9e7c50616120f60a9025b5b5bd17d0cee55bac6cc9be7f2f9e24de4e2",
+      "photos": [
+        38736417
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "seed": 1866199061,
+      "dark": false,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 8.4,
+        "dE_p95": 18.1,
+        "dL": -3.1,
+        "dC": -5.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fd27e405d20d250f1ceac83df09b915d60ab0517186ae3e317e6ec050eabac6b",
+      "photos": [
+        706802479
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "cistothorus-palustris": {
+      "common_name": "Marsh Wren",
+      "seed": 2439143949,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 6.6,
+        "dE_p95": 14.7,
+        "dL": -4.8,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7c13eef04e7afde3d3248548bffd8fd4b49a7aa9729137f00c28d1ec12146b23",
+      "photos": [
+        446550735
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "coccyzus-americanus": {
+      "common_name": "Yellow-billed Cuckoo",
+      "seed": 1559689714,
+      "dark": true,
+      "measure": {
+        "iou": 0.81,
+        "dE_mean": 25.3,
+        "dE_p95": 41.9,
+        "dL": 22.3,
+        "dC": 2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "d14c665911b6e17d18e249671418178820186944f02aaca5b20c2cb4e6a7cbb6",
+      "photos": [
+        642173669
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown, back and folded wings are plain grey-brown, not black, with rufous edges to the folded flight feathers; the underparts are clean white; the long tail is black underneath with large white spots; the lower half of the curved bill is yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3321866315,
+        3002636511,
+        737266023
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "seed": 809796411,
+      "dark": false,
+      "measure": {
+        "iou": 0.859,
+        "dE_mean": 9.3,
+        "dE_p95": 17.4,
+        "dL": -8.3,
+        "dC": 2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "feedfb74421b7878bbb0bb3017b1f76846b5ddc912bb1c6748554c204fde9357",
+      "photos": [
+        150151643
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "seed": 2308119461,
+      "dark": false,
+      "measure": {
+        "iou": 0.889,
+        "dE_mean": 9.2,
+        "dE_p95": 15.9,
+        "dL": -6.0,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "379bd7fcf45693b99b561838b10d4861b230ec7f90f8636f9520a12c223e427d",
+      "photos": [
+        457476983
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is orange-red and small, stitched in orange-red thread with a small black centre, not a black eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        4271123251
+      ],
+      "why": "eye black; it is small and orange-red"
+    },
+    "columbina-inca": {
+      "common_name": "Inca Dove",
+      "seed": 79060555,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 13.0,
+        "dE_p95": 21.3,
+        "dL": -8.2,
+        "dC": -7.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "690107f1bec7049e56116827f5a843b5adb569d3e87318ec6a8b36e8e5d6807b",
+      "photos": [
+        446589348
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is soft grey-brown, scaled all over with fine dark edges to the feathers, not blue; the eye is red and small.",
+      "review": "approved"
+    },
+    "contopus-virens": {
+      "common_name": "Eastern Wood Pewee",
+      "seed": 2454895265,
+      "dark": false,
+      "measure": {
+        "iou": 0.824,
+        "dE_mean": 9.5,
+        "dE_p95": 15.2,
+        "dL": -8.3,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "caaf0fd5b99b0eb35cbacefe6b0f72ff0530ae3d4672f60285f7d7219138e16a",
+      "photos": [
+        653846222
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "coragyps-atratus": {
+      "common_name": "Black Vulture",
+      "seed": 1596937106,
+      "dark": false,
+      "measure": {
+        "iou": 0.665,
+        "dE_mean": 40.4,
+        "dE_p95": 76.6,
+        "dL": 38.3,
+        "dC": 10.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6f90b25f41f81febd2857b39c0bb24359830cc5a5c1c18a8aa968f22d3ff7f89",
+      "photos": [
+        407995464
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The body, wings and tail are black, in matte black thread with no white, grey or pale thread on them: no pale fringe, bar or feather edge on the folded wing; the feathers are told apart only by the direction of the black stitches. The bare wrinkled head and neck are dark grey; the legs pale grey.",
+      "review": "approved",
+      "rejected_seeds": [
+        673735428
+      ],
+      "why": "pale grey fringes along the folded wing (sheen turned grey) despite dark_clause false"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "seed": 2010730551,
+      "dark": false,
+      "measure": {
+        "iou": 0.948,
+        "dE_mean": 7.1,
+        "dE_p95": 12.3,
+        "dL": -2.5,
+        "dC": -4.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6c214cb8473bc90ebca4265770e02257352ec012b54690b551fd54282e4f6031",
+      "photos": [
+        471091723
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 575105542,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 14.0,
+        "dE_p95": 22.5,
+        "dL": -13.0,
+        "dC": -4.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3e1011078fe9b30b5118439f034dfd912e8e2af37d93ad9f6787fa94a32f2edc",
+      "photos": [
+        369787719
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The feathers are told apart only by the direction of the black stitches.",
+      "review": "approved"
+    },
+    "corvus-ossifragus": {
+      "common_name": "Fish Crow",
+      "seed": 1033544924,
+      "dark": false,
+      "measure": {
+        "iou": 0.838,
+        "dE_mean": 7.6,
+        "dE_p95": 13.5,
+        "dL": 6.3,
+        "dC": -0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "c808e57fb0dab886d922b062bbb6fa79d319af343446edac19de4d3923c52199",
+      "photos": [
+        273292707
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The feathers are told apart only by the direction of the black stitches.",
+      "review": "approved"
+    },
+    "cyanocitta-cristata": {
+      "common_name": "Blue Jay",
+      "seed": 3441610497,
+      "dark": false,
+      "measure": {
+        "iou": 0.903,
+        "dE_mean": 16.1,
+        "dE_p95": 24.8,
+        "dL": -1.4,
+        "dC": -9.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0042,
+      "attempts": 1,
+      "sha256": "4bb125a0510358c45cab131c6139b1f5b76e8cfd4d8f3de09cde9f0ef650a6b9",
+      "photos": [
+        677470607
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "cygnus-olor": {
+      "common_name": "Mute Swan",
+      "seed": 530414488,
+      "dark": false,
+      "measure": {
+        "iou": 0.504,
+        "dE_mean": 37.1,
+        "dE_p95": 64.2,
+        "dL": -34.2,
+        "dC": 5.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "68cae834835005ddff31b6c5a99b5a0b9f585bfad613557e9db628478334a117",
+      "photos": [
+        247273732
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is pure bright white thread, with no cream or grey; the bill is orange with a black knob at its base.",
+      "review": "approved"
+    },
+    "dendrocygna-autumnalis": {
+      "common_name": "Black-bellied Whistling Duck",
+      "seed": 2808592948,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 21.8,
+        "dE_p95": 32.3,
+        "dL": -19.6,
+        "dC": -4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d002f5207680da2f7d8895b4d8204bb215aa4c65a892d1c3488ad697ed5f47da",
+      "photos": [
+        677470577
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The face and upper neck are pale grey with a white eye-ring; the crown, the back of the neck, the breast and the back are rich chestnut; the belly and flanks are black; a broad white stripe runs along the folded wing; the bill is bright coral pink and the legs pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        3495987874
+      ],
+      "why": "head and neck pale beige-cream; the face is grey with a white eye-ring and the crown and neck chestnut"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "seed": 526815213,
+      "dark": false,
+      "measure": {
+        "iou": 0.678,
+        "dE_mean": 16.4,
+        "dE_p95": 32.3,
+        "dL": 2.0,
+        "dC": 4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7e3afb69ecf2edf8f8ffca4d5904967f27b44bafe6447f18d86dba0947e5b798",
+      "photos": [
+        648160028
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        1751236476
+      ],
+      "why": "maintainer: backwards; the tree needs to be on the other side"
+    },
+    "dryocopus-pileatus": {
+      "common_name": "Pileated Woodpecker",
+      "seed": 2358183816,
+      "dark": false,
+      "measure": {
+        "iou": 0.84,
+        "dE_mean": 10.4,
+        "dE_p95": 23.7,
+        "dL": -8.5,
+        "dC": -2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6b45aadc2d99da4e8a55c1cc9c6e6a1feee381960b59737fcacad62701888225",
+      "photos": [
+        370893062
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The body, wings and tail are black all over, the breast and belly as black as the back; white shows only as one stripe running from the bill down the side of the neck, and a small white spot on the wing; the crest is bright red. The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        1652647588,
+        361125427
+      ],
+      "why": "the breast and belly came out white with black stripes; the bird is black all over"
+    },
+    "dumetella-carolinensis": {
+      "common_name": "Grey Catbird",
+      "seed": 941046470,
+      "dark": false,
+      "measure": {
+        "iou": 0.764,
+        "dE_mean": 6.9,
+        "dE_p95": 15.2,
+        "dL": -1.2,
+        "dC": -1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "ecea4df2912680614cd95856d5509f383ed93840660d8572f475e47c52f80978",
+      "photos": [
+        586216354
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is slate grey, with a black cap on the crown and a black tail; the feathers under the tail are rich rufous chestnut.",
+      "review": "approved",
+      "rejected_seeds": [
+        1326451283
+      ],
+      "why": "no black cap and no rufous undertail"
+    },
+    "egretta-caerulea": {
+      "common_name": "Little Blue Heron",
+      "seed": 2629328327,
+      "dark": false,
+      "measure": {
+        "iou": 0.86,
+        "dE_mean": 11.7,
+        "dE_p95": 20.6,
+        "dL": -8.4,
+        "dC": -4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "00ded613feb37fb440511e955c98931ef64e54be9e72f8fea7f2dfc3f6ef77df",
+      "photos": [
+        613300116
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body, wings and tail are dark slate blue; the head and neck are maroon-purple; the bill is pale blue-grey with a black tip; the legs are dark greenish grey. There is no gold, brown or orange thread on the bird.",
+      "review": "approved"
+    },
+    "egretta-rufescens": {
+      "common_name": "Reddish Egret",
+      "seed": 3206123846,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 7.7,
+        "dE_p95": 14.4,
+        "dL": -6.4,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d96e3a098fe9485868b3d2668055c92e0ceef44a482ad2c9f689e55bf484161b",
+      "photos": [
+        56071987
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "seed": 1567255528,
+      "dark": false,
+      "measure": {
+        "iou": 0.745,
+        "dE_mean": 10.1,
+        "dE_p95": 17.0,
+        "dL": 6.7,
+        "dC": -1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "02ae54dbd227631c743e531c4f8381d2c43d7fa3de43c16a6705c8e3c2231a79",
+      "photos": [
+        625694117
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The whole bird is pure bright white; the bill and legs are black, the bare skin in front of the eye and the feet bright yellow.",
+      "review": "approved"
+    },
+    "egretta-tricolor": {
+      "common_name": "Tricolored Heron",
+      "seed": 1749963483,
+      "dark": false,
+      "measure": {
+        "iou": 0.942,
+        "dE_mean": 6.2,
+        "dE_p95": 11.6,
+        "dL": -4.6,
+        "dC": -1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "891a6fe53cfc92148396389d47b30a10b481841d8ecdb7b927cc79136bf10d1c",
+      "photos": [
+        610492914
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "elanoides-forficatus": {
+      "common_name": "Swallow-tailed Kite",
+      "seed": 1158582879,
+      "dark": false,
+      "measure": {
+        "iou": 0.839,
+        "dE_mean": 21.7,
+        "dE_p95": 40.4,
+        "dL": 8.2,
+        "dC": -8.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c7018cc20bb106c80a2f50966cd8eac9933fd9ea26c8e3270bdb658868a32dc7",
+      "photos": [
+        736988322
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The head, neck, breast, belly and the lining of the wings are pure bright white, with no cream or beige; the back, upper wings and the long deeply forked tail are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        839492297
+      ],
+      "why": "white head and body stitched cream"
+    },
+    "empidonax-virescens": {
+      "common_name": "Acadian Flycatcher",
+      "seed": 1180097661,
+      "dark": false,
+      "measure": {
+        "iou": 0.61,
+        "dE_mean": 35.1,
+        "dE_p95": 57.2,
+        "dL": -10.4,
+        "dC": 7.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0035,
+      "attempts": 1,
+      "sha256": "344087fe587cdf45f8a98b068de7c6880f0810ee73b14ef00ff862a36a2117d3",
+      "photos": [
+        575230303
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The back, head and wings are olive green, not blue or grey-blue; the wings carry two buff-white wing bars; a thin white ring circles the eye; the throat is whitish and the belly pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        2824387922,
+        3747581384
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "eudocimus-albus": {
+      "common_name": "American White Ibis",
+      "seed": 647284979,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 6.2,
+        "dE_p95": 11.5,
+        "dL": -1.3,
+        "dC": -3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6cd4799b45419f47cf5fc7486c4b34c320ca8a9afc04925f28aed22d58d99b31",
+      "photos": [
+        676147474
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole body, neck and wings are pure bright white thread, with no cream, beige or grey anywhere; the tips of the folded wings show a little black. The bare face and the long down-curved bill are pinkish red, and the legs pinkish red. The eye is pale blue, stitched in pale blue thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        1368651877
+      ],
+      "why": "body stitched cream-beige, not pure white; eye dark red, not pale blue"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "seed": 2257815615,
+      "dark": false,
+      "measure": {
+        "iou": 0.868,
+        "dE_mean": 14.8,
+        "dE_p95": 27.7,
+        "dL": 6.8,
+        "dC": 5.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "ab263019d4e344d3fcdb69fa1b4bf40f5088140ff565d13c4c96c8f3f4c2604e",
+      "photos": [
+        594205826
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "fregata-magnificens": {
+      "common_name": "Magnificent Frigatebird",
+      "seed": 13984999,
+      "dark": false,
+      "measure": {
+        "iou": 0.597,
+        "dE_mean": 37.8,
+        "dE_p95": 67.3,
+        "dL": 33.5,
+        "dC": 11.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f489ab1f463b69e35022daf184af7cf50d7759a61044e8a59afa2b589c5bce38",
+      "photos": [
+        252332775
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The whole bird is black, long wings, body and deeply forked tail, in matte black thread with no white, grey or pale thread anywhere on it: no pale bar, stripe, patch or feather edge on the wings; only a small patch of red skin shows on the throat.",
+      "review": "approved",
+      "rejected_seeds": [
+        2010272881
+      ],
+      "why": "a white stripe the length of the wing on an all-black bird"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "seed": 3727709479,
+      "dark": false,
+      "measure": {
+        "iou": 0.823,
+        "dE_mean": 26.2,
+        "dE_p95": 37.6,
+        "dL": -20.3,
+        "dC": -9.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d29ed87f702f6a7dcb463c2a31640d68d42cd249c6d8dff228ef75032113258f",
+      "photos": [
+        485747292
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the bill is white and the eye is red; the body, wings and tail are plain dark slate grey, with no white or pale patches; there is no blue thread anywhere on the bird, the tail too is dark grey.",
+      "review": "approved",
+      "rejected_seeds": [
+        2838980017
+      ],
+      "why": "a bright blue tuft stitched at the tail, from the reference's blue cast"
+    },
+    "gallinago-delicata": {
+      "common_name": "Wilson's Snipe",
+      "seed": 1945491590,
+      "dark": false,
+      "measure": {
+        "iou": 0.843,
+        "dE_mean": 6.0,
+        "dE_p95": 15.2,
+        "dL": -3.2,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "eb5045e52afde09fc2f458169d12f9628279716ef831f63e7b6b7efefa05367f",
+      "photos": [
+        466151312
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "gallinula-galeata": {
+      "common_name": "Common Gallinule",
+      "seed": 2696629906,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 8.0,
+        "dE_p95": 15.6,
+        "dL": 2.2,
+        "dC": 3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "90b688790e5ec1309c319812f800943f4149476677954d16bfc0837d77bc7160",
+      "photos": [
+        670272633
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "geothlypis-formosa": {
+      "common_name": "Kentucky Warbler",
+      "seed": 4029348848,
+      "dark": false,
+      "measure": {
+        "iou": 0.867,
+        "dE_mean": 10.4,
+        "dE_p95": 20.0,
+        "dL": 2.5,
+        "dC": 0.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "c5742ac8ebe54d4a3195451c464335e19d4c107104d0fc0b6087505b736c78a4",
+      "photos": [
+        489214388
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The underparts from throat to tail are bright lemon yellow, in clear yellow thread, not mustard or ochre; yellow spectacles run from the bill around the eye; the crown and a sideburn below the eye are black; the back, wings and tail are olive green; the legs pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        2267925369
+      ],
+      "why": "yellow stitched mustard"
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "seed": 1997339383,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 10.0,
+        "dE_p95": 19.1,
+        "dL": -6.6,
+        "dC": -3.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "607dc7ec24bd6020d55ee6ac69ba08014fdf50acee26e91df9280f4a51c2050f",
+      "photos": [
+        745656937
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "seed": 4188318241,
+      "dark": false,
+      "measure": {
+        "iou": 0.953,
+        "dE_mean": 9.1,
+        "dE_p95": 17.3,
+        "dL": -8.0,
+        "dC": -0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c84d590cfb0f864d5e09c6c5238a29f25f125d83a432d0d79529fe74b8719403",
+      "photos": [
+        508410504
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "haliaeetus-leucocephalus": {
+      "common_name": "Bald Eagle",
+      "seed": 372589865,
+      "dark": true,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 5.3,
+        "dE_p95": 12.8,
+        "dL": 1.6,
+        "dC": 1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d9e3477a2e80d428ed0b4e5e5a4a7556c71a3f69056a5f7aa6a32dce65ff7859",
+      "photos": [
+        608252163
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The head and the fanned tail are pure white; the body and the whole of both wings, out to the tips of the long flight feathers, are dark chocolate brown with no pale or white patches; the bill and the feet are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        4283883549,
+        2287063178,
+        291012914,
+        1717547431,
+        4164625415,
+        2403079316
+      ],
+      "why": "maintainer: feet not on branch"
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "seed": 3879466688,
+      "dark": false,
+      "measure": {
+        "iou": 0.733,
+        "dE_mean": 7.9,
+        "dE_p95": 17.5,
+        "dL": -4.2,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0077,
+      "attempts": 1,
+      "sha256": "1b531f6756cd88e1471bb39072cb01d8337f8af80e95bdef1b8ee7dc36f1ac2f",
+      "photos": [
+        652771107
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The neck, breast, belly and the spot over the eye are pure bright white, not cream or beige; the back of the head, the back of the neck and the wings are glossy black; the long legs are bright pink-red.",
+      "review": "approved",
+      "rejected_seeds": [
+        2419902038
+      ],
+      "why": "white neck and belly stitched cream; they are pure white"
+    },
+    "hirundo-rustica": {
+      "common_name": "Barn Swallow",
+      "seed": 1573132058,
+      "dark": false,
+      "measure": {
+        "iou": 0.848,
+        "dE_mean": 6.6,
+        "dE_p95": 15.4,
+        "dL": 2.3,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ca703b1d70a0dbfbf415c7733bd0f46a1627648f9d1d72eedaed7ae551f67849",
+      "photos": [
+        628062230
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "seed": 1183625602,
+      "dark": false,
+      "measure": {
+        "iou": 0.793,
+        "dE_mean": 5.9,
+        "dE_p95": 12.3,
+        "dL": 1.5,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "21283787d359163e5274a65a7f51f6f562858dd5a2c1ddf4c8193b336e50181b",
+      "photos": [
+        644053594
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The neck, breast and belly are pure bright white and the back and folded wings pale silver grey, with no cream, beige or brown thread; the cap is black; the large thick bill is red with a dark tip; the legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        831226132
+      ],
+      "why": "body stitched cream-beige; it is white and pale grey"
+    },
+    "icterus-spurius": {
+      "common_name": "Orchard Oriole",
+      "seed": 699037524,
+      "dark": true,
+      "measure": {
+        "iou": 0.864,
+        "dE_mean": 12.9,
+        "dE_p95": 24.5,
+        "dL": 8.6,
+        "dC": -1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "c3e79f9112274603e6a64d76801541613a3747b53b81d12df8c2ed12ad35bd61",
+      "photos": [
+        641447405
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "ictinia-mississippiensis": {
+      "common_name": "Mississippi Kite",
+      "seed": 1432896017,
+      "dark": false,
+      "measure": {
+        "iou": 0.776,
+        "dE_mean": 21.3,
+        "dE_p95": 30.6,
+        "dL": -18.3,
+        "dC": -0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "7e489b2af2d311d48cd5bb3d2ce5749cc646d5f51bff9eabb6668e1c988f77ae",
+      "photos": [
+        547047883
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is red and small, stitched in red thread with a small black centre, inside a small black mask around the eye; it is not a large black eye. The head is pale grey-white, the body grey and the wings darker grey.",
+      "review": "approved",
+      "rejected_seeds": [
+        3144033084,
+        3428914092
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "lanius-ludovicianus": {
+      "common_name": "Loggerhead Shrike",
+      "seed": 4155664158,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 10.9,
+        "dE_p95": 16.9,
+        "dL": 2.7,
+        "dC": -1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9a1941751976945c6f30732e1263f41390b463e022a5f0bf18ed40a277c5cea7",
+      "photos": [
+        465414689
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, back and rump are pale grey; a broad black mask runs through the eye; the wings are black with a white patch; the tail is black with white edges; the underparts are white, with no blue tint.",
+      "review": "approved",
+      "rejected_seeds": [
+        2159368072
+      ],
+      "why": "bottom-right corner peeled up into a white curl and the tail crosses the cord; breast tinted blue"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "seed": 2448333175,
+      "dark": false,
+      "measure": {
+        "iou": 0.552,
+        "dE_mean": 26.7,
+        "dE_p95": 45.7,
+        "dL": -13.3,
+        "dC": 1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0147,
+      "attempts": 1,
+      "sha256": "11d1167421156b3429d8721c485b5d870bb6282dd89ba459b05cccd4cf752985",
+      "photos": [
+        612572877
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "larus-smithsonianus": {
+      "common_name": "American Herring Gull",
+      "seed": 4135304069,
+      "dark": false,
+      "measure": {
+        "iou": 0.887,
+        "dE_mean": 12.7,
+        "dE_p95": 24.1,
+        "dL": -11.0,
+        "dC": 5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "82e8e9bde4b5339b7b8e91ed4bd0b569ca0c9a7d1abf0e1feea35929170df12d",
+      "photos": [
+        343866367
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "seed": 795378653,
+      "dark": false,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 12.9,
+        "dE_p95": 22.5,
+        "dL": -8.6,
+        "dC": -4.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "738ac49295364bfc9424c007ca0509ba0f6e365a9f8acf4c8a93cf8f4dc2c40b",
+      "photos": [
+        466138541
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is olive green, yellower below, in olive-green and olive-yellow thread, not tan, beige or brown; faint blurred streaks on the breast; a thin yellowish arc around the eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        1483715404
+      ],
+      "why": "bottom-left corner peeled into a white curl; olive-yellow stitched drab tan"
+    },
+    "leiothlypis-peregrina": {
+      "common_name": "Tennessee Warbler",
+      "seed": 2704807859,
+      "dark": false,
+      "measure": {
+        "iou": 0.909,
+        "dE_mean": 10.9,
+        "dE_p95": 15.2,
+        "dL": 2.4,
+        "dC": -5.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0364c58eca310b6cd69a3cf35fe61b8bcf8d03466a5ebfd75723f5e4f887dccc",
+      "photos": [
+        439840049
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "leucophaeus-atricilla": {
+      "common_name": "Laughing Gull",
+      "seed": 720947772,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 15.1,
+        "dE_p95": 23.9,
+        "dL": -1.8,
+        "dC": -0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b95e3fb382408e075c24550281a30178c7dd9b5e45ffe3903945ab35845670e5",
+      "photos": [
+        634503202
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The head is a black hood with thin white crescents above and below the eye; the bill is dark red; the neck, breast, belly and tail are pure bright white, not cream; the back and folded wings are dark slate grey with black wingtips; the legs are dark red-black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1577056938
+      ],
+      "why": "face-on bird with its body stitched cream; the white parts are pure white (no side-on breeding adult alone in the cached pool)"
+    },
+    "limnothlypis-swainsonii": {
+      "common_name": "Swainson's Warbler",
+      "seed": 2356650974,
+      "dark": false,
+      "measure": {
+        "iou": 0.578,
+        "dE_mean": 20.2,
+        "dE_p95": 40.9,
+        "dL": 6.4,
+        "dC": -7.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "4907f22fc78b5b1dfedd120327734fb7a08eb7e43dd945a50c4d7cc49382c272",
+      "photos": [
+        490347838
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "seed": 1675610576,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 8.0,
+        "dE_p95": 16.6,
+        "dL": 3.9,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5825a07bc408068db0f31e4d1578e7ce66ef3338a8772ef525478feceeeffcd7",
+      "photos": [
+        609961692
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, shaggy crest, back and wings are slate blue-grey; a white collar circles the neck and the throat is white; a slate-blue band crosses the breast with a rufous band below it; the belly is white; the eye is small and dark; the long dagger bill is black.",
+      "review": "approved"
+    },
+    "megascops-asio": {
+      "common_name": "Eastern Screech Owl",
+      "seed": 2168807011,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 17.5,
+        "dE_p95": 26.6,
+        "dL": 15.1,
+        "dC": 5.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "13443cce69e5be83231c412d79cb11ea3c4833177cb56edf33bf96271e8b4886",
+      "photos": [
+        40712121
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The face is plain grey with a thin dark rim around the facial disc and no black stripe down the middle of the face; two short ear tufts of equal size stand on the head, with nothing on them but feathers; the body is grey with fine dark streaks and bars; the eyes are bright yellow, stitched in yellow thread with a black centre; the bill is pale greenish.",
+      "review": "approved",
+      "rejected_seeds": [
+        1867202383,
+        407637977
+      ],
+      "why": "a broad band of bare twill outside the cord, and a black stripe down the face"
+    },
+    "melanerpes-carolinus": {
+      "common_name": "Red-bellied Woodpecker",
+      "seed": 1175960116,
+      "dark": true,
+      "measure": {
+        "iou": 0.962,
+        "dE_mean": 5.7,
+        "dE_p95": 12.0,
+        "dL": 1.0,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a51742b63c91bf23f4507f972634db6ee0d855b9f49c4eb7b201d5f3d3aa38c6",
+      "photos": [
+        636107994
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "melanerpes-erythrocephalus": {
+      "common_name": "Red-headed Woodpecker",
+      "seed": 3565744078,
+      "dark": false,
+      "measure": {
+        "iou": 0.788,
+        "dE_mean": 28.5,
+        "dE_p95": 66.2,
+        "dL": 7.1,
+        "dC": -5.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7023c05b689a435fe793853408614fbb18b8ede5716adbeb5e65ddae49bad0dc",
+      "photos": [
+        270844659
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "melospiza-georgiana": {
+      "common_name": "Swamp Sparrow",
+      "seed": 3045014480,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 3.7,
+        "dE_p95": 8.4,
+        "dL": -2.3,
+        "dC": 1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "811701574845e1098c383d1aea7684daa8ca7c50eb110ede6c8e1723b5f4aeb1",
+      "photos": [
+        465410051
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "seed": 2911726983,
+      "dark": false,
+      "measure": {
+        "iou": 0.857,
+        "dE_mean": 8.4,
+        "dE_p95": 16.9,
+        "dL": 0.2,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "118b10ee655ab7ea1a697d35f394d4aba853df8ea7b03319cfb0746b491ad350",
+      "photos": [
+        624711194
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is pale yellow and small, stitched in pale yellow thread with a small black centre, not a large black eye. The upperparts are plain grey, the underparts pale grey-white, and the blackish wings carry two white wing bars and a white patch.",
+      "review": "approved",
+      "rejected_seeds": [
+        3666500882
+      ],
+      "why": "eye large and black; it is small and pale yellow"
+    },
+    "mniotilta-varia": {
+      "common_name": "Black-and-white Warbler",
+      "seed": 3833061792,
+      "dark": false,
+      "measure": {
+        "iou": 0.855,
+        "dE_mean": 11.3,
+        "dE_p95": 20.0,
+        "dL": 6.5,
+        "dC": -0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fd18b9783892e11a980ebbc7e334a4f789e222e0b7f96b0dade38a4a315a324a",
+      "photos": [
+        651642897
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "seed": 2779898651,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 17.7,
+        "dE_p95": 29.4,
+        "dL": -16.5,
+        "dC": -1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ba111d9f654243d3745676bf9c43eb3e3d4f672f81e1f388b20357095fa7b34b",
+      "photos": [
+        651029610
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and neck are chocolate brown. The rest of the bird, its back, shoulder, folded wing, belly and tail, is black, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge.",
+      "review": "approved"
+    },
+    "myiarchus-crinitus": {
+      "common_name": "Great Crested Flycatcher",
+      "seed": 99599755,
+      "dark": false,
+      "measure": {
+        "iou": 0.891,
+        "dE_mean": 12.3,
+        "dE_p95": 19.0,
+        "dL": -8.9,
+        "dC": 4.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0038,
+      "attempts": 3,
+      "sha256": "b6c50a407108b71b7814fa092da6129d01876e76e9dfbbbc63d8d6fbd1e7219b",
+      "photos": [
+        429123888
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3957433510,
+        2632356916
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "seed": 982222311,
+      "dark": false,
+      "measure": {
+        "iou": 0.631,
+        "dE_mean": 13.3,
+        "dE_p95": 36.4,
+        "dL": -6.9,
+        "dC": -3.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f30c92ad0a59c205c76f0b2ad0dc04aebbe946ce2340f2cb5f5727b90ffdd755",
+      "photos": [
+        624332033
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black, head, neck, breast, belly, back and wings, in matte black thread with no white, grey, blue, gold or pale thread anywhere on it: no pale patch, bar, streak, stripe or feather edge. The only colour is a small patch of bare orange-yellow skin at the base of the bill and on the chin; there is no orange stripe down the neck and the breast is black, not bronze.",
+      "review": "approved",
+      "rejected_seeds": [
+        1301067121
+      ],
+      "why": "orange runs down the neck as a stripe and the breast is bronze-gold; only the skin at the bill base is orange"
+    },
+    "nannopterum-brasilianum": {
+      "common_name": "Neotropic Cormorant",
+      "seed": 3991805432,
+      "dark": false,
+      "measure": {
+        "iou": 0.848,
+        "dE_mean": 10.6,
+        "dE_p95": 22.3,
+        "dL": -6.9,
+        "dC": 1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "6212e25f6ca5ab193266fc5d6cab6930d2f43fb3f790a2b924f4251e68760c1b",
+      "photos": [
+        455596541
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black with only a faint bronze sheen on the back and wings, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. Only the small bare throat patch is dull yellow-brown.",
+      "review": "approved"
+    },
+    "nyctanassa-violacea": {
+      "common_name": "Yellow-crowned Night Heron",
+      "seed": 3006487474,
+      "dark": false,
+      "measure": {
+        "iou": 0.87,
+        "dE_mean": 14.4,
+        "dE_p95": 22.3,
+        "dL": -13.2,
+        "dC": 2.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "31b7774a69b8ad9ca0bfc7971eefcd3e5a628b096a3581c5d3d761b769d4edb8",
+      "photos": [
+        677313722
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body is smooth grey with black-centred scaled feathers on the back and wings; the face is black with a white cheek patch and a pale crown; the eye is orange-red, stitched in that colour with a small black centre.",
+      "review": "approved"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "seed": 3888350573,
+      "dark": true,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 27.6,
+        "dE_p95": 54.2,
+        "dL": 24.7,
+        "dC": -1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1e5c81adfaaa64927d06680c7c60559ccb9db013756464c522909585b25d3a97",
+      "photos": [
+        309736038
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The eye is red, stitched in red thread with a small black centre.",
+      "review": "approved"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "seed": 3120979303,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 9.3,
+        "dE_p95": 15.5,
+        "dL": 7.3,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9d225775a35edf11cd3612c222c9d73b1f23b741c73bf08791ea981202be2462",
+      "photos": [
+        641333232
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "seed": 492820938,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 6.0,
+        "dE_p95": 11.2,
+        "dL": -1.7,
+        "dC": 3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "78bf491195527c6c2b1856930149b737cfd377b52dd997c24917dcc7aa3d527c",
+      "photos": [
+        611328492
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "seed": 2180294823,
+      "dark": false,
+      "measure": {
+        "iou": 0.846,
+        "dE_mean": 7.7,
+        "dE_p95": 14.7,
+        "dL": 2.6,
+        "dC": -0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0219043369fe8ac346934450a3774f26a18f93bc23e76d529962e038f51bcc39",
+      "photos": [
+        650241324
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerina-caerulea": {
+      "common_name": "Blue Grosbeak",
+      "seed": 2021250709,
+      "dark": false,
+      "measure": {
+        "iou": 0.877,
+        "dE_mean": 6.9,
+        "dE_p95": 12.3,
+        "dL": -3.4,
+        "dC": -1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7d00655dd8829cd80b6e33b23eb55b60ba6803803b6c7a54c2f19f21ad0fa035",
+      "photos": [
+        674277451
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerina-ciris": {
+      "common_name": "Painted Bunting",
+      "seed": 1613831591,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 27.0,
+        "dE_p95": 54.4,
+        "dL": -21.1,
+        "dC": 3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0113,
+      "attempts": 1,
+      "sha256": "7e4dd8dc550b0e38c0720676dc07c592bc9ba2e928a17b679d8e10615e3fdbe1",
+      "photos": [
+        663178360
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head is deep blue with a red eye-ring; the back is bright yellow-green; the throat, breast, belly and rump are bright red, in true red thread, not orange.",
+      "review": "approved",
+      "rejected_seeds": [
+        389426482
+      ],
+      "why": "red underparts stitched orange"
+    },
+    "passerina-cyanea": {
+      "common_name": "Indigo Bunting",
+      "seed": 356040931,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 33.8,
+        "dE_p95": 46.8,
+        "dL": -26.1,
+        "dC": 0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d958f11c0d89db1c573ec10bff14d32cdcb227c28330c0d87ba814bec3610905",
+      "photos": [
+        547684975
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is deep indigo blue, darkest on the head, in deep blue thread, not cyan, turquoise or teal; the wing and tail feathers have black centres. The bird sits on a branch that passes directly under its body; both feet are closed around that branch. The bird is small in the frame: its tail tip ends well inside the border, clear of the cord.",
+      "review": "approved",
+      "rejected_seeds": [
+        2338084161,
+        4233848278,
+        1699886188,
+        307561722,
+        2352058715,
+        4214661584,
+        1648357495
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "seed": 1437335744,
+      "dark": false,
+      "measure": {
+        "iou": 0.876,
+        "dE_mean": 9.8,
+        "dE_p95": 20.9,
+        "dL": 4.3,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9dfcf864146af60d7d3d385b3467943656b33a66e64f471b3c656947023d3584",
+      "photos": [
+        619381821
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange.",
+      "review": "approved"
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "seed": 1636687652,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 9.7,
+        "dE_p95": 18.4,
+        "dL": 2.2,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0035,
+      "attempts": 1,
+      "sha256": "b8019b6da14f04f0a2dfc7b490545a2b6c4d7d6a9b0c2a9c288b8b4465e55b3c",
+      "photos": [
+        706760482
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "pheucticus-ludovicianus": {
+      "common_name": "Rose-breasted Grosbeak",
+      "seed": 3337415136,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 20.8,
+        "dE_p95": 41.7,
+        "dL": 15.0,
+        "dC": -6.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0116,
+      "attempts": 1,
+      "sha256": "64a5bf78d7df004320cd775862357c77b5690f662371e216bdc8fcfa63430aa2",
+      "photos": [
+        489000673
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, back, wings and tail are black, with white patches on the wings; a rose-red triangle covers the middle of the breast; the belly and sides are white; the thick bill is pale.",
+      "review": "approved"
+    },
+    "piranga-olivacea": {
+      "common_name": "Scarlet Tanager",
+      "seed": 1967104772,
+      "dark": false,
+      "measure": {
+        "iou": 0.641,
+        "dE_mean": 21.8,
+        "dE_p95": 58.4,
+        "dL": -4.7,
+        "dC": -16.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "fe5198d78d1c11ae2c81b8ce51c76553fe3609424c6a790c81d9384622393c73",
+      "photos": [
+        488996036
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and body are bright scarlet red; the wings and tail are plain black. The bird is small in the frame: its tail tip ends well inside the border, clear of the cord.",
+      "review": "approved",
+      "rejected_seeds": [
+        3948623520,
+        2623276599,
+        89479054,
+        1918002972,
+        3963024059,
+        2603729456,
+        37262229
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "piranga-rubra": {
+      "common_name": "Summer Tanager",
+      "seed": 58586202,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 15.5,
+        "dE_p95": 29.7,
+        "dL": 6.8,
+        "dC": -3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "f618db2c16c5affed45ff55e16d9f87e208c69d972d053d4d051dc3ba4887781",
+      "photos": [
+        642435577
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is rose red, head, body, wings and tail, in true red thread, not salmon, coral, orange or maroon; the wings are only slightly deeper red; the bill is pale.",
+      "review": "approved",
+      "rejected_seeds": [
+        2591335908,
+        3983775094,
+        1954202832
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "platalea-ajaja": {
+      "common_name": "Roseate Spoonbill",
+      "seed": 2763840873,
+      "dark": false,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 21.1,
+        "dE_p95": 32.4,
+        "dL": -16.3,
+        "dC": 10.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8366240848e673c8519f71c12140e804a54dc754422fe5e3cefa4b5025e8c0f5",
+      "photos": [
+        466402612
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The wings, back and belly are bright rose pink, with a deep red patch on the shoulder; the neck and upper breast are white; the bare head is greenish; the long flat spoon-tipped bill is grey; the legs are dark pinkish red. The pink is strong and clear, not cream, peach or orange.",
+      "review": "approved",
+      "rejected_seeds": [
+        3552308735
+      ],
+      "why": "pink lost: body and wings cream with a faint blush; the bird is bright rose pink"
+    },
+    "plegadis-chihi": {
+      "common_name": "White-faced Ibis",
+      "seed": 2069932884,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 14.0,
+        "dE_p95": 23.1,
+        "dL": -0.1,
+        "dC": -6.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "55a89fcc3365bb79eede409a8a1aa8ff2108b427889fa607e45da2986bf23a5a",
+      "photos": [
+        687244499
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The body and neck are deep chestnut; the wings glossy green and bronze; a thin white line edges the bare face; the eye is red, stitched in red thread with a small black centre.",
+      "review": "approved"
+    },
+    "pluvialis-squatarola": {
+      "common_name": "Grey Plover",
+      "seed": 2768296406,
+      "dark": false,
+      "measure": {
+        "iou": 0.937,
+        "dE_mean": 7.3,
+        "dE_p95": 13.4,
+        "dL": 4.3,
+        "dC": -2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7a0931d615684b0dfa19ad56c63a4d626c37a6d77acc2476eb8b492a666e60c9",
+      "photos": [
+        641442945
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "Two black legs show, and each ends in a black foot with three toes standing on top of the sand, in full view.",
+      "review": "approved",
+      "rejected_seeds": [
+        3523733824
+      ],
+      "why": "maintainer: missing feet"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "seed": 1772462090,
+      "dark": true,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 6.7,
+        "dE_p95": 13.9,
+        "dL": -6.0,
+        "dC": -1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2bb4cf25ac4c41809ad191b37e5b0c832ab65e61148328482756565acdaafc06",
+      "photos": [
+        601748825
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "poecile-carolinensis": {
+      "common_name": "Carolina Chickadee",
+      "seed": 4032211929,
+      "dark": false,
+      "measure": {
+        "iou": 0.873,
+        "dE_mean": 8.2,
+        "dE_p95": 16.8,
+        "dL": -6.2,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0091,
+      "attempts": 1,
+      "sha256": "280fd2e6766dd71c22084364a1bcc2f8055bcdc8b36ebd4cae09bba7bc070ec8",
+      "photos": [
+        612992609
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        2270272335
+      ],
+      "why": "maintainer: feet not grabbing branch"
+    },
+    "polioptila-caerulea": {
+      "common_name": "Blue-grey Gnatcatcher",
+      "seed": 3814134788,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 13.0,
+        "dE_p95": 18.9,
+        "dL": -2.8,
+        "dC": -0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1142a323ba3def37b4dc46838b2a474217f49f8d8e5936535998a3ec8552967a",
+      "photos": [
+        457497487
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "porphyrio-martinica": {
+      "common_name": "Purple Gallinule",
+      "seed": 2243708848,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 9.1,
+        "dE_p95": 16.0,
+        "dL": -3.8,
+        "dC": -1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0112,
+      "attempts": 1,
+      "sha256": "0a59141f6a187370fb71567bd64b43771a88b1faa348219e5df2e2e8b47b7de4",
+      "photos": [
+        366194447
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "porzana-carolina": {
+      "common_name": "Sora",
+      "seed": 249516150,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 6.7,
+        "dE_p95": 12.8,
+        "dL": -5.3,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "85f48577fd9ca84cb9c3d3451167e8a2c53a18def041946a15c83150cbbb02c7",
+      "photos": [
+        343754416
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "progne-subis": {
+      "common_name": "Purple Martin",
+      "seed": 1328752985,
+      "dark": false,
+      "measure": {
+        "iou": 0.937,
+        "dE_mean": 4.0,
+        "dE_p95": 8.8,
+        "dL": 0.0,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "57157a2a8d52b9079897fb7c27946c8c5b4b7b623645f60f3db9afd64ee87626",
+      "photos": [
+        384202196
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is glossy dark blue-black, in very dark navy and black thread, with no white, grey or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The tail is forked.",
+      "review": "approved"
+    },
+    "protonotaria-citrea": {
+      "common_name": "Prothonotary Warbler",
+      "seed": 930420918,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 20.1,
+        "dE_p95": 35.7,
+        "dL": -8.8,
+        "dC": -15.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "991403e25ba33698a872600e924fd91ab739aab26b0bfa3805aafab5a9e7f6d1",
+      "photos": [
+        636591920
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pyrocephalus-rubinus": {
+      "common_name": "Scarlet Flycatcher",
+      "seed": 1821091441,
+      "dark": false,
+      "measure": {
+        "iou": 0.907,
+        "dE_mean": 13.4,
+        "dE_p95": 27.1,
+        "dL": -0.7,
+        "dC": 7.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f06cf2b0c263278bc9db5900c72c10ba3a4ccf695a2d6d69abbcacf0634b61ab",
+      "photos": [
+        586078618
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown, throat, breast and belly are bright scarlet red, in true red thread, not orange or salmon; a dark brown-black mask runs through the eye; the back, wings and tail are dark brown-black.",
+      "review": "approved",
+      "rejected_seeds": [
+        462198503
+      ],
+      "why": "red stitched orange"
+    },
+    "quiscalus-major": {
+      "common_name": "Boat-tailed Grackle",
+      "seed": 3284604049,
+      "dark": false,
+      "measure": {
+        "iou": 0.525,
+        "dE_mean": 8.1,
+        "dE_p95": 28.3,
+        "dL": 3.3,
+        "dC": -0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4991d8e4a3d35c2153da103b989e8bec857ca35a7d76fbba4ca2fc11cf499a29",
+      "photos": [
+        491834495
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black, in matte black thread with no white, grey, lilac, blue or pale thread anywhere on it: no pale patch, bar, streak, spot or feather edge on the wing, shoulder, body or tail; the feathers are told apart only by the direction of the black stitches. The bill and legs are black and the eye is dark brown.",
+      "review": "approved",
+      "rejected_seeds": [
+        3299528840,
+        3014516766,
+        715436452,
+        1570996532
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "quiscalus-mexicanus": {
+      "common_name": "Great-tailed Grackle",
+      "seed": 2491679539,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 7.3,
+        "dE_p95": 16.3,
+        "dL": 0.1,
+        "dC": -2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c5ef4bf48a4155e77467c33db6ff4b09c5d8e8d9bd40e57d8a6c28385ec95d62",
+      "photos": [
+        189542615
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black, in matte black thread with no white, grey, lilac, blue or pale thread anywhere on it: no pale patch, bar, streak, sheen or feather edge on the head, neck, wing, body or tail; the feathers are told apart only by the direction of the black stitches. The eye is pale yellow, stitched in pale yellow thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        3817026469
+      ],
+      "why": "grey-white sheen on the head, neck and along the wing despite dark_clause false"
+    },
+    "quiscalus-quiscula": {
+      "common_name": "Common Grackle",
+      "seed": 2821171261,
+      "dark": false,
+      "measure": {
+        "iou": 0.811,
+        "dE_mean": 6.7,
+        "dE_p95": 13.2,
+        "dL": 2.0,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "2bdffd64cc2ee805183391abf3d65d8c3a39309dd97c9a16d0a9b2524b261264",
+      "photos": [
+        353453295
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black, with a purple-blue gloss on the head and a bronze sheen on the body, in black and very dark thread. Any sheen on its feathers is stitched in dark thread, never in white, grey, lilac or pale thread; there are no pale patches, bars or feather edges on the wing, body or tail. The eye is pale yellow.",
+      "review": "approved"
+    },
+    "rallus-crepitans": {
+      "common_name": "Clapper Rail",
+      "seed": 1153582776,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 5.4,
+        "dE_p95": 12.4,
+        "dL": -3.5,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0033,
+      "attempts": 1,
+      "sha256": "2646c5f2f2cc3e589198a527c5f3f1f81c884e369154a0a3541b5b3e96fba371",
+      "photos": [
+        594454911
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "rallus-elegans": {
+      "common_name": "King Rail",
+      "seed": 3736071462,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 11.3,
+        "dE_p95": 16.2,
+        "dL": -5.9,
+        "dC": 0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7fe3766507d8916308d26c9240575cb7839226688a19786228c3904085d87185",
+      "photos": [
+        247673863
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "recurvirostra-americana": {
+      "common_name": "American Avocet",
+      "seed": 3580694635,
+      "dark": false,
+      "measure": {
+        "iou": 0.778,
+        "dE_mean": 23.6,
+        "dE_p95": 55.8,
+        "dL": -14.8,
+        "dC": -3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "79af37a03a0a9169a28286e7f9caf1eb2314fd0a498e00167e353d18825d3a74",
+      "photos": [
+        595158361
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The long legs are pale blue-grey, not cream or yellow; the head and neck are cinnamon-rust; the body is white, the wings black and white; the long thin bill curves upward.",
+      "review": "approved",
+      "rejected_seeds": [
+        2724864253
+      ],
+      "why": "legs stitched pale cream; they are blue-grey"
+    },
+    "rynchops-niger": {
+      "common_name": "Black Skimmer",
+      "seed": 3358578019,
+      "dark": true,
+      "measure": {
+        "iou": 0.885,
+        "dE_mean": 15.3,
+        "dE_p95": 30.2,
+        "dL": 6.0,
+        "dC": -4.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0034,
+      "attempts": 1,
+      "sha256": "84a942b298b30c2682d1c024b0e12c864b5f409f3d4353551311376db771389a",
+      "photos": [
+        585466949
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The legs and feet are bright red-orange, not black; the bill is red with a black tip, its lower half longer than the upper; the cap, back and wings are black, the forehead, neck and underparts white.",
+      "review": "approved",
+      "rejected_seeds": [
+        3207128565
+      ],
+      "why": "legs stitched dark; they are red-orange"
+    },
+    "sayornis-phoebe": {
+      "common_name": "Eastern Phoebe",
+      "seed": 419468402,
+      "dark": false,
+      "measure": {
+        "iou": 0.805,
+        "dE_mean": 8.1,
+        "dE_p95": 14.6,
+        "dL": -1.2,
+        "dC": 0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3395e1a729f719645108a767a67c5302c9fe13e281a881bd81fccad9df013af3",
+      "photos": [
+        587401872
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "selasphorus-rufus": {
+      "common_name": "Rufous Hummingbird",
+      "seed": 496982358,
+      "dark": false,
+      "measure": {
+        "iou": 0.895,
+        "dE_mean": 5.9,
+        "dE_p95": 9.7,
+        "dL": -4.4,
+        "dC": -2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "e015e20b7b37a4e2462c4e72b7e2548d720167dd99bf673ae9868d1c9866bb80",
+      "photos": [
+        434150183
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        4086380666,
+        2224425200
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "seed": 2950495747,
+      "dark": false,
+      "measure": {
+        "iou": 0.749,
+        "dE_mean": 30.3,
+        "dE_p95": 63.7,
+        "dL": -14.3,
+        "dC": -21.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "058b1f3132d89d447296a55c95af163b24a0ef2390504e103fda152fc24bed57",
+      "photos": [
+        723315242
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright lemon yellow, in clear yellow thread, not mustard, olive or ochre; the back and wings are a slightly greener yellow with yellow feather edges; the breast carries thin red-chestnut streaks; the black eye sits in a plain yellow face.",
+      "review": "approved",
+      "rejected_seeds": [
+        3638283925
+      ],
+      "why": "yellow stitched mustard-olive; the tail touches the cord"
+    },
+    "setophaga-americana": {
+      "common_name": "Northern Parula",
+      "seed": 2763993336,
+      "dark": false,
+      "measure": {
+        "iou": 0.738,
+        "dE_mean": 24.9,
+        "dE_p95": 54.3,
+        "dL": -2.6,
+        "dC": 1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c5a2f9317a220b7d5c2fefc6462b36f663fd535da3210d589e20530753bf2069",
+      "photos": [
+        477040634
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-citrina": {
+      "common_name": "Hooded Warbler",
+      "seed": 3782850061,
+      "dark": false,
+      "measure": {
+        "iou": 0.723,
+        "dE_mean": 38.9,
+        "dE_p95": 71.8,
+        "dL": -8.1,
+        "dC": -27.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0053,
+      "attempts": 1,
+      "sha256": "57d5231256325e45a1f1e0c340c3adcd04ed984d1928a40cc614d8406bd69889",
+      "photos": [
+        642435536
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The face and forehead are bright lemon yellow, framed by a black hood over the crown, nape and throat; the breast and belly are bright lemon yellow, in clear yellow thread, not mustard, ochre or gold; the back, wings and tail are olive green.",
+      "review": "approved",
+      "rejected_seeds": [
+        2524874395
+      ],
+      "why": "yellow stitched mustard-ochre"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "seed": 3175012572,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 8.9,
+        "dE_p95": 15.5,
+        "dL": -6.4,
+        "dC": 2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bb77c55c7a065c60dac1e203b901cd2230c8f3b55c4f92f64e285e12564547a5",
+      "photos": [
+        605383843
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-magnolia": {
+      "common_name": "Magnolia Warbler",
+      "seed": 4268416059,
+      "dark": false,
+      "measure": {
+        "iou": 0.849,
+        "dE_mean": 12.8,
+        "dE_p95": 23.8,
+        "dL": -3.0,
+        "dC": -9.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5dc6c2c09483a5689a6c4dc76d0355ca5ef4ff01899fc588057d26d94bb0d688",
+      "photos": [
+        653154704
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-palmarum": {
+      "common_name": "Palm Warbler",
+      "seed": 1507736691,
+      "dark": false,
+      "measure": {
+        "iou": 0.962,
+        "dE_mean": 8.9,
+        "dE_p95": 16.4,
+        "dL": -3.5,
+        "dC": -3.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0039,
+      "attempts": 2,
+      "sha256": "69ab3a5a5d0b2545c57a43eed6d12738cfb693fa80b31111f5718763fd6e54bb",
+      "photos": [
+        595824433
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-pinus": {
+      "common_name": "Pine Warbler",
+      "seed": 4109001219,
+      "dark": false,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 10.9,
+        "dE_p95": 16.8,
+        "dL": -6.2,
+        "dC": -5.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "418df723f0d4c83b2f76558b177022e07541c5a41907a51a607db4df3f432dfd",
+      "photos": [
+        507400395
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-ruticilla": {
+      "common_name": "American Redstart",
+      "seed": 3414031292,
+      "dark": false,
+      "measure": {
+        "iou": 0.869,
+        "dE_mean": 15.5,
+        "dE_p95": 28.3,
+        "dL": -8.9,
+        "dC": -9.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1f58bb19412f2b7b828b80acfb37291f10e052dc3f55a2b9a554dd0b8b820f73",
+      "photos": [
+        641627874
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, back, breast, wings and tail are black, in black thread, not navy or blue; bright orange patches mark the sides of the breast, the wing and the base of the tail; the belly is white. The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        628333201,
+        1383377414
+      ],
+      "why": "maintainer: feet are not on branch"
+    },
+    "sialia-sialis": {
+      "common_name": "Eastern Bluebird",
+      "seed": 279603135,
+      "dark": false,
+      "measure": {
+        "iou": 0.862,
+        "dE_mean": 16.0,
+        "dE_p95": 28.4,
+        "dL": -9.0,
+        "dC": 4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d26ac257cd7e6cd30b0254ee593f51fa9c123793dc0fb32db6f12e9f724894a1",
+      "photos": [
+        610227382
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, back, wings and tail are vivid deep royal blue thread, not lavender, grey or purple; the throat and breast are rusty orange; the belly white.",
+      "review": "approved",
+      "rejected_seeds": [
+        1739413289
+      ],
+      "why": "blue stitched dull lavender-grey; the reference is vivid royal blue"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "seed": 1817397971,
+      "dark": true,
+      "measure": {
+        "iou": 0.641,
+        "dE_mean": 39.1,
+        "dE_p95": 74.2,
+        "dL": 0.7,
+        "dC": 4.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "538ba7fa5cc6087268da5b6ac4ad5728d317bd184bb3d48b922c5d804dcf0b8d",
+      "photos": [
+        625681028
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are glossy dark green, in deep green thread, not black; the eye is bright yellow with a small black centre; the long broad bill is black; the breast is white, the flanks chestnut.",
+      "review": "approved",
+      "rejected_seeds": [
+        458521157
+      ],
+      "why": "the head is black, not green, and the eye is dark, not yellow"
+    },
+    "spatula-discors": {
+      "common_name": "Blue-winged Teal",
+      "seed": 834370609,
+      "dark": false,
+      "measure": {
+        "iou": 0.868,
+        "dE_mean": 9.5,
+        "dE_p95": 19.8,
+        "dL": -6.7,
+        "dC": 1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "eb86f57ac443b7d34a95c7676ce00c2ec97c1df414d34acf03afccbc86eaa0b2",
+      "photos": [
+        353348982
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "sphyrapicus-varius": {
+      "common_name": "Yellow-bellied Sapsucker",
+      "seed": 2464912595,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 4.5,
+        "dE_p95": 8.1,
+        "dL": 1.9,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dd29098ae7ff36fa2be20edba4a2c5ec61a17fb270f8dcfd6035ef0d59f76b18",
+      "photos": [
+        459751352
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "spinus-tristis": {
+      "common_name": "American Goldfinch",
+      "seed": 2274603215,
+      "dark": false,
+      "measure": {
+        "iou": 0.897,
+        "dE_mean": 10.2,
+        "dE_p95": 16.7,
+        "dL": -3.7,
+        "dC": 0.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "23bbad980fedcdbc6915663cc7cb0da53e0ac50452fcff4f80064ac5f0533076",
+      "photos": [
+        595073755
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spizella-passerina": {
+      "common_name": "Chipping Sparrow",
+      "seed": 3799786924,
+      "dark": false,
+      "measure": {
+        "iou": 0.809,
+        "dE_mean": 6.9,
+        "dE_p95": 18.2,
+        "dL": -1.8,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0034,
+      "attempts": 1,
+      "sha256": "9b8e52612ca8516a320ac09d9eacda7f073c1d5f0f6d52d70ed061def522d9f0",
+      "photos": [
+        353203203
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "seed": 2585881562,
+      "dark": false,
+      "measure": {
+        "iou": 0.836,
+        "dE_mean": 13.4,
+        "dE_p95": 23.8,
+        "dL": -11.1,
+        "dC": 0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fbf14e89cdb175af613b10d9f875a7ea515460a61282aafb598a82c87ed2d5a5",
+      "photos": [
+        547137375
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "sternula-antillarum": {
+      "common_name": "Least Tern",
+      "seed": 4038692589,
+      "dark": false,
+      "measure": {
+        "iou": 0.887,
+        "dE_mean": 8.5,
+        "dE_p95": 18.2,
+        "dL": 2.1,
+        "dC": -0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1d3a11199e9adc7d619d9a8cbd6ea2ffa69117a45521c8cf1e76eced1835f5f3",
+      "photos": [
+        651359180
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "strix-varia": {
+      "common_name": "Barred Owl",
+      "seed": 4136610080,
+      "dark": false,
+      "measure": {
+        "iou": 0.966,
+        "dE_mean": 15.2,
+        "dE_p95": 20.6,
+        "dL": 10.9,
+        "dC": 9.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f26597770cd3ccc1b80db62cbd7b4e435681fbac7bed9f500560740c463c90c7",
+      "photos": [
+        658249169
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eyes are dark brown, almost black, not yellow; the bill is pale yellow.",
+      "review": "approved"
+    },
+    "sturnella-magna": {
+      "common_name": "Eastern Meadowlark",
+      "seed": 1465602604,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 10.7,
+        "dE_p95": 16.1,
+        "dL": -10.0,
+        "dC": 2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0185,
+      "attempts": 2,
+      "sha256": "e9f5cf7357330f0f002f774dbc1fbd4be6f25c31231d65a082a7c46072360163",
+      "photos": [
+        465565628
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        542925503
+      ],
+      "why": "bottom-right corner peeled and the tail crosses the cord"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "seed": 1904354673,
+      "dark": true,
+      "measure": {
+        "iou": 0.87,
+        "dE_mean": 9.5,
+        "dE_p95": 22.0,
+        "dL": 8.2,
+        "dC": -0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "367e44472ecf3b788399a5beb25b5b0bd88cbd3160e4b74f801080ff0d29ecb2",
+      "photos": [
+        472188298
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The legs and feet are pinkish red, not black; the bill is yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        109385191
+      ],
+      "why": "legs stitched black; they are pinkish red"
+    },
+    "tachycineta-bicolor": {
+      "common_name": "Tree Swallow",
+      "seed": 3850456484,
+      "dark": true,
+      "measure": {
+        "iou": 0.873,
+        "dE_mean": 11.6,
+        "dE_p95": 23.8,
+        "dL": 6.9,
+        "dC": -2.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cf7d82687ac70cf04072c4eb1b7a970a6a557efa4bb0743785b8329453ee739e",
+      "photos": [
+        598653018
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "thalasseus-maximus": {
+      "common_name": "Royal Tern",
+      "seed": 3119432993,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 8.9,
+        "dE_p95": 14.1,
+        "dL": 0.6,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "70b5050843abea095d47abd769c02d0346ec6c3e664c0518f7bcba53d857d957",
+      "photos": [
+        693725580
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "thalasseus-sandvicensis": {
+      "common_name": "Sandwich Tern",
+      "seed": 1645695733,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 11.3,
+        "dE_p95": 19.6,
+        "dL": -9.1,
+        "dC": 4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4329e09da15c820379963cdde2f48c110f9702e09d353929b7a1881f6c95c620",
+      "photos": [
+        309267287
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "thryothorus-ludovicianus": {
+      "common_name": "Carolina Wren",
+      "seed": 3986433073,
+      "dark": false,
+      "measure": {
+        "iou": 0.866,
+        "dE_mean": 16.6,
+        "dE_p95": 25.1,
+        "dL": -3.0,
+        "dC": 12.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d017347281b04ef6cd6b11e7ff5c70bd0de049794fba78c3964f595cdbeae3e6",
+      "photos": [
+        547684998
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The back, wings and tail are warm rufous-brown with fine dark bars on the wings and tail; a long white eyebrow runs above the eye over a dark line through it; the throat is white and the breast and belly rich warm buff.",
+      "review": "approved"
+    },
+    "toxostoma-rufum": {
+      "common_name": "Brown Thrasher",
+      "seed": 4120873912,
+      "dark": false,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 11.7,
+        "dE_p95": 18.2,
+        "dL": 1.6,
+        "dC": 7.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4a2a2974546c5e1c6318600f0746ae4617272d7a39aa3bfa630f9d397f60aa44",
+      "photos": [
+        651031962
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre, not a large black eye. The upperparts are rufous, the underparts white with bold dark streaks, and the wings carry two white wing bars. The bird is small in the frame: its tail tip ends well inside the border, clear of the cord.",
+      "review": "approved",
+      "rejected_seeds": [
+        462547605,
+        1821825539
+      ],
+      "why": "maintainer: the bird's tail goes underneath and outside the patch"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "seed": 3151696321,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 6.4,
+        "dE_p95": 12.6,
+        "dL": 0.1,
+        "dC": 4.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "49a6b5a869d0fd30bc3b55e7ebaa8579b0c47691ce6479e72ec00d78e71bd941",
+      "photos": [
+        732760381
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "seed": 1975205671,
+      "dark": false,
+      "measure": {
+        "iou": 0.869,
+        "dE_mean": 9.6,
+        "dE_p95": 15.0,
+        "dL": -2.3,
+        "dC": 7.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7357bfd92dbfcded99904a7e20d0c81446bd74db90862eecc325f56a5eb20202",
+      "photos": [
+        687305335
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 1376942338,
+      "dark": false,
+      "measure": {
+        "iou": 0.9,
+        "dE_mean": 5.7,
+        "dE_p95": 10.9,
+        "dL": -1.7,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e23c41c88c639748ba106fa435bfd0561f992044150403cbc35ee7c43c2d956e",
+      "photos": [
+        648670774
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "tyrannus-tyrannus": {
+      "common_name": "Eastern Kingbird",
+      "seed": 1853010255,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 8.6,
+        "dE_p95": 13.5,
+        "dL": -2.0,
+        "dC": 1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "572ad6c6fef578eb25e667760267e0de626927a05fec4aa39d4db02df1fe52ea",
+      "photos": [
+        660449333
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "vireo-griseus": {
+      "common_name": "White-eyed Vireo",
+      "seed": 57555119,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 17.8,
+        "dE_p95": 28.4,
+        "dL": -5.0,
+        "dC": -14.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0061,
+      "attempts": 2,
+      "sha256": "6d2a3746ff9b4ce0ce33c21cf0b476d8b39ed1224f201213f12154af87b128d8",
+      "photos": [
+        731654918
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The back and head are olive green; the throat is white and the sides and flanks bright yellow; yellow spectacles run from the bill around the eye; the wings are dark with two white wing bars; the eye is white, stitched in white thread with a tiny black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        1953040440
+      ],
+      "why": "stitched plain brown with a dark eye; the bird is olive and yellow with yellow spectacles and a white eye"
+    },
+    "vireo-olivaceus": {
+      "common_name": "Red-eyed Vireo",
+      "seed": 697771782,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 9.8,
+        "dE_p95": 13.9,
+        "dL": -9.0,
+        "dC": -2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "568a998730afd757519b6f550844651fc0f80a5b7315cf5002cbc1d5bb417758",
+      "photos": [
+        664129792
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "vireo-solitarius": {
+      "common_name": "Blue-headed Vireo",
+      "seed": 2331590579,
+      "dark": false,
+      "measure": {
+        "iou": 0.835,
+        "dE_mean": 9.1,
+        "dE_p95": 23.7,
+        "dL": 3.4,
+        "dC": -2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "8a454ba13727499086f2c4ec39b024efd7304e6507ac0c4da02215796d001682",
+      "photos": [
+        456207027
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zenaida-asiatica": {
+      "common_name": "White-winged Dove",
+      "seed": 3726414280,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 6.4,
+        "dE_p95": 13.3,
+        "dL": 0.6,
+        "dC": 2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0113,
+      "attempts": 3,
+      "sha256": "de52ca8056a66d996c11b315db55ebd167090825a96393f11be110678cb0131d",
+      "photos": [
+        448254097
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is small and orange-red, stitched in that colour with a small black centre, inside a ring of bare blue skin; it is not a large black eye. A white stripe edges the folded wing.",
+      "review": "approved",
+      "rejected_seeds": [
+        2837160272
+      ],
+      "why": "eye large and dark; a dove's eye is small, orange-red in blue skin"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "seed": 222517412,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 10.4,
+        "dE_p95": 15.9,
+        "dL": -9.6,
+        "dC": 2.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "60c9e3b25721e803220965b98c7acf861b1a424637d8e0402038f3eaa23e80f8",
+      "photos": [
+        486146093
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zonotrichia-albicollis": {
+      "common_name": "White-throated Sparrow",
+      "seed": 3697504597,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 5.5,
+        "dE_p95": 9.9,
+        "dL": -4.4,
+        "dC": 1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "85a50bd4674d217cad4456904e297ab938d7b9bab411dbab69654ddb38f9d60d",
+      "photos": [
+        617074319
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a diamond, a square stood on one corner, with softly rounded points",
+        "cord": "deep plum-purple",
+        "twill": "pale straw-gold cotton twill",
+        "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    }
+  }
+}
