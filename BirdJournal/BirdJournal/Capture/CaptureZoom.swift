@@ -41,20 +41,32 @@ nonisolated struct CaptureZoom: Equatable, Sendable {
         self.displayMultiplier = displayMultiplier
     }
 
+    /// Two buttons are at least this far apart, as a ratio: a 0.9 beside the 1 is the same picture twice.
+    static let leastStep = 1.2
+
     /// The steps the camera has, and no more: where each lens starts, and each lens's full-quality crop while it is still the
-    /// lens in use. The zoom opens on 1, the wide lens, and a pinch goes on to five times the last step, as the phone's own
-    /// camera does, or as far as the camera goes.
+    /// lens in use. A step closer than `leastStep` to one already kept is left out, and the keeping goes in this order: 1,
+    /// the wide lens, then where the other lenses start, then the crops. The zoom opens on 1, and a pinch goes on to five
+    /// times the last step, as the phone's own camera does, or as far as the camera goes.
     init(_ facts: RearCameraFacts) {
         let multiplier = facts.displayMultiplier > 0 ? facts.displayMultiplier : 1
-        var steps: [Double] = []
+        var starts: [Double] = []
+        var crops: [Double] = []
         for (index, lens) in facts.lenses.enumerated() {
             let next = index + 1 < facts.lenses.count ? facts.lenses[index + 1].start : .infinity
-            steps.append(lens.start)
-            steps += lens.fullQualityCrops.map { lens.start * $0 }.filter { $0 > lens.start && $0 < next }
+            starts.append(lens.start)
+            crops += lens.fullQualityCrops.map { lens.start * $0 }.filter { $0 > lens.start && $0 < next }
         }
-        let shown = Set(steps.filter { $0 >= facts.minimum && $0 <= facts.maximum }.map { Self.rounded($0 * multiplier) }).sorted()
+        func shown(_ steps: [Double]) -> [Double] {
+            steps.filter { $0 > 0 && $0 >= facts.minimum && $0 <= facts.maximum }.map { Self.rounded($0 * multiplier) }.sorted()
+        }
+        var kept: [Double] = []
+        for step in shown(starts).filter({ $0 == 1 }) + shown(starts).filter({ $0 != 1 }) + shown(crops)
+        where !kept.contains(where: { max($0, step) / min($0, step) < Self.leastStep }) {
+            kept.append(step)
+        }
         let least = Self.rounded(facts.minimum * multiplier)
-        let lenses = shown.isEmpty ? [least] : shown
+        let lenses = kept.isEmpty ? [least] : kept.sorted()
         let most = max(min(facts.maximum * multiplier, lenses[lenses.count - 1] * 5), lenses[lenses.count - 1])
         let range = min(least, lenses[0])...most
         self.init(lenses: lenses, range: range, factor: min(max(1, range.lowerBound), range.upperBound), displayMultiplier: multiplier)

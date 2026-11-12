@@ -52,6 +52,21 @@ struct CaptureZoomTests {
         #expect(CaptureZoom(short).lenses == [1])
     }
 
+    @Test("A step too close to another is no button: no 0.9 beside the 1, and the wide lens and the lens starts are the ones kept")
+    func stepsTooClose() {
+        // An ultra-wide whose sensor lists a crop just short of the wide's start: 1.8 of the camera's, 0.9 as a person reads it.
+        var facts = Self.iPhone17Pro
+        facts.lenses[0].fullQualityCrops = [1.8]
+        #expect(CaptureZoom(facts).lenses == [0.5, 1, 2, 4, 8])
+        // A lens that starts just short of the wide: the wide, where the camera opens, is the one kept.
+        let nearWide = RearCameraFacts(minimum: 1, maximum: 60, lenses: [Lens(start: 1), Lens(start: 1.8), Lens(start: 2, fullQualityCrops: [2])], displayMultiplier: 0.5)
+        #expect(CaptureZoom(nearWide).lenses == [0.5, 1, 2])
+        #expect(CaptureZoom(nearWide).factor == 1)
+        // A crop a little past a lens's start gives way to the start.
+        let nearStart = RearCameraFacts(minimum: 1, maximum: 10, lenses: [Lens(start: 1, fullQualityCrops: [1.1, 2]), Lens(start: 3)])
+        #expect(CaptureZoom(nearStart).lenses == [1, 2, 3])
+    }
+
     @Test("A pinch runs from the widest lens to five times the last step, or as far as the camera goes, and no further")
     func range() {
         var zoom = CaptureZoom(Self.iPhone17Pro)
