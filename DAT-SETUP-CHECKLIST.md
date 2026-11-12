@@ -345,6 +345,53 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
    - **iOS's speech-recognition question** never appears on the phone. If it does, note when, and the wording shown.
    - Record the answers in DECISIONS.md, "Seen birds: say the bird's name on the lens".
 
+17. [ ] The capture's still (2026-11-12), a Debug build, from "Listen with the glasses". Pull the day's camera log
+   afterwards (step 12); every step below has a line in it.
+   - **The photo mode comes up.** Start a run. A second or so after "stream: streaming" the log reads "photo mode:
+     starting" and "photo mode: started". If it never reads "started", photos fall back to the stream ("photo: the
+     photo mode is …, taking it in the stream"): note it, that is the finding.
+   - **The shutter.** Swipe up to "Capture a sighting" (the hint reads "Tap: take a photo.") and tap. The lens reads
+     "Taking the photo…", then "Photo taken" / "Sending it to your phone…", then "Say the bird's name" with the
+     photo. Note the seconds from the tap to "Photo taken" and to the photo. From the log: "stream set aside (N s,
+     stopped)", "still: first bytes N s after it was asked for", then "still taken in N s (bytes, W×H, …; the glasses'
+     time for it is N s after it was asked for, the crossing took N s; N s from the tap)", or "still not taken after
+     15.0 s" and any "photo mode error: …". **Whether the photo shows the moment of the tap or a later one** (move
+     your head just after tapping) is the thing to settle: a bird does not wait for a late shutter.
+   - **The photo.** On the phone, the photo under "Seen this run": is it sharp enough to name the bird from, at the
+     journal's crop and in "View original photo"?
+   - **Right after Start.** Tap the row within five seconds of Start: the lens waits on "Saving the photo…" ("the photo
+     waited N s for the camera" in the log) and then has the photo.
+   - **The cues.** At the tap the lens shows a large bright frame over "Hold still", then "Photo taken"; two rising
+     notes sound just before listening is back. Note whether the frame appears at once, and whether the notes are
+     heard, in the glasses or from the phone. To learn when the shutter really fires, photograph a clock that shows
+     seconds and compare it with the log's "capture: listening paused" line.
+   - **The percentage** moves in tens while the photo crosses ("still: 40% at N s (bytes)" in the log, which is the
+     link's speed), and the photo is not given up on while it moves.
+   - **Listening after it.** The lens reads "Photo saved" / "Name it on your phone." and does not ask for a name; the
+     log reads "capture: listening resumes" and "stream back (attempt 1, N s)". Then a bird that calls is listed
+     again. Take three photos in a row and check the stream is back after each, and that each photo on the phone is
+     the scene of its own tap (look somewhere different for each).
+   - **More than one.** On the capture page tap twice more while the first photo crosses. The page reads "3 photos
+     taken" and "Sending photo 1 of 3…"; the log has "still N: asked for … N in the queue" at each tap, with no
+     "photo mode error" after it (an error there means the glasses refuse a photo while another crosses: note it).
+     Each photo on the phone is the scene of its own tap.
+   - **Away and back.** Swipe right to the species list while photos cross, then select "Capture a sighting": the page
+     is back with the progress, and no photo is taken.
+   - **Stop.** Swipe down on the capture page: "Stop sending?" Swipe right keeps sending. Swipe down again and tap: the
+     list, the chime, listening back, and no photo for the ones not yet in. Take a photo afterwards and check whether
+     a stopped one arrives with it ("stills: the earlier photo arrived, kept").
+   - **A run dismissed.** End the run and dismiss its review without naming: the photos are in the Collection, under
+     "To name".
+   - **On the phone.** In "Name this bird", tap the photo: it opens full screen, whole, and pinches to zoom.
+   - **Sizes.** Settings → Glasses → "Photos from the glasses": take one photo each at Full detail (the default),
+     Standard and Small, from a fresh run each, and note each one's "still taken in N s", its "still: N% at N s" lines
+     and how the photo looks. The words under the picker claim a minute and ten seconds: correct them to what is
+     measured.
+   - **The picture fits.** The photo on "Say the bird's name" and, from "Add to my list", the viewfinder's picture are
+     whole on the lens with nothing cut at the bottom, dark bands left and right. If so, the glasses stretch a `.fill`
+     image to its width: record it in DECISIONS.md, "Toolkit facts".
+   - Record the answers in DECISIONS.md, "The capture's camera".
+
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.
 - Inputs (Neural Band events), camera audio, photo capture, motion and speech are all **experimental**: usable in Dev Mode and the Beta channel, not publishable to production yet.

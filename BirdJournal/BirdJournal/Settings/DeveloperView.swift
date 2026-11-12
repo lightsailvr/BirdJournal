@@ -100,7 +100,7 @@ struct DeveloperView: View {
 /// glasses, so the lens goes on to "Photo saved" and the Collection lists it under "To name". `wait` in the inputs is a
 /// second with no input, to step past the viewfinder's echo window ("navUp select wait select"),
 /// `-autoMockLensSpecies <n>` hears that many fake species instead of three (0: the empty list; 6: all of them, a second page), and
-/// `-autoMockLensPhotoSeconds <s>` holds the stand-in's photo that long, with the lens on "Saving the photo…".
+/// `-autoMockLensPhotoSeconds <s>` holds the stand-in's photo that long, with the lens on "Taking the photo…".
 ///
 /// With the camera the lens goes on to ask for the bird's name (issue #194), as a run's does: "navUp select wait select"
 /// ends on "Say the bird's name", listening (`-dictationSilenceSeconds 60` keeps it there for a screenshot).
@@ -180,9 +180,11 @@ private struct AutoMockLens: ViewModifier {
 /// the camera stream stays on while the glasses listen. Read as each dictation starts, so it can be flipped mid-run.
 private struct DictationSection: View {
     @AppStorage(DictationSettings.keepsStreamKey) private var keepsStream = DictationSettings.keepsStreamByDefault
+    @AppStorage(DictationSettings.asksOnLensKey) private var asksOnLens = DictationSettings.asksOnLensByDefault
 
     var body: some View {
         Section {
+            Toggle("Ask for the bird's name on the lens", isOn: $asksOnLens)
             Toggle("Keep the camera stream on while saying a name", isOn: $keepsStream)
         } header: {
             Text("Dictation on the lens")

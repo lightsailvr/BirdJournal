@@ -16,12 +16,14 @@ public enum LensPage: Sendable, Hashable {
     /// The camera's view after "Add to my list", to frame the bird: a tap takes the photo and adds it, any swipe
     /// adds it without one.
     case viewfinder(index: Int)
-    /// The camera's view after "Capture a sighting" on the list (issue #193), to frame a bird that was seen and not
-    /// heard: a tap takes the photo, any swipe (or Back) returns to the list with nothing saved.
-    case captureViewfinder
-    /// After the tap on the capture viewfinder, until the run says the photo is written: "Saving the photo…". Swipe right
-    /// (or Back) returns to the list, and the photo is saved all the same.
+    /// The capture page (issue #193; a page that stays since 2026-11-12): from the tap on "Capture a sighting" until
+    /// every photo taken has reached the phone. A tap takes another photo; it says how many were taken and how far
+    /// the one crossing is. Swipe right (or Back) returns to the list with the photos still crossing, and the row
+    /// leads back here; swipe down asks whether to stop.
     case captureSaving
+    /// "Stop sending?", over the capture page: a tap gives up the photos not yet on the phone and returns to the
+    /// list, so listening comes back; any swipe (or Back) returns to the capture page and they go on crossing.
+    case captureCancel
     /// The photo is on the phone as an unnamed sighting: "Photo saved. Name it on your phone." A tap or swipe right (or
     /// Back) returns to the list. Where the capture ends when no name is said: "Name it later", silence, no speech on the
     /// glasses, anything going wrong (issue #194).
@@ -45,28 +47,40 @@ public enum LensPage: Sendable, Hashable {
     /// The stack index the page is about, nil on the root, a problem page and a friend banner.
     public var index: Int? {
         switch self {
-        case .list, .captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem, .friend: nil
+        case .list, .captureSaving, .captureCancel, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem, .friend: nil
         case .species(let index), .details(let index), .sounds(let index), .viewfinder(let index): index
         }
     }
 
-    /// Whether the page shows the camera's view, the add's or the capture's: the adapter keeps it fed with frames, and a
+    /// Whether the page shows the camera's view, after "Add to my list": the adapter keeps it fed with frames, and a
     /// tap right behind the press that opened it is that press again.
     public var isViewfinder: Bool {
         switch self {
-        case .viewfinder, .captureViewfinder: true
-        case .list, .species, .details, .sounds, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem, .friend: false
+        case .viewfinder: true
+        case .list, .species, .details, .sounds, .captureSaving, .captureCancel, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem, .friend: false
+        }
+    }
+
+    /// Whether the page is a capture's that needs the glasses' camera or microphones for itself: the wait for its
+    /// photo, and "Say the bird's name". The run stops listening for birds while the lens is on one (2026-11-12: a
+    /// still and the listening stream cannot both have the camera, and the stream's audio leaves a photo little of
+    /// the link), and listens again on every other page, the birds a name may be among them, which can stay up as
+    /// long as the wearer likes.
+    public var needsCaptureCamera: Bool {
+        switch self {
+        case .captureSaving, .captureCancel, .captureNaming: true
+        case .list, .species, .details, .sounds, .viewfinder, .captureSaved, .captureMatches, .captureAdded, .problem, .friend: false
         }
     }
 
     /// Whether a tap on the page would undo or skip what the press that opened it was for. The hardware can deliver one
     /// press twice (a click and a select), so the adapter, which has a clock, drops a tap that lands on such a page right
-    /// behind the press that opened it. The viewfinders, where the echo would take the photo; "Say the bird's name",
+    /// behind the press that opened it. The viewfinder, where the echo would take the photo; "Say the bird's name",
     /// which "Say it again" opens and where a tap is "Name it later"; and "Photo saved" and "Added", which a tap opens
     /// and a tap closes before they are read.
     public var guardsItsTap: Bool {
         switch self {
-        case .viewfinder, .captureViewfinder, .captureNaming, .captureSaved, .captureAdded: true
+        case .viewfinder, .captureCancel, .captureNaming, .captureSaved, .captureAdded: true
         case .list, .species, .details, .sounds, .captureSaving, .captureMatches, .problem, .friend: false
         }
     }
@@ -256,15 +270,34 @@ public enum LensEarnedPatch: Sendable, Hashable {
     case seenAgain(count: Int)
 }
 
+/// The photos taken on the capture page since it last had none crossing: what the page says of them.
+public struct LensCaptureBatch: Sendable, Equatable {
+    /// How many were taken, how many of them are on the phone, and how many could not be taken.
+    public var taken = 0
+    public var saved = 0
+    public var failed = 0
+    /// Whether the glasses have the oldest one not yet in, so that it is crossing, and how many tenths of it have.
+    public var isCrossing = false
+    public var tenthsSent = 0
+    /// Whether the mark of a tap is up: for a moment after each one.
+    public var showsShutter = false
+
+    public init() {}
+
+    /// How many are not yet on the phone.
+    public var pending: Int { max(taken - saved - failed, 0) }
+}
+
 /// What the adapter must do after an event, besides rendering the new page.
 public enum LensEffect: Sendable, Equatable {
     /// "Add to my list" opened the viewfinder: show the camera's view until the wearer taps or swipes.
     case openViewfinder(Candidate)
-    /// "Capture a sighting" opened its viewfinder (issue #193): show the camera's view until the wearer taps or swipes.
-    case openCaptureViewfinder
-    /// A tap on the capture viewfinder: take a photo now and write it as an unnamed sighting, then tell the machine how
+    /// A tap on "Capture a sighting" (issue #193): take a photo now and write it as an unnamed sighting, then tell the machine how
     /// it went with `captureSaved(_:)` or `captureFailed(_:)`. The number tells one capture from the next.
     case capturePhoto(Int)
+    /// The wearer gave up the photos not yet on the phone: stop waiting for them, so listening comes back. Their
+    /// captures are not told of again.
+    case cancelCaptures
     /// "Say the bird's name" is the page (issue #194): listen for the name of capture `capture`, and tell the machine
     /// what is heard with `heard(_:dictation:)`, `matched(_:_:dictation:)` and `dictationEnded(_:)` and this dictation's
     /// number. The adapter listens only while that page is the page.
@@ -303,9 +336,10 @@ public enum LensEffect: Sendable, Equatable {
 ///
 /// "Capture a sighting" (issue #193) is the row above the first bird on every page of the list, for a bird that was
 /// seen and not heard. The highlight reaches it by one swipe up from the first bird, and leaves it by a swipe down or
-/// right, back onto the first bird; on an empty list it is the highlighted row. A tap or swipe left on it opens the
-/// capture viewfinder: a tap there takes the photo (`LensEffect.capturePhoto`), and any swipe (or Back) returns to the
-/// list with nothing saved. After the tap the lens waits on the saving page until the adapter says the photo is
+/// right, back onto the first bird; on an empty list it is the highlighted row. A tap or swipe left on it takes the
+/// photo at once (`LensEffect.capturePhoto`), as the glasses' own shutter does: there is no viewfinder, because a
+/// stream of the camera's view reaches the lens slowly and coarsely and a bird does not wait for it (2026-11-12);
+/// the wearer's eyes frame the bird and the lens shows the photo afterwards. After the tap the lens waits on the saving page until the adapter says the photo is
 /// written (`captureSaved(_:dictation:)`) or that there is none (`captureFailed(_:)`: a problem page). On the saved
 /// page ("Photo saved. Name it on your phone.") a tap, swipe right or Back returns to the list, the highlight still on
 /// the row; the wait can be left by swipe right or Back, and the photo is saved all the same.
@@ -344,8 +378,13 @@ public struct LensStateMachine: Sendable, Equatable {
     private var captureRowSelected = false
     /// Photos taken from the capture viewfinder so far, for their numbers.
     private var captures = 0
-    /// The capture whose photo the "Saving the photo…" page is waiting for, nil when none is.
-    private var awaitedCapture: Int?
+    /// The capture whose photo the "Taking the photo…" page is waiting for, nil when none is.
+    private var pendingCaptures: [Int] = []
+    /// What the capture page says of the photos taken since it last had none crossing.
+    public private(set) var captureBatch = LensCaptureBatch()
+    /// Whether the glasses have the photo now crossing, and how many tenths of it have reached the phone.
+    public var captureIsTaken: Bool { captureBatch.isCrossing }
+    public var captureTenthsSent: Int { captureBatch.tenthsSent }
     /// The photo being named by voice, on "Say the bird's name" and the birds' page (issue #194); nil elsewhere.
     public private(set) var naming: LensNaming?
     /// The photo just named, on the "Added" page; nil elsewhere.
@@ -421,7 +460,8 @@ public struct LensStateMachine: Sendable, Equatable {
             coveredPage = .list
             pinnedSpecies = nil
             captureRowSelected = false
-            awaitedCapture = nil
+            pendingCaptures = []
+            captureBatch = LensCaptureBatch()
             naming = nil
             named = nil
             savedIndices = []
@@ -477,6 +517,25 @@ public struct LensStateMachine: Sendable, Equatable {
         return effect
     }
 
+    /// The tap that takes a capture's photo: it joins the photos crossing, and the capture page marks the moment.
+    private mutating func takeCapture() -> LensEffect {
+        captures += 1
+        if pendingCaptures.isEmpty { captureBatch = LensCaptureBatch() }
+        pendingCaptures.append(captures)
+        captureBatch.taken += 1
+        captureBatch.showsShutter = true
+        page = .captureSaving
+        return .capturePhoto(captures)
+    }
+
+    /// The mark of the last tap has been up long enough: the capture page says how the photos are doing. Returns
+    /// whether it was showing.
+    public mutating func shutterEnded() -> Bool {
+        guard captureBatch.showsShutter else { return false }
+        captureBatch.showsShutter = false
+        return true
+    }
+
     /// The page map's moves. A tap on a sounds page is the play control, handled by `apply`.
     private mutating func navigate(_ gesture: LensGesture) -> LensEffect? {
         switch (page, gesture) {
@@ -491,8 +550,11 @@ public struct LensStateMachine: Sendable, Equatable {
             if !captureRowSelected { pin(rowOffset: -1) }
         case (.list, .tap), (.list, .swipeLeft):
             if isCaptureRowHighlighted {
-                page = .captureViewfinder
-                return .openCaptureViewfinder
+                // On the row, the shutter: a bird does not wait for a viewfinder. With photos still crossing the
+                // row leads back to their page, where a tap takes another.
+                if pendingCaptures.isEmpty { return takeCapture() }
+                page = .captureSaving
+                break
             }
             page = .species(index: selection)
         case (.list, .swipeRight):
@@ -524,19 +586,24 @@ public struct LensStateMachine: Sendable, Equatable {
         case let (.viewfinder(index), _):
             return save(index, photo: false)
 
-        case (.captureViewfinder, .tap):
-            captures += 1
-            awaitedCapture = captures
-            page = .captureSaving
-            return .capturePhoto(captures)
-        case (.captureViewfinder, _):
-            page = .list
+        case (.captureSaving, .tap):
+            return takeCapture()
+        case (.captureSaving, .swipeDown):
+            if !pendingCaptures.isEmpty { page = .captureCancel }
         case (.captureSaving, .swipeRight), (.captureSaving, .back),
              (.captureSaved, .swipeRight), (.captureSaved, .back), (.captureSaved, .tap):
             page = .list
-        case (.captureSaving, .tap), (.captureSaving, .swipeLeft), (.captureSaving, .swipeUp), (.captureSaving, .swipeDown),
+        case (.captureSaving, .swipeLeft), (.captureSaving, .swipeUp),
              (.captureSaved, .swipeLeft), (.captureSaved, .swipeUp), (.captureSaved, .swipeDown):
             break
+        case (.captureCancel, .tap):
+            // Given up: nothing more is waited for, and the run stops the photos so listening comes back.
+            pendingCaptures = []
+            captureBatch = LensCaptureBatch()
+            page = .list
+            return .cancelCaptures
+        case (.captureCancel, _):
+            page = .captureSaving
 
         case (.captureNaming, .tap):
             // "Name it later": the photo waits on the phone.
@@ -598,8 +665,8 @@ public struct LensStateMachine: Sendable, Equatable {
         switch (page, action) {
         case let (.details(index), .save):
             return openViewfinder(index)
-        case (.list, .save), (.species, .save), (.sounds, .save), (.viewfinder, .save), (.captureViewfinder, .save),
-             (.captureSaving, .save), (.captureSaved, .save), (.captureNaming, .save), (.captureMatches, .save), (.captureAdded, .save),
+        case (.list, .save), (.species, .save), (.sounds, .save), (.viewfinder, .save),
+             (.captureSaving, .save), (.captureCancel, .save), (.captureSaved, .save), (.captureNaming, .save), (.captureMatches, .save), (.captureAdded, .save),
              (.problem, .save), (.friend, .save):
             return nil
         }
@@ -636,6 +703,15 @@ public struct LensStateMachine: Sendable, Equatable {
         if case .friend = page { coveredPage } else { page }
     }
 
+    /// Whether a capture has the camera: the page, or the one a problem or a banner covers, needs it
+    /// (`LensPage.needsCaptureCamera`). A problem over the viewfinder returns to it, so the camera stays.
+    public var isCapturing: Bool {
+        switch page {
+        case .problem, .friend: coveredPage.needsCaptureCamera
+        default: page.needsCaptureCamera
+        }
+    }
+
     /// When the held banner is dropped, nil when none is held: the adapter wakes then to call `expireBanner(at:)`.
     public var heldBannerExpiry: Double? {
         guard heldBanner != nil, bannerArrivedAt.isFinite else { return nil }
@@ -657,7 +733,7 @@ public struct LensStateMachine: Sendable, Equatable {
             coveredPage = page
             page = .friend(banner)
             heldBanner = nil
-        case .details, .sounds, .viewfinder, .captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches,
+        case .details, .sounds, .viewfinder, .captureSaving, .captureCancel, .captureSaved, .captureNaming, .captureMatches,
              .captureAdded, .problem, .friend:
             break
         }
@@ -682,33 +758,59 @@ public struct LensStateMachine: Sendable, Equatable {
     /// is where the wait ends ("Photo saved. Name it on your phone."). Nothing changes if the wearer has left the wait, or
     /// took another photo since.
     public mutating func captureSaved(_ id: Int, dictation: Bool) -> LensEffect? {
-        guard awaitedCapture == id else { return nil }
-        awaitedCapture = nil
-        if dictation, page == .captureSaving { return listenForName(of: id) }
+        guard let index = pendingCaptures.firstIndex(of: id) else { return nil }
+        pendingCaptures.remove(at: index)
+        captureBatch.saved += 1
+        captureBatch.isCrossing = false
+        captureBatch.tenthsSent = 0
+        // With others still crossing the capture page counts on.
+        guard pendingCaptures.isEmpty else { return nil }
+        if dictation, captureBatch.taken == 1, page == .captureSaving { return listenForName(of: id) }
         endWait(on: .captureSaved)
         return nil
     }
 
-    /// Capture `id` took no photo, or it could not be written: a problem page says so, over the list if the wearer was
-    /// waiting for it, else over the page they have moved on to.
+    /// The photo of capture `id` could not be taken or written. With others still crossing, or some already saved,
+    /// the capture pages count it; with nothing to show for the taps, a problem page says so, over the list or over
+    /// the page the wearer has moved on to.
     @discardableResult
     public mutating func captureFailed(_ id: Int) -> LensEffect? {
-        if awaitedCapture == id {
-            awaitedCapture = nil
+        if let index = pendingCaptures.firstIndex(of: id) {
+            pendingCaptures.remove(at: index)
+            captureBatch.failed += 1
+            captureBatch.isCrossing = false
+            captureBatch.tenthsSent = 0
+            guard pendingCaptures.isEmpty else { return nil }
+            if captureBatch.saved > 0 {
+                endWait(on: .captureSaved)
+                return nil
+            }
             endWait(on: .list)
         }
         return report(.photoNotTaken)
     }
 
-    /// Replaces the "Saving the photo…" page, showing or under a problem page, with `next`. Returns whether the page the
-    /// wearer sees changed.
+    /// The glasses have the photo of capture `id`, and `sent` of it (0 to 1) has crossed to the phone: the capture
+    /// page says so and, by tenths, how far along it is. Only the oldest photo not yet in crosses. Returns whether
+    /// what the page says changed.
+    public mutating func captureTaken(_ id: Int, sent: Double = 0) -> Bool {
+        guard pendingCaptures.first == id else { return false }
+        let tenths = min(max(Int(sent * 10), 0), 10)
+        guard !captureBatch.isCrossing || tenths > captureBatch.tenthsSent else { return false }
+        captureBatch.isCrossing = true
+        captureBatch.tenthsSent = max(captureBatch.tenthsSent, tenths)
+        return true
+    }
+
+    /// Replaces the capture page (or its "Stop sending?"), showing or under a problem page, with `next`. Returns
+    /// whether the page the wearer sees changed.
     @discardableResult
     private mutating func endWait(on next: LensPage) -> Bool {
-        if page == .captureSaving {
+        if page == .captureSaving || page == .captureCancel {
             page = next
             return true
         }
-        if case .problem = page, coveredPage == .captureSaving { coveredPage = next }
+        if case .problem = page, coveredPage == .captureSaving || coveredPage == .captureCancel { coveredPage = next }
         return false
     }
 

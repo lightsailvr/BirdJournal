@@ -21,11 +21,12 @@ struct LensStateMachineTests {
             _ = machine.apply(.swipeDown)
             _ = machine.apply(.tap)
         }
-        if [.captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded].contains(page) {
+        if [.captureSaving, .captureCancel, .captureSaved, .captureNaming, .captureMatches, .captureAdded].contains(page) {
+            // Up to the row, and a tap on it: the shutter.
             _ = machine.apply(.swipeUp)
             _ = machine.apply(.tap)
         }
-        if [.captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded].contains(page) { _ = machine.apply(.tap) }
+        if page == .captureCancel { _ = machine.apply(.swipeDown) }
         if page == .captureSaved { _ = machine.captureSaved(1, dictation: false) }
         if [.captureNaming, .captureMatches, .captureAdded].contains(page) { _ = machine.captureSaved(1, dictation: true) }
         if [.captureMatches, .captureAdded].contains(page) { machine.matched("black phoebe", Fakes.matches, dictation: 1) }
@@ -227,23 +228,22 @@ struct LensStateMachineTests {
         Transition(.viewfinder(index: 1), .swipeDown, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
         Transition(.viewfinder(index: 1), .back, .details(index: 1), .saveSighting(Fakes.candidate(Fakes.finch))),
 
-        // The capture viewfinder (issue #193): a tap takes the photo and the lens waits for it; any swipe, or Back, returns
-        // to the list with nothing saved (on "Add to my list" a swipe still adds, without a photo).
-        Transition(.captureViewfinder, .tap, .captureSaving, .capturePhoto(1)),
-        Transition(.captureViewfinder, .swipeLeft, .list),
-        Transition(.captureViewfinder, .swipeRight, .list),
-        Transition(.captureViewfinder, .swipeUp, .list),
-        Transition(.captureViewfinder, .swipeDown, .list),
-        Transition(.captureViewfinder, .back, .list),
-
         // While the photo is on its way: swipe right and Back return to the list (the photo is still saved); a tap does
         // nothing, so a tap doubled on the viewfinder never skips what comes next.
-        Transition(.captureSaving, .tap, .captureSaving),
+        Transition(.captureSaving, .tap, .captureSaving, .capturePhoto(2)),
         Transition(.captureSaving, .swipeLeft, .captureSaving),
         Transition(.captureSaving, .swipeRight, .list),
         Transition(.captureSaving, .swipeUp, .captureSaving),
-        Transition(.captureSaving, .swipeDown, .captureSaving),
+        Transition(.captureSaving, .swipeDown, .captureCancel),
         Transition(.captureSaving, .back, .list),
+
+        // "Stop sending?": a tap gives the photos up, and anything else goes back to them.
+        Transition(.captureCancel, .tap, .list, .cancelCaptures),
+        Transition(.captureCancel, .swipeLeft, .captureSaving),
+        Transition(.captureCancel, .swipeRight, .captureSaving),
+        Transition(.captureCancel, .swipeUp, .captureSaving),
+        Transition(.captureCancel, .swipeDown, .captureSaving),
+        Transition(.captureCancel, .back, .captureSaving),
 
         // "Photo saved. Name it on your phone.": a tap, swipe right and Back return to the list.
         Transition(.captureSaved, .tap, .list),
@@ -307,7 +307,7 @@ struct LensStateMachineTests {
 
     @Test("the table covers every page kind and gesture")
     func tableIsComplete() {
-        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1), .sounds(index: 1), .viewfinder(index: 1), .captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem(.noLocation), .friend(Fakes.mayasPhoebe)]
+        let pages: [LensPage] = [.list, .species(index: 1), .details(index: 1), .sounds(index: 1), .viewfinder(index: 1), .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem(.noLocation), .friend(Fakes.mayasPhoebe)]
         for page in pages {
             for gesture in LensGesture.allCases {
                 #expect(Self.transitions.contains { $0.from == page && $0.gesture == gesture }, "\(page) + \(gesture) is not in the table")
@@ -424,24 +424,105 @@ struct LensStateMachineTests {
         #expect(!machine.isCaptureRowHighlighted)
     }
 
-    @Test("a tap or a swipe left on the highlighted capture row opens the capture viewfinder, on an empty list too, and adds nothing", arguments: [LensGesture.tap, .swipeLeft])
-    func captureRowOpens(_ gesture: LensGesture) {
+    @Test("a tap or a swipe left on the highlighted capture row is the shutter: the photo is taken at once, with no viewfinder, on an empty list too, and adds nothing", arguments: [LensGesture.tap, .swipeLeft])
+    func captureRowShoots(_ gesture: LensGesture) {
         var empty = LensStateMachine()
-        #expect(empty.apply(gesture) == .openCaptureViewfinder)
-        #expect(empty.page == .captureViewfinder)
+        #expect(empty.apply(gesture) == .capturePhoto(1))
+        #expect(empty.page == .captureSaving)
 
         var machine = Self.machine(on: .list)
+        #expect(machine.apply(gesture) == nil, "a bird has the highlight: the gesture opens it")
+        #expect(machine.page == .species(index: 0))
+        _ = machine.apply(.swipeRight)
         _ = machine.apply(.swipeUp)
-        #expect(machine.apply(gesture) == .openCaptureViewfinder)
-        #expect(machine.page == .captureViewfinder)
+        #expect(machine.apply(gesture) == .capturePhoto(1))
+        #expect(machine.page == .captureSaving)
         #expect(machine.page.index == nil)
         #expect(machine.currentCandidate == nil)
         #expect(machine.savedIndices.isEmpty)
+        // The page stays, and a tap on it takes another. (A press delivered twice is the adapter's to drop: it has
+        // the clock.)
+        #expect(machine.apply(.tap) == .capturePhoto(2))
+        #expect(machine.page == .captureSaving)
+        // With photos crossing the row leads back to the page and takes none.
+        _ = machine.apply(.swipeRight)
+        #expect(machine.page == .list)
+        #expect(machine.apply(gesture) == nil)
+        #expect(machine.page == .captureSaving)
     }
 
-    @Test("a tap on the capture viewfinder takes the photo; the lens waits, says so once it is saved, and returns to the list with the capture row still highlighted")
+    @Test("a tap on the capture page takes another photo; the page counts them as they arrive, only the oldest is crossing, and it ends on how many were saved")
+    func captureQueue() {
+        var machine = Self.machine(on: .captureSaving)
+        #expect(machine.captureBatch.showsShutter, "the mark of the tap")
+        let ended = machine.shutterEnded()
+        #expect(ended && !machine.captureBatch.showsShutter)
+        #expect(machine.apply(.tap) == .capturePhoto(2))
+        #expect(machine.captureBatch.taken == 2 && machine.captureBatch.pending == 2 && machine.captureBatch.showsShutter)
+        let early = machine.captureTaken(2, sent: 0.5)
+        #expect(!early, "only the oldest is crossing")
+        _ = machine.captureTaken(1, sent: 0.5)
+        #expect(machine.captureSaved(1, dictation: true) == nil, "no name is asked for with another still crossing")
+        #expect(machine.page == .captureSaving)
+        #expect(machine.captureBatch.saved == 1 && !machine.captureBatch.isCrossing && machine.captureBatch.tenthsSent == 0)
+        _ = machine.captureSaved(2, dictation: false)
+        #expect(machine.page == .captureSaved)
+        #expect(machine.captureBatch.saved == 2 && machine.captureBatch.pending == 0)
+        // The next photo starts the count again.
+        _ = machine.apply(.tap)
+        #expect(machine.apply(.tap) == .capturePhoto(3))
+        #expect(machine.captureBatch.taken == 1 && machine.captureBatch.saved == 0)
+    }
+
+    @Test("swipe down on the capture page asks whether to stop: a swipe keeps sending, a tap gives the photos up and returns to the list, and a photo saved while it asks ends the question")
+    func captureGivenUp() {
+        var machine = Self.machine(on: .captureSaving)
+        #expect(machine.apply(.swipeDown) == nil)
+        #expect(machine.page == .captureCancel)
+        #expect(machine.isCapturing)
+        #expect(machine.apply(.swipeRight) == nil)
+        #expect(machine.page == .captureSaving)
+        _ = machine.apply(.swipeDown)
+        #expect(machine.apply(.tap) == .cancelCaptures)
+        #expect(machine.page == .list)
+        #expect(machine.captureBatch.pending == 0)
+        #expect(!machine.isCapturing)
+        // Late news of a photo given up moves nothing, and the row takes a new photo.
+        #expect(machine.captureSaved(1, dictation: false) == nil)
+        #expect(machine.page == .list)
+        #expect(machine.apply(.tap) == .capturePhoto(2))
+
+        var asked = Self.machine(on: .captureCancel)
+        _ = asked.captureSaved(1, dictation: false)
+        #expect(asked.page == .captureSaved, "nothing is left to stop")
+    }
+
+    @Test("a capture has the camera through the wait for its photo and while the glasses listen for the name, and under a problem over the wait; not on the list, the saved page, the birds a name may be, or \"Added\"")
+    func captureHasTheCamera() {
+        for page in [LensPage.captureSaving, .captureCancel, .captureNaming] {
+            var machine = Self.machine(on: page)
+            #expect(machine.isCapturing, "\(page)")
+            if page == .captureSaving {
+                machine.report(.noLocation)
+                #expect(machine.isCapturing, "a problem over the wait: the photo is still on its way")
+            }
+        }
+        for page in [LensPage.list, .species(index: 1), .details(index: 1), .viewfinder(index: 1), .captureSaved, .captureMatches, .captureAdded] {
+            #expect(!Self.machine(on: page).isCapturing, "\(page)")
+        }
+        // Off the wait, and after a photo that could not be taken: listening has the camera back.
+        var left = Self.machine(on: .captureSaving)
+        _ = left.apply(.swipeRight)
+        #expect(!left.isCapturing)
+        var failed = Self.machine(on: .captureSaving)
+        failed.captureFailed(1)
+        #expect(!failed.isCapturing)
+    }
+
+    @Test("a tap on the capture row takes the photo; the lens waits, says so once it is saved, and returns to the list with the capture row still highlighted")
     func captureSaves() {
-        var machine = Self.machine(on: .captureViewfinder)
+        var machine = Self.machine(on: .list)
+        _ = machine.apply(.swipeUp)
         #expect(machine.apply(.tap) == .capturePhoto(1))
         #expect(machine.page == .captureSaving)
         #expect(machine.captureSaved(1, dictation: false) == nil)
@@ -451,8 +532,7 @@ struct LensStateMachineTests {
         #expect(machine.isCaptureRowHighlighted, "one tap from another photo of the same bird")
         #expect(machine.savedIndices.isEmpty, "a capture adds no bird")
 
-        // The next photo is another capture, and late news of the first does not end its wait.
-        #expect(machine.apply(.tap) == .openCaptureViewfinder)
+        // The next photo is another capture, one tap away, and late news of the first does not end its wait.
         #expect(machine.apply(.tap) == .capturePhoto(2))
         _ = machine.captureSaved(1, dictation: false)
         #expect(machine.page == .captureSaving)
@@ -460,17 +540,35 @@ struct LensStateMachineTests {
         #expect(machine.page == .captureSaved)
     }
 
-    @Test("a swipe off the capture viewfinder takes no photo, and a photo saved after the wearer left the wait moves no page")
-    func captureCancelledOrLeft() {
-        var machine = Self.machine(on: .captureViewfinder)
-        #expect(machine.apply(.swipeRight) == nil)
-        #expect(machine.page == .list)
-        #expect(machine.isCaptureRowHighlighted)
-
+    @Test("the glasses having the photo is told once, for the capture the lens waits for, and a new capture starts untaken")
+    func captureIsTaken() {
+        var machine = Self.machine(on: .captureSaving)
+        #expect(!machine.captureIsTaken)
+        let other = machine.captureTaken(7)
+        #expect(!other, "not the capture the lens waits for")
+        let told = machine.captureTaken(1)
+        #expect(told)
+        #expect(machine.captureIsTaken)
+        let again = machine.captureTaken(1)
+        #expect(!again, "told once")
+        let half = machine.captureTaken(1, sent: 0.55)
+        #expect(half && machine.captureTenthsSent == 5, "and again as each tenth of it crosses")
+        let same = machine.captureTaken(1, sent: 0.58)
+        #expect(!same)
+        let back = machine.captureTaken(1, sent: 0.3)
+        #expect(!back && machine.captureTenthsSent == 5, "never backwards")
+        _ = machine.captureSaved(1, dictation: false)
         _ = machine.apply(.tap)
-        #expect(machine.apply(.tap) == .capturePhoto(1), "the cancelled visit took no number")
+        #expect(machine.apply(.tap) == .capturePhoto(2))
+        #expect(!machine.captureIsTaken && machine.captureTenthsSent == 0)
+    }
+
+    @Test("a photo saved after the wearer left the wait moves no page")
+    func captureLeft() {
+        var machine = Self.machine(on: .captureSaving)
         _ = machine.apply(.swipeRight)
         #expect(machine.page == .list)
+        #expect(machine.isCaptureRowHighlighted)
         #expect(machine.captureSaved(1, dictation: true) == nil, "nobody is there to say a name")
         #expect(machine.page == .list)
     }
@@ -494,25 +592,19 @@ struct LensStateMachineTests {
         _ = away.apply(.tap)
         #expect(away.page == .species(index: 0))
 
-        // The photo before failed while the next is on its way: the problem covers the wait, which goes on.
+        // One of two could not be taken while the other is still crossing: the page counts it, with no problem page.
         var again = Self.machine(on: .captureSaving)
-        _ = again.apply(.swipeRight)
-        _ = again.apply(.tap)
         #expect(again.apply(.tap) == .capturePhoto(2))
         again.captureFailed(1)
-        _ = again.apply(.swipeRight)
         #expect(again.page == .captureSaving)
+        #expect(again.captureBatch.failed == 1 && again.captureBatch.pending == 1)
         _ = again.captureSaved(2, dictation: false)
         #expect(again.page == .captureSaved)
     }
 
-    @Test("a problem over the capture viewfinder returns to it, and the photo still waits for a tap; over the wait, the saved page is there when the problem goes")
+    @Test("a problem over the wait for a photo: the saved page is there when the problem goes")
     func problemOverCapture() {
-        var machine = Self.machine(on: .captureViewfinder)
-        machine.report(.connectionLost)
-        #expect(machine.apply(.swipeRight) == nil)
-        #expect(machine.page == .captureViewfinder)
-        #expect(machine.apply(.tap) == .capturePhoto(1))
+        var machine = Self.machine(on: .captureSaving)
 
         machine.report(.noLocation)
         #expect(machine.captureSaved(1, dictation: true) == nil, "no name is asked for under a problem")
@@ -521,7 +613,7 @@ struct LensStateMachineTests {
         #expect(machine.page == .captureSaved)
     }
 
-    @Test("a friend's find is held on the capture viewfinder, the wait and the saved page, and shown back on the list", arguments: [LensPage.captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded])
+    @Test("a friend's find is held on the wait for a photo and the pages after it, and shown back on the list", arguments: [LensPage.captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded])
     func bannerHeldDuringCapture(_ page: LensPage) {
         var machine = Self.machine(on: page)
         machine.friendFound(Fakes.mayasPhoebe, at: 10)
@@ -534,7 +626,7 @@ struct LensStateMachineTests {
         #expect(machine.page == .list)
     }
 
-    @Test("the Add button does nothing on the capture pages, and a new session's stack restarts them on the list", arguments: [LensPage.captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded])
+    @Test("the Add button does nothing on the capture pages, and a new session's stack restarts them on the list", arguments: [LensPage.captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded])
     func capturePagesIgnoreSaveAndRestart(_ page: LensPage) {
         var machine = Self.machine(on: page)
         #expect(machine.press(.save) == nil)
@@ -663,9 +755,9 @@ struct LensStateMachineTests {
     }
 
     // Review of #185, J19: one press can arrive twice (a click and a select), and the echo must not be the next page's tap.
-    @Test("the pages whose own tap would undo the press that opened them say so: both viewfinders, \"Say the bird's name\", \"Photo saved\" and \"Added\"")
+    @Test("the pages whose own tap would undo the press that opened them say so: the viewfinder, \"Say the bird's name\", \"Photo saved\" and \"Added\"")
     func pagesThatGuardTheirTap() {
-        let guarded: [LensPage] = [.viewfinder(index: 1), .captureViewfinder, .captureNaming, .captureSaved, .captureAdded]
+        let guarded: [LensPage] = [.viewfinder(index: 1), .captureCancel, .captureNaming, .captureSaved, .captureAdded]
         let open: [LensPage] = [.list, .species(index: 1), .details(index: 1), .sounds(index: 1), .captureSaving, .captureMatches, .problem(.noLocation), .friend(Fakes.mayasPhoebe)]
         #expect(guarded.filter(\.guardsItsTap) == guarded)
         #expect(open.filter(\.guardsItsTap) == [])
@@ -782,7 +874,6 @@ struct LensStateMachineTests {
     func nextCapture() {
         var machine = Self.machine(on: .captureAdded)
         _ = machine.apply(.tap)
-        #expect(machine.apply(.tap) == .openCaptureViewfinder)
         #expect(machine.apply(.tap) == .capturePhoto(2))
         #expect(machine.captureSaved(2, dictation: true) == .listenForName(dictation: 2, capture: 2))
         #expect(machine.naming == LensNaming(capture: 2, dictation: 2))

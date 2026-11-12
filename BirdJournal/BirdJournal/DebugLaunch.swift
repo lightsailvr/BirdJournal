@@ -603,8 +603,8 @@ struct MockLensAdds {
         _ = await wait(seconds: 2) { lens.page == .list }
     }
 
-    /// Takes a photo from the lens as a wearer would (issue #193): up to "Capture a sighting", a tap, a moment for the
-    /// viewfinder's echo window, and a tap on the viewfinder; then back to the list, with the highlight on the first bird again.
+    /// Takes a photo from the lens as a wearer would (issue #193): up to "Capture a sighting" and a tap on it, which is
+    /// the shutter; then back to the list, with the highlight on the first bird again.
     /// Where the lens asks for the bird's name (issue #194), the mock's glasses hear `words` and the first bird offered is
     /// chosen; with no words, or no bird for them, the photo is left to be named later.
     func capture(saying words: String? = nil) async {
@@ -616,10 +616,9 @@ struct MockLensAdds {
         }
         let taken = sightings.unnamed.count + sightings.seen.count
         connection.injectMockInput(.select)
-        guard await wait(seconds: 2, until: { lens.page == .captureViewfinder }) else { return }
-        try? await Task.sleep(for: .milliseconds(1200))
-        connection.injectMockInput(.select)
         _ = await wait(seconds: 10) { sightings.unnamed.count + sightings.seen.count > taken }
+        // A tap right behind the one that took the photo is taken for it.
+        try? await Task.sleep(for: .milliseconds(1200))
         _ = await wait(seconds: 5) { lens.page == .captureSaved || lens.page == .captureNaming }
         if lens.page == .captureNaming {
             if let words, await wait(seconds: 5, until: { connection.mockSpeechIsListening }) {

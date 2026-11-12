@@ -116,6 +116,45 @@ final class IdleCaptureUITests: XCTestCase {
         XCTAssertTrue(patch.waitForExistence(timeout: 20), "the sighting isn't in the Collection; screen: \(app.debugDescription.prefix(4000))")
     }
 
+    /// The photo at the head of the naming is a thumbnail: a real tap on it brings the whole photo up full screen, a double
+    /// tap there zooms in and another shows it whole again, and Close returns to the naming with the photo still waiting.
+    /// Reduce Motion (`launchIdle`), so each zoom is there at once.
+    @MainActor
+    func testATapOnThePhotoBringsItUpFullScreenToZoomAndCloseReturnsToTheNaming() throws {
+        let app = launchIdle(location: "denied")
+        capture(app)
+
+        let photo = element(app, "name-bird-photo")
+        XCTAssertTrue(photo.waitForExistence(timeout: 5))
+        XCTAssertTrue(photo.isHittable, "the head of the naming takes the tap")
+        photo.tap()
+
+        let close = app.buttons["photo-close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5), "the photo did not open; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(close.label, "Close photo")
+        let whole = element(app, "photo-viewer-photo")
+        XCTAssertTrue(whole.waitForExistence(timeout: 5), "the stored file opens; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(whole.label, "Your photo")
+        XCTAssertFalse(element(app, "photo-viewer-note").exists, "not a sighting's yet, so nothing is said of evidence")
+
+        // Whole, the photo stands inside the screen; a double tap brings it three times closer, and another shows it whole.
+        let window = app.windows.firstMatch
+        let fitted = whole.frame.width
+        XCTAssertLessThanOrEqual(fitted, window.frame.width + 1, "the whole photo is in view")
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).doubleTap()
+        XCTAssertGreaterThan(whole.frame.width, fitted * 2, "a double tap zooms in; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(whole.value as? String, "3 times zoom", "and VoiceOver hears how far")
+        XCTAssertTrue(close.isHittable, "Close stays in reach over the zoomed photo")
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).doubleTap()
+        XCTAssertEqual(whole.frame.width, fitted, accuracy: 2, "a second double tap shows the whole photo again")
+
+        close.tap()
+        XCTAssertTrue(close.waitForNonExistence(timeout: 5), "the photo did not close; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars["Name this bird"].exists, "back on the naming; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(photo.exists, "the photo still waits for its name")
+        XCTAssertTrue(app.buttons["name-bird-later"].isHittable)
+    }
+
     @MainActor
     func testWithLocationRefusedThePlaceIsNotRecordedAndUndoOnTheIdleTabTakesTheNameBack() throws {
         let app = launchIdle(location: "denied")

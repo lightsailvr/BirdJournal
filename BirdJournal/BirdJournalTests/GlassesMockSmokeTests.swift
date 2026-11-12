@@ -90,20 +90,27 @@ extension MockDeviceKitTests {
             }
         }
 
-        @Test("a full-resolution photo takes the stream off, comes from the photo capability, and the stream comes back")
-        func audioSourceFullPhoto() async throws {
+        // The mock's stream with audio stops by itself the moment it streams, and takes the photo mode down with
+        // it, so here every still starts the mode again on a camera whose stream is down. That the mode stays up
+        // beside a running stream, and through a stream stopped for a still, is checked on hardware.
+        @Test("a photo is a still from the photo mode, started on the listening camera once its stream is up: the stream is set aside for it and comes back on the same camera (2026-11-12)")
+        func audioSourceStill() async throws {
             try await withStartedSource { source, glasses, log in
                 try await waitUntil { log.streamStates.contains(.streaming) }
-                let photoURL = try makeFeedImage()
-                glasses.services.cameraCapture.setCapturedPhoto(fileURL: photoURL)
+                glasses.services.cameraCapture.setCapturedPhoto(fileURL: try makeFeedImage())
                 let streamed = { log.streamStates.filter { $0 == .streaming }.count }
-                source.fullResolutionPhotos = true
 
                 let photo = await source.capturePhoto()
-                let data = try #require(photo, "the mock's photo")
+                let data = try #require(photo, "the mock's still")
                 #expect(data.starts(with: [0xFF, 0xD8]), "stored as a JPEG")
                 try await waitUntil(timeout: .seconds(15)) { streamed() == 2 }
                 #expect(source.sessionState == .started)
+
+                // A second one, as a birder takes them.
+                glasses.services.cameraCapture.setCapturedPhoto(fileURL: try makeFeedImage())
+                let again = await source.capturePhoto()
+                #expect(again != nil)
+                try await waitUntil(timeout: .seconds(15)) { streamed() == 3 }
             }
         }
 
@@ -115,7 +122,6 @@ extension MockDeviceKitTests {
                 try await waitUntil { log.streamStates.contains(.streaming) }
                 try await waitUntil { source.sessionState == .started }
                 let streamed = { log.streamStates.filter { $0 == .streaming }.count }
-                #expect(!source.fullResolutionPhotos)
 
                 await source.holdForPlayback()
                 await source.ensureStreaming("species list")
@@ -127,6 +133,37 @@ extension MockDeviceKitTests {
                 try await Task.sleep(for: GlassesAudioSource.audioStall + .milliseconds(500))
                 await source.ensureStreaming("species list")
                 try await waitUntil(timeout: .seconds(15)) { streamed() == 3 }
+                #expect(source.sessionState == .started)
+            }
+        }
+
+        @Test("a capture keeps the listening stream off from its photo until it ends, for the bird's name, and listening comes back on the same camera (2026-11-12)")
+        func audioSourceCapture() async throws {
+            try await withStartedSource { source, glasses, log in
+                try await waitUntil { log.streamStates.contains(.streaming) }
+                try await waitUntil { source.sessionState == .started }
+                glasses.services.cameraCapture.setCapturedPhoto(fileURL: try makeFeedImage())
+                let streamed = { log.streamStates.filter { $0 == .streaming }.count }
+
+                // The lens's order: the photo is asked for, and the capture takes the camera.
+                async let photo = source.capturePhoto()
+                await source.beginCapture()
+                let first = await photo
+                #expect(first != nil)
+                await source.ensureStreaming("species list")
+                try await Task.sleep(for: .seconds(2))
+                #expect(streamed() == 1, "the photo is in and the stream stays off: the name may be said next")
+                await source.endCapture()
+                try await waitUntil(timeout: .seconds(20)) { streamed() == 2 }
+
+                // A capture that ends while its photo is still being taken: listening comes back once it is in.
+                glasses.services.cameraCapture.setCapturedPhoto(fileURL: try makeFeedImage())
+                await source.beginCapture()
+                async let late = source.capturePhoto()
+                await source.endCapture()
+                let second = await late
+                #expect(second != nil)
+                try await waitUntil(timeout: .seconds(20)) { streamed() == 3 }
                 #expect(source.sessionState == .started)
             }
         }

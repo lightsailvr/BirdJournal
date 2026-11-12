@@ -45,8 +45,8 @@ extension MockDeviceKitTests {
             var speech: any MockSpeechKit { glasses.services.speech }
             var input: any MockInputKit { glasses.services.input }
 
-            /// From the list to the tap that takes the photo: up to the row if a bird has the highlight, a tap, a beat for
-            /// the viewfinder's echo window, and a tap. Returns once the photo is written.
+            /// From the list to the tap that takes the photo: up to the row if a bird has the highlight, and a tap on it.
+            /// Returns once the photo is written and a tap can no longer be taken for the one that took it.
             func takePhoto() async throws {
                 try #require(lens.page == .list)
                 if !lens.machine.isCaptureRowHighlighted {
@@ -55,10 +55,9 @@ extension MockDeviceKitTests {
                 }
                 let taken = run.sightings.unnamed.count + run.sightings.seen.count
                 input.select()
-                try await waitUntil(timeout: .seconds(2)) { lens.page == .captureViewfinder }
-                try await Task.sleep(for: .milliseconds(1100))
-                input.select()
                 try await waitUntil(timeout: .seconds(5)) { run.sightings.unnamed.count + run.sightings.seen.count == taken + 1 }
+                // A tap right behind the one that took the photo is taken for it: the test's next tap is its own.
+                try await Task.sleep(for: .milliseconds(1100))
             }
 
             /// A photo taken, and the lens on "Say the bird's name" with the glasses listening.
@@ -104,7 +103,9 @@ extension MockDeviceKitTests {
                     names: names,
                     occurrenceModel: SpyOccurrence(),
                     dictationLimits: limits,
-                    dictationKeepsStream: { keepsStream }
+                    dictationKeepsStream: { keepsStream },
+                    // The app's lens no longer asks (2026-11-12); the dictation stays built, and is tested switched on.
+                    asksNameOnLens: { true }
                 )
                 let defaults = try #require(UserDefaults(suiteName: "lens-dictation-\(UUID().uuidString)"))
                 let run = ListeningCoordinator(phone: ListeningSession(), glasses: glassesRun, sightings: sightings, levels: LevelSink(), defaultSource: .glasses, defaults: defaults)
@@ -178,9 +179,6 @@ extension MockDeviceKitTests {
                 do {
                     input.navUp()
                     try await waitUntil(timeout: .seconds(2)) { lens.machine.isCaptureRowHighlighted }
-                    input.select()
-                    try await waitUntil(timeout: .seconds(2)) { lens.page == .captureViewfinder }
-                    try await Task.sleep(for: .milliseconds(1100))
                     input.select()
                     try await waitUntil(timeout: .seconds(2)) { lens.page == .captureSaving }
                     await run.stop()
