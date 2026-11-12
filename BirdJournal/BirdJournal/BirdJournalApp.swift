@@ -226,8 +226,12 @@ struct BirdJournalApp: App {
     /// The whole loop on the glasses (issue #9), writing sightings to the album through the run ledger the phone's
     /// adds share (issue #28), and reporting the audio level for the waveform.
     private static func makeGlassesListeningSession(connection: GlassesConnection, recorder: SightingRecorder, sightings: RunSightings, packs: PackLibrary, levels: LevelSink, suppression: AudioSuppression) -> GlassesListeningSession {
+        let cues = SystemCaptureCues()
         var makeSource: (DeviceSession) -> any FrameKeepingAudioSource = { session in
-            GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100, onLevel: { levels.level = $0 })
+            let source = GlassesAudioSource(lease: .shared(session), sampleRate: .rate44100, onLevel: { levels.level = $0 })
+            // The shutter's sound and the one for listening coming back, through the glasses.
+            source.cues = cues
+            return source
         }
         var location: any LocationProvider = CoreLocationProvider()
         #if DEBUG

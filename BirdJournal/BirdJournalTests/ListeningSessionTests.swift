@@ -281,12 +281,23 @@ final class ManualAudioSource: FrameKeepingAudioSource, DictationStreamHold {
         return photo
     }
 
+    /// How many times the photos on their way were given up; those held back are let go, for the run to drop.
+    private(set) var cancels = 0
+    func cancelPhotos() async {
+        cancels += 1
+        deliverPhoto()
+    }
+
     /// Lets the photos held back arrive.
     func deliverPhoto() {
         holdsPhoto = false
         photoWaiters.forEach { $0.resume() }
         photoWaiters = []
     }
+    /// Every time a capture took the camera (true) or let it go (false), oldest first.
+    var captureSteps: [Bool] = []
+    func beginCapture() async { captureSteps.append(true) }
+    func endCapture() async { captureSteps.append(false) }
     /// Every moment the run asked for the stream, oldest first.
     var streamChecks: [String] = []
     func ensureStreaming(_ reason: String) async { streamChecks.append(reason) }

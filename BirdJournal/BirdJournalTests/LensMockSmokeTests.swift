@@ -114,20 +114,21 @@ extension MockDeviceKitTests {
             }
         }
 
-        @Test("Capture a sighting on a lens with no run behind it: the row is highlighted on the empty list, a tap opens the viewfinder, which waits for a camera, and a tap there says no photo was taken (issue #193)")
+        @Test("Capture a sighting on a lens with no run behind it: the row is highlighted on the empty list, and a tap on it says no photo was taken, which a tap right behind it does not put away (issue #193)")
         func captureWithoutARun() async throws {
             try await withRunningLens { lens, glasses in
                 #expect(lens.card.elements == [
-                    .heading("No species yet"), .meta("Birds appear as they call."), .capture(label: "Capture a sighting", isSelected: true),
+                    .heading("No species yet"), .meta("Birds appear as they call. Tap: take a photo."), .capture(label: "Capture a sighting", isSelected: true),
                 ])
                 let input = glasses.services.input
                 input.select()
-                try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
-                #expect(lens.card.elements == [.viewfinder, .heading("Capture a sighting"), .meta("Tap: take the photo · swipe right: back")])
-                try await Task.sleep(for: .milliseconds(1100))
-                input.select()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .problem(.photoNotTaken) }
                 #expect(lens.card.elements.first == .heading("No photo taken"))
+                // The same press delivered twice does not put the answer away unread.
+                let received = lens.inputRecords.count
+                input.select()
+                try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == received + 1 }
+                #expect(lens.page == .problem(.photoNotTaken))
                 input.navRight()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
                 #expect(lens.savedSightings.isEmpty)

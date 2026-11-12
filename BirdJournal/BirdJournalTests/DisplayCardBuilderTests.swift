@@ -22,7 +22,7 @@ struct DisplayCardBuilderTests {
 
     nonisolated static let pages: [LensPage] = [
         .list, .species(index: 0), .species(index: 4), .details(index: 0), .details(index: 4),
-        .captureViewfinder, .captureSaving, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem(.photoNotTaken),
+        .captureSaving, .captureCancel, .captureSaved, .captureNaming, .captureMatches, .captureAdded, .problem(.photoNotTaken),
     ]
 
     @Test("every page builds one root FlexBox, saved or not, with the card each add earned", arguments: pages, [Set<Int>(), [0, 4]])
@@ -71,23 +71,76 @@ struct DisplayCardBuilderTests {
         }
     }
 
-    @Test("the photo on \"Say the bird's name\" is the journal's crop of the picture, no larger than its box, whatever the picture's shape; data that is no picture gives none")
+    @Test("the photo on \"Say the bird's name\" is the journal's crop of the picture in the middle of a canvas of the card's width, whatever the picture's shape; data that is no picture gives none")
     func capturedPhoto() throws {
         for size in [CGSize(width: 1080, height: 1440), CGSize(width: 360, height: 640), CGSize(width: 4032, height: 3024), CGSize(width: 64, height: 64)] {
-            let format = UIGraphicsImageRendererFormat()
-            format.scale = 1
-            let jpeg = try #require(UIGraphicsImageRenderer(size: size, format: format).image { context in
-                UIColor.blue.setFill()
-                context.fill(CGRect(origin: .zero, size: size))
-            }.jpegData(compressionQuality: 0.9))
+            let jpeg = try #require(Self.picture(size, .blue).jpegData(compressionQuality: 0.9))
             let image = try #require(DisplayCardBuilder.capturedPhotoImage(jpeg))
             #expect(image.scale == 1)
-            #expect(image.size.width <= DisplayCardBuilder.capturedPhotoSize.width && image.size.height <= DisplayCardBuilder.capturedPhotoSize.height, "\(size) became \(image.size)")
-            #expect(image.size.width > 0 && image.size.height > 0)
+            // The glasses stretch a `.fill` image to the card's width, so a narrower one would grow off the lens.
+            #expect(image.size == DisplayCardBuilder.capturedPhotoSize, "\(size) became \(image.size)")
             let crop = FrameCrop.centerRect(in: size)
-            #expect(abs(image.size.width / image.size.height - crop.width / crop.height) < 0.05, "the crop's shape: \(image.size) for \(crop.size)")
+            let scale = min(DisplayCardBuilder.capturedPhotoSize.width / crop.width, DisplayCardBuilder.capturedPhotoSize.height / crop.height, 1)
+            let lit = try Self.litBounds(of: image)
+            #expect(abs(lit.width - crop.width * scale) <= 2 && abs(lit.height - crop.height * scale) <= 2, "the crop's size: \(lit) for \(crop.size) at \(scale)")
+            #expect(abs(lit.midX - image.size.width / 2) <= 2 && abs(lit.midY - image.size.height / 2) <= 2, "in the middle: \(lit)")
         }
         #expect(DisplayCardBuilder.capturedPhotoImage(Data("not a picture".utf8)) == nil)
+    }
+
+    @Test("the mark of a photo being taken is as wide as the card, so the glasses draw it at its size, and is lit")
+    func shutterMark() throws {
+        let image = DisplayCardBuilder.shutterImage
+        #expect(image.scale == 1)
+        #expect(image.size.width == DisplayCardBuilder.capturedPhotoSize.width)
+        let lit = try Self.litBounds(of: image)
+        #expect(lit.width > image.size.width * 0.9 && lit.height > image.size.height * 0.8, "the corners reach the edges: \(lit)")
+    }
+
+    @Test("the viewfinder's picture is a canvas of the card's width with the journal's crop whole on it, whatever the frame's size")
+    func viewfinderPicture() throws {
+        for size in [CGSize(width: 360, height: 640), CGSize(width: 504, height: 896), CGSize(width: 720, height: 1280), CGSize(width: 640, height: 360)] {
+            let image = DisplayCardBuilder.viewfinderImage(Self.picture(size, .blue))
+            #expect(image.scale == 1)
+            #expect(image.size == DisplayCardBuilder.viewfinderSize, "\(size) became \(image.size)")
+            let lit = try Self.litBounds(of: image)
+            let kept = FrameCrop.centerRect(in: size)
+            let scale = min(image.size.height * DisplayCardBuilder.viewfinderCropShare / kept.height, image.size.width * DisplayCardBuilder.viewfinderCropShare / kept.width)
+            // The crop is whole on the canvas, and the frame around it reaches as far as the canvas lets it.
+            #expect(kept.width * scale <= image.size.width && kept.height * scale <= image.size.height)
+            #expect(abs(lit.width - min(size.width * scale, image.size.width)) <= 2, "\(size): \(lit)")
+            #expect(abs(lit.height - min(size.height * scale, image.size.height)) <= 2, "\(size): \(lit)")
+            #expect(abs(lit.midX - image.size.width / 2) <= 2 && abs(lit.midY - image.size.height / 2) <= 2, "in the middle: \(lit)")
+        }
+    }
+
+    /// A picture of one colour, one pixel a point.
+    private static func picture(_ size: CGSize, _ color: UIColor) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            color.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+    }
+
+    /// The box around every pixel of `image` that is not black: where the canvas has a picture.
+    private static func litBounds(of image: UIImage) throws -> CGRect {
+        let cg = try #require(image.cgImage)
+        let width = cg.width, height = cg.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let context = try #require(CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+        var minX = width, minY = height, maxX = -1, maxY = -1
+        for y in 0..<height {
+            for x in 0..<width {
+                let i = (y * width + x) * 4
+                guard Int(pixels[i]) + Int(pixels[i + 1]) + Int(pixels[i + 2]) > 24 else { continue }
+                minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
+            }
+        }
+        try #require(maxX >= 0, "nothing lit")
+        return CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
     }
 
     @Test("a photo the app cannot load still builds a card")

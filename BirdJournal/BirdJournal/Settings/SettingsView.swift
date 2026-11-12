@@ -14,6 +14,8 @@ struct SettingsView: View {
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     /// "Share my finds automatically" (issue #62): on by default; off is private.
     @AppStorage(FindOutbox.sharingKey) private var sharesFinds = true
+    /// How large a photo the glasses are asked for (`GlassesPhotoSize`): full detail unless the birder says otherwise.
+    @AppStorage(GlassesPhotoSize.key) private var photoSize = GlassesPhotoSize.byDefault
     /// Read on appear, so it is current when the reader comes back from the icon screen.
     @State private var iconTitle = ""
     #if DEBUG
@@ -52,6 +54,13 @@ struct SettingsView: View {
                 if let error = connection.errorMessage {
                     InlineError(error)
                 }
+                Picker("Photos from the glasses", selection: $photoSize) {
+                    ForEach(GlassesPhotoSize.allCases) { Text($0.title).tag($0) }
+                }
+                .accessibilityIdentifier("glassesPhotoSize")
+                Text(photoSize.detail)
+                    .font(JournalFont.supporting)
+                    .foregroundStyle(Color.inkSecondary)
                 HowThisWorks("Featherguild registers with the Meta AI app once, then listens through the glasses' camera stream, which carries their microphones. Camera frames are not used to identify birds; the latest one is kept as a snapshot when you add a bird.")
             } header: {
                 Text("Glasses")

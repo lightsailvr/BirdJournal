@@ -41,11 +41,12 @@ import UIKit
 /// every page a press opens whose own tap would undo that press (`LensPage.guardsItsTap`): "Say the bird's name" after
 /// "Say it again", where the echo would be "Name it later", and "Photo saved" and "Added", which it would close unread.
 ///
-/// "Capture a sighting", the row above the birds on the species list (issue #193), opens a viewfinder of its own for a
-/// bird that was seen and not heard: the same frames, the same echo window, and a tap there asks `onCapture` for the
-/// photo, which the run writes as an unnamed sighting for the phone to name. The lens waits on "Saving the photo…" until
-/// the run answers with `captureSaved(_:)` ("Photo saved. Name it on your phone.") or `captureFailed(_:)` (a problem
-/// page: nothing was saved). A swipe off that viewfinder saves nothing.
+/// "Capture a sighting", the row above the birds on the species list (issue #193), is the shutter for a bird that was
+/// seen and not heard: a tap on it asks `onCapture` for the photo at once, which the run writes as an unnamed sighting
+/// for the phone to name. It has no viewfinder: the wearer's eyes frame the bird, and the lens shows the photo
+/// afterwards. A tap within `echoWindow` of the one that took a photo is dropped on whatever page the photo has
+/// brought. The lens waits on "Taking the photo…" (then "Photo taken", once the glasses have it) until the run answers with `captureSaved(_:)` ("Photo saved. Name
+/// it on your phone.") or `captureFailed(_:)` (a problem page: nothing was saved).
 ///
 /// Where the run can hear a name (issue #194) it answers a saved photo with `captureSaved(_:askName:photo:)`, and the lens
 /// goes on to "Say the bird's name". While that is the page, and only then, a `GlassesDictation` has the toolkit's Speech
@@ -134,12 +135,27 @@ final class GlassesLensSession {
     @ObservationIgnored private let echoWindow: Duration
     /// When an input last opened such a page.
     @ObservationIgnored private var pressOpenedPageAt: ContinuousClock.Instant?
+    /// When a tap last took a capture's photo.
+    @ObservationIgnored private var shutterPressedAt: ContinuousClock.Instant?
+    /// How long the mark of a tap stays on the capture page, and the timer that takes it off. The glasses stamped a
+    /// photo 1.5 s after it was asked for (2026-11-12): "Hold still" for two.
+    @ObservationIgnored private let shutterTime: Duration
+    @ObservationIgnored private var shutterTask: Task<Void, Never>?
+    /// Told when the wearer gives up the photos not yet on the phone ("Stop sending?"), so the run stops them and
+    /// listening comes back.
+    @ObservationIgnored var onCancelCaptures: (() -> Void)?
+    /// Told when a capture takes the camera and the glasses' microphones for itself (true: its photo is being taken,
+    /// so the run stops listening) and when it no longer needs them (false: the name is heard or left for later, the
+    /// wearer swiped away, or the pages left the lens), so listening comes back.
+    @ObservationIgnored var onCapturing: ((Bool) -> Void)?
+    /// What `onCapturing` was last told.
+    @ObservationIgnored private var isCapturing = false
     /// The camera's latest frame for the viewfinder; nil without a camera (a lens-only session), which the page says.
     @ObservationIgnored var viewfinderFrame: (() -> CameraFrame?)?
     /// Told when the viewfinder opens ("viewfinder") and when the wearer lands on the species list ("species list"),
     /// so the run can make sure the camera is streaming.
     @ObservationIgnored var onStreamNeeded: ((String) -> Void)?
-    /// Told to take the capture viewfinder's photo and write it as an unnamed sighting (issue #193), and then to say how
+    /// Told to take a capture's photo and write it as an unnamed sighting (issue #193), and then to say how
     /// it went with `captureSaved(_:)` or `captureFailed(_:)` and the number it was given. Nil on a lens without a run,
     /// which has no camera: its captures fail at once.
     @ObservationIgnored var onCapture: ((Int) -> Void)?
@@ -199,6 +215,7 @@ final class GlassesLensSession {
         image: @escaping (LensImage) -> UIImage? = { _ in nil },
         echoWindow: Duration = .seconds(1),
         viewfinderInterval: Duration = .milliseconds(150),
+        shutterTime: Duration = .seconds(2),
         dictationLimits: GlassesDictation.Limits = GlassesDictation.Limits(),
         onEffect: @escaping (LensEffect) -> Void = { _ in }
     ) {
@@ -208,6 +225,7 @@ final class GlassesLensSession {
         self.image = image
         self.echoWindow = echoWindow
         self.viewfinderInterval = viewfinderInterval
+        self.shutterTime = shutterTime
         self.dictationLimits = dictationLimits
         self.onEffect = onEffect
         card = LensCardRenderer.render(LensStateMachine(), profile: profile)
@@ -238,6 +256,7 @@ final class GlassesLensSession {
         bannerExpiryTask = nil
         savedSightings = []
         pressOpenedPageAt = nil
+        shutterPressedAt = nil
         capturedPhoto = nil
         inputRecords = []
         teardownTask = nil
@@ -267,6 +286,7 @@ final class GlassesLensSession {
             phase = .running
             // Back from a suspension onto the viewfinder (or a problem over it, cleared later).
             syncViewfinder()
+            syncCapture()
         } catch {
             errorMessage = error.localizedDescription
             connection?.noteSessionFailure(error)
@@ -436,6 +456,10 @@ final class GlassesLensSession {
         lapseTask?.cancel()
         lapseTask = nil
         stopViewfinder()
+        shutterTask?.cancel()
+        shutterTask = nil
+        // The pages are off the lens: a capture no longer has the camera.
+        syncCapture()
         // Nobody is there to say a name: the photo is saved, and the pages come back saying so.
         if machine.page == .captureNaming, let naming = machine.naming, machine.dictationEnded(naming.dictation) { refreshCard() }
         syncDictation()
@@ -509,10 +533,27 @@ final class GlassesLensSession {
         if gesture == .tap, machine.page.guardsItsTap, let pressOpenedPageAt, ContinuousClock.now - pressOpenedPageAt < echoWindow {
             return
         }
+        // The shutter's echo: whatever page the photo has brought by then (the wait, "Photo saved", "Say the bird's
+        // name", or a problem), a tap right behind the one that took it is that tap again.
+        if gesture == .tap, let shutterPressedAt, ContinuousClock.now - shutterPressedAt < echoWindow {
+            return
+        }
         // A held banner past its limit must not show on the page this gesture lands on, even if the timer is late.
         machine.expireBanner(at: bannerTime)
         let before = machine.page
-        perform(machine.apply(gesture) { [self] in cardProfile(for: $0)?.sounds ?? [] })
+        let effect = machine.apply(gesture) { [self] in cardProfile(for: $0)?.sounds ?? [] }
+        // Noted before the photo is asked for: a lens with no camera answers at once, with a problem page.
+        if case .capturePhoto = effect {
+            shutterPressedAt = .now
+            // The mark of the tap comes off after a moment, and the page says how the photos are doing.
+            shutterTask?.cancel()
+            shutterTask = Task { [weak self, shutterTime] in
+                try? await Task.sleep(for: shutterTime)
+                guard !Task.isCancelled, let self else { return }
+                if self.machine.shutterEnded() { self.refreshCard() }
+            }
+        }
+        perform(effect)
         notePress(from: before)
     }
 
@@ -540,8 +581,6 @@ final class GlassesLensSession {
         switch effect {
         case .openViewfinder(let candidate):
             onEffect(.openViewfinder(candidate))
-        case .openCaptureViewfinder:
-            onEffect(.openCaptureViewfinder)
         case .capturePhoto(let id):
             if let onCapture {
                 onCapture(id)
@@ -549,6 +588,8 @@ final class GlassesLensSession {
                 // No run behind the lens, so no camera: nothing was taken.
                 _ = machine.captureFailed(id)
             }
+        case .cancelCaptures:
+            onCancelCaptures?()
         case .listenForName:
             // "Say the bird's name" is the page: `syncDictation()` below starts listening.
             break
@@ -579,6 +620,7 @@ final class GlassesLensSession {
         if machine.naming == nil { capturedPhoto = nil }
         refreshCard()
         syncViewfinder()
+        syncCapture()
         syncDictation()
         // A banner over the list is still the list for the camera: the wearer is back to listening.
         if machine.pageUnderBanner == .list, landedPage != .list { onStreamNeeded?("species list") }
@@ -587,6 +629,12 @@ final class GlassesLensSession {
     }
 
     // MARK: - Captures
+
+    /// The glasses have the photo of capture `id`, and `sent` of it has crossed to the phone: the wait page says
+    /// "Photo taken" and how far along it is.
+    func captureTaken(_ id: Int, sent: Double) {
+        if machine.captureTaken(id, sent: sent) { refreshCard() }
+    }
 
     /// The photo of capture `id` is written, as an unnamed sighting on the phone (issue #193): the lens says so, if the
     /// wearer is still waiting for it. With `askName` (issue #194) the glasses can hear the bird's name, and the lens asks
@@ -753,6 +801,14 @@ final class GlassesLensSession {
         guard viewfinderTask == nil else { return }
         viewfinderTask = Task { [weak self] in await self?.pumpViewfinder() }
         onStreamNeeded?("viewfinder")
+    }
+
+    /// Tells the run when a capture takes the camera and when it lets it go (`onCapturing`).
+    private func syncCapture() {
+        let capturing = phase == .running && machine.isCapturing
+        guard capturing != isCapturing else { return }
+        isCapturing = capturing
+        onCapturing?(capturing)
     }
 
     private func stopViewfinder() {

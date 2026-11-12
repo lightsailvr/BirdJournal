@@ -4,10 +4,11 @@ import MWDATSpeech
 import OSLog
 
 /// The switch the field check flips (issue #194, DAT-SETUP-CHECKLIST.md step 16): whether the camera stream, which
-/// carries the run's listening audio, stays on while the glasses listen for a bird's name. On, unless a debug build's
-/// defaults say otherwise (`-dictationKeepsStream NO`, or the Developer screen's toggle). Nobody knows yet whether the
-/// toolkit's Speech runs beside a stream that has the microphones; if it does not, off takes the stream off for the
-/// seconds of a dictation, as a reference clip does.
+/// carries the run's listening audio, stays on while the glasses listen for a bird's name. Off, unless a debug build's
+/// defaults say otherwise (`-dictationKeepsStream YES`, or the Developer screen's toggle). On the glasses (2026-11-12)
+/// Speech heard a name with no camera on the session, and failed half a second after starting ("Unexpected error")
+/// with one there, its stream stopped: so the camera comes off the session for the seconds of a dictation, as it does
+/// for a reference clip, unless the switch says to keep it.
 ///
 /// A Release build never reads the switch: the Developer screen's toggle is written to the app's defaults, which a
 /// Release build installed over a debug one inherits, and it has no screen to turn the stream back on with. Once the
@@ -15,7 +16,22 @@ import OSLog
 enum DictationSettings {
     static let keepsStreamKey = "dictationKeepsStream"
     /// What every build does unless a debug build's switch says otherwise.
-    static let keepsStreamByDefault = true
+    static let keepsStreamByDefault = false
+
+    static let asksOnLensKey = "lensAsksName"
+    /// Whether the lens asks for the bird's name once a photo is saved. Off since 2026-11-12, the maintainer's choice:
+    /// photos are named on the phone after the walk, where they can be seen large, and the lens goes straight back to
+    /// listening. The dictation stays built, behind a debug build's switch (`-lensAsksName YES`, or the Developer
+    /// screen's toggle).
+    static let asksOnLensByDefault = false
+
+    static func asksOnLens(_ defaults: UserDefaults = .standard) -> Bool {
+        #if DEBUG
+        defaults.object(forKey: asksOnLensKey) == nil ? asksOnLensByDefault : defaults.bool(forKey: asksOnLensKey)
+        #else
+        asksOnLensByDefault
+        #endif
+    }
 
     static func keepsStream(_ defaults: UserDefaults = .standard) -> Bool {
         #if DEBUG
@@ -190,7 +206,14 @@ final class GlassesDictation {
     private let limits: Limits
     private let onEvent: (Event) -> Void
     private var speech: Speech?
-    private let tokens = ListenerTokenBag()
+    private var tokens = ListenerTokenBag()
+    /// When Speech was last started, and whether it has been started a second time: an error in its first moments,
+    /// with nothing heard, is tried once more ("Unexpected error" half a second after `started`, 2026-11-12).
+    private var startedAt: ContinuousClock.Instant?
+    private var hasRetried = false
+    private var heardAnything = false
+    /// How soon after its start an error counts as Speech failing to come up rather than failing to hear.
+    static let earlyError: Duration = .seconds(3)
     private var progress = DictationProgress()
     /// Stopped by its owner: nothing more is told.
     private var isStopped = false
@@ -212,21 +235,27 @@ final class GlassesDictation {
                 return
             }
             self.speech = speech
+            let tokens = self.tokens
             speech.transcriptionPublisher.listen { [weak self] result in
                 Task { @MainActor in
-                    guard let self else { return }
+                    guard let self, self.speech === speech else { return }
+                    self.heardAnything = true
                     self.take(self.progress.heard(result.text, isFinal: result.isFinal))
                 }
             }.store(in: tokens)
             speech.errorPublisher.listen { [weak self] error in
                 Task { @MainActor in
-                    guard let self else { return }
-                    self.take(self.progress.failed(error.description))
+                    guard let self, self.speech === speech else { return }
+                    self.failed(error.description)
                 }
             }.store(in: tokens)
             speech.statePublisher.listen { [weak self] state in
-                Task { @MainActor in self?.stateChanged(to: state) }
+                Task { @MainActor in
+                    guard let self, self.speech === speech else { return }
+                    self.stateChanged(to: state)
+                }
             }.store(in: tokens)
+            startedAt = .now
             speech.start()
             GlassesLog.shared.note("dictation: listening")
             take(DictationProgress.Step(wait: .silence))
@@ -250,6 +279,31 @@ final class GlassesDictation {
         } catch {
             // A session the glasses ended has taken Speech with it.
             Self.logger.info("Speech not removed: \(error.description, privacy: .public)")
+        }
+    }
+
+    /// Speech reported an error. One in its first moments, with nothing heard, is Speech not having come up: it is
+    /// taken off the session and added again, once. Any other ends the dictation, and the photo waits on the phone.
+    private func failed(_ description: String) {
+        guard !isStopped, !progress.isOver else { return }
+        guard !hasRetried, !heardAnything, let startedAt, ContinuousClock.now - startedAt < Self.earlyError, let speech else {
+            take(progress.failed(description))
+            return
+        }
+        hasRetried = true
+        GlassesLog.shared.error("dictation: Speech error: \(description); starting it once more")
+        waitTask?.cancel()
+        waitTask = nil
+        self.speech = nil
+        let old = tokens
+        tokens = ListenerTokenBag()
+        progress = DictationProgress()
+        Task { [weak self] in
+            speech.stop()
+            await old.cancelAll()
+            try? self?.session.removeSpeech()
+            try? await Task.sleep(for: .milliseconds(800))
+            self?.start()
         }
     }
 

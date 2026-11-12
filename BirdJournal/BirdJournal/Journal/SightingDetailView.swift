@@ -226,9 +226,10 @@ struct SightingDetailView: View {
             .sheet(isPresented: $showingMap) {
                 SightingMapView(focus: sighting)
             }
-            .sheet(isPresented: $showingOriginal) {
+            // The whole screen and not a sheet: the photo is there to be zoomed, and a drag on it is a drag across the photo.
+            .fullScreenCover(isPresented: $showingOriginal) {
                 if let path = CardText.originalPhotoPath(sighting) {
-                    OriginalPhotoView(path: path)
+                    OriginalPhotoView(path: path, note: OriginalPhotoView.evidenceNote)
                 }
             }
             .sheet(item: $changingBird) { named in
@@ -482,52 +483,5 @@ private struct SightingMatchDetails: View {
             LabeledContent("Evidence", value: CardText.evidence(sighting))
         }
         .font(JournalFont.supporting)
-    }
-}
-
-/// The original photo, whole and unaltered: evidence kept with the sighting, never art.
-struct OriginalPhotoView: View {
-    @Environment(\.frameStore) private var frameStore
-    @Environment(\.dismiss) private var dismiss
-    let path: String
-    @State private var image: UIImage?
-    @State private var loaded = false
-
-    var body: some View {
-        NavigationStack {
-            PaperPage {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                            .accessibilityLabel("Original photo")
-                    } else if loaded {
-                        StateNotice("Photo unavailable", message: "The file is no longer on this iPhone.", mark: .symbol("photo"))
-                    } else {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, minHeight: 200)
-                    }
-                    Text("The unaltered photo kept with this sighting: evidence, never art.")
-                        .font(JournalFont.attribution)
-                        .foregroundStyle(Color.inkSecondary)
-                }
-                .padding(.top, 4)
-            }
-            .navigationTitle("Original photo")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-            .task(id: path) {
-                if let url = frameStore?.url(for: path) {
-                    image = await Task.detached(priority: .userInitiated) { (try? Data(contentsOf: url)).flatMap(UIImage.init(data:)) }.value
-                }
-                loaded = true
-            }
-        }
     }
 }

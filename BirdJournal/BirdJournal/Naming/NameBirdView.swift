@@ -13,6 +13,9 @@ import SwiftUI
 /// finds most likely where the photo was taken, in the week it was taken. Typing replaces both with the search, and clearing
 /// the field brings them back. `NameableBirds.search(_:in:)` decides all of it; this view draws what it returns.
 ///
+/// The photo at the head of the page is small, and a glasses photo's is its middle: a tap on it brings the whole photo up
+/// full screen, to be zoomed until the bird can be told (`OriginalPhotoView`).
+///
 /// The photo was saved at the shutter, so nothing here can lose it: "Name it later", a swipe down or the app being killed
 /// all leave it an unnamed sighting, to be named from the run, its review or the Collection. Only "Delete photo", once
 /// confirmed, removes it. The same sheet names a photo just taken and one that has waited for weeks, which is why where and
@@ -343,6 +346,10 @@ struct NameBirdView: View {
 
 /// The photo being named, small, with when it was taken and where the sighting will be recorded. For a sighting whose bird
 /// is being changed it leads with the bird the sighting is now, and has no picture once the birder has removed the photo.
+///
+/// The picture is a thumbnail, and a glasses photo's is only its middle, so a tap brings the whole photo up full screen,
+/// where a pinch shows the bird (`OriginalPhotoView`). The head is the button, picture and words: the picture in it takes
+/// no touches (DECISIONS.md "Clipped images take no touches"), and VoiceOver hears one sentence and what a double tap does.
 private struct CapturedPhotoHeader: View {
     /// The sighting's bird now; nil for a photo not yet named.
     let bird: String?
@@ -353,9 +360,40 @@ private struct CapturedPhotoHeader: View {
     let place: String
     @ScaledMetric(relativeTo: .body) private var side: CGFloat = 96
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// The photo is up, full screen.
+    @State private var showingPhoto = false
 
     var body: some View {
         let taken = NameBirdText.taken(takenAt)
+        let spoken = NameBirdText.sentence([bird, photoPath == nil ? nil : (bird == nil ? "Your photo" : "your photo"), taken, place].compactMap { $0 })
+        if let photoPath {
+            Button {
+                showingPhoto = true
+            } label: {
+                row(taken: taken)
+                    .contentShape(Rectangle())
+                    // One sentence for the head; the button around it keeps its action.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(spoken)
+            }
+            .buttonStyle(.journalPress)
+            .accessibilityAddTraits(.isImage)
+            .accessibilityHint("Shows the photo full screen, where you can zoom in")
+            .accessibilityIdentifier("name-bird-photo")
+            // Over the sheet, and over the camera's cover when the photo was just taken: the photo has the whole screen.
+            .fullScreenCover(isPresented: $showingPhoto) {
+                OriginalPhotoView(path: photoPath, name: "Your photo")
+            }
+        } else {
+            row(taken: taken)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(spoken)
+                .accessibilityIdentifier("name-bird-photo")
+        }
+    }
+
+    /// The picture, with a mark in its corner that it opens, and the words beside it.
+    private func row(taken: String) -> some View {
         // At the largest sizes the words go under the picture: beside it they'd have a column a word wide.
         AdaptiveRow(stacked: typeSize.stacksRows) {
             if photoPath != nil {
@@ -363,6 +401,15 @@ private struct CapturedPhotoHeader: View {
                 BirderPhoto(path: photoPath, isGlassesFrame: isGlassesFrame, maxPixels: 900, placeholder: nil)
                     .frame(width: min(side, 140), height: min(side, 140))
                     .clipShape(RoundedRectangle(cornerRadius: JournalLayout.thumbnailRadius, style: .continuous))
+                    .overlay(alignment: .bottomTrailing) {
+                        // A mark of one size on a picture that stops growing: white on a dark disc, so it shows on any photo.
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 24, height: 24)
+                            .background(.black.opacity(0.55), in: Circle())
+                            .padding(5)
+                    }
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(bird ?? "Your photo")
@@ -374,13 +421,11 @@ private struct CapturedPhotoHeader: View {
             }
             .font(JournalFont.supporting)
             .foregroundStyle(Color.inkSecondary)
+            // A button's label centres its lines unless told.
+            .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(NameBirdText.sentence([bird, photoPath == nil ? nil : (bird == nil ? "Your photo" : "your photo"), taken, place].compactMap { $0 }))
-        .accessibilityAddTraits(photoPath == nil ? [] : .isImage)
-        .accessibilityIdentifier("name-bird-photo")
     }
 }
 

@@ -130,10 +130,16 @@ final class GlassesListeningSession {
     @ObservationIgnored private let occurrenceModel: any SpeciesOccurrenceModel
     /// Whether the camera stream stays on while the glasses listen for a name, read as each dictation starts.
     @ObservationIgnored private let dictationKeepsStream: () -> Bool
+    /// Whether the lens asks for the bird's name after a photo (`DictationSettings.asksOnLens`).
+    @ObservationIgnored private let asksNameOnLens: () -> Bool
     /// The stream a dictation took off, until the dictation is over.
     @ObservationIgnored private var dictationHold: (any DictationStreamHold)?
     /// The photos taken on the lens this run that have no name yet, by the lens's number for each.
     @ObservationIgnored private var captured: [Int: UnnamedSighting] = [:]
+    /// The captures whose photos are on their way, and those of them the wearer gave up ("Stop sending?"): a photo
+    /// given up is not written, not even as the frame from its tap, and the lens hears no more of it.
+    @ObservationIgnored private var capturesInFlight: Set<Int> = []
+    @ObservationIgnored private var capturesGivenUp: Set<Int> = []
     /// The birds last offered for each of them, by scientific name: what a tap on the lens names.
     @ObservationIgnored private var offered: [Int: [String: NameableBird]] = [:]
     @ObservationIgnored private var session: DeviceSession?
@@ -163,7 +169,8 @@ final class GlassesListeningSession {
         names: (@Sendable () async -> NameableBirds?)? = nil,
         occurrenceModel: any SpeciesOccurrenceModel = BundledIdentification.geoModel,
         dictationLimits: GlassesDictation.Limits = GlassesDictation.Limits(),
-        dictationKeepsStream: @escaping () -> Bool = { DictationSettings.keepsStream() }
+        dictationKeepsStream: @escaping () -> Bool = { DictationSettings.keepsStream() },
+        asksNameOnLens: @escaping () -> Bool = { DictationSettings.asksOnLens() }
     ) {
         self.wearables = wearables
         self.connection = connection
@@ -173,6 +180,7 @@ final class GlassesListeningSession {
         loadNames = names
         self.occurrenceModel = occurrenceModel
         self.dictationKeepsStream = dictationKeepsStream
+        self.asksNameOnLens = asksNameOnLens
         // The closures reach back into the run; both objects live as long as it does.
         let box = WeakBox()
         listening = ListeningSession(
@@ -204,7 +212,17 @@ final class GlassesListeningSession {
         lens.onStreamNeeded = { reason in
             Task { await box.run?.source?.ensureStreaming(reason) }
         }
+        lens.onCapturing = { capturing in
+            Task {
+                if capturing {
+                    await box.run?.source?.beginCapture()
+                } else {
+                    await box.run?.source?.endCapture()
+                }
+            }
+        }
         lens.onCapture = { id in box.run?.capture(id) }
+        lens.onCancelCaptures = { box.run?.giveUpCaptures() }
         box.run = self
     }
 
@@ -257,6 +275,8 @@ final class GlassesListeningSession {
 
             let source = makeSource(session)
             self.source = source
+            // A photo that crosses after its own wait gave up is still a photo of this run.
+            (source as? GlassesAudioSource)?.onEarlierPhoto = { [weak self] jpeg in self?.keepEarlierPhoto(jpeg) }
             if let glasses = source as? GlassesAudioSource {
                 sourceEventTask = Task { [weak self] in
                     for await event in glasses.events {
@@ -476,12 +496,12 @@ final class GlassesListeningSession {
             Task { await save(candidate, confirmedAt: confirmedAt, frame: nil) }
         case .endSession:
             beginStop(reason: .back)
-        case .openViewfinder, .openCaptureViewfinder, .playSound, .stopSound:
+        case .openViewfinder, .playSound, .stopSound:
             // The lens shows its viewfinders and plays its clips itself.
             break
-        case .capturePhoto, .listenForName, .nameCapture:
-            // The lens asks for a capture's photo through `onCapture`, with a number to answer by, and for the birds a
-            // name may be and the naming itself through its `names`.
+        case .capturePhoto, .cancelCaptures, .listenForName, .nameCapture:
+            // The lens asks for a capture's photo through `onCapture`, with a number to answer by, gives the photos up
+            // through `onCancelCaptures`, and asks for the birds a name may be and the naming itself through its `names`.
             break
         }
     }
@@ -498,8 +518,17 @@ final class GlassesListeningSession {
         let takenAt = Date.now
         let location = listening.coordinate
         let run = runNumber
+        capturesInFlight.insert(id)
         Task {
-            var jpeg = await source?.capturePhoto()
+            var jpeg = await source?.capturePhoto(progress: { [weak self] fraction in
+                guard let self, run == self.runNumber else { return }
+                self.lens.captureTaken(id, sent: fraction)
+            })
+            capturesInFlight.remove(id)
+            if capturesGivenUp.remove(id) != nil {
+                Self.logger.info("capture \(id): given up by the wearer, nothing written")
+                return
+            }
             if jpeg == nil {
                 jpeg = await Task.detached(priority: .userInitiated) { frame?.jpegData() }.value
             }
@@ -530,20 +559,40 @@ final class GlassesListeningSession {
         }
     }
 
+    /// The wearer gave up the photos not yet on the phone, to listen again: none of them is written, and the camera
+    /// stops waiting for them.
+    private func giveUpCaptures() {
+        capturesGivenUp.formUnion(capturesInFlight)
+        Task { await source?.cancelPhotos() }
+    }
+
+    /// A photo the glasses delivered after the wait for it had ended (a transfer that stalled and went on at the next
+    /// photo): kept as an unnamed sighting of the run, at the run's place now, to be named with the others. The lens
+    /// is not told: it has moved on.
+    private func keepEarlierPhoto(_ jpeg: Data) {
+        do {
+            let unnamed = try sightings.capture(photo: jpeg, takenAt: .now, location: listening.coordinate, source: .glasses, onThisRun: true)
+            onCaptured?(unnamed)
+            Self.logger.info("an earlier photo arrived late and was kept to name")
+        } catch {
+            Self.logger.error("an earlier photo could not be kept: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     // MARK: - Saying the bird's name (issue #194)
 
     /// Whether the lens can ask for a bird's name now: the run has the names, and the glasses' microphone permission is
     /// granted. The permission is only read here, never asked for: asking opens Meta AI, which is for the phone to offer
     /// (`allowDictation()`), not for a wearer with the phone in a pocket.
     private func canAskName() async -> Bool {
-        guard loadNames != nil, phase == .listening else { return false }
+        guard asksNameOnLens(), loadNames != nil, phase == .listening else { return false }
         guard let status = await microphonePermission() else { return false }
         dictationNeedsPermission = status != .granted
         return status == .granted
     }
 
     /// The glasses' microphone permission as it stands; nil when it cannot be read, or when the answer takes longer than
-    /// `limit`: the lens is on "Saving the photo…" meanwhile, and a check that never answers (seen on a wedged link)
+    /// `limit`: the lens is on "Taking the photo…" meanwhile, and a check that never answers (seen on a wedged link)
     /// must not keep it there.
     private func microphonePermission(within limit: Duration = .seconds(3)) async -> PermissionStatus? {
         let wearables = wearables

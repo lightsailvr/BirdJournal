@@ -263,9 +263,16 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<8 where !view.isHittable { app.swipeUp() }
         view.tap()
-        XCTAssertTrue(app.navigationBars["Original photo"].waitForExistence(timeout: 5), "the photo did not open; screen: \(app.debugDescription.prefix(4000))")
-        app.buttons["Done"].tap()
-        XCTAssertFalse(app.navigationBars["Original photo"].waitForExistence(timeout: 2))
+        // Full screen, with its one way out (`OriginalPhotoView`).
+        let close = app.buttons["photo-close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5), "the photo did not open; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(close.label, "Close photo")
+        let note = element(app, "photo-viewer-note")
+        XCTAssertTrue(note.waitForExistence(timeout: 5), "the seeded frame opens, with what it is under it; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(note.label, "The unaltered photo kept with this sighting: evidence, never art.")
+        close.tap()
+        XCTAssertTrue(close.waitForNonExistence(timeout: 5), "the photo did not close; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(view.waitForExistence(timeout: 5), "back on the sighting's page")
     }
 
     /// Attaching a library photo to a sighting heard on the phone (#137). `-fakeLibraryPhoto` stands in for the system
@@ -290,10 +297,13 @@ final class CardFlipUITests: XCTestCase {
         let view = app.buttons["View original photo"]
         for _ in 0..<4 where !view.isHittable { app.swipeUp() }
         view.tap()
-        XCTAssertTrue(app.navigationBars["Original photo"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.images["Original photo"].waitForExistence(timeout: 5), "the stored file opens")
-        app.buttons["Done"].tap()
-        XCTAssertFalse(app.navigationBars["Original photo"].waitForExistence(timeout: 2))
+        let close = app.buttons["photo-close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
+        let original = element(app, "photo-viewer-photo")
+        XCTAssertTrue(original.waitForExistence(timeout: 5), "the stored file opens; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(original.label, "Original photo")
+        close.tap()
+        XCTAssertTrue(close.waitForNonExistence(timeout: 5))
 
         let remove = app.buttons["sighting-remove-photo"]
         for _ in 0..<4 where !remove.isHittable { app.swipeUp() }
