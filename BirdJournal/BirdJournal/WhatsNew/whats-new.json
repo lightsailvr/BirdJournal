@@ -1,6 +1,38 @@
 {
   "releases": [
     {
+      "version": "0.3.0",
+      "headline": "Field guides for more places",
+      "items": [
+        {
+          "title": "Three new field guides",
+          "detail": "Pacific Northwest, New York and South Louisiana join the Atlas, each with its own edition of patches: Evergreen, Borough and Bayou.",
+          "try": "In Settings, open Field-guide downloads and download the one nearest you."
+        },
+        {
+          "title": "Patches for every region",
+          "detail": "San Diego, SF Bay Area, California Deserts and Orlando & Space Coast now have a patch, a story and a silhouette for every bird.",
+          "try": "Update those field guides in Field-guide downloads, then open one of their sets in the Atlas."
+        },
+        {
+          "title": "Quicker photos from your glasses",
+          "detail": "Capture a sighting on the lens now takes the photo at once, and each tap takes another. They cross to your phone, where you name them.",
+          "try": "On a glasses run, choose Capture a sighting, tap for a few photos, then name them on your phone."
+        },
+        {
+          "title": "See the whole photo",
+          "detail": "In Name this bird, tap the photo to open it full screen, then pinch or double-tap to zoom in on the bird.",
+          "try": "Capture a sighting, then tap the photo before you choose its name."
+        },
+        {
+          "title": "Smoother all round",
+          "detail": "Photos from your glasses arrive at full detail, and the capture camera no longer shows a stray 0.9× zoom button."
+        }
+      ],
+      "note": "Seen something odd? Take a screenshot in the app and choose Share Beta Feedback.",
+      "date": "2026-11-12"
+    },
+    {
       "version": "0.2.0",
       "headline": "Add the birds you see",
       "items": [
