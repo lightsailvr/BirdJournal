@@ -2,7 +2,7 @@
   "id": "us-ca-bay",
   "name": "SF Bay Area",
   "region": "San Francisco Bay Area, California, US",
-  "version": 2,
+  "version": 3,
   "inat_place_id": 54321,
   "inat_created_before": "2026-09-27",
   "bounding_box": {
